@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.3967.4dbafed"
+    "version" : "2025-04-02.4152.881fef2"
   },
   "servers" : [ {
     "url" : "https://csip-api-dev.hmpps.service.justice.gov.uk",
@@ -1906,67 +1906,11 @@
         "description" : "Returns the CSIP records matching search query and filters\n\nRequires one of the following roles:\n* ROLE_CHALLENGE_SUPPORT_INTERVENTION_PLAN__CHALLENGE_SUPPORT_INTERVENTION_PLAN_UI",
         "operationId" : "findCsipRecords",
         "parameters" : [ {
-          "name" : "prisonCode",
+          "name" : "request",
           "in" : "query",
-          "required" : false,
+          "required" : true,
           "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "query",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "status",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "CSIP_CLOSED", "CSIP_OPEN", "AWAITING_DECISION", "ACCT_SUPPORT", "PLAN_PENDING", "INVESTIGATION_PENDING", "NO_FURTHER_ACTION", "SUPPORT_OUTSIDE_CSIP", "REFERRAL_SUBMITTED", "REFERRAL_PENDING", "UNKNOWN" ]
-          }
-        }, {
-          "name" : "prisonCodes",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            },
-            "uniqueItems" : true
-          }
-        }, {
-          "name" : "includeRestrictedPatients",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/FindCsipRequest"
           }
         } ],
         "responses" : {
@@ -2026,7 +1970,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "area-of-work", "contributory-factor-type", "decision-outcome-type", "role", "incident-involvement", "incident-location", "incident-type", "interviewee-role", "screening-outcome-type" ]
+            "enum" : [ "area-of-work", "contributory-factor-type", "decision-outcome-type", "role", "incident-involvement", "incident-location", "incident-type", "interviewee-role", "screening-outcome-type", "status" ]
           }
         }, {
           "name" : "includeInactive",
@@ -2641,7 +2585,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -2958,7 +2901,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -3176,9 +3118,15 @@
           "actionOther" : {
             "type" : "string",
             "description" : "Any other actions that are recommended to be considered."
+          },
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DecisionAndActions"
+            }
           }
         },
-        "required" : [ "actions" ]
+        "required" : [ "actions", "history" ]
       },
       "IdentifiedNeed" : {
         "type" : "object",
@@ -3390,7 +3338,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -3571,9 +3518,15 @@
           "reasonForDecision" : {
             "type" : "string",
             "description" : "The reasons for the safer custody screening outcome decision."
+          },
+          "history" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SaferCustodyScreeningOutcome"
+            }
           }
         },
-        "required" : [ "date", "outcome", "recordedBy", "recordedByDisplayName" ]
+        "required" : [ "date", "history", "outcome", "recordedBy", "recordedByDisplayName" ]
       },
       "UpsertSaferCustodyScreeningOutcomeRequest" : {
         "type" : "object",
@@ -3724,7 +3677,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -3804,7 +3756,8 @@
             "description" : "Contributory factors to the incident that motivated the referral.",
             "items" : {
               "$ref" : "#/components/schemas/CreateContributoryFactorRequest"
-            }
+            },
+            "minItems" : 1
           }
         },
         "required" : [ "contributoryFactors", "incidentDate", "incidentLocationCode", "incidentTypeCode", "isSaferCustodyTeamInformed", "refererAreaCode", "referredBy" ]
@@ -4091,7 +4044,6 @@
           },
           "incidentTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time the incident that motivated the CSIP referral occurred",
             "example" : "14:19:25"
           },
@@ -4413,6 +4365,47 @@
         },
         "required" : [ "createdDate", "identifiedNeed", "intervention", "responsiblePerson", "targetDate" ]
       },
+      "FindCsipRequest" : {
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "query" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CSIP_CLOSED", "CSIP_OPEN", "AWAITING_DECISION", "ACCT_SUPPORT", "PLAN_PENDING", "INVESTIGATION_PENDING", "NO_FURTHER_ACTION", "SUPPORT_OUTSIDE_CSIP", "REFERRAL_SUBMITTED", "REFERRAL_PENDING", "UNKNOWN" ]
+            },
+            "uniqueItems" : true
+          },
+          "includeRestrictedPatients" : {
+            "type" : "boolean"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "maximum" : 100,
+            "minimum" : 1
+          },
+          "sort" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "includeRestrictedPatients", "page", "prisonCode", "size", "sort", "status" ]
+      },
       "CsipSearchResult" : {
         "type" : "object",
         "properties" : {
@@ -4420,12 +4413,18 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "logCode" : {
+            "type" : "string"
+          },
           "prisoner" : {
             "$ref" : "#/components/schemas/Prisoner"
           },
           "referralDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "incidentType" : {
+            "type" : "string"
           },
           "nextReviewDate" : {
             "type" : "string",
@@ -4438,7 +4437,7 @@
             "$ref" : "#/components/schemas/ReferenceData"
           }
         },
-        "required" : [ "id", "prisoner", "referralDate", "status" ]
+        "required" : [ "id", "incidentType", "prisoner", "referralDate", "status" ]
       },
       "CsipSearchResults" : {
         "type" : "object",
