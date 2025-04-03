@@ -71,13 +71,13 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
           .withRequestBody(
             matchingJsonPath(
               "visitComment",
-              equalTo("Created by Book A Prison Visit. Reference: 12"),
+              equalTo("DPS booking reference: 12"),
             ),
           )
           .withRequestBody(
             matchingJsonPath(
               "visitOrderComment",
-              equalTo("Created by Book A Prison Visit for visit with reference: 12"),
+              equalTo("DPS booking reference: 12"),
             ),
           ),
       )
