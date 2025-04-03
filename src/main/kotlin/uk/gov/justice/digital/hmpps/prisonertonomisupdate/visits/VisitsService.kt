@@ -64,7 +64,7 @@ class VisitsService(
                   else -> throw ValidationException("Invalid visit type ${visit.visitType}")
                 },
                 visitComment = "Created by Book A Prison Visit. Reference: ${visit.reference}",
-                visitOrderComment = "Created by Book A Prison Visit for visit with reference: ${visit.reference}",
+                visitOrderComment = "DPS booking reference: ${visit.reference}",
                 room = visit.visitRoom,
                 openClosedStatus = visit.visitRestriction,
               ),
