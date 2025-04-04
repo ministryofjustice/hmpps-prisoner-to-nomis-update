@@ -12,6 +12,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNote
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
@@ -374,7 +375,244 @@ class CaseNotesReconciliationServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class CheckForNomisDuplicateAndDelete {
+    @Test
+    fun `will delete a duplicate case note in Nomis`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verify(caseNotesNomisApiService).deleteCaseNote(3L)
+      verifyNoMoreInteractions(caseNotesNomisApiService)
+
+      verify(telemetryClient).trackEvent(
+        "casenotes-reports-reconciliation-mismatch-deleted",
+        mapOf("offenderNo" to "A3456GH", "nomisId" to "3"),
+        null,
+      )
+    }
+
+    @Test
+    fun `will delete a duplicate case note in Nomis 2`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(3, "UUID03", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID03" to templateComparison("UUID03", "The text - this is duplicated", 3),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verify(caseNotesNomisApiService).deleteCaseNote(2L)
+      verifyNoMoreInteractions(caseNotesNomisApiService)
+
+      verify(telemetryClient).trackEvent(
+        "casenotes-reports-reconciliation-mismatch-deleted",
+        mapOf("offenderNo" to "A3456GH", "nomisId" to "2"),
+        null,
+      )
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if it is in DPS`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+        "UUID03" to templateComparison("UUID03", "The text - this is duplicated", 3),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if neither are in DPS`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if neither are in the mapping table`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(4, "UUID04", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if it is in the mapping table`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+        templateMapping(3, "UUID03", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if details differ`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is NOT duplicated", 3),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+
+    @Test
+    fun `will NOT delete a duplicate if more than 2 are the same`() = runTest {
+      val mappings = listOf(
+        templateMapping(1, "UUID01", OFFENDER_NO),
+        templateMapping(2, "UUID02", OFFENDER_NO),
+      )
+      val nomisCaseNotes = mapOf(
+        1L to templateComparison("1", "Other", 1),
+        2L to templateComparison("2", "The text - this is duplicated", 2),
+        3L to templateComparison("3", "The text - this is duplicated", 3),
+        4L to templateComparison("4", "The text - this is duplicated", 4),
+      )
+      val dpsCaseNotes = mapOf(
+        "UUID01" to templateComparison("UUID01", "Other", 1),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+      )
+
+      caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
+        OFFENDER_NO,
+        mappings,
+        nomisCaseNotes,
+        dpsCaseNotes,
+      )
+
+      verifyNoInteractions(caseNotesNomisApiService)
+    }
+  }
 }
+
+private fun templateComparison(id: String, text: String, legacyId: Long) = ComparisonCaseNote(
+  id = id,
+  text = text,
+  type = "TYPE",
+  subType = "SUBTYPE",
+  occurrenceDateTime = "2025-01-01T12:00:00",
+  creationDateTime = null,
+  legacyId = legacyId,
+)
 
 private fun templateDpsCaseNote(
   dpsId: String,
