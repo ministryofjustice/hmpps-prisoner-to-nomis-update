@@ -7,13 +7,13 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.5307.ffc0b87"
+    "version" : "2025-04-02.5662.4615e7e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
     "description" : "Prod"
   }, {
-    "url" : "https://remand-and-sentencing-api-preprod.hmpps.service.justice.gov.ukk",
+    "url" : "https://remand-and-sentencing-api-preprod.hmpps.service.justice.gov.uk",
     "description" : "Preprod"
   }, {
     "url" : "https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk",
@@ -264,8 +264,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "sentence updated"
+          "204" : {
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -383,8 +383,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "court case updated"
+          "204" : {
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -503,7 +503,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "204" : {
             "description" : "court appearance updated"
           },
           "401" : {
@@ -630,8 +630,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -749,8 +749,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "charge updated"
+          "204" : {
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -821,8 +821,8 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
-            "description" : "charge updated"
+          "204" : {
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -906,7 +906,7 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "204" : {
             "description" : "court appearance updated"
           },
           "401" : {
@@ -1094,7 +1094,7 @@
         },
         "responses" : {
           "204" : {
-            "description" : "No Content"
+            "description" : "No content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
@@ -1952,6 +1952,14 @@
               "enum" : [ "ACTIVE", "INACTIVE" ]
             }
           }
+        }, {
+          "name" : "offenceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -2101,6 +2109,258 @@
         }
       }
     },
+    "/legacy/sentence-type/summary" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get historic NOMIS sentence type by nomis sentence type reference",
+        "description" : "Returns historic NOMIS sentence type information for the specified type in a summary format",
+        "operationId" : "getLegacySentenceTypeSummary",
+        "parameters" : [ {
+          "name" : "nomisSentenceTypeReference",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns historic NOMIS sentence type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid OAuth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at given NOMIS type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/sentence-type/all" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get all historic NOMIS sentence types",
+        "description" : "Returns a set of historic NOMIS sentence type information in a detailed format",
+        "operationId" : "getLegacyAllSentenceTypes",
+        "responses" : {
+          "200" : {
+            "description" : "Returns historic NOMIS sentence type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid OAuth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at given NOMIS type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/sentence-type/all/summary" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get summary of all historic NOMIS sentence types",
+        "description" : "Returns a set of historic NOMIS sentence type information in a summary format",
+        "operationId" : "getLegacyAllSentenceTypesSummaries",
+        "responses" : {
+          "200" : {
+            "description" : "Returns historic NOMIS sentence type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid OAuth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at given NOMIS type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceTypeGroupingSummary"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/sentence-type/" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get historic NOMIS sentence type by nomis sentence type reference",
+        "description" : "Returns historic NOMIS sentence type information for the specified type in a detailed format",
+        "operationId" : "getLegacySentenceType",
+        "parameters" : [ {
+          "name" : "nomisSentenceTypeReference",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns historic NOMIS sentence type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid OAuth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at given NOMIS type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentenceType"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/court-case/{courtCaseUuid}/test" : {
       "get" : {
         "tags" : [ "legacy-court-case-controller" ],
@@ -2220,8 +2480,8 @@
     "/court-case/search" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
-        "summary" : "Retrieve all court cases for person",
-        "description" : "This endpoint will retrieve all court cases for a person",
+        "summary" : "Retrieve all court cases for person (where each court case has at least one appearance in the past)",
+        "description" : "This endpoint will retrieve all court cases for a person (where each court case has at least one appearance in the past - i.e. there exists a latest court appearance)",
         "operationId" : "searchCourtCases",
         "parameters" : [ {
           "name" : "prisonerId",
@@ -2932,7 +3192,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3184,7 +3444,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtCode" : {
             "type" : "string"
@@ -3858,7 +4118,7 @@
           },
           "classification" : {
             "type" : "string",
-            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL" ]
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "hintText" : {
             "type" : "string"
@@ -4033,6 +4293,158 @@
         },
         "required" : [ "active", "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "periodLengths", "prisonerId", "sentenceCalcType", "sentenceCategory", "sentenceStartDate" ]
       },
+      "LegacySentenceTypeGroupingSummary" : {
+        "type" : "object",
+        "properties" : {
+          "nomisSentenceTypeReference" : {
+            "type" : "string"
+          },
+          "nomisDescription" : {
+            "type" : "string"
+          },
+          "isIndeterminate" : {
+            "type" : "boolean"
+          },
+          "recall" : {
+            "$ref" : "#/components/schemas/RecallType"
+          },
+          "nomisActive" : {
+            "type" : "boolean"
+          },
+          "nomisExpiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "isIndeterminate", "nomisActive", "nomisDescription", "nomisSentenceTypeReference", "recall" ]
+      },
+      "RecallType" : {
+        "type" : "object",
+        "properties" : {
+          "isRecall" : {
+            "type" : "boolean"
+          },
+          "type" : {
+            "type" : "string"
+          },
+          "isFixedTermRecall" : {
+            "type" : "boolean"
+          },
+          "lengthInDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "isFixedTermRecall", "isRecall", "lengthInDays", "type" ]
+      },
+      "LegacySentenceType" : {
+        "type" : "object",
+        "properties" : {
+          "nomisSentenceTypeReference" : {
+            "type" : "string"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "classificationPeriodDefinition" : {
+            "$ref" : "#/components/schemas/SentenceTypePeriodDefinitions"
+          },
+          "sentencingAct" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "eligibility" : {
+            "$ref" : "#/components/schemas/SentenceEligibility"
+          },
+          "recallType" : {
+            "$ref" : "#/components/schemas/RecallType"
+          },
+          "inputSentenceType" : {
+            "$ref" : "#/components/schemas/SentenceType"
+          },
+          "nomisActive" : {
+            "type" : "boolean"
+          },
+          "nomisDescription" : {
+            "type" : "string"
+          },
+          "nomisExpiryDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nomisTermTypes" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "classification", "nomisActive", "nomisDescription", "nomisSentenceTypeReference", "nomisTermTypes", "recallType", "sentencingAct" ]
+      },
+      "Period" : {
+        "type" : "object",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+          },
+          "auto" : {
+            "type" : "boolean"
+          },
+          "periodLength" : {
+            "$ref" : "#/components/schemas/PeriodLengthDetail"
+          }
+        },
+        "required" : [ "auto", "type" ]
+      },
+      "PeriodLengthDetail" : {
+        "type" : "object",
+        "properties" : {
+          "years" : {
+            "type" : "string"
+          },
+          "periodOrder" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "periodLengthType" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "periodLengthType", "periodOrder", "years" ]
+      },
+      "SentenceEligibility" : {
+        "type" : "object",
+        "properties" : {
+          "toreraEligibilityType" : {
+            "type" : "string",
+            "enum" : [ "NONE", "SOPC", "SDS" ]
+          },
+          "sdsPlusEligibilityType" : {
+            "type" : "string",
+            "enum" : [ "NONE", "SECTION250", "SDS" ]
+          }
+        }
+      },
+      "SentenceTypePeriodDefinitions" : {
+        "type" : "object",
+        "properties" : {
+          "periodDefinitions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Period"
+            }
+          }
+        },
+        "required" : [ "periodDefinitions" ]
+      },
       "LegacyCourtCase" : {
         "type" : "object",
         "properties" : {
@@ -4122,7 +4534,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "charges" : {
             "type" : "array",
@@ -4145,7 +4557,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtId" : {
             "type" : "string"
@@ -4404,7 +4816,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:53:37.430478184"
+            "example" : "14:30:00"
           },
           "courtCode" : {
             "type" : "string"
