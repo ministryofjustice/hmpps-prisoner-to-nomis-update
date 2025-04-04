@@ -32,7 +32,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Slack message to review failing PRs
-        if: steps.check-prs.outputs.failing_prs
+        if: steps.check-prs.outputs.failure_count
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         env:
           SLACK_BOT_TOKEN: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
@@ -42,27 +42,49 @@ jobs:
           payload-templated: true
           payload: |
             channel: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID }}
-            text: "Check APIs has detected failing PRs",
-              blocks
-                - type: section
-                  text:
-                    type: mrkdwn
-                    text: ":warning: Github Workflow ${{ github.workflow }} has detected failing PRs"
-                - type: section
-                  fields:
-                    - type: mrkdwn
-                      text: "*PRs:*\n<${{ steps.check-prs.outputs.failing_prs }}>"
-                    - type: mrkdwn
-                      text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
-                    - type: mrkdwn
-                      text: "*Job:*\n${{ github.job }}"
-                    - type: mrkdwn
-                      text: "*Repo:*\n${{ github.repository }}"
-                    - type: mrkdwn
-                      text: "*Project:*\n${{ github.event.repository.name }}"
+            text: "Check APIs has detected failing PRs"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ":warning: Github Workflow ${{ github.workflow }} has detected ${{ steps.check-prs.outputs.failure_count }} failing PRs"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*PRs:*\n<${{ github.server_url }}/${{ github.repository }}/pulls>"
+                  - type: mrkdwn
+                    text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
+                  - type: mrkdwn
+                    text: "*Repository:*\n${{ github.repository }}"
+
+      - name: Slack message to review combined PR
+        if: steps.check-prs.outputs.combined_pr
+        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        env:
+          SLACK_BOT_TOKEN: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
+        with:
+          method: chat.postMessage
+          token: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
+          payload-templated: true
+          payload: |
+            channel: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID }}
+            text: "Check APIs has detected a combined PR that needs reviewing and merging"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ":githubpr: Github Workflow ${{ github.workflow }} has detected a combined PR"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*PR:*\n<${{ steps.check-prs.outputs.combined_pr }}>"
+                  - type: mrkdwn
+                    text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
+                  - type: mrkdwn
+                    text: "*Repository:*\n${{ github.repository }}"
 
       - name: Slack message to review PRs
-        if: ${{ steps.check-prs.outputs.failing_prs == '' && steps.check-prs.outputs.all_prs }}
+        if: ${{ steps.check-prs.outputs.failure_count != steps.check-prs.outputs.pr_count && steps.check-prs.outputs.combined_pr == '' }}
         uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
         with:
           method: chat.postMessage
@@ -70,21 +92,17 @@ jobs:
           payload-templated: true
           payload: |
             channel: ${{ vars.SECURITY_ALERTS_SLACK_CHANNEL_ID }}
-            text: "Check APIs has detected PRs",
-              blocks
-                - type: section
-                  text:
-                    type: mrkdwn
-                    text: ":githubpr: Github Workflow ${{ github.workflow }} has detected PRs"
-                - type: section
-                  fields:
-                    - type: mrkdwn
-                      text: "*PRs:*\n<${{ steps.check-prs.outputs.all_prs }}>"
-                    - type: mrkdwn
-                      text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
-                    - type: mrkdwn
-                      text: "*Job:*\n${{ github.job }}"
-                    - type: mrkdwn
-                      text: "*Repo:*\n${{ github.repository }}"
-                    - type: mrkdwn
-                      text: "*Project:*\n${{ github.event.repository.name }}"
+            text: "Check APIs has detected PRs"
+            blocks:
+              - type: section
+                text:
+                  type: mrkdwn
+                  text: ":githubpr: Github Workflow ${{ github.workflow }} has detected PRs"
+              - type: section
+                fields:
+                  - type: mrkdwn
+                    text: "*PRs:*\n<${{ github.server_url }}/${{ github.repository }}/pulls>"
+                  - type: mrkdwn
+                    text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
+                  - type: mrkdwn
+                    text: "*Repository:*\n${{ github.repository }}"
