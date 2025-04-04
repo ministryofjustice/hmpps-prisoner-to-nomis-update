@@ -1,12 +1,13 @@
 {
   "openapi" : "3.1.0",
   "info" : {
-    "title" : "HMPPS Visit Allocation Api",
+    "title" : "HMPPS Visit Allocation API",
+    "description" : "API for managing a prisoner visit order balance on DPS.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices looking to integrate with the API should request a new role be created with the following syntax:\n ROLE_VISIT_ALLOCATION_API__<SERVICE_NAME>\n \nPre-existing roles:\n 1. ROLE_VISIT_ALLOCATION_API__NOMIS_API - [NOMIS use only] - Grants NOMIS read/write access to the API (syncing / retrieving balances).\n",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-21.231.51b52e3"
+    "version" : "2025-03-28.263.aedf421"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -25,12 +26,13 @@
     "description" : "Local"
   } ],
   "security" : [ {
-    "visit-allocation-api-ui-role" : [ "read" ]
+    "visit-allocation-api-nomis-role" : [ "read", "write" ]
   } ],
   "paths" : {
     "/queue-admin/retry-dlq/{dlqName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_EVENTS_QUEUE_ADMIN",
         "operationId" : "retryDlq",
         "parameters" : [ {
           "name" : "dlqName",
@@ -78,6 +80,7 @@
     "/queue-admin/purge-queue/{queueName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_EVENTS_QUEUE_ADMIN",
         "operationId" : "purgeQueue",
         "parameters" : [ {
           "name" : "queueName",
@@ -105,7 +108,7 @@
       "post" : {
         "tags" : [ "nomis-controller" ],
         "summary" : "Endpoint to sync ongoing changes to prisoner VO / PVO balances from NOMIS to DPS.",
-        "description" : "Takes a set of changes to a prisoners and syncs them onto DPS.",
+        "description" : "Takes a set of changes to a prisoners and syncs them onto DPS.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
         "operationId" : "syncPrisonerVisitOrders",
         "requestBody" : {
           "content" : {
@@ -148,7 +151,7 @@
       "post" : {
         "tags" : [ "nomis-controller" ],
         "summary" : "Endpoint to migrate prisoner VO / PVO balances from NOMIS to DPS.",
-        "description" : "Takes a prisoner and 'onboards' them onto DPS, syncing their balance with NOMIS.",
+        "description" : "Takes a prisoner and 'onboards' them onto DPS, syncing their balance with NOMIS.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
         "operationId" : "migratePrisonerVisitOrders",
         "requestBody" : {
           "content" : {
@@ -231,7 +234,7 @@
       "get" : {
         "tags" : [ "balance-controller" ],
         "summary" : "Endpoint to get a prisoners current balance.",
-        "description" : "Takes a prisoner id and return their current visit order balance.",
+        "description" : "Takes a prisoner id and return their current visit order balance.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
         "operationId" : "getPrisonerBalance",
         "parameters" : [ {
           "name" : "prisonerId",
@@ -292,6 +295,7 @@
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_EVENTS_QUEUE_ADMIN",
         "operationId" : "getDlqMessages",
         "parameters" : [ {
           "name" : "dlqName",
@@ -375,7 +379,8 @@
           "prisonerId" : {
             "type" : "string",
             "description" : "nomsNumber of the prisoner",
-            "example" : "AA123456"
+            "example" : "AA123456",
+            "minLength" : 1
           },
           "oldVoBalance" : {
             "type" : "integer",
@@ -410,7 +415,7 @@
           "adjustmentReasonCode" : {
             "type" : "string",
             "description" : "The reason for the adjustment",
-            "enum" : [ "AUTO_EXP", "CANC", "DISC", "GOV", "IEP", "PVO_CANCEL", "PVO_IEP", "PVO_ISSUE", "VO_CANCEL", "VO_ISSUE" ],
+            "enum" : [ "AUTO_EXP", "CANC", "DISC", "GOV", "IEP", "PVO_CANCEL", "PVO_IEP", "PVO_ISSUE", "VO_CANCEL", "VO_ISSUE", "VO_RECREDIT" ],
             "example" : "VO_ISSUE"
           },
           "changeLogSource" : {
@@ -425,7 +430,7 @@
             "example" : "Manually adjusted for phone credit"
           }
         },
-        "required" : [ "adjustmentReasonCode", "changeLogSource", "comment", "createdDate", "oldPvoBalance", "oldVoBalance", "prisonerId" ]
+        "required" : [ "adjustmentReasonCode", "changeLogSource", "createdDate", "prisonerId" ]
       },
       "VisitAllocationPrisonerMigrationDto" : {
         "type" : "object",
@@ -433,7 +438,8 @@
           "prisonerId" : {
             "type" : "string",
             "description" : "nomsNumber of the prisoner",
-            "example" : "AA123456"
+            "example" : "AA123456",
+            "minLength" : 1
           },
           "voBalance" : {
             "type" : "integer",
@@ -533,9 +539,9 @@
       }
     },
     "securitySchemes" : {
-      "visit-allocation-api-ui-role" : {
+      "visit-allocation-api-nomis-role" : {
         "type" : "http",
-        "description" : "A HMPPS Auth access token with the `ROLE_TEMPLATE_KOTLIN__UI` role.",
+        "description" : "A HMPPS Auth access token with the `ROLE_VISIT_ALLOCATION_API__NOMIS_API` role.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
