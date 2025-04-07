@@ -2,7 +2,7 @@ name: Process API docs PRs
 
 on:
   schedule:
-    - cron: "50 7 * * MON-FRI" # Every weekday at 07:50 UTC
+    - cron: "0 8 * * MON-FRI" # Every weekday at 08:00 UTC
   workflow_dispatch:
 
 permissions:
