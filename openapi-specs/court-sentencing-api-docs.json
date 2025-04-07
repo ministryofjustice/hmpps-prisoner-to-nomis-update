@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-02.5662.4615e7e"
+    "version" : "2025-04-04.5678.8b9cd64"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2102,6 +2102,54 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PersonDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/person/{prisonerId}/sentenced-court-cases" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "Retrieve all sentenced court cases for prisoner",
+        "description" : "This endpoint will retrieve all sentenced court cases for prisoner",
+        "operationId" : "getSentencedCourtCases",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns sentenced court cases",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCases"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCases"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCases"
                 }
               }
             }
@@ -4208,6 +4256,243 @@
         },
         "required" : [ "dateOfBirth", "firstName", "lastName", "personId" ]
       },
+      "AppearanceType" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "appearanceTypeUuid", "description", "displayOrder" ]
+      },
+      "Charge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/ChargeOutcome"
+          },
+          "terrorRelated" : {
+            "type" : "boolean"
+          },
+          "sentence" : {
+            "$ref" : "#/components/schemas/Sentence"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          }
+        },
+        "required" : [ "chargeUuid", "offenceCode" ]
+      },
+      "ChargeOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          },
+          "nomisCode" : {
+            "type" : "string"
+          },
+          "outcomeType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dispositionCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid" ]
+      },
+      "CourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "courtCaseReference" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "warrantId" : {
+            "type" : "string"
+          },
+          "warrantType" : {
+            "type" : "string"
+          },
+          "taggedBail" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "nextCourtAppearance" : {
+            "$ref" : "#/components/schemas/NextCourtAppearance"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Charge"
+            }
+          },
+          "overallSentenceLength" : {
+            "$ref" : "#/components/schemas/PeriodLength"
+          },
+          "overallConvictionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "warrantType" ]
+      },
+      "CourtAppearanceOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          },
+          "nomisCode" : {
+            "type" : "string"
+          },
+          "outcomeType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "relatedChargeOutcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isSubList" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "displayOrder", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
+      },
+      "CourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED" ]
+          },
+          "latestAppearance" : {
+            "$ref" : "#/components/schemas/CourtAppearance"
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearance"
+            }
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+          },
+          "draftAppearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DraftCourtAppearance"
+            }
+          }
+        },
+        "required" : [ "appearances", "courtCaseUuid", "draftAppearances", "prisonerId", "status" ]
+      },
+      "CourtCases" : {
+        "type" : "object",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtCase"
+            }
+          }
+        },
+        "required" : [ "courtCases" ]
+      },
+      "DraftCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "draftUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sessionBlob" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          }
+        },
+        "required" : [ "draftUuid", "sessionBlob" ]
+      },
+      "NextCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTime" : {
+            "type" : "string",
+            "example" : "14:30:00"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceType" : {
+            "$ref" : "#/components/schemas/AppearanceType"
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceType", "courtCode" ]
+      },
       "LegacyPeriodLength" : {
         "type" : "object",
         "properties" : {
@@ -4601,231 +4886,6 @@
           }
         },
         "required" : [ "active", "appearances", "caseReferences", "courtCaseUuid", "prisonerId" ]
-      },
-      "DraftCourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "draftUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "sessionBlob" : {
-            "$ref" : "#/components/schemas/JsonNode"
-          }
-        },
-        "required" : [ "draftUuid", "sessionBlob" ]
-      },
-      "AppearanceType" : {
-        "type" : "object",
-        "properties" : {
-          "appearanceTypeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "appearanceTypeUuid", "description", "displayOrder" ]
-      },
-      "Charge" : {
-        "type" : "object",
-        "properties" : {
-          "chargeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "offenceCode" : {
-            "type" : "string"
-          },
-          "offenceStartDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "outcome" : {
-            "$ref" : "#/components/schemas/ChargeOutcome"
-          },
-          "terrorRelated" : {
-            "type" : "boolean"
-          },
-          "sentence" : {
-            "$ref" : "#/components/schemas/Sentence"
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
-          }
-        },
-        "required" : [ "chargeUuid", "offenceCode" ]
-      },
-      "ChargeOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string"
-          },
-          "nomisCode" : {
-            "type" : "string"
-          },
-          "outcomeType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "dispositionCode" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid" ]
-      },
-      "CourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "appearanceUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcome" : {
-            "$ref" : "#/components/schemas/CourtAppearanceOutcome"
-          },
-          "courtCode" : {
-            "type" : "string"
-          },
-          "courtCaseReference" : {
-            "type" : "string"
-          },
-          "appearanceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "warrantId" : {
-            "type" : "string"
-          },
-          "warrantType" : {
-            "type" : "string"
-          },
-          "taggedBail" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/NextCourtAppearance"
-          },
-          "charges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Charge"
-            }
-          },
-          "overallSentenceLength" : {
-            "$ref" : "#/components/schemas/PeriodLength"
-          },
-          "overallConvictionDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
-          }
-        },
-        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "warrantType" ]
-      },
-      "CourtAppearanceOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string"
-          },
-          "nomisCode" : {
-            "type" : "string"
-          },
-          "outcomeType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "relatedChargeOutcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isSubList" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "displayOrder", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
-      },
-      "CourtCase" : {
-        "type" : "object",
-        "properties" : {
-          "prisonerId" : {
-            "type" : "string"
-          },
-          "courtCaseUuid" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED" ]
-          },
-          "latestAppearance" : {
-            "$ref" : "#/components/schemas/CourtAppearance"
-          },
-          "appearances" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtAppearance"
-            }
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/CourtCaseLegacyData"
-          },
-          "draftAppearances" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DraftCourtAppearance"
-            }
-          }
-        },
-        "required" : [ "appearances", "courtCaseUuid", "draftAppearances", "prisonerId", "status" ]
-      },
-      "NextCourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "appearanceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "appearanceTime" : {
-            "type" : "string",
-            "example" : "14:30:00"
-          },
-          "courtCode" : {
-            "type" : "string"
-          },
-          "appearanceType" : {
-            "$ref" : "#/components/schemas/AppearanceType"
-          }
-        },
-        "required" : [ "appearanceDate", "appearanceType", "courtCode" ]
       },
       "Pageable" : {
         "type" : "object",
