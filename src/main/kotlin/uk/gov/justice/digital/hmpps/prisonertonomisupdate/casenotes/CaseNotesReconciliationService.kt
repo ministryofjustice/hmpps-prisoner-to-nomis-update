@@ -182,8 +182,13 @@ class CaseNotesReconciliationService(
   private val maxLengthToCompare = MAX_CASENOTE_LENGTH_BYTES - SEE_DPS_REPLACEMENT.length
 
   /**
-   * There could be a duplicate created in Nomis. In the specific case of one duplicate which
-   * is neither in DPS nor in the mapping table, we fix by deleting it from Nomis
+   * There could be a duplicate created in Nomis due to a call to nomis-api succeeding in creating
+   * a CN but failing to return success to to-nomis. In the specific case of there being
+   * - 1 more nomis case notes than mappings,
+   * - 2 identical CNs in Nomis,
+   * - but only one CN in DPS with matching details,
+   * - and one of the 2 not in the mapping table,
+   * we fix by deleting it from Nomis
    */
   internal suspend fun checkForNomisDuplicateAndDelete(
     offenderNo: String,
@@ -197,24 +202,34 @@ class CaseNotesReconciliationService(
         .groupBy { it.text.take(maxLengthToCompare) + it.occurrenceDateTime + it.creationDateTime + it.type + it.subType }
         .filter { it.value.size == 2 }
         .forEach { (_, identicalCaseNotePair) ->
-          val id1 = identicalCaseNotePair.first().legacyId
-          val id2 = identicalCaseNotePair.last().legacyId
-          val inDps1 = dpsCaseNotes.values.any { it.legacyId == id1 }
-          val inDps2 = dpsCaseNotes.values.any { it.legacyId == id2 }
-          val inMapping1 = mappings.any { it.nomisCaseNoteId == id1 }
-          val inMapping2 = mappings.any { it.nomisCaseNoteId == id2 }
-          if (inDps1 && !inDps2 && inMapping1 && !inMapping2) {
-            caseNotesNomisApiService.deleteCaseNote(id2)
-            telemetryClient.trackEvent(
-              "casenotes-reports-reconciliation-mismatch-deleted",
-              mapOf("offenderNo" to offenderNo, "nomisId" to id2.toString()),
-            )
-          } else if (!inDps1 && inDps2 && !inMapping1 && inMapping2) {
-            caseNotesNomisApiService.deleteCaseNote(id1)
-            telemetryClient.trackEvent(
-              "casenotes-reports-reconciliation-mismatch-deleted",
-              mapOf("offenderNo" to offenderNo, "nomisId" to id1.toString()),
-            )
+          val nomisCaseNote1 = identicalCaseNotePair.first()
+          val nomisCaseNote2 = identicalCaseNotePair.last()
+          val textToCompare = nomisCaseNote1.text.take(maxLengthToCompare)
+          val exactlyOneExistsInDps = dpsCaseNotes.values.filter {
+            it.text.take(maxLengthToCompare) == textToCompare &&
+              it.occurrenceDateTime == nomisCaseNote1.occurrenceDateTime &&
+              it.creationDateTime == nomisCaseNote1.creationDateTime &&
+              it.type == nomisCaseNote1.type &&
+              it.subType == nomisCaseNote1.subType
+          }
+            .size == 1
+
+          if (exactlyOneExistsInDps) {
+            val inMapping1 = mappings.any { it.nomisCaseNoteId == nomisCaseNote1.legacyId }
+            val inMapping2 = mappings.any { it.nomisCaseNoteId == nomisCaseNote2.legacyId }
+            if (inMapping1 && !inMapping2) {
+              caseNotesNomisApiService.deleteCaseNote(nomisCaseNote2.legacyId)
+              telemetryClient.trackEvent(
+                "casenotes-reports-reconciliation-mismatch-deleted",
+                mapOf("offenderNo" to offenderNo, "nomisId" to nomisCaseNote2.id),
+              )
+            } else if (!inMapping1 && inMapping2) {
+              caseNotesNomisApiService.deleteCaseNote(nomisCaseNote1.legacyId)
+              telemetryClient.trackEvent(
+                "casenotes-reports-reconciliation-mismatch-deleted",
+                mapOf("offenderNo" to offenderNo, "nomisId" to nomisCaseNote1.id),
+              )
+            }
           }
         }
     }

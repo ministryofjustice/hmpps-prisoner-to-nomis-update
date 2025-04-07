@@ -93,7 +93,7 @@ class CaseNotesReconciliationServiceTest {
         MismatchCaseNote(
           offenderNo = "A3456GH",
           notes = listOf(
-            "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
+            "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=-1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
               " nomisCaseNote = {id=1, legacyId=1, text-hash=128700130, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
           ),
         ),
@@ -116,7 +116,7 @@ class CaseNotesReconciliationServiceTest {
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "offenderNo" to OFFENDER_NO,
-              "1" to "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
+              "1" to "dpsCaseNote = {id=12345678-0000-0000-0000-000011112222, legacyId=-1, text-hash=128700130, type=OTHER, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=USER}," +
                 " nomisCaseNote = {id=1, legacyId=1, text-hash=128700130, type=CODE, subType=SUBCODE, occurrenceDateTime=2024-01-01T01:02:03, creationDateTime=2024-02-02T01:02:03, authorUsername=[USER]}",
             ),
           )
@@ -390,8 +390,8 @@ class CaseNotesReconciliationServiceTest {
         3L to templateComparison("3", "The text - this is duplicated", 3),
       )
       val dpsCaseNotes = mapOf(
-        "UUID01" to templateComparison("UUID01", "Other", 1),
-        "UUID02" to templateComparison("UUID02", "The text - this is duplicated", 2),
+        "UUID01" to templateComparison("UUID01", "Other"),
+        "UUID02" to templateComparison("UUID02", "The text - this is duplicated"),
       )
 
       caseNotesReconciliationService.checkForNomisDuplicateAndDelete(
@@ -604,7 +604,7 @@ class CaseNotesReconciliationServiceTest {
   }
 }
 
-private fun templateComparison(id: String, text: String, legacyId: Long) = ComparisonCaseNote(
+private fun templateComparison(id: String, text: String, legacyId: Long = -1) = ComparisonCaseNote(
   id = id,
   text = text,
   type = "TYPE",
@@ -646,7 +646,7 @@ private fun templateDpsCaseNote(
   sensitive = false,
   amendments = amendments,
   systemGenerated = false,
-  legacyId = 1L,
+  legacyId = -1L,
 )
 
 private fun templateMapping(nomisId: Long, dpsId: String, prisonerNo: String, bookingId: Long = 1) = CaseNoteMappingDto(
