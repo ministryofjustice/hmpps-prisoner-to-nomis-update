@@ -14,35 +14,30 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhone
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactAddressDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactAddressPhoneDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactEmailDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactIdentityDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactPhoneDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.EmploymentDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.OrganisationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelLinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddressPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileEmployment
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileIdentity
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcilePhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
@@ -51,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
@@ -222,105 +218,74 @@ class ContactPersonDpsApiExtension :
       updatedTime = null,
     )
 
-    fun contactDetails(contactId: Long = 12345) = ContactDetails(
-      id = contactId,
+    fun contactReconcileDetails(contactId: Long = 12345) = SyncContactReconcile(
+      contactId = contactId,
       lastName = "KOFI",
       firstName = "KWEKU",
-      isStaff = false,
-      interpreterRequired = false,
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      staffFlag = false,
+      phones = emptyList(),
       addresses = emptyList(),
-      phoneNumbers = emptyList(),
-      emailAddresses = emptyList(),
+      emails = emptyList(),
       identities = emptyList(),
+      restrictions = emptyList(),
+      relationships = emptyList(),
       employments = emptyList(),
+      middleNames = null,
+      dateOfBirth = null,
     )
 
-    fun contactAddressDetails(contactAddressId: Long = 1234567, phoneNumbers: List<ContactAddressPhoneDetails> = emptyList()) = ContactAddressDetails(
+    fun contactAddressDetails(contactAddressId: Long = 1234567, phoneNumbers: List<ReconcileAddressPhone> = emptyList()) = ReconcileAddress(
       contactAddressId = contactAddressId,
-      contactId = 12345,
       primaryAddress = true,
-      verified = false,
-      mailFlag = false,
-      noFixedAddress = false,
-      phoneNumbers = phoneNumbers,
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      addressPhones = phoneNumbers,
+      addressType = "HOME",
+      property = null,
+      street = null,
+      area = null,
     )
 
-    fun contactEmailDetails(emailAddress: String = "test@test.com") = ContactEmailDetails(
+    fun contactEmailDetails(emailAddress: String = "test@test.com") = ReconcileEmail(
       contactEmailId = 1234567,
-      contactId = 12345,
       emailAddress = emailAddress,
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
-    fun contactPhoneDetails(phoneNumber: String = "07973 555 5555") = ContactPhoneDetails(
+    fun contactPhoneDetails(phoneNumber: String = "07973 555 5555") = ReconcilePhone(
       contactPhoneId = 1234567,
-      contactId = 12345,
       phoneNumber = phoneNumber,
       phoneType = "MOB",
-      phoneTypeDescription = "Mobile",
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
-    fun contactAddressPhoneDetails(phoneNumber: String = "07973 555 5555") = ContactAddressPhoneDetails(
-      contactPhoneId = 1234567,
-      contactId = 12345,
+    fun contactAddressPhoneDetails(phoneNumber: String = "07973 555 5555") = ReconcileAddressPhone(
       phoneNumber = phoneNumber,
       phoneType = "MOB",
-      phoneTypeDescription = "Mobile",
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
       contactAddressPhoneId = 111,
-      contactAddressId = 1222,
     )
-    fun contactIdentityDetails(identityValue: String = "SMIT5654DL") = ContactIdentityDetails(
+    fun contactIdentityDetails(identityValue: String = "SMIT5654DL") = ReconcileIdentity(
       contactIdentityId = 1234567,
-      contactId = 12345,
       identityValue = identityValue,
       identityType = "DL",
       issuingAuthority = "DVLA",
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
-      identityTypeIsActive = true,
     )
 
-    fun contactEmploymentDetails(organisationId: Long = 1) = EmploymentDetails(
+    fun contactEmploymentDetails(organisationId: Long = 1) = ReconcileEmployment(
       employmentId = 1234567,
-      contactId = 12345,
-      employer = OrganisationSummary(
-        organisationId = organisationId,
-        organisationName = "Police",
-        organisationActive = true,
-      ),
-      isActive = true,
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
+      organisationId = organisationId,
+      active = true,
     )
 
-    fun contactRestrictionDetails() = ContactRestrictionDetails(
+    fun contactRestrictionDetails() = ReconcileRestriction(
       contactRestrictionId = 1234567,
-      contactId = 12345,
       restrictionType = "BAN",
-      restrictionTypeDescription = "Banned",
-      enteredByUsername = "T.SMITH",
-      enteredByDisplayName = "Tim Smith",
-      createdBy = "JANE.SAM",
-      createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
 
-    fun linkedPrisonerDetails() = LinkedPrisonerDetails(
+    fun linkedPrisonerDetails() = ReconcileRelationship(
       prisonerNumber = "A1234KT",
-      lastName = "WILLIAMS",
-      firstName = "SARAH",
       prisonerContactId = 12434567,
-      relationshipTypeCode = "S",
-      relationshipTypeDescription = "Social",
-      relationshipToPrisonerCode = "FRI",
-      relationshipToPrisonerDescription = "Friend",
-      isRelationshipActive = true,
+      relationshipType = "S",
+      relationshipRestrictions = emptyList(),
+      contactType = "S",
+      nextOfKin = false,
+      emergencyContact = false,
+      active = true,
+      approvedVisitor = false,
     )
   }
 
@@ -501,10 +466,10 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetContactDetails(contactId: Long, response: ContactDetails? = contactDetails()) {
+  fun stubGetContactDetails(contactId: Long, response: SyncContactReconcile? = contactReconcileDetails()) {
     if (response == null) {
       stubFor(
-        get("/contact/$contactId")
+        get("/sync/contact/$contactId/reconcile")
           .willReturn(
             aResponse()
               .withStatus(404)
@@ -514,7 +479,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     } else {
       stubFor(
-        get("/contact/$contactId")
+        get("/sync/contact/$contactId/reconcile")
           .willReturn(
             aResponse()
               .withStatus(200)
@@ -523,33 +488,5 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           ),
       )
     }
-  }
-
-  fun stubGetContactRestrictions(contactId: Long, response: List<ContactRestrictionDetails> = listOf(contactRestrictionDetails())) {
-    stubFor(
-      get(urlPathEqualTo("/contact/$contactId/restriction")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
-      ),
-    )
-  }
-  fun stubGetLinkedPrisonerContacts(contactId: Long, response: List<LinkedPrisonerDetails> = listOf(linkedPrisonerDetails())) {
-    stubFor(
-      get(urlPathEqualTo("/contact/$contactId/linked-prisoners")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(
-            ContactPersonDpsApiExtension.objectMapper.writeValueAsString(
-              PagedModelLinkedPrisonerDetails(
-                content = response,
-                page = PageMetadata(totalElements = response.size.toLong()),
-              ),
-            ),
-          ),
-      ),
-    )
   }
 }

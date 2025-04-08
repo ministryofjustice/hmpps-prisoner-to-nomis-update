@@ -25,11 +25,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhoneDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmailDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactEmploymentDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactIdentityDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactPhoneDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.linkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
@@ -46,11 +46,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.personPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
@@ -660,7 +658,7 @@ internal class ContactPersonReconciliationServiceTest {
       contacts = emptyList(),
       restrictions = emptyList(),
     )
-    val dpsContact = contactDetails(contactId = personId).copy(
+    val dpsContact = contactReconcileDetails(contactId = personId).copy(
       firstName = "KWEKU",
       lastName = "KOFI",
     )
@@ -670,11 +668,9 @@ internal class ContactPersonReconciliationServiceTest {
       reset(telemetryClient)
     }
 
-    private fun stubPersonContact(nomisPerson: ContactPerson, dpsContact: ContactDetails, dpsContactRestrictions: List<ContactRestrictionDetails> = emptyList(), dpsPrisonerContacts: List<LinkedPrisonerDetails> = emptyList()) {
+    private fun stubPersonContact(nomisPerson: ContactPerson, dpsContact: SyncContactReconcile) {
       nomisApi.stubGetPerson(personId, nomisPerson)
       dpsApi.stubGetContactDetails(personId, dpsContact)
-      dpsApi.stubGetContactRestrictions(personId, dpsContactRestrictions)
-      dpsApi.stubGetLinkedPrisonerContacts(personId, dpsPrisonerContacts)
     }
 
     @Nested
@@ -737,44 +733,44 @@ internal class ContactPersonReconciliationServiceTest {
             firstName = "KWEKU",
             lastName = "KOFI",
             dateOfBirth = LocalDate.parse("1980-01-01"),
-            phoneNumbers = listOf(contactPhoneDetails("0114555555")),
+            phones = listOf(contactPhoneDetails("0114555555")),
             addresses = listOf(contactAddressDetails(phoneNumbers = listOf(contactAddressPhoneDetails("01146666666")))),
-            emailAddresses = listOf(contactEmailDetails("test@justice.gov.uk")),
+            emails = listOf(contactEmailDetails("test@justice.gov.uk")),
             employments = listOf(contactEmploymentDetails(98765)),
             identities = listOf(contactIdentityDetails("SMITH1717171")),
-          ),
-          dpsContactRestrictions = listOf(
-            contactRestrictionDetails().copy(
-              restrictionType = "BAN",
-              startDate = LocalDate.parse("2023-01-01"),
-              expiryDate = LocalDate.parse("2024-01-30"),
+            restrictions = listOf(
+              contactRestrictionDetails().copy(
+                restrictionType = "BAN",
+                startDate = LocalDate.parse("2023-01-01"),
+                expiryDate = LocalDate.parse("2024-01-30"),
+              ),
+              contactRestrictionDetails().copy(
+                restrictionType = "BAN",
+                startDate = LocalDate.parse("2024-01-31"),
+                expiryDate = null,
+              ),
+              contactRestrictionDetails().copy(
+                restrictionType = "CCTV",
+                startDate = LocalDate.parse("2024-01-31"),
+                expiryDate = null,
+              ),
             ),
-            contactRestrictionDetails().copy(
-              restrictionType = "BAN",
-              startDate = LocalDate.parse("2024-01-31"),
-              expiryDate = null,
-            ),
-            contactRestrictionDetails().copy(
-              restrictionType = "CCTV",
-              startDate = LocalDate.parse("2024-01-31"),
-              expiryDate = null,
-            ),
-          ),
-          dpsPrisonerContacts = listOf(
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1234KT",
-              relationshipToPrisonerCode = "BRO",
-              isRelationshipActive = false,
-            ),
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1234KT",
-              relationshipToPrisonerCode = "FRI",
-              isRelationshipActive = true,
-            ),
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1000KT",
-              relationshipToPrisonerCode = "GIR",
-              isRelationshipActive = true,
+            relationships = listOf(
+              linkedPrisonerDetails().copy(
+                prisonerNumber = "A1234KT",
+                relationshipType = "BRO",
+                active = false,
+              ),
+              linkedPrisonerDetails().copy(
+                prisonerNumber = "A1234KT",
+                relationshipType = "FRI",
+                active = true,
+              ),
+              linkedPrisonerDetails().copy(
+                prisonerNumber = "A1000KT",
+                relationshipType = "GIR",
+                active = true,
+              ),
             ),
           ),
         )
@@ -965,7 +961,7 @@ internal class ContactPersonReconciliationServiceTest {
             phoneNumbers = listOf(personPhoneNumber("01145555555")),
           ),
           dpsContact.copy(
-            phoneNumbers = listOf(contactPhoneDetails("01146666666")),
+            phones = listOf(contactPhoneDetails("01146666666")),
           ),
         )
       }
@@ -1001,7 +997,7 @@ internal class ContactPersonReconciliationServiceTest {
             emailAddresses = listOf(personEmailAddress("john@gmail.com")),
           ),
           dpsContact.copy(
-            emailAddresses = listOf(contactEmailDetails("bob@justice.gov.uk")),
+            emails = listOf(contactEmailDetails("bob@justice.gov.uk")),
           ),
         )
       }
@@ -1113,14 +1109,7 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsPrisonerContacts = listOf(
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1234KT",
-              relationshipToPrisonerCode = "BRO",
-              isRelationshipActive = true,
-            ),
-          ),
+          dpsContact.copy(relationships = listOf(linkedPrisonerDetails().copy(prisonerNumber = "A1234KT", relationshipType = "BRO", active = true))),
         )
       }
 
@@ -1158,13 +1147,7 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsPrisonerContacts = listOf(
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1234KT",
-              relationshipToPrisonerCode = "BRO",
-            ),
-          ),
+          dpsContact.copy(relationships = listOf(linkedPrisonerDetails().copy(prisonerNumber = "A1234KT", relationshipType = "BRO"))),
         )
       }
 
@@ -1205,13 +1188,7 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsPrisonerContacts = listOf(
-            linkedPrisonerDetails().copy(
-              prisonerNumber = "A1234KT",
-              relationshipToPrisonerCode = "BRO",
-            ),
-          ),
+          dpsContact.copy(relationships = listOf(linkedPrisonerDetails().copy(prisonerNumber = "A1234KT", relationshipType = "BRO"))),
         )
       }
 
@@ -1251,12 +1228,13 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsContactRestrictions = listOf(
-            contactRestrictionDetails().copy(
-              restrictionType = "BAN",
-              startDate = LocalDate.parse("2023-01-01"),
-              expiryDate = null,
+          dpsContact.copy(
+            restrictions = listOf(
+              contactRestrictionDetails().copy(
+                restrictionType = "BAN",
+                startDate = LocalDate.parse("2023-01-01"),
+                expiryDate = null,
+              ),
             ),
           ),
         )
@@ -1297,11 +1275,12 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsContactRestrictions = listOf(
-            contactRestrictionDetails().copy(
-              restrictionType = "CCTV",
-              startDate = LocalDate.parse("2023-01-01"),
+          dpsContact.copy(
+            restrictions = listOf(
+              contactRestrictionDetails().copy(
+                restrictionType = "CCTV",
+                startDate = LocalDate.parse("2023-01-01"),
+              ),
             ),
           ),
         )
@@ -1342,15 +1321,16 @@ internal class ContactPersonReconciliationServiceTest {
               ),
             ),
           ),
-          dpsContact,
-          dpsContactRestrictions = listOf(
-            contactRestrictionDetails().copy(
-              restrictionType = "BAN",
-              startDate = LocalDate.parse("2023-01-01"),
-            ),
-            contactRestrictionDetails().copy(
-              restrictionType = "CCTV",
-              startDate = LocalDate.parse("2023-01-01"),
+          dpsContact.copy(
+            restrictions = listOf(
+              contactRestrictionDetails().copy(
+                restrictionType = "BAN",
+                startDate = LocalDate.parse("2023-01-01"),
+              ),
+              contactRestrictionDetails().copy(
+                restrictionType = "CCTV",
+                startDate = LocalDate.parse("2023-01-01"),
+              ),
             ),
           ),
         )
