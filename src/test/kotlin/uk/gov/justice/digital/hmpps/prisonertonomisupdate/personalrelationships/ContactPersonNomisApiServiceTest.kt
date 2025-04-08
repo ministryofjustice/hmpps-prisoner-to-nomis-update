@@ -905,6 +905,45 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class GetPersonIdsTotals {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPersonIdsTotals()
+
+      apiService.getPersonIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPersonIdsTotals()
+
+      apiService.getPersonIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/persons/ids")),
+      )
+    }
+
+    @Test
+    fun `will request just a single page with 1 item`() = runTest {
+      mockServer.stubGetPersonIdsTotals()
+
+      apiService.getPersonIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("1"))
+          .withQueryParam("page", equalTo("0")),
+      )
+    }
+  }
+
+  @Nested
   inner class GetPerson {
     @Test
     fun `will pass oath2 token to service`() = runTest {

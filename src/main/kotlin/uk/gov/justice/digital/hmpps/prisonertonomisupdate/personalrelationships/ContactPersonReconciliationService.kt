@@ -71,6 +71,8 @@ class ContactPersonReconciliationService(
   }
 
   suspend fun generatePersonContactReconciliationReport(): List<MismatchPersonContacts> {
+    checkTotalsMatch()
+
     val mismatches: MutableList<MismatchPersonContacts> = mutableListOf()
     var lastPersonId = 0L
     var pageErrorCount = 0L
@@ -97,6 +99,29 @@ class ContactPersonReconciliationService(
     } while (result.notLastPage() && notManyPageErrors(pageErrorCount))
 
     return mismatches.toList()
+  }
+
+  private suspend fun checkTotalsMatch() = runCatching {
+    val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getPersonIdsTotals().totalElements } to
+        async { dpsApiService.getContactIds().page!!.totalElements!! }
+    }.awaitBoth()
+
+    if (nomisTotal != dpsTotal) {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PERSON_PREFIX-mismatch-totals",
+        mapOf(
+          "nomisTotal" to nomisTotal.toString(),
+          "dpsTotal" to dpsTotal.toString(),
+        ),
+      )
+    }
+  }.onFailure {
+    log.error("Unable to get person contacts totals", it)
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-mismatch-totals-error",
+      mapOf(),
+    )
   }
 
   private suspend fun BookingIdsWithLast.checkPageOfPrisonerContactsMatches(): PrisonerMismatchPageResult {
