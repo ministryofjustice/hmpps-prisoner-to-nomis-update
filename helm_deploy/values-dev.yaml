@@ -93,6 +93,9 @@ generic-prometheus-alerts:
     organisations:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_dlq"
+    visitbalance:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_dlq"
 
 cron:
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"

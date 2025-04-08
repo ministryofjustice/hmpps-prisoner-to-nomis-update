@@ -186,7 +186,14 @@ hmpps.sqs:
           "organisations-api.organisation-address-phone.updated",
           "organisations-api.organisation-address-phone.deleted"
         ]}
-
+    visitbalance:
+      queueName: hmpps_prisoner_to_nomis_visitbalance_queue
+      dlqName: hmpps_prisoner_to_nomis_visitbalance_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "prison-visit-allocation.updated"
+        ]}
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events

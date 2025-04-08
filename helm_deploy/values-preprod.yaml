@@ -48,6 +48,7 @@ generic-service:
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_DELETED: false
+    FEATURE_EVENT_PRISON-VISIT-ALLOCATION.UPDATED: false
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 40
 
 generic-prometheus-alerts:
@@ -95,6 +96,9 @@ generic-prometheus-alerts:
     organisations:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_organisations_dlq"
+    visitbalance:
+       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visitbalance_queue"
+       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visitbalance_dlq"
 
 cron:
   activitiesTidyMappingsSuspend: false

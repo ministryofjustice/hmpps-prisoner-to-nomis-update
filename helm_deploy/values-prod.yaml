@@ -67,7 +67,7 @@ generic-service:
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_DELETED: false
-
+    FEATURE_EVENT_PRISON-VISIT-ALLOCATION.UPDATED: false
 
 generic-prometheus-alerts:
   sqsNumberAlertQueueMappings:
@@ -112,3 +112,6 @@ generic-prometheus-alerts:
     organisations:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_organisations_dlq"
+    visitbalance:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_dlq"
