@@ -24,11 +24,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.pagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.util.Collections.singletonList
 
 class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
   @Autowired
@@ -185,6 +187,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
+      nomisApi.stubGetPersonIdsTotals(pagePersonIdResponse(2))
+      dpsApi.stubGetContactIds(contactIds = singletonList(1))
       nomisApi.stubGetPersonIds(lastPersonId = 0, response = PersonIdsWithLast(lastPersonId = 1, personIds = listOf(1, 2)))
       nomisApi.stubGetPerson(
         1,
@@ -231,6 +235,23 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         eq("contact-person-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "1")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output totals mismatch telemetry`() {
+      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-reconciliation-mismatch-totals"),
+        check {
+          assertThat(it).containsEntry("nomisTotal", "2")
+          assertThat(it).containsEntry("dpsTotal", "1")
         },
         isNull(),
       )

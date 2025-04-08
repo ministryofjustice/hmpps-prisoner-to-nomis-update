@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonEmailAddress
@@ -263,6 +264,11 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       identifiers = listOf(personIdentifier()),
       contacts = listOf(personContact()),
       restrictions = listOf(ContactRestriction(id = 2, type = CodeDescription(code = "BAN", description = "Banned"), enteredStaff = ContactRestrictionEnteredStaff(staffId = 1, username = "Q1251T"), effectiveDate = LocalDate.parse("2020-01-01"), audit = nomisAudit())),
+    )
+
+    fun pagePersonIdResponse(total: Long) = PagePersonIdResponse(
+      totalElements = total,
+      totalPages = 100,
     )
   }
 
@@ -640,6 +646,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(response)),
       ),
+    )
+  }
+
+  fun stubGetPersonIdsTotals(response: PagePersonIdResponse = pagePersonIdResponse(100)) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/persons/ids"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
     )
   }
 
