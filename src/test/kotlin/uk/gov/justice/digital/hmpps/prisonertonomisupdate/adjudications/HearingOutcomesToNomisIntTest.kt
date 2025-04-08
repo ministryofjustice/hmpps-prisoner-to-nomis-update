@@ -479,8 +479,8 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will not attempt to delete a hearing in NOMIS`() {
         await untilAsserted {
-          verify(telemetryClient, times(3)).trackEvent(
-            eq("hearing-result-deleted-failed"),
+          verify(telemetryClient).trackEvent(
+            eq("hearing-result-deleted-skipped"),
             org.mockito.kotlin.check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
@@ -586,6 +586,39 @@ class HearingOutcomesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to delete the hearing result`() {
         waitForEventProcessingToBeComplete()
         NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID/charge/$CHARGE_SEQUENCE/result")))
+      }
+    }
+
+    @Nested
+    inner class WhenHearingHasAlreadyBeenDeleted {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(
+          chargeNumber = CHARGE_NUMBER,
+          offenderNo = OFFENDER_NO,
+        )
+        publishDeleteHearingAdjournedDomainEvent().also { waitForEventProcessingToBeComplete() }
+      }
+
+      @Test
+      fun `will create skipped telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("hearing-result-deleted-skipped"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the hearing result`() {
+        NomisApiExtension.nomisApi.verify(0, WireMock.deleteRequestedFor(WireMock.anyUrl()))
       }
     }
   }
