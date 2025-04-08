@@ -528,55 +528,58 @@ class AdjudicationsService(
             telemetryMap["adjudicationNumber"] = it.adjudicationNumber.toString()
           }
       val hearingMapping =
-        hearingMappingService.getMappingGivenDpsHearingId(eventData.hearingId)
-          .also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
+        hearingMappingService.getMappingGivenDpsHearingIdOrNull(eventData.hearingId)
+          ?.also { telemetryMap["nomisHearingId"] = it.nomisHearingId.toString() }
 
-      val outcome = adjudicationsApiService.getCharge(
-        eventData.chargeNumber,
-        eventData.prisonId,
-      ).reportedAdjudication.outcomes.lastOrNull()
+      if (hearingMapping != null) {
+        val outcome = adjudicationsApiService.getCharge(
+          eventData.chargeNumber,
+          eventData.prisonId,
+        ).reportedAdjudication.outcomes.lastOrNull()
 
-      // If no adjudication outcome exists - delete on NOMIS
-      // if outcome exists - update NOMIS with current state
-      outcome?.getOutcome()?.let {
-        nomisApiService.upsertHearingResult(
-          adjudicationNumber = adjudicationMapping.adjudicationNumber,
-          hearingId = hearingMapping.nomisHearingId,
-          chargeSequence = adjudicationMapping.chargeSequence,
-          request = outcome.toNomisCreateHearingResult(),
-        )
-      } ?: let {
-        nomisApiService.deleteHearingResult(
-          adjudicationNumber = adjudicationMapping.adjudicationNumber,
-          hearingId = hearingMapping.nomisHearingId,
-          chargeSequence = adjudicationMapping.chargeSequence,
-        ).also {
-          telemetryMap["punishmentsDeletedCount"] = it.awardsDeleted.size.toString()
+        // If no adjudication outcome exists - delete on NOMIS
+        // if outcome exists - update NOMIS with current state
+        outcome?.getOutcome()?.let {
+          nomisApiService.upsertHearingResult(
+            adjudicationNumber = adjudicationMapping.adjudicationNumber,
+            hearingId = hearingMapping.nomisHearingId,
+            chargeSequence = adjudicationMapping.chargeSequence,
+            request = outcome.toNomisCreateHearingResult(),
+          )
+        } ?: let {
+          nomisApiService.deleteHearingResult(
+            adjudicationNumber = adjudicationMapping.adjudicationNumber,
+            hearingId = hearingMapping.nomisHearingId,
+            chargeSequence = adjudicationMapping.chargeSequence,
+          ).also {
+            telemetryMap["punishmentsDeletedCount"] = it.awardsDeleted.size.toString()
 
-          AdjudicationPunishmentBatchUpdateMappingDto(
-            punishmentsToCreate = emptyList(),
-            punishmentsToDelete = it.awardsDeleted.map {
-              AdjudicationPunishmentNomisIdDto(
-                nomisBookingId = it.bookingId,
-                nomisSanctionSequence = it.sanctionSequence,
+            AdjudicationPunishmentBatchUpdateMappingDto(
+              punishmentsToCreate = emptyList(),
+              punishmentsToDelete = it.awardsDeleted.map {
+                AdjudicationPunishmentNomisIdDto(
+                  nomisBookingId = it.bookingId,
+                  nomisSanctionSequence = it.sanctionSequence,
+                )
+              },
+            ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
+              // if the removal of the outcome has had the side effect of removing punishments - we delete the punishment mappings
+              createMapping(
+                mapping = this,
+                telemetryClient = telemetryClient,
+                retryQueueService = adjudicationRetryQueueService,
+                eventTelemetry = telemetryMap,
+                name = EntityType.PUNISHMENT_DELETE.displayName,
+                postMapping = { punishmentsMappingService.updateMapping(it) },
+                log = log,
               )
-            },
-          ).takeIf { it.hasAnyMappingsToUpdate() }?.run {
-            // if the removal of the outcome has had the side effect of removing punishments - we delete the punishment mappings
-            createMapping(
-              mapping = this,
-              telemetryClient = telemetryClient,
-              retryQueueService = adjudicationRetryQueueService,
-              eventTelemetry = telemetryMap,
-              name = EntityType.PUNISHMENT_DELETE.displayName,
-              postMapping = { punishmentsMappingService.updateMapping(it) },
-              log = log,
-            )
+            }
           }
         }
+        telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
+      } else {
+        telemetryClient.trackEvent("hearing-result-deleted-skipped", telemetryMap, null)
       }
-    }.onSuccess {
-      telemetryClient.trackEvent("hearing-result-deleted-success", telemetryMap, null)
     }.onFailure { e ->
       telemetryClient.trackEvent("hearing-result-deleted-failed", telemetryMap, null)
       throw e
