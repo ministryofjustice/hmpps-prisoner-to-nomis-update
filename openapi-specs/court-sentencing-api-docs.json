@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-04.5678.8b9cd64"
+    "version" : "2025-04-07.5706.8333fd3"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4646,7 +4646,7 @@
             "$ref" : "#/components/schemas/RecallType"
           },
           "inputSentenceType" : {
-            "$ref" : "#/components/schemas/SentenceType"
+            "$ref" : "#/components/schemas/SentenceTypeDetail"
           },
           "nomisActive" : {
             "type" : "boolean"
@@ -4717,6 +4717,64 @@
             "enum" : [ "NONE", "SECTION250", "SDS" ]
           }
         }
+      },
+      "SentenceTypeDetail" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string"
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
       },
       "SentenceTypePeriodDefinitions" : {
         "type" : "object",
