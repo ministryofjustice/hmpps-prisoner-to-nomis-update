@@ -290,6 +290,16 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    visitbalance:
+        queueName: "visitbalance-${random.uuid}"
+        dlqName: "visitbalance-dlq-${random.uuid}"
+        subscribeTopicId: domainevents
+        subscribeFilter: >-
+          { "eventType":[
+            "prison-visit-allocation.updated"          
+          ]}
+        dlqMaxReceiveCount: 3
+        visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

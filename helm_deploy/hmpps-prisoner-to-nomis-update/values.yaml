@@ -203,6 +203,10 @@ generic-service:
       HMPPS_SQS_QUEUES_ORGANISATIONS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-organisations-dlq:
       HMPPS_SQS_QUEUES_ORGANISATIONS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-visitbalance:
+      HMPPS_SQS_QUEUES_VISITBALANCE_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-visitbalance-dlq:
+      HMPPS_SQS_QUEUES_VISITBALANCE_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
