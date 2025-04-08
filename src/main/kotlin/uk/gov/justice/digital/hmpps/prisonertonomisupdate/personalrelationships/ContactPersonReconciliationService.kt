@@ -17,16 +17,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.LinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
-import java.util.SortedSet
-import kotlin.collections.plus
+import java.util.*
 
 @Service
 class ContactPersonReconciliationService(
@@ -187,15 +186,8 @@ class ContactPersonReconciliationService(
         async { dpsApiService.getContactDetails(personId) }
     }.awaitBoth()
 
-    val (dpsPrisonerContacts, dpsContactRestrictions) = dpsContact?.let {
-      withContext(Dispatchers.Unconfined) {
-        async { dpsApiService.getLinkedPrisonerContacts(personId).content ?: emptyList() } to
-          async { dpsApiService.getContactRestrictions(personId) }
-      }.awaitBoth()
-    } ?: Pair(emptyList(), emptyList())
-
     val nomisPersonSummary = nomisPerson.asSummary()
-    val dpsPersonSummary = dpsContact?.asSummary(dpsPrisonerContacts, dpsContactRestrictions)
+    val dpsPersonSummary = dpsContact?.asSummary()
     return checkPersonMatch(
       personId = personId,
       nomisPersonSummary = nomisPersonSummary,
@@ -397,22 +389,19 @@ class ContactPersonReconciliationService(
     prisonerContacts = this.contacts.filter { it.prisoner.bookingSequence == 1L }.map { it.asSummary() }.toSortedSet(),
     restrictions = this.restrictions.map { it.asSummary() }.toSortedSet(),
   )
-  private fun ContactDetails.asSummary(
-    dpsPrisonerContacts: List<LinkedPrisonerDetails>,
-    dpsContactRestrictions: List<ContactRestrictionDetails>,
-  ) = PersonSummary(
-    personId = this.id,
+  private fun SyncContactReconcile.asSummary() = PersonSummary(
+    personId = this.contactId,
     firstName = this.firstName,
     lastName = this.lastName,
     dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
-    phoneNumbers = this.phoneNumbers.map { it.phoneNumber }.toSortedSet(),
-    emailAddresses = this.emailAddresses.map { it.emailAddress }.toSortedSet(),
-    addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
-    employmentOrganisations = this.employments.map { it.employer.organisationId }.toSortedSet(),
+    phoneNumbers = this.phones.map { it.phoneNumber }.toSortedSet(),
+    emailAddresses = this.emails.map { it.emailAddress }.toSortedSet(),
+    addressPhoneNumbers = this.addresses.map { it.addressPhones.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
+    employmentOrganisations = this.employments.map { it.organisationId }.toSortedSet(),
     identifiers = this.identities.map { it.identityValue.toString() }.toSortedSet(),
-    prisonerContacts = dpsPrisonerContacts.map { it.asSummary() }.toSortedSet(),
-    restrictions = dpsContactRestrictions.map { it.asSummary() }.toSortedSet(),
+    prisonerContacts = this.relationships.map { it.asSummary() }.toSortedSet(),
+    restrictions = this.restrictions.map { it.asSummary() }.toSortedSet(),
   )
 
   // There is no reason why we have ever registered a visitor born before 1800
@@ -426,10 +415,10 @@ class ContactPersonReconciliationService(
     active = this.active,
   )
 
-  private fun LinkedPrisonerDetails.asSummary() = PrisonerRelationship(
+  private fun ReconcileRelationship.asSummary() = PrisonerRelationship(
     offenderNo = this.prisonerNumber,
-    relationshipType = this.relationshipToPrisonerCode,
-    active = this.isRelationshipActive,
+    relationshipType = this.relationshipType,
+    active = this.active,
   )
 
   private fun ContactRestriction.asSummary() = PersonContactRestrictionSummary(
@@ -438,7 +427,7 @@ class ContactPersonReconciliationService(
     expiryDate = this.expiryDate,
   )
 
-  private fun ContactRestrictionDetails.asSummary() = PersonContactRestrictionSummary(
+  private fun ReconcileRestriction.asSummary() = PersonContactRestrictionSummary(
     restrictionType = this.restrictionType,
     startDate = this.startDate,
     expiryDate = this.expiryDate,

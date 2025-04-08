@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
@@ -201,9 +201,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         ),
       )
       nomisApi.stubGetPerson(2, contactPerson(personId = 2).copy(firstName = "JANE", lastName = "SMITH"))
-      dpsApi.stubGetContactDetails(1, contactDetails(contactId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
-      dpsApi.stubGetContactRestrictions(1, emptyList())
-      dpsApi.stubGetLinkedPrisonerContacts(1, emptyList())
+      dpsApi.stubGetContactDetails(1, contactReconcileDetails(contactId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
       dpsApi.stubGetContactDetails(2, null)
     }
 
@@ -259,9 +257,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
           restrictions = emptyList(),
         ),
       )
-      dpsApi.stubGetContactDetails(1, contactDetails(contactId = 1).copy(firstName = "JOHN", lastName = "KOFI"))
-      dpsApi.stubGetContactRestrictions(1, emptyList())
-      dpsApi.stubGetLinkedPrisonerContacts(1, emptyList())
+      dpsApi.stubGetContactDetails(1, contactReconcileDetails(contactId = 1).copy(firstName = "JOHN", lastName = "KOFI"))
     }
 
     @Nested

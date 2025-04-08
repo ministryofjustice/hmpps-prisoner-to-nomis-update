@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -387,7 +387,7 @@ class ContactPersonDpsApiServiceTest {
   }
 
   @Nested
-  inner class GetContactDetails {
+  inner class GetContactReconcileDetails {
     @Test
     internal fun `will pass oath2 token to contact endpoint`() = runTest {
       dpsContactPersonServer.stubGetContactDetails(contactId = 1234567)
@@ -407,7 +407,7 @@ class ContactPersonDpsApiServiceTest {
       apiService.getContactDetails(contactId = 1234567)
 
       dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/contact/1234567")),
+        getRequestedFor(urlPathEqualTo("/sync/contact/1234567/reconcile")),
       )
     }
 
@@ -420,74 +420,9 @@ class ContactPersonDpsApiServiceTest {
 
     @Test
     fun `200 returns contact`() = runTest {
-      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567, response = contactDetails())
+      dpsContactPersonServer.stubGetContactDetails(contactId = 1234567, response = contactReconcileDetails())
 
       assertThat(apiService.getContactDetails(contactId = 1234567)).isNotNull()
-    }
-  }
-
-  @Nested
-  inner class GetContactRestrictions {
-
-    @Test
-    fun `will pass oath2 token to service`() = runTest {
-      dpsContactPersonServer.stubGetContactRestrictions(contactId = 1234)
-
-      apiService.getContactRestrictions(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the get endpoint`() = runTest {
-      dpsContactPersonServer.stubGetContactRestrictions(contactId = 1234)
-
-      apiService.getContactRestrictions(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/contact/1234/restriction")),
-      )
-    }
-  }
-
-  @Nested
-  inner class GetLinkedPrisonerContacts {
-
-    @Test
-    fun `will pass oath2 token to service`() = runTest {
-      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
-
-      apiService.getLinkedPrisonerContacts(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the get endpoint`() = runTest {
-      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
-
-      apiService.getLinkedPrisonerContacts(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/contact/1234/linked-prisoners")),
-      )
-    }
-
-    @Test
-    fun `will request a larger enough page size for person with most contacts`() = runTest {
-      dpsContactPersonServer.stubGetLinkedPrisonerContacts(contactId = 1234)
-
-      apiService.getLinkedPrisonerContacts(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(anyUrl())
-          .withQueryParam("size", equalTo("8000"))
-          .withQueryParam("page", equalTo("0")),
-      )
     }
   }
 }

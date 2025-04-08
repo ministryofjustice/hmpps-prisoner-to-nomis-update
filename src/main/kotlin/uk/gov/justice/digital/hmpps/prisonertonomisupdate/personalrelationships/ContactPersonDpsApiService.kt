@@ -7,9 +7,6 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelLinkedPrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
@@ -19,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
@@ -96,18 +94,8 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
-  suspend fun getContactDetails(contactId: Long): ContactDetails? = webClient.get()
-    .uri("/contact/{contactId}", contactId)
+  suspend fun getContactDetails(contactId: Long): SyncContactReconcile? = webClient.get()
+    .uri("/sync/contact/{contactId}/reconcile", contactId)
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
-
-  suspend fun getContactRestrictions(contactId: Long): List<ContactRestrictionDetails> = webClient.get()
-    .uri("/contact/{contactId}/restriction", contactId)
-    .retrieve()
-    .awaitBodyWithRetry(backoffSpec)
-
-  suspend fun getLinkedPrisonerContacts(contactId: Long): PagedModelLinkedPrisonerDetails = webClient.get()
-    .uri("/contact/{contactId}/linked-prisoners?page=0&size=8000", contactId)
-    .retrieve()
-    .awaitBodyWithRetry(backoffSpec)
 }
