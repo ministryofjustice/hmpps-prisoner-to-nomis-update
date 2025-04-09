@@ -455,13 +455,13 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetContactIds(contactIds: List<Long> = emptyList()) {
+  fun stubGetContactIds(contactIds: List<Long> = emptyList(), totalElements: Long = contactIds.size.toLong()) {
     stubFor(
       get(urlPathEqualTo("/sync/contact/reconcile")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = contactIds.size.toLong()), content = contactIds.map { SyncContactId(it) }))),
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = totalElements), content = contactIds.map { SyncContactId(it) }))),
       ),
     )
   }

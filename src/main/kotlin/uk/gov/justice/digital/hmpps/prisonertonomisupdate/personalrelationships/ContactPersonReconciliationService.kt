@@ -1,9 +1,18 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.channels.toList
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -26,7 +35,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 import java.util.*
+import kotlin.collections.plusAssign
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @Service
 class ContactPersonReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -34,7 +45,7 @@ class ContactPersonReconciliationService(
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
   @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val prisonerContactPageSize: Long = 10,
-  @Value("\${reports.contact-person.person-contact.reconciliation.page-size:10}") private val personContactPageSize: Long = 10,
+  @Value("\${reports.contact-person.person-contact.reconciliation.page-size:10}") private val personContactPageSize: Int = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -74,7 +85,26 @@ class ContactPersonReconciliationService(
   suspend fun generatePersonContactReconciliationReport(): List<MismatchPersonContacts> {
     checkTotalsMatch()
 
-    val mismatches: MutableList<MismatchPersonContacts> = mutableListOf()
+    return coroutineScope {
+      val mismatchesChannel = Channel<MismatchPersonContacts>(capacity = UNLIMITED)
+      val channel = producePersonIds()
+      val jobs = (1L..personContactPageSize).map { launchCheckPersonMatcher(channel, mismatchesChannel) }
+      launch {
+        // when all jobs finished (no more contacts to process) we can shut down the mismatch channel and return the results
+        jobs.forEach { it.join() }
+        mismatchesChannel.close()
+      }
+      mismatchesChannel.toList()
+    }
+  }
+
+  fun CoroutineScope.launchCheckPersonMatcher(channel: ReceiveChannel<Long>, mismatchesChannel: Channel<MismatchPersonContacts>) = launch {
+    for (personId in channel) {
+      checkPersonContactMatch(personId)?.also { mismatchesChannel.send(it) }
+    }
+  }
+
+  fun CoroutineScope.producePersonIds() = produce<Long>(capacity = personContactPageSize * 2) {
     var lastPersonId = 0L
     var pageErrorCount = 0L
 
@@ -84,10 +114,10 @@ class ContactPersonReconciliationService(
       when (result) {
         is PersonSuccessPageResult -> {
           if (result.value.personIds.isNotEmpty()) {
-            result.value.checkPageOfPersonContactsMatches().also {
-              mismatches += it.mismatches
-              lastPersonId = it.lastPersonId
+            result.value.personIds.forEach {
+              send(it)
             }
+            lastPersonId = result.value.lastPersonId
           }
         }
 
@@ -99,7 +129,8 @@ class ContactPersonReconciliationService(
       }
     } while (result.notLastPage() && notManyPageErrors(pageErrorCount))
 
-    return mismatches.toList()
+    // no more person ids so signal a close of the channel
+    channel.close()
   }
 
   private suspend fun checkTotalsMatch() = runCatching {
