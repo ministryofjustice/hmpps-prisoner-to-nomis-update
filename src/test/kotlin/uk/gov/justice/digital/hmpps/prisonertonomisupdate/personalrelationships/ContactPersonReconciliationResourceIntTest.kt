@@ -187,26 +187,40 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetPersonIdsTotals(pagePersonIdResponse(2))
-      dpsApi.stubGetContactIds(contactIds = singletonList(1))
-      nomisApi.stubGetPersonIds(lastPersonId = 0, response = PersonIdsWithLast(lastPersonId = 1, personIds = listOf(1, 2)))
-      nomisApi.stubGetPerson(
-        1,
-        contactPerson(personId = 1).copy(
-          firstName = "KWEKU",
-          lastName = "KOFI",
-          phoneNumbers = emptyList(),
-          employments = emptyList(),
-          identifiers = emptyList(),
-          addresses = emptyList(),
-          emailAddresses = emptyList(),
-          contacts = emptyList(),
-          restrictions = emptyList(),
-        ),
-      )
-      nomisApi.stubGetPerson(2, contactPerson(personId = 2).copy(firstName = "JANE", lastName = "SMITH"))
-      dpsApi.stubGetContactDetails(1, contactReconcileDetails(contactId = 1).copy(firstName = "KWEKU", lastName = "KOFI"))
-      dpsApi.stubGetContactDetails(2, null)
+      nomisApi.stubGetPersonIdsTotals(pagePersonIdResponse(100))
+      dpsApi.stubGetContactIds(contactIds = singletonList(1), totalElements = 99)
+
+      // stub 10 pages of 10 personIds
+      (0L..90).step(10).forEach {
+        nomisApi.stubGetPersonIds(
+          lastPersonId = it,
+          response = PersonIdsWithLast(
+            lastPersonId = it + 10,
+            personIds = (it + 1..it + 10).toList(),
+          ),
+        )
+      }
+      nomisApi.stubGetPersonIds(lastPersonId = 100, response = PersonIdsWithLast(lastPersonId = 0, personIds = emptyList()))
+
+      // stub 99 matched contacts
+      (1L..99).forEach {
+        nomisApi.stubGetPerson(
+          it,
+          contactPerson(personId = it).copy(
+            firstName = "KWEKU", lastName = "KOFI", phoneNumbers = emptyList(),
+            employments = emptyList(),
+            identifiers = emptyList(),
+            addresses = emptyList(),
+            emailAddresses = emptyList(),
+            contacts = emptyList(),
+            restrictions = emptyList(),
+          ),
+        )
+        dpsApi.stubGetContactDetails(it, contactReconcileDetails(contactId = it).copy(firstName = "KWEKU", lastName = "KOFI"))
+      }
+      // final one mismatched
+      nomisApi.stubGetPerson(100, contactPerson(personId = 100).copy(firstName = "JANE", lastName = "SMITH"))
+      dpsApi.stubGetContactDetails(100, null)
     }
 
     @Test
@@ -250,8 +264,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
       verify(telemetryClient).trackEvent(
         eq("contact-person-reconciliation-mismatch-totals"),
         check {
-          assertThat(it).containsEntry("nomisTotal", "2")
-          assertThat(it).containsEntry("dpsTotal", "1")
+          assertThat(it).containsEntry("nomisTotal", "100")
+          assertThat(it).containsEntry("dpsTotal", "99")
         },
         isNull(),
       )
