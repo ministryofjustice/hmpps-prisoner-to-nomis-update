@@ -33,7 +33,8 @@ class ContactPersonReconciliationService(
   private val nomisApiService: ContactPersonNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
-  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val pageSize: Long = 10,
+  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val prisonerContactPageSize: Long = 10,
+  @Value("\${reports.contact-person.person-contact.reconciliation.page-size:10}") private val personContactPageSize: Long = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -61,7 +62,7 @@ class ContactPersonReconciliationService(
 
         is BookingErrorPageResult -> {
           // just skip this "page" by moving the bookingId pointer up
-          lastBookingId += pageSize.toInt()
+          lastBookingId += prisonerContactPageSize.toInt()
           pageErrorCount++
         }
       }
@@ -92,7 +93,7 @@ class ContactPersonReconciliationService(
 
         is PersonErrorPageResult -> {
           // just skip this "page" by moving the personId pointer up
-          lastPersonId += pageSize.toInt()
+          lastPersonId += personContactPageSize.toInt()
           pageErrorCount++
         }
       }
@@ -145,7 +146,7 @@ class ContactPersonReconciliationService(
   data class PrisonerMismatchPageResult(val mismatches: List<MismatchPrisonerContacts>, val lastBookingId: Long)
   data class PersonMismatchPageResult(val mismatches: List<MismatchPersonContacts>, val lastPersonId: Long)
 
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = pageSize.toInt()) }
+  private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerContactPageSize.toInt()) }
     .onFailure {
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
@@ -157,9 +158,9 @@ class ContactPersonReconciliationService(
     }
     .map { BookingSuccessPageResult(it) }
     .getOrElse { BookingErrorPageResult(it) }
-    .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
+    .also { log.info("Page requested from booking: $lastBookingId, with $prisonerContactPageSize bookings") }
 
-  private suspend fun getNextPersonsForPage(lastPersonId: Long): PersonPageResult = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = pageSize.toInt()) }
+  private suspend fun getNextPersonsForPage(lastPersonId: Long): PersonPageResult = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = personContactPageSize.toInt()) }
     .onFailure {
       telemetryClient.trackEvent(
         "$TELEMETRY_PERSON_PREFIX-mismatch-page-error",
@@ -171,7 +172,7 @@ class ContactPersonReconciliationService(
     }
     .map { PersonSuccessPageResult(it) }
     .getOrElse { PersonErrorPageResult(it) }
-    .also { log.info("Page requested from person: $lastPersonId, with $pageSize person") }
+    .also { log.info("Page requested from person: $lastPersonId, with $personContactPageSize person") }
 
   suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerContacts? = runCatching {
     val (nomisContacts, dpsContacts) = withContext(Dispatchers.Unconfined) {
@@ -475,13 +476,13 @@ class ContactPersonReconciliationService(
 
   // Last page will be a non-null page with items less than page size
   private fun BookingPageResult.notLastPage(): Boolean = when (this) {
-    is BookingSuccessPageResult -> this.value.prisonerIds.size == pageSize.toInt()
+    is BookingSuccessPageResult -> this.value.prisonerIds.size == prisonerContactPageSize.toInt()
     is BookingErrorPageResult -> true
   }
 
   // Last page will be a non-null page with items less than page size
   private fun PersonPageResult.notLastPage(): Boolean = when (this) {
-    is PersonSuccessPageResult -> this.value.personIds.size == pageSize.toInt()
+    is PersonSuccessPageResult -> this.value.personIds.size == personContactPageSize.toInt()
     is PersonErrorPageResult -> true
   }
 
