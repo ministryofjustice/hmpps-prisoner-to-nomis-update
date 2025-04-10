@@ -61,7 +61,12 @@ class ContactPersonReconciliationResource(
         .onSuccess {
           telemetryClient.trackEvent(
             "$TELEMETRY_PERSON_PREFIX-report",
-            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asPersonMap(),
+            mapOf(
+              "contacts-count" to it.contactsChecked.toString(),
+              "pages-count" to it.pagesChecked.toString(),
+              "mismatch-count" to it.mismatches.size.toString(),
+              "success" to "true",
+            ) + it.mismatches.asPersonMap(),
           )
         }
         .onFailure {
