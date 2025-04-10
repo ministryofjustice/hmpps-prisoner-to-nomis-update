@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 import java.util.*
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.collections.plusAssign
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -82,29 +83,40 @@ class ContactPersonReconciliationService(
     return mismatches.toList()
   }
 
-  suspend fun generatePersonContactReconciliationReport(): List<MismatchPersonContacts> {
+  suspend fun generatePersonContactReconciliationReport(): PersonContactsReconciliationResult {
+    val contactsCount = AtomicInteger(0)
+    val pagesCount = AtomicInteger(0)
     checkTotalsMatch()
 
     return coroutineScope {
       val mismatchesChannel = Channel<MismatchPersonContacts>(capacity = UNLIMITED)
-      val channel = producePersonIds()
-      val jobs = (1L..personContactPageSize).map { launchCheckPersonMatcher(channel, mismatchesChannel) }
+      val channel = producePersonIds(pagesCount)
+      val jobs = (1L..personContactPageSize).map { launchCheckPersonMatcher(channel, mismatchesChannel, contactsCount) }
       launch {
         // when all jobs finished (no more contacts to process) we can shut down the mismatch channel and return the results
         jobs.forEach { it.join() }
         mismatchesChannel.close()
       }
-      mismatchesChannel.toList()
+      PersonContactsReconciliationResult(
+        mismatches = mismatchesChannel.toList(),
+        contactsChecked = contactsCount.get(),
+        pagesChecked = pagesCount.get(),
+      )
     }
   }
 
-  fun CoroutineScope.launchCheckPersonMatcher(channel: ReceiveChannel<Long>, mismatchesChannel: Channel<MismatchPersonContacts>) = launch {
+  fun CoroutineScope.launchCheckPersonMatcher(
+    channel: ReceiveChannel<Long>,
+    mismatchesChannel: Channel<MismatchPersonContacts>,
+    contactsCount: AtomicInteger,
+  ) = launch {
     for (personId in channel) {
       checkPersonContactMatch(personId)?.also { mismatchesChannel.send(it) }
+      contactsCount.incrementAndGet()
     }
   }
 
-  fun CoroutineScope.producePersonIds() = produce<Long>(capacity = personContactPageSize * 2) {
+  fun CoroutineScope.producePersonIds(pagesCount: AtomicInteger) = produce<Long>(capacity = personContactPageSize * 2) {
     var lastPersonId = 0L
     var pageErrorCount = 0L
 
@@ -114,6 +126,7 @@ class ContactPersonReconciliationService(
       when (result) {
         is PersonSuccessPageResult -> {
           if (result.value.personIds.isNotEmpty()) {
+            pagesCount.incrementAndGet()
             result.value.personIds.forEach {
               send(it)
             }
@@ -164,18 +177,9 @@ class ContactPersonReconciliationService(
     return PrisonerMismatchPageResult(mismatches, prisonerIds.last().bookingId)
   }
 
-  private suspend fun PersonIdsWithLast.checkPageOfPersonContactsMatches(): PersonMismatchPageResult {
-    val personIds = this.personIds
-    val mismatches = withContext(Dispatchers.Unconfined) {
-      personIds.map { async { checkPersonContactMatch(it) } }
-    }.awaitAll().filterNotNull()
-    return PersonMismatchPageResult(mismatches, lastPersonId = personIds.last())
-  }
-
   private fun notManyPageErrors(errors: Long): Boolean = errors < 30
 
   data class PrisonerMismatchPageResult(val mismatches: List<MismatchPrisonerContacts>, val lastBookingId: Long)
-  data class PersonMismatchPageResult(val mismatches: List<MismatchPersonContacts>, val lastPersonId: Long)
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerContactPageSize.toInt()) }
     .onFailure {
@@ -578,4 +582,10 @@ data class MismatchPersonContacts(
   val personId: Long,
   val dpsSummary: PersonSummary?,
   val nomisSummary: PersonSummary?,
+)
+
+data class PersonContactsReconciliationResult(
+  val mismatches: List<MismatchPersonContacts>,
+  val contactsChecked: Int,
+  val pagesChecked: Int,
 )

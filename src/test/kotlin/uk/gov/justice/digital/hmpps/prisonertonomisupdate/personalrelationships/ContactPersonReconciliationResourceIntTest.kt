@@ -249,6 +249,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         eq("contact-person-reconciliation-report"),
         check {
           assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("pages-count", "10")
+          assertThat(it).containsEntry("contacts-count", "100")
         },
         isNull(),
       )
