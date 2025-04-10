@@ -1,10 +1,18 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails
 
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
+import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
+import kotlinx.coroutines.channels.ReceiveChannel
+import kotlinx.coroutines.channels.produce
+import kotlinx.coroutines.channels.toList
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -12,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerNumberOfChildrenResponse
@@ -19,9 +28,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileType.MARITAL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
+typealias Mismatches = List<String>
+
+@OptIn(ExperimentalCoroutinesApi::class)
 @Service
 class ContactPersonProfileDetailsReconciliationService(
   @Autowired private val nomisIdsApi: NomisApiService,
@@ -36,26 +47,47 @@ class ContactPersonProfileDetailsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<String> = if (reconciliationTurnedOn) {
-    activePrisonersCount
-      .asPages(pageSize)
-      .flatMap { page ->
-        val activePrisoners = getActivePrisonersForPage(page)
-
-        withContext(Dispatchers.Unconfined) {
-          activePrisoners.map { async { checkPrisoner(it.offenderNo) } }
-        }.awaitAll().filterNotNull()
-      }
+  suspend fun generateReconciliationReport(activePrisonersCount: Long): Mismatches = if (reconciliationTurnedOn) {
+    coroutineScope {
+      mismatchesChannel().also { mismatches ->
+        producePrisonerIds(activePrisonersCount)
+          .also { ids -> checkPrisoners(ids, mismatches) }
+      }.waitForMismatches()
+    }
   } else {
     emptyList()
   }
 
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisIdsApi.getActivePrisoners(page.first, page.second).content }
-    .onFailure {
-      log.error("Failed to retrieve active prisoners for page $page", it)
-      telemetryClient.trackEvent("$TELEMETRY_PREFIX-page-error", mapOf("page" to page.first.toString(), "error" to (it.message ?: "unknown error")))
-    }
+  private fun mismatchesChannel() = Channel<String>(capacity = UNLIMITED)
+
+  private suspend fun Channel<String>.waitForMismatches(): Mismatches = close().let { toList() }
+
+  fun CoroutineScope.producePrisonerIds(activePrisonersCount: Long) = produce<PrisonerIds>(capacity = pageSize.toInt() * 2) {
+    (0..activePrisonersCount / pageSize)
+      .forEach { page ->
+        getActivePrisonersForPage(page)
+          .forEach { id -> send(id) }
+      }
+      .also { channel.close() }
+  }
+
+  private suspend fun getActivePrisonersForPage(page: Long) = runCatching {
+    nomisIdsApi.getActivePrisoners(page, pageSize).content
+  }.onFailure {
+    log.error("Failed to retrieve active prisoners for page $page", it)
+    telemetryClient.trackEvent("$TELEMETRY_PREFIX-page-error", mapOf("page" to page.toString(), "error" to (it.message ?: "unknown error")))
+  }
     .getOrElse { emptyList() }
+
+  suspend fun CoroutineScope.checkPrisoners(
+    ids: ReceiveChannel<PrisonerIds>,
+    mismatches: Channel<String>,
+  ) = launch {
+    for (id in ids) {
+      checkPrisoner(id.offenderNo)
+        ?.also { mismatches.send(it) }
+    }
+  }.join()
 
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
