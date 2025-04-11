@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-04.271.d632516"
+    "version" : "2025-04-10.276.b56ae65"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -136,49 +136,6 @@
           },
           "403" : {
             "description" : "Incorrect permissions to sync prisoner VO / PVO information.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/visits/allocation/prisoner/sync/booking-move" : {
-      "post" : {
-        "tags" : [ "nomis-controller" ],
-        "summary" : "Endpoint to sync booking changes made to a prisoner, which effect their VO / PVO balances from NOMIS to DPS.",
-        "description" : "Takes a pair of prisoners who have been effected by a booking being moved between them, and their new balances.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
-        "operationId" : "syncPrisonerBookingMoveVisitOrderChanges",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/VisitAllocationPrisonerSyncBookingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Prisoner information has been synced."
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Incorrect permissions to sync prisoner booking VO / PVO information.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -474,49 +431,6 @@
           }
         },
         "required" : [ "adjustmentReasonCode", "changeLogSource", "createdDate", "prisonerId" ]
-      },
-      "VisitAllocationPrisonerSyncBookingDto" : {
-        "type" : "object",
-        "description" : "DTO to provide information of 2 prisoners effected by a booking moved between them in NOMIS",
-        "properties" : {
-          "firstPrisonerId" : {
-            "type" : "string",
-            "description" : "nomsNumber of the first prisoner",
-            "example" : "AA123456",
-            "minLength" : 1
-          },
-          "firstPrisonerVoBalance" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The new VO balance of the first prisoner (can be negative)",
-            "example" : 5
-          },
-          "firstPrisonerPvoBalance" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The new PVO balance of the first prisoner (can be negative)",
-            "example" : 1
-          },
-          "secondPrisonerId" : {
-            "type" : "string",
-            "description" : "nomsNumber of the second prisoner",
-            "example" : "AA123456",
-            "minLength" : 1
-          },
-          "secondPrisonerVoBalance" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The new VO balance of the second prisoner (can be negative)",
-            "example" : 5
-          },
-          "secondPrisonerPvoBalance" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The new PVO balance of the second prisoner (can be negative)",
-            "example" : 1
-          }
-        },
-        "required" : [ "firstPrisonerId", "firstPrisonerPvoBalance", "firstPrisonerVoBalance", "secondPrisonerId", "secondPrisonerPvoBalance", "secondPrisonerVoBalance" ]
       },
       "VisitAllocationPrisonerMigrationDto" : {
         "type" : "object",
