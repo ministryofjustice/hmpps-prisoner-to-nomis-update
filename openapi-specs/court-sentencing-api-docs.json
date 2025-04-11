@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-07.5706.8333fd3"
+    "version" : "2025-04-10.5756.75111d7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3206,6 +3206,9 @@
           },
           "postedDate" : {
             "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
           }
         },
         "required" : [ "postedDate" ]
@@ -4425,7 +4428,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX" ]
           },
           "latestAppearance" : {
             "$ref" : "#/components/schemas/CourtAppearance"
