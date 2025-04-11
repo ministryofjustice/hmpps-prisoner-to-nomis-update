@@ -112,6 +112,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val personalRelationshipsQueueUrl by lazy { personalRelationshipsQueue.queueUrl }
   internal val personalRelationshipsDlqUrl by lazy { personalRelationshipsQueue.dlqUrl }
 
+  internal val visitBalanceQueue by lazy { hmppsQueueService.findByQueueId("visitbalance") as HmppsQueue }
+  internal val visitBalanceQueueClient by lazy { visitBalanceQueue.sqsClient }
+  internal val visitBalanceDlqClient by lazy { visitBalanceQueue.sqsDlqClient }
+  internal val visitBalanceQueueUrl by lazy { visitBalanceQueue.queueUrl }
+  internal val visitBalanceDlqUrl by lazy { visitBalanceQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -156,6 +162,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     personalRelationshipsQueueClient.purgeQueue(personalRelationshipsQueueUrl).get()
     personalRelationshipsDlqClient?.purgeQueue(personalRelationshipsDlqUrl)?.get()
+
+    visitBalanceQueueClient.purgeQueue(visitBalanceQueueUrl).get()
+    visitBalanceDlqClient?.purgeQueue(visitBalanceDlqUrl)?.get()
   }
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {

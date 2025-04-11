@@ -30,7 +30,7 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var visitBalanceNomisApi: VisitBalanceNomisApiMockServer
 
-  private val visitBalanceDpsApi = VisitBalanceDpsApiExtension.Companion.dpsVisitBalanceServer
+  private val visitBalanceDpsApi = VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
@@ -283,7 +283,7 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
   @DisplayName("GET /visit-balance/reconciliation/{prisonNumber}")
   @Nested
   inner class GenerateReconciliationReportForPrisoner {
-    private val prisonNumber = "A1234BC"
+    private val prisonNumber = "A1234KT"
 
     @Nested
     inner class Security {
@@ -347,7 +347,7 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `will return mismatch with nomis`() {
-        visitBalanceNomisApi.stubGetVisitBalance("A1234BC", visitBalance().copy(remainingVisitOrders = 4))
+        visitBalanceNomisApi.stubGetVisitBalance(prisonNumber, visitBalance().copy(remainingVisitOrders = 4))
 
         webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
           .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))

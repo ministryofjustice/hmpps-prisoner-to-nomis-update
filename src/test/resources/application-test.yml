@@ -298,7 +298,7 @@ hmpps.sqs:
           { "eventType":[
             "prison-visit-allocation.updated"          
           ]}
-        dlqMaxReceiveCount: 3
+        dlqMaxReceiveCount: 2
         visibilityTimeout: 120
   topics:
     domainevents:
