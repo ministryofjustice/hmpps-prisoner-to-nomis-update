@@ -1,7 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.mockito.kotlin.any
@@ -14,6 +16,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
@@ -112,6 +115,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val personalRelationshipsQueueUrl by lazy { personalRelationshipsQueue.queueUrl }
   internal val personalRelationshipsDlqUrl by lazy { personalRelationshipsQueue.dlqUrl }
 
+  internal val visitBalanceQueue by lazy { hmppsQueueService.findByQueueId("visitbalance") as HmppsQueue }
+  internal val visitBalanceQueueClient by lazy { visitBalanceQueue.sqsClient }
+  internal val visitBalanceDlqClient by lazy { visitBalanceQueue.sqsDlqClient }
+  internal val visitBalanceQueueUrl by lazy { visitBalanceQueue.queueUrl }
+  internal val visitBalanceDlqUrl by lazy { visitBalanceQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -156,6 +165,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     personalRelationshipsQueueClient.purgeQueue(personalRelationshipsQueueUrl).get()
     personalRelationshipsDlqClient?.purgeQueue(personalRelationshipsDlqUrl)?.get()
+
+    visitBalanceQueueClient.purgeQueue(visitBalanceQueueUrl).get()
+    visitBalanceDlqClient?.purgeQueue(visitBalanceDlqUrl)?.get()
   }
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {

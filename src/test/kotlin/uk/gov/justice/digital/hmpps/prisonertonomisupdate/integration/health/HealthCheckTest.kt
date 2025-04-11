@@ -112,6 +112,6 @@ class HealthCheckTest : IntegrationTestBase() {
     CSIPDpsApiExtension.csipDpsApi.stubHealthPing(status)
     ContactPersonDpsApiExtension.dpsContactPersonServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
-    VisitBalanceDpsApiExtension.dpsVisitBalanceServer.stubHealthPing(status)
+    VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
   }
 }

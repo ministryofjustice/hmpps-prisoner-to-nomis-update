@@ -1,38 +1,63 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
+import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
+import org.mockito.internal.verification.Times
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
+
+  @Autowired
+  private lateinit var visitBalanceNomisApi: VisitBalanceNomisApiMockServer
 
   @Nested
   @DisplayName("prison-visit-allocation.updated")
   inner class VisitBalanceAdjustmentCreated {
     @Nested
-    @DisplayName("when NOMIS is the origin of a Visit Balance adjustment create")
-    inner class WhenNomisCreated {
+    @DisplayName("when NOMIS is the origin of a Visit balance adjustment create")
+    inner class WhenCreatedInNomis {
       @BeforeEach
       fun setup() {
         publishVisitBalanceAdjustmentDomainEvent(source = VisitBalanceAdjustmentSource.NOMIS)
-
         waitForAnyProcessingToComplete()
       }
 
       @Test
-      fun `will send telemetry event showing the create received`() {
+      fun `will not make a call to DPS`() {
+        visitBalanceDpsApi.verify(0, getRequestedFor(anyUrl()))
+      }
+
+      @Test
+      fun `will not update Nomis`() {
+        visitBalanceNomisApi.verify(0, postRequestedFor(anyUrl()))
+      }
+
+      @Test
+      fun `will send telemetry event showing the create was ignored`() {
         verify(telemetryClient).trackEvent(
-          eq("Received prison-visit-allocation.updated event"),
+          eq("visitbalance-adjustment-synchronisation-created-skipped"),
           any(),
           isNull(),
         )
@@ -44,22 +69,114 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     inner class VisitBalanceAdjustmentCreated {
       @Nested
       @DisplayName("when DPS is the origin of a Visit Balance adjustment create")
-      inner class WhenDpsCreated {
-        @BeforeEach
-        fun setup() {
-          publishVisitBalanceAdjustmentDomainEvent()
-          waitForAnyProcessingToComplete()
+      inner class WhenCreatedInDps {
+        val visitBalanceAdjId = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef"
+
+        @Nested
+        inner class HappyPath {
+
+          @BeforeEach
+          fun setup() {
+            visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjId)
+            visitBalanceNomisApi.stubPostVisitBalanceAdjustment()
+            publishVisitBalanceAdjustmentDomainEvent()
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will retrieve the adjustment details from Dps`() {
+            visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+          }
+
+          @Test
+          fun `will create the adjustment in Nomis`() {
+            visitBalanceNomisApi.verify(
+              postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments"))
+                .withRequestBodyJsonPath("adjustmentReasonCode", "GOV")
+                .withRequestBodyJsonPath("adjustmentDate", "2021-01-18")
+                .withRequestBodyJsonPath("previousVisitOrderCount", 12)
+                .withRequestBodyJsonPath("visitOrderChange", 2)
+                .withRequestBodyJsonPath("previousPrivilegedVisitOrderCount", 7)
+                .withRequestBodyJsonPath("privilegedVisitOrderChange", -1)
+                .withRequestBodyJsonPath("comment", "A comment")
+                .withRequestBodyJsonPath("expiryBalance", 6)
+                .withRequestBodyJsonPath("expiryDate", "2021-02-19")
+                .withRequestBodyJsonPath("endorsedStaffId", 123)
+                .withRequestBodyJsonPath("authorisedStaffId", 345),
+            )
+          }
+
+          @Test
+          fun `will send telemetry event showing the create success`() {
+            verify(telemetryClient).trackEvent(
+              eq("visitbalance-adjustment-synchronisation-created-success"),
+              check {
+                assertThat(it).containsEntry("visitBalanceAdjustmentId", "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef")
+                assertThat(it).containsEntry("prisonNumber", "A1234KT")
+                assertThat(it).containsEntry("visitBalanceChange", "2")
+                assertThat(it).containsEntry("privilegeVisitBalanceChange", "-1")
+              },
+              isNull(),
+            )
+          }
         }
 
-        @Test
-        fun `will send telemetry event showing the create received`() {
-          verify(telemetryClient).trackEvent(
-            eq("Received prison-visit-allocation.updated event"),
-            check {
-              assertThat(it).containsEntry("prisonNumber", "A1234KT")
-            },
-            isNull(),
-          )
+        @Nested
+        inner class HappyPathWithNomisFailures {
+
+          @BeforeEach
+          fun setUp() {
+            visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjId)
+            visitBalanceNomisApi.stubPostVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
+            publishVisitBalanceAdjustmentDomainEvent()
+            await untilCallTo {
+              visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+          @Test
+          fun `will attempt to retrieve the balance adjustment from Dps `() {
+            visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+          }
+
+          @Test
+          fun `will not create telemetry tracking`() {
+            verify(telemetryClient, Times(0)).trackEvent(any(), any(), isNull())
+          }
+
+          @Test
+          fun `will attempt call to Nomis several times and keep failing`() {
+            visitBalanceNomisApi.verify(2, postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments")))
+          }
+        }
+
+        @Nested
+        inner class HappyPathWithDpsFailures {
+          val bookingId = 123456L
+
+          @BeforeEach
+          fun setUp() {
+            visitBalanceDpsApi.stubGetVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
+            publishVisitBalanceAdjustmentDomainEvent()
+            await untilCallTo {
+              visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
+            } matches { it == 1 }
+          }
+
+          @Test
+          fun `will attempt to retrieve visit balance adjustment from Dps`() {
+            visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+          }
+
+          @Test
+          fun `will not create telemetry tracking`() {
+            verify(telemetryClient, Times(0)).trackEvent(any(), any(), isNull())
+          }
+
+          @Test
+          fun `will not attempt call to Nomis `() {
+            visitBalanceNomisApi.verify(0, postRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/sync/booking")))
+          }
         }
       }
     }
@@ -69,6 +186,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String = "prison-visit-allocation.updated",
     offenderNo: String = "A1234KT",
     source: VisitBalanceAdjustmentSource = VisitBalanceAdjustmentSource.DPS,
+    visitBalanceAdjustmentId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef",
   ) {
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -77,6 +195,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
             eventType = eventType,
             offenderNo = offenderNo,
             source = source,
+            visitBalanceAdjustmentId = visitBalanceAdjustmentId,
           ),
         )
         .messageAttributes(
@@ -92,6 +211,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 fun visitBalanceAdjustmentMessagePayload(
   eventType: String,
   offenderNo: String,
+  visitBalanceAdjustmentId: String,
   source: VisitBalanceAdjustmentSource,
 ) = //language=JSON
   """
@@ -99,7 +219,8 @@ fun visitBalanceAdjustmentMessagePayload(
       "eventType":"$eventType", 
       "detailUrl":"https://somecallback", 
       "additionalInformation": {
-        "source": "${source.name}"
+        "source": "${source.name}",
+        "visitBalanceAdjustmentUuid": "$visitBalanceAdjustmentId"
       },
       "personReference": {
         "identifiers": [

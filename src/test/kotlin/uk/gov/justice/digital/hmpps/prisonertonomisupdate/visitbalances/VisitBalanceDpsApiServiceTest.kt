@@ -10,7 +10,8 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.dpsVisitBalanceServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(
@@ -23,27 +24,55 @@ class VisitBalanceDpsApiServiceTest {
   private lateinit var apiService: VisitBalanceDpsApiService
 
   @Nested
-  inner class GeVisitBalance {
+  inner class GetVisitBalance {
     @Test
-    internal fun `will pass oath2 token to organisation endpoint`() = runTest {
-      dpsVisitBalanceServer.stubGetVisitBalance()
+    internal fun `will pass oath2 token to visit balance endpoint`() = runTest {
+      visitBalanceDpsApi.stubGetVisitBalance()
 
       apiService.getVisitBalance("A1234BC")
 
-      dpsVisitBalanceServer.verify(
+      visitBalanceDpsApi.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
-    fun `will call the GET endpoint`() = runTest {
-      dpsVisitBalanceServer.stubGetVisitBalance()
+    fun `will call the GET visit balance endpoint`() = runTest {
+      visitBalanceDpsApi.stubGetVisitBalance()
 
       apiService.getVisitBalance("A1234BC")
 
-      dpsVisitBalanceServer.verify(
+      visitBalanceDpsApi.verify(
         getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/A1234BC/balance")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetVisitBalanceAdjustment {
+    private val visitBalanceAdjustmentId = UUID.randomUUID().toString()
+
+    @Test
+    internal fun `will pass oath2 token to visit balance adjustment endpoint`() = runTest {
+      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjustmentId)
+
+      apiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId)
+
+      visitBalanceDpsApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the GET visit balance adjustment endpoint`() = runTest {
+      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjustmentId)
+
+      apiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId)
+
+      visitBalanceDpsApi.verify(
+        getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjustmentId")),
       )
     }
   }
