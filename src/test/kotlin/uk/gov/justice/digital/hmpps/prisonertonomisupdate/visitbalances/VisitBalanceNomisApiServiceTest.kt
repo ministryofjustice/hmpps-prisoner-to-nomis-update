@@ -65,7 +65,7 @@ class VisitBalanceNomisApiServiceTest {
   inner class CreateVisitBalanceAdjustment {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubPostVisitBalanceAdjustment(prisonNumber ="A1234BC")
+      mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
       apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())
 
@@ -76,7 +76,7 @@ class VisitBalanceNomisApiServiceTest {
 
     @Test
     fun `will pass balance adjustment data to Nomis`() = runTest {
-      mockServer.stubPostVisitBalanceAdjustment(prisonNumber ="A1234BC")
+      mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
       apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())
 
@@ -99,7 +99,7 @@ class VisitBalanceNomisApiServiceTest {
 
     @Test
     fun `will call the  adjustment endpoint`() = runTest {
-      mockServer.stubPostVisitBalanceAdjustment(prisonNumber ="A1234BC")
+      mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
       apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())
 
@@ -110,7 +110,7 @@ class VisitBalanceNomisApiServiceTest {
 
     @Test
     fun `will return visit balance adjustment id`() = runTest {
-      mockServer.stubPostVisitBalanceAdjustment(prisonNumber ="A1234BC")
+      mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
       val visitBalanceAdjustment = apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())
 

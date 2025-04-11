@@ -1,9 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration
 
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.mockito.kotlin.any
@@ -16,7 +14,6 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
-import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
