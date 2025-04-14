@@ -332,6 +332,7 @@ reports:
   contact-person.profile-details:
     reconciliation:
       page-size: 3
+      parallel-jobs: 2
   visit-balance:
     reconciliation:
       page-size: 10

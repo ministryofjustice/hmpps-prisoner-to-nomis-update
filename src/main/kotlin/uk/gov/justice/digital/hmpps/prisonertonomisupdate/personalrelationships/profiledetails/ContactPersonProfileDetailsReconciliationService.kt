@@ -42,6 +42,7 @@ class ContactPersonProfileDetailsReconciliationService(
   @Autowired private val nomisApi: ProfileDetailsNomisApiService,
   @Autowired private val dpsApi: ContactPersonProfileDetailsDpsApiService,
   @Value("\${reports.contact-person.profile-details.reconciliation.page-size:20}") private val pageSize: Long = 20,
+  @Value("\${reports.contact-person.profile-details.reconciliation.parallel-jobs:20}") private val parallelJobs: Long = 20,
   @Value("\${feature.recon.contact-person.profile-details:true}") private val reconciliationTurnedOn: Boolean = true,
   @Autowired private val telemetryClient: TelemetryClient,
 ) {
@@ -52,10 +53,11 @@ class ContactPersonProfileDetailsReconciliationService(
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): Mismatches = if (reconciliationTurnedOn) {
     coroutineScope {
-      mismatchesChannel().also { mismatches ->
-        producePrisonerIds(activePrisonersCount)
-          .also { ids -> checkPrisoners(ids, mismatches) }
-      }.waitForMismatches()
+      val idProducer = producePrisonerIds(activePrisonersCount)
+      val mismatchConsumer = Channel<String>(capacity = UNLIMITED)
+      (1..parallelJobs)
+        .map { launchCheckPrisoners(idProducer, mismatchConsumer) }
+        .let { jobs -> mismatchConsumer.waitForMismatches(jobs) }
     }
   } else {
     emptyList()
@@ -63,7 +65,10 @@ class ContactPersonProfileDetailsReconciliationService(
 
   private fun mismatchesChannel() = Channel<String>(capacity = UNLIMITED)
 
-  private suspend fun Channel<String>.waitForMismatches(): Mismatches = close().let { toList() }
+  private suspend fun Channel<String>.waitForMismatches(jobs: List<Job>): Mismatches = run {
+    jobs.joinAll()
+    close().let { toList() }
+  }
 
   fun CoroutineScope.producePrisonerIds(activePrisonersCount: Long) = produce<PrisonerIds>(capacity = pageSize.toInt() * 2) {
     val pages = ceil(activePrisonersCount * 1.0 / pageSize).toLong()
@@ -83,18 +88,14 @@ class ContactPersonProfileDetailsReconciliationService(
   }
     .getOrElse { emptyList() }
 
-  suspend fun CoroutineScope.checkPrisoners(
+  suspend fun CoroutineScope.launchCheckPrisoners(
     ids: ReceiveChannel<PrisonerIds>,
     mismatches: Channel<String>,
-  ) {
-    val jobs = mutableListOf<Job>()
+  ) = launch {
     for (id in ids) {
-      jobs += launch {
-        checkPrisoner(id.offenderNo)
-          ?.also { mismatches.send(it) }
-      }
+      checkPrisoner(id.offenderNo)
+        ?.also { mismatches.send(it) }
     }
-    jobs.joinAll()
   }
 
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
