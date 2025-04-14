@@ -8,9 +8,10 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
-import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.ValueSource
 import org.mockito.ArgumentMatchers.any
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
@@ -34,6 +35,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.profile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.profileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+
+// This is set in applications-test.yml
+private const val PAGE_SIZE = 3L
 
 class ContactPersonProfileDetailsReconciliationIntTest(
   @Autowired val nomisApi: ProfileDetailsNomisApiMockServer,
@@ -249,15 +253,17 @@ class ContactPersonProfileDetailsReconciliationIntTest(
 
   @Nested
   inner class FullReconciliation {
-    private val noActivePrisoners = 7L
-    private val pageSize = 3L
+    private var noActivePrisoners: Long = 0
+    private fun pages() = noActivePrisoners / PAGE_SIZE + if (noActivePrisoners % PAGE_SIZE == 0L) 0 else 1
+    private fun lastPrisonerNumber() = generateOffenderNo(sequence = noActivePrisoners)
 
     private fun stubPages() {
       NomisApiExtension.nomisApi.apply {
         stubGetActivePrisonersInitialCount(noActivePrisoners)
-        stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 0, pageSize = pageSize, numberOfElements = pageSize)
-        stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 1, pageSize = pageSize, numberOfElements = pageSize)
-        stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 2, pageSize = pageSize, numberOfElements = 1)
+        (0..pages() - 1).forEach { pageNumber ->
+          val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % PAGE_SIZE == 0L) PAGE_SIZE else noActivePrisoners % PAGE_SIZE
+          stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = PAGE_SIZE, numberOfElements = elements, fixedDelay = 250)
+        }
       }
     }
 
@@ -269,8 +275,9 @@ class ContactPersonProfileDetailsReconciliationIntTest(
 
     @Nested
     inner class HappyPath {
-      @BeforeEach
-      fun setup() {
+      private fun setUp(count: Long) {
+        noActivePrisoners = count
+
         reset(telemetryClient)
         stubPages()
         forEachPrisoner { prisonerNumber ->
@@ -288,8 +295,11 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         runReconciliation()
       }
 
-      @Test
-      fun `should run a reconciliation with no problems`() {
+      @ParameterizedTest
+      @ValueSource(longs = [7, 6])
+      fun `should run a reconciliation with no problems`(noActivePrisoner: Long) {
+        setUp(noActivePrisoner)
+
         // should publish requested telemetry
         verify(telemetryClient).trackEvent(
           eq("$TELEMETRY_PREFIX-report-requested"),
@@ -305,9 +315,9 @@ class ContactPersonProfileDetailsReconciliationIntTest(
             .withQueryParam("size", equalTo("1")),
         )
         NomisApiExtension.nomisApi.verify(
-          3,
+          pages().toInt(),
           getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-            .withQueryParam("size", equalTo("$pageSize")),
+            .withQueryParam("size", equalTo("$PAGE_SIZE")),
         )
 
         // should call NOMIS and DPS for each prisoner
@@ -355,15 +365,18 @@ class ContactPersonProfileDetailsReconciliationIntTest(
 
     @Nested
     inner class Failures {
-      @Test
-      fun `should handle a mismatched prisoner`() {
+      @ParameterizedTest
+      @ValueSource(longs = [7, 6])
+      fun `should handle a mismatched prisoner`(count: Long) {
+        noActivePrisoners = count
+
         reset(telemetryClient)
         stubPages()
         forEachPrisoner { prisonerNumber ->
           dpsApi.stubGetDomesticStatus(prisonerNumber, domesticStatus(domesticStatusCode = "M"))
           dpsApi.stubGetNumberOfChildren(prisonerNumber, numberOfChildren(numberOfChildren = "2"))
-          // Stub a mismatch on the 4th prisoner
-          if (prisonerNumber == "A0004TZ") {
+          // Stub a mismatch on the last prisoner - using the last prisoner should find errors with closing channels too soon
+          if (prisonerNumber == lastPrisonerNumber()) {
             stubGetProfileDetails(
               prisonerNumber,
               listOf(
@@ -390,7 +403,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
           check {
             assertThat(it).containsAllEntriesOf(
               mapOf(
-                "offenderNo" to "A0004TZ",
+                "offenderNo" to lastPrisonerNumber(),
                 "differences" to "domestic-status, number-of-children",
               ),
             )
@@ -404,7 +417,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
           check {
             assertThat(it).containsEntry("active-prisoners", noActivePrisoners.toString())
             assertThat(it).containsEntry("mismatch-count", "1")
-            assertThat(it).containsEntry("mismatch-prisoners", "[A0004TZ]")
+            assertThat(it).containsEntry("mismatch-prisoners", "[${lastPrisonerNumber()}]")
           },
           isNull(),
         )
@@ -423,20 +436,23 @@ class ContactPersonProfileDetailsReconciliationIntTest(
           .expectStatus().is5xxServerError
       }
 
-      @Test
-      fun `should handle an error getting one of the prisoner pages`() {
+      @ParameterizedTest
+      @ValueSource(longs = [7, 6])
+      fun `should handle an error getting one of the prisoner pages`(count: Long) {
+        noActivePrisoners = count
+
         reset(telemetryClient)
         NomisApiExtension.nomisApi.apply {
           stubGetActivePrisonersInitialCount(noActivePrisoners)
-          stubGetActivePrisonersPage(
-            noActivePrisoners,
-            pageNumber = 0,
-            pageSize = pageSize,
-            numberOfElements = pageSize,
-          )
-          // fail to retrieve page 1
-          stubGetActivePrisonersPageWithError(pageNumber = 1, pageSize = pageSize, responseCode = 500)
-          stubGetActivePrisonersPage(noActivePrisoners, pageNumber = 2, pageSize = pageSize, numberOfElements = 1)
+          (0..pages() - 1).forEach { pageNumber ->
+            // stub an error on page 1
+            if (pageNumber == 1L) {
+              stubGetActivePrisonersPageWithError(pageNumber = pageNumber, pageSize = PAGE_SIZE, responseCode = 500)
+            } else {
+              val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % PAGE_SIZE == 0L) PAGE_SIZE else noActivePrisoners % PAGE_SIZE
+              stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = PAGE_SIZE, numberOfElements = elements, fixedDelay = 250)
+            }
+          }
         }
         forEachPrisoner { prisonerNumber ->
           stubGetProfileDetails(
@@ -455,7 +471,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         // should call DPS and NOMIS for each prisoner on successful pages
         forEachPrisoner { prisonerNumber ->
           // for prisoners from the 2nd page, we should not call the APIs
-          val count = if (listOf("A0004TZ", "A0005TZ", "A0006TZ").contains(prisonerNumber)) 0 else 1
+          val count = if (getPrisonerOnPage(1).contains(prisonerNumber)) 0 else 1
           nomisApi.verify(count, getRequestedFor(urlPathEqualTo("/prisoners/$prisonerNumber/profile-details")))
           dpsApi.verify(count, getRequestedFor(urlPathEqualTo("/sync/$prisonerNumber/domestic-status")))
           dpsApi.verify(count, getRequestedFor(urlPathEqualTo("/sync/$prisonerNumber/number-of-children")))
@@ -485,15 +501,18 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         )
       }
 
-      @Test
-      fun `should handle an error getting a single prisoner`() {
+      @ParameterizedTest
+      @ValueSource(longs = [7, 6])
+      fun `should handle an error getting a single prisoner`(count: Long) {
+        noActivePrisoners = count
+
         reset(telemetryClient)
         stubPages()
         forEachPrisoner { prisonerNumber ->
           dpsApi.stubGetDomesticStatus(prisonerNumber, domesticStatus(domesticStatusCode = "M"))
           dpsApi.stubGetNumberOfChildren(prisonerNumber, numberOfChildren(numberOfChildren = "2"))
-          // the 4th prisoner's NOMIS call returns an error
-          if (prisonerNumber == "A0004TZ") {
+          // the last prisoner's NOMIS call returns an error
+          if (prisonerNumber == lastPrisonerNumber()) {
             nomisApi.stubGetProfileDetails(prisonerNumber, BAD_GATEWAY)
           } else {
             stubGetProfileDetails(
@@ -512,10 +531,10 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         verify(telemetryClient).trackEvent(
           eq("$TELEMETRY_PREFIX-prisoner-error"),
           check {
-            assertThat(it).containsEntry("offenderNo", "A0004TZ")
+            assertThat(it).containsEntry("offenderNo", lastPrisonerNumber())
             assertThat(it).containsEntry(
               "error",
-              "502 Bad Gateway from GET http://localhost:8082/prisoners/A0004TZ/profile-details",
+              "502 Bad Gateway from GET http://localhost:8082/prisoners/${lastPrisonerNumber()}/profile-details",
             )
           },
           isNull(),
@@ -532,13 +551,16 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         )
       }
 
-      @Test
-      fun `should handle handle connection failures and retry both DPS and NOMIS`() {
+      @ParameterizedTest
+      @ValueSource(longs = [7, 6])
+      fun `should handle handle connection failures and retry both DPS and NOMIS`(count: Long) {
+        noActivePrisoners = count
+
         reset(telemetryClient)
         stubPages()
         forEachPrisoner { prisonerNumber ->
-          // the 4th prisoner needs a retry on both NOMIS and DPS endpoints
-          if (prisonerNumber == "A0004TZ") {
+          // the last prisoner needs a retry on both NOMIS and DPS endpoints
+          if (prisonerNumber == lastPrisonerNumber()) {
             nomisApi.stubGetProfileDetailsAfterRetry(
               prisonerNumber,
               profileDetailsResponse(
@@ -571,9 +593,9 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         runReconciliation()
 
         // should retry the NOMIS and DPS calls for the failed prisoner
-        nomisApi.verify(2, getRequestedFor(urlPathEqualTo("/prisoners/A0004TZ/profile-details")))
-        dpsApi.verify(2, getRequestedFor(urlPathEqualTo("/sync/A0004TZ/domestic-status")))
-        dpsApi.verify(2, getRequestedFor(urlPathEqualTo("/sync/A0004TZ/number-of-children")))
+        nomisApi.verify(2, getRequestedFor(urlPathEqualTo("/prisoners/${lastPrisonerNumber()}/profile-details")))
+        dpsApi.verify(2, getRequestedFor(urlPathEqualTo("/sync/${lastPrisonerNumber()}/domestic-status")))
+        dpsApi.verify(2, getRequestedFor(urlPathEqualTo("/sync/${lastPrisonerNumber()}/number-of-children")))
 
         // should NOT publish error telemetry for prisoner
         verify(telemetryClient, times(0)).trackEvent(
@@ -593,11 +615,14 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         )
       }
     }
+
+    private fun getPrisonerOnPage(page: Int) = (1..PAGE_SIZE).map { page * PAGE_SIZE + it }.map { generateOffenderNo(sequence = it) }
   }
 
   fun stubGetProfileDetails(
     offenderNo: String = "A1234BC",
     profileDetails: List<ProfileDetailsResponse>,
+    fixedDelay: Int = 30,
   ) = nomisApi.stubGetProfileDetails(
     offenderNo,
     profileDetailsResponse(
@@ -608,5 +633,6 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         ),
       ),
     ),
+    fixedDelay = fixedDelay,
   )
 }

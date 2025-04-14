@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
@@ -12,6 +13,7 @@ import kotlinx.coroutines.channels.ReceiveChannel
 import kotlinx.coroutines.channels.produce
 import kotlinx.coroutines.channels.toList
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
@@ -29,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
+import kotlin.math.ceil
 
 typealias Mismatches = List<String>
 
@@ -63,7 +66,8 @@ class ContactPersonProfileDetailsReconciliationService(
   private suspend fun Channel<String>.waitForMismatches(): Mismatches = close().let { toList() }
 
   fun CoroutineScope.producePrisonerIds(activePrisonersCount: Long) = produce<PrisonerIds>(capacity = pageSize.toInt() * 2) {
-    (0..activePrisonersCount / pageSize)
+    val pages = ceil(activePrisonersCount * 1.0 / pageSize).toLong()
+    (0..pages - 1)
       .forEach { page ->
         getActivePrisonersForPage(page)
           .forEach { id -> send(id) }
@@ -82,12 +86,16 @@ class ContactPersonProfileDetailsReconciliationService(
   suspend fun CoroutineScope.checkPrisoners(
     ids: ReceiveChannel<PrisonerIds>,
     mismatches: Channel<String>,
-  ) = launch {
+  ) {
+    val jobs = mutableListOf<Job>()
     for (id in ids) {
-      checkPrisoner(id.offenderNo)
-        ?.also { mismatches.send(it) }
+      jobs += launch {
+        checkPrisoner(id.offenderNo)
+          ?.also { mismatches.send(it) }
+      }
     }
-  }.join()
+    jobs.joinAll()
+  }
 
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
