@@ -931,6 +931,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     pageNumber: Long,
     numberOfElements: Long = 10,
     pageSize: Long = 10,
+    fixedDelay: Int = 500,
   ) {
     stubFor(
       get(
@@ -942,7 +943,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withFixedDelay(500)
+            .withFixedDelay(fixedDelay)
             .withBody(
               activePrisonersPagedResponse(
                 totalElements = totalElements,

@@ -51,13 +51,15 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetProfileDetails(
     offenderNo: String,
     response: PrisonerProfileDetailsResponse = profileDetailsResponse(offenderNo),
+    fixedDelay: Int = 30,
   ) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/prisoners/$offenderNo/profile-details")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(response)),
+          .withBody(objectMapper.writeValueAsString(response))
+          .withFixedDelay(fixedDelay),
       ),
     )
   }
