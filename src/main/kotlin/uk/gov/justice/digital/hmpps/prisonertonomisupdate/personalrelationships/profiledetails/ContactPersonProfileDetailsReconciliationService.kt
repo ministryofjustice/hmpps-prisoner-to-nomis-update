@@ -20,6 +20,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
@@ -31,11 +32,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.ProfileDetailsNomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
+import kotlin.concurrent.atomics.AtomicInt
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.math.ceil
 
 typealias Mismatches = List<String>
 
-@OptIn(ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class, ExperimentalAtomicApi::class)
 @Service
 class ContactPersonProfileDetailsReconciliationService(
   @Autowired private val nomisIdsApi: NomisApiService,
@@ -45,6 +48,7 @@ class ContactPersonProfileDetailsReconciliationService(
   @Value("\${reports.contact-person.profile-details.reconciliation.parallel-jobs:20}") private val parallelJobs: Long = 20,
   @Value("\${feature.recon.contact-person.profile-details:true}") private val reconciliationTurnedOn: Boolean = true,
   @Autowired private val telemetryClient: TelemetryClient,
+  @Autowired(required = false) private val channelActivityDebugger: ContactPersonProfileDetailsChannelActivityDebugger? = null,
 ) {
   companion object {
     const val TELEMETRY_PREFIX = "contact-person-profile-details-reconciliation"
@@ -63,8 +67,6 @@ class ContactPersonProfileDetailsReconciliationService(
     emptyList()
   }
 
-  private fun mismatchesChannel() = Channel<String>(capacity = UNLIMITED)
-
   private suspend fun Channel<String>.waitForMismatches(jobs: List<Job>): Mismatches = run {
     jobs.joinAll()
     close().let { toList() }
@@ -75,7 +77,7 @@ class ContactPersonProfileDetailsReconciliationService(
     (0..pages - 1)
       .forEach { page ->
         getActivePrisonersForPage(page)
-          .forEach { id -> send(id) }
+          .forEach { id -> send(id).also { channelActivityDebugger?.addId() } }
       }
       .also { channel.close() }
   }
@@ -93,7 +95,15 @@ class ContactPersonProfileDetailsReconciliationService(
     mismatches: Channel<String>,
   ) = launch {
     for (id in ids) {
+      if (ids.isEmpty) {
+        log.info("The contact person profile details reconciliation prisoner ids channel is empty - indicates possible sub-optimal performance.")
+      }
+      channelActivityDebugger?.run {
+        removeId()
+        addCheck()
+      }
       checkPrisoner(id.offenderNo)
+        .also { channelActivityDebugger?.removeCheck() }
         ?.also { mismatches.send(it) }
     }
   }
@@ -169,4 +179,45 @@ class ContactPersonProfileDetailsReconciliationService(
     ?.profileDetails
     ?.firstOrNull { it.type == profileType }
     ?.code
+}
+
+/**
+ * A utility for debugging the channel size and number of concurrent prisoner checks when running tests. This should help
+ * when trying to work out the page size and number of parallel prisoner check jobs. The goal is to prevent the channel
+ * from becoming empty and keep the number of concurrent prisoner checks close to the number of parallel jobs.
+ *
+ * To use this when running locally:
+ * - set the fixed delay on the NOMIS API stubs to realistic values (remember that response times differ with page size)
+ * - in application-test.yml set reports.contact-person.profile-details.reconciliation.debug = true
+ * - in application-test.yml set page-size and parallel-jobs to the values you want to test
+ * - run the Happy Path integration test with a high active prisoner count
+ *
+ * If having problems in a real environment you could turn on "debug" in the env vars. However, you should be aware that
+ * this will log 4 times for every prisoner that is checked - approx. 90,000 active prisoner * 4 ~= 360,000 extra logs.
+ */
+@Service
+@ConditionalOnProperty("reports.contact-person.profile-details.reconciliation.debug", havingValue = "true")
+@OptIn(ExperimentalAtomicApi::class)
+class ContactPersonProfileDetailsChannelActivityDebugger(
+  @Value("\${reports.contact-person.profile-details.reconciliation.page-size}") private val pageSize: Long,
+  @Value("\${reports.contact-person.profile-details.reconciliation.parallel-jobs}") private val parallelJobs: Long,
+) {
+  companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    var checkPrisonerCounter: AtomicInt = AtomicInt(0)
+    var idsInChannel: AtomicInt = AtomicInt(0)
+  }
+
+  init {
+    log.debug("page-size=$pageSize, parallel-jobs=$parallelJobs")
+  }
+
+  fun addId() = idsInChannel.addAndFetch(1)
+  fun removeId() = idsInChannel.addAndFetch(-1).also { logId(it) }
+  private fun logId(count: Int) = log.debug("ids in channel=$count")
+
+  fun addCheck() = checkPrisonerCounter.addAndFetch(1).also { logCheck(it) }
+  fun removeCheck() = checkPrisonerCounter.addAndFetch(-1).also { logCheck(it) }
+  private fun logCheck(count: Int) = log.debug("concurrent prisoner checks=$count")
 }

@@ -23,6 +23,7 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
@@ -36,13 +37,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails.profile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-// This is set in applications-test.yml
-private const val PAGE_SIZE = 3L
-
 class ContactPersonProfileDetailsReconciliationIntTest(
   @Autowired val nomisApi: ProfileDetailsNomisApiMockServer,
   @Autowired val dpsApi: ContactPersonProfileDetailsDpsApiMockServer,
   @Autowired val service: ContactPersonProfileDetailsReconciliationService,
+  @Value("\${reports.contact-person.profile-details.reconciliation.page-size}") private val pageSize: Long,
 ) : IntegrationTestBase() {
 
   @Nested
@@ -254,15 +253,15 @@ class ContactPersonProfileDetailsReconciliationIntTest(
   @Nested
   inner class FullReconciliation {
     private var noActivePrisoners: Long = 0
-    private fun pages() = noActivePrisoners / PAGE_SIZE + if (noActivePrisoners % PAGE_SIZE == 0L) 0 else 1
+    private fun pages() = noActivePrisoners / pageSize + if (noActivePrisoners % pageSize == 0L) 0 else 1
     private fun lastPrisonerNumber() = generateOffenderNo(sequence = noActivePrisoners)
 
     private fun stubPages() {
       NomisApiExtension.nomisApi.apply {
         stubGetActivePrisonersInitialCount(noActivePrisoners)
         (0..pages() - 1).forEach { pageNumber ->
-          val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % PAGE_SIZE == 0L) PAGE_SIZE else noActivePrisoners % PAGE_SIZE
-          stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = PAGE_SIZE, numberOfElements = elements, fixedDelay = 250)
+          val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % pageSize == 0L) pageSize else noActivePrisoners % pageSize
+          stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = pageSize, numberOfElements = elements, fixedDelay = 550)
         }
       }
     }
@@ -317,7 +316,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
         NomisApiExtension.nomisApi.verify(
           pages().toInt(),
           getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-            .withQueryParam("size", equalTo("$PAGE_SIZE")),
+            .withQueryParam("size", equalTo("$pageSize")),
         )
 
         // should call NOMIS and DPS for each prisoner
@@ -447,10 +446,10 @@ class ContactPersonProfileDetailsReconciliationIntTest(
           (0..pages() - 1).forEach { pageNumber ->
             // stub an error on page 1
             if (pageNumber == 1L) {
-              stubGetActivePrisonersPageWithError(pageNumber = pageNumber, pageSize = PAGE_SIZE, responseCode = 500)
+              stubGetActivePrisonersPageWithError(pageNumber = pageNumber, pageSize = pageSize, responseCode = 500)
             } else {
-              val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % PAGE_SIZE == 0L) PAGE_SIZE else noActivePrisoners % PAGE_SIZE
-              stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = PAGE_SIZE, numberOfElements = elements, fixedDelay = 250)
+              val elements = if (pageNumber < (pages() - 1) || noActivePrisoners % pageSize == 0L) pageSize else noActivePrisoners % pageSize
+              stubGetActivePrisonersPage(noActivePrisoners, pageNumber = pageNumber, pageSize = pageSize, numberOfElements = elements, fixedDelay = 1250)
             }
           }
         }
@@ -616,7 +615,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       }
     }
 
-    private fun getPrisonerOnPage(page: Int) = (1..PAGE_SIZE).map { page * PAGE_SIZE + it }.map { generateOffenderNo(sequence = it) }
+    private fun getPrisonerOnPage(page: Int) = (1..pageSize).map { page * pageSize + it }.map { generateOffenderNo(sequence = it) }
   }
 
   fun stubGetProfileDetails(
