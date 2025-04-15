@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-10.5756.75111d7"
+    "version" : "2025-04-14.5800.d69c702"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3128,9 +3128,12 @@
       "LegacyCreateSentence" : {
         "type" : "object",
         "properties" : {
-          "chargeLifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
+          "chargeUuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
           },
           "chargeNumber" : {
             "type" : "string"
@@ -3158,7 +3161,7 @@
             }
           }
         },
-        "required" : [ "active", "chargeLifetimeUuid", "legacyData", "periodLengths", "prisonId" ]
+        "required" : [ "active", "chargeUuids", "legacyData", "periodLengths", "prisonId" ]
       },
       "NomisPeriodLengthId" : {
         "type" : "object",
