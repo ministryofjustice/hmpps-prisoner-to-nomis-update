@@ -53,6 +53,7 @@ class ContactPersonProfileDetailsReconciliationService(
   companion object {
     const val TELEMETRY_PREFIX = "contact-person-profile-details-reconciliation"
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+    var emptyChannelCounter: AtomicInt = AtomicInt(0)
   }
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): Mismatches = if (reconciliationTurnedOn) {
@@ -95,9 +96,7 @@ class ContactPersonProfileDetailsReconciliationService(
     mismatches: Channel<String>,
   ) = launch {
     for (id in ids) {
-      if (ids.isEmpty) {
-        log.info("The contact person profile details reconciliation prisoner ids channel is empty - indicates possible sub-optimal performance.")
-      }
+      checkAndLogEmptyChannel(ids)
       channelActivityDebugger?.run {
         removeId()
         addCheck()
@@ -107,6 +106,14 @@ class ContactPersonProfileDetailsReconciliationService(
         ?.also { mismatches.send(it) }
     }
   }
+
+  private fun checkAndLogEmptyChannel(channel: ReceiveChannel<PrisonerIds>) = if (channel.isEmpty) {
+    emptyChannelCounter.addAndFetch(1)
+      .takeIf { it >= (2 * pageSize) && it % pageSize.toInt() == 0 }
+      ?.also {
+        log.warn("The contact person profile details reconciliation prisoner ids channel found to be empty $it times - indicates possible sub-optimal performance.")
+      }
+  } else {}
 
   suspend fun checkPrisoner(prisonerNumber: String): String? = runCatching {
     val apiResponses = withContext(Dispatchers.Unconfined) {
