@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -46,7 +47,7 @@ class VisitBalanceNomisApiServiceTest {
       apiService.getVisitBalance(prisonNumber = "A1234BC")
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/A1234BC/visit-orders/balance")),
+        getRequestedFor(urlPathEqualTo("/prisoners/A1234BC/visit-balance")),
       )
     }
 
@@ -115,6 +116,44 @@ class VisitBalanceNomisApiServiceTest {
       val visitBalanceAdjustment = apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())
 
       assertThat(visitBalanceAdjustment.visitBalanceAdjustmentId).isEqualTo(1234)
+    }
+  }
+
+  @Nested
+  inner class UpdateVisitBalance {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubPutVisitBalance(prisonNumber = "A1234BC")
+
+      apiService.updateVisitBalance(prisonNumber = "A1234BC", visitBalance = updateVisitBalanceRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass balance data to Nomis`() = runTest {
+      mockServer.stubPutVisitBalance(prisonNumber = "A1234BC")
+
+      apiService.updateVisitBalance(prisonNumber = "A1234BC", visitBalance = updateVisitBalanceRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withRequestBodyJsonPath("remainingVisitOrders", equalTo("24"))
+          .withRequestBodyJsonPath("remainingPrivilegedVisitOrders", equalTo("3")),
+      )
+    }
+
+    @Test
+    fun `will call the update balance endpoint`() = runTest {
+      mockServer.stubPutVisitBalance(prisonNumber = "A1234BC")
+
+      apiService.updateVisitBalance(prisonNumber = "A1234BC", visitBalance = updateVisitBalanceRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/visit-balance")),
+      )
     }
   }
 }

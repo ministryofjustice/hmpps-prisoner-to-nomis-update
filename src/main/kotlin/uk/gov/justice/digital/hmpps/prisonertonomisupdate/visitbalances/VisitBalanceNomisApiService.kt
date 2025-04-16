@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
@@ -12,7 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Vi
 @Service
 class VisitBalanceNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
   suspend fun getVisitBalance(prisonNumber: String): VisitBalanceResponse? = webClient.get()
-    .uri("/prisoners/{prisonNumber}/visit-orders/balance", prisonNumber)
+    .uri("/prisoners/{prisonNumber}/visit-balance", prisonNumber)
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
@@ -21,4 +22,18 @@ class VisitBalanceNomisApiService(@Qualifier("nomisApiWebClient") private val we
     .bodyValue(visitBalanceAdjustment)
     .retrieve()
     .awaitBody()
+
+  suspend fun updateVisitBalance(prisonNumber: String, visitBalance: UpdateVisitBalanceRequest) {
+    webClient.put()
+      .uri("/prisoners/{prisonNumber}/visit-balance", prisonNumber)
+      .bodyValue(visitBalance)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
+
+// TODO remove when added in Nomis
+data class UpdateVisitBalanceRequest(
+  val remainingVisitOrders: Int,
+  val remainingPrivilegedVisitOrders: Int,
+)

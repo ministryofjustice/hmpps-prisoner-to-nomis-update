@@ -296,7 +296,8 @@ hmpps.sqs:
         subscribeTopicId: domainevents
         subscribeFilter: >-
           { "eventType":[
-            "prison-visit-allocation.updated"          
+            "prison-visit-allocation.adjustment.created",          
+            "prison-visit-allocation.balance.updated"          
           ]}
         dlqMaxReceiveCount: 2
         visibilityTimeout: 120

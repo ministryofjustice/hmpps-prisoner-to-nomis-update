@@ -31,7 +31,8 @@ class VisitBalanceDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "prison-visit-allocation.updated" -> visitBalanceService.createVisitBalanceAdjustment(message.fromJson())
+      "prison-visit-allocation.adjustment.created" -> visitBalanceService.visitBalanceAdjustmentCreated(message.fromJson())
+      "prison-visit-allocation.balance.updated" -> visitBalanceService.visitBalanceUpdated(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

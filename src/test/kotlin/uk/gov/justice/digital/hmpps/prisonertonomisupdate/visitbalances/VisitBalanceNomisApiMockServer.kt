@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -24,7 +25,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
     response: VisitBalanceResponse = visitBalance(),
   ) {
     nomisApi.stubFor(
-      get(urlEqualTo("/prisoners/$prisonNumber/visit-orders/balance")).willReturn(
+      get(urlEqualTo("/prisoners/$prisonNumber/visit-balance")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
@@ -34,7 +35,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
   }
   fun stubGetVisitBalance(prisonNumber: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     nomisApi.stubFor(
-      get(urlEqualTo("/prisoners/$prisonNumber/visit-orders/balance")).willReturn(
+      get(urlEqualTo("/prisoners/$prisonNumber/visit-balance")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -65,11 +66,35 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
         ),
     )
   }
+  fun stubPutVisitBalance(prisonNumber: String = "A1234KT") {
+    nomisApi.stubFor(
+      put("/prisoners/$prisonNumber/visit-balance")
+        .willReturn(
+          aResponse()
+            .withStatus(204)
+            .withHeader("Content-Type", "application/json"),
+        ),
+    )
+  }
+  fun stubPutVisitBalance(prisonNumber: String = "A1234KT", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    nomisApi.stubFor(
+      put("/prisoners/$prisonNumber/visit-balance")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value()),
+        ),
+    )
+  }
 
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
 
+fun updateVisitBalanceRequest(): UpdateVisitBalanceRequest = UpdateVisitBalanceRequest(
+  remainingVisitOrders = 24,
+  remainingPrivilegedVisitOrders = 3,
+)
 fun visitBalance(): VisitBalanceResponse = VisitBalanceResponse(
   remainingVisitOrders = 24,
   remainingPrivilegedVisitOrders = 3,

@@ -57,7 +57,7 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
-  fun stubGetVisitBalance(offenderNo: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubGetVisitBalance(offenderNo: String = "A1234KT", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
       get("/visits/allocation/prisoner/$offenderNo/balance").willReturn(
         aResponse()
