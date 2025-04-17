@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.PersonRefere
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import java.util.UUID
 
