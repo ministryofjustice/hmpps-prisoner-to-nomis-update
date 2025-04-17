@@ -8,6 +8,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitBalanceResponse
 
 @Service
@@ -31,9 +32,3 @@ class VisitBalanceNomisApiService(@Qualifier("nomisApiWebClient") private val we
       .awaitBodilessEntity()
   }
 }
-
-// TODO remove when added in Nomis
-data class UpdateVisitBalanceRequest(
-  val remainingVisitOrders: Int,
-  val remainingPrivilegedVisitOrders: Int,
-)
