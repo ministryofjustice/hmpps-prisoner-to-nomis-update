@@ -86,16 +86,7 @@ class CaseNotesService(
 
     if (caseNoteEvent.wasAmendedInDPS() && caseNoteEvent.notDpsOnly()) {
       runCatching {
-        val mappings = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
-          ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
-
-        val dpsCaseNote = dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
-        val updateCaseNoteRequest = dpsCaseNote.toNomisUpdateRequest()
-        mappings.forEachIndexed { i, dto ->
-          telemetryMap["nomisBookingId-${i + 1}"] = dto.nomisBookingId.toString()
-          telemetryMap["nomisCaseNoteId-${i + 1}"] = dto.nomisCaseNoteId.toString()
-          nomisApiService.updateCaseNote(dto.nomisCaseNoteId, updateCaseNoteRequest)
-        }
+        doUpdate(dpsCaseNoteId, offenderNo, telemetryMap)
         telemetryClient.trackEvent("casenotes-amend-success", telemetryMap)
       }.onFailure { e ->
         telemetryClient.trackEvent("casenotes-amend-failed", telemetryMap)
@@ -103,6 +94,19 @@ class CaseNotesService(
       }
     } else {
       telemetryClient.trackEvent("casenotes-amend-ignored", telemetryMap)
+    }
+  }
+
+  private suspend fun doUpdate(dpsCaseNoteId: String, offenderNo: String, telemetryMap: MutableMap<String, String>) {
+    val mappings = mappingApiService.getOrNullByDpsId(dpsCaseNoteId)
+      ?: throw IllegalStateException("Tried to amend an casenote that has no mapping")
+
+    val dpsCaseNote = dpsApiService.getCaseNote(offenderNo, dpsCaseNoteId)
+    val updateCaseNoteRequest = dpsCaseNote.toNomisUpdateRequest()
+    mappings.forEachIndexed { i, dto ->
+      telemetryMap["nomisBookingId-${i + 1}"] = dto.nomisBookingId.toString()
+      telemetryMap["nomisCaseNoteId-${i + 1}"] = dto.nomisCaseNoteId.toString()
+      nomisApiService.updateCaseNote(dto.nomisCaseNoteId, updateCaseNoteRequest)
     }
   }
 
@@ -141,6 +145,20 @@ class CaseNotesService(
   }.onFailure { e ->
     telemetryClient.trackEvent("casenotes-mapping-deleted-failed", mapOf("dpsCaseNoteId" to dpsCaseNoteId))
     log.warn("Unable to delete mapping for casenote $dpsCaseNoteId. Please delete manually", e)
+  }
+
+  suspend fun resynchroniseCaseNote(offenderNo: String, dpsCaseNoteId: String) {
+    val telemetryMap = mutableMapOf(
+      "dpsCaseNoteId" to dpsCaseNoteId,
+      "offenderNo" to offenderNo,
+    )
+    runCatching {
+      doUpdate(dpsCaseNoteId, offenderNo, telemetryMap)
+      telemetryClient.trackEvent("casenotes-repair-success", telemetryMap)
+    }.onFailure { e ->
+      telemetryClient.trackEvent("casenotes-repair-failed", telemetryMap)
+      throw e
+    }
   }
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)

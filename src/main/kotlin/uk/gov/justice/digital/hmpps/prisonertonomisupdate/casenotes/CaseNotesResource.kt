@@ -27,6 +27,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 class CaseNotesResource(
   private val telemetryClient: TelemetryClient,
   private val caseNotesReconciliationService: CaseNotesReconciliationService,
+  private val caseNotesService: CaseNotesService,
   private val nomisApiService: NomisApiService,
   private val reportScope: CoroutineScope,
 ) {
@@ -116,8 +117,28 @@ class CaseNotesResource(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC") @PathVariable prisonNumber: String,
   ) = try {
     caseNotesReconciliationService.checkMatchOrThrowException(prisonNumber)
-  } catch (notFound: NotFound) {
+  } catch (_: NotFound) {
     throw NotFoundException("Offender not found $prisonNumber")
+  }
+
+  @PutMapping("/casenotes/{offenderNo}/{dpsId}/resynchronise")
+  @PreAuthorize("hasRole('NOMIS_CASENOTES')")
+  @Operation(
+    summary = "Resynchronises a case note for the given prisoner from DPS to NOMIS",
+    description = "Copies a case note from DPS to NOMIS. Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_NOMIS_CASENOTES",
+  )
+  suspend fun repairCaseNote(
+    @PathVariable offenderNo: String,
+    @PathVariable dpsId: String,
+  ) {
+    caseNotesService.resynchroniseCaseNote(offenderNo, dpsId)
+    telemetryClient.trackEvent(
+      "to-nomis-synch-casenotes-resynchronisation-repair",
+      mapOf(
+        "dpsId" to dpsId,
+      ),
+      null,
+    )
   }
 }
 

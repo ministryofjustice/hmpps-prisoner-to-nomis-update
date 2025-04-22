@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -59,6 +60,12 @@ class CaseNotesNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(caseNote)),
       ),
+    )
+  }
+
+  fun stubPutCaseNoteError(caseNoteId: Long) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/casenotes/$caseNoteId")).willReturn(status(500)),
     )
   }
 
