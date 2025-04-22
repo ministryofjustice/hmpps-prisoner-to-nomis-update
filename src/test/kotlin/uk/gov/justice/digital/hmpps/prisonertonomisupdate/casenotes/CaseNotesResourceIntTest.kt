@@ -1,5 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -8,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.doThrow
@@ -19,10 +24,20 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension.Companion.caseNotesDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDateTime
+import java.util.UUID
+
+private val NOMIS_CASE_NOTE_ID = 123456L
+private val OFFENDER_NO = "A1234KT"
+private val DPS_CASE_NOTE_ID = UUID.randomUUID().toString()
 
 class CaseNotesResourceIntTest : IntegrationTestBase() {
 
@@ -288,6 +303,179 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
           any(),
           isNull(),
         )
+      }
+    }
+  }
+
+  @DisplayName("PUT /casenotes/{offenderNo}/{dpsId}/resynchronise")
+  @Nested
+  inner class RepairCaseNote {
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/casenotes/$OFFENDER_NO/$DPS_CASE_NOTE_ID/resynchronise")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/casenotes/$OFFENDER_NO/$DPS_CASE_NOTE_ID/resynchronise")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/casenotes/$OFFENDER_NO/$DPS_CASE_NOTE_ID/resynchronise")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        caseNotesMappingApi.stubGetByDpsId(
+          DPS_CASE_NOTE_ID,
+          listOf(
+            CaseNoteMappingDto(
+              dpsCaseNoteId = DPS_CASE_NOTE_ID,
+              nomisBookingId = NOMIS_BOOKING_ID,
+              offenderNo = OFFENDER_NO,
+              nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+              mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+        )
+        caseNotesDpsApi.stubGetCaseNote(
+          caseNote = dpsCaseNote().copy(
+            caseNoteId = DPS_CASE_NOTE_ID,
+            offenderIdentifier = OFFENDER_NO,
+            type = "HPI",
+            amendments = listOf(
+              CaseNoteAmendment(
+                additionalNoteText = "amendment",
+                authorUserId = "54321",
+                creationDateTime = LocalDateTime.parse("2024-05-06T07:08:09"),
+                authorName = "ME SMITH",
+                authorUserName = "ME",
+              ),
+            ),
+          ),
+        )
+        caseNotesNomisApiMockServer.stubPutCaseNote(caseNoteId = NOMIS_CASE_NOTE_ID)
+
+        webTestClient.put().uri("/casenotes/$OFFENDER_NO/$DPS_CASE_NOTE_ID/resynchronise")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CASENOTES")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will send telemetry event showing the update`() {
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("casenotes-repair-success"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `telemetry will contain key facts about the updated caseNote`() {
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("casenotes-repair-success"),
+          check {
+            assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
+            assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call the mapping service to get the NOMIS caseNote id`() {
+        caseNotesMappingApi.verify(getRequestedFor(urlMatching("/mapping/casenotes/dps-casenote-id/$DPS_CASE_NOTE_ID/all")))
+      }
+
+      @Test
+      fun `will call back to DPS to get caseNote details`() {
+        caseNotesDpsApi.verify(getRequestedFor(urlMatching("/case-notes/$OFFENDER_NO/$DPS_CASE_NOTE_ID")))
+      }
+
+      @Test
+      fun `will update the caseNote in NOMIS with details of the DPS caseNote`() {
+        caseNotesNomisApiMockServer.verify(
+          putRequestedFor(urlEqualTo("/casenotes/${NOMIS_CASE_NOTE_ID}"))
+            .withRequestBodyJsonPath("text", "contents of case note")
+            .withRequestBodyJsonPath("amendments[0].text", "amendment")
+            .withRequestBodyJsonPath("amendments[0].authorUsername", "ME")
+            .withRequestBodyJsonPath("amendments[0].createdDateTime", "2024-05-06T07:08:09"),
+        )
+      }
+    }
+
+    @Nested
+    inner class Exceptions {
+      @Nested
+      @DisplayName("when Nomis fails")
+      inner class WhenUnexpectedDPsError {
+        @BeforeEach
+        fun setUp() {
+          caseNotesMappingApi.stubGetByDpsId(
+            DPS_CASE_NOTE_ID,
+            listOf(
+              CaseNoteMappingDto(
+                dpsCaseNoteId = DPS_CASE_NOTE_ID,
+                nomisBookingId = NOMIS_BOOKING_ID,
+                offenderNo = OFFENDER_NO,
+                nomisCaseNoteId = NOMIS_CASE_NOTE_ID,
+                mappingType = CaseNoteMappingDto.MappingType.DPS_CREATED,
+              ),
+            ),
+          )
+          caseNotesDpsApi.stubGetCaseNote(
+            caseNote = dpsCaseNote().copy(
+              caseNoteId = DPS_CASE_NOTE_ID,
+              offenderIdentifier = OFFENDER_NO,
+              type = "HPI",
+              amendments = listOf(
+                CaseNoteAmendment(
+                  additionalNoteText = "amendment",
+                  authorUserId = "54321",
+                  creationDateTime = LocalDateTime.parse("2024-05-06T07:08:09"),
+                  authorName = "ME SMITH",
+                  authorUserName = "ME",
+                ),
+              ),
+            ),
+          )
+          caseNotesNomisApiMockServer.stubPutCaseNoteError(caseNoteId = NOMIS_CASE_NOTE_ID)
+
+          webTestClient.put().uri("/casenotes/$OFFENDER_NO/$DPS_CASE_NOTE_ID/resynchronise")
+            .headers(setAuthorisation(roles = listOf("NOMIS_CASENOTES")))
+            .exchange()
+            .expectStatus().is5xxServerError
+        }
+
+        @Test
+        fun `will send telemetry event showing it failed to update`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              ArgumentMatchers.eq("casenotes-repair-failed"),
+              check {
+                assertThat(it).containsEntry("dpsCaseNoteId", DPS_CASE_NOTE_ID)
+                assertThat(it).containsEntry("offenderNo", OFFENDER_NO)
+              },
+              isNull(),
+            )
+          }
+        }
       }
     }
   }
