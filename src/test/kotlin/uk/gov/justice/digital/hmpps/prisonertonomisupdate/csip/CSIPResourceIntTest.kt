@@ -18,6 +18,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension.Companion.csipDpsApi
@@ -120,7 +121,11 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         .exchange()
         .expectStatus().isAccepted
 
-      verify(telemetryClient).trackEvent(eq("csip-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
+      verify(telemetryClient).trackEvent(
+        eq("csip-reports-reconciliation-requested"),
+        check { assertThat(it).containsEntry("active-prisoners", "34") },
+        isNull(),
+      )
 
       awaitReportFinished()
     }
@@ -175,12 +180,18 @@ class CSIPResourceIntTest : IntegrationTestBase() {
       with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
         assertThat(this).containsEntry("missingFromDps", "")
-        assertThat(this).containsEntry("missingFromNomis", "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)")
+        assertThat(this).containsEntry(
+          "missingFromNomis",
+          "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+        )
       }
       with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
         assertThat(this).containsEntry("missingFromDps", "")
-        assertThat(this).containsEntry("missingFromNomis", "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)")
+        assertThat(this).containsEntry(
+          "missingFromNomis",
+          "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+        )
       }
       with(telemetryCaptor.allValues.find { it["offenderNo"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
@@ -257,6 +268,106 @@ class CSIPResourceIntTest : IntegrationTestBase() {
         },
         isNull(),
       )
+    }
+  }
+
+  @DisplayName("GET /csip/reconciliation/{prisonNumber}")
+  @Nested
+  inner class CSIPReconciliationForOffender {
+    private val prisonNumber = "A1234BC"
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `return 404 when offender not found`() {
+        webTestClient.get().uri("/csip/reconciliation/AB9999C")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .exchange()
+          .expectStatus().isNotFound
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setup() {
+        csipNomisApi.stubGetCSIPsForReconciliation(prisonNumber)
+        csipDpsApi.stubGetCSIPsForPrisoner(prisonNumber)
+      }
+
+      @Test
+      fun `will return no differences`() {
+        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return mismatch with nomis`() {
+        csipDpsApi.stubGetCSIPsForPrisoner(
+          prisonNumber,
+          dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentType = ReferenceData(code = "VIP"))),
+          dpsCsipRecord(reviewOutcome = setOf(Review.Actions.REMAIN_ON_CSIP)),
+        )
+
+        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("offenderNo").isEqualTo(prisonNumber)
+          .jsonPath("nomisCSIPCount").isEqualTo(0)
+          .jsonPath("dpsCSIPCount").isEqualTo(2)
+          .jsonPath("missingFromNomis[0].incidentTypeCode").isEqualTo("VIP")
+          .jsonPath("missingFromNomis[1].incidentTypeCode").isEqualTo("INT")
+          .jsonPath("missingFromDps.size()").isEqualTo(0)
+
+        verify(telemetryClient).trackEvent(
+          eq("csip-reports-reconciliation-mismatch"),
+          telemetryCaptor.capture(),
+          isNull(),
+        )
+
+        with(telemetryCaptor.allValues[0]) {
+          assertThat(this).containsEntry(
+            "missingFromNomis",
+            "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true), " +
+              "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=false)",
+          )
+        }
+      }
     }
   }
 
