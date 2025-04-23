@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -104,7 +106,11 @@ class CSIPResource(
   suspend fun generateReconciliationReportForPrisoner(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
     @PathVariable prisonNumber: String,
-  ) = reconciliationService.checkCSIPsMatch(PrisonerIds(0, prisonNumber))
+  ) = try {
+    reconciliationService.checkCSIPsMatchOrThrowException(PrisonerIds(0, prisonNumber))
+  } catch (_: NotFound) {
+    throw NotFoundException("Offender not found $prisonNumber")
+  }
 }
 
 fun List<MismatchCSIPs>.asMap(): Map<String, String> = this.associate {

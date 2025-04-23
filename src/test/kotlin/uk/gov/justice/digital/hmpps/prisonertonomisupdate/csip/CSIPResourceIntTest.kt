@@ -306,6 +306,10 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     inner class Validation {
       @Test
       fun `return 404 when offender not found`() {
+        csipNomisApi.stubGetCSIPsForReconciliation(
+          offenderNo = "AB9999C",
+          status = HttpStatus.NOT_FOUND,
+        )
         webTestClient.get().uri("/csip/reconciliation/AB9999C")
           .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
           .exchange()
