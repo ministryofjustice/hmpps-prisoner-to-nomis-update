@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.4631.7d70e1f"
+    "version" : "2025-04-23.4834.658ad2e"
   },
   "servers" : [ {
     "url" : "https://alerts-api-dev.hmpps.service.justice.gov.uk",
@@ -1992,6 +1992,22 @@
             "description" : "The displayable name of the user who last set the alert to expire.",
             "example" : "Firstname Lastname"
           },
+          "madeInactiveAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the alert was made to expire.",
+            "example" : "2022-07-15T15:24:56"
+          },
+          "madeInactiveBy" : {
+            "type" : "string",
+            "description" : "The username of the user who made the alert to expire.",
+            "example" : "USER1234"
+          },
+          "madeInactiveByDisplayName" : {
+            "type" : "string",
+            "description" : "The displayable name of the user who made the alert to expire.",
+            "example" : "Firstname Lastname"
+          },
           "prisonCodeWhenCreated" : {
             "type" : "string",
             "description" : "The location of the prisoner at the time the alert was created",
@@ -2453,6 +2469,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -2470,18 +2492,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -2498,14 +2514,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
