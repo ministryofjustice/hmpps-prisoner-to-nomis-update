@@ -54,6 +54,19 @@ class CSIPReconciliationService(
     .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
 
   suspend fun checkCSIPsMatch(prisonerId: PrisonerIds): MismatchCSIPs? = runCatching {
+    checkCSIPsMatchOrThrowException(prisonerId)
+  }.onFailure {
+    log.error("Unable to match csips for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
+    telemetryClient.trackEvent(
+      "csip-reports-reconciliation-mismatch-error",
+      mapOf(
+        "offenderNo" to prisonerId.offenderNo,
+        "bookingId" to prisonerId.bookingId.toString(),
+      ),
+    )
+  }.getOrNull()
+
+  suspend fun checkCSIPsMatchOrThrowException(prisonerId: PrisonerIds): MismatchCSIPs? {
     val nomisCSIPList = doApiCallWithRetries { nomisCSIPApiService.getCSIPsForReconciliation(prisonerId.offenderNo) }.offenderCSIPs
     val dpsCSIPList = doApiCallWithRetries { dpsCSIPApiService.getCSIPsForPrisoner(prisonerId.offenderNo) }
 
@@ -87,16 +100,7 @@ class CSIPReconciliationService(
     } else {
       null
     }
-  }.onFailure {
-    log.error("Unable to match csips for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
-    telemetryClient.trackEvent(
-      "csip-reports-reconciliation-mismatch-error",
-      mapOf(
-        "offenderNo" to prisonerId.offenderNo,
-        "bookingId" to prisonerId.bookingId.toString(),
-      ),
-    )
-  }.getOrNull()
+  }
 }
 
 fun CSIPResponse.toCSIPSummary() = CSIPReportSummary(
