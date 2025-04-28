@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-17.11945.23db7bd"
+    "version" : "2025-04-25.11998.2ed99e3"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -1180,7 +1180,7 @@
       "put" : {
         "tags" : [ "sentencing-resource" ],
         "summary" : "Updates Sentence",
-        "description" : "Required role NOMIS_SENTENCING Updates a Sentence for the offender and latest booking",
+        "description" : "Required role NOMIS_SENTENCING Updates a Sentence for the offender and case",
         "operationId" : "updateSentence",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -1318,6 +1318,196 @@
         "responses" : {
           "204" : {
             "description" : "the sentence has been deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSequence}/sentence-terms/{termSequence}" : {
+      "put" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "Updates Sentence Term",
+        "description" : "Required role NOMIS_SENTENCING Updates a Sentence Term for the offender",
+        "operationId" : "updateSentenceTerm",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no",
+            "example" : "AA668EC"
+          },
+          "example" : "AA668EC"
+        }, {
+          "name" : "caseId",
+          "in" : "path",
+          "description" : "Case Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Case Id",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        }, {
+          "name" : "sentenceSequence",
+          "in" : "path",
+          "description" : "Sentence sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sentence sequence",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "termSequence",
+          "in" : "path",
+          "description" : "term sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "term sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateSentenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Sentence updated"
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Sentence term does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "deletes a specific sentence",
+        "description" : "Requires role NOMIS_SENTENCING. Deletes a sentence by case.booking, sentence sequence and term sequence",
+        "operationId" : "deleteSentenceTerm",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no",
+            "example" : "AA668EC"
+          },
+          "example" : "AA668EC"
+        }, {
+          "name" : "caseId",
+          "in" : "path",
+          "description" : "Case Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Case Id",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        }, {
+          "name" : "sentenceSequence",
+          "in" : "path",
+          "description" : "Sentence sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sentence sequence",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "termSequence",
+          "in" : "path",
+          "description" : "Term sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Term sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "the sentence term has been deleted"
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -7232,8 +7422,8 @@
     "/service-prisons/{serviceCode}/prison/{prisonId}" : {
       "get" : {
         "tags" : [ "service-agency-switches-resource" ],
-        "summary" : "Check if a service is turned on for a prison",
-        "description" : "Check if a prison is turned on for a service. Requires role NOMIS_ACTIVITIES",
+        "summary" : "Returns if the service is switched on for the specified service code / prison id.",
+        "description" : "Returns 204 if the service is switched on for the service code / prison id combination.\n    If the service is not switched on then 404 is returned.\n    This endpoint also takes into account the special `*ALL*` prison id - if the service code has a prison entry of\n    `*ALL*` then the service is deemed to be switched on for all prisons and will therefore return 204 irrespective of the\n    prison id that is passed in.\n    Requires role NOMIS_ACTIVITIES or ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "checkServicePrison",
         "parameters" : [ {
           "name" : "serviceCode",
@@ -7260,7 +7450,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "OK"
+            "description" : "Service is switched on for the service code and prison id."
           },
           "400" : {
             "description" : "Bad request",
@@ -7283,7 +7473,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7293,7 +7483,7 @@
             }
           },
           "404" : {
-            "description" : "Not Found, the service is not turned on for the prison",
+            "description" : "The service code does not exist or the service is not switched on for the prison.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7357,7 +7547,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "description" : "Forbidden, requires role NOMIS_ACTIVITIES",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8054,6 +8244,112 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSequence}/sentence-terms" : {
+      "post" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "Creates a new Sentence term",
+        "description" : "Required role NOMIS_SENTENCING Creates a new sentence term for the specified sentence",
+        "operationId" : "createSentenceTerm",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number",
+            "example" : "AB1234K"
+          },
+          "example" : "AB1234K"
+        }, {
+          "name" : "caseId",
+          "in" : "path",
+          "description" : "Case Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Case Id",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        }, {
+          "name" : "sentenceSequence",
+          "in" : "path",
+          "description" : "Sentence sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sentence sequence",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SentenceTermRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created Sentence Term",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateSentenceTermResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/casenotes" : {
       "get" : {
         "tags" : [ "case-notes-resource" ],
@@ -8463,7 +8759,7 @@
       "post" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets prisoner details for a list of bookings",
-        "description" : "Requires role SYNCHRONISATION_REPORTING.",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerBookings",
         "requestBody" : {
           "content" : {
@@ -8506,7 +8802,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11587,8 +11883,8 @@
     "/service-prisons/{serviceCode}" : {
       "get" : {
         "tags" : [ "service-agency-switches-resource" ],
-        "summary" : "Retrieve a list of prisons switched on for the service",
-        "description" : "Retrieves all prisons switched on for the service code, or an empty list if there are none. Requires role SYNCHRONISATION_REPORTING",
+        "summary" : "Retrieve a list of prisons switched on for the service code",
+        "description" : "Returns a list of prisons switched on for the service code.\n      A special prisonId of `*ALL*` is used to designate that the service is switched on for all prisons.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getServicePrisons",
         "parameters" : [ {
           "name" : "serviceCode",
@@ -11635,7 +11931,83 @@
             }
           },
           "403" : {
-            "description" : "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/service-prisons/{serviceCode}/prisoner/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "service-agency-switches-resource" ],
+        "summary" : "Check if a service is turned on for the prison relating to this prisoner",
+        "description" : "Check if the prisoner's current prison is turned on for a service. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "checkServicePrisonForPrisoner",
+        "parameters" : [ {
+          "name" : "serviceCode",
+          "in" : "path",
+          "description" : "The code of the service from the EXTERNAL_SERVICES table",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The code of the service from the EXTERNAL_SERVICES table",
+            "example" : "ACTIVITY"
+          },
+          "example" : "ACTIVITY"
+        }, {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Offender No AKA prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No AKA prisoner number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK"
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found, the service is not turned on for the prison",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11888,7 +12260,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden, requires role SYNCHRONISATION_REPORTING",
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12408,11 +12780,109 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentence-terms/booking-id/{bookingId}/sentence-sequence/{sentenceSequence}/term-sequence/{termSequence}" : {
+      "get" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "get a sentence term by id (offender booking, sentence sequence and term sequence",
+        "description" : "Requires role NOMIS_SENTENCING. Retrieves a sentence term by id",
+        "operationId" : "getOffenderSentenceTerm",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no",
+            "example" : "AA668EC"
+          },
+          "example" : "AA668EC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "offender booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "offender booking id",
+            "example" : 4565456
+          },
+          "example" : 4565456
+        }, {
+          "name" : "sentenceSequence",
+          "in" : "path",
+          "description" : "Sentence sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Sentence sequence",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "termSequence",
+          "in" : "path",
+          "description" : "term sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "term sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the sentence term details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTermResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender booking not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/merges" : {
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets prisoner's list of merge details since a given date. Either the current offenderNo or the previous offenderNo can be used to search for merges. Only COMPLETED merges are returned",
-        "description" : "Requires role SYNCHRONISATION_REPORTING.",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerMerges",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -12461,7 +12931,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12872,7 +13342,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the identifiers for all prisoners. By default only active prisoners will be returned unless active=false",
-        "description" : "Requires role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS.",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW or ROLE_NOMIS_ALERTS.",
         "operationId" : "getPrisonerIdentifiers",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -12913,7 +13383,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12930,7 +13400,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the identifier for all prisoners.",
-        "description" : "Requires role SYNCHRONISATION_REPORTING, NOMIS_ALERTS, 'ROLE_NOMIS_SENTENCING' or NOMIS_CORE_PERSON.",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW, NOMIS_ALERTS, 'ROLE_NOMIS_SENTENCING' or NOMIS_CORE_PERSON.",
         "operationId" : "getAllPrisoners",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -12962,7 +13432,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING, 'ROLE_NOMIS_SENTENCING' or ROLE_NOMIS_ALERTS not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW, 'ROLE_NOMIS_SENTENCING' or ROLE_NOMIS_ALERTS not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12978,7 +13448,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the identifier for all prisoners.",
-        "description" : "Gets the specified number of prisoners starting after the given id number.\n      Clients can iterate through all prisoners by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role SYNCHRONISATION_REPORTING or NOMIS_CASENOTES.",
+        "description" : "Gets the specified number of prisoners starting after the given id number.\n      Clients can iterate through all prisoners by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW or NOMIS_CASENOTES.",
         "operationId" : "getAllPrisonersFromId",
         "parameters" : [ {
           "name" : "offenderId",
@@ -13027,7 +13497,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING or ROLE_NOMIS_ALERTS not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW or ROLE_NOMIS_ALERTS not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -13043,7 +13513,7 @@
       "get" : {
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets the identifiers for all active prisoners",
-        "description" : "Requires role SYNCHRONISATION_REPORTING.",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getActivePrisonerIdentifiers",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -13075,7 +13545,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -13423,7 +13893,7 @@
       "get" : {
         "tags" : [ "contact-person-resource" ],
         "summary" : "Gets the identifier for all persons.",
-        "description" : "Gets the specified number of persons starting after the given id number.\n      Clients can iterate through all persons by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role SYNCHRONISATION_REPORTING.",
+        "description" : "Gets the specified number of persons starting after the given id number.\n      Clients can iterate through all persons by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPersonIdsFromId",
         "parameters" : [ {
           "name" : "personId",
@@ -13472,7 +13942,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -14937,7 +15407,7 @@
     "/court-cases/{id}" : {
       "get" : {
         "tags" : [ "sentencing-resource" ],
-        "summary" : "get a court case, migration version without offenderNo validation",
+        "summary" : "get a court case, without offenderNo validation",
         "description" : "Requires role NOMIS_SENTENCING. Retrieves a court case by id",
         "operationId" : "getCourtCaseForMigration",
         "parameters" : [ {
@@ -15199,7 +15669,7 @@
       "get" : {
         "tags" : [ "bookings-resource" ],
         "summary" : "Gets the identifiers for all latest bookings.",
-        "description" : "Gets the specified number of latest bookings starting after the given id number.\n      Clients can iterate through all bookings by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role SYNCHRONISATION_REPORTING.",
+        "description" : "Gets the specified number of latest bookings starting after the given id number.\n      Clients can iterate through all bookings by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned prisonerIds list has size less than the requested page size.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAllLatestBookingsFromId",
         "parameters" : [ {
           "name" : "bookingId",
@@ -15260,7 +15730,7 @@
             }
           },
           "403" : {
-            "description" : "Forbidden to access this endpoint when role SYNCHRONISATION_REPORTING not present",
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -19917,6 +20387,25 @@
       "CreateSentenceResponse" : {
         "type" : "object",
         "description" : "Create sentence response",
+        "properties" : {
+          "sentenceSeq" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "termSeq" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "bookingId", "sentenceSeq", "termSeq" ]
+      },
+      "CreateSentenceTermResponse" : {
+        "type" : "object",
+        "description" : "Create sentence term response",
         "properties" : {
           "sentenceSeq" : {
             "type" : "integer",
