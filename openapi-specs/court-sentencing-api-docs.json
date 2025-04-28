@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-22.5886.8481d2f"
+    "version" : "2025-04-25.6020.7c6e547"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4449,15 +4449,9 @@
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
-          },
-          "draftAppearances" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DraftCourtAppearance"
-            }
           }
         },
-        "required" : [ "appearances", "courtCaseUuid", "draftAppearances", "prisonerId", "status" ]
+        "required" : [ "appearances", "courtCaseUuid", "prisonerId", "status" ]
       },
       "CourtCases" : {
         "type" : "object",
@@ -4470,19 +4464,6 @@
           }
         },
         "required" : [ "courtCases" ]
-      },
-      "DraftCourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "draftUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "sessionBlob" : {
-            "$ref" : "#/components/schemas/JsonNode"
-          }
-        },
-        "required" : [ "draftUuid", "sessionBlob" ]
       },
       "NextCourtAppearance" : {
         "type" : "object",
@@ -4955,6 +4936,19 @@
           }
         },
         "required" : [ "active", "appearances", "caseReferences", "courtCaseUuid", "prisonerId" ]
+      },
+      "DraftCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "draftUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sessionBlob" : {
+            "$ref" : "#/components/schemas/JsonNode"
+          }
+        },
+        "required" : [ "draftUuid", "sessionBlob" ]
       },
       "Pageable" : {
         "type" : "object",
