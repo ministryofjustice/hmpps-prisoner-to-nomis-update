@@ -195,6 +195,7 @@ class ContactPersonDpsApiExtension :
         totalActive = 0,
         totalExpired = 0,
       ),
+      isStaff = false,
     )
     fun prisonerContactRestrictionsResponse() = PrisonerContactRestrictionsResponse(
       prisonerContactRestrictions = emptyList(),
