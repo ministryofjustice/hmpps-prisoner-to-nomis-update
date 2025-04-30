@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-25.1100.318de1a"
+    "version" : "2025-04-29.1162.4938d84"
   },
   "servers" : [ {
     "url" : "/",
@@ -14083,11 +14083,16 @@
             "description" : "Any additional comments",
             "example" : "Close family friend"
           },
+          "isStaff" : {
+            "type" : "boolean",
+            "description" : "Whether the contact is a staff member",
+            "example" : false
+          },
           "restrictionSummary" : {
             "$ref" : "#/components/schemas/RestrictionsSummary"
           }
         },
-        "required" : [ "contactId", "currentTerm", "firstName", "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "lastName", "prisonerContactId", "prisonerNumber", "relationshipToPrisonerCode", "relationshipToPrisonerDescription", "relationshipTypeCode", "relationshipTypeDescription", "restrictionSummary" ]
+        "required" : [ "contactId", "currentTerm", "firstName", "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "isStaff", "lastName", "prisonerContactId", "prisonerNumber", "relationshipToPrisonerCode", "relationshipToPrisonerDescription", "relationshipTypeCode", "relationshipTypeDescription", "restrictionSummary" ]
       },
       "RestrictionTypeDetails" : {
         "type" : "object",
