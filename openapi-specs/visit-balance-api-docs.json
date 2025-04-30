@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-10.276.b56ae65"
+    "version" : "2025-04-29.323.7ac74aa"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -292,6 +292,79 @@
         }
       }
     },
+    "/visits/allocation/prisoner/{prisonerId}/adjustments/{adjustmentId}" : {
+      "get" : {
+        "tags" : [ "nomis-controller" ],
+        "summary" : "Endpoint to get adjustment for a prisoner, given their ID and adjustment id (changeLogId).",
+        "description" : "Returns a snapshot of prisoners balance (including changes and reason for change).\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
+        "operationId" : "getPrisonerAdjustment",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "description" : "prisonerId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonerId",
+            "example" : "AA123456"
+          },
+          "example" : "AA123456"
+        }, {
+          "name" : "adjustmentId",
+          "in" : "path",
+          "description" : "adjustmentId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "adjustmentId",
+            "example" : "1234"
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner information returned.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitAllocationPrisonerAdjustmentResponseDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get prisoner VO / PVO information.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No adjustments found in visit allocation api for given prisoner.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -501,6 +574,52 @@
           }
         },
         "required" : [ "prisonerId", "pvoBalance", "voBalance" ]
+      },
+      "VisitAllocationPrisonerAdjustmentResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string",
+            "description" : "nomsNumber of the prisoner",
+            "example" : "AA123456"
+          },
+          "voBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "previous VO balance of prisoner (can be negative)",
+            "example" : 2
+          },
+          "changeToVoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "change to previous VO balance (can be negative)",
+            "example" : -1
+          },
+          "pvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "previous PVO balance of prisoner (can be negative)",
+            "example" : 1
+          },
+          "changeToPvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "change to previous PVO balance (can be negative)",
+            "example" : -1
+          },
+          "changeLogType" : {
+            "type" : "string",
+            "description" : "type of change applied",
+            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED" ],
+            "example" : "SYNC"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "additional information of change applied",
+            "example" : "Gave prisoner extra VO"
+          }
+        },
+        "required" : [ "changeLogType", "prisonerId" ]
       },
       "DlqMessage" : {
         "type" : "object",
