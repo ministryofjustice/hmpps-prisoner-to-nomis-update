@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-03-10.25320.703aab5"
+    "version" : "2025-04-29.26763.03f2615"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -99,6 +99,155 @@
         }
       }
     },
+    "/scheduled-instances/{instanceId}" : {
+      "get" : {
+        "tags" : [ "scheduled-instance-controller" ],
+        "summary" : "Get a scheduled instance by ID",
+        "description" : "Returns a scheduled instance.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES",
+        "operationId" : "getScheduledInstanceById",
+        "parameters" : [ {
+          "name" : "instanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "Caseload-Id",
+          "in" : "header",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled instance found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ActivityScheduleInstance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The scheduled instance was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "scheduled-instance-controller" ],
+        "summary" : "Update a scheduled instance.",
+        "description" : "\n      Currently only cancelled sessions reasons, comments and attendances where payments should be issued can be updated\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "updateScheduledInstance",
+        "parameters" : [ {
+          "name" : "instanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "Caseload-Id",
+          "in" : "header",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledInstancedUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Scheduled instance successfully updated"
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Scheduled instance not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/scheduled-instances/{instanceId}/uncancel" : {
       "put" : {
         "tags" : [ "scheduled-instance-controller" ],
@@ -168,7 +317,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/scheduled-instances/{instanceId}/cancel" : {
@@ -239,6 +389,127 @@
           },
           "404" : {
             "description" : "The scheduled instance was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/scheduled-instances/uncancel" : {
+      "put" : {
+        "tags" : [ "scheduled-instance-controller" ],
+        "summary" : "Uncancel multiple schedule instances",
+        "description" : "Uncancel multiple schedule instances and reset associated un-suspended attendances\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "uncancelScheduledInstances",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduleInstancesUncancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Scheduled instances successfully uncancelled",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scheduled-instances/cancel" : {
+      "put" : {
+        "tags" : [ "scheduled-instance-controller" ],
+        "summary" : "Cancel multiple schedule instances",
+        "description" : "Cancels multiple schedule instances and associated attendance records\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "cancelScheduledInstances",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduleInstancesCancelRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Scheduled instances successfully cancelled",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -495,85 +766,6 @@
         "responses" : {
           "202" : {
             "description" : "The appointment or series of appointments was cancelled.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AppointmentSeries"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The appointment for this id was not found.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/appointments/{appointmentId}/attendance" : {
-      "put" : {
-        "tags" : [ "appointment-controller" ],
-        "summary" : "Mark the attendance for an appointment",
-        "description" : "\n    Mark or update the attendance records for the attendees of an appointment. This sets the current attendance record\n    for each supplied prison number, replacing any existing record. This supports both the initial recording of attendance\n    and changing that attendance record. There are no restrictions on when attendance can be recorded. It can be done\n    for past and future appointments.\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
-        "operationId" : "markAttendance",
-        "parameters" : [ {
-          "name" : "appointmentId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "Caseload-Id",
-          "in" : "header",
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/AppointmentAttendanceRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "202" : {
-            "description" : "Attendance for the appointment was recorded.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1374,6 +1566,113 @@
               }
             }
           }
+        },
+        "deprecated" : true
+      }
+    },
+    "/scheduled-events/prison/{prisonCode}/location-events" : {
+      "post" : {
+        "tags" : [ "scheduled-event-controller" ],
+        "summary" : "Get a list of scheduled events for a prison given list of DPS location UUIDs, a date and optional time slot",
+        "description" : "\n      Returns scheduled events for the prison, locations UUIDs, date and optional time slot.\n      This endpoint only returns activities and appointments and these come from the local database.\n      This endpoint supports the creation of movement lists.\n      Note that activities are only scheduled 60 days in advance. Appointments may be scheduled for any date in the future.\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "getScheduledEventsForMultipleLocationsByDPSLocationsIds",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The 3-character prison code.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "date",
+          "in" : "query",
+          "description" : "The exact date to return events for (required) in format YYYY-MM-DD",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "timeSlot",
+          "in" : "query",
+          "description" : "Time slot of the events (optional). If supplied, one of AM, PM or ED.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "AM", "PM", "ED" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "Set of internal DPS Locations UUIDS (required). Example [b7602cc8-e769-4cbb-8194-62d8e655992a, e284603a-73cb-4892-a4c8-79cf9da199df].",
+                "items" : {
+                  "type" : "string",
+                  "format" : "uuid"
+                },
+                "uniqueItems" : true
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successful call - zero or more scheduled events found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/InternalLocationEvents"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Requested resource not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
         }
       }
     },
@@ -1554,6 +1853,86 @@
           },
           "403" : {
             "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/{prisonCode}/move-activity-start-dates" : {
+      "post" : {
+        "tags" : [ "migrate-activity-controller" ],
+        "summary" : "Move the start date for activities their schedules and allocations for a prison",
+        "description" : "\n      Move a prisons activities to a later start date.\n      Only allocations due to start before the new start date will be moved.\n      Activities that have already started will be ignored.\n      Activities that are not before the new start date will be ignored.\n    \n\nRequires one of the following roles:\n* NOMIS_ACTIVITIES\n* ACTIVITY_ADMIN",
+        "operationId" : "moveActivityStartDates",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activityStartDate",
+          "in" : "query",
+          "description" : "The new activity start date for the activities. Must be in the future.",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The start dates have been updated where possible",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison code is unknown.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2041,7 +2420,8 @@
           "description" : "The prison code e.g. MDI",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "minLength" : 1
           }
         } ],
         "requestBody" : {
@@ -3244,6 +3624,26 @@
         }
       }
     },
+    "/utility/invalid-activity-locations" : {
+      "get" : {
+        "tags" : [ "utility-controller" ],
+        "summary" : "Get any activities with invalid locations",
+        "description" : "Return any activities with invalid locations.",
+        "operationId" : "getInvalidActivityLocations",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/synchronisation/reconciliation/attendances/{prisonId}" : {
       "get" : {
         "tags" : [ "synchronisation-controller" ],
@@ -3998,75 +4398,6 @@
         }
       }
     },
-    "/scheduled-instances/{instanceId}" : {
-      "get" : {
-        "tags" : [ "scheduled-instance-controller" ],
-        "summary" : "Get a scheduled instance by ID",
-        "description" : "Returns a scheduled instance.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES",
-        "operationId" : "getScheduledInstanceById",
-        "parameters" : [ {
-          "name" : "instanceId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "Caseload-Id",
-          "in" : "header",
-          "content" : {
-            "*/*" : {
-              "schema" : {
-                "type" : "string"
-              }
-            }
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Scheduled instance found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ActivityScheduleInstance"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The scheduled instance was not found.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/scheduled-instances/{instanceId}/scheduled-attendees" : {
       "get" : {
         "tags" : [ "scheduled-instance-controller" ],
@@ -4526,6 +4857,14 @@
           "schema" : {
             "type" : "boolean",
             "default" : true
+          }
+        }, {
+          "name" : "nameSearch",
+          "in" : "query",
+          "description" : "The activity name contains this case insensitive search term",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -4991,7 +5330,8 @@
           "description" : "The prison code e.g. MDI",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "minLength" : 1
           }
         }, {
           "name" : "date",
@@ -6372,7 +6712,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "text", "type" ]
+        "required" : [ "type" ]
       },
       "PrisonerDeallocationRequest" : {
         "type" : "object",
@@ -6383,13 +6723,15 @@
             "description" : "The prisoner or prisoners to be deallocated. Must be allocated to the schedule affected by the request.",
             "items" : {
               "type" : "string"
-            }
+            },
+            "minItems" : 1
           },
           "reasonCode" : {
             "type" : "string",
             "description" : "The reason code for the deallocation",
             "enum" : [ "COMPLETED", "TRANSFERRED", "WITHDRAWN_STAFF", "WITHDRAWN_OWN", "DISMISSED", "HEALTH", "OTHER", "SECURITY" ],
-            "example" : "RELEASED"
+            "example" : "RELEASED",
+            "minLength" : 1
           },
           "endDate" : {
             "type" : "string",
@@ -6407,7 +6749,7 @@
             "description" : "The scheduled instance id required when de-allocation is a session later today"
           }
         },
-        "required" : [ "endDate", "prisonerNumbers", "reasonCode" ]
+        "required" : [ "endDate" ]
       },
       "ErrorResponse" : {
         "type" : "object",
@@ -6432,6 +6774,31 @@
         },
         "required" : [ "status" ]
       },
+      "ScheduledInstancedUpdateRequest" : {
+        "type" : "object",
+        "description" : "The update request with the scheduled instance changes",
+        "properties" : {
+          "cancelledReason" : {
+            "type" : "string",
+            "description" : "The reason for cancelling the schedule instance",
+            "example" : "No tutor available",
+            "maxLength" : 60,
+            "minLength" : 0
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "A field for any additional comments",
+            "example" : "Resume tomorrow",
+            "maxLength" : 250,
+            "minLength" : 0
+          },
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued? Will be ignored if the activity is unpaid.",
+            "example" : true
+          }
+        }
+      },
       "UncancelScheduledInstanceRequest" : {
         "type" : "object",
         "description" : "The uncancel request with the user details",
@@ -6439,12 +6806,14 @@
           "username" : {
             "type" : "string",
             "description" : "The username of the user performing the unschedule operation",
-            "example" : "RJ56DDE"
+            "example" : "RJ56DDE",
+            "minLength" : 1
           },
           "displayName" : {
             "type" : "string",
             "description" : "The displayName of the user performing the unschedule operation",
-            "example" : "Bob Adams"
+            "example" : "Bob Adams",
+            "minLength" : 1
           }
         },
         "required" : [ "displayName", "username" ]
@@ -6463,7 +6832,8 @@
           "username" : {
             "type" : "string",
             "description" : "The username of the user cancelling the schedule instance",
-            "example" : "RJ56DDE"
+            "example" : "RJ56DDE",
+            "minLength" : 1
           },
           "comment" : {
             "type" : "string",
@@ -6472,6 +6842,60 @@
           }
         },
         "required" : [ "reason", "username" ]
+      },
+      "ScheduleInstancesUncancelRequest" : {
+        "type" : "object",
+        "description" : "The uncancel scheduled instances request",
+        "properties" : {
+          "scheduleInstanceIds" : {
+            "type" : "array",
+            "description" : "The scheduled instance ids to uncancel",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "minItems" : 1
+          }
+        }
+      },
+      "ScheduleInstancesCancelRequest" : {
+        "type" : "object",
+        "description" : "The cancel scheduled instances request",
+        "properties" : {
+          "scheduleInstanceIds" : {
+            "type" : "array",
+            "description" : "The scheduled instance ids to cancel",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "minItems" : 1
+          },
+          "reason" : {
+            "type" : "string",
+            "description" : "The reason for cancelling the schedule instances",
+            "example" : "No tutor available",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "The username of the user cancelling the schedule instances",
+            "example" : "RJ56DDE",
+            "minLength" : 1
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "A field for any additional comments",
+            "example" : "Resume tomorrow"
+          },
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued? Will be ignored if the activity is unpaid.",
+            "example" : true
+          }
+        },
+        "required" : [ "issuePayment", "reason", "username" ]
       },
       "RetryDlqResult" : {
         "type" : "object",
@@ -6506,13 +6930,15 @@
           "prisonCode" : {
             "type" : "string",
             "description" : "The prison code",
-            "example" : "MDI"
+            "example" : "MDI",
+            "minLength" : 1
           },
           "status" : {
             "type" : "string",
             "description" : "The status - WAITING, COMPLETED",
             "enum" : [ "WAITING", "COMPLETED" ],
-            "example" : "WAITING"
+            "example" : "WAITING",
+            "minLength" : 1
           },
           "attendanceReason" : {
             "type" : "string",
@@ -6619,13 +7045,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of this appointment",
             "example" : "13:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -6809,13 +7233,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment or appointments in the series",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
@@ -6943,29 +7365,6 @@
         },
         "required" : [ "applyTo", "cancellationReasonId" ]
       },
-      "AppointmentAttendanceRequest" : {
-        "type" : "object",
-        "description" : "The lists of prison numbers to mark as attended and non-attended",
-        "properties" : {
-          "attendedPrisonNumbers" : {
-            "type" : "array",
-            "description" : "The prisoner or prisoners that attended the appointment",
-            "example" : [ "A1234BC" ],
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "nonAttendedPrisonNumbers" : {
-            "type" : "array",
-            "description" : "The prisoner or prisoners that did not attended the appointment",
-            "example" : [ "A1234BC" ],
-            "items" : {
-              "type" : "string"
-            }
-          }
-        },
-        "required" : [ "attendedPrisonNumbers", "nonAttendedPrisonNumbers" ]
-      },
       "MultipleAppointmentAttendanceRequest" : {
         "type" : "object",
         "description" : "\n  Describes how to update attendances for multiple appointments.\n  ",
@@ -6981,7 +7380,8 @@
             "description" : "The list of prisoner numbers to update",
             "items" : {
               "type" : "string"
-            }
+            },
+            "minItems" : 1
           }
         },
         "required" : [ "appointmentId", "prisonerNumbers" ]
@@ -7272,10 +7672,11 @@
             "items" : {
               "type" : "integer",
               "format" : "int64"
-            }
+            },
+            "minItems" : 1
           }
         },
-        "required" : [ "identifiers", "outboundEvent" ]
+        "required" : [ "outboundEvent" ]
       },
       "PrisonerAllocationRequest" : {
         "type" : "object",
@@ -7319,7 +7720,7 @@
             "description" : "The scheduled instance id required when allocation starts today"
           }
         },
-        "required" : [ "prisonerNumber", "startDate" ]
+        "required" : [ "startDate" ]
       },
       "Slot" : {
         "type" : "object",
@@ -7334,7 +7735,8 @@
           "timeSlot" : {
             "type" : "string",
             "description" : "The time slot of the activity schedule",
-            "enum" : [ "AM", "PM", "ED" ]
+            "enum" : [ "AM", "PM", "ED" ],
+            "minLength" : 1
           },
           "monday" : {
             "type" : "boolean"
@@ -7359,11 +7761,11 @@
           },
           "customStartTime" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "customEndTime" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "daysOfWeek" : {
             "type" : "array",
@@ -7568,13 +7970,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for this scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for this scheduled instance",
             "example" : "10:00"
           },
@@ -7603,6 +8003,11 @@
             "type" : "string",
             "description" : "The reason this scheduled instance was cancelled",
             "example" : "Staff unavailable"
+          },
+          "cancelledIssuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued for the cancelled scheduled instance?",
+            "example" : true
           },
           "comment" : {
             "type" : "string",
@@ -7732,13 +8137,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time that any instances of this schedule slot will start",
             "example" : "9:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The time that any instances of this schedule slot will finish",
             "example" : "11:30"
           },
@@ -8263,13 +8666,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for this scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for this scheduled instance",
             "example" : "10:00"
           },
@@ -8285,7 +8686,6 @@
           },
           "appointmentSeriesCancellationStartTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time of the first appointment cancelled in the series",
             "example" : "10:30"
           },
@@ -8328,6 +8728,12 @@
             "description" : "\n    The id of the internal location. Mapped from AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID in NOMIS.\n    ",
             "example" : 27723
           },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location UUID for this schedule",
+            "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
+          },
           "prisonCode" : {
             "type" : "string",
             "description" : "\n    The prison code/agency id of the internal location. Mapped from AGENCY_LOCATIONS.AGY_LOC_ID in NOMIS.\n    ",
@@ -8352,7 +8758,7 @@
             "uniqueItems" : true
           }
         },
-        "required" : [ "code", "description", "events", "id", "prisonCode" ]
+        "required" : [ "code", "description", "dpsLocationId", "events", "id", "prisonCode" ]
       },
       "PrisonRegimeSlot" : {
         "type" : "object",
@@ -8364,27 +8770,27 @@
           },
           "amStart" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "amFinish" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "pmStart" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "pmFinish" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "edStart" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "edFinish" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           }
         },
         "required" : [ "amFinish", "amStart", "dayOfWeek", "edFinish", "edStart", "pmFinish", "pmStart" ]
@@ -8406,37 +8812,31 @@
           },
           "amStart" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for the am slot",
             "example" : "09:00"
           },
           "amFinish" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for the am slot",
             "example" : "12:00"
           },
           "pmStart" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for the pm slot",
             "example" : "13:00"
           },
           "pmFinish" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for the pm slot",
             "example" : "16:30"
           },
           "edStart" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for the ed slot",
             "example" : "18:00"
           },
           "edFinish" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for the ed slot",
             "example" : "20:00"
           },
@@ -8787,12 +9187,14 @@
           "alias" : {
             "type" : "string",
             "description" : "The alternative text to use in place of the description e.g. Low, Medium, High",
-            "example" : "Low"
+            "example" : "Low",
+            "minLength" : 1
           },
           "description" : {
             "type" : "string",
             "description" : "The description of pay band in this prison",
-            "example" : "Pay band 1"
+            "example" : "Pay band 1",
+            "minLength" : 1
           },
           "nomisPayBand" : {
             "type" : "integer",
@@ -8905,7 +9307,8 @@
           "programServiceCode" : {
             "type" : "string",
             "description" : "A nomis program service code (activity category)",
-            "example" : "PRISON JOBS"
+            "example" : "PRISON JOBS",
+            "minLength" : 1
           },
           "prisonCode" : {
             "type" : "string",
@@ -8966,7 +9369,8 @@
             "description" : "Details of when this activity runs during the week",
             "items" : {
               "$ref" : "#/components/schemas/NomisScheduleRule"
-            }
+            },
+            "minItems" : 1
           },
           "payRates" : {
             "type" : "array",
@@ -8985,7 +9389,8 @@
           "incentiveLevel" : {
             "type" : "string",
             "description" : "The incentive level code from NOMIS",
-            "example" : "BAS"
+            "example" : "BAS",
+            "minLength" : 1
           },
           "nomisPayBand" : {
             "type" : "string",
@@ -9007,13 +9412,11 @@
         "properties" : {
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "Start time on the day",
             "example" : "10:45"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "End time on the day",
             "example" : "11:45"
           },
@@ -9121,13 +9524,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment",
             "example" : "10:30"
           },
@@ -9166,7 +9567,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "bookingId", "categoryCode", "created", "createdBy", "internalLocationId", "prisonCode", "prisonerNumber", "startDate", "startTime" ]
+        "required" : [ "bookingId", "created", "internalLocationId", "startDate", "startTime" ]
       },
       "AppointmentInstance" : {
         "type" : "object",
@@ -9246,13 +9647,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment instance",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment instance",
             "example" : "10:30"
           },
@@ -9629,13 +10028,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of this appointment",
             "example" : "13:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -9809,13 +10206,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of this appointment",
             "example" : "13:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -9982,13 +10377,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment",
             "example" : "10:30"
           },
@@ -10016,13 +10409,15 @@
           "categoryCode" : {
             "type" : "string",
             "description" : "The NOMIS reference code for these appointments. Must exist and be active",
-            "example" : "CHAP"
+            "example" : "CHAP",
+            "minLength" : 1
           },
           "tierCode" : {
             "type" : "string",
             "description" : "The tier code for this appointment",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
-            "example" : "TIER_1"
+            "example" : "TIER_1",
+            "minLength" : 1
           },
           "organiserCode" : {
             "type" : "string",
@@ -10058,10 +10453,11 @@
             "description" : "\n    The list of appointments to create\n    ",
             "items" : {
               "$ref" : "#/components/schemas/AppointmentSetAppointment"
-            }
+            },
+            "minItems" : 1
           }
         },
-        "required" : [ "appointments", "categoryCode", "inCell", "prisonCode", "startDate", "tierCode" ]
+        "required" : [ "appointments", "inCell", "startDate" ]
       },
       "AppointmentSet" : {
         "type" : "object",
@@ -10155,18 +10551,21 @@
             "example" : [ "A1234BC" ],
             "items" : {
               "type" : "string"
-            }
+            },
+            "minItems" : 1
           },
           "categoryCode" : {
             "type" : "string",
             "description" : "The NOMIS reference code for this appointment. Must exist and be active",
-            "example" : "CHAP"
+            "example" : "CHAP",
+            "minLength" : 1
           },
           "tierCode" : {
             "type" : "string",
             "description" : "The tier code for this appointment",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
-            "example" : "TIER_1"
+            "example" : "TIER_1",
+            "minLength" : 1
           },
           "organiserCode" : {
             "type" : "string",
@@ -10199,13 +10598,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment or appointments in the series",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
@@ -10227,7 +10624,7 @@
             "example" : 789
           }
         },
-        "required" : [ "appointmentType", "categoryCode", "endTime", "inCell", "prisonCode", "prisonerNumbers", "startDate", "startTime", "tierCode" ]
+        "required" : [ "appointmentType", "endTime", "inCell", "prisonerNumbers", "startDate", "startTime" ]
       },
       "WaitingListApplicationRequest" : {
         "type" : "object",
@@ -10273,7 +10670,7 @@
             "example" : "PENDING"
           }
         },
-        "required" : [ "activityScheduleId", "applicationDate", "prisonerNumber", "requestedBy", "status" ]
+        "required" : [ "activityScheduleId", "applicationDate", "status" ]
       },
       "UnsuspendPrisonerRequest" : {
         "type" : "object",
@@ -10293,7 +10690,8 @@
             "items" : {
               "type" : "integer",
               "format" : "int64"
-            }
+            },
+            "minItems" : 1
           },
           "suspendUntil" : {
             "type" : "string",
@@ -10302,7 +10700,7 @@
             "example" : "2023-09-10"
           }
         },
-        "required" : [ "allocationIds", "prisonerNumber", "suspendUntil" ]
+        "required" : [ "allocationIds", "suspendUntil" ]
       },
       "SuspendPrisonerRequest" : {
         "type" : "object",
@@ -10322,7 +10720,8 @@
             "items" : {
               "type" : "integer",
               "format" : "int64"
-            }
+            },
+            "minItems" : 1
           },
           "suspendFrom" : {
             "type" : "string",
@@ -10341,7 +10740,7 @@
             "example" : "SUSPENDED_WITH_PAY"
           }
         },
-        "required" : [ "allocationIds", "prisonerNumber", "status", "suspendFrom" ]
+        "required" : [ "allocationIds", "status", "suspendFrom" ]
       },
       "ActivityCreateRequest" : {
         "type" : "object",
@@ -10418,7 +10817,8 @@
             "type" : "string",
             "description" : "The tier code for this activity, as defined by the Future Prison Regime team",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
-            "example" : "TIER_1"
+            "example" : "TIER_1",
+            "minLength" : 1
           },
           "organiserCode" : {
             "type" : "string",
@@ -10492,7 +10892,8 @@
             "description" : "The days and times an activity schedule can take place",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
-            }
+            },
+            "minItems" : 1
           },
           "runsOnBankHoliday" : {
             "type" : "boolean",
@@ -10500,7 +10901,7 @@
             "example" : true
           }
         },
-        "required" : [ "attendanceRequired", "categoryId", "eligibilityRuleIds", "inCell", "minimumEducationLevel", "offWing", "onWing", "outsideWork", "paid", "pay", "pieceWork", "prisonCode", "riskLevel", "runsOnBankHoliday", "scheduleWeeks", "slots", "startDate", "summary", "tierCode" ]
+        "required" : [ "attendanceRequired", "categoryId", "eligibilityRuleIds", "inCell", "minimumEducationLevel", "offWing", "onWing", "outsideWork", "paid", "pay", "pieceWork", "runsOnBankHoliday", "scheduleWeeks", "startDate" ]
       },
       "ActivityMinimumEducationLevelCreateRequest" : {
         "type" : "object",
@@ -10586,7 +10987,7 @@
             "example" : "2022-12-23"
           }
         },
-        "required" : [ "incentiveLevel", "incentiveNomisCode", "payBandId" ]
+        "required" : [ "payBandId" ]
       },
       "Activity" : {
         "type" : "object",
@@ -10945,13 +11346,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time for this scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time for this scheduled instance",
             "example" : "10:00"
           },
@@ -11050,15 +11449,10 @@
           "alias" : {
             "type" : "string",
             "description" : "The alternative text to use in place of the description e.g. Low, Medium, High",
-            "example" : "Low"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "The description of pay band in this prison",
-            "example" : "Pay band 1"
+            "example" : "Low",
+            "minLength" : 1
           }
-        },
-        "required" : [ "alias", "description" ]
+        }
       },
       "AppointmentUpdateRequest" : {
         "type" : "object",
@@ -11099,13 +11493,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The updated starting time",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The updated end time",
             "example" : "10:30"
           },
@@ -11410,13 +11802,11 @@
           },
           "sessionStartTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The scheduled instance start time",
             "example" : "10:00"
           },
           "sessionEndTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The scheduled instance end time",
             "example" : "11:00"
           },
@@ -12157,13 +12547,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time of the scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the scheduled instance",
             "example" : "12:00"
           },
@@ -12451,6 +12839,12 @@
             "description" : "\n    The id of the internal location. Mapped from AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID in NOMIS.\n    ",
             "example" : 27723
           },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location UUID for the location",
+            "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
+          },
           "prisonCode" : {
             "type" : "string",
             "description" : "\n    The prison code/agency id of the internal location. Mapped from AGENCY_LOCATIONS.AGY_LOC_ID in NOMIS.\n    ",
@@ -12467,7 +12861,7 @@
             "example" : "Education 1"
           }
         },
-        "required" : [ "code", "description", "id", "prisonCode" ]
+        "required" : [ "code", "description", "dpsLocationId", "id", "prisonCode" ]
       },
       "EventReview" : {
         "type" : "object",
@@ -12596,13 +12990,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The start time",
             "example" : "9:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time",
             "example" : "11:30"
           },
@@ -12677,13 +13069,13 @@
         "properties" : {
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "the activity start time"
+            "description" : "the activity start time",
+            "example" : "14:30:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
-            "description" : "the activity end time"
+            "description" : "the activity end time",
+            "example" : "14:30:00"
           },
           "internalLocation" : {
             "type" : "string",
@@ -12776,11 +13168,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time"
+            "example" : "14:30:00"
           }
         },
         "required" : [ "appointmentAttendeeId", "appointmentId", "appointmentName", "bookingId", "endTime", "prisonerNumber", "startDate", "startTime" ]
@@ -12820,13 +13212,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of this appointment",
             "example" : "13:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -13002,13 +13392,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of the appointment or appointments in the series",
             "example" : "09:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
@@ -13072,13 +13460,11 @@
           },
           "startTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The starting time of this appointment",
             "example" : "13:00"
           },
           "endTime" : {
             "type" : "string",
-            "format" : "partial-time",
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
