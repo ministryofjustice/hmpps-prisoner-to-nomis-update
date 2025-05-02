@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-29.323.7ac74aa"
+    "version" : "2025-05-01.345.2b3daa8"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -610,7 +610,7 @@
           "changeLogType" : {
             "type" : "string",
             "description" : "type of change applied",
-            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED" ],
+            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS" ],
             "example" : "SYNC"
           },
           "comment" : {
