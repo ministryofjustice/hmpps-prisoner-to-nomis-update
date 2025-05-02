@@ -31,6 +31,11 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForSt
   }
   .awaitSingleOrNull()
 
+suspend inline fun WebClient.ResponseSpec.awaitBodilessEntityAsTrueNotFoundAsFalse(): Boolean = this.toBodilessEntity()
+  .map { true }
+  .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.just(false) }
+  .awaitSingle()
+
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrUpsertAttendanceError(): T = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException.BadRequest::class.java) {
     val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse

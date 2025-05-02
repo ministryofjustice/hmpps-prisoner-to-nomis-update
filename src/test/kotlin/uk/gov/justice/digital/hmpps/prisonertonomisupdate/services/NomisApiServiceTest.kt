@@ -56,6 +56,58 @@ internal class NomisApiServiceTest {
   private lateinit var nomisApiService: NomisApiService
 
   @Nested
+  inner class IsServicePrisonOnForPrisoner {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubCheckServicePrisonForPrisoner()
+
+      nomisApiService.isServicePrisonOnForPrisoner(
+        serviceCode = "VISIT_ALLOCATION",
+        prisonNumber = "A1234BC",
+      )
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will call the  service endpoint`() = runTest {
+      nomisApi.stubCheckServicePrisonForPrisoner()
+
+      nomisApiService.isServicePrisonOnForPrisoner(
+        serviceCode = "VISIT_ALLOCATION",
+        prisonNumber = "A1234BC",
+      )
+
+      nomisApi.verify(getRequestedFor(urlPathEqualTo("/service-prisons/VISIT_ALLOCATION/prisoner/A1234BC")))
+    }
+
+    @Test
+    fun `will return true when service is on for prisoner's prison`() = runTest {
+      nomisApi.stubCheckServicePrisonForPrisoner()
+
+      assertThat(
+        nomisApiService.isServicePrisonOnForPrisoner(
+          serviceCode = "VISIT_ALLOCATION",
+          prisonNumber = "A1234BC",
+        ),
+      ).isTrue
+    }
+
+    @Test
+    fun `will return false if exception thrown when service not on for prisoner's prison`() = runTest {
+      nomisApi.stubCheckServicePrisonForPrisonerNotFound()
+      assertThat(
+        nomisApiService.isServicePrisonOnForPrisoner(
+          serviceCode = "VISIT_ALLOCATION",
+          prisonNumber = "A1234BC",
+        ),
+      ).isFalse
+    }
+  }
+
+  @Nested
   inner class CreateVisit {
 
     @Test

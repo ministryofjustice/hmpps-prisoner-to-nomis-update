@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityAsTrueNotFoundAsFalse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
@@ -84,6 +85,11 @@ class NomisApiService(
   }
 
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
+  suspend fun isServicePrisonOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
+    .uri("/service-prisons/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
+    .retrieve()
+    .awaitBodilessEntityAsTrueNotFoundAsFalse()
 
   // ////////// VISITS //////////////
 

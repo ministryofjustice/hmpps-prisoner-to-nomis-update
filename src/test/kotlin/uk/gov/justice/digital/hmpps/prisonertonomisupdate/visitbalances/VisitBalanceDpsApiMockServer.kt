@@ -15,8 +15,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
-import java.time.LocalDate
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
 
 class VisitBalanceDpsApiExtension :
   BeforeAllCallback,
@@ -68,7 +67,7 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetVisitBalanceAdjustment(vbAdjId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef", response: VisitBalanceAdjustmentDto = visitBalanceAdjustmentDto(vbAdjId)) {
+  fun stubGetVisitBalanceAdjustment(vbAdjId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef", response: VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceAdjustmentDto(vbAdjId)) {
     stubFor(
       get("/visits/allocation/adjustment/$vbAdjId").willReturn(
         aResponse()
@@ -112,18 +111,19 @@ fun visitBalanceDto() = PrisonerBalanceDto(
   pvoBalance = 3,
 )
 
-fun visitBalanceAdjustmentDto(vbAdjId: String) = VisitBalanceAdjustmentDto(
-  id = UUID.fromString(vbAdjId),
+fun visitBalanceAdjustmentDto(vbAdjId: String) = VisitAllocationPrisonerAdjustmentResponseDto(
   prisonerId = "A1234KT",
-  oldVoBalance = 12,
+  voBalance = 12,
   changeToVoBalance = 2,
-  oldPvoBalance = 7,
+  pvoBalance = 7,
   changeToPvoBalance = -1,
-  adjustmentDate = LocalDate.parse("2021-01-18"),
-  adjustmentReasonCode = VisitBalanceAdjustmentReasonCode.GOV,
+  // TODO update with values from DPS
+  // adjustmentDate = LocalDate.parse("2021-01-18"),
+  changeLogType = VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogType.SYNC,
   comment = "A comment",
-  expiryBalance = 6,
-  expiryDate = LocalDate.parse("2021-02-19"),
-  endorsedStaffId = 123,
-  authorisedStaffId = 345,
+  // TODO update with values from DPS
+  // expiryBalance = 6,
+  // expiryDate = LocalDate.parse("2021-02-19"),
+  // endorsedStaffId = 123,
+  // authorisedStaffId = 345,
 )
