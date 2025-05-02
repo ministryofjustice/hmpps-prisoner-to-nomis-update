@@ -16,6 +16,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Er
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogSource
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogType
+import java.time.LocalDateTime
 
 class VisitBalanceDpsApiExtension :
   BeforeAllCallback,
@@ -119,7 +122,10 @@ fun visitBalanceAdjustmentDto(vbAdjId: String) = VisitAllocationPrisonerAdjustme
   changeToPvoBalance = -1,
   // TODO update with values from DPS
   // adjustmentDate = LocalDate.parse("2021-01-18"),
-  changeLogType = VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogType.SYNC,
+  changeLogType = ChangeLogType.SYNC,
+  userId = "SYSTEM",
+  changeLogSource = ChangeLogSource.SYSTEM,
+  changeTimestamp = LocalDateTime.parse("2021-01-18T01:02:03"),
   comment = "A comment",
   // TODO update with values from DPS
   // expiryBalance = 6,
