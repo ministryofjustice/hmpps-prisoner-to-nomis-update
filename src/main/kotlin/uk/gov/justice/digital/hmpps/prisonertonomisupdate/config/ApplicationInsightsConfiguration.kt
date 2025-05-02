@@ -13,4 +13,8 @@ class ApplicationInsightsConfiguration {
   fun telemetryClient(): TelemetryClient = TelemetryClient()
 }
 
-fun TelemetryClient.trackEvent(name: String, properties: Map<String, String>) = this.trackEvent(name, properties, null)
+fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = this.trackEvent(name, properties.valuesAsStrings(), null)
+
+fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }
+
+fun telemetryOf(vararg pairs: Pair<String, Any>): MutableMap<String, Any> = mutableMapOf(*pairs)
