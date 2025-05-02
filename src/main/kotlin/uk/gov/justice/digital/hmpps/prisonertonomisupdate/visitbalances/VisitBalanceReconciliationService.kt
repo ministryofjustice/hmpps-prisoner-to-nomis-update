@@ -60,18 +60,17 @@ class VisitBalanceReconciliationService(
 
     return if (nomisVisitBalance != dpsVisitBalance) {
       MismatchVisitBalance(prisonNumber = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
-        log.info("VisitBalance Mismatch found  $mismatch")
-        telemetryClient.trackEvent(
-          "visitbalance-reports-reconciliation-mismatch",
-          mapOf(
-            "prisonNumber" to mismatch.prisonNumber,
-            "bookingId" to prisonerId.bookingId.toString(),
-            "nomisVisitBalance" to mismatch.nomisVisitBalance.visitBalance.toString(),
-            "dpsVisitBalance" to mismatch.dpsVisitBalance.visitBalance.toString(),
-            "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance.privilegedVisitBalance.toString(),
-            "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance.privilegedVisitBalance.toString(),
-          ),
+        log.info("VisitBalance mismatch found {}", mismatch)
+        val telemetry = mutableMapOf(
+          "prisonNumber" to mismatch.prisonNumber,
+          "nomisVisitBalance" to mismatch.nomisVisitBalance.visitBalance.toString(),
+          "dpsVisitBalance" to mismatch.dpsVisitBalance.visitBalance.toString(),
+          "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance.privilegedVisitBalance.toString(),
+          "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance.privilegedVisitBalance.toString(),
         )
+        // booking will be 0 if reconciliation run for single prisoner, in which case ignore
+        prisonerId.bookingId.takeIf { it != 0L }.let { telemetry["bookingId"] = it.toString() }
+        telemetryClient.trackEvent("visitbalance-reports-reconciliation-mismatch", telemetry)
       }
     } else {
       null
