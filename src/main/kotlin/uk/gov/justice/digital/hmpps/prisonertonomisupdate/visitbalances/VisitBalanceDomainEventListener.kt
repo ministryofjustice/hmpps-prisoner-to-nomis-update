@@ -14,7 +14,7 @@ import java.util.concurrent.CompletableFuture
 class VisitBalanceDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  private val visitBalanceService: VisitBalanceService,
+  private val service: VisitBalanceService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(
   objectMapper = objectMapper,
@@ -31,8 +31,8 @@ class VisitBalanceDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "prison-visit-allocation.adjustment.created" -> visitBalanceService.visitBalanceAdjustmentCreated(message.fromJson())
-      "prison-visit-allocation.balance.updated" -> visitBalanceService.visitBalanceUpdated(message.fromJson())
+      "prison-visit-allocation.adjustment.created" -> service.visitBalanceAdjustmentCreated(message.fromJson())
+      "prison-offender-events.prisoner.booking.moved" -> service.synchronisePrisonerBookingMoved(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

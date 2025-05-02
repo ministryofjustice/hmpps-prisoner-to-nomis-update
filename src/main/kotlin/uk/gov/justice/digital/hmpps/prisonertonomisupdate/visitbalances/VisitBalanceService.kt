@@ -2,26 +2,32 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.PersonReference
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerBookingMovedDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
-import java.util.UUID
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
+import java.time.LocalDate
 
 @Service
 class VisitBalanceService(
   private val telemetryClient: TelemetryClient,
   private val dpsApiService: VisitBalanceDpsApiService,
-  private val nomisApiService: VisitBalanceNomisApiService,
+  private val nomisApiService: NomisApiService,
+  private val visitBalanceNomisApiService: VisitBalanceNomisApiService,
 ) {
+  companion object {
+    const val VISIT_ALLOCATION_SERVICE = "VISIT_ALLOCATION"
+  }
   suspend fun visitBalanceAdjustmentCreated(event: VisitBalanceAdjustmentEvent) {
-    val visitBalanceAdjustmentId = event.additionalInformation.visitBalanceAdjustmentUuid.toString()
+    val visitBalanceAdjustmentId = event.additionalInformation.adjustmentId
     val telemetry = telemetryOf("visitBalanceAdjustmentId" to visitBalanceAdjustmentId)
 
     dpsApiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId).also {
-      nomisApiService.createVisitBalanceAdjustment(it.prisonerId, it.toNomisCreateVisitBalanceAdjustmentRequest())
+      visitBalanceNomisApiService.createVisitBalanceAdjustment(it.prisonerId, it.toNomisCreateVisitBalanceAdjustmentRequest())
       telemetryClient.trackEvent(
         "visitbalance-adjustment-synchronisation-created-success",
         telemetry + ("prisonNumber" to it.prisonerId) + ("visitBalanceChange" to it.changeToVoBalance.toString()) +
@@ -30,26 +36,41 @@ class VisitBalanceService(
     }
   }
 
-  suspend fun visitBalanceUpdated(event: VisitBalanceEvent) {
-    val offenderNo: String = event.personReference.identifiers.first { it.type == "NOMS" }.value
-    val telemetry = telemetryOf("prisonNumber" to offenderNo)
+  suspend fun synchronisePrisonerBookingMoved(bookingMovedEvent: PrisonerBookingMovedDomainEvent) {
+    /*
+    val movedFromPrisoner = bookingMovedEvent.additionalInformation.movedFromNomsNumber
+    val movedToPrisoner = bookingMovedEvent.additionalInformation.movedToNomsNumber
 
-    val balance = dpsApiService.getVisitBalance(offenderNo)
-    if (balance != null) {
-      nomisApiService.updateVisitBalance(balance.prisonerId, balance.toNomisUpdateVisitBalanceRequest())
-      telemetryClient.trackEvent(
-        "visitbalance-balance-synchronisation-updated-success",
-        telemetry + ("visitBalance" to balance.voBalance.toString()) + ("privilegedVisitBalance" to balance.pvoBalance.toString()),
+    val telemetry = telemetryOf(
+      "bookingId" to bookingMovedEvent.additionalInformation.bookingId,
+      "movedFromPrisonNumber" to movedFromPrisoner,
+      "movedToPrisonNumber" to movedToPrisoner,
+    )
+
+    if (isDpsInChargeOfVisitAllocation(movedFromPrisoner)) {
+      // BUT THEY COULD NOW BE OUT - do we care?
+      val fromVisitBalance = dpsApiService.getVisitBalance(movedFromPrisoner)
+      // TODO what if it is now null? can it be
+      visitBalanceNomisApiService.updateVisitBalance(movedFromPrisoner, fromVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(0, 0))
+      telemetry + mapOf(
+        "movedFromBalance" to mapOf("voBalance" to fromVisitBalance?.voBalance.toString(), "pvoBalance" to fromVisitBalance?.pvoBalance.toString()),
       )
     }
-  }
-}
 
-data class VisitBalanceEvent(
-  val description: String?,
-  val eventType: String,
-  val personReference: PersonReference,
-)
+    if (isDpsInChargeOfVisitAllocation(movedToPrisoner)) {
+      val toVisitBalance = dpsApiService.getVisitBalance(movedToPrisoner)
+      // TODO what if it is now null?
+      visitBalanceNomisApiService.updateVisitBalance(movedToPrisoner, toVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(0, 0))
+      telemetry + mapOf(
+        "movedToBalance" to mapOf("voBalance" to toVisitBalance?.voBalance.toString(), "pvoBalance" to toVisitBalance?.pvoBalance.toString()),
+      )
+    }
+    telemetryClient.trackEvent("visitbalance-adjustment-synchronisation-booking-moved", telemetry)
+     */
+  }
+
+  suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(serviceCode = VISIT_ALLOCATION_SERVICE, prisonNumber = nomisPrisonNumber)
+}
 
 data class VisitBalanceAdjustmentEvent(
   val description: String?,
@@ -58,22 +79,35 @@ data class VisitBalanceAdjustmentEvent(
   val additionalInformation: VisitBalanceAdjustmentAdditionalInformation,
 )
 
+data class PersonReference(val identifiers: List<Identifier> = listOf()) {
+  operator fun get(key: String) = identifiers.find { it.type == key }?.value
+  fun findNomsNumber() = get(NOMS_NUMBER_TYPE)
+
+  companion object {
+    const val NOMS_NUMBER_TYPE = "NOMIS"
+  }
+
+  data class Identifier(val type: String, val value: String)
+}
 data class VisitBalanceAdjustmentAdditionalInformation(
-  val visitBalanceAdjustmentUuid: UUID,
+  val adjustmentId: String,
 )
 
-fun VisitBalanceAdjustmentDto.toNomisCreateVisitBalanceAdjustmentRequest() = CreateVisitBalanceAdjustmentRequest(
-  adjustmentReasonCode = adjustmentReasonCode.value,
-  adjustmentDate = adjustmentDate,
+fun VisitAllocationPrisonerAdjustmentResponseDto.toNomisCreateVisitBalanceAdjustmentRequest() = CreateVisitBalanceAdjustmentRequest(
+  // TODO - pick up adjustment reason code set correctly
+  adjustmentReasonCode = "GOV",
+  // TODO - check if adjustment date should be passed in
+  adjustmentDate = LocalDate.now(),
   visitOrderChange = changeToVoBalance,
-  previousVisitOrderCount = oldVoBalance,
+  previousVisitOrderCount = voBalance,
   privilegedVisitOrderChange = changeToPvoBalance,
-  previousPrivilegedVisitOrderCount = oldPvoBalance,
+  previousPrivilegedVisitOrderCount = pvoBalance,
   comment = comment,
-  expiryBalance = expiryBalance,
-  expiryDate = expiryDate,
-  endorsedStaffId = endorsedStaffId,
-  authorisedStaffId = authorisedStaffId,
+  // TODO check we don't need these
+  // expiryBalance = expiryBalance,
+  // expiryDate = expiryDate,
+  // endorsedStaffId = endorsedStaffId,
+  // authorisedStaffId = authorisedStaffId,
 )
 
 fun PrisonerBalanceDto.toNomisUpdateVisitBalanceRequest() = UpdateVisitBalanceRequest(
