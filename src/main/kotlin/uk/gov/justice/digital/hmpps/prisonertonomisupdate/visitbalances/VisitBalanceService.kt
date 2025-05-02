@@ -2,10 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerBookingMovedDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerReceiveDomainEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.telemetryOf
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -23,16 +23,24 @@ class VisitBalanceService(
   companion object {
     const val VISIT_ALLOCATION_SERVICE = "VISIT_ALLOCATION"
   }
+
   suspend fun visitBalanceAdjustmentCreated(event: VisitBalanceAdjustmentEvent) {
     val visitBalanceAdjustmentId = event.additionalInformation.adjustmentId
-    val telemetry = telemetryOf("visitBalanceAdjustmentId" to visitBalanceAdjustmentId)
 
     dpsApiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId).also {
-      visitBalanceNomisApiService.createVisitBalanceAdjustment(it.prisonerId, it.toNomisCreateVisitBalanceAdjustmentRequest())
+      visitBalanceNomisApiService.createVisitBalanceAdjustment(
+        it.prisonerId,
+        it.toNomisCreateVisitBalanceAdjustmentRequest(),
+      )
+      val telemetry = telemetryOf(
+        "visitBalanceAdjustmentId" to visitBalanceAdjustmentId,
+        "prisonNumber" to it.prisonerId,
+      )
+      it.changeToVoBalance?.let { telemetry["visitBalanceChange"] = it }
+      it.changeToPvoBalance?.let { telemetry["privilegeVisitBalanceChange"] = it }
       telemetryClient.trackEvent(
         "visitbalance-adjustment-synchronisation-created-success",
-        telemetry + ("prisonNumber" to it.prisonerId) + ("visitBalanceChange" to it.changeToVoBalance.toString()) +
-          ("privilegeVisitBalanceChange" to it.changeToPvoBalance.toString()),
+        telemetry,
       )
     }
   }
@@ -74,7 +82,10 @@ class VisitBalanceService(
     // TODO: process receive reason to synchronise
   }
 
-  suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(serviceCode = VISIT_ALLOCATION_SERVICE, prisonNumber = nomisPrisonNumber)
+  suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(
+    serviceCode = VISIT_ALLOCATION_SERVICE,
+    prisonNumber = nomisPrisonNumber,
+  )
 }
 
 data class VisitBalanceAdjustmentEvent(
@@ -94,6 +105,7 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
 
   data class Identifier(val type: String, val value: String)
 }
+
 data class VisitBalanceAdjustmentAdditionalInformation(
   val adjustmentId: String,
 )

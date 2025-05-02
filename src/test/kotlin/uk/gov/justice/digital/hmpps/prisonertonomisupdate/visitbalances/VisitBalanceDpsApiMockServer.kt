@@ -120,16 +120,9 @@ fun visitBalanceAdjustmentDto(vbAdjId: String) = VisitAllocationPrisonerAdjustme
   changeToVoBalance = 2,
   pvoBalance = 7,
   changeToPvoBalance = -1,
-  // TODO update with values from DPS
-  // adjustmentDate = LocalDate.parse("2021-01-18"),
   changeLogType = ChangeLogType.SYNC,
   userId = "SYSTEM",
   changeLogSource = ChangeLogSource.SYSTEM,
   changeTimestamp = LocalDateTime.parse("2021-01-18T01:02:03"),
   comment = "A comment",
-  // TODO update with values from DPS
-  // expiryBalance = 6,
-  // expiryDate = LocalDate.parse("2021-02-19"),
-  // endorsedStaffId = 123,
-  // authorisedStaffId = 345,
 )

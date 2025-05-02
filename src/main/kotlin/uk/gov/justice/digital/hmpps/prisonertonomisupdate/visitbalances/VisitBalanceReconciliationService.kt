@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitBalanceResponse
@@ -16,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
-import kotlin.Long
 
 @Service
 class VisitBalanceReconciliationService(
@@ -61,15 +61,15 @@ class VisitBalanceReconciliationService(
     return if (nomisVisitBalance != dpsVisitBalance) {
       MismatchVisitBalance(prisonNumber = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
         log.info("VisitBalance mismatch found {}", mismatch)
-        val telemetry = mutableMapOf(
+        val telemetry = telemetryOf(
           "prisonNumber" to mismatch.prisonNumber,
-          "nomisVisitBalance" to mismatch.nomisVisitBalance.visitBalance.toString(),
-          "dpsVisitBalance" to mismatch.dpsVisitBalance.visitBalance.toString(),
-          "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance.privilegedVisitBalance.toString(),
-          "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance.privilegedVisitBalance.toString(),
+          "nomisVisitBalance" to mismatch.nomisVisitBalance.visitBalance,
+          "dpsVisitBalance" to mismatch.dpsVisitBalance.visitBalance,
+          "nomisPrivilegedVisitBalance" to mismatch.nomisVisitBalance.privilegedVisitBalance,
+          "dpsPrivilegedVisitBalance" to mismatch.dpsVisitBalance.privilegedVisitBalance,
         )
         // booking will be 0 if reconciliation run for single prisoner, in which case ignore
-        prisonerId.bookingId.takeIf { it != 0L }.let { telemetry["bookingId"] = it.toString() }
+        prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
         telemetryClient.trackEvent("visitbalance-reports-reconciliation-mismatch", telemetry)
       }
     } else {
