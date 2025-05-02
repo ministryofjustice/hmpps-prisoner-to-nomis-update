@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-01.345.2b3daa8"
+    "version" : "2025-05-02.349.ea0ab94"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -613,13 +613,29 @@
             "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS" ],
             "example" : "SYNC"
           },
+          "userId" : {
+            "type" : "string",
+            "description" : "user who applied change [If system -> SYSTEM, if user -> username]",
+            "example" : "JSMITH"
+          },
+          "changeLogSource" : {
+            "type" : "string",
+            "description" : "source of change applied",
+            "enum" : [ "SYSTEM", "STAFF" ],
+            "example" : "'STAFF' / 'SYSTEM'"
+          },
+          "changeTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp of when change occurred"
+          },
           "comment" : {
             "type" : "string",
             "description" : "additional information of change applied",
             "example" : "Gave prisoner extra VO"
           }
         },
-        "required" : [ "changeLogType", "prisonerId" ]
+        "required" : [ "changeLogSource", "changeLogType", "changeTimestamp", "prisonerId", "userId" ]
       },
       "DlqMessage" : {
         "type" : "object",

@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerBookingMovedDomainEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerReceiveDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
@@ -67,6 +68,10 @@ class VisitBalanceService(
     }
     telemetryClient.trackEvent("visitbalance-adjustment-synchronisation-booking-moved", telemetry)
      */
+  }
+
+  suspend fun synchronisePrisonerReceived(prisonerReceiveDomainEvent: PrisonerReceiveDomainEvent) {
+    // TODO: process receive reason to synchronise
   }
 
   suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(serviceCode = VISIT_ALLOCATION_SERVICE, prisonNumber = nomisPrisonNumber)
