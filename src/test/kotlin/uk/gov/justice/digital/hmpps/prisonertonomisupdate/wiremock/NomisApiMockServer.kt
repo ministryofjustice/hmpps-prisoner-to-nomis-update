@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
@@ -2395,6 +2396,37 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubSentenceDelete(offenderNo: String, caseId: Long, sentenceSeq: Long) {
     stubFor(
       delete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubSentenceTermCreate(offenderNo: String, caseId: Long, response: CreateSentenceTermResponse, sentenceSeq: Long) {
+    stubFor(
+      post("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(response)
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubSentenceTermUpdate(offenderNo: String, caseId: Long, sentenceSeq: Long, termSeq: Long) {
+    stubFor(
+      put("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubSentenceTermDelete(offenderNo: String, caseId: Long, sentenceSeq: Long, termSeq: Long) {
+    stubFor(
+      delete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(204),

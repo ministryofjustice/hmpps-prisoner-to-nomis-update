@@ -55,6 +55,12 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.updateSentence(message.fromJson())
       "sentence.deleted" ->
         courtSentencingService.deleteSentence(message.fromJson())
+      "sentence.period-length.inserted" ->
+        courtSentencingService.createSentenceTerm(message.fromJson())
+      "sentence.period-length.updated" ->
+        courtSentencingService.updateSentenceTerm(message.fromJson())
+      "sentence.period-length.deleted" ->
+        courtSentencingService.deleteSentenceTerm(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

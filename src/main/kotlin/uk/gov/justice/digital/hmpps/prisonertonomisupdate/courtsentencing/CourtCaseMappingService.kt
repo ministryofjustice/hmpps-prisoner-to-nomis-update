@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 
 @Service
 class CourtCaseMappingService(
@@ -78,6 +79,13 @@ class CourtCaseMappingService(
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
   }
+  suspend fun createSentenceTermMapping(request: SentenceTermMappingDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/sentence-terms")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
 
   suspend fun getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId: String): CourtCaseMappingDto? = webClient.get()
     .uri("/mapping/court-sentencing/court-cases/dps-court-case-id/{dpsCourtCaseId}", dpsCourtCaseId)
@@ -129,6 +137,26 @@ class CourtCaseMappingService(
       .uri(
         "/mapping/court-sentencing/sentences/dps-sentence-id/{dpsSentenceId}",
         dpsSentenceId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun getMappingGivenSentenceTermIdOrNull(dpsTermId: String): SentenceTermMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/sentence-terms/dps-term-id/{dpsTermId}", dpsTermId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getMappingGivenSentenceTermId(dpsTermId: String): SentenceTermMappingDto = webClient.get()
+    .uri("/mapping/court-sentencing/sentence-terms/dps-term-id/{dpsTermId}", dpsTermId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun deleteSentenceTermMappingByDpsId(dpsTermId: String) {
+    webClient.delete()
+      .uri(
+        "/mapping/court-sentencing/sentence-terms/dps-term-id/{dpsTermId}",
+        dpsTermId,
       )
       .retrieve()
       .awaitBodilessEntity()

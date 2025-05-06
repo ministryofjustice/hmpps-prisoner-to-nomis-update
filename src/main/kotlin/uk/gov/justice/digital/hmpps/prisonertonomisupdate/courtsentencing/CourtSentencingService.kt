@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
@@ -56,6 +57,7 @@ class CourtSentencingService(
     COURT_APPEARANCE("court-appearance"),
     COURT_CHARGE("charge"),
     SENTENCE("sentence"),
+    SENTENCE_TERM("sentence-term"),
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
@@ -267,6 +269,16 @@ class CourtSentencingService(
       mapOf("dpsSentenceId" to dpsSentenceId, "offenderNo" to offenderNo),
     )
     log.warn("Unable to delete mapping for Sentence $dpsSentenceId for offender $offenderNo. Please delete manually", e)
+  }
+
+  private suspend fun tryToDeleteSentenceTermMapping(offenderNo: String, dpsTermId: String) = runCatching {
+    courtCaseMappingService.deleteSentenceTermMappingByDpsId(dpsTermId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent(
+      "sentence-term-mapping-deleted-failed",
+      mapOf("dpsTermId" to dpsTermId, "offenderNo" to offenderNo),
+    )
+    log.warn("Unable to delete mapping for Sentence term $dpsTermId for offender $offenderNo. Please delete manually", e)
   }
 
   suspend fun createCharge(createEvent: CourtChargeCreatedEvent) {
@@ -501,6 +513,14 @@ class CourtSentencingService(
     )
   }
 
+  suspend fun createSentenceTermRetry(message: CreateMappingRetryMessage<SentenceTermMappingDto>) = courtCaseMappingService.createSentenceTermMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "sentence-term-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
@@ -508,6 +528,7 @@ class CourtSentencingService(
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceRetry(message.fromJson())
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
+      EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
@@ -602,6 +623,83 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun createSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
+    val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
+    val source = createEvent.additionalInformation.source
+    val dpsSentenceId = createEvent.additionalInformation.sentenceId
+    val dpsTermId = createEvent.additionalInformation.periodLengthId
+    val dpsAppearanceId = createEvent.additionalInformation.courtAppearanceId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCourtCaseId,
+      "dpsSentenceId" to dpsSentenceId,
+      "dpsCourtAppearanceId" to dpsAppearanceId,
+      "dpsTermId" to dpsTermId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(source)) {
+      synchronise {
+        name = EntityType.SENTENCE_TERM.displayName
+        telemetryClient = this@CourtSentencingService.telemetryClient
+        retryQueueService = courtSentencingRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          courtCaseMappingService.getMappingGivenSentenceTermIdOrNull(dpsTermId)
+        }
+
+        transform {
+          courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
+            ?.let { caseMapping ->
+              telemetryMap["nomisCourtCaseId"] = caseMapping.nomisCourtCaseId.toString()
+              courtCaseMappingService.getMappingGivenSentenceIdOrNull(dpsSentenceId = dpsSentenceId)
+                ?.let { sentenceMapping ->
+                  telemetryMap["nomisSentenceSequence"] = sentenceMapping.nomisSentenceSequence.toString()
+                  telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
+                  val dpsPeriodLength =
+                    courtSentencingApiService.getPeriodLength(dpsTermId)
+                      .also { telemetryMap["dpsTermId"] = it.periodLengthUuid.toString() }
+                  val nomisSentenceTermResponse =
+                    nomisApiService.createSentenceTerm(
+                      offenderNo,
+                      request = dpsPeriodLength.toNomisSentenceTerm(),
+                      caseId = caseMapping.nomisCourtCaseId,
+                      sentenceSeq = sentenceMapping.nomisSentenceSequence,
+                    )
+                  telemetryMap["nomisSentenceSeq"] = nomisSentenceTermResponse.sentenceSeq.toString()
+                  telemetryMap["nomisbookingId"] = nomisSentenceTermResponse.bookingId.toString()
+
+                  SentenceTermMappingDto(
+                    nomisBookingId = nomisSentenceTermResponse.bookingId,
+                    nomisSentenceSequence = nomisSentenceTermResponse.sentenceSeq.toInt(),
+                    nomisTermSequence = nomisSentenceTermResponse.termSeq.toInt(),
+                    dpsTermId = dpsTermId,
+                  )
+                } ?: let {
+                telemetryMap["reason"] = "Parent entity not found"
+                throw ParentEntityNotFoundRetry(
+                  "Attempt to create a sentence term without a sentence nomis mapping. Dps sentence id: $dpsSentenceId not found for DPS term $dpsTermId",
+                )
+              }
+            } ?: let {
+            telemetryMap["reason"] = "Parent entity not found"
+            throw ParentEntityNotFoundRetry(
+              "Attempt to create a sentence term without a case mapping. Dps case id: $dpsCourtCaseId not found for DPS term id $dpsTermId",
+            )
+          }
+        }
+        saveMapping { courtCaseMappingService.createSentenceTermMapping(it) }
+      }
+    } else {
+      telemetryMap["reason"] = "Sentence term created in NOMIS"
+      telemetryClient.trackEvent(
+        "sentence-term-create-ignored",
+        telemetryMap,
+        null,
+      )
+    }
+  }
+
   private suspend fun getNomisConsecutiveSentenceSeqOrNull(
     dpsSentence: LegacySentence,
     telemetryMap: MutableMap<String, String>,
@@ -688,6 +786,65 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun updateSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
+    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val source = createEvent.additionalInformation.source
+    val sentenceId = createEvent.additionalInformation.sentenceId
+    val termId = createEvent.additionalInformation.periodLengthId
+    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
+    val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to courtCaseId,
+      "dpsSentenceId" to sentenceId,
+      "dpsTermId" to termId,
+      "dpsCourtAppearanceId" to courtAppearanceId,
+      "offenderNo" to offenderNo,
+    )
+
+    if (isDpsCreated(source)) {
+      runCatching {
+        val courtCaseMapping =
+          courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(courtCaseId)?.also {
+            telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
+          } ?: let {
+            telemetryMap["reason"] = "Parent entity not found. Dps term id: $termId"
+            throw ParentEntityNotFoundRetry(
+              "Attempt to update a sentence term without a nomis case mapping. Dps case id: $courtCaseId not found for DPS period length $termId",
+            )
+          }
+
+        val sentenceTermMapping =
+          courtCaseMappingService.getMappingGivenSentenceTermId(termId)
+            .also {
+              telemetryMap["nomisSentenceSeq"] = it.nomisSentenceSequence.toString()
+              telemetryMap["nomisTermSeq"] = it.nomisTermSequence.toString()
+              telemetryMap["nomisBookingId"] = it.nomisBookingId.toString()
+            }
+
+        val dpsPeriodLength = courtSentencingApiService.getPeriodLength(termId)
+
+        nomisApiService.updateSentenceTerm(
+          offenderNo = offenderNo,
+          caseId = courtCaseMapping.nomisCourtCaseId,
+          sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
+          termSeq = sentenceTermMapping.nomisTermSequence,
+          request = dpsPeriodLength.toNomisSentenceTerm(),
+        )
+
+        telemetryClient.trackEvent(
+          "sentence-term-updated-success",
+          telemetryMap,
+        )
+      }.onFailure { e ->
+        telemetryClient.trackEvent("sentence-term-updated-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryMap["reason"] = "Sentence term updated in NOMIS"
+      telemetryClient.trackEvent("sentence-term-updated-ignored", telemetryMap, null)
+    }
+  }
+
   suspend fun deleteSentence(createdEvent: SentenceCreatedEvent) {
     val dpsSentenceId = createdEvent.additionalInformation.sentenceId
     val dpsCaseId = createdEvent.additionalInformation.courtCaseId
@@ -712,9 +869,11 @@ class CourtSentencingService(
             tryToDeleteSentenceMapping(offenderNo, dpsSentenceId)
             telemetryClient.trackEvent("sentence-deleted-success", telemetryMap)
           } ?: also {
+            telemetryMap["reason"] = "sentence mapping not found"
             telemetryClient.trackEvent("sentence-deleted-skipped", telemetryMap)
           }
         } ?: also {
+          telemetryMap["reason"] = "no case mapping found for sentence - required for deletion"
           telemetryClient.trackEvent("sentence-deleted-skipped", telemetryMap)
         }
       }.onFailure { e ->
@@ -722,7 +881,53 @@ class CourtSentencingService(
         throw e
       }
     } else {
+      telemetryMap["reason"] = "sentence deleted in nomis"
       telemetryClient.trackEvent("sentence-deleted-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun deleteSentenceTerm(createdEvent: PeriodLengthCreatedEvent) {
+    val dpsSentenceId = createdEvent.additionalInformation.sentenceId
+    val dpsTermId = createdEvent.additionalInformation.periodLengthId
+    val dpsCaseId = createdEvent.additionalInformation.courtCaseId
+    val offenderNo = createdEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCaseId,
+      "dpsSentenceId" to dpsSentenceId,
+      "dpsTermId" to dpsTermId,
+      "offenderNo" to offenderNo,
+    )
+    if (isDpsCreated(createdEvent.additionalInformation.source)) {
+      runCatching {
+        courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCaseId)?.also { mapping ->
+          telemetryMap["nomisCourtCaseId"] = mapping.nomisCourtCaseId.toString()
+          courtCaseMappingService.getMappingGivenSentenceTermIdOrNull(dpsSentenceId)?.also { sentenceTermMapping ->
+            telemetryMap["nomisSentenceSeq"] = sentenceTermMapping.nomisSentenceSequence.toString()
+            telemetryMap["nomisTermSeq"] = sentenceTermMapping.nomisTermSequence.toString()
+            telemetryMap["nomisBookingId"] = sentenceTermMapping.nomisBookingId.toString()
+            nomisApiService.deleteSentenceTerm(
+              offenderNo = offenderNo,
+              caseId = mapping.nomisCourtCaseId,
+              sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
+              termSeq = sentenceTermMapping.nomisTermSequence,
+            )
+            tryToDeleteSentenceTermMapping(offenderNo, dpsTermId)
+            telemetryClient.trackEvent("sentence-term-deleted-success", telemetryMap)
+          } ?: also {
+            telemetryMap["reason"] = "sentence term mapping not found"
+            telemetryClient.trackEvent("sentence-term-deleted-skipped", telemetryMap)
+          }
+        } ?: also {
+          telemetryMap["reason"] = "Parent entity case not found - required for deletion"
+          telemetryClient.trackEvent("sentence-term-deleted-skipped", telemetryMap)
+        }
+      }.onFailure { e ->
+        telemetryClient.trackEvent("sentence-term-deleted-failed", telemetryMap)
+        throw e
+      }
+    } else {
+      telemetryMap["reason"] = "sentence term deleted in nomis"
+      telemetryClient.trackEvent("sentence-term-deleted-ignored", telemetryMap)
     }
   }
 
@@ -801,6 +1006,14 @@ class CourtSentencingService(
     val courtCaseId: String,
   )
 
+  data class PeriodLengthAdditionalInformation(
+    val sentenceId: String,
+    val periodLengthId: String,
+    val courtAppearanceId: String,
+    val source: String,
+    val courtCaseId: String,
+  )
+
   data class CaseReferencesAdditionalInformation(
     val courtCaseId: String,
     val source: String,
@@ -828,6 +1041,11 @@ class CourtSentencingService(
 
   data class SentenceCreatedEvent(
     val additionalInformation: SentenceAdditionalInformation,
+    val personReference: PersonReferenceList,
+  )
+
+  data class PeriodLengthCreatedEvent(
+    val additionalInformation: PeriodLengthAdditionalInformation,
     val personReference: PersonReferenceList,
   )
 }
@@ -885,27 +1103,25 @@ fun LegacySentence.toNomisSentence(
   nomisChargeId: Long,
   nomisConsecutiveToSentenceSeq: Long?,
   nomisEventId: Long,
-): CreateSentenceRequest {
-  val terms: List<SentenceTermRequest> = this.periodLengths.map { it.toNomisSentenceTerm() }
-  return CreateSentenceRequest(
-    offenderChargeIds = listOf(nomisChargeId),
-    startDate = sentenceStartDate,
-    // no end date provided,
-    status = if (this.active) {
-      "A"
-    } else {
-      "I"
-    },
-    sentenceCategory = this.sentenceCategory,
-    sentenceCalcType = this.sentenceCalcType,
-    sentenceLevel = SENTENCE_LEVEL_IND,
-    sentenceTerms = terms,
+): CreateSentenceRequest = CreateSentenceRequest(
+  offenderChargeIds = listOf(nomisChargeId),
+  startDate = sentenceStartDate,
+  // no end date provided,
+  status = if (this.active) {
+    "A"
+  } else {
+    "I"
+  },
+  sentenceCategory = this.sentenceCategory,
+  sentenceCalcType = this.sentenceCalcType,
+  sentenceLevel = SENTENCE_LEVEL_IND,
+  // TODO will be removed as sentence terms moving to separate events to sentencing
+  sentenceTerms = emptyList(),
 
-    fine = this.fineAmount,
-    consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
-    eventId = nomisEventId,
-  )
-}
+  fine = this.fineAmount,
+  consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
+  eventId = nomisEventId,
+)
 
 fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTermRequest(
   years = this.periodYears,

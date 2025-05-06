@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-25.6020.7c6e547"
+    "version" : "2025-05-02.6261.8a23330"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -58,6 +58,9 @@
   }, {
     "name" : "draft-court-appearance-controller",
     "description" : "Draft Court appearance"
+  }, {
+    "name" : "legacy-period-length-controller",
+    "description" : "CRUD operations for syncing period-length data between NOMIS and RAS (period-lengths are called sentence-terms in NOMIS)"
   }, {
     "name" : "charge-controller",
     "description" : "Charges"
@@ -1305,12 +1308,62 @@
         }
       }
     },
+    "/legacy/period-length" : {
+      "post" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "Creates one or more period lengths for a single sentence",
+        "description" : "Creates one or more period lengths for a single sentence",
+        "operationId" : "create_1",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyCreatePeriodLength"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "period length created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLengthCreatedResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLengthCreatedResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLengthCreatedResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/court-case" : {
       "post" : {
         "tags" : [ "legacy-court-case-controller" ],
         "summary" : "Create a court case",
         "description" : "Synchronise a creation of court case from NOMIS into remand and sentencing API.",
-        "operationId" : "create_1",
+        "operationId" : "create_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1360,7 +1413,7 @@
         "tags" : [ "migration-controller" ],
         "summary" : "Creates a court case",
         "description" : "Migrates a court case, court appearance and charge from NOMIS into remand and sentencing API.",
-        "operationId" : "create_2",
+        "operationId" : "create_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1410,7 +1463,7 @@
         "tags" : [ "legacy-court-appearance-controller" ],
         "summary" : "Create a court appearance",
         "description" : "Synchronise a creation of court appearance from NOMIS court events into remand and sentencing API.",
-        "operationId" : "create_3",
+        "operationId" : "create_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1460,7 +1513,7 @@
         "tags" : [ "legacy-charge-controller" ],
         "summary" : "Create a charge",
         "description" : "Synchronise a creation of charge from NOMIS Offender charges into remand and sentencing API.",
-        "operationId" : "create_4",
+        "operationId" : "create_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1510,7 +1563,7 @@
         "tags" : [ "draft-court-case-controller" ],
         "summary" : "Create a draft court case",
         "description" : "Creates a draft court case for when a user wants to pause inputting a warrant and come back later",
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2131,6 +2184,62 @@
         }
       }
     },
+    "/person/{prisonerId}/has-sentence-to-chain-to" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "Determine if there can be a sentence to chain to",
+        "description" : "This endpoint will determine whether there can be a sentence which can be selected for a consecutive to chain",
+        "operationId" : "hasSentenceToChainTo",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "beforeOrOnAppearanceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns whether there is a sentence for a consecutive to chain",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HasSentenceToChainToResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HasSentenceToChainToResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HasSentenceToChainToResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/sentence-type/summary" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -2379,6 +2488,91 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/legacy/period-length/{periodLengthUuid}" : {
+      "get" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "retrieve a period-length",
+        "description" : "This endpoint will retrieve period-length details.",
+        "operationId" : "get_5",
+        "parameters" : [ {
+          "name" : "periodLengthUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns period-length details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found: Period length either doesn't exist, has no sentence, or is deleted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "Delete Period Length",
+        "description" : "This endpoint will soft-delete a period-length from RAS.",
+        "operationId" : "delete_4",
+        "parameters" : [ {
+          "name" : "periodLengthUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
           }
         }
       }
@@ -3016,7 +3210,7 @@
         "tags" : [ "legacy-charge-controller" ],
         "summary" : "Delete Charge",
         "description" : "Synchronise a deletion of charge from NOMIS offender charges into remand and sentencing API.",
-        "operationId" : "delete_4",
+        "operationId" : "delete_5",
         "parameters" : [ {
           "name" : "chargeUuid",
           "in" : "path",
@@ -3098,38 +3292,6 @@
         },
         "required" : [ "fineAmount" ]
       },
-      "LegacyCreatePeriodLength" : {
-        "type" : "object",
-        "properties" : {
-          "periodLengthId" : {
-            "$ref" : "#/components/schemas/NomisPeriodLengthId"
-          },
-          "periodLengthUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "periodYears" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodMonths" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodWeeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodDays" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
-          }
-        },
-        "required" : [ "legacyData", "periodLengthId" ]
-      },
       "LegacyCreateSentence" : {
         "type" : "object",
         "properties" : {
@@ -3158,47 +3320,9 @@
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/SentenceLegacyData"
-          },
-          "periodLengths" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LegacyCreatePeriodLength"
-            }
           }
         },
-        "required" : [ "active", "chargeUuids", "legacyData", "periodLengths", "prisonId" ]
-      },
-      "NomisPeriodLengthId" : {
-        "type" : "object",
-        "properties" : {
-          "offenderBookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sentenceSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "termSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "offenderBookingId", "sentenceSequence", "termSequence" ]
-      },
-      "PeriodLengthLegacyData" : {
-        "type" : "object",
-        "properties" : {
-          "lifeSentence" : {
-            "type" : "boolean"
-          },
-          "sentenceTermCode" : {
-            "type" : "string"
-          },
-          "sentenceTermDescription" : {
-            "type" : "string"
-          }
-        }
+        "required" : [ "active", "chargeUuids", "legacyData", "prisonId" ]
       },
       "SentenceLegacyData" : {
         "type" : "object",
@@ -3638,19 +3762,6 @@
         },
         "required" : [ "appearances", "charges", "courtCaseUuid" ]
       },
-      "LegacyPeriodLengthCreatedResponse" : {
-        "type" : "object",
-        "properties" : {
-          "uuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "sentenceTermNOMISId" : {
-            "$ref" : "#/components/schemas/NomisPeriodLengthId"
-          }
-        },
-        "required" : [ "sentenceTermNOMISId", "uuid" ]
-      },
       "LegacySentenceCreatedResponse" : {
         "type" : "object",
         "properties" : {
@@ -3671,15 +3782,80 @@
           },
           "courtCaseId" : {
             "type" : "string"
-          },
-          "createdPeriodLengths" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LegacyPeriodLengthCreatedResponse"
-            }
           }
         },
-        "required" : [ "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "createdPeriodLengths", "lifetimeUuid", "prisonerId" ]
+        "required" : [ "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId" ]
+      },
+      "LegacyCreatePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          }
+        },
+        "required" : [ "legacyData", "sentenceUuid" ]
+      },
+      "PeriodLengthLegacyData" : {
+        "type" : "object",
+        "properties" : {
+          "lifeSentence" : {
+            "type" : "boolean"
+          },
+          "sentenceTermCode" : {
+            "type" : "string"
+          },
+          "sentenceTermDescription" : {
+            "type" : "string"
+          }
+        }
+      },
+      "LegacyPeriodLengthCreatedResponse" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtCaseId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "appearanceUuid", "chargeUuid", "courtCaseId", "periodLengthUuid", "prisonerId", "sentenceUuid" ]
       },
       "LegacyCourtCaseCreatedResponse" : {
         "type" : "object",
@@ -3882,6 +4058,24 @@
           }
         },
         "required" : [ "offenderBookingId", "sequence" ]
+      },
+      "NomisPeriodLengthId" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "termSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "offenderBookingId", "sentenceSequence", "termSequence" ]
       },
       "MigrationCreateChargeResponse" : {
         "type" : "object",
@@ -4234,7 +4428,7 @@
             }
           }
         },
-        "required" : [ "createdAt", "createdByPrison", "createdByUsername", "prisonerId", "recallType", "recallUuid" ]
+        "required" : [ "createdAt", "createdByUsername", "prisonerId", "recallType", "recallUuid" ]
       },
       "PersonDetails" : {
         "type" : "object",
@@ -4485,37 +4679,14 @@
         },
         "required" : [ "appearanceDate", "appearanceType", "courtCode" ]
       },
-      "LegacyPeriodLength" : {
+      "HasSentenceToChainToResponse" : {
         "type" : "object",
         "properties" : {
-          "periodYears" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodMonths" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodWeeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodDays" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "isLifeSentence" : {
+          "hasSentenceToChainTo" : {
             "type" : "boolean"
-          },
-          "sentenceTermCode" : {
-            "type" : "string"
-          },
-          "periodLengthUuid" : {
-            "type" : "string",
-            "format" : "uuid"
           }
         },
-        "required" : [ "periodLengthUuid", "sentenceTermCode" ]
+        "required" : [ "hasSentenceToChainTo" ]
       },
       "LegacySentence" : {
         "type" : "object",
@@ -4557,18 +4728,12 @@
           "fineAmount" : {
             "type" : "number"
           },
-          "periodLengths" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LegacyPeriodLength"
-            }
-          },
           "sentenceStartDate" : {
             "type" : "string",
             "format" : "date"
           }
         },
-        "required" : [ "active", "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "periodLengths", "prisonerId", "sentenceCalcType", "sentenceCategory", "sentenceStartDate" ]
+        "required" : [ "active", "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId", "sentenceCalcType", "sentenceCategory", "sentenceStartDate" ]
       },
       "LegacySentenceTypeGroupingSummary" : {
         "type" : "object",
@@ -4779,6 +4944,56 @@
           }
         },
         "required" : [ "periodDefinitions" ]
+      },
+      "LegacyPeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "isLifeSentence" : {
+            "type" : "boolean"
+          },
+          "sentenceTermCode" : {
+            "type" : "string"
+          },
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtChargeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtCaseId" : {
+            "type" : "string"
+          },
+          "courtAppearanceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "courtAppearanceId", "courtCaseId", "courtChargeId", "periodLengthUuid", "prisonerId", "sentenceTermCode", "sentenceUuid" ]
       },
       "LegacyCourtCase" : {
         "type" : "object",
@@ -5031,12 +5246,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"

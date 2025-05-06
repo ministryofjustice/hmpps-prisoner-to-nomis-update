@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 
@@ -34,6 +35,11 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
 
   suspend fun getSentence(id: String): LegacySentence = courtSentencingApiWebClient.get()
     .uri("/legacy/sentence/{id}", id)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun getPeriodLength(id: String): LegacyPeriodLength = courtSentencingApiWebClient.get()
+    .uri("/legacy/period-length/{id}", id)
     .retrieve()
     .awaitBody()
 }

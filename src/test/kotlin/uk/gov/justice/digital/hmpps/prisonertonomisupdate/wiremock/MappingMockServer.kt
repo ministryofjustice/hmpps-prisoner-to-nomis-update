@@ -1814,4 +1814,85 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
         ).willSetStateTo(Scenario.STARTED),
     )
   }
+  fun stubGetSentenceTermMappingGivenDpsId(id: String, nomisSentenceSequence: Long, nomisTermSequence: Long, nomisBookingId: Long) {
+    stubFor(
+      get("/mapping/court-sentencing/sentence-terms/dps-term-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            // language=json
+            """ 
+              {
+                "dpsTermId": "$id",
+                "nomisSentenceSequence": "$nomisSentenceSequence",
+                "nomisTermSequence": "$nomisTermSequence", 
+                "nomisBookingId": "$nomisBookingId",
+                "mappingType": "${SentenceMappingDto.MappingType.DPS_CREATED}",
+                "whenCreated": "2021-07-05T10:35:17"
+              }
+            
+            """.trimIndent(),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetSentenceTermMappingGivenDpsIdWithError(id: String, status: Int = 500) {
+    stubFor(
+      get("/mapping/court-sentencing/sentence-terms/dps-term-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
+          .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubCreateSentenceTerm() {
+    stubFor(
+      post("/mapping/court-sentencing/sentence-terms").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubDeleteSentenceTerm(id: String) {
+    stubFor(
+      delete("/mapping/court-sentencing/sentence-terms/dps-term-id/$id").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  fun stubCreateSentenceTermWithErrorFollowedBySlowSuccess() {
+    stubFor(
+      post("/mapping/court-sentencing/sentence-terms")
+        .inScenario("Retry Mapping Sentence Term Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create Mapping Sentence Term Success"),
+    )
+
+    stubFor(
+      post("/mapping/court-sentencing/sentence-terms")
+        .inScenario("Retry Mapping Sentence Term Scenario")
+        .whenScenarioStateIs("Create Mapping Sentence Term Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withFixedDelay(1500),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 }
