@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultResponse
@@ -763,7 +764,7 @@ class NomisApiService(
     caseId: Long,
     sentenceSeq: Int,
     request: SentenceTermRequest,
-  ): CreateSentenceResponse = webClient.post()
+  ): CreateSentenceTermResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms", offenderNo, caseId, sentenceSeq)
     .bodyValue(request)
     .retrieve()

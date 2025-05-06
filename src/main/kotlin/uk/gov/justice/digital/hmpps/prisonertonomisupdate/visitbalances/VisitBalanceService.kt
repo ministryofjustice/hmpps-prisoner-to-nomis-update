@@ -112,7 +112,7 @@ data class VisitBalanceAdjustmentAdditionalInformation(
 
 fun VisitAllocationPrisonerAdjustmentResponseDto.toNomisCreateVisitBalanceAdjustmentRequest() = CreateVisitBalanceAdjustmentRequest(
   // TODO - pick up adjustment reason code set correctly
-  adjustmentReasonCode = "GOV",
+  // adjustmentReasonCode = "GOV",
   // TODO - check if adjustment date should be passed in
   adjustmentDate = LocalDate.now(),
   visitOrderChange = changeToVoBalance,
