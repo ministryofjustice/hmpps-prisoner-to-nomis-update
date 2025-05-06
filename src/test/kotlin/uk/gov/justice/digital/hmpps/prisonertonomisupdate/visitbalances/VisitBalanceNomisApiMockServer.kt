@@ -5,7 +5,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
-import com.github.tomakehurst.wiremock.client.WireMock.stubFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -110,10 +109,5 @@ fun createVisitBalanceAdjRequest(): CreateVisitBalanceAdjustmentRequest = Create
   previousPrivilegedVisitOrderCount = 7,
   privilegedVisitOrderChange = -1,
   adjustmentDate = LocalDate.parse("2021-01-18"),
-  // adjustmentReasonCode = "GOV",
   comment = "A comment",
-  // expiryBalance = 6,
-  // expiryDate = LocalDate.parse("2021-02-19"),
-  // endorsedStaffId = 123,
-  // authorisedStaffId = 345,
 )

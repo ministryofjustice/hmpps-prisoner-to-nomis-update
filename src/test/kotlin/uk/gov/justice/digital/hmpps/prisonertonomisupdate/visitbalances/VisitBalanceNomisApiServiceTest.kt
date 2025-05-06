@@ -8,7 +8,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.Ignore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,7 +75,7 @@ class VisitBalanceNomisApiServiceTest {
       )
     }
 
-    @Ignore
+    @Test
     fun `will pass balance adjustment data to Nomis`() = runTest {
       mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
@@ -89,18 +88,12 @@ class VisitBalanceNomisApiServiceTest {
           .withRequestBodyJsonPath("previousPrivilegedVisitOrderCount", equalTo("7"))
           .withRequestBodyJsonPath("privilegedVisitOrderChange", equalTo("-1"))
           .withRequestBodyJsonPath("adjustmentDate", equalTo("2021-01-18"))
-          .withRequestBodyJsonPath("adjustmentReasonCode", equalTo("GOV"))
-          .withRequestBodyJsonPath("comment", equalTo("A comment"))
-          .withRequestBodyJsonPath("expiryBalance", equalTo("6"))
-          .withRequestBodyJsonPath("expiryDate", equalTo("2021-02-19"))
-          .withRequestBodyJsonPath("endorsedStaffId", equalTo("123"))
-          .withRequestBodyJsonPath("authorisedStaffId", equalTo("345")),
-
+          .withRequestBodyJsonPath("comment", equalTo("A comment")),
       )
     }
 
     @Test
-    fun `will call the  adjustment endpoint`() = runTest {
+    fun `will call the adjustment endpoint`() = runTest {
       mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 
       apiService.createVisitBalanceAdjustment(prisonNumber = "A1234BC", visitBalanceAdjustment = createVisitBalanceAdjRequest())

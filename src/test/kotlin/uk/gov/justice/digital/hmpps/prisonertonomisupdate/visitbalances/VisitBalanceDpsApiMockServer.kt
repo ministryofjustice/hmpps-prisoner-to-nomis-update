@@ -70,7 +70,10 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetVisitBalanceAdjustment(vbAdjId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef", response: VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceAdjustmentDto(vbAdjId)) {
+  fun stubGetVisitBalanceAdjustment(
+    vbAdjId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef",
+    response: VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceAdjustmentDto(vbAdjId),
+  ) {
     stubFor(
       get("/visits/allocation/adjustment/$vbAdjId").willReturn(
         aResponse()
@@ -114,15 +117,19 @@ fun visitBalanceDto() = PrisonerBalanceDto(
   pvoBalance = 3,
 )
 
-fun visitBalanceAdjustmentDto(vbAdjId: String) = VisitAllocationPrisonerAdjustmentResponseDto(
+fun visitBalanceAdjustmentDto(
+  vbAdjId: String,
+  changeLogSource: ChangeLogSource = ChangeLogSource.SYSTEM,
+  userId: String = "SYSTEM",
+) = VisitAllocationPrisonerAdjustmentResponseDto(
   prisonerId = "A1234KT",
   voBalance = 12,
   changeToVoBalance = 2,
   pvoBalance = 7,
   changeToPvoBalance = -1,
   changeLogType = ChangeLogType.SYNC,
-  userId = "SYSTEM",
-  changeLogSource = ChangeLogSource.SYSTEM,
+  userId = userId,
+  changeLogSource = changeLogSource,
   changeTimestamp = LocalDateTime.parse("2021-01-18T01:02:03"),
   comment = "A comment",
 )
