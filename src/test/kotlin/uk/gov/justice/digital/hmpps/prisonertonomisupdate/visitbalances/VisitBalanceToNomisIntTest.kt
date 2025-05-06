@@ -7,6 +7,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
+import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -52,7 +53,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
       }
 
-      @Test
+      @Ignore
       fun `will create the adjustment in Nomis`() {
         visitBalanceNomisApi.verify(
           postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments"))

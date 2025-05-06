@@ -1115,9 +1115,6 @@ fun LegacySentence.toNomisSentence(
   sentenceCategory = this.sentenceCategory,
   sentenceCalcType = this.sentenceCalcType,
   sentenceLevel = SENTENCE_LEVEL_IND,
-  // TODO will be removed as sentence terms moving to separate events to sentencing
-  sentenceTerms = emptyList(),
-
   fine = this.fineAmount,
   consecutiveToSentenceSeq = nomisConsecutiveToSentenceSeq,
   eventId = nomisEventId,

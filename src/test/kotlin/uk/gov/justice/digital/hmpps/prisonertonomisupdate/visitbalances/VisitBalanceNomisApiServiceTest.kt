@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.Ignore
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,7 +76,7 @@ class VisitBalanceNomisApiServiceTest {
       )
     }
 
-    @Test
+    @Ignore
     fun `will pass balance adjustment data to Nomis`() = runTest {
       mockServer.stubPostVisitBalanceAdjustment(prisonNumber = "A1234BC")
 

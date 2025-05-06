@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-01.12026.7b23213"
+    "version" : "2025-05-06.12049.0c40ca2"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17787,12 +17787,6 @@
           "fine" : {
             "type" : "number"
           },
-          "sentenceTerms" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceTermRequest"
-            }
-          },
           "offenderChargeIds" : {
             "type" : "array",
             "items" : {
@@ -17809,40 +17803,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "eventId", "offenderChargeIds", "sentenceCalcType", "sentenceCategory", "sentenceLevel", "sentenceTerms", "startDate", "status" ]
-      },
-      "SentenceTermRequest" : {
-        "type" : "object",
-        "description" : "Sentence term request",
-        "properties" : {
-          "years" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "months" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "weeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "days" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "hours" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sentenceTermType" : {
-            "type" : "string"
-          },
-          "lifeSentenceFlag" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "lifeSentenceFlag", "sentenceTermType" ]
+        "required" : [ "eventId", "offenderChargeIds", "sentenceCalcType", "sentenceCategory", "sentenceLevel", "startDate", "status" ]
       },
       "AlertResponse" : {
         "type" : "object",
@@ -20233,10 +20194,6 @@
             "format" : "int32",
             "description" : "Previous number of privileged visit orders before the adjustment"
           },
-          "adjustmentReasonCode" : {
-            "type" : "string",
-            "description" : "The Adjustment reason code"
-          },
           "adjustmentDate" : {
             "type" : "string",
             "format" : "date",
@@ -20246,28 +20203,12 @@
             "type" : "string",
             "description" : "Comment text"
           },
-          "expiryBalance" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Expiry balance"
-          },
-          "expiryDate" : {
+          "authorisedUsername" : {
             "type" : "string",
-            "format" : "date",
-            "description" : "Expiry date"
-          },
-          "endorsedStaffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Which staff member endorsed the adjustment aka Entered by"
-          },
-          "authorisedStaffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Which staff member authorised the adjustment"
+            "description" : "Which user authorised the adjustment. Will be null for a system initiated change"
           }
         },
-        "required" : [ "adjustmentDate", "adjustmentReasonCode" ]
+        "required" : [ "adjustmentDate" ]
       },
       "CreateVisitBalanceAdjustmentResponse" : {
         "type" : "object",
@@ -20445,16 +20386,45 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "termSeq" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "bookingId" : {
             "type" : "integer",
             "format" : "int64"
           }
         },
-        "required" : [ "bookingId", "sentenceSeq", "termSeq" ]
+        "required" : [ "bookingId", "sentenceSeq" ]
+      },
+      "SentenceTermRequest" : {
+        "type" : "object",
+        "description" : "Sentence term request",
+        "properties" : {
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "hours" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sentenceTermType" : {
+            "type" : "string"
+          },
+          "lifeSentenceFlag" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "lifeSentenceFlag", "sentenceTermType" ]
       },
       "CreateSentenceTermResponse" : {
         "type" : "object",
@@ -22697,6 +22667,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -22707,9 +22680,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
