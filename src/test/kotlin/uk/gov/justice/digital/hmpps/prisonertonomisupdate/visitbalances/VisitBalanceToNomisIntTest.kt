@@ -1,13 +1,14 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilCallTo
-import org.junit.Ignore
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -23,6 +24,7 @@ import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogSource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
@@ -53,23 +55,17 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
       }
 
-      @Ignore
+      @Test
       fun `will create the adjustment in Nomis`() {
         visitBalanceNomisApi.verify(
           postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments"))
-            .withRequestBodyJsonPath("adjustmentReasonCode", "GOV")
-            // TODO add back in when set in Dps
-            // .withRequestBodyJsonPath("adjustmentDate", "2021-01-18")
+            .withRequestBodyJsonPath("adjustmentDate", "2021-01-18")
             .withRequestBodyJsonPath("previousVisitOrderCount", 12)
             .withRequestBodyJsonPath("visitOrderChange", 2)
             .withRequestBodyJsonPath("previousPrivilegedVisitOrderCount", 7)
             .withRequestBodyJsonPath("privilegedVisitOrderChange", -1)
-            .withRequestBodyJsonPath("comment", "A comment"),
-          // TODO add back in when set in Dps
-          // .withRequestBodyJsonPath("expiryBalance", 6)
-          // .withRequestBodyJsonPath("expiryDate", "2021-02-19")
-          // withRequestBodyJsonPath("endorsedStaffId", 123)
-          // .withRequestBodyJsonPath("authorisedStaffId", 345),
+            .withRequestBodyJsonPath("comment", "A comment")
+            .withRequestBody(matchingJsonPath("authorisedUsername", absent())),
         )
       }
 
@@ -84,6 +80,39 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it).containsEntry("privilegeVisitBalanceChange", "-1")
           },
           isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class HappyPathForUserChange {
+
+      @BeforeEach
+      fun setup() {
+        visitBalanceDpsApi.stubGetVisitBalanceAdjustment(
+          visitBalanceAdjId,
+          visitBalanceAdjustmentDto(
+            visitBalanceAdjId,
+            changeLogSource = ChangeLogSource.STAFF,
+            userId = "SOME_USER",
+          ),
+        )
+        visitBalanceNomisApi.stubPostVisitBalanceAdjustment()
+        publishVisitBalanceAdjustmentDomainEvent()
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will create the adjustment in Nomis`() {
+        visitBalanceNomisApi.verify(
+          postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments"))
+            .withRequestBodyJsonPath("adjustmentDate", "2021-01-18")
+            .withRequestBodyJsonPath("previousVisitOrderCount", 12)
+            .withRequestBodyJsonPath("visitOrderChange", 2)
+            .withRequestBodyJsonPath("previousPrivilegedVisitOrderCount", 7)
+            .withRequestBodyJsonPath("privilegedVisitOrderChange", -1)
+            .withRequestBodyJsonPath("comment", "A comment")
+            .withRequestBodyJsonPath("authorisedUsername", "SOME_USER"),
         )
       }
     }

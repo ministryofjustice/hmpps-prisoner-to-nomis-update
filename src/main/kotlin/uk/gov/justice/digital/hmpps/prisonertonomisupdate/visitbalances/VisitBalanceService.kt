@@ -11,7 +11,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
-import java.time.LocalDate
 
 @Service
 class VisitBalanceService(
@@ -111,20 +110,13 @@ data class VisitBalanceAdjustmentAdditionalInformation(
 )
 
 fun VisitAllocationPrisonerAdjustmentResponseDto.toNomisCreateVisitBalanceAdjustmentRequest() = CreateVisitBalanceAdjustmentRequest(
-  // TODO - pick up adjustment reason code set correctly
-  // adjustmentReasonCode = "GOV",
-  // TODO - check if adjustment date should be passed in
-  adjustmentDate = LocalDate.now(),
+  adjustmentDate = changeTimestamp.toLocalDate(),
   visitOrderChange = changeToVoBalance,
   previousVisitOrderCount = voBalance,
   privilegedVisitOrderChange = changeToPvoBalance,
   previousPrivilegedVisitOrderCount = pvoBalance,
   comment = comment,
-  // TODO check we don't need these
-  // expiryBalance = expiryBalance,
-  // expiryDate = expiryDate,
-  // endorsedStaffId = endorsedStaffId,
-  // authorisedStaffId = authorisedStaffId,
+  authorisedUsername = userId.takeIf { changeLogSource != VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogSource.SYSTEM },
 )
 
 fun PrisonerBalanceDto.toNomisUpdateVisitBalanceRequest() = UpdateVisitBalanceRequest(
