@@ -172,6 +172,9 @@ hmpps.sqs:
         "charge.inserted",
         "charge.updated",
         "court-appearance.updated",
+        "sentence.period-length.inserted",
+        "sentence.period-length.deleted",
+        "sentence.period-length.updated",
         "sentence.inserted",
         "sentence.deleted",
         "sentence.updated"]}

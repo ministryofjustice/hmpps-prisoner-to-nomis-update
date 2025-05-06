@@ -55,6 +55,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerNosWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCapacityRequest
@@ -754,6 +755,39 @@ class NomisApiService(
     caseId: Long,
   ) = webClient.delete()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun createSentenceTerm(
+    offenderNo: String,
+    caseId: Long,
+    sentenceSeq: Int,
+    request: SentenceTermRequest,
+  ): CreateSentenceResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms", offenderNo, caseId, sentenceSeq)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun updateSentenceTerm(
+    offenderNo: String,
+    sentenceSeq: Int,
+    termSeq: Int,
+    caseId: Long,
+    request: SentenceTermRequest,
+  ) = webClient.put()
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms/{termSequence}", offenderNo, caseId, sentenceSeq, termSeq)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun deleteSentenceTerm(
+    offenderNo: String,
+    sentenceSeq: Int,
+    termSeq: Int,
+    caseId: Long,
+  ) = webClient.delete()
+    .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms/{termSequence}", offenderNo, caseId, sentenceSeq, termSeq)
     .retrieve()
     .awaitBodilessEntity()
 

@@ -23,7 +23,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
@@ -51,6 +53,7 @@ private const val DPS_COURT_CHARGE_3_ID = "4566aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_4_ID = "1236aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_SENTENCE_ID = "4c111b18-642a-484a-a967-2d17b5c9c5d5"
 private const val DPS_SENTENCE_ID_2 = "1e333b18-642a-484a-a967-2d17b5c9c5d5"
+private const val DPS_TERM_ID = "9c888b18-642a-484a-a967-2d17b5c9c5d5"
 private const val FINE_AMOUNT = "1000.0"
 private const val NOMIS_BOOKING_ID = 66L
 private const val NOMIS_SENTENCE_SEQ = 54L
@@ -58,7 +61,6 @@ private const val NOMIS_SENTENCE_SEQ_2 = 64L
 private const val NOMIS_TERM_SEQ = 32L
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
-private const val PRISON_ID = "MDI"
 private const val CASE_REFERENCE = "ABC4999"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
@@ -1480,36 +1482,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 "eventId",
                 WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "sentenceTerms[0].weeks",
-                WireMock.equalTo("4"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "sentenceTerms[0].years",
-                WireMock.equalTo("2"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "sentenceTerms[0].months",
-                WireMock.equalTo("6"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "sentenceTerms[0].days",
-                WireMock.equalTo("15"),
-              ),
-            )
-            .withRequestBody(
-              WireMock.matchingJsonPath(
-                "sentenceTerms[0].sentenceTermType",
-                WireMock.equalTo("TERM"),
-              ),
             ),
         )
       }
@@ -2114,6 +2086,529 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class CreatePeriodLength {
+
+    @Nested
+    inner class WhenPeriodLengthHasBeenCreatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishCreatePeriodLengthDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-create-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenPeriodLengthHasBeenCreatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+          periodLengthId = DPS_TERM_ID,
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseId = COURT_CASE_ID_FOR_CREATION,
+          chargeId = DPS_COURT_CHARGE_ID,
+          appearanceId = DPS_COURT_APPEARANCE_ID,
+        )
+        NomisApiExtension.nomisApi.stubSentenceTermCreate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+          response = CreateSentenceTermResponse(sentenceSeq = NOMIS_SENTENCE_SEQ, termSeq = NOMIS_TERM_SEQ, bookingId = NOMIS_BOOKING_ID),
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsIdWithError(DPS_TERM_ID, 404)
+        MappingExtension.mappingServer.stubCreateSentenceTerm()
+
+        publishCreatePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-create-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceTermMappingDto.MappingType.DPS_CREATED.toString())
+            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the Sentence Term`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms"))
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "weeks",
+                WireMock.equalTo("4"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "years",
+                WireMock.equalTo("2"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "months",
+                WireMock.equalTo("6"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "days",
+                WireMock.equalTo("15"),
+              ),
+            )
+            .withRequestBody(
+              WireMock.matchingJsonPath(
+                "sentenceTermType",
+                WireMock.equalTo("TERM"),
+              ),
+            ),
+        )
+      }
+
+      @Test
+      fun `will create a mapping between the two sentences`() {
+        waitForAnyProcessingToComplete()
+
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/sentence-terms"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "dpsTermId",
+                  WireMock.equalTo(DPS_TERM_ID),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisSentenceSequence",
+                  WireMock.equalTo(
+                    NOMIS_SENTENCE_SEQ.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisTermSequence",
+                  WireMock.equalTo(
+                    NOMIS_TERM_SEQ.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisBookingId",
+                  WireMock.equalTo(
+                    NOMIS_BOOKING_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class WhenMappingAlreadyCreatedForPeriodLength {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsId(
+          id = DPS_TERM_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+          nomisTermSequence = NOMIS_TERM_SEQ,
+        )
+        publishCreatePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will not create a sentence term in NOMIS`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-create-duplicate"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.postRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingServiceFailsOnce {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsIdWithError(DPS_TERM_ID, 404)
+        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseId = COURT_CASE_ID_FOR_CREATION,
+          periodLengthId = DPS_TERM_ID,
+          chargeId = DPS_COURT_CHARGE_ID,
+          appearanceId = DPS_COURT_APPEARANCE_ID,
+        )
+        NomisApiExtension.nomisApi.stubSentenceTermCreate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+          response = CreateSentenceTermResponse(sentenceSeq = NOMIS_SENTENCE_SEQ, termSeq = NOMIS_TERM_SEQ, bookingId = NOMIS_BOOKING_ID),
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+
+        MappingExtension.mappingServer.stubCreateSentenceTermWithErrorFollowedBySlowSuccess()
+
+        publishCreatePeriodLengthDomainEvent()
+
+        await untilCallTo { CourtSentencingApiExtension.courtSentencingApi.getCountFor("/legacy/period-length/$DPS_TERM_ID") } matches { it == 1 }
+        await untilCallTo { NomisApiExtension.nomisApi.postCountFor("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms") } matches { it == 1 }
+      }
+
+      @Test
+      fun `should only create the NOMIS sentence term once`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentence-term-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+        NomisApiExtension.nomisApi.verify(
+          1,
+          WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms")),
+        )
+      }
+
+      @Test
+      fun `will eventually create a mapping after NOMIS sentence term is created`() {
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            2,
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/sentence-terms"))
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "dpsTermId",
+                  WireMock.equalTo(DPS_TERM_ID),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisSentenceSequence",
+                  WireMock.equalTo(
+                    NOMIS_SENTENCE_SEQ.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisTermSequence",
+                  WireMock.equalTo(
+                    NOMIS_TERM_SEQ.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                WireMock.matchingJsonPath(
+                  "nomisBookingId",
+                  WireMock.equalTo(
+                    NOMIS_BOOKING_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentence-term-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdatePeriodLength {
+
+    @Nested
+    inner class WhenSentenceTermHasBeenUpdatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishUpdatePeriodLengthDomainEvent(source = "NOMIS")
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-updated-ignored"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenPeriodLengthHasBeenUpdatedInDPS {
+      @BeforeEach
+      fun setUp() {
+        CourtSentencingApiExtension.courtSentencingApi.stubGetPeriodLength(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseId = COURT_CASE_ID_FOR_CREATION,
+          periodLengthId = DPS_TERM_ID,
+          chargeId = DPS_COURT_CHARGE_ID,
+          appearanceId = DPS_COURT_APPEARANCE_ID,
+        )
+        NomisApiExtension.nomisApi.stubSentenceTermUpdate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+          termSeq = NOMIS_TERM_SEQ,
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsId(
+          id = DPS_TERM_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisTermSequence = NOMIS_TERM_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+
+        publishUpdatePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-term-updated-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            Assertions.assertThat(it["nomisTermSeq"]).isEqualTo(NOMIS_TERM_SEQ.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the Sentence term`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/${NOMIS_SENTENCE_SEQ}/sentence-terms/${NOMIS_TERM_SEQ}")))
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesntExistForPeriodLength {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsIdWithError(
+          DPS_SENTENCE_ID,
+          404,
+        )
+        publishUpdatePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will not update a sentence term in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("sentence-term-updated-failed"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class DeletePeriodLength {
+    @Nested
+    inner class WhenPeriodLengthHasBeenDeletedInDPS {
+      @BeforeEach
+      fun setUp() {
+        NomisApiExtension.nomisApi.stubSentenceTermDelete(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          sentenceSeq = NOMIS_SENTENCE_SEQ,
+          termSeq = NOMIS_TERM_SEQ,
+        )
+        MappingExtension.mappingServer.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+          nomisTermSequence = NOMIS_TERM_SEQ,
+        )
+        MappingExtension.mappingServer.stubDeleteSentenceTerm(id = DPS_TERM_ID)
+        publishDeletePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("sentence-term-deleted-success"),
+          org.mockito.kotlin.check {
+            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to delete the sentence term`() {
+        waitForAnyProcessingToComplete()
+        NomisApiExtension.nomisApi.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
+      }
+
+      @Test
+      fun `will call the mapping service to delete the mapping`() {
+        waitForAnyProcessingToComplete()
+        MappingExtension.mappingServer.verify(WireMock.deleteRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenNoMappingExistsForPeriodLength {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsIdWithError(DPS_TERM_ID, 404)
+        publishDeletePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will not attempt to delete a sentence term in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            org.mockito.kotlin.eq("sentence-term-deleted-skipped"),
+            org.mockito.kotlin.check {
+              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        NomisApiExtension.nomisApi.verify(
+          0,
+          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+  }
+
+  @Nested
   inner class RefreshCaseReferences {
     @Nested
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
@@ -2441,6 +2936,78 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishCreatePeriodLengthDomainEvent(source: String = "DPS") {
+    val eventType = "sentence.period-length.inserted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          periodLengthMessagePayload(
+            sentenceId = DPS_SENTENCE_ID,
+            periodLengthId = DPS_TERM_ID,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishUpdatePeriodLengthDomainEvent(source: String = "DPS") {
+    val eventType = "sentence.period-length.updated"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          periodLengthMessagePayload(
+            sentenceId = DPS_SENTENCE_ID,
+            periodLengthId = DPS_TERM_ID,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
+  private fun publishDeletePeriodLengthDomainEvent(source: String = "DPS") {
+    val eventType = "sentence.period-length.deleted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          periodLengthMessagePayload(
+            sentenceId = DPS_SENTENCE_ID,
+            periodLengthId = DPS_TERM_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") = """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtAppearanceMessagePayload(
@@ -2468,6 +3035,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
   ) = """{"eventType":"$eventType", "additionalInformation": {"sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+
+  fun periodLengthMessagePayload(
+    courtCaseId: String,
+    sentenceId: String,
+    periodLengthId: String,
+    courtAppearanceId: String,
+    offenderNo: String,
+    eventType: String,
+    source: String = "DPS",
+  ) = """{"eventType":"$eventType", "additionalInformation": {"periodLengthId":"$periodLengthId","sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [] }

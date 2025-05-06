@@ -231,16 +231,6 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     sentenceId: String,
     caseID: String,
     chargeUuid: String? = UUID.randomUUID().toString(),
-    periodLengths: List<LegacyPeriodLength> = listOf(
-      LegacyPeriodLength(
-        periodYears = 2,
-        periodMonths = 6,
-        periodWeeks = 4,
-        periodDays = 15,
-        sentenceTermCode = "TERM",
-        periodLengthUuid = UUID.randomUUID(),
-      ),
-    ),
     offenderNo: String = "A6160DZ",
     fineAmount: BigDecimal = BigDecimal("1000.00"),
     startDate: LocalDate = LocalDate.now(),
@@ -251,7 +241,6 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonerId = offenderNo,
       chargeLifetimeUuid = UUID.fromString(chargeUuid),
       lifetimeUuid = UUID.fromString(sentenceId),
-      periodLengths = periodLengths,
       sentenceCalcType = "CALC",
       sentenceCategory = "CAT",
       consecutiveToLifetimeUuid = consecutiveToLifetimeUuid,
@@ -268,6 +257,39 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentence),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetPeriodLength(
+    periodLengthId: String,
+    sentenceId: String,
+    chargeId: String,
+    appearanceId: String,
+    offenderNo: String = "A6160DZ",
+    caseId: String,
+    periodLength: LegacyPeriodLength = LegacyPeriodLength(
+      periodYears = 2,
+      periodMonths = 6,
+      periodWeeks = 4,
+      periodDays = 15,
+      sentenceTermCode = "TERM",
+      periodLengthUuid = UUID.randomUUID(),
+      courtChargeId = UUID.fromString(chargeId),
+      prisonerId = offenderNo,
+      courtCaseId = caseId,
+      courtAppearanceId = UUID.fromString(appearanceId),
+      sentenceUuid = UUID.fromString(sentenceId),
+    ),
+  ) {
+    stubFor(
+      get(WireMock.urlPathMatching("/legacy/period-length/$periodLengthId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            objectMapper().writeValueAsString(periodLength),
           )
           .withStatus(200),
       ),
