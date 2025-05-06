@@ -65,5 +65,3 @@ class CourtSentencingDomainEventListener(
     }
   }
 }
- /*Monday - write tests for above and remove any sentence terms as part of a sentence processing.  Check all makes sense - parent stuff
-  confirm structure of periodLengthEvent*/
