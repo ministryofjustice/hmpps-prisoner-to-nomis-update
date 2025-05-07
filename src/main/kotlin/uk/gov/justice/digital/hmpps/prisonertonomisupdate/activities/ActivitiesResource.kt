@@ -151,6 +151,10 @@ class ActivitiesResource(
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
 
+  @PostMapping("/suspended-allocations/reports/reconciliation")
+  @ResponseStatus(HttpStatus.ACCEPTED)
+  suspend fun suspendedAllocationsReconciliation() = activitiesReconService.suspendedAllocationReconciliationReport()
+
   @PostMapping("/attendances/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) = activitiesReconService.attendanceReconciliationReport(date)
