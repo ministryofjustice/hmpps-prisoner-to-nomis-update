@@ -44,6 +44,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /suspended-allocations/reports/reconciliation {
+          deny all;
+          return 401;
+        }
         location /attendances/reports/reconciliation {
           deny all;
           return 401;
