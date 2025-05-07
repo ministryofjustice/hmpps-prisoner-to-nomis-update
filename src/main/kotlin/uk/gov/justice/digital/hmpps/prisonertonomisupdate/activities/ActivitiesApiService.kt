@@ -54,6 +54,11 @@ class ActivitiesApiService(@Qualifier("activitiesApiWebClient") private val webC
     .retrieve()
     .awaitBody()
 
+  suspend fun getSuspendedAllocationReconciliation(prisonCode: String): AllocationReconciliationResponse = webClient.get()
+    .uri("/synchronisation/reconciliation/suspended-allocations/{prisonCode}", prisonCode)
+    .retrieve()
+    .awaitBody()
+
   suspend fun getAttendanceReconciliation(prisonCode: String, date: LocalDate): AttendanceReconciliationResponse = webClient.get()
     .uri {
       it.path("/synchronisation/reconciliation/attendances/{prisonCode}")

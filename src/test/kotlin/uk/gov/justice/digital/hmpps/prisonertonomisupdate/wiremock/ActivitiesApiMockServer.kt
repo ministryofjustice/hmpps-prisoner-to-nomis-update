@@ -121,6 +121,12 @@ class ActivitiesApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubGetWithError("/synchronisation/reconciliation/allocations/$prisonId", status)
   }
 
+  fun stubSuspendedAllocationReconciliation(prisonId: String, response: String) = stubGet("/synchronisation/reconciliation/suspended-allocations/$prisonId", response)
+
+  fun stubSuspendedAllocationReconciliationWithError(prisonId: String, status: Int = 500) {
+    stubGetWithError("/synchronisation/reconciliation/suspended-allocations/$prisonId", status)
+  }
+
   fun stubAttendanceReconciliation(prisonId: String, date: LocalDate, response: String) = stubGet("/synchronisation/reconciliation/attendances/$prisonId?date=$date", response)
 
   fun stubAttendanceReconciliationWithError(prisonId: String, date: LocalDate, status: Int = 500) {

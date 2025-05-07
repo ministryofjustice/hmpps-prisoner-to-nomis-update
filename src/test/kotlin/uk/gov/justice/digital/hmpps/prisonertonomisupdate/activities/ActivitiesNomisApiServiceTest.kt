@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -334,6 +335,63 @@ class ActivitiesNomisApiServiceTest {
 
       assertThrows<BadRequest> {
         activitiesNomisApiService.getAllocationReconciliation("BXI")
+      }
+    }
+  }
+
+  @Nested
+  inner class SuspendedAllocationReconciliation {
+
+    private fun jsonResponse(prisonId: String = "BXI") = """
+      {
+        "prisonId": "$prisonId",
+        "bookings": [
+          {
+            "bookingId": 1234,
+            "count": 2
+          },
+          {
+            "bookingId": 1235,
+            "count": 1
+          }
+        ]
+      }
+    """.trimIndent()
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApi.stubSuspendedAllocationReconciliation("BXI", jsonResponse())
+
+      activitiesNomisApiService.getSuspendedAllocationReconciliation("BXI")
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/allocations/reconciliation/BXI"))
+          .withQueryParam("suspended", equalTo("true"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse response`() = runTest {
+      nomisApi.stubSuspendedAllocationReconciliation("BXI", jsonResponse())
+
+      val response = activitiesNomisApiService.getSuspendedAllocationReconciliation("BXI")
+
+      with(response) {
+        assertThat(prisonId).isEqualTo("BXI")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `should throw exception on error`() = runTest {
+      nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 400)
+
+      assertThrows<BadRequest> {
+        activitiesNomisApiService.getSuspendedAllocationReconciliation("BXI")
       }
     }
   }

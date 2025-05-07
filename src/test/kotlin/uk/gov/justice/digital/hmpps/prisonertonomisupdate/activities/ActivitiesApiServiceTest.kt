@@ -869,6 +869,63 @@ internal class ActivitiesApiServiceTest {
   }
 
   @Nested
+  inner class SuspendedAllocationReconciliation {
+    @BeforeEach
+    fun `stub allocation reconciliation`() {
+      activitiesApi.stubSuspendedAllocationReconciliation(
+        "BXI",
+        """
+          {
+            "prisonCode": "BXI",
+            "bookings": [
+              { 
+                "bookingId": 1234,
+                "count": 2
+              },
+              {
+                "bookingId": 1235,
+                "count": 1
+              }
+            ]
+          }
+        """.trimIndent(),
+      )
+    }
+
+    @Test
+    fun `should call API with auth token`() = runTest {
+      activitiesApiService.getSuspendedAllocationReconciliation("BXI")
+
+      activitiesApi.verify(
+        getRequestedFor(urlEqualTo("/synchronisation/reconciliation/suspended-allocations/BXI"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should parse return data`() = runTest {
+      val response = activitiesApiService.getSuspendedAllocationReconciliation("BXI")
+
+      with(response) {
+        assertThat(prisonCode).isEqualTo("BXI")
+        assertThat(bookings[0].bookingId).isEqualTo(1234)
+        assertThat(bookings[0].count).isEqualTo(2)
+        assertThat(bookings[1].bookingId).isEqualTo(1235)
+        assertThat(bookings[1].count).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `when any bad response is received an exception is thrown`() = runTest {
+      activitiesApi.stubSuspendedAllocationReconciliationWithError("BXI", status = 503)
+
+      assertThrows<ServiceUnavailable> {
+        activitiesApiService.getSuspendedAllocationReconciliation("BXI")
+      }
+    }
+  }
+
+  @Nested
   inner class AttendanceReconciliation {
     @BeforeEach
     fun `stub attendance reconciliation`() {
