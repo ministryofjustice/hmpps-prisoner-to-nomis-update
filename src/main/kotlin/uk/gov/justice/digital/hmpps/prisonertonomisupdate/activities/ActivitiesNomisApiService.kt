@@ -83,6 +83,11 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
     .retrieve()
     .awaitBody()
 
+  suspend fun getSuspendedAllocationReconciliation(prisonId: String): AllocationReconciliationResponse = webClient.get()
+    .uri("/allocations/reconciliation/{prisonId}?suspended=true", prisonId)
+    .retrieve()
+    .awaitBody()
+
   suspend fun getAttendanceReconciliation(prisonId: String, date: LocalDate): AttendanceReconciliationResponse = webClient.get()
     .uri {
       it.path("/attendances/reconciliation/{prisonId}")
