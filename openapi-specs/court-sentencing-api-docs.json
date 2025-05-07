@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-02.6261.8a23330"
+    "version" : "2025-05-06.6325.81c06f7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -305,12 +305,136 @@
         }
       }
     },
+    "/legacy/period-length/{periodLengthUuid}" : {
+      "get" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "retrieve a period-length",
+        "description" : "This endpoint will retrieve period-length details.",
+        "operationId" : "get_1",
+        "parameters" : [ {
+          "name" : "periodLengthUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns period-length details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found: Period length either doesn't exist, has no sentence, or is deleted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyPeriodLength"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "Updates one or more period lengths related to a period-length UUID",
+        "description" : "Updates one or more period lengths related to a period-length UUID",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "name" : "periodLengthUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacyCreatePeriodLength"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No content"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          },
+          "404" : {
+            "description" : "Period length or sentence not found"
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "legacy-period-length-controller" ],
+        "summary" : "Delete Period Length",
+        "description" : "This endpoint will soft-delete a period-length from RAS.",
+        "operationId" : "delete_1",
+        "parameters" : [ {
+          "name" : "periodLengthUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
     "/legacy/court-case/{courtCaseUuid}" : {
       "get" : {
         "tags" : [ "legacy-court-case-controller" ],
         "summary" : "Retrieve court case details",
         "description" : "This endpoint will retrieve court case details",
-        "operationId" : "get_1",
+        "operationId" : "get_2",
         "parameters" : [ {
           "name" : "courtCaseUuid",
           "in" : "path",
@@ -366,7 +490,7 @@
         "tags" : [ "legacy-court-case-controller" ],
         "summary" : "Updates a court case",
         "description" : "Synchronise an update of court case from NOMIS into remand and sentencing API.",
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "name" : "courtCaseUuid",
           "in" : "path",
@@ -401,7 +525,7 @@
         "tags" : [ "legacy-court-case-controller" ],
         "summary" : "Deletes a court case",
         "description" : "Synchronise a deletion of court case from NOMIS into remand and sentencing API.",
-        "operationId" : "delete_1",
+        "operationId" : "delete_2",
         "parameters" : [ {
           "name" : "courtCaseUuid",
           "in" : "path",
@@ -428,7 +552,7 @@
         "tags" : [ "legacy-court-appearance-controller" ],
         "summary" : "Retrieve court appearance details",
         "description" : "This endpoint will retrieve court appearance details",
-        "operationId" : "get_2",
+        "operationId" : "get_3",
         "parameters" : [ {
           "name" : "lifetimeUuid",
           "in" : "path",
@@ -485,7 +609,7 @@
         "tags" : [ "legacy-court-appearance-controller" ],
         "summary" : "Updates a court appearance",
         "description" : "Synchronise an update of court appearance from NOMIS court events into remand and sentencing API.",
-        "operationId" : "update_2",
+        "operationId" : "update_3",
         "parameters" : [ {
           "name" : "lifetimeUuid",
           "in" : "path",
@@ -521,7 +645,7 @@
         "tags" : [ "legacy-court-appearance-controller" ],
         "summary" : "Delete Appearance",
         "description" : "Synchronise a deletion of court appearance from NOMIS court events into remand and sentencing API.",
-        "operationId" : "delete_2",
+        "operationId" : "delete_3",
         "parameters" : [ {
           "name" : "lifetimeUuid",
           "in" : "path",
@@ -684,7 +808,7 @@
         "tags" : [ "legacy-charge-controller" ],
         "summary" : "retrieve a charge",
         "description" : "This endpoint will retrieve charge details.",
-        "operationId" : "get_3",
+        "operationId" : "get_4",
         "parameters" : [ {
           "name" : "lifetimeUuid",
           "in" : "path",
@@ -731,7 +855,7 @@
         "tags" : [ "legacy-charge-controller" ],
         "summary" : "Update a charge in all appearances",
         "description" : "Synchronise an update of charge in all appearances from NOMIS Offender charges into remand and sentencing API.",
-        "operationId" : "update_3",
+        "operationId" : "update_4",
         "parameters" : [ {
           "name" : "lifetimeUuid",
           "in" : "path",
@@ -815,7 +939,7 @@
         "tags" : [ "draft-court-appearance-controller" ],
         "summary" : "Retrieves a draft court appearance",
         "description" : "Retrieves a draft court appearance",
-        "operationId" : "get_4",
+        "operationId" : "get_5",
         "parameters" : [ {
           "name" : "draftUuid",
           "in" : "path",
@@ -862,7 +986,7 @@
         "tags" : [ "draft-court-appearance-controller" ],
         "summary" : "Updates a draft court appearance",
         "description" : "Updates a draft court appearance for when a user wants to pause inputting a warrant and come back later",
-        "operationId" : "update_4",
+        "operationId" : "update_5",
         "parameters" : [ {
           "name" : "draftUuid",
           "in" : "path",
@@ -898,7 +1022,7 @@
         "tags" : [ "draft-court-appearance-controller" ],
         "summary" : "deletes a draft court appearance",
         "description" : "deletes a draft court appearance",
-        "operationId" : "delete_3",
+        "operationId" : "delete_4",
         "parameters" : [ {
           "name" : "draftUuid",
           "in" : "path",
@@ -2136,6 +2260,62 @@
         }
       }
     },
+    "/person/{prisonerId}/sentences-to-chain-to" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "retrieve all sentences to chain to",
+        "description" : "This endpoint will retrieve all sentences which can be used in a consecutive to chain",
+        "operationId" : "sentencesToChainTo",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "beforeOrOnAppearanceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns all sentences for a consecutive to chain",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesToChainToResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesToChainToResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesToChainToResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/sentenced-court-cases" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -2488,91 +2668,6 @@
                 }
               }
             }
-          }
-        }
-      }
-    },
-    "/legacy/period-length/{periodLengthUuid}" : {
-      "get" : {
-        "tags" : [ "legacy-period-length-controller" ],
-        "summary" : "retrieve a period-length",
-        "description" : "This endpoint will retrieve period-length details.",
-        "operationId" : "get_5",
-        "parameters" : [ {
-          "name" : "periodLengthUuid",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns period-length details",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/LegacyPeriodLength"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/LegacyPeriodLength"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/LegacyPeriodLength"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found: Period length either doesn't exist, has no sentence, or is deleted",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/LegacyPeriodLength"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete" : {
-        "tags" : [ "legacy-period-length-controller" ],
-        "summary" : "Delete Period Length",
-        "description" : "This endpoint will soft-delete a period-length from RAS.",
-        "operationId" : "delete_4",
-        "parameters" : [ {
-          "name" : "periodLengthUuid",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token"
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role"
           }
         }
       }
@@ -3345,6 +3440,55 @@
         },
         "required" : [ "postedDate" ]
       },
+      "LegacyCreatePeriodLength" : {
+        "type" : "object",
+        "description" : "Used for creating or updating period length records (aka sentence-terms in NOMIS).",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison identifier where create/update originated from.",
+            "example" : "MDI"
+          }
+        },
+        "required" : [ "legacyData", "prisonId", "sentenceUuid" ]
+      },
+      "PeriodLengthLegacyData" : {
+        "type" : "object",
+        "properties" : {
+          "lifeSentence" : {
+            "type" : "boolean"
+          },
+          "sentenceTermCode" : {
+            "type" : "string"
+          },
+          "sentenceTermDescription" : {
+            "type" : "string"
+          }
+        }
+      },
       "LegacyCreateCourtCase" : {
         "type" : "object",
         "properties" : {
@@ -3785,49 +3929,6 @@
           }
         },
         "required" : [ "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId" ]
-      },
-      "LegacyCreatePeriodLength" : {
-        "type" : "object",
-        "properties" : {
-          "sentenceUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "periodYears" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodMonths" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodWeeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "periodDays" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
-          }
-        },
-        "required" : [ "legacyData", "sentenceUuid" ]
-      },
-      "PeriodLengthLegacyData" : {
-        "type" : "object",
-        "properties" : {
-          "lifeSentence" : {
-            "type" : "boolean"
-          },
-          "sentenceTermCode" : {
-            "type" : "string"
-          },
-          "sentenceTermDescription" : {
-            "type" : "string"
-          }
-        }
       },
       "LegacyPeriodLengthCreatedResponse" : {
         "type" : "object",
@@ -4460,6 +4561,64 @@
           }
         },
         "required" : [ "dateOfBirth", "firstName", "lastName", "personId" ]
+      },
+      "AppearanceToChainTo" : {
+        "type" : "object",
+        "properties" : {
+          "courtCode" : {
+            "type" : "string"
+          },
+          "courtCaseReference" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceToChainTo"
+            }
+          }
+        },
+        "required" : [ "appearanceDate", "courtCode", "sentences" ]
+      },
+      "SentenceToChainTo" : {
+        "type" : "object",
+        "properties" : {
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "countNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "offenceCode", "sentenceUuid" ]
+      },
+      "SentencesToChainToResponse" : {
+        "type" : "object",
+        "properties" : {
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AppearanceToChainTo"
+            }
+          }
+        },
+        "required" : [ "appearances" ]
       },
       "AppearanceType" : {
         "type" : "object",
@@ -5246,12 +5405,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
