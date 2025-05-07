@@ -901,7 +901,7 @@ class CourtSentencingService(
       runCatching {
         courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCaseId)?.also { mapping ->
           telemetryMap["nomisCourtCaseId"] = mapping.nomisCourtCaseId.toString()
-          courtCaseMappingService.getMappingGivenSentenceTermIdOrNull(dpsSentenceId)?.also { sentenceTermMapping ->
+          courtCaseMappingService.getMappingGivenSentenceTermIdOrNull(dpsTermId)?.also { sentenceTermMapping ->
             telemetryMap["nomisSentenceSeq"] = sentenceTermMapping.nomisSentenceSequence.toString()
             telemetryMap["nomisTermSeq"] = sentenceTermMapping.nomisTermSequence.toString()
             telemetryMap["nomisBookingId"] = sentenceTermMapping.nomisBookingId.toString()
