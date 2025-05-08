@@ -87,8 +87,6 @@ interface CreateMappingRetryable {
 
 data class MergeEvent(
   val eventType: String,
-  val version: String,
-  val description: String,
   val additionalInformation: MergeAdditionalInformation,
 )
 
@@ -103,9 +101,6 @@ data class MergeAdditionalInformation(
 
 data class BookingMovedEvent(
   val eventType: String,
-  val occurredAt: String,
-  val version: String,
-  val description: String,
   val additionalInformation: BookingMovedAdditionalInformation,
 )
 
@@ -114,6 +109,16 @@ data class BookingMovedAdditionalInformation(
   val movedFromNomsNumber: String,
   val movedToNomsNumber: String,
   val bookingStartDateTime: String,
+)
+
+data class PrisonerReceiveDomainEvent(
+  val eventType: String,
+  val additionalInformation: ReceivePrisonerAdditionalInformationEvent,
+)
+
+data class ReceivePrisonerAdditionalInformationEvent(
+  val nomsNumber: String,
+  val reason: String,
 )
 
 data class PersonReferenceList(
