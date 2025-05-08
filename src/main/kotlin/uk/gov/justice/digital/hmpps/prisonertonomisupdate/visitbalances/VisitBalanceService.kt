@@ -45,36 +45,33 @@ class VisitBalanceService(
   }
 
   suspend fun synchronisePrisonerBookingMoved(bookingMovedEvent: PrisonerBookingMovedDomainEvent) {
-    /*
-    val movedFromPrisoner = bookingMovedEvent.additionalInformation.movedFromNomsNumber
-    val movedToPrisoner = bookingMovedEvent.additionalInformation.movedToNomsNumber
+    with(bookingMovedEvent.additionalInformation) {
+      synchronisePrisoner(movedFromNomsNumber, bookingId, "booking-moved-from")
+      synchronisePrisoner(movedToNomsNumber, bookingId, "booking-moved-to")
+    }
+  }
 
-    val telemetry = telemetryOf(
-      "bookingId" to bookingMovedEvent.additionalInformation.bookingId,
-      "movedFromPrisonNumber" to movedFromPrisoner,
-      "movedToPrisonNumber" to movedToPrisoner,
-    )
-
-    if (isDpsInChargeOfVisitAllocation(movedFromPrisoner)) {
-      // BUT THEY COULD NOW BE OUT - do we care?
-      val fromVisitBalance = dpsApiService.getVisitBalance(movedFromPrisoner)
-      // TODO what if it is now null? can it be
-      visitBalanceNomisApiService.updateVisitBalance(movedFromPrisoner, fromVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(0, 0))
-      telemetry + mapOf(
-        "movedFromBalance" to mapOf("voBalance" to fromVisitBalance?.voBalance.toString(), "pvoBalance" to fromVisitBalance?.pvoBalance.toString()),
+  private suspend fun synchronisePrisoner(
+    prisonNumber: String,
+    bookingId: Long,
+    eventTypeSuffix: String,
+  ) {
+    if (isDpsInChargeOfVisitAllocation(prisonNumber)) {
+      val fromVisitBalance = dpsApiService.getVisitBalance(prisonNumber)
+      visitBalanceNomisApiService.updateVisitBalance(
+        prisonNumber,
+        fromVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(null, null),
+      )
+      telemetryClient.trackEvent(
+        "visitbalance-adjustment-synchronisation-$eventTypeSuffix",
+        mapOf(
+          "prisonNumber" to prisonNumber,
+          "bookingId" to bookingId,
+          "voBalance" to fromVisitBalance?.voBalance.toString(),
+          "pvoBalance" to fromVisitBalance?.pvoBalance.toString(),
+        ),
       )
     }
-
-    if (isDpsInChargeOfVisitAllocation(movedToPrisoner)) {
-      val toVisitBalance = dpsApiService.getVisitBalance(movedToPrisoner)
-      // TODO what if it is now null?
-      visitBalanceNomisApiService.updateVisitBalance(movedToPrisoner, toVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(0, 0))
-      telemetry + mapOf(
-        "movedToBalance" to mapOf("voBalance" to toVisitBalance?.voBalance.toString(), "pvoBalance" to toVisitBalance?.pvoBalance.toString()),
-      )
-    }
-    telemetryClient.trackEvent("visitbalance-adjustment-synchronisation-booking-moved", telemetry)
-     */
   }
 
   suspend fun synchronisePrisonerReceived(prisonerReceiveDomainEvent: PrisonerReceiveDomainEvent) {

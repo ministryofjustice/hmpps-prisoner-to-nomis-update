@@ -296,12 +296,6 @@ hmpps.sqs:
     visitbalance:
         queueName: "visitbalance-${random.uuid}"
         dlqName: "visitbalance-dlq-${random.uuid}"
-        subscribeTopicId: domainevents
-        subscribeFilter: >-
-          { "eventType":[
-            "prison-visit-allocation.adjustment.created",          
-            "prison-visit-allocation.balance.updated"          
-          ]}
         dlqMaxReceiveCount: 2
         visibilityTimeout: 120
   topics:
