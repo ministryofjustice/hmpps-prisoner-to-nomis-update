@@ -23,6 +23,8 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.bookingMovedDomainEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonerReceivedDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogSource
@@ -30,7 +32,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBal
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
-import uk.gov.justice.hmpps.sqs.eventTypeMessageAttributes
 
 class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -197,7 +198,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedFromNomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedFromNomsNumber)
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedToNomsNumber)
-        publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+        sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
         waitForAnyProcessingToComplete(times = 2)
       }
 
@@ -254,7 +255,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedFromNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedFromNomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedFromNomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
-        publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+        sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
 
         await untilCallTo {
           visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
@@ -285,7 +286,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedFromNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(movedFromNomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
-        publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+        sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
         await untilCallTo {
           visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
         } matches { it == 1 }
@@ -305,6 +306,114 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not attempt call to Nomis `() {
         visitBalanceNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/$movedFromNomsNumber/visit-balance")))
         visitBalanceNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/$movedToNomsNumber/visit-balance")))
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("prisoner-offender-search.prisoner.received")
+  inner class PrisonerReceived {
+    private val nomsNumber = "A1234AA"
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
+        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber)
+        sendPrisonerReceivedEvent(nomsNumber)
+        waitForAnyProcessingToComplete(times = 1)
+      }
+
+      @Test
+      fun `will retrieve the adjustment details from Dps`() {
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+      }
+
+      @Test
+      fun `will create the adjustment in Nomis`() {
+        visitBalanceNomisApi.verify(
+          putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance"))
+            .withRequestBodyJsonPath("remainingVisitOrders", "2")
+            .withRequestBodyJsonPath("remainingPrivilegedVisitOrders", "3"),
+        )
+      }
+
+      @Test
+      fun `will send telemetry event showing the create success`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-adjustment-synchronisation-prisoner-received"),
+          check {
+            assertThat(it).containsEntry("reason", "READMISSION_SWITCH_BOOKING")
+            assertThat(it).containsEntry("prisonNumber", nomsNumber)
+            assertThat(it).containsEntry("voBalance", "2")
+            assertThat(it).containsEntry("pvoBalance", "3")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class HappyPathWithNomisFailures {
+
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
+        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
+        sendPrisonerReceivedEvent(nomsNumber)
+
+        await untilCallTo {
+          visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
+        } matches { it == 1 }
+      }
+
+      @Test
+      fun `will attempt to retrieve the balance adjustment from Dps `() {
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+      }
+
+      @Test
+      fun `will not create telemetry tracking`() {
+        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+      }
+
+      @Test
+      fun `will attempt call to Nomis several times and keep failing`() {
+        visitBalanceNomisApi.verify(2, putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")))
+      }
+    }
+
+    @Nested
+    inner class HappyPathWithDpsFailures {
+      val bookingId = 123456L
+
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        visitBalanceDpsApi.stubGetVisitBalance(nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
+        sendPrisonerReceivedEvent(nomsNumber)
+        await untilCallTo {
+          visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
+        } matches { it == 1 }
+      }
+
+      @Test
+      fun `will attempt to retrieve visit balance adjustment from Dps`() {
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+      }
+
+      @Test
+      fun `will not create telemetry tracking`() {
+        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+      }
+
+      @Test
+      fun `will not attempt call to Nomis `() {
+        visitBalanceNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")))
       }
     }
   }
@@ -344,32 +453,19 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 }
     """.trimIndent()
 
-  private fun publishBookingMovedEvent(bookingId: Long, old: String, new: String, bookingStartDateTime: String) {
+  private fun sendBookingMovedEvent(bookingId: Long, old: String, new: String, bookingStartDateTime: String) {
     visitBalanceQueueClient.sendMessage(
       SendMessageRequest.builder().queueUrl(visitBalanceQueueUrl).messageBody(
         bookingMovedDomainEvent(bookingId = bookingId, movedFromNomsNumber = old, movedToNomsNumber = new, bookingStartDateTime = bookingStartDateTime),
-      )
-        .eventTypeMessageAttributes("prison-offender-events.prisoner.booking.moved").build(),
+      ).build(),
     ).get()
   }
 
-  fun bookingMovedDomainEvent(
-    eventType: String = "prison-offender-events.prisoner.booking.moved",
-    bookingId: Long = 1234567,
-    movedToNomsNumber: String = "A1234KT",
-    movedFromNomsNumber: String = "A1000KT",
-    bookingStartDateTime: String = "2019-10-21T15:00:25.489964",
-  ) = //language=JSON
-    """{
-    "MessageId": "ae06c49e-1f41-4b9f-b2f2-dcca610d02cd", "Type": "Notification", "Timestamp": "2019-10-21T14:01:18.500Z", 
-    "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"movedToNomsNumber\":\"$movedToNomsNumber\", \"movedFromNomsNumber\":\"$movedFromNomsNumber\", \"bookingId\":\"$bookingId\", \"bookingStartDateTime\":\"$bookingStartDateTime\"}}",
-    "TopicArn": "arn:aws:sns:eu-west-1:000000000000:offender_events", 
-    "MessageAttributes": {
-      "eventType": {"Type": "String", "Value": "$eventType"}, 
-      "id": {"Type": "String", "Value": "8b07cbd9-0820-0a0f-c32f-a9429b618e0b"}, 
-      "contentType": {"Type": "String", "Value": "text/plain;charset=UTF-8"}, 
-      "timestamp": {"Type": "Number.java.lang.Long", "Value": "1571666478344"}
-    }
-}
-    """.trimIndent()
+  private fun sendPrisonerReceivedEvent(prisonNumber: String) {
+    visitBalanceQueueClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(visitBalanceQueueUrl).messageBody(
+        prisonerReceivedDomainEvent(offenderNo = prisonNumber),
+      ).build(),
+    ).get()
+  }
 }

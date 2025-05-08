@@ -4,11 +4,11 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerBookingMovedDomainEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.PrisonerReceiveDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.BookingMovedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PrisonerReceiveDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
 
@@ -44,16 +44,16 @@ class VisitBalanceService(
     }
   }
 
-  suspend fun synchronisePrisonerBookingMoved(bookingMovedEvent: PrisonerBookingMovedDomainEvent) {
+  suspend fun synchronisePrisonerBookingMoved(bookingMovedEvent: BookingMovedEvent) {
     with(bookingMovedEvent.additionalInformation) {
-      synchronisePrisoner(movedFromNomsNumber, bookingId, "booking-moved-from")
-      synchronisePrisoner(movedToNomsNumber, bookingId, "booking-moved-to")
+      synchronisePrisoner(movedFromNomsNumber, "bookingId" to bookingId, "booking-moved-from")
+      synchronisePrisoner(movedToNomsNumber, "bookingId" to bookingId, "booking-moved-to")
     }
   }
 
   private suspend fun synchronisePrisoner(
     prisonNumber: String,
-    bookingId: Long,
+    extraTelemetry: Pair<String, Any>,
     eventTypeSuffix: String,
   ) {
     if (isDpsInChargeOfVisitAllocation(prisonNumber)) {
@@ -66,7 +66,7 @@ class VisitBalanceService(
         "visitbalance-adjustment-synchronisation-$eventTypeSuffix",
         mapOf(
           "prisonNumber" to prisonNumber,
-          "bookingId" to bookingId,
+          extraTelemetry,
           "voBalance" to fromVisitBalance?.voBalance.toString(),
           "pvoBalance" to fromVisitBalance?.pvoBalance.toString(),
         ),
@@ -75,7 +75,9 @@ class VisitBalanceService(
   }
 
   suspend fun synchronisePrisonerReceived(prisonerReceiveDomainEvent: PrisonerReceiveDomainEvent) {
-    // TODO: process receive reason to synchronise
+    with(prisonerReceiveDomainEvent.additionalInformation) {
+      synchronisePrisoner(nomsNumber, "reason" to reason, "prisoner-received")
+    }
   }
 
   suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(

@@ -24,6 +24,9 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import software.amazon.awssdk.services.sqs.model.SendMessageRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.bookingMovedDomainEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.mergeDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -503,7 +506,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
-      publishMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
+      sendMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
     }
 
     @Test
@@ -553,7 +556,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will correct the mapping`() {
-      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+      sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
       await untilAsserted {
         mappingServer.verify(
           putRequestedFor(urlEqualTo("/mapping/non-associations/update-list/from/$movedFromNomsNumber/to/$movedToNomsNumber"))
@@ -564,7 +567,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `will create success telemetry`() {
-      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+      sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
       await untilAsserted {
         verify(telemetryClient).trackEvent(
           Mockito.eq("non-association-booking-moved-success"),
@@ -583,7 +586,7 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     @Test
     fun `No affected NAs found`() {
       nomisApi.stubGetNonAssociationsByBooking(bookingId, "[]")
-      publishBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+      sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
 
       await untilAsserted {
         nomisApi.verify(
@@ -611,44 +614,19 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
   fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
 
-  private fun publishMergeEvent(old: String, new: String) {
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(mergeEventPayload(old, new))
-        .messageAttributes(
-          mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue("prison-offender-events.prisoner.merged").build()),
-        ).build(),
+  private fun sendMergeEvent(old: String, new: String) {
+    awsSqsNonAssociationClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(nonAssociationQueueUrl).messageBody(
+        mergeDomainEvent(removedOffenderNo = old, offenderNo = new),
+      ).build(),
     ).get()
   }
 
-  private fun mergeEventPayload(old: String, new: String) = """{
-      "eventType":"prison-offender-events.prisoner.merged",
-      "version":1,
-      "description":"A prisoner has been merged from $old to $new",
-      "occurredAt":"2024-07-03T12:24:56+01:00",
-      "publishedAt":"2024-07-03T12:24:59.097648582+01:00",
-      "personReference":{"identifiers":[{"type":"NOMS","value":"$new"}]},
-      "additionalInformation":{"bookingId":"2937673","nomsNumber":"$new","removedNomsNumber":"$old","reason":"MERGE"}
-      }
-    """
-
-  private fun publishBookingMovedEvent(bookingId: Long, old: String, new: String, bookingStartDateTime: String) {
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(bookingMovedEventPayload(bookingId, old, new, bookingStartDateTime))
-        .messageAttributes(
-          mapOf("eventType" to MessageAttributeValue.builder().dataType("String").stringValue("prison-offender-events.prisoner.booking.moved").build()),
-        ).build(),
+  private fun sendBookingMovedEvent(bookingId: Long, old: String, new: String, bookingStartDateTime: String) {
+    awsSqsNonAssociationClient.sendMessage(
+      SendMessageRequest.builder().queueUrl(nonAssociationQueueUrl).messageBody(
+        bookingMovedDomainEvent(bookingId = bookingId, movedFromNomsNumber = old, movedToNomsNumber = new, bookingStartDateTime = bookingStartDateTime),
+      ).build(),
     ).get()
   }
-
-  private fun bookingMovedEventPayload(bookingId: Long, old: String, new: String, bookingStartDateTime: String) = """{
-      "eventType":"prison-offender-events.prisoner.booking.moved",
-      "version":1,
-      "description":"A prisoner booking has been moved from $old to $new",
-      "occurredAt":"2024-07-03T12:24:56+01:00",
-      "publishedAt":"2024-07-03T12:24:59.097648582+01:00",
-      "additionalInformation":{"bookingId":"$bookingId","movedFromNomsNumber":"$old","movedToNomsNumber":"$new","bookingStartDateTime":"$bookingStartDateTime"}
-      }
-    """
 }
