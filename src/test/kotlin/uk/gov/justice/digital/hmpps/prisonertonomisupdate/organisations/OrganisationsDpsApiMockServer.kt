@@ -20,8 +20,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.Or
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationTypeDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationWebAddressDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PageMetadata
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PagedModelSyncOrganisationId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pageContent
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -190,12 +191,19 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun pageOrganisationIdResponse(
     count: Long,
     content: List<SyncOrganisationId>,
-  ) = pageContent(
-    objectMapper = objectMapper,
-    content = content,
-    pageSize = 1L,
-    pageNumber = 0L,
+  ): String = objectMapper.writeValueAsString(
+    PagedModelSyncOrganisationId(
+      content = content,
+      page = pageMetadata(count),
+    ),
+  )
+
+  fun pageMetadata(
+    count: Long,
+  ) = PageMetadata(
+    propertySize = 1L,
+    number = 0L,
     totalElements = count,
-    size = 1,
+    totalPages = 1,
   )
 }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-01.65.6792a09"
+    "version" : "2025-05-08.71.1d95ffe"
   },
   "servers" : [ {
     "url" : "/",
@@ -2000,7 +2000,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PageSyncOrganisationId"
+                  "$ref" : "#/components/schemas/PagedModelSyncOrganisationId"
                 }
               }
             }
@@ -2257,7 +2257,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/OrganisationSummaryResultItemPage"
+                  "$ref" : "#/components/schemas/PagedModelOrganisationSummary"
                 }
               }
             }
@@ -4548,89 +4548,38 @@
         },
         "required" : [ "address", "phoneNumbers" ]
       },
-      "PageSyncOrganisationId" : {
+      "PageMetadata" : {
         "type" : "object",
         "properties" : {
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
           "totalPages" : {
             "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
+            "format" : "int64"
+          }
+        }
+      },
+      "PagedModelSyncOrganisationId" : {
+        "type" : "object",
+        "properties" : {
           "content" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/SyncOrganisationId"
             }
           },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "PageableObject" : {
-        "type" : "object",
-        "properties" : {
-          "offset" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
-          },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "SortObject" : {
-        "type" : "object",
-        "properties" : {
-          "empty" : {
-            "type" : "boolean"
-          },
-          "sorted" : {
-            "type" : "boolean"
-          },
-          "unsorted" : {
-            "type" : "boolean"
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
           }
         }
       },
@@ -4824,7 +4773,7 @@
           }
         }
       },
-      "OrganisationSummaryResultItemPage" : {
+      "PagedModelOrganisationSummary" : {
         "type" : "object",
         "properties" : {
           "content" : {
@@ -4833,45 +4782,8 @@
               "$ref" : "#/components/schemas/OrganisationSummary"
             }
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "total" : {
-            "type" : "integer",
-            "format" : "int64",
-            "writeOnly" : true
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "empty" : {
-            "type" : "boolean"
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
           }
         }
       }

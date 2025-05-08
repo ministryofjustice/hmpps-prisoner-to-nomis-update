@@ -7,7 +7,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PageSyncOrganisationId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PagedModelSyncOrganisationId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -27,7 +27,7 @@ class OrganisationsDpsApiService(
   suspend fun getOrganisationIds(
     pageNumber: Long = 0,
     pageSize: Long = 1,
-  ): PageSyncOrganisationId = webClient.get()
+  ): PagedModelSyncOrganisationId = webClient.get()
     .uri {
       it.path("/sync/organisations/reconcile")
         .queryParam("page", pageNumber)
