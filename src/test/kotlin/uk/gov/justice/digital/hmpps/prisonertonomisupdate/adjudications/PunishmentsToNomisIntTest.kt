@@ -39,6 +39,7 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.UUID
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345-1"
 private const val CHARGE_SEQ = 1
@@ -1153,6 +1154,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
+                locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
@@ -1251,6 +1253,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 hearing = HearingDto(
                   id = 812,
                   locationId = 27187,
+                  locationUuid = UUID.randomUUID(),
                   dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                   outcome = HearingOutcomeDto(
@@ -1326,6 +1329,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
+                locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
@@ -1445,6 +1449,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               hearing = HearingDto(
                 id = 812,
                 locationId = 27187,
+                locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                 outcome = HearingOutcomeDto(
@@ -1619,6 +1624,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 hearing = HearingDto(
                   id = 812,
                   locationId = 27187,
+                  locationUuid = UUID.randomUUID(),
                   dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
                   outcome = HearingOutcomeDto(

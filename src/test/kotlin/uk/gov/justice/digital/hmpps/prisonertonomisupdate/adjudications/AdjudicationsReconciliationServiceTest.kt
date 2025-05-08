@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(
@@ -594,7 +595,13 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   chargeNumber = chargeNumber,
   prisonerNumber = prisonerNumber,
   gender = ReportedAdjudicationDto.Gender.FEMALE,
-  incidentDetails = IncidentDetailsDto(locationId = 1234, dateTimeOfIncident = LocalDateTime.parse("2023-01-01T10:00"), dateTimeOfDiscovery = LocalDateTime.parse("2023-01-01T10:00"), handoverDeadline = LocalDateTime.parse("2023-01-01T10:00")),
+  incidentDetails = IncidentDetailsDto(
+    locationId = 1234,
+    locationUuid = UUID.randomUUID(),
+    dateTimeOfIncident = LocalDateTime.parse("2023-01-01T10:00"),
+    dateTimeOfDiscovery = LocalDateTime.parse("2023-01-01T10:00"),
+    handoverDeadline = LocalDateTime.parse("2023-01-01T10:00"),
+  ),
   isYouthOffender = false,
   incidentRole = IncidentRoleDto(),
   offenceDetails = OffenceDto(offenceCode = 1, offenceRule = OffenceRuleDto("51A", paragraphDescription = ""), protectedCharacteristics = emptyList()),

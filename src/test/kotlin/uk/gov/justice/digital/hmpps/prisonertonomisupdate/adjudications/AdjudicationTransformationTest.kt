@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import java.time.LocalDateTime
+import java.util.UUID
 
 class AdjudicationTransformationTest {
   @Test
@@ -22,6 +23,7 @@ class AdjudicationTransformationTest {
         chargeNumber = "1234567",
         incidentDetails = IncidentDetailsDto(
           locationId = 543311,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
           dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
           handoverDeadline = LocalDateTime.parse("2023-07-30T01:12:00"),
@@ -288,6 +290,7 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
       dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
       dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
       handoverDeadline = LocalDateTime.parse("2023-07-30T01:12:00"),
+      locationUuid = UUID.randomUUID(),
     ),
     isYouthOffender = false,
     incidentRole = IncidentRoleDto(),

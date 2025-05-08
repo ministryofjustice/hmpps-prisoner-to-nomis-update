@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import java.time.LocalDateTime
+import java.util.UUID
 
 class AdjudicationsApiExtension :
   BeforeAllCallback,
@@ -82,6 +83,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       HearingDto(
         id = hearingId,
         locationId = 27187,
+        locationUuid = UUID.randomUUID(),
         dateTimeOfHearing = LocalDateTime.parse("2023-08-23T14:25:00"),
         oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
         agencyId = "MDI",
@@ -100,6 +102,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
         locationId = 197683,
+        locationUuid = UUID.randomUUID(),
         dateTimeOfIncident = LocalDateTime.parse("2023-07-11T09:00:00"),
         dateTimeOfDiscovery = LocalDateTime.parse("2023-07-11T09:00:00"),
         handoverDeadline = LocalDateTime.parse("2023-07-13T09:00:00"),
@@ -159,6 +162,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.parse("2023-04-27T17:45:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
@@ -234,6 +238,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.parse("2023-10-04T13:20:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
@@ -271,6 +276,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 357596,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.parse("2023-10-12T14:00:00"),
           oicHearingType = HearingDto.OicHearingType.valueOf(hearingType),
           outcome = HearingOutcomeDto(
@@ -307,6 +313,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = hearingId,
           locationId = 27187,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.parse("2023-10-04T13:20:00"),
           oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
           outcome = HearingOutcomeDto(
@@ -386,6 +393,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         hearing = HearingDto(
           id = 816,
           locationId = 357596,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.parse("2023-10-26T16:10:00"),
           oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
           agencyId = "MDI",
