@@ -2539,7 +2539,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         MappingExtension.mappingServer.stubGetSentenceTermMappingGivenDpsId(
-          id = DPS_SENTENCE_ID,
+          id = DPS_TERM_ID,
           nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
           nomisBookingId = NOMIS_BOOKING_ID,
           nomisTermSequence = NOMIS_TERM_SEQ,
