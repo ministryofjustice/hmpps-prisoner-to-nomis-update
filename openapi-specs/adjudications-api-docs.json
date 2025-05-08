@@ -12,7 +12,7 @@
       "name" : "MIT",
       "url" : "https://opensource.org/license/mit-0"
     },
-    "version" : "2025-02-28.14112.4f93f83"
+    "version" : "2025-05-06.14525.84e6b4d"
   },
   "servers" : [ {
     "url" : "/",
@@ -4809,8 +4809,28 @@
           }
         } ],
         "responses" : {
+          "200" : {
+            "description" : "Request successfully processed - content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/HmppsSubjectAccessRequestContent"
+                }
+              }
+            }
+          },
           "204" : {
             "description" : "Request successfully processed - no content found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "209" : {
+            "description" : "Subject Identifier is not recognised by this service",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4839,32 +4859,12 @@
               }
             }
           },
-          "209" : {
-            "description" : "Subject Identifier is not recognised by this service",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
-          },
           "500" : {
             "description" : "Unexpected error occurred",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Request successfully processed - content found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/HmppsSubjectAccessRequestContent"
                 }
               }
             }
@@ -7851,7 +7851,7 @@
             "description" : "agency id of hearing"
           }
         },
-        "required" : [ "agencyId", "dateTimeOfHearing", "locationId", "oicHearingType" ]
+        "required" : [ "agencyId", "dateTimeOfHearing", "locationUuid", "oicHearingType" ]
       },
       "HearingOutcomeDto" : {
         "type" : "object",
@@ -7936,7 +7936,7 @@
             "example" : "2010-10-14T10:00:00"
           }
         },
-        "required" : [ "dateTimeOfDiscovery", "dateTimeOfIncident", "handoverDeadline", "locationId" ]
+        "required" : [ "dateTimeOfDiscovery", "dateTimeOfIncident", "handoverDeadline", "locationUuid" ]
       },
       "IncidentRoleDto" : {
         "type" : "object",
@@ -8889,7 +8889,7 @@
             "enum" : [ "GOV_ADULT", "GOV_YOI", "INAD_YOI", "GOV", "INAD_ADULT" ]
           }
         },
-        "required" : [ "dateTimeOfHearing", "locationId", "oicHearingType" ]
+        "required" : [ "dateTimeOfHearing", "locationUuid", "oicHearingType" ]
       },
       "AmendHearingOutcomeRequest" : {
         "type" : "object",
@@ -9413,7 +9413,7 @@
             "example" : "2010-10-12T10:00:00"
           }
         },
-        "required" : [ "dateTimeOfIncident", "locationId" ]
+        "required" : [ "dateTimeOfIncident", "locationUuid" ]
       },
       "GenderRequest" : {
         "type" : "object",
@@ -9741,7 +9741,7 @@
             "description" : "offender book id used for api calls from dps"
           }
         },
-        "required" : [ "agencyId", "dateTimeOfIncident", "gender", "locationId", "prisonerNumber" ]
+        "required" : [ "agencyId", "dateTimeOfIncident", "gender", "locationUuid", "prisonerNumber" ]
       },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
@@ -9948,15 +9948,15 @@
         "type" : "object",
         "additionalProperties" : false,
         "properties" : {
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "unpaged" : {
+            "type" : "boolean"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "unpaged" : {
-            "type" : "boolean"
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "pageSize" : {
             "type" : "integer",
@@ -10173,7 +10173,7 @@
             "description" : "Location UUID of the hearing"
           }
         },
-        "required" : [ "chargeNumber", "dateTimeOfDiscovery", "dateTimeOfHearing", "locationId", "oicHearingType", "prisonerNumber", "status" ]
+        "required" : [ "chargeNumber", "dateTimeOfDiscovery", "dateTimeOfHearing", "locationUuid", "oicHearingType", "prisonerNumber", "status" ]
       },
       "HearingSummaryResponse" : {
         "type" : "object",

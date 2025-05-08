@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Ad
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
+import java.util.UUID
 
 private const val DPS_HEARING_ID = "123"
 private const val NOMIS_HEARING_ID = 456L
@@ -112,6 +113,7 @@ internal class AdjudicationsServiceTest {
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
         locationId = 2,
+        locationUuid = UUID.randomUUID(),
         dateTimeOfDiscovery = LocalDateTime.parse("2023-09-26T08:15:00"),
         dateTimeOfIncident = LocalDateTime.parse("2023-09-26T08:15:00"),
         handoverDeadline = LocalDateTime.parse("2023-09-26T08:15:00"),
@@ -134,6 +136,7 @@ internal class AdjudicationsServiceTest {
         HearingDto(
           id = DPS_HEARING_ID.toLong(),
           locationId = 123,
+          locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.now(),
           oicHearingType = oicHearingType,
           agencyId = "MDI",
@@ -149,6 +152,7 @@ internal class AdjudicationsServiceTest {
           hearing = HearingDto(
             id = DPS_HEARING_ID.toLong(),
             locationId = 123,
+            locationUuid = UUID.randomUUID(),
             dateTimeOfHearing = LocalDateTime.now(),
             oicHearingType = oicHearingType,
             agencyId = "MDI",

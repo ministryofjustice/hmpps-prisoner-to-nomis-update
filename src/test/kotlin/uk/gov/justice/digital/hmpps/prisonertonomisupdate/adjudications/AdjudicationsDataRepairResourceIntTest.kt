@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 private const val DPS_CHARGE_NUMBER = "12345-1"
 private const val DPS_HEARING_ID = "654321"
@@ -84,6 +85,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
           hearings = listOf(
             HearingDto(
               locationId = 188489,
+              locationUuid = UUID.randomUUID(),
               dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
@@ -99,6 +101,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             ),
             HearingDto(
               locationId = 138711,
+              locationUuid = UUID.randomUUID(),
               dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
@@ -130,6 +133,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 locationId = 188489,
+                locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
                 agencyId = PRISON_ID,
@@ -147,6 +151,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 locationId = 138711,
+                locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
                 agencyId = PRISON_ID,

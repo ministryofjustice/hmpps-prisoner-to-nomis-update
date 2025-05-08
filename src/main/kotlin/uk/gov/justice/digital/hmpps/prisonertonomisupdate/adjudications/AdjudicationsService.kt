@@ -1114,7 +1114,8 @@ private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHear
   hearingType = this.oicHearingType.name,
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
-  internalLocationId = this.locationId,
+  // TODO future change to look up NOMIS id from DPS this.locationUuid
+  internalLocationId = this.locationId!!,
 )
 
 // If OutcomeDto exists use code, else use code from hearingOutcomeDto
@@ -1226,7 +1227,8 @@ internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudica
     incidentTime = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalTimeAtMinute().toString(),
     reportedDate = reportedAdjudication.createdDateTime.toLocalDate(),
     reportedTime = reportedAdjudication.createdDateTime.toLocalTimeAtMinute().toString(),
-    internalLocationId = reportedAdjudication.incidentDetails.locationId,
+    // TODO future change to look up NOMIS id from DPS this.locationUuid
+    internalLocationId = reportedAdjudication.incidentDetails.locationId!!,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
     prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber
@@ -1334,7 +1336,8 @@ private fun HearingDto.toNomisCreateHearing() = CreateHearingRequest(
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
   agencyId = this.agencyId,
-  internalLocationId = this.locationId,
+  // TODO future change to look up NOMIS id from DPS this.locationUuid
+  internalLocationId = this.locationId!!,
 )
 
 data class HearingAdditionalInformation(
