@@ -28,7 +28,7 @@ class OrganisationsReconciliationService(
   }
 
   suspend fun getOrganisationsCounts(): OrganisationCounts = OrganisationCounts(
-    dpsCount = dpsApiService.getOrganisationIds(0, 1).totalElements!!,
+    dpsCount = dpsApiService.getOrganisationIds(0, 1).page?.totalElements!!,
     nomisCount = nomisApiService.getCorporateOrganisationIds(0, 1).totalElements,
   )
 
