@@ -66,17 +66,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
         ),
     )
   }
-  fun stubPutVisitBalance(prisonNumber: String = "A1234KT") {
-    nomisApi.stubFor(
-      put("/prisoners/$prisonNumber/visit-balance")
-        .willReturn(
-          aResponse()
-            .withStatus(204)
-            .withHeader("Content-Type", "application/json"),
-        ),
-    )
-  }
-  fun stubPutVisitBalance(prisonNumber: String = "A1234KT", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubPutVisitBalance(prisonNumber: String = "A1234KT", status: HttpStatus = HttpStatus.NO_CONTENT, error: ErrorResponse = ErrorResponse(status = status.value())) {
     nomisApi.stubFor(
       put("/prisoners/$prisonNumber/visit-balance")
         .willReturn(
