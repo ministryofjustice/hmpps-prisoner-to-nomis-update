@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-02.4152.881fef2"
+    "version" : "2025-05-08.76.954eda0"
   },
   "servers" : [ {
     "url" : "https://csip-api-dev.hmpps.service.justice.gov.uk",
@@ -3122,7 +3122,8 @@
           "history" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/DecisionAndActions"
+              "description" : "The Decision and Actions for the CSIP referral",
+              "required" : [ "actions" ]
             }
           }
         },
@@ -3522,7 +3523,8 @@
           "history" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/SaferCustodyScreeningOutcome"
+              "description" : "The Safer Custody Screening Outcome to the CSIP referral",
+              "required" : [ "date", "outcome", "recordedBy", "recordedByDisplayName" ]
             }
           }
         },
