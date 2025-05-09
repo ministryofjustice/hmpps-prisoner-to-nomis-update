@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -104,6 +105,31 @@ class OrganisationsNomisApiServiceTest {
       assertThat(pages.content).hasSize(2)
       assertThat(pages.content[0].corporateId).isEqualTo(1234567)
       assertThat(pages.content[1].corporateId).isEqualTo(1234568)
+    }
+  }
+
+  @Nested
+  inner class DeleteCorporateOrganisation {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteCorporateOrganisation(corporateId = 1234567)
+
+      apiService.deleteCorporateOrganisation(corporateId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass nomis corporate Id to service`() = runTest {
+      mockServer.stubDeleteCorporateOrganisation(corporateId = 1234567)
+
+      apiService.deleteCorporateOrganisation(corporateId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/corporates/1234567")),
+      )
     }
   }
 }

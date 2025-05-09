@@ -74,10 +74,19 @@ interface SourcedOrganisationChildEvent {
 interface SourcedAdditionalData {
   val source: String
 }
-interface OrganisationAdditionalData : SourcedAdditionalData {
+data class OrganisationAdditionalData(
+  override val organisationId: Long,
+  override val source: String = "DPS",
+) : SourcedOrganisationAdditionalData
+
+data class OrganisationDeletedEvent(
+  override val additionalInformation: OrganisationAdditionalData,
+) : SourcedOrganisationsEvent
+
+interface SourcedOrganisationAdditionalData : SourcedAdditionalData {
   val organisationId: Long
 }
-interface OrganisationChildAdditionalData : OrganisationAdditionalData {
+interface OrganisationChildAdditionalData : SourcedOrganisationAdditionalData {
   val identifier: Long
 }
 

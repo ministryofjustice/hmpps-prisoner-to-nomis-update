@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.data.domain.PageImpl
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorporateOrganisation
@@ -44,4 +45,11 @@ class OrganisationsNomisApiService(
     .bodyToMono(typeReference<RestResponsePage<CorporateOrganisationIdResponse>>())
     .retryWhen(backoffSpec)
     .awaitSingle()
+
+  suspend fun deleteCorporateOrganisation(corporateId: Long) {
+    webClient.delete()
+      .uri("/corporates/{corporateId}", corporateId)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
