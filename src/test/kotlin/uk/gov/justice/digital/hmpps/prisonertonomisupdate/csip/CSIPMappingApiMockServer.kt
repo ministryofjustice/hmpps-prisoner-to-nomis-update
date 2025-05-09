@@ -160,6 +160,18 @@ class CSIPMappingApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubDeleteChildMappingsByDpsId(
+    dpsCSIPId: String = UUID.randomUUID().toString(),
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/csip/dps-csip-id/$dpsCSIPId/children")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)

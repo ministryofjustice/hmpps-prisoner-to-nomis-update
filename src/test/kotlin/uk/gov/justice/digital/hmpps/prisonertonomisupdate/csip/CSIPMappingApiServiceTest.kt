@@ -234,4 +234,32 @@ class CSIPMappingApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class DeleteChildMappings {
+    private val dpsCSIPId = UUID.randomUUID().toString()
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      csipMappingApiMockServer.stubDeleteChildMappingsByDpsId(dpsCSIPId)
+
+      apiService.deleteChildMappingsByDpsId(dpsCSIPId)
+
+      csipMappingApiMockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass ids to service`() = runTest {
+      val dpsCSIPId = "a04f7a8d-61aa-400c-9395-f4dc62f36ab0"
+      csipMappingApiMockServer.stubDeleteChildMappingsByDpsId(dpsCSIPId)
+
+      apiService.deleteChildMappingsByDpsId(dpsCSIPId)
+
+      csipMappingApiMockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/csip/dps-csip-id/$dpsCSIPId/children")),
+      )
+    }
+  }
 }

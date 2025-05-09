@@ -25,6 +25,13 @@ class CSIPMappingApiService(@Qualifier("mappingWebClient") private val webClient
       .awaitBodilessEntity()
   }
 
+  suspend fun deleteChildMappingsByDpsId(dpsCsipReportId: String) {
+    webClient.delete()
+      .uri("/mapping/csip/dps-csip-id/{dpsCsipReportId}/children", dpsCsipReportId)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createMapping(csipFullMappingDto: CSIPFullMappingDto) {
     webClient.post()
       .uri("/mapping/csip/all")
