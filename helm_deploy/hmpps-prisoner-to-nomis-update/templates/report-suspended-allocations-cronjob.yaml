@@ -6,7 +6,6 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "{{ .Values.cron.suspendedAllocationReconReportSchedule }}"
-  suspend: true
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
