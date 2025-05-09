@@ -2,10 +2,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Schema
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
@@ -25,8 +27,10 @@ class CSIPDataRepairResource(
   suspend fun repairCsipReport(
     @PathVariable prisonNumber: String,
     @PathVariable dpsCsipReportId: String,
+    @Schema(description = "Whether to clear existing child mappings", required = false, defaultValue = "false")
+    @RequestParam clearChildMappings: Boolean = false,
   ) {
-    csipService.repairCsipReport(prisonNumber = prisonNumber, dpsCsipReportId = dpsCsipReportId)
+    csipService.repairCsipReport(prisonNumber = prisonNumber, dpsCsipReportId = dpsCsipReportId, clearChildMappings = clearChildMappings)
     telemetryClient.trackEvent(
       "csip-resynchronisation-repair",
       mapOf(
