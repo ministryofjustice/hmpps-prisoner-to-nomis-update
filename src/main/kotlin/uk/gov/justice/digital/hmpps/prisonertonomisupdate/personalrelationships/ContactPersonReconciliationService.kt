@@ -423,6 +423,7 @@ class ContactPersonReconciliationService(
     emergencyContact = this.isEmergencyContact,
     nextOfKin = this.isNextOfKin,
     approvedVisitor = this.isApprovedVisitor,
+    active = this.isRelationshipActive,
   )
 
   private fun PrisonerContact.asSummary() = ContactSummary(
@@ -434,6 +435,7 @@ class ContactPersonReconciliationService(
     emergencyContact = this.emergencyContact,
     nextOfKin = this.nextOfKin,
     approvedVisitor = this.approvedVisitor,
+    active = this.active,
   )
 
   private fun ContactPerson.asSummary() = PersonSummary(
@@ -539,6 +541,7 @@ data class ContactSummary(
   val emergencyContact: Boolean,
   val nextOfKin: Boolean,
   val approvedVisitor: Boolean,
+  val active: Boolean,
 )
 data class PrisonerContactRestrictionSummary(
   val contactId: Long,
