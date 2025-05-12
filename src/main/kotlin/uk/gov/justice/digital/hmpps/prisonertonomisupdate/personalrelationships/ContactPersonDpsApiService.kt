@@ -80,7 +80,7 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .awaitBody()
 
   suspend fun getPrisonerContacts(prisonNumber: String): PagedModelPrisonerContactSummary = webClient.get()
-    .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000&active=true", prisonNumber)
+    .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000", prisonNumber)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 

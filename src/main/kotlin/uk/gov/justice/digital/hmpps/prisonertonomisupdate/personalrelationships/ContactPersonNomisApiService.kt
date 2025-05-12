@@ -329,7 +329,7 @@ class ContactPersonNomisApiService(
   }
 
   suspend fun getContactsForPrisoner(offenderNo: String): PrisonerWithContacts = webClient.get()
-    .uri("/prisoners/{offenderNo}/contacts?active-only={activeOnly}&latest-booking-only={latestBookingOnly}", offenderNo, true, true)
+    .uri("/prisoners/{offenderNo}/contacts?active-only={activeOnly}&latest-booking-only={latestBookingOnly}", offenderNo, false, true)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 

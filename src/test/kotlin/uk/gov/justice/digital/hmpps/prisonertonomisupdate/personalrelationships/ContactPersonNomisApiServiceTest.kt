@@ -852,14 +852,14 @@ class ContactPersonNomisApiServiceTest {
     }
 
     @Test
-    fun `will request just active contacts`() = runTest {
+    fun `will request just active and inactive contacts`() = runTest {
       mockServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
 
       apiService.getContactsForPrisoner("A1234KT")
 
       mockServer.verify(
         getRequestedFor(anyUrl())
-          .withQueryParam("active-only", equalTo("true"))
+          .withQueryParam("active-only", equalTo("false"))
           .withQueryParam("latest-booking-only", equalTo("true")),
       )
     }

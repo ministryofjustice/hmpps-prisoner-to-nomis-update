@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -307,7 +308,7 @@ class ContactPersonDpsApiServiceTest {
     }
 
     @Test
-    fun `will request a single huge page of just active contacts`() = runTest {
+    fun `will request a single huge page of all contacts`() = runTest {
       dpsContactPersonServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
 
       apiService.getPrisonerContacts("A1234KT")
@@ -316,7 +317,7 @@ class ContactPersonDpsApiServiceTest {
         getRequestedFor(anyUrl())
           .withQueryParam("size", equalTo("10000"))
           .withQueryParam("page", equalTo("0"))
-          .withQueryParam("active", equalTo("true")),
+          .withQueryParam("active", absent()),
       )
     }
   }
