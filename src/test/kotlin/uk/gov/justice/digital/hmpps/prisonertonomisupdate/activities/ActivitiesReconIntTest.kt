@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import kotlin.collections.joinToString
 
 class ActivitiesReconIntTest : IntegrationTestBase() {
 
@@ -343,6 +344,35 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
+      fun `should publish failed telemetry where prisoner not found in NOMIS`() {
+        stubGetPrisons("BXI")
+        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
+        nomisApi.stubGetPrisonerDetails("[]")
+
+        webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .exchange()
+          .expectStatus().isAccepted
+
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("activity-suspended-allocation-reconciliation-report-failed"),
+            check {
+              assertThat(it).containsExactlyInAnyOrderEntriesOf(
+                mapOf(
+                  "prison" to "BXI",
+                  "type" to "different_count",
+                  "bookingId" to "1234567",
+                  "offenderNo" to "Details not found in NOMIS",
+                  "location" to "BXI",
+                ),
+              )
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
       fun `should publish telemetry for multiple prisons`() {
         stubGetPrisons("BXI", "MDI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
@@ -404,8 +434,8 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       @Test
       fun `should publish error telemetry if fails to get recon data from NOMIS`() {
         stubGetPrisons("BXI")
-        nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 500)
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = null, dpsCount = 1))
+        nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 500)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
           .exchange()
@@ -431,7 +461,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       fun `should publish error telemetry if fails to get recon data from DPS`() {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = null))
-        activitiesApi.stubAllocationReconciliationWithError("BXI", 400)
+        activitiesApi.stubSuspendedAllocationReconciliationWithError("BXI", 400)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
           .exchange()
