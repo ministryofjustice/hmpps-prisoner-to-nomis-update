@@ -22,7 +22,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.Or
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationWebAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.PagedModelSyncOrganisationId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncTypesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncWebResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -187,6 +195,155 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetSyncOrganisation(organisationId: Long, response: SyncOrganisationResponse = organisation()) {
+    stubFor(
+      get("/sync/organisation/$organisationId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisation() = SyncOrganisationResponse(
+    organisationId = 234324,
+    active = true,
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
+
+  fun stubGetSyncOrganisationTypes(organisationId: Long, response: SyncTypesResponse = organisationTypes()) {
+    stubFor(
+      get("/sync/organisation-types/$organisationId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationTypes() = SyncTypesResponse(
+    organisationId = 234324,
+    types = listOf(
+      SyncOrganisationType(
+        "some type",
+        createdBy = "a user",
+        createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+      ),
+    ),
+  )
+
+  fun stubGetSyncOrganisationWeb(organisationWebId: Long, response: SyncWebResponse = organisationWeb()) {
+    stubFor(
+      get("/sync/organisation-web/$organisationWebId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationWeb() = SyncWebResponse(
+    organisationWebAddressId = 1234567,
+    organisationId = 234324,
+    webAddress = "web address",
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
+
+  fun stubGetSyncOrganisationAddress(organisationAddressId: Long, response: SyncAddressResponse = organisationAddress()) {
+    stubFor(
+      get("/sync/organisation-address/$organisationAddressId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationAddress() = SyncAddressResponse(
+    organisationAddressId = 1234567,
+    organisationId = 345567,
+    primaryAddress = true,
+    mailAddress = false,
+    serviceAddress = false,
+    noFixedAddress = false,
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
+
+  fun stubGetSyncOrganisationEmail(organisationEmailId: Long, response: SyncEmailResponse = organisationEmail()) {
+    stubFor(
+      get("/sync/organisation-email/$organisationEmailId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationEmail() = SyncEmailResponse(
+    organisationEmailId = 1234567,
+    organisationId = 324524,
+    emailAddress = "joe@joe.com",
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
+
+  fun stubGetSyncOrganisationPhone(organisationPhoneId: Long, response: SyncPhoneResponse = organisationPhone()) {
+    stubFor(
+      get("/sync/organisation-phone/$organisationPhoneId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationPhone() = SyncPhoneResponse(
+    organisationPhoneId = 1234567,
+    organisationId = 34535,
+    phoneType = "SOME_TYPE",
+    phoneNumber = "12345 234",
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
+
+  fun stubGetSyncOrganisationAddressPhone(organisationAddressPhoneId: Long, response: SyncAddressPhoneResponse = organisationAddressPhone()) {
+    stubFor(
+      get("/sync/organisation-address-phone/$organisationAddressPhoneId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  private fun organisationAddressPhone() = SyncAddressPhoneResponse(
+    organisationAddressPhoneId = 1234567,
+    organisationAddressId = 12346,
+    organisationPhoneId = 12345,
+    organisationId = 34535,
+    phoneType = "SOME_TYPE",
+    phoneNumber = "12345 234",
+    createdBy = "a user",
+    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+  )
 
   fun pageOrganisationIdResponse(
     count: Long,

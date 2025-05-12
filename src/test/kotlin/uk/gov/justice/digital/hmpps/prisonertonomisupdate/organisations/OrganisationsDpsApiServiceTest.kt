@@ -95,4 +95,186 @@ class OrganisationsDpsApiServiceTest {
       assertThat(content[1].organisationId).isEqualTo(1234568)
     }
   }
+
+  @Nested
+  inner class GetSyncOrganisation {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisation(organisationId = 1234567)
+
+      apiService.getSyncOrganisation(organisationId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisation(organisationId = 1234567)
+
+      apiService.getSyncOrganisation(organisationId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationWeb {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationWeb(organisationWebId = 1234567)
+
+      apiService.getSyncOrganisationWeb(organisationWebId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationWeb(organisationWebId = 1234567)
+
+      apiService.getSyncOrganisationWeb(organisationWebId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-web/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationTypes {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationTypes(organisationId = 1234567)
+
+      apiService.getSyncOrganisationTypes(organisationId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationTypes(organisationId = 1234567)
+
+      apiService.getSyncOrganisationTypes(organisationId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-types/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationAddress {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationAddress(organisationAddressId = 1234567)
+
+      apiService.getSyncOrganisationAddress(organisationAddressId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationAddress(organisationAddressId = 1234567)
+
+      apiService.getSyncOrganisationAddress(organisationAddressId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-address/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationEmail {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationEmail(organisationEmailId = 1234567)
+
+      apiService.getSyncOrganisationEmail(organisationEmailId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationEmail(organisationEmailId = 1234567)
+
+      apiService.getSyncOrganisationEmail(organisationEmailId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-email/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationPhone {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationPhone(organisationPhoneId = 1234567)
+
+      apiService.getSyncOrganisationPhone(organisationPhoneId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationPhone(organisationPhoneId = 1234567)
+
+      apiService.getSyncOrganisationPhone(organisationPhoneId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-phone/1234567")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetSyncOrganisationAddressPhone {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationAddressPhone(organisationAddressPhoneId = 1234567)
+
+      apiService.getSyncOrganisationAddressPhone(organisationAddressPhoneId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get sync endpoint`() = runTest {
+      dpsOrganisationsServer.stubGetSyncOrganisationAddressPhone(organisationAddressPhoneId = 1234567)
+
+      apiService.getSyncOrganisationAddressPhone(organisationAddressPhoneId = 1234567)
+
+      dpsOrganisationsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/organisation-address-phone/1234567")),
+      )
+    }
+  }
 }
