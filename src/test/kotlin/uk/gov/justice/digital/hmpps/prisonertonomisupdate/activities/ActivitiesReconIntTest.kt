@@ -461,7 +461,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       fun `should publish error telemetry if fails to get recon data from DPS`() {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = null))
-        activitiesApi.stubAllocationReconciliationWithError("BXI", 400)
+        activitiesApi.stubSuspendedAllocationReconciliationWithError("BXI", 400)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
           .exchange()
