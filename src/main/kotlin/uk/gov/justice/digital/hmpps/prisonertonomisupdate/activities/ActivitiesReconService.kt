@@ -76,7 +76,7 @@ class ActivitiesReconService(
       val dpsBookingCounts = async { activitiesApiService.getSuspendedAllocationReconciliation(prisonId) }
       val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-      publishTelemetry("suspended-allocation", prisonId, compareResults)
+      publishTelemetry("suspended-allocation", prisonId, compareResults, ignoreDifferentPrisons = false)
     }
   } catch (e: Exception) {
     log.error("Suspended allocation reconciliation report failed for prison $prisonId", e)
@@ -144,13 +144,14 @@ class ActivitiesReconService(
     prisonId: String,
     differences: CompareBookingsDifferences,
     date: LocalDate? = null,
+    ignoreDifferentPrisons: Boolean = true,
   ) {
     val differencesWithDetails = with(differences.all()) {
       if (isNotEmpty()) activitiesNomisApiService.getPrisonerDetails(this) else listOf()
     }
 
     val ignoredBookings = differencesWithDetails
-      .filter { it.location != prisonId }
+      .filter { ignoreDifferentPrisons && it.location != prisonId }
       .onEach {
         log.info("Ignoring failed $type reconciliation for booking ${it.bookingId} at prison $prisonId as the prisoner is now at location ${it.location}")
       }
