@@ -8,6 +8,7 @@ import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import java.time.LocalDate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AllocationReconciliationResponse as DpsAllocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AttendanceReconciliationResponse as DpsAttendanceResponse
@@ -161,7 +162,7 @@ class ActivitiesReconService(
     differences.all()
       .filterNot { it in ignoredBookings }
       .sorted()
-      .map { differencesWithDetails.first { details -> details.bookingId == it } }
+      .map { differencesWithDetails.firstOrNull { details -> details.bookingId == it } ?: PrisonerDetails("Details not found in NOMIS", it, prisonId, false) }
       .forEach {
         telemetryClient.trackEvent(
           "activity-$type-reconciliation-report-failed",
