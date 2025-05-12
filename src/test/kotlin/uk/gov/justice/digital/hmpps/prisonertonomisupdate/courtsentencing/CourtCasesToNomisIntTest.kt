@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -99,11 +100,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-case-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtCaseAllMappingDto.MappingType.DPS_CREATED.toString())
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(CourtCaseAllMappingDto.MappingType.DPS_CREATED.toString())
           },
           isNull(),
         )
@@ -193,10 +194,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-case-create-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["reason"]).isEqualTo("Court case created in NOMIS")
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["reason"]).isEqualTo("Court case created in NOMIS")
           },
           isNull(),
         )
@@ -221,9 +222,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-case-create-duplicate"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -331,9 +332,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("court-case-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
           },
           isNull(),
         )
@@ -366,9 +367,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(1)).trackEvent(
             org.mockito.kotlin.eq("court-case-deleted-skipped"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -402,10 +403,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-appearance-create-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
           },
           isNull(),
         )
@@ -467,15 +468,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-appearance-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtAppearanceMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["courtEventCharges"])
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(CourtAppearanceMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["courtEventCharges"])
               .isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
-            Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+            assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
           },
           isNull(),
         )
@@ -568,9 +569,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-appearance-create-duplicate"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -739,10 +740,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-appearance-updated-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
           },
           isNull(),
         )
@@ -857,13 +858,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("court-appearance-updated-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
-            Assertions.assertThat(it["deletedCourtChargeMappings"])
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+            assertThat(it["deletedCourtChargeMappings"])
               .contains("[nomisCourtChargeId: 15, nomisCourtChargeId: 16]")
           },
           isNull(),
@@ -895,9 +896,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("court-appearance-updated-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -940,9 +941,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("court-appearance-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+          check {
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
           },
           isNull(),
         )
@@ -975,9 +976,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(1)).trackEvent(
             org.mockito.kotlin.eq("court-appearance-deleted-skipped"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -1011,10 +1012,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("charge-create-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
           },
           isNull(),
         )
@@ -1058,13 +1059,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("charge-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
           },
           isNull(),
         )
@@ -1122,9 +1123,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("charge-create-duplicate"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -1225,11 +1226,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("charge-updated-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
           },
           isNull(),
         )
@@ -1281,14 +1282,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("charge-updated-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
-            Assertions.assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
-            Assertions.assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisOutcomeCode"]).isEqualTo(COURT_CHARGE_1_RESULT_CODE)
+            assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
           },
           isNull(),
         )
@@ -1369,10 +1370,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-create-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -1426,17 +1427,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
           },
           isNull(),
         )
@@ -1568,19 +1569,19 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-            Assertions.assertThat(it["dpsConsecutiveSentenceId"]).isEqualTo(DPS_SENTENCE_ID_2)
-            Assertions.assertThat(it["nomisConsecutiveSentenceSequence"]).isEqualTo(NOMIS_SENTENCE_SEQ_2.toString())
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["dpsConsecutiveSentenceId"]).isEqualTo(DPS_SENTENCE_ID_2)
+            assertThat(it["nomisConsecutiveSentenceSequence"]).isEqualTo(NOMIS_SENTENCE_SEQ_2.toString())
           },
           isNull(),
         )
@@ -1657,9 +1658,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-create-duplicate"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -1833,10 +1834,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-updated-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
           },
           isNull(),
         )
@@ -1890,14 +1891,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-updated-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
           },
           isNull(),
         )
@@ -1928,11 +1929,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("sentence-updated-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             },
             isNull(),
           )
@@ -1984,11 +1985,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("sentence-updated-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              Assertions.assertThat(it["reason"])
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["reason"])
                 .isEqualTo("Parent entity not found. Dps charge id: $DPS_COURT_CHARGE_ID")
             },
             isNull(),
@@ -2033,10 +2034,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("sentence-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
           },
           isNull(),
         )
@@ -2069,9 +2070,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(1)).trackEvent(
             org.mockito.kotlin.eq("sentence-deleted-skipped"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -2101,11 +2102,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-term-create-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -2159,16 +2160,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-term-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(SentenceTermMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(SentenceTermMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
           },
           isNull(),
         )
@@ -2275,10 +2276,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-term-create-duplicate"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
           },
           isNull(),
         )
@@ -2407,11 +2408,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-term-updated-ignored"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
           },
           isNull(),
         )
@@ -2463,16 +2464,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("sentence-term-updated-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-            Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-            Assertions.assertThat(it["nomisTermSeq"]).isEqualTo(NOMIS_TERM_SEQ.toString())
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["nomisTermSeq"]).isEqualTo(NOMIS_TERM_SEQ.toString())
           },
           isNull(),
         )
@@ -2503,12 +2504,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("sentence-term-updated-failed"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-              Assertions.assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
             },
             isNull(),
           )
@@ -2554,11 +2555,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           org.mockito.kotlin.eq("sentence-term-deleted-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-            Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-            Assertions.assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-            Assertions.assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
           },
           isNull(),
         )
@@ -2591,10 +2592,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(1)).trackEvent(
             org.mockito.kotlin.eq("sentence-term-deleted-skipped"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
-              Assertions.assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -2643,11 +2644,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("case-references-refreshed-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["caseReferences"])
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["caseReferences"])
               .isEqualTo("[CaseIdentifier(reference=$CASE_REFERENCE, createdDate=2024-01-01T10:10)]")
           },
           isNull(),
@@ -2678,9 +2679,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("case-references-refreshed-failure"),
-            org.mockito.kotlin.check {
-              Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             },
             isNull(),
           )
@@ -2689,6 +2690,65 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         NomisApiExtension.nomisApi.verify(
           0,
           WireMock.putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class CreateRecallSentences {
+
+    @Nested
+    inner class WhenRecallHasBeenCreatedInNomis {
+      @BeforeEach
+      fun setUp() {
+        publishRecallInsertedDomainEvent(
+          source = "NOMIS",
+          recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+        ).also {
+          waitForAnyProcessingToComplete()
+        }
+      }
+
+      @Test
+      fun `will create ignore telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("recall-inserted-ignored"),
+          check {
+            assertThat(it["dpsRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenRecallHasBeenInsertedInDPS {
+      @BeforeEach
+      fun setUp() {
+        // TODO: mock API calls
+        publishRecallInsertedDomainEvent(
+          source = "DPS",
+          recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+        ).also {
+          waitForAnyProcessingToComplete()
+        }
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("recall-inserted-success"),
+          check {
+            assertThat(it["dpsRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
+          },
+          isNull(),
         )
       }
     }
@@ -3008,6 +3068,28 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishRecallInsertedDomainEvent(recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+    val eventType = "recall.inserted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          recallInsertedMessagePayload(
+            offenderNo = OFFENDER_NO,
+            recallId = recallId,
+            sentenceIds = sentenceIds,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   fun courtCaseMessagePayload(courtCaseId: String, offenderNo: String, eventType: String, source: String = "DPS") = """{"eventType":"$eventType", "additionalInformation": {"courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun courtAppearanceMessagePayload(
@@ -3045,6 +3127,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     source: String = "DPS",
   ) = """{"eventType":"$eventType", "additionalInformation": {"periodLengthId":"$periodLengthId","sentenceId":"$sentenceId", "courtAppearanceId":"$courtAppearanceId", "courtCaseId":"$courtCaseId", "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+
+  fun recallInsertedMessagePayload(
+    recallId: String,
+    sentenceIds: List<String>,
+    offenderNo: String,
+    eventType: String,
+    source: String = "DPS",
+  ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
       |"courtEventChargesIds": [] }

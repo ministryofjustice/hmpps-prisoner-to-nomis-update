@@ -786,6 +786,33 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun createRecallSentences(recallInsertedEvent: RecallEvent) {
+    val source = recallInsertedEvent.additionalInformation.source
+    val recallId = recallInsertedEvent.additionalInformation.recallId
+    val sentenceIds = recallInsertedEvent.additionalInformation.sentenceIds
+    val offenderNo: String = recallInsertedEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsRecallId" to recallId,
+      "dpsSentenceIds" to sentenceIds.joinToString(),
+      "offenderNo" to offenderNo,
+    )
+
+    if (isDpsCreated(source)) {
+      runCatching {
+        telemetryClient.trackEvent(
+          "recall-inserted-success",
+          telemetryMap,
+        )
+      }.onFailure { e ->
+        telemetryClient.trackEvent("recall-inserted-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryMap["reason"] = "Recall inserted in NOMIS"
+      telemetryClient.trackEvent("recall-inserted-ignored", telemetryMap, null)
+    }
+  }
+
   suspend fun updateSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
@@ -1019,6 +1046,12 @@ class CourtSentencingService(
     val source: String,
   )
 
+  data class RecallAdditionalInformation(
+    val recallId: String,
+    val sentenceIds: List<String>,
+    val source: String,
+  )
+
   data class CourtCaseCreatedEvent(
     val additionalInformation: AdditionalInformation,
     val personReference: PersonReferenceList,
@@ -1046,6 +1079,11 @@ class CourtSentencingService(
 
   data class PeriodLengthCreatedEvent(
     val additionalInformation: PeriodLengthAdditionalInformation,
+    val personReference: PersonReferenceList,
+  )
+
+  data class RecallEvent(
+    val additionalInformation: RecallAdditionalInformation,
     val personReference: PersonReferenceList,
   )
 }

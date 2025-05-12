@@ -175,7 +175,9 @@ hmpps.sqs:
         "sentence.period-length.updated",
         "sentence.inserted",
         "sentence.deleted",
-        "sentence.updated"]}
+        "sentence.updated",
+        "recall.inserted"
+        ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
     alerts:
