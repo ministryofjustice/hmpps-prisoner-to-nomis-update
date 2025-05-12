@@ -434,8 +434,8 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       @Test
       fun `should publish error telemetry if fails to get recon data from NOMIS`() {
         stubGetPrisons("BXI")
-        nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 500)
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = null, dpsCount = 1))
+        nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 500)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
           .exchange()
