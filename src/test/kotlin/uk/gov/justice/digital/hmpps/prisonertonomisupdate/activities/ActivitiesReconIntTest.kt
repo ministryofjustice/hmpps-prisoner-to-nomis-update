@@ -75,6 +75,34 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
+      fun `should publish failed telemetry for differences even if in different prison`() {
+        stubGetPrisons("BXI")
+        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
+
+        webTestClient.post().uri("/allocations/reports/reconciliation")
+          .exchange()
+          .expectStatus().isAccepted
+
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("activity-allocation-reconciliation-report-failed"),
+            check {
+              assertThat(it).containsExactlyInAnyOrderEntriesOf(
+                mapOf(
+                  "prison" to "BXI",
+                  "type" to "different_count",
+                  "bookingId" to "1234567",
+                  "offenderNo" to "A1234AA",
+                  "location" to "OUT",
+                ),
+              )
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
       fun `should publish telemetry for multiple prisons`() {
         stubGetPrisons("BXI", "MDI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
@@ -316,7 +344,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish failed telemetry for differences even if in different prison`() {
+      fun `should NOT publish failed telemetry in different prison`() {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
 
@@ -326,17 +354,9 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("activity-suspended-allocation-reconciliation-report-failed"),
+            eq("activity-suspended-allocation-reconciliation-report-success"),
             check {
-              assertThat(it).containsExactlyInAnyOrderEntriesOf(
-                mapOf(
-                  "prison" to "BXI",
-                  "type" to "different_count",
-                  "bookingId" to "1234567",
-                  "offenderNo" to "A1234AA",
-                  "location" to "OUT",
-                ),
-              )
+              assertThat(it).containsExactlyInAnyOrderEntriesOf(mapOf("prison" to "BXI"))
             },
             isNull(),
           )

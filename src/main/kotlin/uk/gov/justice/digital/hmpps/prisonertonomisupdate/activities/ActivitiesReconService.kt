@@ -47,7 +47,7 @@ class ActivitiesReconService(
       val dpsBookingCounts = async { activitiesApiService.getAllocationReconciliation(prisonId) }
       val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-      publishTelemetry("allocation", prisonId, compareResults)
+      publishTelemetry("allocation", prisonId, compareResults, ignoreDifferentPrisons = false)
     }
   } catch (e: Exception) {
     log.error("Allocation reconciliation report failed for prison $prisonId", e)
@@ -77,7 +77,7 @@ class ActivitiesReconService(
       val dpsBookingCounts = async { activitiesApiService.getSuspendedAllocationReconciliation(prisonId) }
       val compareResults = compareBookingCounts(nomisBookingCounts.await(), dpsBookingCounts.await())
 
-      publishTelemetry("suspended-allocation", prisonId, compareResults, ignoreDifferentPrisons = false)
+      publishTelemetry("suspended-allocation", prisonId, compareResults)
     }
   } catch (e: Exception) {
     log.error("Suspended allocation reconciliation report failed for prison $prisonId", e)

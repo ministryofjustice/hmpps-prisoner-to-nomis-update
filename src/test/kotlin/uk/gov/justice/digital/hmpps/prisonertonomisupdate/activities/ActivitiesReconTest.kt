@@ -226,7 +226,7 @@ class ActivitiesReconTest {
     }
 
     @Test
-    fun `should NOT publish fail telemetry if a prisoner is now in a different location`() = runTest {
+    fun `should publish fail telemetry if a prisoner is now in a different location`() = runTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
@@ -235,7 +235,7 @@ class ActivitiesReconTest {
 
       activitiesReconService.allocationsReconciliationReport("BXI")
 
-      verifyBlocking(telemetryClient, times(1)) {
+      verifyBlocking(telemetryClient, times(2)) {
         trackEvent(
           eq("activity-allocation-reconciliation-report-failed"),
           telemetryCaptor.capture(),
@@ -243,8 +243,17 @@ class ActivitiesReconTest {
         )
       }
 
-      assertThat(telemetryCaptor.allValues.size).isEqualTo(1)
+      assertThat(telemetryCaptor.allValues.size).isEqualTo(2)
       assertThat(telemetryCaptor.firstValue).containsExactlyInAnyOrderEntriesOf(
+        mapOf(
+          "prison" to "BXI",
+          "type" to "different_count",
+          "bookingId" to "11",
+          "offenderNo" to "A1234AA",
+          "location" to "OUT",
+        ),
+      )
+      assertThat(telemetryCaptor.secondValue).containsExactlyInAnyOrderEntriesOf(
         mapOf(
           "prison" to "BXI",
           "type" to "different_count",
@@ -256,7 +265,7 @@ class ActivitiesReconTest {
     }
 
     @Test
-    fun `should still publish success telemetry if only failures are for prisoners different locations`() = runTest {
+    fun `should not publish success telemetry if only failures are for prisoners different locations`() = runTest {
       stubBookingCounts(
         prisonId = "BXI",
         BookingDetailsStub(bookingId = 11, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2),
@@ -265,9 +274,9 @@ class ActivitiesReconTest {
 
       activitiesReconService.allocationsReconciliationReport("BXI")
 
-      verifyBlocking(telemetryClient) {
+      verifyBlocking(telemetryClient, times(2)) {
         trackEvent(
-          eq("activity-allocation-reconciliation-report-success"),
+          eq("activity-allocation-reconciliation-report-failed"),
           any(),
           isNull(),
         )
