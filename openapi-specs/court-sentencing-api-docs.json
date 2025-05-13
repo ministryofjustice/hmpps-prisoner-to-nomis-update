@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-08.6418.ad1267f"
+    "version" : "2025-05-12.6438.9993235"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3523,7 +3523,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:52:58.018396823"
+            "example" : "09:42:58.33927409"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3769,7 +3769,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:52:58.018396823"
+            "example" : "09:42:58.33927409"
           },
           "courtCode" : {
             "type" : "string"
@@ -3839,9 +3839,6 @@
           "sentenceServeType" : {
             "type" : "string"
           },
-          "consecutiveToChargeNumber" : {
-            "type" : "string"
-          },
           "consecutiveToSentenceUuid" : {
             "type" : "string",
             "format" : "uuid"
@@ -3859,9 +3856,15 @@
           },
           "prisonId" : {
             "type" : "string"
+          },
+          "sentenceReference" : {
+            "type" : "string"
+          },
+          "consecutiveToSentenceReference" : {
+            "type" : "string"
           }
         },
-        "required" : [ "periodLengths", "sentenceServeType", "sentenceTypeId" ]
+        "required" : [ "periodLengths", "sentenceReference", "sentenceServeType", "sentenceTypeId" ]
       },
       "CreateChargeResponse" : {
         "type" : "object",
@@ -4443,9 +4446,6 @@
           "sentenceServeType" : {
             "type" : "string"
           },
-          "consecutiveToChargeNumber" : {
-            "type" : "string"
-          },
           "sentenceType" : {
             "$ref" : "#/components/schemas/SentenceType"
           },
@@ -4458,6 +4458,10 @@
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
         "required" : [ "periodLengths", "sentenceServeType", "sentenceUuid" ]
@@ -4825,7 +4829,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:52:58.018396823"
+            "example" : "09:42:58.33927409"
           },
           "courtCode" : {
             "type" : "string"
@@ -5245,7 +5249,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:52:58.018396823"
+            "example" : "09:42:58.33927409"
           },
           "charges" : {
             "type" : "array",
@@ -5268,7 +5272,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:52:58.018396823"
+            "example" : "09:42:58.33927409"
           },
           "courtId" : {
             "type" : "string"
@@ -5358,12 +5362,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -5380,6 +5378,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
