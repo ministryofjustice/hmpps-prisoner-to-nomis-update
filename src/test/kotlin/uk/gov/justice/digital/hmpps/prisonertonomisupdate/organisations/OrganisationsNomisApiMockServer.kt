@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateOrganisationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporatePhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporatePhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateWebAddressRequest
@@ -29,7 +30,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateOrganisationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateTypesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pageContent
@@ -39,8 +42,23 @@ import java.time.LocalDateTime
 @Component
 class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   companion object {
+    fun createCorporateRequest(): CreateCorporateOrganisationRequest = CreateCorporateOrganisationRequest(
+      id = 12345,
+      name = "Some name",
+      active = true,
+    )
+
+    fun updateCorporateRequest(): UpdateCorporateOrganisationRequest = UpdateCorporateOrganisationRequest(
+      name = "Some name",
+      active = true,
+    )
+
     fun createCorporateWebAddressResponse(): CreateCorporateWebAddressResponse = CreateCorporateWebAddressResponse(
       id = 123456,
+    )
+
+    fun updateCorporateTypesRequest(): UpdateCorporateTypesRequest = UpdateCorporateTypesRequest(
+      typeCodes = setOf("A type", "B type"),
     )
 
     fun createCorporateWebAddressRequest(): CreateCorporateWebAddressRequest = CreateCorporateWebAddressRequest(
@@ -147,6 +165,52 @@ class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     totalElements = count,
     size = 1,
   )
+
+  fun stubCreateCorporate() {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateCorporate(
+    corporateId: Long = 123456,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubDeleteCorporate(
+    corporateId: Long = 123456,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateCorporateTypes(
+    corporateId: Long = 123456,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/type")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
 
   fun stubCreateCorporateAddress(
     corporateId: Long = 123456,

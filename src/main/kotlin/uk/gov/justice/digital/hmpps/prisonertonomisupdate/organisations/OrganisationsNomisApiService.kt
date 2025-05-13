@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateOrganisationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateTypesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -93,6 +94,17 @@ class OrganisationsNomisApiService(
         "/corporates/{corporateId}",
         corporateId,
       )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun updateCorporateTypes(corporateId: Long, request: UpdateCorporateTypesRequest) {
+    webClient.put()
+      .uri(
+        "/corporates/{corporateId}/type",
+        corporateId,
+      )
+      .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()
   }
