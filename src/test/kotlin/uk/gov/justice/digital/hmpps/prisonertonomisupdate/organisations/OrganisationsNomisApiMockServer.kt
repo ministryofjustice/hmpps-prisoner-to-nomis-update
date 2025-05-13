@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -16,7 +18,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorporateOrganisationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorporateOrganisationType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorporatePhoneNumber
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateAddressResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporatePhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateWebAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateWebAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pageContent
 import java.time.LocalDate
@@ -24,6 +38,62 @@ import java.time.LocalDateTime
 
 @Component
 class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
+  companion object {
+    fun createCorporateWebAddressResponse(): CreateCorporateWebAddressResponse = CreateCorporateWebAddressResponse(
+      id = 123456,
+    )
+
+    fun createCorporateWebAddressRequest(): CreateCorporateWebAddressRequest = CreateCorporateWebAddressRequest(
+      webAddress = "Some web address",
+    )
+    fun updateCorporateWebAddressRequest(): UpdateCorporateWebAddressRequest = UpdateCorporateWebAddressRequest(
+      webAddress = "Some web address",
+    )
+
+    fun createCorporatePhoneResponse(): CreateCorporatePhoneResponse = CreateCorporatePhoneResponse(
+      id = 123456,
+    )
+
+    fun createCorporatePhoneRequest(): CreateCorporatePhoneRequest = CreateCorporatePhoneRequest(
+      number = "07973 555 5555",
+      typeCode = "MOB",
+    )
+    fun updateCorporatePhoneRequest(): UpdateCorporatePhoneRequest = UpdateCorporatePhoneRequest(
+      number = "07973 555 5555",
+      typeCode = "MOB",
+    )
+
+    fun createCorporateEmailResponse(): CreateCorporateEmailResponse = CreateCorporateEmailResponse(
+      id = 123456,
+    )
+
+    fun createCorporateEmailRequest(): CreateCorporateEmailRequest = CreateCorporateEmailRequest(
+      email = "test@test.com",
+    )
+
+    fun updateCorporateEmailRequest(): UpdateCorporateEmailRequest = UpdateCorporateEmailRequest(
+      email = "test@test.com",
+    )
+    fun createCorporateAddressResponse(): CreateCorporateAddressResponse = CreateCorporateAddressResponse(
+      id = 123456,
+    )
+
+    fun createCorporateAddressRequest(): CreateCorporateAddressRequest = CreateCorporateAddressRequest(
+      primaryAddress = true,
+      mailAddress = true,
+      noFixedAddress = false,
+      startDate = LocalDate.parse("2021-01-01"),
+      isServices = false,
+    )
+
+    fun updateCorporateAddressRequest(): UpdateCorporateAddressRequest = UpdateCorporateAddressRequest(
+      primaryAddress = true,
+      mailAddress = true,
+      noFixedAddress = false,
+      startDate = LocalDate.parse("2021-01-01"),
+      isServices = false,
+    )
+  }
   fun stubGetCorporateOrganisation(
     corporateId: Long = 123456,
     corporate: CorporateOrganisation = corporateOrganisation(),
@@ -77,6 +147,201 @@ class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     totalElements = count,
     size = 1,
   )
+
+  fun stubCreateCorporateAddress(
+    corporateId: Long = 123456,
+    response: CreateCorporateAddressResponse = createCorporateAddressResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates/$corporateId/address")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubCreateCorporateWebAddress(
+    corporateId: Long = 123456,
+    response: CreateCorporateWebAddressResponse = createCorporateWebAddressResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates/$corporateId/web-address")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubUpdateCorporateWebAddress(
+    corporateId: Long = 123456,
+    webAddressId: Long = 765443,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/web-address/$webAddressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeleteCorporateWebAddress(
+    corporateId: Long = 123456,
+    webAddressId: Long = 765443,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId/web-address/$webAddressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubCreateCorporatePhone(
+    corporateId: Long = 123456,
+    response: CreateCorporatePhoneResponse = createCorporatePhoneResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates/$corporateId/phone")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubUpdateCorporatePhone(
+    corporateId: Long = 123456,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeleteCorporatePhone(
+    corporateId: Long = 123456,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubCreateCorporateEmail(
+    corporateId: Long = 123456,
+    response: CreateCorporateEmailResponse = createCorporateEmailResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates/$corporateId/email")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdateCorporateEmail(
+    corporateId: Long = 123456,
+    emailId: Long = 765443,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/email/$emailId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeleteCorporateEmail(
+    corporateId: Long = 123456,
+    emailId: Long = 765443,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId/email/$emailId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubUpdateCorporateAddress(
+    corporateId: Long = 123456,
+    addressId: Long = 123456,
+    response: UpdateCorporateAddressRequest = updateCorporateAddressRequest(),
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/address/$addressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubDeleteCorporateAddress(
+    corporateId: Long = 123456,
+    addressId: Long = 123456,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId/address/$addressId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  } fun stubCreateCorporateAddressPhone(
+    corporateId: Long = 123456,
+    addressId: Long = 78990,
+    response: CreateCorporatePhoneResponse = createCorporatePhoneResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/corporates/$corporateId/address/$addressId/phone")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubUpdateCorporateAddressPhone(
+    corporateId: Long = 123456,
+    addressId: Long = 78990,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/corporates/$corporateId/address/$addressId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+  fun stubDeleteCorporateAddressPhone(
+    corporateId: Long = 123456,
+    addressId: Long = 78990,
+    phoneId: Long = 73737,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/corporates/$corporateId/address/$addressId/phone/$phoneId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
 }
 
 fun corporateOrganisation(corporateId: Long = 123456): CorporateOrganisation = CorporateOrganisation(
