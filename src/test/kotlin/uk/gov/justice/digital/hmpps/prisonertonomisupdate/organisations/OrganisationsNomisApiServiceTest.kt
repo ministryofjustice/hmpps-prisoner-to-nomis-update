@@ -21,11 +21,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.Organisa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporatePhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporatePhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateWebAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporateAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporateEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporateRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporateTypesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.updateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -119,6 +122,120 @@ class OrganisationsNomisApiServiceTest {
       assertThat(pages.content).hasSize(2)
       assertThat(pages.content[0].corporateId).isEqualTo(1234567)
       assertThat(pages.content[1].corporateId).isEqualTo(1234568)
+    }
+  }
+
+  @Nested
+  inner class Corporate {
+
+    @Nested
+    inner class CreateCorporate {
+      @Test
+      fun `will pass oath2 token to service`() = runTest {
+        mockServer.stubCreateCorporate()
+
+        apiService.createCorporate(request = createCorporateRequest())
+
+        mockServer.verify(
+          postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
+
+      @Test
+      fun `will call create endpoint`() = runTest {
+        mockServer.stubCreateCorporate()
+
+        apiService.createCorporate(request = createCorporateRequest())
+
+        mockServer.verify(
+          postRequestedFor(urlPathEqualTo("/corporates")),
+        )
+      }
+    }
+
+    @Nested
+    inner class DeleteCorporate {
+      private val corporateId = 17171L
+
+      @Test
+      fun `will pass oath2 token to service`() = runTest {
+        mockServer.stubDeleteCorporate(corporateId)
+
+        apiService.deleteCorporate(corporateId)
+
+        mockServer.verify(
+          deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
+
+      @Test
+      fun `will call delete endpoint`() = runTest {
+        mockServer.stubDeleteCorporate(corporateId)
+
+        apiService.deleteCorporate(corporateId)
+
+        mockServer.verify(
+          deleteRequestedFor(urlPathEqualTo("/corporates/$corporateId")),
+        )
+      }
+    }
+
+    @Nested
+    inner class UpdateCorporate {
+      private val corporateId = 17171L
+
+      @Test
+      fun `will pass oath2 token to service`() = runTest {
+        mockServer.stubUpdateCorporate(corporateId)
+
+        apiService.updateCorporate(corporateId, updateCorporateRequest())
+
+        mockServer.verify(
+          putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
+
+      @Test
+      fun `will call update endpoint`() = runTest {
+        mockServer.stubUpdateCorporate(corporateId)
+
+        apiService.updateCorporate(corporateId, updateCorporateRequest())
+
+        mockServer.verify(
+          putRequestedFor(urlPathEqualTo("/corporates/$corporateId")),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class CorporateTypes {
+
+    @Nested
+    inner class UpdateCorporateTypes {
+      private val corporateId = 17171L
+
+      @Test
+      fun `will pass oath2 token to service`() = runTest {
+        mockServer.stubUpdateCorporateTypes(corporateId)
+
+        apiService.updateCorporateTypes(corporateId, updateCorporateTypesRequest())
+
+        mockServer.verify(
+          putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
+
+      @Test
+      fun `will call update endpoint`() = runTest {
+        mockServer.stubUpdateCorporateTypes(corporateId)
+
+        apiService.updateCorporateTypes(corporateId, updateCorporateTypesRequest())
+
+        mockServer.verify(
+          putRequestedFor(urlPathEqualTo("/corporates/$corporateId/type")),
+        )
+      }
     }
   }
 
