@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-01.6338.4cc082d"
+    "version" : "2025-05-14.6365.e2e00d5"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2193,6 +2193,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences/dps-sentence-ids/get-list" : {
+      "post" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "get sentence mappings by DPS sentence IDs",
+        "description" : "Retrieves mappings for a list of DPS sentence IDs. Any mappings noty found will be missing but the response will still be a 200. Requires role NOMIS_COURT_SENTENCING",
+        "operationId" : "getSentenceMappingsByDpsIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "List of DPS sentence IDs",
+                "example" : [ "ce53d679-dec3-4cd2-9bc7-35037c78c4b7", "fd246c2e-146b-47a9-9bda-14c279cd1708" ],
+                "items" : {
+                  "type" : "string",
+                  "description" : "List of DPS sentence IDs",
+                  "example" : "[\"ce53d679-dec3-4cd2-9bc7-35037c78c4b7\",\"fd246c2e-146b-47a9-9bda-14c279cd1708\"]"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "List of associated mappings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SentenceMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -13863,6 +13913,42 @@
         }
       }
     },
+    "/mapping/csip/dps-csip-id/{dpsCSIPId}/children" : {
+      "delete" : {
+        "tags" : [ "csip-mapping-resource" ],
+        "summary" : "Deletes all child mappings for a CSIP Report by DPS id",
+        "description" : "Deletes all child mappings associated with a specific CSIP report mapping by DPS CSIP Report id. Requires role NOMIS_CSIP",
+        "operationId" : "deleteChildMappings",
+        "parameters" : [ {
+          "name" : "dpsCSIPId",
+          "in" : "path",
+          "description" : "DPS CSIP Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS CSIP Id",
+            "example" : "4321"
+          },
+          "example" : 4321
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "CSIP child mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csip/dps-csip-id/{dpsCSIPId}/all" : {
       "delete" : {
         "tags" : [ "csip-mapping-resource" ],
@@ -17191,12 +17277,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17213,6 +17293,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17303,12 +17389,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17325,6 +17405,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17392,12 +17478,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17414,6 +17494,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17496,12 +17582,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17518,6 +17598,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17596,12 +17682,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17618,6 +17698,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17642,12 +17728,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17664,6 +17744,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17716,12 +17802,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17738,6 +17818,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17784,12 +17870,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17806,6 +17886,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",

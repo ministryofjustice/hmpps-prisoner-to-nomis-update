@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-12.6438.9993235"
+    "version" : "2025-05-14.6521.8482ab7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3410,9 +3410,6 @@
           "active" : {
             "type" : "boolean"
           },
-          "prisonId" : {
-            "type" : "string"
-          },
           "legacyData" : {
             "$ref" : "#/components/schemas/SentenceLegacyData"
           },
@@ -3421,7 +3418,7 @@
             "format" : "date"
           }
         },
-        "required" : [ "active", "chargeUuids", "legacyData", "prisonId" ]
+        "required" : [ "active", "chargeUuids", "legacyData" ]
       },
       "SentenceLegacyData" : {
         "type" : "object",
@@ -3470,14 +3467,9 @@
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/PeriodLengthLegacyData"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison identifier where create/update originated from.",
-            "example" : "MDI"
           }
         },
-        "required" : [ "legacyData", "prisonId", "sentenceUuid" ]
+        "required" : [ "legacyData", "sentenceUuid" ]
       },
       "PeriodLengthLegacyData" : {
         "type" : "object",
@@ -3523,7 +3515,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:42:58.33927409"
+            "example" : "13:26:06.047732632"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3570,6 +3562,9 @@
           },
           "outcomeDispositionCode" : {
             "type" : "string"
+          },
+          "outcomeConvictionFlag" : {
+            "type" : "boolean"
           }
         }
       },
@@ -3769,7 +3764,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:42:58.33927409"
+            "example" : "13:26:06.047732632"
           },
           "courtCode" : {
             "type" : "string"
@@ -4006,6 +4001,10 @@
           "mergedChargeNOMISId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "mergedFromDate" : {
+            "type" : "string",
+            "format" : "date"
           }
         },
         "required" : [ "chargeNOMISId", "legacyData", "offenceCode" ]
@@ -4829,7 +4828,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:42:58.33927409"
+            "example" : "13:26:06.047732632"
           },
           "courtCode" : {
             "type" : "string"
@@ -5249,7 +5248,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:42:58.33927409"
+            "example" : "13:26:06.047732632"
           },
           "charges" : {
             "type" : "array",
@@ -5272,7 +5271,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:42:58.33927409"
+            "example" : "13:26:06.047732632"
           },
           "courtId" : {
             "type" : "string"
