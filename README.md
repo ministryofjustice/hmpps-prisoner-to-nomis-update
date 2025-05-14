@@ -1,7 +1,6 @@
 [![Runbook](https://img.shields.io/badge/runbook-view-172B4D.svg?logo=confluence)](https://dsdmoj.atlassian.net/wiki/spaces/NOM/pages/1739325587/DPS+Runbook)
 [![repo standards badge](https://img.shields.io/badge/endpoint.svg?&style=flat&logo=github&url=https%3A%2F%2Foperations-engineering-reports.cloud-platform.service.justice.gov.uk%2Fapi%2Fv1%2Fcompliant_public_repositories%2Fhmpps-prisoner-to-nomis-update)](https://operations-engineering-reports.cloud-platform.service.justice.gov.uk/public-report/hmpps-prisoner-to-nomis-update "Link to report")
-[![CircleCI](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-to-nomis-update/tree/main.svg?style=svg)](https://circleci.com/gh/ministryofjustice/hmpps-prisoner-to-nomis-update)
-[![Docker Repository on Quay](https://img.shields.io/badge/quay.io-repository-2496ED.svg?logo=docker)](https://quay.io/repository/hmpps/hmpps-prisoner-to-nomis-update)
+[![Docker Repository on ghcr](https://img.shields.io/badge/ghcr.io-repository-2496ED.svg?logo=docker)](https://ghcr.io/ministryofjustice/hmpps-prisoner-to-nomis-update)
 [![API docs](https://img.shields.io/badge/API_docs_-view-85EA2D.svg?logo=swagger)](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html)
 
 # hmpps-prisoner-to-nomis-update
@@ -72,6 +71,12 @@ configuration two tasks are created:
 So, for example, running
 ```shell
 ./gradlew writeNonAssociationsJson compileKotlin compileTestKotlin
+./gradlew writeOrganisationsJson compileKotlin compileTestKotlin
+
+./gradlew writeNomisPrisonerJson compileKotlin compileTestKotlin
+./gradlew writeCSIPJson compileKotlin compileTestKotlin
+./gradlew writeVisitBalanceJson compileKotlin compileTestKotlin
+./gradlew buildVisitBalanceApiModel compileKotlin compileTestKotlin
 ```
 
 Will download the non associations Open API specification from dev, generate the model and then compile the code.
