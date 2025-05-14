@@ -37,7 +37,7 @@ jobs:
     uses: ./.github/workflows/kotlin_localstack_validate.yml # LOCAL_VERSION
     secrets: inherit
     with:
-     services: sqs
+     services: sqs,sns
      localstack_tag: "4"
   build:
     name: Build docker image from hmpps-github-actions
