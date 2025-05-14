@@ -16,8 +16,11 @@ class VisitBalanceDpsApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun getVisitBalanceAdjustment(visitBalanceAdjustmentId: String): VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceApiWebClient.get()
-    .uri("/visits/allocation/adjustment/{visitBalanceAdjustmentId}", visitBalanceAdjustmentId)
+  suspend fun getVisitBalanceAdjustment(
+    prisonNumber: String,
+    visitBalanceAdjustmentId: String,
+  ): VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceApiWebClient.get()
+    .uri("/visits/allocation/prisoner/{prisonNumber}/adjustments/{visitBalanceAdjustmentId}", prisonNumber, visitBalanceAdjustmentId)
     .retrieve()
     .awaitBody()
 }

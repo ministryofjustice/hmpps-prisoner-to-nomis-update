@@ -52,12 +52,13 @@ class VisitBalanceDpsApiServiceTest {
   @Nested
   inner class GetVisitBalanceAdjustment {
     private val visitBalanceAdjustmentId = UUID.randomUUID().toString()
+    private val prisonNumber = "A1234BG"
 
     @Test
     internal fun `will pass oath2 token to visit balance adjustment endpoint`() = runTest {
-      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjustmentId)
+      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber, visitBalanceAdjustmentId)
 
-      apiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId)
+      apiService.getVisitBalanceAdjustment(prisonNumber, visitBalanceAdjustmentId)
 
       visitBalanceDpsApi.verify(
         getRequestedFor(anyUrl())
@@ -67,12 +68,12 @@ class VisitBalanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET visit balance adjustment endpoint`() = runTest {
-      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjustmentId)
+      visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber, visitBalanceAdjustmentId)
 
-      apiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId)
+      apiService.getVisitBalanceAdjustment(prisonNumber, visitBalanceAdjustmentId)
 
       visitBalanceDpsApi.verify(
-        getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjustmentId")),
+        getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjustmentId")),
       )
     }
   }

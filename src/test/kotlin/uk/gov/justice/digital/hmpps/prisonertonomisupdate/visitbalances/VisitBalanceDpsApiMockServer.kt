@@ -71,11 +71,12 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetVisitBalanceAdjustment(
+    prisonNumber: String,
     vbAdjId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef",
-    response: VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceAdjustmentDto(vbAdjId),
+    response: VisitAllocationPrisonerAdjustmentResponseDto = visitBalanceAdjustmentDto(prisonNumber),
   ) {
     stubFor(
-      get("/visits/allocation/adjustment/$vbAdjId").willReturn(
+      get("/visits/allocation/prisoner/$prisonNumber/adjustments/$vbAdjId").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
@@ -85,7 +86,7 @@ class VisitBalanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
   fun stubGetVisitBalanceAdjustment(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
-      get(urlPathMatching("/visits/allocation/adjustment/.*")).willReturn(
+      get(urlPathMatching("/visits/allocation/prisoner/.*/adjustments/.*")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -118,11 +119,11 @@ fun visitBalanceDto() = PrisonerBalanceDto(
 )
 
 fun visitBalanceAdjustmentDto(
-  vbAdjId: String,
+  prisonNumber: String,
   changeLogSource: ChangeLogSource = ChangeLogSource.SYSTEM,
   userId: String = "SYSTEM",
 ) = VisitAllocationPrisonerAdjustmentResponseDto(
-  prisonerId = "A1234KT",
+  prisonerId = prisonNumber,
   voBalance = 12,
   changeToVoBalance = 2,
   pvoBalance = 7,
