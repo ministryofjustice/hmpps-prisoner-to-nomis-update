@@ -799,6 +799,9 @@ class CourtSentencingService(
 
     if (isDpsCreated(source)) {
       runCatching {
+        courtSentencingApiService.getRecall(recallId).also {
+          telemetryMap["recallType"] = it.recallType.name
+        }
         courtCaseMappingService.getMappingsGivenSentenceIds(sentenceIds).also { mappings ->
           telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
           // only expecting one but theoretically can deal with multiple bookings

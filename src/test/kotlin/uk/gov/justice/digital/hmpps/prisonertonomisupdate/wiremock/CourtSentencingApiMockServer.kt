@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import java.math.BigDecimal
@@ -303,6 +304,19 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCaseResponse),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetRecall(recallId: String, recall: Recall) {
+    stubFor(
+      get(WireMock.urlPathMatching("/recall/$recallId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            objectMapper().writeValueAsString(recall),
           )
           .withStatus(200),
       ),

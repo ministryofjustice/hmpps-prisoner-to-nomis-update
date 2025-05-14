@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -23,6 +24,9 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Sentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.SentenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -96,7 +100,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
@@ -119,35 +123,35 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the Court Case`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "status",
-                WireMock.equalTo("A"),
+                equalTo("A"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "legalCaseType",
-                WireMock.equalTo("NE"),
+                equalTo("NE"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "startDate",
-                WireMock.equalTo("2024-01-01"),
+                equalTo("2024-01-01"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "caseReference",
-                WireMock.equalTo(CASE_REFERENCE),
+                equalTo(CASE_REFERENCE),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtId",
-                WireMock.equalTo(DONCASTER_COURT_CODE),
+                equalTo(DONCASTER_COURT_CODE),
               ),
             ),
 
@@ -160,17 +164,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtCaseId",
-                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION),
+                  equalTo(COURT_CASE_ID_FOR_CREATION),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtCaseId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                   ),
                 ),
@@ -236,7 +240,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.anyUrl()),
+          postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -275,7 +279,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases")),
         )
       }
 
@@ -284,17 +288,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtCaseId",
-                  WireMock.equalTo(COURT_CASE_ID_FOR_CREATION),
+                  equalTo(COURT_CASE_ID_FOR_CREATION),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtCaseId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CASE_ID_FOR_CREATION.toString(),
                   ),
                 ),
@@ -464,7 +468,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
@@ -491,38 +495,38 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the Court Appearance`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "eventDateTime",
-                WireMock.equalTo("2024-09-23T10:00:00"),
+                equalTo("2024-09-23T10:00:00"),
               ),
             )
-            .withRequestBody(WireMock.matchingJsonPath("courtEventCharges.size()", WireMock.equalTo("4")))
+            .withRequestBody(matchingJsonPath("courtEventCharges.size()", equalTo("4")))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[0]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
               ),
 
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[1]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[2]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_3_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_3_ID.toString()),
               ),
 
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[3]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_4_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_4_ID.toString()),
               ),
             ),
         )
@@ -534,17 +538,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtAppearanceId",
-                  WireMock.equalTo(DPS_COURT_APPEARANCE_ID),
+                  equalTo(DPS_COURT_APPEARANCE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtAppearanceId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_APPEARANCE_ID.toString(),
                   ),
                 ),
@@ -583,7 +587,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.anyUrl()),
+          postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -643,7 +647,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
         )
       }
 
@@ -652,17 +656,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtAppearanceId",
-                  WireMock.equalTo(DPS_COURT_APPEARANCE_ID),
+                  equalTo(DPS_COURT_APPEARANCE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtAppearanceId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_APPEARANCE_ID.toString(),
                   ),
                 ),
@@ -723,7 +727,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
         )
       }
     }
@@ -805,7 +809,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
       }
 
       @Test
@@ -814,18 +818,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           WireMock.putRequestedFor(WireMock.anyUrl())
-            .withRequestBody(WireMock.matchingJsonPath("courtEventCharges.size()", WireMock.equalTo("4")))
+            .withRequestBody(matchingJsonPath("courtEventCharges.size()", equalTo("4")))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[0]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
               ),
 
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "courtEventCharges[1]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
               ),
             ),
         )
@@ -838,17 +842,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           mappingServer.verify(
             WireMock.putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "courtChargesToDelete[0].nomisCourtChargeId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CHARGE_5_ID.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "courtChargesToDelete[1].nomisCourtChargeId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CHARGE_6_ID.toString(),
                   ),
                 ),
@@ -1055,7 +1059,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -1079,7 +1083,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Charge`() {
         waitForAnyProcessingToComplete()
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+        NomisApiExtension.nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
       }
 
       @Test
@@ -1088,17 +1092,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtChargeId",
-                  WireMock.equalTo(DPS_COURT_CHARGE_ID),
+                  equalTo(DPS_COURT_CHARGE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtChargeId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CHARGE_ID.toString(),
                   ),
                 ),
@@ -1137,7 +1141,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.anyUrl()),
+          postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -1179,7 +1183,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")),
         )
       }
 
@@ -1188,17 +1192,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsCourtChargeId",
-                  WireMock.equalTo(DPS_COURT_CHARGE_ID),
+                  equalTo(DPS_COURT_CHARGE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisCourtChargeId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_COURT_CHARGE_ID.toString(),
                   ),
                 ),
@@ -1278,7 +1282,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -1306,27 +1310,27 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         NomisApiExtension.nomisApi.verify(
           WireMock.putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID/charges/$NOMIS_COURT_CHARGE_ID"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "offenceCode",
-                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_CODE),
+                equalTo(COURT_CHARGE_1_OFFENCE_CODE),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "offenceEndDate",
-                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_END_DATE),
+                equalTo(COURT_CHARGE_1_OFFENCE_END_DATE),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "offenceDate",
-                WireMock.equalTo(COURT_CHARGE_1_OFFENCE_DATE),
+                equalTo(COURT_CHARGE_1_OFFENCE_DATE),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "resultCode1",
-                WireMock.equalTo(COURT_CHARGE_1_RESULT_CODE),
+                equalTo(COURT_CHARGE_1_RESULT_CODE),
               ),
             ),
         )
@@ -1423,7 +1427,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
       }
 
       @Test
@@ -1452,41 +1456,41 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the Sentence`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "offenderChargeIds[0]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "sentenceLevel",
-                WireMock.equalTo(SENTENCE_LEVEL_IND),
+                equalTo(SENTENCE_LEVEL_IND),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "fine",
-                WireMock.equalTo(FINE_AMOUNT),
+                equalTo(FINE_AMOUNT),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "startDate",
-                WireMock.equalTo("2024-01-01"),
+                equalTo("2024-01-01"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "status",
-                WireMock.equalTo("A"),
+                equalTo("A"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "eventId",
-                WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
+                equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
             ),
         )
@@ -1498,25 +1502,25 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsSentenceId",
-                  WireMock.equalTo(DPS_SENTENCE_ID),
+                  equalTo(DPS_SENTENCE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisSentenceSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_SENTENCE_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisBookingId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_BOOKING_ID.toString(),
                   ),
                 ),
@@ -1596,47 +1600,47 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the Sentence`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "offenderChargeIds[0]",
-                WireMock.equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "sentenceLevel",
-                WireMock.equalTo(SENTENCE_LEVEL_IND),
+                equalTo(SENTENCE_LEVEL_IND),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "fine",
-                WireMock.equalTo(FINE_AMOUNT),
+                equalTo(FINE_AMOUNT),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "startDate",
-                WireMock.equalTo("2024-01-01"),
+                equalTo("2024-01-01"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "status",
-                WireMock.equalTo("A"),
+                equalTo("A"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "eventId",
-                WireMock.equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
+                equalTo(NOMIS_COURT_APPEARANCE_ID.toString()),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "consecutiveToSentenceSeq",
-                WireMock.equalTo("$NOMIS_SENTENCE_SEQ_2"),
+                equalTo("$NOMIS_SENTENCE_SEQ_2"),
               ),
             ),
         )
@@ -1672,7 +1676,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.anyUrl()),
+          postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -1725,7 +1729,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences")),
         )
       }
 
@@ -1734,25 +1738,25 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsSentenceId",
-                  WireMock.equalTo(DPS_SENTENCE_ID),
+                  equalTo(DPS_SENTENCE_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisSentenceSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_SENTENCE_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisBookingId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_BOOKING_ID.toString(),
                   ),
                 ),
@@ -1817,7 +1821,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences")),
         )
       }
     }
@@ -1887,7 +1891,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
       }
 
       @Test
@@ -2156,7 +2160,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
       }
 
       @Test
@@ -2184,35 +2188,35 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will call nomis api to create the Sentence Term`() {
         waitForAnyProcessingToComplete()
         NomisApiExtension.nomisApi.verify(
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms"))
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "weeks",
-                WireMock.equalTo("4"),
+                equalTo("4"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "years",
-                WireMock.equalTo("2"),
+                equalTo("2"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "months",
-                WireMock.equalTo("6"),
+                equalTo("6"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "days",
-                WireMock.equalTo("15"),
+                equalTo("15"),
               ),
             )
             .withRequestBody(
-              WireMock.matchingJsonPath(
+              matchingJsonPath(
                 "sentenceTermType",
-                WireMock.equalTo("TERM"),
+                equalTo("TERM"),
               ),
             ),
         )
@@ -2224,33 +2228,33 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           mappingServer.verify(
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsTermId",
-                  WireMock.equalTo(DPS_TERM_ID),
+                  equalTo(DPS_TERM_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisSentenceSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_SENTENCE_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisTermSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_TERM_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisBookingId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_BOOKING_ID.toString(),
                   ),
                 ),
@@ -2291,7 +2295,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         NomisApiExtension.nomisApi.verify(
           0,
-          WireMock.postRequestedFor(WireMock.anyUrl()),
+          postRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -2344,7 +2348,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         NomisApiExtension.nomisApi.verify(
           1,
-          WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms")),
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms")),
         )
       }
 
@@ -2353,33 +2357,33 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           mappingServer.verify(
             2,
-            WireMock.postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms"))
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "dpsTermId",
-                  WireMock.equalTo(DPS_TERM_ID),
+                  equalTo(DPS_TERM_ID),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisSentenceSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_SENTENCE_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisTermSequence",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_TERM_SEQ.toString(),
                   ),
                 ),
               )
               .withRequestBody(
-                WireMock.matchingJsonPath(
+                matchingJsonPath(
                   "nomisBookingId",
-                  WireMock.equalTo(
+                  equalTo(
                     NOMIS_BOOKING_ID.toString(),
                   ),
                 ),
@@ -2460,7 +2464,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/period-length/${DPS_TERM_ID}")))
       }
 
       @Test
@@ -2640,7 +2644,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-case/${COURT_CASE_ID_FOR_CREATION}")))
       }
 
       @Test
@@ -2663,7 +2667,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to refresh the refs`() {
         waitForAnyProcessingToComplete()
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/case-identifiers")))
+        NomisApiExtension.nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/case-identifiers")))
       }
     }
 
@@ -2734,6 +2738,33 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenRecallHasBeenInsertedInDPS {
       @BeforeEach
       fun setUp() {
+        // Will change to a legacy specific endpoint once implemented by DPS
+        CourtSentencingApiExtension.courtSentencingApi.stubGetRecall(
+          "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          Recall(
+            recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
+            prisonerId = "LEI",
+            recallType = Recall.RecallType.FTR_14,
+            createdAt = LocalDateTime.now(),
+            createdByUsername = "T.SMITH",
+            revocationDate = null,
+            returnToCustodyDate = LocalDate.parse("2025-04-23"),
+            createdByPrison = "LEI",
+            sentences = listOf(
+              sentence(
+                sentenceUuid = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+                sentenceCategory = "2020",
+                sentenceCalcType = "FTR_14",
+              ),
+              sentence(
+                sentenceUuid = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
+                sentenceCategory = "2020",
+                sentenceCalcType = "FTR_14",
+              ),
+            ),
+            courtCaseIds = emptyList(),
+          ),
+        )
         mappingServer.stubGetMappingsGivenSentenceIds(
           listOf(
             SentenceMappingDto(
@@ -2757,6 +2788,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
 
+      fun sentence(sentenceUuid: String, sentenceCalcType: String, sentenceCategory: String) = Sentence(
+        sentenceUuid = UUID.fromString(sentenceUuid),
+        periodLengths = emptyList(),
+        sentenceServeType = "",
+        legacyData = SentenceLegacyData(
+          postedDate = "2022-01-01",
+          sentenceCalcType = sentenceCalcType,
+          sentenceCategory = sentenceCategory,
+        ),
+      )
+
       @Test
       fun `will get the NOMIS sentenceIds for each DPS sentence`() {
         mappingServer.verify(
@@ -2767,10 +2809,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will retrieve DPS recall information`() {
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/recall/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")))
+      }
+
+      @Test
       fun `will create success telemetry`() {
         verify(telemetryClient).trackEvent(
           eq("recall-inserted-success"),
           check {
+            assertThat(it["recallType"]).isEqualTo("FTR_14")
             assertThat(it["dpsRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
             assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
