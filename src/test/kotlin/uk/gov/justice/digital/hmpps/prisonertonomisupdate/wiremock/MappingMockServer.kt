@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -14,10 +15,12 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.objectMapper
 
 class MappingExtension :
   BeforeAllCallback,
@@ -26,9 +29,11 @@ class MappingExtension :
   companion object {
     @JvmField
     val mappingServer = MappingMockServer()
+    lateinit var objectMapper: ObjectMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
+    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
     mappingServer.start()
   }
 
@@ -1764,6 +1769,17 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
           .withStatus(status),
+      ),
+    )
+  }
+
+  fun stubGetMappingsGivenSentenceIds(mappings: List<SentenceMappingDto>) {
+    stubFor(
+      post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(objectMapper.writeValueAsString(mappings))
+          .withStatus(200),
       ),
     )
   }

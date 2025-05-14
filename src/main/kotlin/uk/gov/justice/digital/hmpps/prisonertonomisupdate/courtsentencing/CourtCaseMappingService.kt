@@ -132,6 +132,12 @@ class CourtCaseMappingService(
     .retrieve()
     .awaitBody()
 
+  suspend fun getMappingsGivenSentenceIds(dpsSentenceIds: List<String>): List<SentenceMappingDto> = webClient.post()
+    .uri("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list")
+    .bodyValue(dpsSentenceIds)
+    .retrieve()
+    .awaitBody()
+
   suspend fun deleteSentenceMappingByDpsId(dpsSentenceId: String) {
     webClient.delete()
       .uri(
