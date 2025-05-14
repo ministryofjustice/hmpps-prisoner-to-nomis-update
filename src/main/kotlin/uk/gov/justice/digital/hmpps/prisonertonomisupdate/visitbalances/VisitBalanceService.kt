@@ -25,8 +25,9 @@ class VisitBalanceService(
 
   suspend fun visitBalanceAdjustmentCreated(event: VisitBalanceAdjustmentEvent) {
     val visitBalanceAdjustmentId = event.additionalInformation.adjustmentId
+    val prisonNumber = event.personReference.findNomsNumber()!!
 
-    dpsApiService.getVisitBalanceAdjustment(visitBalanceAdjustmentId).also {
+    dpsApiService.getVisitBalanceAdjustment(prisonNumber = prisonNumber, visitBalanceAdjustmentId = visitBalanceAdjustmentId).also {
       visitBalanceNomisApiService.createVisitBalanceAdjustment(
         it.prisonerId,
         it.toNomisCreateVisitBalanceAdjustmentRequest(),

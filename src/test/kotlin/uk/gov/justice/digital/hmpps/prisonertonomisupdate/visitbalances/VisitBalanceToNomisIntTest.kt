@@ -41,14 +41,15 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
   @Nested
   @DisplayName("prison-visit-allocation.adjustment.created")
   inner class VisitBalanceAdjustmentCreated {
-    val visitBalanceAdjId = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef"
+    private val visitBalanceAdjId = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef"
+    private val prisonNumber = "A1234KT"
 
     @Nested
     inner class HappyPath {
 
       @BeforeEach
       fun setup() {
-        visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjId)
+        visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber = prisonNumber, vbAdjId = visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment()
         sendVisitBalanceAdjustmentToQueue()
         waitForAnyProcessingToComplete()
@@ -56,7 +57,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will retrieve the adjustment details from Dps`() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjId")))
       }
 
       @Test
@@ -94,9 +95,10 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setup() {
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(
-          visitBalanceAdjId,
+          prisonNumber = prisonNumber,
+          vbAdjId = visitBalanceAdjId,
           visitBalanceAdjustmentDto(
-            visitBalanceAdjId,
+            prisonNumber,
             changeLogSource = ChangeLogSource.STAFF,
             userId = "SOME_USER",
           ),
@@ -126,7 +128,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        visitBalanceDpsApi.stubGetVisitBalanceAdjustment(visitBalanceAdjId)
+        visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber, visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendVisitBalanceAdjustmentToQueue()
         await untilCallTo {
@@ -136,7 +138,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will attempt to retrieve the balance adjustment from Dps `() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjId")))
       }
 
       @Test
@@ -165,7 +167,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will attempt to retrieve visit balance adjustment from Dps`() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/adjustment/$visitBalanceAdjId")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjId")))
       }
 
       @Test
