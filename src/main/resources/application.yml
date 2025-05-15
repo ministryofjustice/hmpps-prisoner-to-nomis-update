@@ -18,8 +18,8 @@ spring:
         registration:
           nomis-api:
             provider: hmpps-auth
-            client-id: ${system.client.id}
-            client-secret: ${system.client.secret}
+            client-id: ${api.client.id}
+            client-secret: ${api.client.secret}
             authorization-grant-type: client_credentials
           mapping-api:
             provider: hmpps-auth
