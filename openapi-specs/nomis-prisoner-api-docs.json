@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-13.3.694ef9a"
+    "version" : "2025-05-14.22.9146164"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22761,13 +22761,13 @@
       "PageVisitIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -22950,13 +22950,13 @@
       "PageVisitBalanceIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -23367,13 +23367,13 @@
       "PageQuestionnaireIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -24099,6 +24099,13 @@
               "$ref" : "#/components/schemas/OffenderChargeResponse"
             }
           },
+          "missingCourtOffenderChargeIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
           "prisonId" : {
             "type" : "string"
           },
@@ -24106,7 +24113,7 @@
             "$ref" : "#/components/schemas/RecallCustodyDate"
           }
         },
-        "required" : [ "bookingId", "calculationType", "category", "createdByUsername", "createdDateTime", "offenderCharges", "prisonId", "sentenceSeq", "sentenceTerms", "startDate", "status" ]
+        "required" : [ "bookingId", "calculationType", "category", "createdByUsername", "createdDateTime", "missingCourtOffenderChargeIds", "offenderCharges", "prisonId", "sentenceSeq", "sentenceTerms", "startDate", "status" ]
       },
       "SentenceTermResponse" : {
         "type" : "object",
@@ -24149,9 +24156,12 @@
           },
           "lifeSentenceFlag" : {
             "type" : "boolean"
+          },
+          "prisonId" : {
+            "type" : "string"
           }
         },
-        "required" : [ "lifeSentenceFlag", "startDate", "termSequence" ]
+        "required" : [ "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
       },
       "PostPrisonerMergeCaseChanges" : {
         "type" : "object",
@@ -25292,13 +25302,13 @@
       "PagePrisonerIds" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -25356,13 +25366,13 @@
       "PagePrisonerId" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -26003,13 +26013,13 @@
       "PagePersonIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -26159,13 +26169,13 @@
       "PageNonAssociationIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -26380,13 +26390,13 @@
       "PageLocationIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -26896,13 +26906,13 @@
       "PageIncidentIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -27006,13 +27016,13 @@
       "PageIncentiveIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -27137,13 +27147,13 @@
       "PageCourtCaseIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -27443,13 +27453,13 @@
       "PageCorporateOrganisationIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -28204,13 +28214,13 @@
       "PageAppointmentIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -28501,13 +28511,13 @@
       "PageFindActiveAllocationIdsResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -28563,13 +28573,13 @@
       "PageAdjustmentIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -28630,13 +28640,13 @@
       "PageAdjudicationChargeIdResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
@@ -28923,13 +28933,13 @@
       "PageFindActiveActivityIdsResponse" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "first" : {
             "type" : "boolean"
