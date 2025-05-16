@@ -416,8 +416,8 @@ class ContactPersonReconciliationService(
   }
   private fun PrisonerContactSummary.asSummary() = ContactSummary(
     contactId = this.contactId,
-    firstName = this.firstName,
-    lastName = this.lastName,
+    firstName = this.firstName.uppercase(),
+    lastName = this.lastName.uppercase(),
     relationshipCode = this.relationshipToPrisonerCode,
     contactType = this.relationshipTypeCode,
     emergencyContact = this.isEmergencyContact,
@@ -428,8 +428,8 @@ class ContactPersonReconciliationService(
 
   private fun PrisonerContact.asSummary() = ContactSummary(
     contactId = this.person.personId,
-    firstName = this.person.firstName,
-    lastName = this.person.lastName,
+    firstName = this.person.firstName.uppercase(),
+    lastName = this.person.lastName.uppercase(),
     relationshipCode = this.relationshipType.code,
     contactType = this.contactType.code,
     emergencyContact = this.emergencyContact,
@@ -440,8 +440,8 @@ class ContactPersonReconciliationService(
 
   private fun ContactPerson.asSummary() = PersonSummary(
     personId = this.personId,
-    firstName = this.firstName,
-    lastName = this.lastName,
+    firstName = this.firstName.uppercase(),
+    lastName = this.lastName.uppercase(),
     dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
@@ -454,8 +454,8 @@ class ContactPersonReconciliationService(
   )
   private fun SyncContactReconcile.asSummary() = PersonSummary(
     personId = this.contactId,
-    firstName = this.firstName,
-    lastName = this.lastName,
+    firstName = this.firstName.uppercase(),
+    lastName = this.lastName.uppercase(),
     dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phones.map { it.phoneNumber }.toSortedSet(),
