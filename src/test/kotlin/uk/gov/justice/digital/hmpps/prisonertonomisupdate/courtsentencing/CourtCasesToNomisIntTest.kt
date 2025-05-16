@@ -41,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_END_DATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_RESULT_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDate
@@ -2779,6 +2780,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             ),
           ),
         )
+
+        CourtSentencingApiExtension.courtSentencingApi.stubGetSentences(
+          sentences = listOf(
+            legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14"),
+            legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14"),
+          ),
+        )
         publishRecallInsertedDomainEvent(
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -2811,6 +2819,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will retrieve DPS recall information`() {
         CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/recall/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")))
+      }
+
+      @Test
+      fun `will retrieve DPS sentence information`() {
+        CourtSentencingApiExtension.courtSentencingApi.verify(
+          postRequestedFor(urlEqualTo("/legacy/sentence/search"))
+            .withRequestBody(matchingJsonPath("lifetimeUuids[0]", equalTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc")))
+            .withRequestBody(matchingJsonPath("lifetimeUuids[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"))),
+        )
       }
 
       @Test
