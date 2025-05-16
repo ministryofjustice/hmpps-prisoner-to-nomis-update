@@ -132,6 +132,34 @@ internal class ContactPersonReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenPrisonerHasSameContactsButWithDifferentCase {
+      @BeforeEach
+      fun beforeEach() {
+        stubContact(
+          dpsContact = prisonerContactSummary().copy(
+            contactId = 99,
+            firstName = "Jane",
+            lastName = "Smith",
+          ),
+          nomisContact = prisonerContact().copy(
+            person = ContactForPerson(
+              personId = 99,
+              firstName = "JANE",
+              lastName = "SMITH",
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkPrisonerContactsMatch(prisonerId),
+        ).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenPrisonerHasSameDuplicateContactsButInDifferentOrder {
       @BeforeEach
       fun beforeEach() {
@@ -831,6 +859,29 @@ internal class ContactPersonReconciliationServiceTest {
           ),
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    inner class WhenNamesHaveDifferentCase {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            firstName = "KWEKU",
+            lastName = "KOFI",
+          ),
+          dpsContact.copy(
+            firstName = "Kweku",
+            lastName = "Kofi",
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNull()
       }
     }
 
