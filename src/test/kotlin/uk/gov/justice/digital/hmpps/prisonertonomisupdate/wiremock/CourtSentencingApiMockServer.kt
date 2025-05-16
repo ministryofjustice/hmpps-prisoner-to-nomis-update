@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -46,6 +47,21 @@ class CourtSentencingApiExtension :
     @JvmField
     val courtSentencingApi = CourtSentencingApiMockServer()
     lateinit var objectMapper: ObjectMapper
+
+    fun legacySentence(sentenceId: String, sentenceCalcType: String) = LegacySentence(
+      prisonerId = "A6160DZ",
+      chargeLifetimeUuid = UUID.randomUUID(),
+      lifetimeUuid = UUID.fromString(sentenceId),
+      sentenceCalcType = sentenceCalcType,
+      sentenceCategory = "2020",
+      consecutiveToLifetimeUuid = null,
+      chargeNumber = null,
+      fineAmount = null,
+      courtCaseId = UUID.randomUUID().toString(),
+      sentenceStartDate = LocalDate.now().minusYears(1),
+      active = true,
+      appearanceUuid = UUID.randomUUID(),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -258,6 +274,21 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentence),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetSentences(
+    sentences: List<LegacySentence>,
+  ) {
+    stubFor(
+      post(WireMock.urlPathMatching("/legacy/sentence/search")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            objectMapper().writeValueAsString(sentences),
           )
           .withStatus(200),
       ),

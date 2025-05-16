@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
@@ -37,6 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.util.UUID
 
 @Service
 class CourtSentencingService(
@@ -806,6 +808,10 @@ class CourtSentencingService(
           telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
           // only expecting one but theoretically can deal with multiple bookings
           telemetryMap["nomisBookingId"] = mappings.map { it.nomisBookingId }.toSortedSet().joinToString()
+        }
+
+        courtSentencingApiService.getSentences(LegacySearchSentence(recallInsertedEvent.additionalInformation.sentenceIds.map { UUID.fromString(it) })).also {
+          telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
         }
         telemetryClient.trackEvent(
           "recall-inserted-success",
