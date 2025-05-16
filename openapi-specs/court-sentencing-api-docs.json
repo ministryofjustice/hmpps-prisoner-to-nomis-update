@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-14.6521.8482ab7"
+    "version" : "2025-05-15.6583.dd0e0b8"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -187,6 +187,53 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "recall-controller" ],
+        "summary" : "Delete a recall",
+        "description" : "This endpoint will delete a recall",
+        "operationId" : "deleteRecall",
+        "parameters" : [ {
+          "name" : "recallUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Recall deleted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteRecallResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteRecallResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DeleteRecallResponse"
                 }
               }
             }
@@ -1432,6 +1479,65 @@
         }
       }
     },
+    "/legacy/sentence/search" : {
+      "post" : {
+        "tags" : [ "legacy-sentence-controller" ],
+        "summary" : "Search for multiple sentences",
+        "description" : "This endpoint will retrieve multiple sentences by search parameters.",
+        "operationId" : "search",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/LegacySearchSentence"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns matching sentence details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentence"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentence"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/LegacySentence"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/period-length" : {
       "post" : {
         "tags" : [ "legacy-period-length-controller" ],
@@ -1942,6 +2048,58 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Sentence"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence/consecutive-to-details" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Retrieve sentence consecutive to details",
+        "description" : "This endpoint will retrieve consecutive to sentence details",
+        "operationId" : "getConsecutiveToSentenceDetails",
+        "parameters" : [ {
+          "name" : "sentenceUuids",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns consecutive to sentence details",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceConsecutiveToDetailsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceConsecutiveToDetailsResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceConsecutiveToDetailsResponse"
                 }
               }
             }
@@ -3515,7 +3673,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "13:26:06.047732632"
+            "example" : "13:20:01.098921277"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3764,7 +3922,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "13:26:06.047732632"
+            "example" : "13:20:01.098921277"
           },
           "courtCode" : {
             "type" : "string"
@@ -3925,6 +4083,70 @@
           }
         },
         "required" : [ "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId" ]
+      },
+      "LegacySearchSentence" : {
+        "type" : "object",
+        "properties" : {
+          "lifetimeUuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "lifetimeUuids" ]
+      },
+      "LegacySentence" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtCaseId" : {
+            "type" : "string"
+          },
+          "chargeLifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "lifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "sentenceCalcType" : {
+            "type" : "string"
+          },
+          "sentenceCategory" : {
+            "type" : "string"
+          },
+          "consecutiveToLifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNumber" : {
+            "type" : "string"
+          },
+          "fineAmount" : {
+            "type" : "number"
+          },
+          "sentenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "active", "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId", "sentenceCalcType", "sentenceCategory", "sentenceStartDate" ]
       },
       "LegacyPeriodLengthCreatedResponse" : {
         "type" : "object",
@@ -4489,6 +4711,52 @@
         },
         "required" : [ "classification", "description", "displayOrder", "sentenceTypeUuid" ]
       },
+      "SentenceConsecutiveToDetails" : {
+        "type" : "object",
+        "properties" : {
+          "courtCaseReference" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "countNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "appearanceDate", "courtCode", "offenceCode", "sentenceUuid" ]
+      },
+      "SentenceConsecutiveToDetailsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceConsecutiveToDetails"
+            }
+          }
+        },
+        "required" : [ "sentences" ]
+      },
       "Recall" : {
         "type" : "object",
         "properties" : {
@@ -4828,7 +5096,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "13:26:06.047732632"
+            "example" : "13:20:01.098921277"
           },
           "courtCode" : {
             "type" : "string"
@@ -4847,57 +5115,6 @@
           }
         },
         "required" : [ "hasSentenceToChainTo" ]
-      },
-      "LegacySentence" : {
-        "type" : "object",
-        "properties" : {
-          "prisonerId" : {
-            "type" : "string"
-          },
-          "courtCaseId" : {
-            "type" : "string"
-          },
-          "chargeLifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "lifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "appearanceUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "active" : {
-            "type" : "boolean"
-          },
-          "sentenceCalcType" : {
-            "type" : "string"
-          },
-          "sentenceCategory" : {
-            "type" : "string"
-          },
-          "consecutiveToLifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "chargeNumber" : {
-            "type" : "string"
-          },
-          "fineAmount" : {
-            "type" : "number"
-          },
-          "sentenceStartDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "returnToCustodyDate" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        },
-        "required" : [ "active", "appearanceUuid", "chargeLifetimeUuid", "courtCaseId", "lifetimeUuid", "prisonerId", "sentenceCalcType", "sentenceCategory", "sentenceStartDate" ]
       },
       "LegacySentenceTypeGroupingSummary" : {
         "type" : "object",
@@ -5248,7 +5465,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "13:26:06.047732632"
+            "example" : "13:20:01.098921277"
           },
           "charges" : {
             "type" : "array",
@@ -5271,7 +5488,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "13:26:06.047732632"
+            "example" : "13:20:01.098921277"
           },
           "courtId" : {
             "type" : "string"
@@ -5361,6 +5578,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -5377,12 +5600,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -5410,12 +5627,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -5435,6 +5652,16 @@
             "type" : "boolean"
           }
         }
+      },
+      "DeleteRecallResponse" : {
+        "type" : "object",
+        "properties" : {
+          "recallUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "recallUuid" ]
       }
     }
   }
