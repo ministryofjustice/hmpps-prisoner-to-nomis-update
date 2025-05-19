@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -26,9 +27,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingAdjustmentsService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -48,6 +53,7 @@ class CourtSentencingService(
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
+  private val sentencingAdjustmentsService: SentencingAdjustmentsService,
 ) : CreateMappingRetryable {
 
   private companion object {
@@ -799,20 +805,57 @@ class CourtSentencingService(
       "offenderNo" to offenderNo,
     )
 
-    if (isDpsCreated(source)) {
+    if (isDpsCreated(source) && sentenceIds.isNotEmpty()) {
       runCatching {
-        courtSentencingApiService.getRecall(recallId).also {
+        val recall = courtSentencingApiService.getRecall(recallId).also {
           telemetryMap["recallType"] = it.recallType.name
         }
-        courtCaseMappingService.getMappingsGivenSentenceIds(sentenceIds).also { mappings ->
+        val sentenceMappings = courtCaseMappingService.getMappingsGivenSentenceIds(sentenceIds).also { mappings ->
           telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
           // only expecting one but theoretically can deal with multiple bookings
           telemetryMap["nomisBookingId"] = mappings.map { it.nomisBookingId }.toSortedSet().joinToString()
         }
 
-        courtSentencingApiService.getSentences(LegacySearchSentence(recallInsertedEvent.additionalInformation.sentenceIds.map { UUID.fromString(it) })).also {
+        val dpsSentences = courtSentencingApiService.getSentences(LegacySearchSentence(recallInsertedEvent.additionalInformation.sentenceIds.map { UUID.fromString(it) })).also {
           telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
         }
+
+        // TODO - I think we need to sentence sentence type per sentence so sentences can be converted to different recall types; HDC to LR_HDC
+        val sentenceCategory = dpsSentences.first().sentenceCategory
+        val sentenceCalcType = dpsSentences.first().sentenceCalcType
+
+        nomisApiService.recallSentences(
+          offenderNo,
+          CreateRecallRequest(
+            sentenceCategory = sentenceCategory,
+            sentenceCalcType = sentenceCalcType,
+            sentenceIds = sentenceMappings.map {
+              SentenceId(
+                offenderBookingId = it.nomisBookingId,
+                sentenceSequence = it.nomisSentenceSequence.toLong(),
+              )
+            },
+            returnToCustody = recall.returnToCustodyDate?.let {
+              ReturnToCustodyRequest(
+                returnToCustodyDate = it,
+                enteredByStaffUsername = recall.createdByUsername,
+                // TODO we should only do this if a FTR - so check if returnToCustodyDate from DPS determines this rather then mapping to 0 days
+                recallLength = when (recall.recallType) {
+                  Recall.RecallType.LR -> 0
+                  Recall.RecallType.FTR_14 -> 14
+                  Recall.RecallType.FTR_28 -> 28
+                  Recall.RecallType.LR_HDC -> 0
+                  Recall.RecallType.FTR_HDC_14 -> 14
+                  Recall.RecallType.FTR_HDC_28 -> 28
+                  Recall.RecallType.CUR_HDC -> 0
+                  Recall.RecallType.IN_HDC -> 0
+                },
+              )
+            },
+
+          ),
+        )
+
         telemetryClient.trackEvent(
           "recall-inserted-success",
           telemetryMap,

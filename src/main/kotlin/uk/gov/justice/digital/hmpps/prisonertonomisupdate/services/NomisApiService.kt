@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
@@ -789,6 +790,15 @@ class NomisApiService(
     caseId: Long,
   ) = webClient.delete()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms/{termSequence}", offenderNo, caseId, sentenceSeq, termSeq)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun recallSentences(
+    offenderNo: String,
+    request: CreateRecallRequest,
+  ) = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
+    .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()
 
