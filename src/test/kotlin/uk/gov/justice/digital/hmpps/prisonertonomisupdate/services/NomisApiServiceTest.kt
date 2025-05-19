@@ -1372,12 +1372,14 @@ fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
 )
 
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")
+
 fun updateVisit(): UpdateVisitDto = UpdateVisitDto(
   startDateTime = LocalDateTime.now(),
   endTime = LocalTime.MIDNIGHT,
   visitorPersonIds = listOf(),
   room = "Main visits room",
   openClosedStatus = "CLOSED",
+  visitComment = "visit comment",
 )
 
 fun newIncentive() = CreateIncentiveDto(

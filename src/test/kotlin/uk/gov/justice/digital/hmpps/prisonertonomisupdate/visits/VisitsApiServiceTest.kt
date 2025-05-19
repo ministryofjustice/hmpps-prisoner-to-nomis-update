@@ -43,6 +43,9 @@ internal class VisitsApiServiceTest {
             "visitStatus": "BOOKED",
             "visitRoom": "Legal Visit Room 6",
             "visitRestriction": "OPEN",
+            "visitorSupport": {
+              "description": "comment"
+            },
             "visitors": [
               {
                 "nomisPersonId": 543524
@@ -79,6 +82,7 @@ internal class VisitsApiServiceTest {
       assertThat(visit.prisonId).isEqualTo("MDI")
       assertThat(visit.visitStatus).isEqualTo("BOOKED")
       assertThat(visit.visitRoom).isEqualTo("Legal Visit Room 6")
+      assertThat(visit.visitorSupport!!.description).isEqualTo("comment")
       assertThat(visit.visitRestriction).isEqualTo("OPEN")
       assertThat(visit.visitors).containsExactly(Visitor(543524), Visitor(344444), Visitor(655656))
     }

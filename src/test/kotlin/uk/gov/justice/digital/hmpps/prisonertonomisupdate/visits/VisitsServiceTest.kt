@@ -275,6 +275,7 @@ internal class VisitsServiceTest {
 fun newVisit(
   offenderNo: String = "AB123D",
   outcome: String? = VsipOutcomeStatus.ESTABLISHMENT_CANCELLED.name,
+  visitorSupportDescription: String? = "comment",
 ): VisitDto = VisitDto(
   prisonerId = offenderNo,
   prisonId = "MDI",
@@ -286,6 +287,7 @@ fun newVisit(
   outcomeStatus = outcome,
   visitRoom = "Main visit room",
   visitRestriction = "OPEN",
+  visitorSupport = visitorSupportDescription?.let { VisitDto.VisitorSupport(it) },
 )
 
 fun newMapping() = VisitMappingDto(nomisId = "456", vsipId = "123", mappingType = "ONLINE")
