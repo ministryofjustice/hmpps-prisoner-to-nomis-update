@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -2787,6 +2788,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14"),
           ),
         )
+
+        NomisApiExtension.nomisApi.stubRecallSentences(OFFENDER_NO)
         publishRecallInsertedDomainEvent(
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -2827,6 +2830,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           postRequestedFor(urlEqualTo("/legacy/sentence/search"))
             .withRequestBody(matchingJsonPath("lifetimeUuids[0]", equalTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc")))
             .withRequestBody(matchingJsonPath("lifetimeUuids[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"))),
+        )
+      }
+
+      @Test
+      fun `will update NOMIS sentence information`() {
+        // TODO more asserts when change DPS top accept sentence data not just IDS
+        NomisApiExtension.nomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+            .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+            .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
+            .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
         )
       }
 
