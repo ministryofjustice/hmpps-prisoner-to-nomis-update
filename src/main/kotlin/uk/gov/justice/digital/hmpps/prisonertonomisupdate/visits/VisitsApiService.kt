@@ -27,6 +27,8 @@ data class VisitDto(
   val outcomeStatus: String? = null,
   val visitRoom: String,
   val visitRestriction: String,
+  val visitorSupport: VisitorSupport? = null,
 ) {
   data class Visitor(val nomisPersonId: Long)
+  data class VisitorSupport(val description: String)
 }

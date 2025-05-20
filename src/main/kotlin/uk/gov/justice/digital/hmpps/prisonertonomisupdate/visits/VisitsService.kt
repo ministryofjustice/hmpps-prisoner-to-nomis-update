@@ -63,7 +63,7 @@ class VisitsService(
                   "FAMILY" -> "SCON"
                   else -> throw ValidationException("Invalid visit type ${visit.visitType}")
                 },
-                visitComment = "DPS booking reference: ${visit.reference}",
+                visitComment = visit.visitorSupport?.description ?: "DPS booking reference: ${visit.reference}",
                 visitOrderComment = "DPS booking reference: ${visit.reference}",
                 room = visit.visitRoom,
                 openClosedStatus = visit.visitRestriction,
@@ -155,6 +155,7 @@ class VisitsService(
             visitorPersonIds = this.visitors.map { it.nomisPersonId },
             room = this.visitRoom,
             openClosedStatus = this.visitRestriction,
+            visitComment = this.visitorSupport?.description,
           ),
         )
       }
