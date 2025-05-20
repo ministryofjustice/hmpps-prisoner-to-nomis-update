@@ -840,6 +840,7 @@ data class UpdateVisitDto(
   val visitorPersonIds: List<Long>,
   val room: String,
   val openClosedStatus: String,
+  val visitComment: String? = null,
 )
 
 data class CreateIncentiveDto(
