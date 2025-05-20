@@ -1,0 +1,35 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "app.fullname" . }}-activities-purge-dlq
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  schedule: "9-59/10 * * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      suspend: {{ .Values.cron.activitiesPurgeDlqSuspend }}
+      template:
+        spec:
+          containers:
+            - name: housekeeping
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
