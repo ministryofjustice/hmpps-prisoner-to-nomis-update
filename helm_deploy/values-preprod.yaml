@@ -104,5 +104,6 @@ generic-prometheus-alerts:
 
 cron:
   activitiesTidyMappingsSuspend: false
+  activitiesPurgeDlqSuspend: false
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"
 
