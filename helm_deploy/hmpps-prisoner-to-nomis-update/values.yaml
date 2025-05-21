@@ -232,5 +232,6 @@ cron:
   suspendedAllocationReconReportSchedule: "35 7 * * *"
   attendanceReconReportSchedule: "5 1 * * *"
   activitiesTidyMappingsSuspend: true
+  activitiesPurgeDlqSuspend: true
   activitiesTidyMappingsSchedule: "15 7 * * 1-5"
   contactPersonProfileDetailsReportSchedule: "30 3 * * *"
