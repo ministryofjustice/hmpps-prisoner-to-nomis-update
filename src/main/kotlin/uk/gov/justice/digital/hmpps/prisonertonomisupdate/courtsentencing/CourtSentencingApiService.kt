@@ -7,9 +7,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 
 @Service
@@ -45,8 +45,8 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .retrieve()
     .awaitBody()
 
-  suspend fun getRecall(id: String): Recall = courtSentencingApiWebClient.get()
-    .uri("/recall/{id}", id)
+  suspend fun getRecall(id: String): LegacyRecall = courtSentencingApiWebClient.get()
+    .uri("/legacy/recall/{id}", id)
     .retrieve()
     .awaitBody()
 

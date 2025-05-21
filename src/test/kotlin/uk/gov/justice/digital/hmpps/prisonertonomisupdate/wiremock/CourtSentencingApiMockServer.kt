@@ -16,8 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import java.math.BigDecimal
@@ -48,12 +48,12 @@ class CourtSentencingApiExtension :
     val courtSentencingApi = CourtSentencingApiMockServer()
     lateinit var objectMapper: ObjectMapper
 
-    fun legacySentence(sentenceId: String, sentenceCalcType: String) = LegacySentence(
+    fun legacySentence(sentenceId: String, sentenceCalcType: String, sentenceCategory: String = "2020") = LegacySentence(
       prisonerId = "A6160DZ",
       chargeLifetimeUuid = UUID.randomUUID(),
       lifetimeUuid = UUID.fromString(sentenceId),
       sentenceCalcType = sentenceCalcType,
-      sentenceCategory = "2020",
+      sentenceCategory = sentenceCategory,
       consecutiveToLifetimeUuid = null,
       chargeNumber = null,
       fineAmount = null,
@@ -341,9 +341,9 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetRecall(recallId: String, recall: Recall) {
+  fun stubGetRecall(recallId: String, recall: LegacyRecall) {
     stubFor(
-      get(WireMock.urlPathMatching("/recall/$recallId")).willReturn(
+      get(WireMock.urlPathMatching("/legacy/recall/$recallId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
