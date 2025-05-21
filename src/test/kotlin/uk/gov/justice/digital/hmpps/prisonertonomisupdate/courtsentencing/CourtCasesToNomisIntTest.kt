@@ -25,7 +25,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Sentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.SentenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
@@ -2743,28 +2743,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         // Will change to a legacy specific endpoint once implemented by DPS
         CourtSentencingApiExtension.courtSentencingApi.stubGetRecall(
           "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
-          Recall(
+          LegacyRecall(
             recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
-            prisonerId = "LEI",
-            recallType = Recall.RecallType.FTR_14,
-            createdAt = LocalDateTime.now(),
-            createdByUsername = "T.SMITH",
-            revocationDate = null,
+            recallType = LegacyRecall.RecallType.FTR_14,
+            recallBy = "T.SMITH",
             returnToCustodyDate = LocalDate.parse("2025-04-23"),
-            createdByPrison = "LEI",
-            sentences = listOf(
-              sentence(
-                sentenceUuid = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
-                sentenceCategory = "2020",
-                sentenceCalcType = "FTR_14",
-              ),
-              sentence(
-                sentenceUuid = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
-                sentenceCategory = "2020",
-                sentenceCalcType = "FTR_14",
-              ),
+            prisonerId = OFFENDER_NO,
+            sentenceIds = listOf(
+              UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
             ),
-            courtCaseIds = emptyList(),
           ),
         )
         mappingServer.stubGetMappingsGivenSentenceIds(
@@ -2784,8 +2772,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         CourtSentencingApiExtension.courtSentencingApi.stubGetSentences(
           sentences = listOf(
-            legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14"),
-            legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14"),
+            legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14", sentenceCategory = "2020"),
+            legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14", sentenceCategory = "2013"),
           ),
         )
 
@@ -2808,6 +2796,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           sentenceCalcType = sentenceCalcType,
           sentenceCategory = sentenceCategory,
         ),
+        hasRecall = false,
       )
 
       @Test
@@ -2821,7 +2810,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will retrieve DPS recall information`() {
-        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/recall/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/recall/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")))
       }
 
       @Test
@@ -2835,9 +2824,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will update NOMIS sentence information`() {
-        // TODO more asserts when change DPS top accept sentence data not just IDS
         NomisApiExtension.nomisApi.verify(
-          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+            .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+            .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
+            .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
+            .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+            .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+            .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
+            .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
+            .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),

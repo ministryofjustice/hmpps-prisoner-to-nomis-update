@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-15.6583.dd0e0b8"
+    "version" : "2025-05-21.6663.f12d886"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -43,6 +43,9 @@
   }, {
     "name" : "sentence-controller",
     "description" : "Sentences"
+  }, {
+    "name" : "legacy-recall-controller",
+    "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
   }, {
     "name" : "recall-controller",
     "description" : "Recall"
@@ -2830,6 +2833,55 @@
         }
       }
     },
+    "/legacy/recall/{uuid}" : {
+      "get" : {
+        "tags" : [ "legacy-recall-controller" ],
+        "summary" : "retrieve a recall",
+        "description" : "This endpoint will retrieve legacy recall details.",
+        "operationId" : "get_6",
+        "parameters" : [ {
+          "name" : "uuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns recall details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyRecall"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyRecall"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/LegacyRecall"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/court-case/{courtCaseUuid}/test" : {
       "get" : {
         "tags" : [ "legacy-court-case-controller" ],
@@ -3673,7 +3725,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:33:01.676012737"
+            "example" : "09:04:49.278342721"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3922,7 +3974,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:33:01.676012737"
+            "example" : "09:04:49.278342721"
           },
           "courtCode" : {
             "type" : "string"
@@ -4683,9 +4735,12 @@
           "consecutiveToSentenceUuid" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "hasRecall" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "periodLengths", "sentenceServeType", "sentenceUuid" ]
+        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
       },
       "SentenceType" : {
         "type" : "object",
@@ -5096,7 +5151,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:33:01.676012737"
+            "example" : "09:04:49.278342721"
           },
           "courtCode" : {
             "type" : "string"
@@ -5326,6 +5381,37 @@
         },
         "required" : [ "periodDefinitions" ]
       },
+      "LegacyRecall" : {
+        "type" : "object",
+        "properties" : {
+          "recallUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "recallType" : {
+            "type" : "string",
+            "enum" : [ "LR", "FTR_14", "FTR_28", "LR_HDC", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+          },
+          "recallBy" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "prisonerId", "recallBy", "recallType", "recallUuid", "sentenceIds" ]
+      },
       "LegacyPeriodLength" : {
         "type" : "object",
         "properties" : {
@@ -5465,7 +5551,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:33:01.676012737"
+            "example" : "09:04:49.278342721"
           },
           "charges" : {
             "type" : "array",
@@ -5488,7 +5574,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:33:01.676012737"
+            "example" : "09:04:49.278342721"
           },
           "courtId" : {
             "type" : "string"
@@ -5578,6 +5664,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -5594,12 +5686,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",

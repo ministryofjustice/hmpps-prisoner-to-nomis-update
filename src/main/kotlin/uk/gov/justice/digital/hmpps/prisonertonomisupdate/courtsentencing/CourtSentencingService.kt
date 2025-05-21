@@ -12,9 +12,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Recall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -25,11 +25,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RecallSentenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
@@ -820,36 +821,26 @@ class CourtSentencingService(
           telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
         }
 
-        // TODO - I think we need to sentence sentence type per sentence so sentences can be converted to different recall types; HDC to LR_HDC
-        val sentenceCategory = dpsSentences.first().sentenceCategory
-        val sentenceCalcType = dpsSentences.first().sentenceCalcType
-
         nomisApiService.recallSentences(
           offenderNo,
-          CreateRecallRequest(
-            sentenceCategory = sentenceCategory,
-            sentenceCalcType = sentenceCalcType,
-            sentenceIds = sentenceMappings.map {
-              SentenceId(
-                offenderBookingId = it.nomisBookingId,
-                sentenceSequence = it.nomisSentenceSequence.toLong(),
+          ConvertToRecallRequest(
+            sentences = dpsSentences.map { dpsSentence ->
+              RecallSentenceDetails(
+                sentenceId = sentenceMappings.find { it.dpsSentenceId == dpsSentence.lifetimeUuid.toString() }!!.let { mapping ->
+                  SentenceId(
+                    offenderBookingId = mapping.nomisBookingId,
+                    sentenceSequence = mapping.nomisSentenceSequence.toLong(),
+                  )
+                },
+                sentenceCategory = dpsSentence.sentenceCategory,
+                sentenceCalcType = dpsSentence.sentenceCalcType,
               )
             },
-            returnToCustody = recall.returnToCustodyDate?.let {
+            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it,
-                enteredByStaffUsername = recall.createdByUsername,
-                // TODO we should only do this if a FTR - so check if returnToCustodyDate from DPS determines this rather then mapping to 0 days
-                recallLength = when (recall.recallType) {
-                  Recall.RecallType.LR -> 0
-                  Recall.RecallType.FTR_14 -> 14
-                  Recall.RecallType.FTR_28 -> 28
-                  Recall.RecallType.LR_HDC -> 0
-                  Recall.RecallType.FTR_HDC_14 -> 14
-                  Recall.RecallType.FTR_HDC_28 -> 28
-                  Recall.RecallType.CUR_HDC -> 0
-                  Recall.RecallType.IN_HDC -> 0
-                },
+                enteredByStaffUsername = recall.recallBy,
+                recallLength = recall.recallType.toDays()!!,
               )
             },
 
@@ -870,6 +861,26 @@ class CourtSentencingService(
     }
   }
 
+  private fun LegacyRecall.RecallType.toDays(): Int? = when (this) {
+    LegacyRecall.RecallType.LR -> null
+    LegacyRecall.RecallType.FTR_14 -> 14
+    LegacyRecall.RecallType.FTR_28 -> 28
+    LegacyRecall.RecallType.LR_HDC -> null
+    LegacyRecall.RecallType.FTR_HDC_14 -> 14
+    LegacyRecall.RecallType.FTR_HDC_28 -> 28
+    LegacyRecall.RecallType.CUR_HDC -> null
+    LegacyRecall.RecallType.IN_HDC -> null
+  }
+  private fun LegacyRecall.RecallType.isFixedTermRecall(): Boolean = when (this) {
+    LegacyRecall.RecallType.LR -> false
+    LegacyRecall.RecallType.FTR_14 -> true
+    LegacyRecall.RecallType.FTR_28 -> true
+    LegacyRecall.RecallType.LR_HDC -> false
+    LegacyRecall.RecallType.FTR_HDC_14 -> true
+    LegacyRecall.RecallType.FTR_HDC_28 -> true
+    LegacyRecall.RecallType.CUR_HDC -> false
+    LegacyRecall.RecallType.IN_HDC -> false
+  }
   suspend fun updateSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
