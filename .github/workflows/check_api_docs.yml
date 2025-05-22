@@ -30,7 +30,19 @@ jobs:
           - sentencing-adjustments
           - visit-balance
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          repositories: hmpps-prisoner-to-nomis-update
+          owner: ministryofjustice
+          # Created by PGP following instructions in https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#authenticating-with-github-app-generated-tokens
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
       - uses: actions/setup-java@v4
         with:
           distribution: 'temurin' # See 'Supported distributions' for available options
@@ -60,9 +72,10 @@ jobs:
             Current production version is ${{ steps.check-api.outputs.production_version }}
           branch: api-docs-${{ matrix.project }}
           base: main
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Delete Pull Request
         if: steps.check-api.outputs.differences == 'false'
         run: ./delete-pull-request.bash api-docs-${{ matrix.project }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
