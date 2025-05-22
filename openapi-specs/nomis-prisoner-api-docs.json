@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-20.39.245eeee"
+    "version" : "2025-05-22.43.8838be8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -910,155 +910,6 @@
           },
           "404" : {
             "description" : "Court case does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/{offenderNo}/sentences/recall" : {
-      "put" : {
-        "tags" : [ "sentencing-resource" ],
-        "summary" : "Recalls Sentences",
-        "description" : "Required role NOMIS_SENTENCING Recalls sentences for the offender",
-        "operationId" : "recallSentences",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender no",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender no",
-            "example" : "AA668EC"
-          },
-          "example" : "AA668EC"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateRecallRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Sentences recalled"
-          },
-          "400" : {
-            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Sentence does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      },
-      "post" : {
-        "tags" : [ "sentencing-resource" ],
-        "summary" : "Recalls Sentences by convert the specified sentences to the requested recall sentence",
-        "description" : "Required role NOMIS_SENTENCING Recalls sentences for the offender",
-        "operationId" : "convertToRecallSentences",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender no",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender no",
-            "example" : "AA668EC"
-          },
-          "example" : "AA668EC"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ConvertToRecallRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Sentences converted to recall"
-          },
-          "400" : {
-            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "One or more sentence does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8361,6 +8212,81 @@
           },
           "404" : {
             "description" : "Court case does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentences/recall" : {
+      "post" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "Recalls Sentences by convert the specified sentences to the requested recall sentence",
+        "description" : "Required role NOMIS_SENTENCING Recalls sentences for the offender",
+        "operationId" : "convertToRecallSentences",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no",
+            "example" : "AA668EC"
+          },
+          "example" : "AA668EC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConvertToRecallRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Sentences converted to recall"
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "One or more sentence does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -17857,6 +17783,10 @@
             "type" : "string",
             "description" : "Whether visit is restricted to a closed session",
             "enum" : [ "OPEN", "CLOSED" ]
+          },
+          "visitComment" : {
+            "type" : "string",
+            "description" : "Comment to be added to visit"
           }
         },
         "required" : [ "endTime", "openClosedStatus", "room", "startDateTime", "visitorPersonIds" ]
@@ -17958,60 +17888,6 @@
           }
         },
         "required" : [ "offenceCode" ]
-      },
-      "CreateRecallRequest" : {
-        "type" : "object",
-        "description" : "Recall add request",
-        "properties" : {
-          "sentenceCategory" : {
-            "type" : "string"
-          },
-          "sentenceCalcType" : {
-            "type" : "string"
-          },
-          "sentenceIds" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceId"
-            }
-          },
-          "returnToCustody" : {
-            "$ref" : "#/components/schemas/ReturnToCustodyRequest"
-          }
-        },
-        "required" : [ "sentenceCalcType", "sentenceCategory", "sentenceIds" ]
-      },
-      "ReturnToCustodyRequest" : {
-        "type" : "object",
-        "description" : "Return to custody data",
-        "properties" : {
-          "returnToCustodyDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "enteredByStaffUsername" : {
-            "type" : "string"
-          },
-          "recallLength" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "enteredByStaffUsername", "recallLength", "returnToCustodyDate" ]
-      },
-      "SentenceId" : {
-        "type" : "object",
-        "properties" : {
-          "offenderBookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sentenceSequence" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        },
-        "required" : [ "offenderBookingId", "sentenceSequence" ]
       },
       "UpsertProfileDetailsRequest" : {
         "type" : "object",
@@ -20722,6 +20598,38 @@
         },
         "required" : [ "sentenceCalcType", "sentenceCategory", "sentenceId" ]
       },
+      "ReturnToCustodyRequest" : {
+        "type" : "object",
+        "description" : "Return to custody data",
+        "properties" : {
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "enteredByStaffUsername" : {
+            "type" : "string"
+          },
+          "recallLength" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "enteredByStaffUsername", "recallLength", "returnToCustodyDate" ]
+      },
+      "SentenceId" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sentenceSequence" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "offenderBookingId", "sentenceSequence" ]
+      },
       "CreateSentenceResponse" : {
         "type" : "object",
         "description" : "Create sentence response",
@@ -22966,12 +22874,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22988,6 +22890,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -23015,15 +22923,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -23155,12 +23063,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -23177,6 +23079,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -23572,12 +23480,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -23594,6 +23496,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25531,12 +25439,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25553,6 +25455,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -25595,12 +25503,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -25617,6 +25519,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26242,12 +26150,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26264,6 +26166,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26398,12 +26306,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26420,6 +26322,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26619,12 +26527,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26641,6 +26543,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27135,12 +27043,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27157,6 +27059,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27245,12 +27153,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27267,6 +27169,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27376,12 +27284,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27398,6 +27300,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27682,12 +27590,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27704,6 +27606,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28443,12 +28351,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28465,6 +28367,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28740,12 +28648,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28762,6 +28664,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28802,12 +28710,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28824,6 +28726,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28869,12 +28777,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28891,6 +28793,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29162,12 +29070,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29184,6 +29086,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
