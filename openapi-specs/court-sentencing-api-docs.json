@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-21.6663.f12d886"
+    "version" : "2025-05-22.6722.97825e8"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3725,7 +3725,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.623576882"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3974,7 +3974,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.623576882"
           },
           "courtCode" : {
             "type" : "string"
@@ -5151,7 +5151,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.623576882"
           },
           "courtCode" : {
             "type" : "string"
@@ -5551,7 +5551,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.623576882"
           },
           "charges" : {
             "type" : "array",
@@ -5574,7 +5574,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.623576882"
           },
           "courtId" : {
             "type" : "string"
@@ -5664,12 +5664,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -5687,12 +5681,18 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "empty" : {
             "type" : "boolean"
@@ -5709,16 +5709,16 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
+          },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "unpaged" : {
             "type" : "boolean"
