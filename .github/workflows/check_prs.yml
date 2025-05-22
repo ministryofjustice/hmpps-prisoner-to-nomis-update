@@ -15,7 +15,18 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: generate-token
+        with:
+          repositories: hmpps-prisoner-to-nomis-update
+          owner: ministryofjustice
+          # Created by PGP following instructions in https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#authenticating-with-github-app-generated-tokens
+          app-id: ${{ secrets.APP_ID }}
+          private-key: ${{ secrets.APP_PRIVATE_KEY }}
+
       - uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
 
       - name: Combine PRs
         id: combine-prs
@@ -24,12 +35,13 @@ jobs:
           branch_prefix: api-docs-
           pr_title: Combined update of api docs
           labels: combined-pr
+          github_token: ${{ steps.generate-token.outputs.token }}
 
       - name: Check status of PRs
         id: check-prs
         run: ./check-prs.bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Slack message to review failing PRs
         if: ${{ steps.check-prs.outputs.failure_count != '0' }}
