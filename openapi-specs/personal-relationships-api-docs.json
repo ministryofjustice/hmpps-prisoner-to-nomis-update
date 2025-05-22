@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-29.1162.4938d84"
+    "version" : "2025-05-21.1708.b85e609"
   },
   "servers" : [ {
     "url" : "/",
@@ -3852,6 +3852,16 @@
               }
             }
           },
+          "409" : {
+            "description" : "The requested combination of prisoner, contact and relationship to prisoner already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
             "content" : {
@@ -4474,6 +4484,16 @@
           },
           "404" : {
             "description" : "Could not find the prisoner or contact that this relationship relates to",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The requested combination of prisoner, contact and relationship to prisoner already exists.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -6095,6 +6115,16 @@
               }
             }
           },
+          "409" : {
+            "description" : "The requested combination of prisoner, contact and relationship to prisoner already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
             "content" : {
@@ -6241,6 +6271,55 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/prisoner/{prisonerNumber}/reconcile" : {
+      "get" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Reconciliation endpoint for a single prisoner by prisoner number",
+        "description" : "Get all the relationships, active and inactive, and their restrictions for one prisoner",
+        "operationId" : "reconcileSinglePrisoner",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The internal ID for the contact.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Reconciliation object for one contact",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncPrisonerReconcile"
                 }
               }
             }
@@ -6483,7 +6562,8 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "enum" : [ "S", "O" ]
+            "enum" : [ "S", "O" ],
+            "pattern" : "[SO]"
           }
         }, {
           "name" : "emergencyContact",
@@ -6543,6 +6623,79 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PagedModelPrisonerContactSummary"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The Prisoner was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoner/{prisonNumber}/contact/{contactId}" : {
+      "get" : {
+        "tags" : [ "Prisoner relationships" ],
+        "summary" : "Get all relationships between a specific prisoner and contact",
+        "description" : "Prisoners can have multiple relationships defined with a single contact which is a security risk and highly discouraged.\n      |This API should be used to help dissuade users from creating multiple relationships between a single prisoner and contact wherever possible.\n    ",
+        "operationId" : "getAllSummariesForPrisonerAndContact",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "The prison number of the prisoner who's contacts will be returned",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "contactId",
+          "in" : "path",
+          "description" : "The id of the contact",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "A page of matching contact relationships for the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerContactSummary"
+                  }
                 }
               }
             }
@@ -7497,21 +7650,24 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "minLength" : 1
+            "minLength" : 1,
+            "pattern" : "[a-zA-Z\\s,.'-]*"
           }
         }, {
           "name" : "firstName",
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "[a-zA-Z\\s,.'-]*"
           }
         }, {
           "name" : "middleNames",
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "[a-zA-Z\\s,.'-]*"
           }
         }, {
           "name" : "dateOfBirth",
@@ -13380,6 +13536,120 @@
           }
         }
       },
+      "ReconcilePrisonerRelationship" : {
+        "type" : "object",
+        "description" : "Prisoner single relationship reconciliation",
+        "properties" : {
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID of the contact",
+            "example" : 12345
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID of the prisoner contact",
+            "example" : 12345
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "Contact first name",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Contact last name",
+            "example" : "Smith"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "relationshipTypeCode" : {
+            "type" : "string",
+            "description" : "Social or official contact",
+            "example" : "S"
+          },
+          "relationshipToPrisoner" : {
+            "type" : "string",
+            "description" : "The relationship code from reference data",
+            "example" : "FRIEND"
+          },
+          "nextOfKin" : {
+            "type" : "boolean",
+            "description" : "Indicates if the prisoner contact is next of kin",
+            "example" : true
+          },
+          "emergencyContact" : {
+            "type" : "boolean",
+            "description" : "Indicates if the prisoner contact is an emergency contact",
+            "example" : true
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Indicates if the prisoner contact is active",
+            "example" : true
+          },
+          "approvedVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates if the prisoner contact is an approved visitor",
+            "example" : true
+          },
+          "restrictions" : {
+            "type" : "array",
+            "description" : "The list of restrictions on this relationship",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconcileRelationshipRestriction"
+            }
+          }
+        },
+        "required" : [ "active", "approvedVisitor", "contactId", "emergencyContact", "nextOfKin", "prisonerContactId", "prisonerNumber", "relationshipToPrisoner", "relationshipTypeCode", "restrictions" ]
+      },
+      "ReconcileRelationshipRestriction" : {
+        "type" : "object",
+        "description" : "Contact relationship restriction reconciliation",
+        "properties" : {
+          "prisonerContactRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID of the prisoner contact restriction",
+            "example" : 12345
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "Type of restriction",
+            "example" : "MOBILE"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Restriction created date",
+            "example" : "2024-01-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Restriction end date ",
+            "example" : "2024-01-01"
+          }
+        },
+        "required" : [ "prisonerContactRestrictionId", "restrictionType" ]
+      },
+      "SyncPrisonerReconcile" : {
+        "type" : "object",
+        "description" : "Prisoner relationship reconciliation",
+        "properties" : {
+          "relationships" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconcilePrisonerRelationship"
+            }
+          }
+        },
+        "required" : [ "relationships" ]
+      },
       "EmploymentEntity" : {
         "type" : "object",
         "properties" : {
@@ -13641,36 +13911,6 @@
         },
         "required" : [ "active", "approvedVisitor", "contactType", "emergencyContact", "nextOfKin", "prisonerContactId", "prisonerNumber", "relationshipRestrictions", "relationshipType" ]
       },
-      "ReconcileRelationshipRestriction" : {
-        "type" : "object",
-        "description" : "Contact relationship restriction reconciliation",
-        "properties" : {
-          "prisonerContactRestrictionId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The ID of the prisoner contact restriction",
-            "example" : 12345
-          },
-          "restrictionType" : {
-            "type" : "string",
-            "description" : "Type of restriction",
-            "example" : "MOBILE"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Restriction created date",
-            "example" : "2024-01-01"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Restriction end date ",
-            "example" : "2024-01-01"
-          }
-        },
-        "required" : [ "prisonerContactRestrictionId", "restrictionType" ]
-      },
       "ReconcileRestriction" : {
         "type" : "object",
         "description" : "Contact restriction reconciliation",
@@ -13703,26 +13943,39 @@
       },
       "SyncContactReconcile" : {
         "type" : "object",
+        "description" : "Reconciliation data for one contact",
         "properties" : {
           "contactId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Unique identifier for a contact",
+            "example" : 1111
           },
           "firstName" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Contact first name",
+            "example" : "Bob"
           },
           "lastName" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Contact last name",
+            "example" : "Smith"
           },
           "middleNames" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Contact middle names",
+            "example" : "David"
           },
           "dateOfBirth" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "description" : "Contact data of birth",
+            "example" : "2001-02-01"
           },
           "staffFlag" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Staff indicator",
+            "example" : false
           },
           "phones" : {
             "type" : "array",
