@@ -877,13 +877,13 @@ class CourtSentencingService(
           // TODO remove this when DPS fixes domain event that is missing ids
           telemetryMap["dpsSentenceIds"] = it.sentenceIds.joinToString()
         }
-        val sentenceIds = recall.sentenceIds.map { it.toString() }
-        val sentenceMappings = courtCaseMappingService.getMappingsGivenSentenceIds(sentenceIds).also { mappings ->
+        val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
+        val sentenceMappings = courtCaseMappingService.getMappingsGivenSentenceIds(dpsSentenceIds).also { mappings ->
           telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
           telemetryMap["nomisBookingId"] = mappings.map { it.nomisBookingId }.toSortedSet().joinToString()
         }
 
-        val dpsSentences = courtSentencingApiService.getSentences(LegacySearchSentence(recallUpdateEvent.additionalInformation.sentenceIds.map { UUID.fromString(it) })).also {
+        val dpsSentences = courtSentencingApiService.getSentences(LegacySearchSentence(dpsSentenceIds.map { UUID.fromString(it) })).also {
           telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
         }
 
