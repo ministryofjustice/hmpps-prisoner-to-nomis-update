@@ -63,6 +63,8 @@ class CourtSentencingDomainEventListener(
         courtSentencingService.deleteSentenceTerm(message.fromJson())
       "recall.inserted" ->
         courtSentencingService.createRecallSentences(message.fromJson())
+      "recall.updated" ->
+        courtSentencingService.updateRecallSentences(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
