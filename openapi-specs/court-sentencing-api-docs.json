@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-21.6663.f12d886"
+    "version" : "2025-05-22.6722.97825e8"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3725,7 +3725,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.182520297"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -3974,7 +3974,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.182520297"
           },
           "courtCode" : {
             "type" : "string"
@@ -5151,7 +5151,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.182520297"
           },
           "courtCode" : {
             "type" : "string"
@@ -5551,7 +5551,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.182520297"
           },
           "charges" : {
             "type" : "array",
@@ -5574,7 +5574,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:04:49.278342721"
+            "example" : "08:06:17.182520297"
           },
           "courtId" : {
             "type" : "string"
@@ -5664,12 +5664,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -5686,6 +5680,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
