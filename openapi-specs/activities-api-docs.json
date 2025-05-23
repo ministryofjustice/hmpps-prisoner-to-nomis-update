@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-29.26763.03f2615"
+    "version" : "2025-05-22.27303.5495127"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -524,7 +524,7 @@
     "/queue-admin/retry-dlq/{dlqName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
         "operationId" : "retryDlq",
         "parameters" : [ {
           "name" : "dlqName",
@@ -572,7 +572,7 @@
     "/queue-admin/purge-queue/{queueName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
         "operationId" : "purgeQueue",
         "parameters" : [ {
           "name" : "queueName",
@@ -870,6 +870,189 @@
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/advance-attendances/{advanceAttendanceId}" : {
+      "get" : {
+        "tags" : [ "advance-attendance-controller" ],
+        "summary" : "Get an advance attendance by id.",
+        "description" : "Returns an advance attendance.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "getAttendanceById",
+        "parameters" : [ {
+          "name" : "advanceAttendanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Advance Attendance found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvanceAttendance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The advance attendance was not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "advance-attendance-controller" ],
+        "summary" : "Updates an advance attendance.",
+        "description" : "Updates the given advance attendance. Currently only updates the issue payment status.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "update",
+        "parameters" : [ {
+          "name" : "advanceAttendanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdvanceAttendanceUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "The advance attendance was updated.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvanceAttendance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The advance attendance was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "advance-attendance-controller" ],
+        "summary" : "Deletes the advance attendance.",
+        "description" : "Hard deletes the given advance attendance.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "reset",
+        "parameters" : [ {
+          "name" : "advanceAttendanceId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The advance attendance was deleted.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvanceAttendance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The advance attendance was not found.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3058,12 +3241,62 @@
         }
       }
     },
+    "/advance-attendances" : {
+      "post" : {
+        "tags" : [ "advance-attendance-controller" ],
+        "summary" : "Create an advance attendance",
+        "description" : "Create an advance attendance. Currently only for a prisoner who is not required.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "create",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/AdvanceAttendanceCreateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The advance attendance record was created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AdvanceAttendance"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/activities" : {
       "post" : {
         "tags" : [ "activity-controller" ],
         "summary" : "Create an activity",
         "description" : "Create an activity\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
-        "operationId" : "create",
+        "operationId" : "create_1",
         "parameters" : [ {
           "name" : "Caseload-Id",
           "in" : "header",
@@ -3447,7 +3680,7 @@
         "tags" : [ "allocation-controller" ],
         "summary" : "Update an allocation",
         "description" : "Update an allocation\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
-        "operationId" : "update",
+        "operationId" : "update_1",
         "parameters" : [ {
           "name" : "allocationId",
           "in" : "path",
@@ -3533,7 +3766,7 @@
         "tags" : [ "activity-controller" ],
         "summary" : "Update an activity",
         "description" : "Update an activity\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
-        "operationId" : "update_1",
+        "operationId" : "update_2",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -3637,6 +3870,66 @@
               "text/plain" : {
                 "schema" : {
                   "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/synchronisation/reconciliation/suspended-allocations/{prisonId}" : {
+      "get" : {
+        "tags" : [ "synchronisation-controller" ],
+        "summary" : "Retrieves suspended allocation details for the sync reconciliation",
+        "description" : "Retrieves booking numbers and counts for suspended allocations currently active in each prison\n\nRequires one of the following roles:\n* NOMIS_ACTIVITIES",
+        "operationId" : "getSuspendedAllocationReconciliation",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison id"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Reconciliation information retrieved",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AllocationReconciliationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "There was an error with the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -4666,7 +4959,7 @@
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
         "operationId" : "getDlqMessages",
         "parameters" : [ {
           "name" : "dlqName",
@@ -5575,7 +5868,7 @@
         "tags" : [ "attendance-controller" ],
         "summary" : "Get an attendance by ID",
         "description" : "Returns an attendance.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
-        "operationId" : "getAttendanceById",
+        "operationId" : "getAttendanceById_1",
         "parameters" : [ {
           "name" : "attendanceId",
           "in" : "path",
@@ -6712,7 +7005,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "type" ]
+        "required" : [ "text", "type" ]
       },
       "PrisonerDeallocationRequest" : {
         "type" : "object",
@@ -6749,7 +7042,7 @@
             "description" : "The scheduled instance id required when de-allocation is a session later today"
           }
         },
-        "required" : [ "endDate" ]
+        "required" : [ "endDate", "prisonerNumbers", "reasonCode" ]
       },
       "ErrorResponse" : {
         "type" : "object",
@@ -6856,7 +7149,8 @@
             },
             "minItems" : 1
           }
-        }
+        },
+        "required" : [ "scheduleInstanceIds" ]
       },
       "ScheduleInstancesCancelRequest" : {
         "type" : "object",
@@ -6895,7 +7189,7 @@
             "example" : true
           }
         },
-        "required" : [ "issuePayment", "reason", "username" ]
+        "required" : [ "issuePayment", "reason", "scheduleInstanceIds", "username" ]
       },
       "RetryDlqResult" : {
         "type" : "object",
@@ -7386,6 +7680,100 @@
         },
         "required" : [ "appointmentId", "prisonerNumbers" ]
       },
+      "AdvanceAttendanceUpdateRequest" : {
+        "type" : "object",
+        "description" : "Request object for creating an advance attendance record",
+        "properties" : {
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued?",
+            "example" : true
+          }
+        },
+        "required" : [ "issuePayment" ]
+      },
+      "AdvanceAttendance" : {
+        "type" : "object",
+        "description" : "An advance attendance record for a prisoner",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internally-generated ID for this attendance",
+            "example" : 123456
+          },
+          "scheduleInstanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID for scheduled instance for this attendance",
+            "example" : 123456
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prison number this attendance record is for",
+            "example" : "A1234AA"
+          },
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued for SICK, REST or OTHER",
+            "example" : true
+          },
+          "payAmount" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The amount in pence to pay the prisoner for the activity based on today's date",
+            "example" : 100
+          },
+          "recordedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the attendance was updated",
+            "example" : "2023-09-10T09:30:00"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "description" : "The person who updated the attendance",
+            "example" : "A.JONES"
+          },
+          "attendanceHistory" : {
+            "type" : "array",
+            "description" : "The attendance history records for this attendance",
+            "items" : {
+              "$ref" : "#/components/schemas/AdvanceAttendanceHistory"
+            }
+          }
+        },
+        "required" : [ "id", "prisonerNumber", "scheduleInstanceId" ]
+      },
+      "AdvanceAttendanceHistory" : {
+        "type" : "object",
+        "description" : "An advance attendance history record for a prisoner",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internally-generated ID for this attendance",
+            "example" : 123456
+          },
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued for SICK, REST or OTHER",
+            "example" : true
+          },
+          "recordedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the attendance was updated",
+            "example" : "2023-09-10T09:30:00"
+          },
+          "recordedBy" : {
+            "type" : "string",
+            "description" : "The person who updated the attendance",
+            "example" : "A.JONES"
+          }
+        },
+        "required" : [ "id", "issuePayment", "recordedBy", "recordedTime" ]
+      },
       "WaitingListSearchRequest" : {
         "type" : "object",
         "description" : "Search filters",
@@ -7676,7 +8064,7 @@
             "minItems" : 1
           }
         },
-        "required" : [ "outboundEvent" ]
+        "required" : [ "identifiers", "outboundEvent" ]
       },
       "PrisonerAllocationRequest" : {
         "type" : "object",
@@ -7720,7 +8108,7 @@
             "description" : "The scheduled instance id required when allocation starts today"
           }
         },
-        "required" : [ "startDate" ]
+        "required" : [ "prisonerNumber", "startDate" ]
       },
       "Slot" : {
         "type" : "object",
@@ -7760,12 +8148,10 @@
             "type" : "boolean"
           },
           "customStartTime" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "customEndTime" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "daysOfWeek" : {
             "type" : "array",
@@ -8045,12 +8431,19 @@
               "$ref" : "#/components/schemas/Attendance"
             }
           },
+          "advanceAttendances" : {
+            "type" : "array",
+            "description" : "The list of advance attendances. payAmount and attendanceHistory will be null.",
+            "items" : {
+              "$ref" : "#/components/schemas/AdvanceAttendance"
+            }
+          },
           "activitySchedule" : {
             "$ref" : "#/components/schemas/ActivityScheduleLite",
             "description" : "The activity schedule"
           }
         },
-        "required" : [ "activitySchedule", "attendances", "cancelled", "date", "endTime", "id", "startTime", "timeSlot" ]
+        "required" : [ "activitySchedule", "advanceAttendances", "attendances", "cancelled", "date", "endTime", "id", "startTime", "timeSlot" ]
       },
       "ActivityScheduleLite" : {
         "type" : "object",
@@ -8769,28 +9162,22 @@
             "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
           },
           "amStart" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "amFinish" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "pmStart" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "pmFinish" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "edStart" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "edFinish" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           }
         },
         "required" : [ "amFinish", "amStart", "dayOfWeek", "edFinish", "edStart", "pmFinish", "pmStart" ]
@@ -9567,7 +9954,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "bookingId", "created", "internalLocationId", "startDate", "startTime" ]
+        "required" : [ "bookingId", "categoryCode", "created", "createdBy", "internalLocationId", "prisonCode", "prisonerNumber", "startDate", "startTime" ]
       },
       "AppointmentInstance" : {
         "type" : "object",
@@ -10457,7 +10844,7 @@
             "minItems" : 1
           }
         },
-        "required" : [ "appointments", "inCell", "startDate" ]
+        "required" : [ "appointments", "categoryCode", "inCell", "prisonCode", "startDate", "tierCode" ]
       },
       "AppointmentSet" : {
         "type" : "object",
@@ -10624,7 +11011,7 @@
             "example" : 789
           }
         },
-        "required" : [ "appointmentType", "endTime", "inCell", "prisonerNumbers", "startDate", "startTime" ]
+        "required" : [ "appointmentType", "categoryCode", "endTime", "inCell", "prisonCode", "prisonerNumbers", "startDate", "startTime", "tierCode" ]
       },
       "WaitingListApplicationRequest" : {
         "type" : "object",
@@ -10670,7 +11057,7 @@
             "example" : "PENDING"
           }
         },
-        "required" : [ "activityScheduleId", "applicationDate", "status" ]
+        "required" : [ "activityScheduleId", "applicationDate", "prisonerNumber", "requestedBy", "status" ]
       },
       "UnsuspendPrisonerRequest" : {
         "type" : "object",
@@ -10700,7 +11087,7 @@
             "example" : "2023-09-10"
           }
         },
-        "required" : [ "allocationIds", "suspendUntil" ]
+        "required" : [ "allocationIds", "prisonerNumber", "suspendUntil" ]
       },
       "SuspendPrisonerRequest" : {
         "type" : "object",
@@ -10740,7 +11127,32 @@
             "example" : "SUSPENDED_WITH_PAY"
           }
         },
-        "required" : [ "allocationIds", "status", "suspendFrom" ]
+        "required" : [ "allocationIds", "prisonerNumber", "status", "suspendFrom" ]
+      },
+      "AdvanceAttendanceCreateRequest" : {
+        "type" : "object",
+        "description" : "The create request with the new advance attendance",
+        "properties" : {
+          "scheduleInstanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The scheduled instance id",
+            "example" : 123
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS ID)",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "issuePayment" : {
+            "type" : "boolean",
+            "description" : "Should payment be issued?",
+            "example" : true
+          }
+        },
+        "required" : [ "issuePayment", "prisonerNumber", "scheduleInstanceId" ]
       },
       "ActivityCreateRequest" : {
         "type" : "object",
@@ -10901,7 +11313,7 @@
             "example" : true
           }
         },
-        "required" : [ "attendanceRequired", "categoryId", "eligibilityRuleIds", "inCell", "minimumEducationLevel", "offWing", "onWing", "outsideWork", "paid", "pay", "pieceWork", "runsOnBankHoliday", "scheduleWeeks", "startDate" ]
+        "required" : [ "attendanceRequired", "categoryId", "eligibilityRuleIds", "inCell", "minimumEducationLevel", "offWing", "onWing", "outsideWork", "paid", "pay", "pieceWork", "prisonCode", "riskLevel", "runsOnBankHoliday", "scheduleWeeks", "slots", "startDate", "summary", "tierCode" ]
       },
       "ActivityMinimumEducationLevelCreateRequest" : {
         "type" : "object",
@@ -10987,7 +11399,7 @@
             "example" : "2022-12-23"
           }
         },
-        "required" : [ "payBandId" ]
+        "required" : [ "incentiveLevel", "incentiveNomisCode", "payBandId" ]
       },
       "Activity" : {
         "type" : "object",
@@ -11452,7 +11864,8 @@
             "example" : "Low",
             "minLength" : 1
           }
-        }
+        },
+        "required" : [ "alias" ]
       },
       "AppointmentUpdateRequest" : {
         "type" : "object",
@@ -11696,7 +12109,7 @@
           },
           "removeEndDate" : {
             "type" : "boolean",
-            "default" : "false",
+            "default" : false,
             "description" : "A flag to indicate that the end date is to be removed",
             "example" : true
           },
@@ -11706,6 +12119,45 @@
             "example" : true
           }
         }
+      },
+      "AllocationReconciliationResponse" : {
+        "type" : "object",
+        "description" : "A list of allocation counts for each booking in the prison",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code",
+            "example" : "BXI"
+          },
+          "bookings" : {
+            "type" : "array",
+            "description" : "A list of bookings and the number of active allocations for each",
+            "example" : "{ [ \"bookingId\": 12345, \"count\": 2 ] }",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCount"
+            }
+          }
+        },
+        "required" : [ "bookings", "prisonCode" ]
+      },
+      "BookingCount" : {
+        "type" : "object",
+        "description" : "The count for a booking ID",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking ID",
+            "example" : 12345
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count for the booking ID",
+            "example" : 2
+          }
+        },
+        "required" : [ "bookingId", "count" ]
       },
       "AttendanceReconciliationResponse" : {
         "type" : "object",
@@ -11732,45 +12184,6 @@
           }
         },
         "required" : [ "bookings", "date", "prisonCode" ]
-      },
-      "BookingCount" : {
-        "type" : "object",
-        "description" : "The count for a booking ID",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking ID",
-            "example" : 12345
-          },
-          "count" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The count for the booking ID",
-            "example" : 2
-          }
-        },
-        "required" : [ "bookingId", "count" ]
-      },
-      "AllocationReconciliationResponse" : {
-        "type" : "object",
-        "description" : "A list of allocation counts for each booking in the prison",
-        "properties" : {
-          "prisonCode" : {
-            "type" : "string",
-            "description" : "The prison code",
-            "example" : "BXI"
-          },
-          "bookings" : {
-            "type" : "array",
-            "description" : "A list of bookings and the number of active allocations for each",
-            "example" : "{ [ \"bookingId\": 12345, \"count\": 2 ] }",
-            "items" : {
-              "$ref" : "#/components/schemas/BookingCount"
-            }
-          }
-        },
-        "required" : [ "bookings", "prisonCode" ]
       },
       "AttendanceSync" : {
         "type" : "object",
@@ -11859,7 +12272,6 @@
         "type" : "object",
         "properties" : {
           "content" : {
-            "type" : "object",
             "description" : "The content of the subject access request response"
           }
         },
@@ -12157,7 +12569,7 @@
           "suitable" : {
             "type" : "boolean",
             "description" : "The prisoner's suitability",
-            "example" : "True"
+            "example" : true
           },
           "education" : {
             "type" : "array",
@@ -12176,7 +12588,7 @@
           "suitable" : {
             "type" : "boolean",
             "description" : "The prisoner's suitability",
-            "example" : "True"
+            "example" : true
           },
           "incentiveLevel" : {
             "type" : "string",
@@ -12193,7 +12605,7 @@
           "suitable" : {
             "type" : "boolean",
             "description" : "The prisoner's suitability",
-            "example" : "True"
+            "example" : true
           },
           "earliestReleaseDate" : {
             "$ref" : "#/components/schemas/EarliestReleaseDate",
@@ -12236,7 +12648,7 @@
           "suitable" : {
             "type" : "boolean",
             "description" : "The prisoner's suitability",
-            "example" : "True"
+            "example" : true
           },
           "riskLevel" : {
             "type" : "string",
@@ -12633,9 +13045,7 @@
         "properties" : {
           "body" : {
             "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
+            "additionalProperties" : { }
           },
           "messageId" : {
             "type" : "string"
@@ -13069,13 +13479,11 @@
         "properties" : {
           "startTime" : {
             "type" : "string",
-            "description" : "the activity start time",
-            "example" : "14:30:00"
+            "description" : "the activity start time"
           },
           "endTime" : {
             "type" : "string",
-            "description" : "the activity end time",
-            "example" : "14:30:00"
+            "description" : "the activity end time"
           },
           "internalLocation" : {
             "type" : "string",
@@ -13167,12 +13575,10 @@
             "format" : "date"
           },
           "startTime" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           },
           "endTime" : {
-            "type" : "string",
-            "example" : "14:30:00"
+            "type" : "string"
           }
         },
         "required" : [ "appointmentAttendeeId", "appointmentId", "appointmentName", "bookingId", "endTime", "prisonerNumber", "startDate", "startTime" ]
