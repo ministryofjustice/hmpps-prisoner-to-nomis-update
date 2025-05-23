@@ -20,21 +20,14 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
-import java.time.LocalDateTime
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -2204,55 +2197,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   // *************************************************** Court Sentencing **********************************************
 
-  fun stubCourtCaseCreate(offenderNo: String, response: CreateCourtCaseResponse) {
-    stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper().writeValueAsString(response))
-          .withStatus(201),
-      ),
-    )
-  }
-
-  fun stubCourtCaseCreateWithError(offenderNo: String, status: Int = 500) {
-    stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubCourtCaseCreateWithErrorFollowedBySlowSuccess(offenderNo: String, response: String) {
-    stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases")
-        .inScenario("Retry NOMIS Court Case Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS Court Case Success"),
-    )
-
-    stubFor(
-      post("/prisoners/$offenderNo/sentencing/court-cases")
-        .inScenario("Retry NOMIS Court Case Scenario")
-        .whenScenarioStateIs("Cause NOMIS Court Case Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(response)
-            .withStatus(200)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
   fun stubCourtAppearanceCreate(offenderNo: String, courtCaseId: Long, response: String) {
     stubFor(
       post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances").willReturn(
@@ -2334,65 +2278,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(200),
       ),
-    )
-  }
-
-  fun stubGetCourtCase(
-    caseId: Long,
-    bookingId: Long = 2,
-    offenderNo: String = "G4803UT",
-    courtId: String = "BATHMC",
-    caseInfoNumber: String? = "caseRef1",
-    caseIndentifiers: List<CaseIdentifierResponse> = emptyList(),
-    courtEvents: List<CourtEventResponse> = emptyList(),
-    combinedCaseId: Long? = null,
-    caseStatus: uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Active"),
-    beginDate: LocalDate = LocalDate.now(),
-    response: CourtCaseResponse = CourtCaseResponse(
-      bookingId = bookingId,
-      id = caseId,
-      offenderNo = offenderNo,
-      caseSequence = 22,
-      caseStatus = caseStatus,
-      legalCaseType = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Adult"),
-      courtId = "MDI",
-      courtEvents = courtEvents,
-      offenderCharges = emptyList(),
-      createdDateTime = LocalDateTime.now(),
-      createdByUsername = "Q1251T",
-      lidsCaseNumber = 1,
-      primaryCaseInfoNumber = "caseRef1",
-      caseInfoNumbers = caseIndentifiers,
-      combinedCaseId = combinedCaseId,
-      beginDate = beginDate,
-      sentences = emptyList(),
-    ),
-  ) {
-    stubFor(
-      get(
-        urlPathEqualTo("/court-cases/$caseId"),
-      )
-        .willReturn(
-          aResponse().withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(objectMapper().writeValueAsString(response)),
-        ),
-    )
-  }
-
-  fun stubGetCourtCasesByOffenderNo(
-    offenderNo: String = "G4803UT",
-    response: List<CourtCaseResponse> = emptyList(),
-  ) {
-    stubFor(
-      get(
-        urlPathEqualTo("/prisoners/$offenderNo/sentencing/court-cases"),
-      )
-        .willReturn(
-          aResponse().withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.OK.value())
-            .withBody(objectMapper().writeValueAsString(response)),
-        ),
     )
   }
 

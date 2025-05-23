@@ -12,6 +12,7 @@ import org.mockito.ArgumentMatchers
 import org.mockito.kotlin.any
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
@@ -55,6 +56,9 @@ private const val OUTCOME_1 = "4001"
 private const val OUTCOME_2 = "3001"
 
 class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
+  @Autowired
+  private lateinit var courtSentencingNomisApi: CourtSentencingNomisApiMockServer
+
   @DisplayName("GET /court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   @Nested
   inner class ManualCaseReconciliationByDpsCaseId {
@@ -113,7 +117,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchFound {
         @Test
         fun `will return a mismatch for case`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             caseStatus = CodeDescription("I", "Inactive"),
             beginDate = LocalDate.parse("2024-01-02"),
@@ -143,7 +147,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchNotFound {
         @Test
         fun `will return a response to indicate no mismatch`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             beginDate = LocalDate.parse("2024-01-02"),
             courtEvents = listOf(
@@ -242,7 +246,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchFound {
         @Test
         fun `will return a mismatch when appearance outcome is different`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             beginDate = LocalDate.parse("2024-01-01"),
             courtEvents = listOf(
@@ -297,7 +301,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will return a mismatch when a charge (court event charge) date is different`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             beginDate = LocalDate.parse("2024-01-01"),
             courtEvents = listOf(
@@ -338,7 +342,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will return a mismatch when number of appearances differ`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             beginDate = LocalDate.parse("2024-01-01"),
             courtEvents = listOf(
@@ -367,7 +371,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchNotFound {
         @Test
         fun `will return a response to indicate no mismatch`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             caseStatus = CodeDescription("A", "Active"),
             beginDate = LocalDate.parse("2024-01-01"),
@@ -445,7 +449,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           dpsCourtCaseId = DPS_COURT_CASE_2_ID,
         )
 
-        nomisApi.stubGetCourtCasesByOffenderNo(
+        courtSentencingNomisApi.stubGetCourtCasesByOffenderNo(
           offenderNo = OFFENDER_NO,
           response = listOf(
             nomisCaseResponse(
@@ -507,7 +511,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchFound {
         @Test
         fun `will return a mismatch when appearance outcome is different`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             beginDate = LocalDate.parse("2024-01-01"),
             courtEvents = listOf(
@@ -535,7 +539,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           )
 
           // second case is not a mismatch
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_2_ID,
             beginDate = LocalDate.parse("2024-01-01"),
             courtEvents = listOf(
@@ -574,7 +578,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       inner class MismatchNotFound {
         @Test
         fun `will return a response to indicate no mismatch`() {
-          nomisApi.stubGetCourtCase(
+          courtSentencingNomisApi.stubGetCourtCase(
             caseId = NOMIS_COURT_CASE_ID,
             caseStatus = CodeDescription("A", "Active"),
             beginDate = LocalDate.parse("2024-01-01"),
