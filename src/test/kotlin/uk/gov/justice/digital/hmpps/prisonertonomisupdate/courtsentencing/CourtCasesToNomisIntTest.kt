@@ -21,6 +21,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
@@ -77,6 +78,9 @@ private const val CASE_REFERENCE = "ABC4999"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
+  @Autowired
+  private lateinit var courtSentencingNomisApi: CourtSentencingNomisApiMockServer
+
   @Nested
   inner class CreateCourtCase {
     @Nested
@@ -87,7 +91,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           legacyCourtCaseResponse(),
         )
-        NomisApiExtension.nomisApi.stubCourtCaseCreate(
+        courtSentencingNomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
           CreateCourtCaseResponse(
             id = NOMIS_COURT_CASE_ID_FOR_CREATION,
@@ -255,7 +259,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           legacyCourtCaseResponse(),
         )
-        NomisApiExtension.nomisApi.stubCourtCaseCreate(
+        courtSentencingNomisApi.stubCourtCaseCreate(
           OFFENDER_NO,
           CreateCourtCaseResponse(
             id = NOMIS_COURT_CASE_ID_FOR_CREATION,
