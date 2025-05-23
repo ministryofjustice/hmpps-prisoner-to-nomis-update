@@ -256,4 +256,5 @@ private fun newScheduledInstance() = ActivityScheduleInstance(
       paid = true,
     ),
   ),
+  advanceAttendances = listOf(),
 )
