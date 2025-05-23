@@ -775,7 +775,8 @@ internal class ActivitiesApiServiceTest {
     ],
     "startDate": "2023-04-20",
     "endDate": null
-  }
+  },
+  "advanceAttendances": []
 }
         """.trimIndent(),
       )
