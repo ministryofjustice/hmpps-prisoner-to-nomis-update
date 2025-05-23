@@ -177,7 +177,8 @@ hmpps.sqs:
         "sentence.deleted",
         "sentence.updated",
         "recall.inserted",
-        "recall.updated"
+        "recall.updated",
+        "recall.deleted"
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
