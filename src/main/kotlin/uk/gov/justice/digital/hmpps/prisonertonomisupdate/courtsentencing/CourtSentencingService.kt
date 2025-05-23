@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
+import kotlin.collections.set
 
 @Service
 class CourtSentencingService(
@@ -811,29 +812,20 @@ class CourtSentencingService(
         val recall = courtSentencingApiService.getRecall(recallId).also {
           telemetryMap["recallType"] = it.recallType.name
         }
-        val sentenceMappings = courtCaseMappingService.getMappingsGivenSentenceIds(sentenceIds).also { mappings ->
-          telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
-          // only expecting one but theoretically can deal with multiple bookings
-          telemetryMap["nomisBookingId"] = mappings.map { it.nomisBookingId }.toSortedSet().joinToString()
-        }
-
-        val dpsSentences = courtSentencingApiService.getSentences(LegacySearchSentence(recallInsertedEvent.additionalInformation.sentenceIds.map { UUID.fromString(it) })).also {
-          telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
-        }
+        val sentenceAndMappings = getSentenceAndMappings(sentenceIds).also { telemetryMap.toTelemetry(it) }
 
         nomisApiService.recallSentences(
           offenderNo,
           ConvertToRecallRequest(
-            sentences = dpsSentences.map { dpsSentence ->
+            sentences = sentenceAndMappings.map { sentence ->
               RecallSentenceDetails(
-                sentenceId = sentenceMappings.find { it.dpsSentenceId == dpsSentence.lifetimeUuid.toString() }!!.let { mapping ->
-                  SentenceId(
-                    offenderBookingId = mapping.nomisBookingId,
-                    sentenceSequence = mapping.nomisSentenceSequence.toLong(),
-                  )
-                },
-                sentenceCategory = dpsSentence.sentenceCategory,
-                sentenceCalcType = dpsSentence.sentenceCalcType,
+                sentenceId =
+                SentenceId(
+                  offenderBookingId = sentence.nomisBookingId,
+                  sentenceSequence = sentence.nomisSentenceSequence,
+                ),
+                sentenceCategory = sentence.dpsSentence.sentenceCategory,
+                sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
               )
             },
             returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
@@ -878,29 +870,20 @@ class CourtSentencingService(
           telemetryMap["dpsSentenceIds"] = it.sentenceIds.joinToString()
         }
         val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
-        val sentenceMappings = courtCaseMappingService.getMappingsGivenSentenceIds(dpsSentenceIds).also { mappings ->
-          telemetryMap["nomisSentenceSeq"] = mappings.joinToString { it.nomisSentenceSequence.toString() }
-          telemetryMap["nomisBookingId"] = mappings.map { it.nomisBookingId }.toSortedSet().joinToString()
-        }
-
-        val dpsSentences = courtSentencingApiService.getSentences(LegacySearchSentence(dpsSentenceIds.map { UUID.fromString(it) })).also {
-          telemetryMap["dpsSentenceTypes"] = it.map { sentence -> sentence.sentenceCalcType }.toSortedSet().joinToString()
-        }
-
+        val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
         // for now call the same endpoint as create until we can establish updating and creating is exactly the same
         nomisApiService.recallSentences(
           offenderNo,
           ConvertToRecallRequest(
-            sentences = dpsSentences.map { dpsSentence ->
+            sentences = sentenceAndMappings.map { sentence ->
               RecallSentenceDetails(
-                sentenceId = sentenceMappings.find { it.dpsSentenceId == dpsSentence.lifetimeUuid.toString() }!!.let { mapping ->
-                  SentenceId(
-                    offenderBookingId = mapping.nomisBookingId,
-                    sentenceSequence = mapping.nomisSentenceSequence.toLong(),
-                  )
-                },
-                sentenceCategory = dpsSentence.sentenceCategory,
-                sentenceCalcType = dpsSentence.sentenceCalcType,
+                sentenceId =
+                SentenceId(
+                  offenderBookingId = sentence.nomisBookingId,
+                  sentenceSequence = sentence.nomisSentenceSequence,
+                ),
+                sentenceCategory = sentence.dpsSentence.sentenceCategory,
+                sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
               )
             },
             returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
@@ -910,7 +893,6 @@ class CourtSentencingService(
                 recallLength = recall.recallType.toDays()!!,
               )
             },
-
           ),
         )
 
@@ -926,6 +908,113 @@ class CourtSentencingService(
       telemetryMap["reason"] = "Recall updated in NOMIS"
       telemetryClient.trackEvent("recall-updated-ignored", telemetryMap, null)
     }
+  }
+  suspend fun deleteRecallSentences(recallDeletedEvent: RecallEvent) {
+    val source = recallDeletedEvent.additionalInformation.source
+    val recallId = recallDeletedEvent.additionalInformation.recallId
+    val previousRecallId = recallDeletedEvent.additionalInformation.previousRecallId
+    val offenderNo: String = recallDeletedEvent.personReference.identifiers.first { it.type == "NOMS" }.value
+    val telemetryMap = mutableMapOf(
+      "dpsRecallId" to recallId,
+      "offenderNo" to offenderNo,
+      "dpsSentenceIds" to recallDeletedEvent.additionalInformation.sentenceIds.joinToString(),
+    )
+
+    if (isDpsCreated(source)) {
+      runCatching {
+        if (previousRecallId != null) {
+          telemetryMap["dpsPreviousRecallId"] = previousRecallId
+          val recall = courtSentencingApiService.getRecall(previousRecallId).also {
+            telemetryMap["recallType"] = it.recallType.name
+            telemetryMap["dpsSentenceIds"] = it.sentenceIds.joinToString()
+          }
+          val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
+          val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
+          // for now call the same endpoint as create until we can establish reverting to previous recall and creating is exactly the same
+          nomisApiService.recallSentences(
+            offenderNo,
+            ConvertToRecallRequest(
+              sentences = sentenceAndMappings.map { sentence ->
+                RecallSentenceDetails(
+                  sentenceId =
+                  SentenceId(
+                    offenderBookingId = sentence.nomisBookingId,
+                    sentenceSequence = sentence.nomisSentenceSequence,
+                  ),
+                  sentenceCategory = sentence.dpsSentence.sentenceCategory,
+                  sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                )
+              },
+              returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
+                ReturnToCustodyRequest(
+                  returnToCustodyDate = it,
+                  enteredByStaffUsername = recall.recallBy,
+                  recallLength = recall.recallType.toDays()!!,
+                )
+              },
+            ),
+          )
+        } else {
+          val dpsSentenceIds = recallDeletedEvent.additionalInformation.sentenceIds
+          val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
+          // for now call the same endpoint as create until we can establish reverting to the previous sentence and creating is exactly the same
+          // though feels like endpoint name doesn't mke sense even though it would work
+          nomisApiService.recallSentences(
+            offenderNo,
+            ConvertToRecallRequest(
+              sentences = sentenceAndMappings.map { sentence ->
+                RecallSentenceDetails(
+                  sentenceId =
+                  SentenceId(
+                    offenderBookingId = sentence.nomisBookingId,
+                    sentenceSequence = sentence.nomisSentenceSequence,
+                  ),
+                  sentenceCategory = sentence.dpsSentence.sentenceCategory,
+                  sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                )
+              },
+              // TODO: feels like we we do need a different DPS endpoint just so we can explicit;y remove the return to custody date
+              returnToCustody = null,
+            ),
+          )
+        }
+
+        telemetryClient.trackEvent(
+          "recall-deleted-success",
+          telemetryMap,
+        )
+      }.onFailure { e ->
+        telemetryClient.trackEvent("recall-deleted-failed", telemetryMap, null)
+        throw e
+      }
+    } else {
+      telemetryMap["reason"] = "Recall deleted in NOMIS"
+      telemetryClient.trackEvent("recall-deleted-ignored", telemetryMap, null)
+    }
+  }
+
+  data class DpsSentenceWithNomisKey(
+    val dpsSentence: LegacySentence,
+    val nomisBookingId: Long,
+    val nomisSentenceSequence: Long,
+  )
+
+  private suspend fun getSentenceAndMappings(dpsSentenceIds: List<String>): List<DpsSentenceWithNomisKey> = courtSentencingApiService.getSentences(LegacySearchSentence(dpsSentenceIds.map { UUID.fromString(it) })).let { dpsSentences ->
+    val mappings = courtCaseMappingService.getMappingsGivenSentenceIds(dpsSentenceIds)
+    dpsSentences.map { sentence ->
+      val mapping = mappings.find { it.dpsSentenceId == sentence.lifetimeUuid.toString() } ?: throw IllegalStateException("Not all sentences have a mapping: ${mappings.map { it.dpsSentenceId }}")
+      DpsSentenceWithNomisKey(
+        dpsSentence = sentence,
+        nomisBookingId = mapping.nomisBookingId,
+        nomisSentenceSequence = mapping.nomisSentenceSequence.toLong(),
+      )
+    }
+  }
+
+  private fun MutableMap<String, String>.toTelemetry(sentence: List<DpsSentenceWithNomisKey>) {
+    this["nomisSentenceSeq"] = sentence.joinToString { it.nomisSentenceSequence.toString() }
+    this["nomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
+    this["dpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
   }
 
   private fun LegacyRecall.RecallType.toDays(): Int? = when (this) {
