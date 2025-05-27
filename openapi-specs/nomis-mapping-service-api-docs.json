@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-14.6365.e2e00d5"
+    "version" : "2025-05-23.7.e810778"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2216,7 +2216,7 @@
                 "items" : {
                   "type" : "string",
                   "description" : "List of DPS sentence IDs",
-                  "example" : "[\"ce53d679-dec3-4cd2-9bc7-35037c78c4b7\",\"fd246c2e-146b-47a9-9bda-14c279cd1708\"]"
+                  "example" : [ "ce53d679-dec3-4cd2-9bc7-35037c78c4b7", "fd246c2e-146b-47a9-9bda-14c279cd1708" ]
                 }
               }
             }
@@ -4676,7 +4676,7 @@
           "schema" : {
             "type" : "string",
             "description" : "VSIP Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -5296,7 +5296,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Sentence Adjustment Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -5346,7 +5346,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Sentence Adjustment Id (from sentencing domain)",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -5382,7 +5382,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS Punishment Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -5432,7 +5432,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS Punishment Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -5937,7 +5937,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS Location id",
-            "example" : "22345678"
+            "example" : 22345678
           },
           "example" : 22345678
         } ],
@@ -6173,7 +6173,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS Incident id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -6223,7 +6223,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS Incident Id",
-            "example" : "4321"
+            "example" : 4321
           },
           "example" : 4321
         } ],
@@ -7420,7 +7420,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS CSIP Report Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -7472,7 +7472,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS CSIP Id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -8633,7 +8633,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS  web id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -8693,7 +8693,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS web address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -8847,7 +8847,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS  phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -8907,7 +8907,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9120,7 +9120,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS organisation id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9180,7 +9180,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS organisation id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9334,7 +9334,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS  email id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9504,7 +9504,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9564,7 +9564,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9718,7 +9718,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS address phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9843,7 +9843,7 @@
           "schema" : {
             "type" : "string",
             "description" : "CPR phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -9967,7 +9967,7 @@
           "schema" : {
             "type" : "string",
             "description" : "CPR core person id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10151,7 +10151,7 @@
           "schema" : {
             "type" : "string",
             "description" : "CPR email address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10276,7 +10276,7 @@
           "schema" : {
             "type" : "string",
             "description" : "CPR address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10515,7 +10515,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10577,7 +10577,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10806,7 +10806,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -10866,7 +10866,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11020,7 +11020,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact restriction id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11214,7 +11214,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact identifier id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11408,7 +11408,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact employment id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11578,7 +11578,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact email id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11748,7 +11748,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS prisoner contact id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -11918,7 +11918,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS prisoner contact restriction id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -12088,7 +12088,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS contact address id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -13143,7 +13143,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Adjudication number",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -13927,7 +13927,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS CSIP Id",
-            "example" : "4321"
+            "example" : 4321
           },
           "example" : 4321
         } ],
@@ -13963,7 +13963,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS CSIP Id",
-            "example" : "4321"
+            "example" : 4321
           },
           "example" : 4321
         } ],
@@ -14358,7 +14358,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS email id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -14404,7 +14404,7 @@
           "schema" : {
             "type" : "string",
             "description" : "DPS phone id",
-            "example" : "12345"
+            "example" : 12345
           },
           "example" : 12345
         } ],
@@ -15205,12 +15205,8 @@
       "DuplicateErrorContentObject" : {
         "type" : "object",
         "properties" : {
-          "duplicate" : {
-            "type" : "object"
-          },
-          "existing" : {
-            "type" : "object"
-          }
+          "duplicate" : { },
+          "existing" : { }
         },
         "required" : [ "duplicate", "existing" ]
       },
@@ -17277,6 +17273,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17293,12 +17295,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17389,6 +17385,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17405,12 +17407,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17478,6 +17474,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17494,12 +17496,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17582,6 +17578,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17598,12 +17600,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17682,6 +17678,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17698,12 +17700,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17728,6 +17724,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17744,12 +17746,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17802,6 +17798,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17818,12 +17820,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17870,6 +17866,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17886,12 +17888,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
