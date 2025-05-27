@@ -314,20 +314,21 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
         ).build(),
     ).get()
   }
+}
 
-  fun buildVisitApiDtoJsonResponse(
-    visitId: String = "1",
-    prisonerId: String = "A32323Y",
-    outcome: String? = null,
-    visitRoom: String = "Main visits room",
-    visitRestriction: String = "OPEN",
-    startTimestamp: String = "2019-12-02T09:00:00",
-    endTimestamp: String = "2019-12-02T10:00:00",
-    visitors: List<Long> = listOf(543524, 344444, 655656),
-  ): String {
-    val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
+fun buildVisitApiDtoJsonResponse(
+  visitId: String = "1",
+  prisonerId: String = "A32323Y",
+  outcome: String? = null,
+  visitRoom: String = "Main visits room",
+  visitRestriction: String = "OPEN",
+  startTimestamp: String = "2019-12-02T09:00:00",
+  endTimestamp: String = "2019-12-02T10:00:00",
+  visitors: List<Long> = listOf(543524, 344444, 655656),
+): String {
+  val outcomeString = outcome?.let { "\"outcomeStatus\": \"$it\"," } ?: ""
 
-    return """
+  return """
     {
       "reference": "$visitId",
       "prisonId": "MDI",
@@ -341,6 +342,5 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
       "visitStatus": "BOOKED",
       "visitors": [ ${visitors.joinToString(",") { "{\"nomisPersonId\": $it}" }} ]
     }
-    """.trimIndent()
-  }
+  """.trimIndent()
 }

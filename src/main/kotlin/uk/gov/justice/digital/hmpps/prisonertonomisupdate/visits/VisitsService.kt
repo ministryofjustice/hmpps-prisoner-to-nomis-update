@@ -28,6 +28,15 @@ class VisitsService(
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
 
+  suspend fun resynchronisePrisonerVisit(offenderNo: String, visitId: String) = createVisit(
+    VisitBookedEvent(
+      additionalInformation = VisitBookedEvent.VisitInformation(
+        reference = visitId,
+      ),
+      occurredAt = OffsetDateTime.now(),
+      prisonerId = offenderNo,
+    ),
+  )
   suspend fun createVisit(visitBookedEvent: VisitBookedEvent) {
     synchronise {
       name = "visit"
@@ -49,7 +58,7 @@ class VisitsService(
             "endTime" to visit.endTimestamp.format(DateTimeFormatter.ISO_TIME),
           )
 
-          kotlin.runCatching {
+          runCatching {
             nomisApiService.createVisit(
               CreateVisitDto(
                 offenderNo = visit.prisonerId,
