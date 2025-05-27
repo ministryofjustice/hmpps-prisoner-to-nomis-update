@@ -35,8 +35,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_CODE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.COURT_CHARGE_1_OFFENCE_DATE
@@ -328,7 +332,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtCaseHasBeenDeletedInDPS {
       @BeforeEach
       fun setUp() {
-        NomisApiExtension.nomisApi.stubCourtCaseDelete(
+        courtSentencingNomisApi.stubCourtCaseDelete(
           offenderNo = OFFENDER_NO,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
 
@@ -441,7 +445,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtCharge3Id = DPS_COURT_CHARGE_3_ID,
           courtCharge4Id = DPS_COURT_CHARGE_4_ID,
         )
-        NomisApiExtension.nomisApi.stubCourtAppearanceCreate(
+        courtSentencingNomisApi.stubCourtAppearanceCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtAppearanceCreateResponse(),
@@ -611,7 +615,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtCharge3Id = DPS_COURT_CHARGE_3_ID,
           courtCharge4Id = DPS_COURT_CHARGE_4_ID,
         )
-        NomisApiExtension.nomisApi.stubCourtAppearanceCreate(
+        courtSentencingNomisApi.stubCourtAppearanceCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtAppearanceCreateResponse(),
@@ -699,7 +703,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           courtCharge1Id = DPS_COURT_CHARGE_ID,
         )
-        NomisApiExtension.nomisApi.stubCourtAppearanceCreate(
+        courtSentencingNomisApi.stubCourtAppearanceCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtAppearanceCreateResponse(),
@@ -778,7 +782,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtCharge3Id = DPS_COURT_CHARGE_3_ID,
           courtCharge4Id = DPS_COURT_CHARGE_4_ID,
         )
-        NomisApiExtension.nomisApi.stubCourtAppearanceUpdate(
+        courtSentencingNomisApi.stubCourtAppearanceUpdate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           NOMIS_COURT_APPEARANCE_ID,
@@ -933,7 +937,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtAppearanceHasBeenDeletedInDPS {
       @BeforeEach
       fun setUp() {
-        NomisApiExtension.nomisApi.stubCourtAppearanceDelete(
+        courtSentencingNomisApi.stubCourtAppearanceDelete(
           offenderNo = OFFENDER_NO,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisEventId = NOMIS_COURT_APPEARANCE_ID,
@@ -1046,7 +1050,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
-        NomisApiExtension.nomisApi.stubCourtChargeCreate(
+        courtSentencingNomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtChargeCreateResponse(),
@@ -1161,7 +1165,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
-        NomisApiExtension.nomisApi.stubCourtChargeCreate(
+        courtSentencingNomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisCourtChargeCreateResponse(),
@@ -1261,7 +1265,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
-        NomisApiExtension.nomisApi.stubCourtChargeUpdate(
+        courtSentencingNomisApi.stubCourtChargeUpdate(
           offenderChargeId = NOMIS_COURT_CHARGE_ID,
           offenderNo = OFFENDER_NO,
           courtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
@@ -1406,7 +1410,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           chargeUuid = DPS_COURT_CHARGE_ID,
           startDate = LocalDate.of(2024, 1, 1),
         )
-        NomisApiExtension.nomisApi.stubSentenceCreate(
+        courtSentencingNomisApi.stubSentenceCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisSentenceCreateResponseWithOneTerm(),
@@ -1549,7 +1553,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           startDate = LocalDate.of(2024, 1, 1),
           consecutiveToLifetimeUuid = UUID.fromString(DPS_SENTENCE_ID_2),
         )
-        NomisApiExtension.nomisApi.stubSentenceCreate(
+        courtSentencingNomisApi.stubSentenceCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisSentenceCreateResponseWithOneTerm(),
@@ -1697,7 +1701,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           caseID = COURT_CASE_ID_FOR_CREATION,
           chargeUuid = DPS_COURT_CHARGE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceCreate(
+        courtSentencingNomisApi.stubSentenceCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisSentenceCreateResponseWithOneTerm(),
@@ -1789,7 +1793,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           caseID = COURT_CASE_ID_FOR_CREATION,
           chargeUuid = DPS_COURT_CHARGE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceCreate(
+        courtSentencingNomisApi.stubSentenceCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           nomisSentenceCreateResponseWithOneTerm(),
@@ -1869,7 +1873,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           caseID = COURT_CASE_ID_FOR_CREATION,
           chargeUuid = DPS_COURT_CHARGE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceUpdate(
+        courtSentencingNomisApi.stubSentenceUpdate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2025,7 +2029,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenSentenceHasBeenDeletedInDPS {
       @BeforeEach
       fun setUp() {
-        NomisApiExtension.nomisApi.stubSentenceDelete(
+        courtSentencingNomisApi.stubSentenceDelete(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2140,7 +2144,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           chargeId = DPS_COURT_CHARGE_ID,
           appearanceId = DPS_COURT_APPEARANCE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceTermCreate(
+        courtSentencingNomisApi.stubSentenceTermCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2319,7 +2323,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           chargeId = DPS_COURT_CHARGE_ID,
           appearanceId = DPS_COURT_APPEARANCE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceTermCreate(
+        courtSentencingNomisApi.stubSentenceTermCreate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2446,7 +2450,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           chargeId = DPS_COURT_CHARGE_ID,
           appearanceId = DPS_COURT_APPEARANCE_ID,
         )
-        NomisApiExtension.nomisApi.stubSentenceTermUpdate(
+        courtSentencingNomisApi.stubSentenceTermUpdate(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2544,7 +2548,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenPeriodLengthHasBeenDeletedInDPS {
       @BeforeEach
       fun setUp() {
-        NomisApiExtension.nomisApi.stubSentenceTermDelete(
+        courtSentencingNomisApi.stubSentenceTermDelete(
           offenderNo = OFFENDER_NO,
           caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
           sentenceSeq = NOMIS_SENTENCE_SEQ,
@@ -2630,7 +2634,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtAppearanceHasBeenUpdatedInDPS {
       @BeforeEach
       fun setUp() {
-        NomisApiExtension.nomisApi.stubCaseReferenceRefresh(
+        courtSentencingNomisApi.stubCaseReferenceRefresh(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
@@ -2781,7 +2785,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
 
-        NomisApiExtension.nomisApi.stubRecallSentences(OFFENDER_NO)
+        courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
         publishRecallInsertedDomainEvent(
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -2932,7 +2936,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
 
-        NomisApiExtension.nomisApi.stubRecallSentences(OFFENDER_NO)
+        courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
         publishRecallUpdatedDomainEvent(
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -3095,7 +3099,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          NomisApiExtension.nomisApi.stubRecallSentences(OFFENDER_NO)
+          courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
             source = "DPS",
             previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -3212,7 +3216,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          NomisApiExtension.nomisApi.stubRecallSentences(OFFENDER_NO)
+          courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
             source = "DPS",
             previousRecallId = null,
@@ -3721,26 +3725,19 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     source: String = "DPS",
   ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "previousRecallId": ${previousRecallId?.let {"\"$it\""}},  "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
-  fun nomisCourtAppearanceCreateResponse(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
-      |"courtEventChargesIds": [] }
-  """.trimMargin()
+  fun nomisCourtAppearanceCreateResponse(): CreateCourtAppearanceResponse = CreateCourtAppearanceResponse(id = NOMIS_COURT_APPEARANCE_ID, courtEventChargesIds = emptyList())
 
-  fun nomisCourtAppearanceUpdateResponseWithTwoDeletedCharges(): String = """{ "id": $NOMIS_COURT_APPEARANCE_ID, 
-      |"createdCourtEventChargesIds": [],
-      |"deletedOffenderChargesIds": [
-      |{"offenderChargeId": $NOMIS_COURT_CHARGE_5_ID },
-      |{"offenderChargeId": $NOMIS_COURT_CHARGE_6_ID }
-      |]
-      | }
-  """.trimMargin()
+  fun nomisCourtAppearanceUpdateResponseWithTwoDeletedCharges(): UpdateCourtAppearanceResponse = UpdateCourtAppearanceResponse(
+    createdCourtEventChargesIds = emptyList(),
+    deletedOffenderChargesIds = listOf(OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_5_ID), OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_6_ID)),
+  )
 
-  fun nomisSentenceCreateResponseWithOneTerm(): String = """{ "bookingId": $NOMIS_BOOKING_ID, 
-      |"sentenceSeq": $NOMIS_SENTENCE_SEQ,
-      |"termSeq": $NOMIS_TERM_SEQ
-      | }
-  """.trimMargin()
+  fun nomisSentenceCreateResponseWithOneTerm(): CreateSentenceResponse = CreateSentenceResponse(
+    sentenceSeq = NOMIS_SENTENCE_SEQ,
+    bookingId = NOMIS_BOOKING_ID,
+  )
 
-  fun nomisCourtChargeCreateResponse(): String = """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }"""
+  fun nomisCourtChargeCreateResponse(): OffenderChargeIdResponse = OffenderChargeIdResponse(NOMIS_COURT_CHARGE_ID)
 
   fun legacyCourtCaseResponse() = LegacyCourtCase(
     courtCaseUuid = COURT_CASE_ID_FOR_CREATION,
