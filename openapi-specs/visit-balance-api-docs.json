@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-02.349.ea0ab94"
+    "version" : "2025-05-23.381.d3a588d"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -317,7 +317,7 @@
           "schema" : {
             "type" : "string",
             "description" : "adjustmentId",
-            "example" : "1234"
+            "example" : 1234
           },
           "example" : 1234
         } ],
@@ -610,7 +610,7 @@
           "changeLogType" : {
             "type" : "string",
             "description" : "type of change applied",
-            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS" ],
+            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS", "ALLOCATION_USED_BY_VISIT", "ALLOCATION_REFUNDED_BY_VISIT_CANCELLED" ],
             "example" : "SYNC"
           },
           "userId" : {
@@ -642,9 +642,7 @@
         "properties" : {
           "body" : {
             "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
+            "additionalProperties" : { }
           },
           "messageId" : {
             "type" : "string"
