@@ -4,7 +4,6 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
@@ -14,7 +13,7 @@ import java.time.LocalDate
 class CourtSentencingReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsApiService: CourtSentencingApiService,
-  private val nomisApiService: NomisApiService,
+  private val nomisApiService: CourtSentencingNomisApiService,
   private val mappingService: CourtCaseMappingService,
   private val courtSentencingService: CourtSentencingService,
 ) {
