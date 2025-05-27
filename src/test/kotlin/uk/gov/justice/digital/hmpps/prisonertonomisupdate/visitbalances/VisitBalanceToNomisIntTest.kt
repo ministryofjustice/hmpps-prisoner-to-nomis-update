@@ -227,7 +227,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will send telemetry event showing the create success`() {
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-adjustment-synchronisation-booking-moved-from"),
+          eq("visitbalance-synchronisation-booking-moved-from"),
           check {
             assertThat(it).containsEntry("bookingId", bookingId.toString())
             assertThat(it).containsEntry("prisonNumber", movedFromNomsNumber)
@@ -237,7 +237,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-adjustment-synchronisation-booking-moved-to"),
+          eq("visitbalance-synchronisation-booking-moved-to"),
           check {
             assertThat(it).containsEntry("bookingId", bookingId.toString())
             assertThat(it).containsEntry("prisonNumber", movedToNomsNumber)
@@ -346,7 +346,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will send telemetry event showing the create success`() {
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-adjustment-synchronisation-prisoner-received"),
+          eq("visitbalance-synchronisation-prisoner-received"),
           check {
             assertThat(it).containsEntry("reason", "READMISSION_SWITCH_BOOKING")
             assertThat(it).containsEntry("prisonNumber", nomsNumber)
