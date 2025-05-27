@@ -2,9 +2,13 @@ name: Security trivy dependency check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "40 6 * * MON-FRI" # Every weekday at 06:40 UTC
+    - cron: "12 9 * * MON-FRI" # Every weekday at 09:12 UTC
 jobs:
-  security-kotlin-trivy-check:
+  security-trivy-check:
+    permissions:
+      contents: read
+      actions: read
+      security-events: write
     name: Project security trivy dependency check
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/security_trivy.yml@v2 # WORKFLOW_VERSION
     with:
