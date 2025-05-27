@@ -38,19 +38,17 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingA
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
-import kotlin.collections.set
 
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
-  private val nomisApiService: NomisApiService,
+  private val nomisApiService: CourtSentencingNomisApiService,
   private val courtCaseMappingService: CourtCaseMappingService,
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
