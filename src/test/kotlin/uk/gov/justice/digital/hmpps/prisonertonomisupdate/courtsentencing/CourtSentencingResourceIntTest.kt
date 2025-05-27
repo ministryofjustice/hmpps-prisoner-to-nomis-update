@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResultCodeResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -681,10 +682,10 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           caseID = DPS_COURT_CASE_ID,
         )
-        nomisApi.stubCourtChargeCreate(
+        courtSentencingNomisApi.stubCourtChargeCreate(
           OFFENDER_NO,
           NOMIS_COURT_CASE_ID,
-          """{ "offenderChargeId": $NOMIS_COURT_CHARGE_ID }""",
+          OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_ID),
         )
         mappingServer.stubGetCourtCaseMappingGivenDpsId(
           id = DPS_COURT_CASE_ID,

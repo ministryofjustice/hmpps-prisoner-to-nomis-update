@@ -1,15 +1,22 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -103,6 +110,80 @@ class CourtSentencingNomisApiMockServer {
     stubGet("/prisoners/$offenderNo/sentencing/court-cases", response)
   }
 
+  fun stubCourtAppearanceCreate(offenderNo: String, courtCaseId: Long, response: CreateCourtAppearanceResponse) {
+    stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances", response = response)
+  }
+
+  fun stubCourtAppearanceUpdate(offenderNo: String, courtCaseId: Long, courtAppearanceId: Long, response: UpdateCourtAppearanceResponse) {
+    stubPutWithResponse("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances/$courtAppearanceId", response)
+  }
+
+  fun stubCourtChargeCreate(offenderNo: String, courtCaseId: Long, response: OffenderChargeIdResponse) {
+    stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/charges", response = response)
+  }
+
+  fun stubCourtChargeUpdate(offenderChargeId: Long, courtAppearanceId: Long, offenderNo: String, courtCaseId: Long) {
+    stubPut("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/court-appearances/$courtAppearanceId/charges/$offenderChargeId")
+  }
+
+  fun stubCourtChargeCreateWithError(offenderNo: String, courtCaseId: Long, status: Int = 500) {
+    stubPostWithError("/prisoners/$offenderNo/sentencing/court-cases/{caseId}/charges", status)
+  }
+
+  fun stubCourtCaseDelete(offenderNo: String, nomisCourtCaseId: Long) {
+    stubDelete("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId")
+  }
+
+  fun stubCourtAppearanceDelete(offenderNo: String, nomisCourtCaseId: Long, nomisEventId: Long) {
+    stubDelete("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId/court-appearances/$nomisEventId")
+  }
+
+  fun stubCaseReferenceRefresh(offenderNo: String, courtCaseId: Long) {
+    nomisApi.stubFor(
+      post("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/case-identifiers").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubSentenceCreate(offenderNo: String, caseId: Long, response: CreateSentenceResponse) {
+    stubPost("/prisoners/$offenderNo/court-cases/$caseId/sentences", response = response)
+  }
+
+  fun stubSentenceUpdate(offenderNo: String, caseId: Long, sentenceSeq: Long) {
+    stubPut("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq")
+  }
+
+  fun stubSentenceDelete(offenderNo: String, caseId: Long, sentenceSeq: Long) {
+    stubDelete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq")
+  }
+
+  fun stubSentenceTermCreate(offenderNo: String, caseId: Long, response: CreateSentenceTermResponse, sentenceSeq: Long) {
+    stubPost("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms", response = response)
+  }
+
+  fun stubSentenceTermUpdate(offenderNo: String, caseId: Long, sentenceSeq: Long, termSeq: Long) {
+    stubPut("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq")
+  }
+
+  fun stubSentenceTermDelete(offenderNo: String, caseId: Long, sentenceSeq: Long, termSeq: Long) {
+    stubDelete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq")
+  }
+
+  fun stubRecallSentences(offenderNo: String) {
+    nomisApi.stubFor(
+      post("/prisoners/$offenderNo/sentences/recall").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
+  // helper methods
+
   private fun stubGet(url: String, response: Any) = nomisApi.stubFor(
     get(url).willReturn(
       aResponse()
@@ -148,6 +229,31 @@ class CourtSentencingNomisApiMockServer {
         .withHeader("Content-Type", "application/json")
         .withBody(objectMapper().writeValueAsString(response))
         .withStatus(201),
+    ),
+  )
+
+  private fun stubPut(url: String) = nomisApi.stubFor(
+    put(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withStatus(200),
+    ),
+  )
+
+  private fun stubPutWithResponse(url: String, response: Any) = nomisApi.stubFor(
+    put(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withBody(objectMapper().writeValueAsString(response))
+        .withStatus(200),
+    ),
+  )
+
+  private fun stubDelete(url: String) = nomisApi.stubFor(
+    delete(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withStatus(204),
     ),
   )
 }
