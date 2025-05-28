@@ -68,7 +68,7 @@ class VisitBalanceService(
         "voBalance" to visitBalance?.voBalance.toString(),
         "pvoBalance" to visitBalance?.pvoBalance.toString(),
       )
-      extraTelemetry?.let { telemetry["extraTelemetry"] = it }
+      extraTelemetry?.let { telemetry.plusAssign(extraTelemetry) }
       telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix", telemetry)
     }
   }
