@@ -205,13 +205,13 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will retrieve the adjustment details from Dps`() {
+      fun `will retrieve the balance details from Dps`() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedFromNomsNumber/balance")))
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedToNomsNumber/balance")))
       }
 
       @Test
-      fun `will create the adjustment in Nomis`() {
+      fun `will create the balance in Nomis`() {
         visitBalanceNomisApi.verify(
           putRequestedFor(urlPathEqualTo("/prisoners/$movedFromNomsNumber/visit-balance"))
             .withRequestBodyJsonPath("remainingVisitOrders", "2")
@@ -265,7 +265,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will attempt to retrieve the balance adjustment from Dps `() {
+      fun `will attempt to retrieve the balance from Dps `() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedFromNomsNumber/balance")))
       }
 
@@ -295,7 +295,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will attempt to retrieve visit balance adjustment from Dps`() {
+      fun `will attempt to retrieve visit balance from Dps`() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedFromNomsNumber/balance")))
       }
 
@@ -330,12 +330,12 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will retrieve the adjustment details from Dps`() {
+      fun `will retrieve the balance from Dps`() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
       }
 
       @Test
-      fun `will create the adjustment in Nomis`() {
+      fun `will create the balance in Nomis`() {
         visitBalanceNomisApi.verify(
           putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance"))
             .withRequestBodyJsonPath("remainingVisitOrders", "2")
@@ -374,7 +374,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will attempt to retrieve the balance adjustment from Dps `() {
+      fun `will attempt to retrieve the balance from Dps `() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
       }
 
@@ -404,7 +404,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will attempt to retrieve visit balance adjustment from Dps`() {
+      fun `will attempt to retrieve visit balance from Dps`() {
         visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
       }
 
