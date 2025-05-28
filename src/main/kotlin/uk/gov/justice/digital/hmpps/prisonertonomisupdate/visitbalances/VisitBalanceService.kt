@@ -52,26 +52,24 @@ class VisitBalanceService(
     }
   }
 
-  private suspend fun synchronisePrisoner(
+  suspend fun synchronisePrisoner(
     prisonNumber: String,
-    extraTelemetry: Pair<String, Any>,
+    extraTelemetry: Pair<String, Any>? = null,
     eventTypeSuffix: String,
   ) {
     if (isDpsInChargeOfVisitAllocation(prisonNumber)) {
-      val fromVisitBalance = dpsApiService.getVisitBalance(prisonNumber)
+      val visitBalance = dpsApiService.getVisitBalance(prisonNumber)
       visitBalanceNomisApiService.updateVisitBalance(
         prisonNumber,
-        fromVisitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(null, null),
+        visitBalance?.toNomisUpdateVisitBalanceRequest() ?: UpdateVisitBalanceRequest(null, null),
       )
-      telemetryClient.trackEvent(
-        "visitbalance-adjustment-synchronisation-$eventTypeSuffix",
-        mapOf(
-          "prisonNumber" to prisonNumber,
-          extraTelemetry,
-          "voBalance" to fromVisitBalance?.voBalance.toString(),
-          "pvoBalance" to fromVisitBalance?.pvoBalance.toString(),
-        ),
+      val telemetry = telemetryOf(
+        "prisonNumber" to prisonNumber,
+        "voBalance" to visitBalance?.voBalance.toString(),
+        "pvoBalance" to visitBalance?.pvoBalance.toString(),
       )
+      extraTelemetry?.let { telemetry.plusAssign(extraTelemetry) }
+      telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix", telemetry)
     }
   }
 
