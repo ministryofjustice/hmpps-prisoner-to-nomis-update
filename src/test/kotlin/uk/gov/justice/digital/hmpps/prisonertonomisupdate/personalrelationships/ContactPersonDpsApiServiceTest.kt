@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
-import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -303,47 +302,7 @@ class ContactPersonDpsApiServiceTest {
       apiService.getPrisonerContacts("A1234KT")
 
       dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/contact")),
-      )
-    }
-
-    @Test
-    fun `will request a single huge page of all contacts`() = runTest {
-      dpsContactPersonServer.stubGetPrisonerContacts(prisonerNumber = "A1234KT")
-
-      apiService.getPrisonerContacts("A1234KT")
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(anyUrl())
-          .withQueryParam("size", equalTo("10000"))
-          .withQueryParam("page", equalTo("0"))
-          .withQueryParam("active", absent()),
-      )
-    }
-  }
-
-  @Nested
-  inner class GetPrisonerContactRestrictions {
-
-    @Test
-    fun `will pass oath2 token to service`() = runTest {
-      dpsContactPersonServer.stubGetPrisonerContactRestrictions(prisonerContactId = 1234)
-
-      apiService.getPrisonerContactRestrictions(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the get endpoint`() = runTest {
-      dpsContactPersonServer.stubGetPrisonerContactRestrictions(prisonerContactId = 1234)
-
-      apiService.getPrisonerContactRestrictions(1234)
-
-      dpsContactPersonServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoner-contact/1234/restriction")),
+        getRequestedFor(urlPathEqualTo("/sync/prisoner/A1234KT/reconcile")),
       )
     }
   }

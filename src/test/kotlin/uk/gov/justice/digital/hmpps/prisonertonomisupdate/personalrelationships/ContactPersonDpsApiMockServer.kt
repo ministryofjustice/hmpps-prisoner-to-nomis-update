@@ -21,24 +21,20 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileIdentity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcilePhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcilePrisonerRelationship
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationshipRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRestriction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.RestrictionsSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -51,6 +47,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerReconcile
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -171,54 +168,6 @@ class ContactPersonDpsApiExtension :
       createdTime = LocalDateTime.parse("2024-01-01T12:13"),
     )
 
-    fun prisonerContactSummaryPage() = PagedModelPrisonerContactSummary(
-      content = emptyList(),
-    )
-
-    fun prisonerContactSummary(contactId: Long = 1, prisonerContactId: Long = 10) = PrisonerContactSummary(
-      prisonerContactId = prisonerContactId,
-      contactId = contactId,
-      prisonerNumber = "A1234KT",
-      lastName = "SMITH",
-      firstName = "JANE",
-      relationshipTypeCode = "S",
-      relationshipTypeDescription = "Social",
-      relationshipToPrisonerCode = "BRO",
-      relationshipToPrisonerDescription = "Brother",
-      isApprovedVisitor = true,
-      isNextOfKin = false,
-      isEmergencyContact = false,
-      isRelationshipActive = true,
-      currentTerm = true,
-      restrictionSummary = RestrictionsSummary(
-        active = emptySet(),
-        totalActive = 0,
-        totalExpired = 0,
-      ),
-      isStaff = false,
-    )
-    fun prisonerContactRestrictionsResponse() = PrisonerContactRestrictionsResponse(
-      prisonerContactRestrictions = emptyList(),
-      contactGlobalRestrictions = emptyList(),
-    )
-    fun prisonerContactRestrictionDetails(contactId: Long) = PrisonerContactRestrictionDetails(
-      prisonerContactRestrictionId = 123,
-      prisonerContactId = 456,
-      contactId = contactId,
-      prisonerNumber = "A1234KT",
-      restrictionType = "BAN",
-      restrictionTypeDescription = "Banned",
-      enteredByUsername = "A.SMITH",
-      enteredByDisplayName = "Anne Smith",
-      createdBy = "A.SMITH",
-      createdTime = LocalDateTime.now(),
-      startDate = LocalDate.parse("2020-01-01"),
-      expiryDate = null,
-      comments = null,
-      updatedBy = null,
-      updatedTime = null,
-    )
-
     fun contactReconcileDetails(contactId: Long = 12345) = SyncContactReconcile(
       contactId = contactId,
       lastName = "KOFI",
@@ -287,6 +236,32 @@ class ContactPersonDpsApiExtension :
       emergencyContact = false,
       active = true,
       approvedVisitor = false,
+    )
+
+    fun prisonerContactDetails() = SyncPrisonerReconcile(
+      relationships = listOf(prisonerContactRelationshipDetails()),
+    )
+
+    fun prisonerContactRelationshipDetails(contactId: Long = 1, prisonerContactId: Long = 10) = ReconcilePrisonerRelationship(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+      prisonerNumber = "A1234KT",
+      relationshipTypeCode = "S",
+      relationshipToPrisoner = "BRO",
+      nextOfKin = false,
+      emergencyContact = false,
+      active = true,
+      approvedVisitor = true,
+      restrictions = emptyList(),
+      lastName = "SMITH",
+      firstName = "JANE",
+    )
+
+    fun prisonerContactRestrictionDetails() = ReconcileRelationshipRestriction(
+      prisonerContactRestrictionId = 1234567,
+      restrictionType = "BAN",
+      startDate = LocalDate.parse("2020-01-01"),
+      expiryDate = null,
     )
   }
 
@@ -435,19 +410,9 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerContacts(prisonerNumber: String, response: PagedModelPrisonerContactSummary = prisonerContactSummaryPage()) {
+  fun stubGetPrisonerContacts(prisonerNumber: String, response: SyncPrisonerReconcile = prisonerContactDetails()) {
     stubFor(
-      get(urlPathEqualTo("/prisoner/$prisonerNumber/contact")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
-      ),
-    )
-  }
-  fun stubGetPrisonerContactRestrictions(prisonerContactId: Long, response: PrisonerContactRestrictionsResponse = prisonerContactRestrictionsResponse()) {
-    stubFor(
-      get(urlPathEqualTo("/prisoner-contact/$prisonerContactId/restriction")).willReturn(
+      get(urlPathEqualTo("/sync/prisoner/$prisonerNumber/reconcile")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())

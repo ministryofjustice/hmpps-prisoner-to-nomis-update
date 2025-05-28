@@ -7,9 +7,7 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelPrisonerContactSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -21,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncEmployment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -79,13 +78,8 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .retrieve()
     .awaitBody()
 
-  suspend fun getPrisonerContacts(prisonNumber: String): PagedModelPrisonerContactSummary = webClient.get()
-    .uri("/prisoner/{prisonNumber}/contact?page=0&size=10000", prisonNumber)
-    .retrieve()
-    .awaitBodyWithRetry(backoffSpec)
-
-  suspend fun getPrisonerContactRestrictions(prisonerContactId: Long): PrisonerContactRestrictionsResponse = webClient.get()
-    .uri("/prisoner-contact/{prisonerContactId}/restriction", prisonerContactId)
+  suspend fun getPrisonerContacts(prisonNumber: String): SyncPrisonerReconcile = webClient.get()
+    .uri("/sync/prisoner/{prisonerNumber}/reconcile", prisonNumber)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
