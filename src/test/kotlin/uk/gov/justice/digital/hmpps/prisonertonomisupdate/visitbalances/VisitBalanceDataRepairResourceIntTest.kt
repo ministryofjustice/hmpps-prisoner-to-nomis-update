@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -13,7 +14,9 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
@@ -56,7 +59,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
     }
 
     @Nested
-    inner class HappyPath {
+    inner class HappyPathDpsVisitAllocation {
 
       @BeforeEach
       fun setUp() {
@@ -100,6 +103,40 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
           },
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    inner class HappyPathNomisVisitAllocation {
+
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = prisonNumber)
+
+        webTestClient.post().uri("/prisoners/$prisonNumber/visit-balance/repair")
+          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .exchange()
+          .expectStatus().isNoContent
+      }
+
+      @Test
+      fun `will perform VISIT_ALLOCATION service agency check`() {
+        nomisApi.verify(getRequestedFor(urlPathEqualTo("/service-prisons/VISIT_ALLOCATION/prisoner/$prisonNumber")))
+      }
+
+      @Test
+      fun `will not retrieve the balance from Dps`() {
+        visitBalanceDpsApi.verify(0, getRequestedFor(anyUrl()))
+      }
+
+      @Test
+      fun `will not update the balance in Nomis`() {
+        visitBalanceNomisApi.verify(0, putRequestedFor(anyUrl()))
+      }
+
+      @Test
+      fun `will not track telemetry for the repair`() {
+        verifyNoInteractions(telemetryClient)
       }
     }
   }
