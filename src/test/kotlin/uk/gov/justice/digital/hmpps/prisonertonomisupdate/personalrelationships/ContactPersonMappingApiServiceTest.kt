@@ -84,7 +84,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactIdOrNull(dpsContactId = 1234567))
+      assertThat(apiService.getByDpsContactIdOrNull(dpsContactId = 1234567)).isNull()
     }
   }
 
@@ -256,7 +256,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsPrisonerContactIdOrNull(dpsPrisonerContactId = 1234567))
+      assertThat(apiService.getByDpsPrisonerContactIdOrNull(dpsPrisonerContactId = 1234567)).isNull()
     }
   }
 
@@ -411,7 +411,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactAddressIdOrNull(dpsContactAddressId = 1234567))
+      assertThat(apiService.getByDpsContactAddressIdOrNull(dpsContactAddressId = 1234567)).isNull()
     }
   }
 
@@ -591,7 +591,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567))
+      assertThat(apiService.getByDpsContactEmailIdOrNull(dpsContactEmailId = 1234567)).isNull()
     }
   }
 
@@ -709,7 +709,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactPhoneIdOrNull(dpsContactPhoneId = 1234567))
+      assertThat(apiService.getByDpsContactPhoneIdOrNull(dpsContactPhoneId = 1234567)).isNull()
     }
   }
 
@@ -803,7 +803,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId = 1234567))
+      assertThat(apiService.getByDpsContactAddressPhoneIdOrNull(dpsContactAddressPhoneId = 1234567)).isNull()
     }
   }
 
@@ -1123,7 +1123,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactIdentityIdOrNull(dpsContactIdentityId = 1234567))
+      assertThat(apiService.getByDpsContactIdentityIdOrNull(dpsContactIdentityId = 1234567)).isNull()
     }
   }
 
@@ -1314,7 +1314,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567))
+      assertThat(apiService.getByDpsContactEmploymentIdOrNull(dpsContactEmploymentId = 1234567)).isNull()
     }
   }
 
@@ -1433,7 +1433,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567))
+      assertThat(apiService.getByDpsPrisonerContactRestrictionIdOrNull(dpsPrisonerContactRestrictionId = 1234567)).isNull()
     }
   }
 
@@ -1525,7 +1525,7 @@ class ContactPersonMappingApiServiceTest {
         mapping = null,
       )
 
-      assertThat(apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567))
+      assertThat(apiService.getByDpsContactRestrictionIdOrNull(dpsContactRestrictionId = 1234567)).isNull()
     }
   }
 

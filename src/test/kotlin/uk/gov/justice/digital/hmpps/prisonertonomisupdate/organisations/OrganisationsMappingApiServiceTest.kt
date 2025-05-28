@@ -158,7 +158,7 @@ class OrganisationsMappingApiServiceTest {
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsAddressIdOrNull(dpsAddressId = 1234567))
+        assertThat(apiService.getByDpsAddressIdOrNull(dpsAddressId = 1234567)).isNull()
       }
     }
 
@@ -342,7 +342,7 @@ class OrganisationsMappingApiServiceTest {
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsPhoneIdOrNull(dpsPhoneId = 1234567))
+        assertThat(apiService.getByDpsPhoneIdOrNull(dpsPhoneId = 1234567)).isNull()
       }
     }
 
@@ -526,7 +526,7 @@ class OrganisationsMappingApiServiceTest {
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsEmailIdOrNull(dpsEmailId = 1234567))
+        assertThat(apiService.getByDpsEmailIdOrNull(dpsEmailId = 1234567)).isNull()
       }
     }
 
@@ -710,7 +710,7 @@ class OrganisationsMappingApiServiceTest {
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsWebIdOrNull(dpsWebId = 1234567))
+        assertThat(apiService.getByDpsWebIdOrNull(dpsWebId = 1234567)).isNull()
       }
     }
 
@@ -894,7 +894,7 @@ class OrganisationsMappingApiServiceTest {
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = 1234567))
+        assertThat(apiService.getByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = 1234567)).isNull()
       }
     }
 
