@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -27,8 +27,6 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.Sentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.SentenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -2795,18 +2793,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
 
-      fun sentence(sentenceUuid: String, sentenceCalcType: String, sentenceCategory: String) = Sentence(
-        sentenceUuid = UUID.fromString(sentenceUuid),
-        periodLengths = emptyList(),
-        sentenceServeType = "",
-        legacyData = SentenceLegacyData(
-          postedDate = "2022-01-01",
-          sentenceCalcType = sentenceCalcType,
-          sentenceCategory = sentenceCategory,
-        ),
-        hasRecall = false,
-      )
-
       @Test
       fun `will get the NOMIS sentenceIds for each DPS sentence`() {
         mappingServer.verify(
@@ -2838,10 +2824,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+            .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
+            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
@@ -2931,12 +2919,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         CourtSentencingApiExtension.courtSentencingApi.stubGetSentences(
           sentences = listOf(
-            legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14", sentenceCategory = "2020"),
-            legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14", sentenceCategory = "2013"),
+            legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14", sentenceCategory = "2020", active = true),
+            legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14", sentenceCategory = "2013", active = false),
           ),
         )
 
-        courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
+        courtSentencingNomisApi.stubUpdateRecallSentences(OFFENDER_NO)
         publishRecallUpdatedDomainEvent(
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -2945,18 +2933,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           waitForAnyProcessingToComplete()
         }
       }
-
-      fun sentence(sentenceUuid: String, sentenceCalcType: String, sentenceCategory: String) = Sentence(
-        sentenceUuid = UUID.fromString(sentenceUuid),
-        periodLengths = emptyList(),
-        sentenceServeType = "",
-        legacyData = SentenceLegacyData(
-          postedDate = "2022-01-01",
-          sentenceCalcType = sentenceCalcType,
-          sentenceCategory = sentenceCategory,
-        ),
-        hasRecall = false,
-      )
 
       @Test
       fun `will get the NOMIS sentenceIds for each DPS sentence`() {
@@ -2984,15 +2960,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will update NOMIS sentence information`() {
         NomisApiExtension.nomisApi.verify(
-          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
             .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+            .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
+            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("false")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
@@ -3090,16 +3068,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
                 sentenceCalcType = "FTR_14",
                 sentenceCategory = "2020",
+                active = true,
               ),
               legacySentence(
                 sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
                 sentenceCalcType = "FTR_14",
                 sentenceCategory = "2013",
+                active = true,
               ),
             ),
           )
 
-          courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
+          courtSentencingNomisApi.stubUpdateRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
             source = "DPS",
             previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -3109,18 +3089,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             waitForAnyProcessingToComplete()
           }
         }
-
-        fun sentence(sentenceUuid: String, sentenceCalcType: String, sentenceCategory: String) = Sentence(
-          sentenceUuid = UUID.fromString(sentenceUuid),
-          periodLengths = emptyList(),
-          sentenceServeType = "",
-          legacyData = SentenceLegacyData(
-            postedDate = "2022-01-01",
-            sentenceCalcType = sentenceCalcType,
-            sentenceCategory = sentenceCategory,
-          ),
-          hasRecall = false,
-        )
 
         @Test
         fun `will get the NOMIS sentenceIds for each DPS sentence`() {
@@ -3146,17 +3114,19 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `will update NOMIS sentence information with previous recall datat`() {
+        fun `will update NOMIS sentence information with previous recall data`() {
           NomisApiExtension.nomisApi.verify(
-            postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+              .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
+              .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
               .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
               .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
               .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
@@ -3207,16 +3177,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
                 sentenceCalcType = "ADIMP_ORA",
                 sentenceCategory = "2020",
+                active = false,
               ),
               legacySentence(
                 sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
                 sentenceCalcType = "ADIMP_ORA",
                 sentenceCategory = "2013",
+                active = false,
               ),
             ),
           )
 
-          courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO)
+          courtSentencingNomisApi.stubDeleteRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
             source = "DPS",
             previousRecallId = null,
@@ -3226,18 +3198,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             waitForAnyProcessingToComplete()
           }
         }
-
-        fun sentence(sentenceUuid: String, sentenceCalcType: String, sentenceCategory: String) = Sentence(
-          sentenceUuid = UUID.fromString(sentenceUuid),
-          periodLengths = emptyList(),
-          sentenceServeType = "",
-          legacyData = SentenceLegacyData(
-            postedDate = "2022-01-01",
-            sentenceCalcType = sentenceCalcType,
-            sentenceCategory = sentenceCategory,
-          ),
-          hasRecall = false,
-        )
 
         @Test
         fun `will get the NOMIS sentenceIds for each DPS sentence`() {
@@ -3265,7 +3225,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will update NOMIS sentence information with previous sentence data`() {
           NomisApiExtension.nomisApi.verify(
-            postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall/restore-original"))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
@@ -3273,8 +3233,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
-              .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("ADIMP_ORA")))
-              .withRequestBody(matchingJsonPath("returnToCustody", absent())),
+              .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("ADIMP_ORA"))),
           )
         }
 
@@ -3612,7 +3571,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishRecallInsertedDomainEvent(recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+  private fun publishRecallInsertedDomainEvent(@Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
     val eventType = "recall.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -3634,7 +3593,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishRecallUpdatedDomainEvent(recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+  private fun publishRecallUpdatedDomainEvent(@Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
     val eventType = "recall.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
