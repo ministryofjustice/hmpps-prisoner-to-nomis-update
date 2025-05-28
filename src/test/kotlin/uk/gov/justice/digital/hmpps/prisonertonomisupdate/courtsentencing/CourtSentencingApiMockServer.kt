@@ -1,12 +1,9 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.post
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -20,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.util.UUID
@@ -85,8 +83,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubHealthPing(status: Int) {
     stubFor(
-      get("/health/ping").willReturn(
-        aResponse()
+      WireMock.get("/health/ping").willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
           .withStatus(status),
@@ -96,8 +94,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCourtCaseGet(courtCaseId: String, courtCaseResponse: LegacyCourtCase) {
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCaseResponse),
@@ -173,8 +171,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtAppearance),
@@ -211,8 +209,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       nomisOutcomeCode = "4531",
     )
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtAppearance),
@@ -233,8 +231,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
     )
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/charge/$courtChargeId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/charge/$courtChargeId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCase),
@@ -269,8 +267,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       appearanceUuid = UUID.randomUUID(),
     )
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentence),
@@ -284,8 +282,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     sentences: List<LegacySentence>,
   ) {
     stubFor(
-      post(WireMock.urlPathMatching("/legacy/sentence/search")).willReturn(
-        aResponse()
+      WireMock.post(WireMock.urlPathMatching("/legacy/sentence/search")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentences),
@@ -317,8 +315,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
   ) {
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/period-length/$periodLengthId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/period-length/$periodLengthId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(periodLength),
@@ -330,8 +328,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCourtCaseForReconciliation2(courtCaseId: String, courtCaseResponse: TestCourtCase) {
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/test")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/test")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCaseResponse),
@@ -343,8 +341,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetRecall(recallId: String, recall: LegacyRecall) {
     stubFor(
-      get(WireMock.urlPathMatching("/legacy/recall/$recallId")).willReturn(
-        aResponse()
+      WireMock.get(WireMock.urlPathMatching("/legacy/recall/$recallId")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(recall),
@@ -355,7 +353,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(NomisApiExtension.Companion.objectMapper.writeValueAsString(body))
     return this
   }
 
