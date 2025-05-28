@@ -1,10 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
@@ -275,4 +277,9 @@ class CourtSentencingNomisApiMockServer {
         .withStatus(204),
     ),
   )
+
+  fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
+  fun postCountFor(url: String) = nomisApi.findAll(WireMock.postRequestedFor(WireMock.urlEqualTo(url))).count()
+  fun putCountFor(url: String) = nomisApi.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 }

@@ -31,8 +31,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResultCodeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.CourtSentencingApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -59,6 +57,9 @@ private const val OUTCOME_2 = "3001"
 class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
   @Autowired
   private lateinit var courtSentencingNomisApi: CourtSentencingNomisApiMockServer
+
+  @Autowired
+  private lateinit var courtSentencingMappingApi: CourtSentencingMappingApiMockServer
 
   @DisplayName("GET /court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   @Nested
@@ -95,7 +96,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetCourtCaseMappingGivenDpsId(
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
           id = DPS_COURT_CASE_ID,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID,
         )
@@ -206,7 +207,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetCourtCaseMappingGivenNomisId(
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(
           id = NOMIS_COURT_CASE_ID,
           dpsCourtCaseId = DPS_COURT_CASE_ID,
         )
@@ -440,12 +441,12 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingServer.stubGetCourtCaseMappingGivenNomisId(
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(
           id = NOMIS_COURT_CASE_ID,
           dpsCourtCaseId = DPS_COURT_CASE_ID,
         )
 
-        mappingServer.stubGetCourtCaseMappingGivenNomisId(
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(
           id = NOMIS_COURT_CASE_2_ID,
           dpsCourtCaseId = DPS_COURT_CASE_2_ID,
         )
@@ -687,13 +688,13 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           NOMIS_COURT_CASE_ID,
           OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_ID),
         )
-        mappingServer.stubGetCourtCaseMappingGivenDpsId(
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
           id = DPS_COURT_CASE_ID,
           nomisCourtCaseId = NOMIS_COURT_CASE_ID,
         )
 
-        mappingServer.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
-        mappingServer.stubCreateCourtCharge()
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        courtSentencingMappingApi.stubCreateCourtCharge()
 
         webTestClient.post().uri("/court-sentencing/court-charges/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
@@ -746,7 +747,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         waitForAnyProcessingToComplete()
 
         await untilAsserted {
-          mappingServer.verify(
+          courtSentencingMappingApi.verify(
             WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-charges"))
               .withRequestBody(
                 WireMock.matchingJsonPath(
