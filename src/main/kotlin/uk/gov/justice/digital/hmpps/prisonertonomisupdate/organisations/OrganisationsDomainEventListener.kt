@@ -86,9 +86,11 @@ data class OrganisationDeletedEvent(
 interface SourcedOrganisationAdditionalData : SourcedAdditionalData {
   val organisationId: Long
 }
-interface OrganisationChildAdditionalData : SourcedOrganisationAdditionalData {
-  val identifier: Long
-}
+data class OrganisationChildAdditionalData(
+  val identifier: Long,
+  override val organisationId: Long,
+  override val source: String,
+) : SourcedOrganisationAdditionalData
 
 data class OrganisationEvent(override val additionalInformation: OrganisationAdditionalData) : SourcedOrganisationsEvent
 data class OrganisationAddressEvent(override val additionalInformation: OrganisationChildAdditionalData) : SourcedOrganisationChildEvent {
