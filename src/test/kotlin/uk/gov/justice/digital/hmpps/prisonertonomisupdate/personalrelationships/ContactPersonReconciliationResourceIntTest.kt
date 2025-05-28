@@ -19,15 +19,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactReconcileDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRelationshipDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestrictionsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactSummaryPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.pagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.prisonerWithContacts
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.util.Collections.singletonList
@@ -53,25 +51,13 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
         ),
       )
       nomisApi.stubGetPrisonerContacts("A0001TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-      dpsApi.stubGetPrisonerContacts("A0001TZ", prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 2), content = listOf(prisonerContactSummary(1))))
+      dpsApi.stubGetPrisonerContacts("A0001TZ", prisonerContactDetails().copy(relationships = listOf(prisonerContactRelationshipDetails(1))))
       nomisApi.stubGetPrisonerContacts("A0002TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(1), prisonerContact(2))))
-      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactSummaryPage().copy(page = PageMetadata(totalElements = 2), content = listOf(prisonerContactSummary(1), prisonerContactSummary(99))))
+      dpsApi.stubGetPrisonerContacts("A0002TZ", prisonerContactDetails().copy(relationships = listOf(prisonerContactRelationshipDetails(1), prisonerContactRelationshipDetails(99))))
       nomisApi.stubGetPrisonerContacts("A0003TZ", prisonerWithContacts())
-      dpsApi.stubGetPrisonerContacts("A0003TZ", prisonerContactSummaryPage())
+      dpsApi.stubGetPrisonerContacts("A0003TZ", prisonerContactDetails().copy(relationships = emptyList()))
       nomisApi.stubGetPrisonerContacts("A0004TZ", prisonerWithContacts().copy(contacts = listOf(prisonerContact(3).copy(restrictions = emptyList()))))
-      dpsApi.stubGetPrisonerContacts(
-        "A0004TZ",
-        prisonerContactSummaryPage().copy(
-          page = PageMetadata(totalElements = 1),
-          content = listOf(
-            prisonerContactSummary(
-              contactId = 3,
-              prisonerContactId = 30,
-            ),
-          ),
-        ),
-      )
-      dpsApi.stubGetPrisonerContactRestrictions(30, prisonerContactRestrictionsResponse().copy(prisonerContactRestrictions = listOf(prisonerContactRestrictionDetails(contactId = 3))))
+      dpsApi.stubGetPrisonerContacts("A0004TZ", prisonerContactDetails().copy(relationships = listOf(prisonerContactRelationshipDetails(contactId = 3, prisonerContactId = 30).copy(restrictions = listOf(prisonerContactRestrictionDetails())))))
     }
 
     @Test

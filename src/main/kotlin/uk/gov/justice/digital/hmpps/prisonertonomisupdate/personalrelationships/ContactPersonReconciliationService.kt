@@ -26,9 +26,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactRestrictionDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerContactSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcilePrisonerRelationship
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRelationshipRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactReconcile
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -73,7 +73,7 @@ class ContactPersonReconciliationService(
         }
 
         is BookingErrorPageResult -> {
-          // just skip this "page" by moving the bookingId pointer up
+          // skip this "page" by moving the bookingId pointer up
           lastBookingId += prisonerContactPageSize.toInt()
           pageErrorCount++
         }
@@ -93,7 +93,7 @@ class ContactPersonReconciliationService(
       val channel = producePersonIds(pagesCount)
       val jobs = (1L..personContactPageSize).map { launchCheckPersonMatcher(channel, mismatchesChannel, contactsCount) }
       launch {
-        // when all jobs finished (no more contacts to process) we can shut down the mismatch channel and return the results
+        // when all jobs finished (there are no more contacts to process), we can shut down the mismatch channel and return the results
         jobs.forEach { it.join() }
         mismatchesChannel.close()
       }
@@ -116,7 +116,7 @@ class ContactPersonReconciliationService(
     }
   }
 
-  fun CoroutineScope.producePersonIds(pagesCount: AtomicInteger) = produce<Long>(capacity = personContactPageSize * 2) {
+  fun CoroutineScope.producePersonIds(pagesCount: AtomicInteger) = produce(capacity = personContactPageSize * 2) {
     var lastPersonId = 0L
     var pageErrorCount = 0L
 
@@ -135,8 +135,8 @@ class ContactPersonReconciliationService(
         }
 
         is PersonErrorPageResult -> {
-          // just skip this "page" by moving the personId pointer up
-          lastPersonId += personContactPageSize.toInt()
+          // skip this "page" by moving the personId pointer up
+          lastPersonId += personContactPageSize
           pageErrorCount++
         }
       }
@@ -195,7 +195,7 @@ class ContactPersonReconciliationService(
     .getOrElse { BookingErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $prisonerContactPageSize bookings") }
 
-  private suspend fun getNextPersonsForPage(lastPersonId: Long): PersonPageResult = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = personContactPageSize.toInt()) }
+  private suspend fun getNextPersonsForPage(lastPersonId: Long): PersonPageResult = runCatching { nomisApiService.getPersonIds(lastPersonId = lastPersonId, pageSize = personContactPageSize) }
     .onFailure {
       telemetryClient.trackEvent(
         "$TELEMETRY_PERSON_PREFIX-mismatch-page-error",
@@ -212,7 +212,7 @@ class ContactPersonReconciliationService(
   suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerContacts? = runCatching {
     val (nomisContacts, dpsContacts) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getContactsForPrisoner(prisonerId.offenderNo).contacts } to
-        async { dpsApiService.getPrisonerContacts(prisonerId.offenderNo).content!! }
+        async { dpsApiService.getPrisonerContacts(prisonerId.offenderNo).relationships }
     }.awaitBoth()
 
     val dpsContactSummaries = dpsContacts.map { it.asSummary() }
@@ -338,20 +338,20 @@ class ContactPersonReconciliationService(
       MismatchPrisonerContacts(prisonerId.offenderNo, nomisContactCount = nomisContactSummaries.size, dpsContactCount = dpsContactSummaries.size)
     }.firstOrNull()
   }
-  suspend fun checkContactRestrictionsMatch(prisonerId: PrisonerIds, nomisContacts: List<PrisonerContact>, dpsContacts: List<PrisonerContactSummary>): MismatchPrisonerContacts? = dpsContacts.map { dpsContact ->
-    val dpsPrisonerContactRestrictions = dpsApiService.getPrisonerContactRestrictions(dpsContact.prisonerContactId).prisonerContactRestrictions
-    // since we only do this if contacts match we must be able to find the associated relationship in NOMIS
-    val nomisPrisonerContactRestrictions = nomisContacts.find { it.person.personId == dpsContact.contactId && it.relationshipType.code == dpsContact.relationshipToPrisonerCode }?.restrictions ?: emptyList()
+  suspend fun checkContactRestrictionsMatch(prisonerId: PrisonerIds, nomisContacts: List<PrisonerContact>, dpsContacts: List<ReconcilePrisonerRelationship>): MismatchPrisonerContacts? = dpsContacts.map { dpsContact ->
+    val dpsPrisonerContactRestrictions = dpsContact.restrictions
+    // since we only do this if contacts match, we must be able to find the associated relationship in NOMIS
+    val nomisPrisonerContactRestrictions = nomisContacts.find { it.person.personId == dpsContact.contactId && it.relationshipType.code == dpsContact.relationshipToPrisoner }?.restrictions ?: emptyList()
     val telemetry = mutableMapOf(
       "offenderNo" to prisonerId.offenderNo,
       "contactId" to dpsContact.contactId.toString(),
-      "relationshipType" to dpsContact.relationshipToPrisonerCode,
+      "relationshipType" to dpsContact.relationshipToPrisoner,
       "dpsPrisonerContactRestrictionCount" to (dpsPrisonerContactRestrictions.size.toString()),
       "nomisPrisonerContactRestrictionCount" to (nomisPrisonerContactRestrictions.size.toString()),
     )
 
-    val dpsPrisonerContactRestrictionsSummaries = dpsPrisonerContactRestrictions.map { it.asSummary(dpsContact.relationshipToPrisonerCode) }
-    val nomisPrisonerContactRestrictionsSummaries = nomisPrisonerContactRestrictions.map { it.asSummary(dpsContact.contactId, dpsContact.relationshipToPrisonerCode) }
+    val dpsPrisonerContactRestrictionsSummaries = dpsPrisonerContactRestrictions.map { it.asSummary(contactId = dpsContact.contactId, relationshipCode = dpsContact.relationshipToPrisoner) }
+    val nomisPrisonerContactRestrictionsSummaries = nomisPrisonerContactRestrictions.map { it.asSummary(dpsContact.contactId, dpsContact.relationshipToPrisoner) }
 
     val (prisonerRestrictionsTypesMissingFromNomis, prisonerRestrictionsTypesMissingFromDps) = findMissingPrisonerContactRestrictions(nomisPrisonerContactRestrictionsSummaries, dpsPrisonerContactRestrictionsSummaries)
 
@@ -414,16 +414,16 @@ class ContactPersonReconciliationService(
 
     return nomisRestrictionTypesMissingFromNomis to nomisRestrictionTypesMissingFromDps
   }
-  private fun PrisonerContactSummary.asSummary() = ContactSummary(
+  private fun ReconcilePrisonerRelationship.asSummary() = ContactSummary(
     contactId = this.contactId,
-    firstName = this.firstName.uppercase(),
-    lastName = this.lastName.uppercase(),
-    relationshipCode = this.relationshipToPrisonerCode,
+    firstName = this.firstName?.uppercase() ?: "UNKNOWN",
+    lastName = this.lastName?.uppercase() ?: "UNKNOWN",
+    relationshipCode = this.relationshipToPrisoner,
     contactType = this.relationshipTypeCode,
-    emergencyContact = this.isEmergencyContact,
-    nextOfKin = this.isNextOfKin,
-    approvedVisitor = this.isApprovedVisitor,
-    active = this.isRelationshipActive,
+    emergencyContact = this.emergencyContact,
+    nextOfKin = this.nextOfKin,
+    approvedVisitor = this.approvedVisitor,
+    active = this.active,
   )
 
   private fun PrisonerContact.asSummary() = ContactSummary(
@@ -446,7 +446,7 @@ class ContactPersonReconciliationService(
     addressCount = this.addresses.size,
     phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
     emailAddresses = this.emailAddresses.map { it.email }.toSortedSet(),
-    addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { it.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
+    addressPhoneNumbers = this.addresses.map { it.phoneNumbers.map { phone -> phone.number }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.corporate.id }.toSortedSet(),
     identifiers = this.identifiers.map { it.identifier }.toSortedSet(),
     prisonerContacts = this.contacts.filter { it.prisoner.bookingSequence == 1L }.map { it.asSummary() }.toSortedSet(),
@@ -460,15 +460,15 @@ class ContactPersonReconciliationService(
     addressCount = this.addresses.size,
     phoneNumbers = this.phones.map { it.phoneNumber }.toSortedSet(),
     emailAddresses = this.emails.map { it.emailAddress }.toSortedSet(),
-    addressPhoneNumbers = this.addresses.map { it.addressPhones.map { it.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
+    addressPhoneNumbers = this.addresses.map { it.addressPhones.map { phone -> phone.phoneNumber }.toSortedSet() }.toSortedSet { o1, o2 -> o1.joinToString().compareTo(o2.joinToString()) },
     employmentOrganisations = this.employments.map { it.organisationId }.toSortedSet(),
-    identifiers = this.identities.map { it.identityValue.toString() }.toSortedSet(),
+    identifiers = this.identities.map { it.identityValue }.toSortedSet(),
     prisonerContacts = this.relationships.map { it.asSummary() }.toSortedSet(),
     restrictions = this.restrictions.map { it.asSummary() }.toSortedSet(),
   )
 
   // There is no reason why we have ever registered a visitor born before 1800
-  // this is to ignore invalid dates e.g "0200-01-01" which can causes mismatches
+  // this is to ignore invalid dates e.g. "0200-01-01", which can causes mismatches
   // due to LocalDate conversion for ancient dates
   private fun LocalDate.validDateOfBirth(): Boolean = this.isAfter(LocalDate.parse("1800-01-01"))
 
@@ -503,23 +503,23 @@ class ContactPersonReconciliationService(
     expiryDate = this.expiryDate,
   )
 
-  private fun PrisonerContactRestrictionDetails.asSummary(relationshipCode: String) = PrisonerContactRestrictionSummary(
-    contactId = this.contactId,
+  private fun ReconcileRelationshipRestriction.asSummary(contactId: Long, relationshipCode: String) = PrisonerContactRestrictionSummary(
+    contactId = contactId,
     relationshipCode = relationshipCode,
     restrictionType = this.restrictionType,
     startDate = this.startDate,
     expiryDate = this.expiryDate,
   )
 
-  // Last page will be a non-null page with items less than page size
+  // The last page will be a non-null page with items less than page size
   private fun BookingPageResult.notLastPage(): Boolean = when (this) {
     is BookingSuccessPageResult -> this.value.prisonerIds.size == prisonerContactPageSize.toInt()
     is BookingErrorPageResult -> true
   }
 
-  // Last page will be a non-null page with items less than page size
+  // The last page will be a non-null page with items less than page size
   private fun PersonPageResult.notLastPage(): Boolean = when (this) {
-    is PersonSuccessPageResult -> this.value.personIds.size == personContactPageSize.toInt()
+    is PersonSuccessPageResult -> this.value.personIds.size == personContactPageSize
     is PersonErrorPageResult -> true
   }
 
