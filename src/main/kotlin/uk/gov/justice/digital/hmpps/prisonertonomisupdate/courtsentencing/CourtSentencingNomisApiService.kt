@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
@@ -146,8 +147,26 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
   suspend fun recallSentences(
     offenderNo: String,
     request: ConvertToRecallRequest,
-  ) = webClient.post()
+  ): ResponseEntity<Void> = webClient.post()
     .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun updateRecallSentences(
+    offenderNo: String,
+    request: ConvertToRecallRequest,
+  ): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun deleteRecallSentences(
+    offenderNo: String,
+    request: DeleteRecallRequest,
+  ): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentences/recall/restore-original", offenderNo)
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()

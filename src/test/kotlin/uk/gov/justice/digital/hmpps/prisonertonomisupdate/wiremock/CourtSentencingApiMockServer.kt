@@ -48,7 +48,7 @@ class CourtSentencingApiExtension :
     val courtSentencingApi = CourtSentencingApiMockServer()
     lateinit var objectMapper: ObjectMapper
 
-    fun legacySentence(sentenceId: String, sentenceCalcType: String, sentenceCategory: String = "2020") = LegacySentence(
+    fun legacySentence(sentenceId: String, sentenceCalcType: String, sentenceCategory: String = "2020", active: Boolean = true) = LegacySentence(
       prisonerId = "A6160DZ",
       chargeLifetimeUuid = UUID.randomUUID(),
       lifetimeUuid = UUID.fromString(sentenceId),
@@ -59,7 +59,7 @@ class CourtSentencingApiExtension :
       fineAmount = null,
       courtCaseId = UUID.randomUUID().toString(),
       sentenceStartDate = LocalDate.now().minusYears(1),
-      active = true,
+      active = active,
       appearanceUuid = UUID.randomUUID(),
     )
   }

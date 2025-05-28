@@ -29,8 +29,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RecallSentenceDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RecallRelatedSentenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
@@ -816,7 +817,7 @@ class CourtSentencingService(
           offenderNo,
           ConvertToRecallRequest(
             sentences = sentenceAndMappings.map { sentence ->
-              RecallSentenceDetails(
+              RecallRelatedSentenceDetails(
                 sentenceId =
                 SentenceId(
                   offenderBookingId = sentence.nomisBookingId,
@@ -824,6 +825,7 @@ class CourtSentencingService(
                 ),
                 sentenceCategory = sentence.dpsSentence.sentenceCategory,
                 sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                active = true,
               )
             },
             returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
@@ -870,11 +872,11 @@ class CourtSentencingService(
         val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
         val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
         // for now call the same endpoint as create until we can establish updating and creating is exactly the same
-        nomisApiService.recallSentences(
+        nomisApiService.updateRecallSentences(
           offenderNo,
           ConvertToRecallRequest(
             sentences = sentenceAndMappings.map { sentence ->
-              RecallSentenceDetails(
+              RecallRelatedSentenceDetails(
                 sentenceId =
                 SentenceId(
                   offenderBookingId = sentence.nomisBookingId,
@@ -882,6 +884,7 @@ class CourtSentencingService(
                 ),
                 sentenceCategory = sentence.dpsSentence.sentenceCategory,
                 sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                active = sentence.dpsSentence.active,
               )
             },
             returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
@@ -929,11 +932,11 @@ class CourtSentencingService(
           val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
           // for now call the same endpoint as create until we can establish reverting to previous recall and creating is exactly the same
-          nomisApiService.recallSentences(
+          nomisApiService.updateRecallSentences(
             offenderNo,
             ConvertToRecallRequest(
               sentences = sentenceAndMappings.map { sentence ->
-                RecallSentenceDetails(
+                RecallRelatedSentenceDetails(
                   sentenceId =
                   SentenceId(
                     offenderBookingId = sentence.nomisBookingId,
@@ -941,6 +944,7 @@ class CourtSentencingService(
                   ),
                   sentenceCategory = sentence.dpsSentence.sentenceCategory,
                   sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                  active = sentence.dpsSentence.active,
                 )
               },
               returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
@@ -955,13 +959,11 @@ class CourtSentencingService(
         } else {
           val dpsSentenceIds = recallDeletedEvent.additionalInformation.sentenceIds
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
-          // for now call the same endpoint as create until we can establish reverting to the previous sentence and creating is exactly the same
-          // though feels like endpoint name doesn't mke sense even though it would work
-          nomisApiService.recallSentences(
+          nomisApiService.deleteRecallSentences(
             offenderNo,
-            ConvertToRecallRequest(
+            DeleteRecallRequest(
               sentences = sentenceAndMappings.map { sentence ->
-                RecallSentenceDetails(
+                RecallRelatedSentenceDetails(
                   sentenceId =
                   SentenceId(
                     offenderBookingId = sentence.nomisBookingId,
@@ -969,10 +971,9 @@ class CourtSentencingService(
                   ),
                   sentenceCategory = sentence.dpsSentence.sentenceCategory,
                   sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
+                  active = sentence.dpsSentence.active,
                 )
               },
-              // TODO: feels like we we do need a different DPS endpoint just so we can explicit;y remove the return to custody date
-              returnToCustody = null,
             ),
           )
         }
