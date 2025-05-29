@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-23.7.e810778"
+    "version" : "2025-05-28.15.600321f"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -8619,7 +8619,7 @@
         }
       }
     },
-    "/mapping/corporate/web/dps-internet-address-id/{dpsWebId}" : {
+    "/mapping/corporate/web/dps-web-id/{dpsWebId}" : {
       "get" : {
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Get web mapping by dps web address Id",
@@ -9371,6 +9371,50 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "corporate-mapping-resource" ],
+        "summary" : "Delete email mapping by dps email Id",
+        "description" : "Deletes the email mapping by DPS Email Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "deleteEmailMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsEmailId",
+          "in" : "path",
+          "description" : "DPS email id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS email id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deletes Email mapping data or it doesn't exist",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -14344,53 +14388,7 @@
         }
       }
     },
-    "/mapping/corporate/email/dps-internet-address-id/{dpsEmailId}" : {
-      "delete" : {
-        "tags" : [ "corporate-mapping-resource" ],
-        "summary" : "Delete email mapping by dps email Id",
-        "description" : "Deletes the email mapping by DPS Email Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "deleteEmailMappingByDpsId",
-        "parameters" : [ {
-          "name" : "dpsEmailId",
-          "in" : "path",
-          "description" : "DPS email id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "DPS email id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Deletes Email mapping data or it doesn't exist",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/corporate/address-phone/dps-phone-id/{dpsPhoneId}" : {
+    "/mapping/corporate/address-phone/dps-address-phone-id/{dpsPhoneId}" : {
       "delete" : {
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Deletes address phone mapping by dps phone Id",
@@ -17318,6 +17316,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -17328,9 +17329,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -17340,10 +17338,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
