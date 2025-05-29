@@ -13,6 +13,13 @@ import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatusCode
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddressPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationEmail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationTypes
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationWeb
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationAddressDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationAddressPhoneDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.OrganisationDetails
@@ -42,6 +49,71 @@ class OrganisationsDpsApiExtension :
     @JvmField
     val dpsOrganisationsServer = OrganisationsDpsApiMockServer()
     lateinit var objectMapper: ObjectMapper
+
+    fun organisation() = SyncOrganisationResponse(
+      organisationId = 234324,
+      active = true,
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
+
+    fun organisationTypes() = SyncTypesResponse(
+      organisationId = 234324,
+      types = listOf(
+        SyncOrganisationType(
+          "some type",
+          createdBy = "a user",
+          createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+        ),
+      ),
+    )
+
+    fun organisationPhone() = SyncPhoneResponse(
+      organisationPhoneId = 1234567,
+      organisationId = 34535,
+      phoneType = "SOME_TYPE",
+      phoneNumber = "12345 234",
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
+
+    fun organisationEmail() = SyncEmailResponse(
+      organisationEmailId = 1234567,
+      organisationId = 324524,
+      emailAddress = "joe@joe.com",
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
+
+    fun organisationWeb() = SyncWebResponse(
+      organisationWebAddressId = 1234567,
+      organisationId = 234324,
+      webAddress = "web address",
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
+
+    fun organisationAddress() = SyncAddressResponse(
+      organisationAddressId = 1234567,
+      organisationId = 345567,
+      primaryAddress = true,
+      mailAddress = false,
+      serviceAddress = false,
+      noFixedAddress = false,
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
+
+    fun organisationAddressPhone() = SyncAddressPhoneResponse(
+      organisationAddressPhoneId = 1234567,
+      organisationAddressId = 12346,
+      organisationPhoneId = 12345,
+      organisationId = 34535,
+      phoneType = "SOME_TYPE",
+      phoneNumber = "12345 234",
+      createdBy = "a user",
+      createdTime = LocalDateTime.parse("2022-01-01T12:13"),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -208,13 +280,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun organisation() = SyncOrganisationResponse(
-    organisationId = 234324,
-    active = true,
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
-
   fun stubGetSyncOrganisationTypes(organisationId: Long, response: SyncTypesResponse = organisationTypes()) {
     stubFor(
       get("/sync/organisation-types/$organisationId")
@@ -226,17 +291,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-
-  private fun organisationTypes() = SyncTypesResponse(
-    organisationId = 234324,
-    types = listOf(
-      SyncOrganisationType(
-        "some type",
-        createdBy = "a user",
-        createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-      ),
-    ),
-  )
 
   fun stubGetSyncOrganisationWeb(organisationWebId: Long, response: SyncWebResponse = organisationWeb()) {
     stubFor(
@@ -250,14 +304,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun organisationWeb() = SyncWebResponse(
-    organisationWebAddressId = 1234567,
-    organisationId = 234324,
-    webAddress = "web address",
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
-
   fun stubGetSyncOrganisationAddress(organisationAddressId: Long, response: SyncAddressResponse = organisationAddress()) {
     stubFor(
       get("/sync/organisation-address/$organisationAddressId")
@@ -269,17 +315,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-
-  private fun organisationAddress() = SyncAddressResponse(
-    organisationAddressId = 1234567,
-    organisationId = 345567,
-    primaryAddress = true,
-    mailAddress = false,
-    serviceAddress = false,
-    noFixedAddress = false,
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
 
   fun stubGetSyncOrganisationEmail(organisationEmailId: Long, response: SyncEmailResponse = organisationEmail()) {
     stubFor(
@@ -293,14 +328,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun organisationEmail() = SyncEmailResponse(
-    organisationEmailId = 1234567,
-    organisationId = 324524,
-    emailAddress = "joe@joe.com",
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
-
   fun stubGetSyncOrganisationPhone(organisationPhoneId: Long, response: SyncPhoneResponse = organisationPhone()) {
     stubFor(
       get("/sync/organisation-phone/$organisationPhoneId")
@@ -313,15 +340,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  private fun organisationPhone() = SyncPhoneResponse(
-    organisationPhoneId = 1234567,
-    organisationId = 34535,
-    phoneType = "SOME_TYPE",
-    phoneNumber = "12345 234",
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
-
   fun stubGetSyncOrganisationAddressPhone(organisationAddressPhoneId: Long, response: SyncAddressPhoneResponse = organisationAddressPhone()) {
     stubFor(
       get("/sync/organisation-address-phone/$organisationAddressPhoneId")
@@ -333,17 +351,6 @@ class OrganisationsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-
-  private fun organisationAddressPhone() = SyncAddressPhoneResponse(
-    organisationAddressPhoneId = 1234567,
-    organisationAddressId = 12346,
-    organisationPhoneId = 12345,
-    organisationId = 34535,
-    phoneType = "SOME_TYPE",
-    phoneNumber = "12345 234",
-    createdBy = "a user",
-    createdTime = LocalDateTime.parse("2022-01-01T12:13"),
-  )
 
   fun pageOrganisationIdResponse(
     count: Long,
