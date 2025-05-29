@@ -5,7 +5,6 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
 import kotlinx.coroutines.channels.ReceiveChannel
@@ -36,7 +35,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 import java.util.*
 import java.util.concurrent.atomic.AtomicInteger
-import kotlin.collections.plusAssign
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Service
@@ -45,7 +43,7 @@ class ContactPersonReconciliationService(
   private val nomisApiService: ContactPersonNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val dpsApiService: ContactPersonDpsApiService,
-  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val prisonerContactPageSize: Long = 10,
+  @Value("\${reports.contact-person.prisoner-contact.reconciliation.page-size:10}") private val prisonerContactPageSize: Int = 10,
   @Value("\${reports.contact-person.person-contact.reconciliation.page-size:10}") private val personContactPageSize: Int = 10,
 ) {
   internal companion object {
@@ -54,33 +52,25 @@ class ContactPersonReconciliationService(
     const val TELEMETRY_PERSON_PREFIX = "contact-person-reconciliation"
   }
 
-  suspend fun generatePrisonerContactReconciliationReport(): List<MismatchPrisonerContacts> {
-    val mismatches: MutableList<MismatchPrisonerContacts> = mutableListOf()
-    var lastBookingId = 0L
-    var pageErrorCount = 0L
+  suspend fun generatePrisonerContactReconciliationReport(): PrisonerContactsReconciliationResult {
+    val prisonersCount = AtomicInteger(0)
+    val pagesCount = AtomicInteger(0)
 
-    do {
-      val result = getNextBookingsForPage(lastBookingId)
-
-      when (result) {
-        is BookingSuccessPageResult -> {
-          if (result.value.prisonerIds.isNotEmpty()) {
-            result.value.checkPageOfPrisonerContactsMatches().also {
-              mismatches += it.mismatches
-              lastBookingId = it.lastBookingId
-            }
-          }
-        }
-
-        is BookingErrorPageResult -> {
-          // skip this "page" by moving the bookingId pointer up
-          lastBookingId += prisonerContactPageSize.toInt()
-          pageErrorCount++
-        }
+    return coroutineScope {
+      val mismatchesChannel = Channel<MismatchPrisonerContacts>(capacity = UNLIMITED)
+      val channel = producePrisonerIds(pagesCount)
+      val jobs = (1L..prisonerContactPageSize).map { launchCheckPrisonerMatcher(channel, mismatchesChannel, prisonersCount) }
+      launch {
+        // when all jobs finished (there are no more prisoners to process), we can shut down the mismatch channel and return the results
+        jobs.forEach { it.join() }
+        mismatchesChannel.close()
       }
-    } while (result.notLastPage() && notManyPageErrors(pageErrorCount))
-
-    return mismatches.toList()
+      PrisonerContactsReconciliationResult(
+        mismatches = mismatchesChannel.toList(),
+        prisonersChecked = prisonersCount.get(),
+        pagesChecked = pagesCount.get(),
+      )
+    }
   }
 
   suspend fun generatePersonContactReconciliationReport(): PersonContactsReconciliationResult {
@@ -115,6 +105,16 @@ class ContactPersonReconciliationService(
       contactsCount.incrementAndGet()
     }
   }
+  fun CoroutineScope.launchCheckPrisonerMatcher(
+    channel: ReceiveChannel<PrisonerIds>,
+    mismatchesChannel: Channel<MismatchPrisonerContacts>,
+    prisonersCount: AtomicInteger,
+  ) = launch {
+    for (prisonerId in channel) {
+      checkPrisonerContactsMatch(prisonerId)?.also { mismatchesChannel.send(it) }
+      prisonersCount.incrementAndGet()
+    }
+  }
 
   fun CoroutineScope.producePersonIds(pagesCount: AtomicInteger) = produce(capacity = personContactPageSize * 2) {
     var lastPersonId = 0L
@@ -146,6 +146,36 @@ class ContactPersonReconciliationService(
     channel.close()
   }
 
+  fun CoroutineScope.producePrisonerIds(pagesCount: AtomicInteger) = produce(capacity = prisonerContactPageSize * 2) {
+    var lastBookingId = 0L
+    var pageErrorCount = 0L
+
+    do {
+      val result = getNextBookingsForPage(lastBookingId)
+
+      when (result) {
+        is BookingSuccessPageResult -> {
+          if (result.value.prisonerIds.isNotEmpty()) {
+            pagesCount.incrementAndGet()
+            result.value.prisonerIds.forEach {
+              send(it)
+            }
+            lastBookingId = result.value.lastBookingId
+          }
+        }
+
+        is BookingErrorPageResult -> {
+          // skip this "page" by moving the bookingId pointer up
+          lastBookingId += prisonerContactPageSize
+          pageErrorCount++
+        }
+      }
+    } while (result.notLastPage() && notManyPageErrors(pageErrorCount))
+
+    // no more prisoner ids so signal a close of the channel
+    channel.close()
+  }
+
   private suspend fun checkTotalsMatch() = runCatching {
     val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getPersonIdsTotals().totalElements } to
@@ -169,19 +199,9 @@ class ContactPersonReconciliationService(
     )
   }
 
-  private suspend fun BookingIdsWithLast.checkPageOfPrisonerContactsMatches(): PrisonerMismatchPageResult {
-    val prisonerIds = this.prisonerIds
-    val mismatches = withContext(Dispatchers.Unconfined) {
-      prisonerIds.map { async { checkPrisonerContactsMatch(it) } }
-    }.awaitAll().filterNotNull()
-    return PrisonerMismatchPageResult(mismatches, prisonerIds.last().bookingId)
-  }
-
   private fun notManyPageErrors(errors: Long): Boolean = errors < 30
 
-  data class PrisonerMismatchPageResult(val mismatches: List<MismatchPrisonerContacts>, val lastBookingId: Long)
-
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerContactPageSize.toInt()) }
+  private suspend fun getNextBookingsForPage(lastBookingId: Long): BookingPageResult = runCatching { nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerContactPageSize) }
     .onFailure {
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
@@ -513,7 +533,7 @@ class ContactPersonReconciliationService(
 
   // The last page will be a non-null page with items less than page size
   private fun BookingPageResult.notLastPage(): Boolean = when (this) {
-    is BookingSuccessPageResult -> this.value.prisonerIds.size == prisonerContactPageSize.toInt()
+    is BookingSuccessPageResult -> this.value.prisonerIds.size == prisonerContactPageSize
     is BookingErrorPageResult -> true
   }
 
@@ -590,5 +610,10 @@ data class MismatchPersonContacts(
 data class PersonContactsReconciliationResult(
   val mismatches: List<MismatchPersonContacts>,
   val contactsChecked: Int,
+  val pagesChecked: Int,
+)
+data class PrisonerContactsReconciliationResult(
+  val mismatches: List<MismatchPrisonerContacts>,
+  val prisonersChecked: Int,
   val pagesChecked: Int,
 )
