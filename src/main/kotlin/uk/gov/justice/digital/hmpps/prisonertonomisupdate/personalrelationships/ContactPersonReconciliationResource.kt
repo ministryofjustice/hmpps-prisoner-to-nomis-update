@@ -30,15 +30,23 @@ class ContactPersonReconciliationResource(
   @PutMapping("/contact-person/prisoner-contact/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun generatePrisonerContactReconciliationReport() {
-    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf())
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-requested",
+      mapOf(),
+    )
 
     reportScope.launch {
       runCatching { reconciliationService.generatePrisonerContactReconciliationReport() }
         .onSuccess {
-          log.info("Prisoner contacts reconciliation report completed with ${it.size} mismatches")
+          log.info("Prisoner contacts reconciliation report completed with ${it.mismatches.size} mismatches")
           telemetryClient.trackEvent(
             "$TELEMETRY_PRISONER_PREFIX-report",
-            mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asPrisonerMap(),
+            mapOf(
+              "prisoners-count" to it.prisonersChecked.toString(),
+              "pages-count" to it.pagesChecked.toString(),
+              "mismatch-count" to it.mismatches.size.toString(),
+              "success" to "true",
+            ) + it.mismatches.asPrisonerMap(),
           )
         }
         .onFailure {
