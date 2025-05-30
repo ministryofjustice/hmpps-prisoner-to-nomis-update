@@ -42,7 +42,7 @@ class ContactPersonReconciliationResource(
           telemetryClient.trackEvent(
             "$TELEMETRY_PRISONER_PREFIX-report",
             mapOf(
-              "prisoners-count" to it.prisonersChecked.toString(),
+              "prisoners-count" to it.itemsChecked.toString(),
               "pages-count" to it.pagesChecked.toString(),
               "mismatch-count" to it.mismatches.size.toString(),
               "success" to "true",
@@ -70,7 +70,7 @@ class ContactPersonReconciliationResource(
           telemetryClient.trackEvent(
             "$TELEMETRY_PERSON_PREFIX-report",
             mapOf(
-              "contacts-count" to it.contactsChecked.toString(),
+              "contacts-count" to it.itemsChecked.toString(),
               "pages-count" to it.pagesChecked.toString(),
               "mismatch-count" to it.mismatches.size.toString(),
               "success" to "true",
