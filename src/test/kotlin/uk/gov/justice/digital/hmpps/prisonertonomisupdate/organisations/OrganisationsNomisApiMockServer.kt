@@ -395,11 +395,10 @@ class OrganisationsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   }
   fun stubDeleteCorporateAddressPhone(
     corporateId: Long = 123456,
-    addressId: Long = 78990,
     phoneId: Long = 73737,
   ) {
     nomisApi.stubFor(
-      delete(urlEqualTo("/corporates/$corporateId/address/$addressId/phone/$phoneId")).willReturn(
+      delete(urlEqualTo("/corporates/$corporateId/address/phone/$phoneId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),

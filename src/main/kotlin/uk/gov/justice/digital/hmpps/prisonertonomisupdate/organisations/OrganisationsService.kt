@@ -426,9 +426,103 @@ class OrganisationsService(
     }
   }
 
-  suspend fun organisationAddressPhoneCreated(event: OrganisationAddressPhoneEvent) = log.debug("Received organisation address phone created event for {} on organisation {}", event.addressPhoneId, event.organisationId)
-  suspend fun organisationAddressPhoneUpdated(event: OrganisationAddressPhoneEvent) = log.debug("Received organisation address phone updated event for {} on organisation {}", event.addressPhoneId, event.organisationId)
-  suspend fun organisationAddressPhoneDeleted(event: OrganisationAddressPhoneEvent) = log.debug("Received organisation address phone deleted event for {} on organisation {}", event.addressPhoneId, event.organisationId)
+  suspend fun organisationAddressPhoneCreated(event: OrganisationAddressPhoneEvent) {
+    val entityName = ORGANISATION_ADDRESS_PHONE.entityName
+    val dpsOrganisationAddressPhoneId = event.addressPhoneId
+    val telemetryMap = mutableMapOf(
+      "dpsOrganisationAddressPhoneId" to dpsOrganisationAddressPhoneId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = entityName
+        telemetryClient = this@OrganisationsService.telemetryClient
+        retryQueueService = organisationsRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsAddressPhoneIdOrNull(dpsOrganisationAddressPhoneId)
+        }
+        transform {
+          val dpsAddressPhone = dpsApiService.getSyncOrganisationAddressPhone(dpsOrganisationAddressPhoneId).also {
+            telemetryMap["dpsAddressPhoneId"] = it.organisationAddressPhoneId.toString()
+            telemetryMap["dpsAddressId"] = it.organisationAddressId.toString()
+            telemetryMap["organisationId"] = it.organisationId.toString()
+          }
+          val nomisAddressId = mappingApiService.getByDpsAddressId(dpsAddressPhone.organisationAddressId).nomisId.also {
+            telemetryMap["nomisAddressId"] = it.toString()
+          }
+          nomisApiService.createCorporateAddressPhone(dpsAddressPhone.organisationId, nomisAddressId, dpsAddressPhone.toNomisCreateRequest()).also {
+            telemetryMap["nomisAddressPhoneId"] = it.id.toString()
+          }.let {
+            OrganisationsMappingDto(
+              dpsId = dpsOrganisationAddressPhoneId.toString(),
+              nomisId = it.id,
+              mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createAddressPhoneMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+  suspend fun organisationAddressPhoneUpdated(event: OrganisationAddressPhoneEvent) {
+    val entityName = ORGANISATION_ADDRESS_PHONE.entityName
+    val dpsAddressPhoneId = event.addressPhoneId
+    val telemetryMap = mutableMapOf(
+      "dpsAddressPhoneId" to dpsAddressPhoneId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisAddressPhoneId = mappingApiService.getByDpsAddressPhoneId(dpsAddressPhoneId).nomisId.also {
+        telemetryMap["nomisAddressPhoneId"] = it.toString()
+      }
+      val dpsAddressPhone = dpsApiService.getSyncOrganisationAddressPhone(dpsAddressPhoneId).also {
+        telemetryMap["organisationId"] = it.organisationId.toString()
+        telemetryMap["dpsAddressId"] = it.organisationAddressId.toString()
+        telemetryMap["dpsAddressPhoneId"] = it.organisationAddressPhoneId.toString()
+      }
+      val nomisAddressId = mappingApiService.getByDpsAddressId(dpsAddressPhone.organisationAddressId).nomisId.also {
+        telemetryMap["nomisAddressId"] = it.toString()
+      }
+      nomisApiService.updateCorporateAddressPhone(
+        corporateId = dpsAddressPhone.organisationId,
+        addressId = nomisAddressId,
+        phoneId = nomisAddressPhoneId,
+        dpsAddressPhone.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
+  suspend fun organisationAddressPhoneDeleted(event: OrganisationAddressPhoneEvent) {
+    val entityName = ORGANISATION_ADDRESS_PHONE.entityName
+    val dpsAddressPhoneId = event.addressPhoneId
+    val organisationId = event.organisationId
+    val telemetryMap = mutableMapOf(
+      "dpsAddressPhoneId" to dpsAddressPhoneId.toString(),
+      "organisationId" to organisationId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsAddressPhoneIdOrNull(dpsAddressPhoneId)?.nomisId?.also {
+        telemetryMap["nomisAddressPhoneId"] = it.toString()
+        nomisApiService.deleteCorporateAddressPhone(
+          corporateId = organisationId,
+          phoneId = it,
+        )
+        mappingApiService.deleteByNomisAddressPhoneId(nomisAddressPhoneId = it)
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
 
   suspend fun organisationEmailCreated(event: OrganisationEmailEvent) {
     val entityName = ORGANISATION_EMAIL.entityName
@@ -575,7 +669,7 @@ class OrganisationsService(
   }
 
   suspend fun createAddressPhoneMapping(message: CreateMappingRetryMessage<OrganisationsMappingDto>) {
-    mappingApiService.createPhoneMapping(message.mapping).also {
+    mappingApiService.createAddressPhoneMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "${ORGANISATION_ADDRESS_PHONE.entityName}-create-success",
         message.telemetryAttributes,
@@ -584,11 +678,6 @@ class OrganisationsService(
   }
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
-}
-
-enum class OrganisationSource {
-  DPS,
-  NOMIS,
 }
 
 private fun SourcedOrganisationsEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
