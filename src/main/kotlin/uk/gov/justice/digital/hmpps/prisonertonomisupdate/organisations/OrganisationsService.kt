@@ -15,16 +15,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateEmailRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporatePhoneRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateTypesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_ADDRESS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_ADDRESS_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_EMAIL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_PHONE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_TYPES
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_WEB
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncPhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncTypesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncWebResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -66,7 +69,7 @@ class OrganisationsService(
     log.debug("Received organisation deleted event for organisation {}", event.organisationId)
     val dpsOrganisationId = event.organisationId.toString()
     val telemetryMap = mutableMapOf("dpsOrganisationId" to dpsOrganisationId)
-    if (event.originatedInDPS()) {
+    if (event.didOriginateInDPS()) {
       runCatching {
         mappingApiService.getByDpsOrganisationIdOrNull(dpsOrganisationId)?.also { mapping ->
           telemetryMap["nomisOrganisationId"] = mapping.nomisId.toString()
@@ -85,7 +88,24 @@ class OrganisationsService(
     }
   }
 
-  suspend fun organisationTypesUpdated(event: OrganisationEvent) = log.debug("Received organisation types updated event for {}", event.organisationId)
+  suspend fun organisationTypesUpdated(event: OrganisationEvent) {
+    val entityName = ORGANISATION_TYPES.entityName
+    val organisationId = event.organisationId
+    val telemetryMap = mutableMapOf(
+      "organisationId" to organisationId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val dpsTypes = dpsApiService.getSyncOrganisationTypes(organisationId)
+      nomisApiService.updateCorporateTypes(
+        corporateId = organisationId,
+        request = dpsTypes.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
 
   suspend fun organisationAddressCreated(event: OrganisationAddressEvent) {
     val entityName = ORGANISATION_ADDRESS.entityName
@@ -516,7 +536,7 @@ enum class OrganisationSource {
   NOMIS,
 }
 
-private fun SourcedOrganisationsEvent.originatedInDPS() = this.additionalInformation.source == "DPS"
+private fun SourcedOrganisationsEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
 private fun SourcedOrganisationChildEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
 
 private fun SyncPhoneResponse.toNomisCreateRequest(): CreateCorporatePhoneRequest = CreateCorporatePhoneRequest(
@@ -591,4 +611,7 @@ private fun SyncAddressPhoneResponse.toNomisUpdateRequest(): UpdateCorporatePhon
   number = this.phoneNumber,
   extension = this.extNumber,
   typeCode = this.phoneType,
+)
+private fun SyncTypesResponse.toNomisUpdateRequest(): UpdateCorporateTypesRequest = UpdateCorporateTypesRequest(
+  typeCodes = this.types.map { it.type }.toSet(),
 )
