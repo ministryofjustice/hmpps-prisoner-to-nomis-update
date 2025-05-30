@@ -6,7 +6,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -21,13 +20,13 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OrganisationsMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationPhone
@@ -49,53 +48,25 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
   private val dpsApi = OrganisationsDpsApiExtension.Companion.dpsOrganisationsServer
 
   @Nested
-  @DisplayName("person.organisation.deleted")
-  inner class OrganisationDeleted {
+  inner class Organisation {
     @Nested
-    @DisplayName("when NOMIS is the origin of the Organisation delete")
-    inner class WhenNomisDeleted {
+    @DisplayName("organisations-api.organisation.created")
+    inner class OrganisationCreated {
 
-      @BeforeEach
-      fun setup() {
-        publishDeleteOrganisationDomainEvent(source = OrganisationSource.NOMIS)
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will send telemetry event showing it ignored the update`() {
-        verify(telemetryClient).trackEvent(
-          eq("organisation-deleted-ignored"),
-          any(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `will not try to delete the Organisation in NOMIS`() {
-        nomisApi.verify(
-          0,
-          deleteRequestedFor(anyUrl()),
-        )
-      }
-    }
-
-    @Nested
-    @DisplayName("when DPS is the origin of the Organisation delete")
-    inner class WhenDpsDeleted {
       @Nested
-      @DisplayName("when no mapping found")
-      inner class WhenMappingDoesNotExist {
+      @DisplayName("when NOMIS is the origin of an organisation create")
+      inner class WhenNomisCreated {
+
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetByDpsOrganisationId(HttpStatus.NOT_FOUND)
-          publishDeleteOrganisationDomainEvent()
+          publishCreateOrganisationDomainEvent(organisationId = "12345", source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
 
         @Test
-        fun `will ignore request since delete may have happened already by previous event`() {
+        fun `will send telemetry event showing the ignore`() {
           verify(telemetryClient).trackEvent(
-            eq("organisation-deleted-skipped"),
+            eq("organisation-create-ignored"),
             any(),
             isNull(),
           )
@@ -103,108 +74,449 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
-      @DisplayName("when mapping is found")
-      inner class HappyPath {
-        private val dpsOrganisationId = "565643"
-        private val nomisOrganisationId = 123456L
+      @DisplayName("when DPS is the origin of an organisation create")
+      inner class WhenDpsCreated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsId = 1234567L
+          private val nomisId = 7654321L
+          private val organisationId = 54321L
 
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetByDpsOrganisationId(
-            dpsOrganisationId,
-            OrganisationsMappingDto(
-              dpsId = dpsOrganisationId,
-              nomisId = nomisOrganisationId,
-              mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
-            ),
-          )
-          nomisApi.stubDeleteCorporateOrganisation(corporateId = nomisOrganisationId)
-          mappingApi.stubDeleteByDpsOrganisationId(dpsOrganisationId = dpsOrganisationId)
-          publishDeleteOrganisationDomainEvent(organisationId = dpsOrganisationId)
-          waitForAnyProcessingToComplete()
-        }
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationIdOrNull(dpsOrganisationId = dpsId, null)
+            dpsApi.stubGetSyncOrganisation(
+              organisationId = dpsId,
+              organisation().copy(
+                organisationId = dpsId,
+              ),
+            )
+            nomisApi.stubCreateCorporate()
+            mappingApi.stubCreateOrganisationMapping()
+            publishCreateOrganisationDomainEvent(organisationId = dpsId.toString())
+            waitForAnyProcessingToComplete()
+          }
 
-        @Test
-        fun `will send telemetry event showing the delete`() {
-          verify(telemetryClient).trackEvent(
-            eq("organisation-deleted-success"),
-            any(),
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `telemetry will contain key facts about the deleted organisation`() {
-          verify(telemetryClient).trackEvent(
-            eq("organisation-deleted-success"),
-            check {
-              assertThat(it).containsEntry("dpsOrganisationId", dpsOrganisationId)
-              assertThat(it).containsEntry("nomisOrganisationId", nomisOrganisationId.toString())
-            },
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will call the mapping service to get the NOMIS organisation id`() {
-          mappingApi.verify(getRequestedFor(urlMatching("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")))
-        }
-
-        @Test
-        fun `will delete the organisation in NOMIS`() {
-          nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$nomisOrganisationId")))
-        }
-
-        @Test
-        fun `will delete the organisation mapping`() {
-          mappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")))
-        }
-      }
-
-      @Nested
-      @DisplayName("when mapping delete fails")
-      inner class WhenMappingDeleteFails {
-        private val dpsOrganisationId = "565643"
-        private val nomisOrganisationId = 123456L
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetByDpsOrganisationId(
-            dpsOrganisationId,
-            OrganisationsMappingDto(
-              dpsId = dpsOrganisationId,
-              nomisId = nomisOrganisationId,
-              mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
-            ),
-          )
-          nomisApi.stubDeleteCorporateOrganisation(corporateId = nomisOrganisationId)
-          mappingApi.stubDeleteByDpsOrganisationId(status = HttpStatus.INTERNAL_SERVER_ERROR)
-          publishDeleteOrganisationDomainEvent(organisationId = dpsOrganisationId)
-          await untilAsserted {
+          @Test
+          fun `will send telemetry event showing the create`() {
             verify(telemetryClient).trackEvent(
-              eq("organisation-deleted-success"),
+              eq("organisation-create-success"),
               any(),
               isNull(),
             )
           }
+
+          @Test
+          fun `telemetry will contain key facts about the organisation created`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-create-success"),
+              check {
+                assertThat(it).containsEntry("organisationId", dpsId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get organisation details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation/$dpsId")))
+          }
+
+          @Test
+          fun `will create the organisation in NOMIS`() {
+            nomisApi.verify(postRequestedFor(urlEqualTo("/corporates")))
+          }
+
+          @Test
+          fun `the created  will contain details of the DPS contact `() {
+            nomisApi.verify(
+              postRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("name", "Test organisation")
+                .withRequestBodyJsonPath("active", true)
+                .withRequestBodyJsonPath("caseloadId", "MDI")
+                .withRequestBodyJsonPath("comment", "some comments")
+                .withRequestBodyJsonPath("programmeNumber", "prog")
+                .withRequestBodyJsonPath("vatNumber", "123 34"),
+            )
+          }
+
+          @Test
+          fun `will create a mapping between the NOMIS and DPS ids`() {
+            mappingApi.verify(
+              postRequestedFor(urlEqualTo("/mapping/corporate/organisation"))
+                .withRequestBodyJsonPath("dpsId", "$dpsId")
+                .withRequestBodyJsonPath("nomisId", dpsId)
+                .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            )
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service fails once")
+        inner class MappingFailure {
+          private val dpsId = 1234567L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationIdOrNull(dpsOrganisationId = dpsId, null)
+            dpsApi.stubGetSyncOrganisation(
+              organisationId = dpsId,
+              organisation().copy(organisationId = dpsId),
+            )
+            nomisApi.stubCreateCorporate()
+            mappingApi.stubCreateOrganisationMappingFollowedBySuccess()
+            publishCreateOrganisationDomainEvent(organisationId = dpsId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for initial failure`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-mapping-create-failed"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the organisation in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-create-success"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates")))
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service detects a duplicate mapping")
+        inner class DuplicateMappingFailure {
+          private val dpsId = 1234567L
+          private val nomisId = 7654321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationIdOrNull(dpsOrganisationId = dpsId, null)
+            dpsApi.stubGetSyncOrganisation(
+              organisationId = dpsId,
+              organisation().copy(
+                organisationId = dpsId,
+              ),
+            )
+            nomisApi.stubCreateCorporate()
+            mappingApi.stubCreateOrganisationMapping(
+              error = DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = OrganisationsMappingDto(
+                    dpsId = dpsId.toString(),
+                    nomisId = 999999,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                  existing = OrganisationsMappingDto(
+                    dpsId = dpsId.toString(),
+                    nomisId = nomisId,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateOrganisationDomainEvent(organisationId = dpsId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for duplicate`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-duplicate"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the organisation in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-duplicate"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates")))
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation.updated")
+    inner class OrganisationUpdated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation update")
+      inner class WhenNomisUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          publishUpdateOrganisationDomainEvent(organisationId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
         }
 
         @Test
-        fun `will delete the organisation in NOMIS`() {
-          nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$nomisOrganisationId")))
-        }
-
-        @Test
-        fun `will try delete the organisation mapping once and ignore failure`() {
-          mappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")))
+        fun `will send telemetry event showing the ignore`() {
           verify(telemetryClient).trackEvent(
-            eq("organisation-mapping-deleted-failed"),
+            eq("organisation-update-ignored"),
             any(),
             isNull(),
           )
         }
       }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation update")
+      inner class WhenDpsUpdated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationId(
+              dpsOrganisationId = organisationId,
+              OrganisationsMappingDto(
+                dpsId = organisationId.toString(),
+                nomisId = organisationId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            dpsApi.stubGetSyncOrganisation(
+              organisationId = organisationId,
+              organisation().copy(
+                organisationId = organisationId,
+              ),
+            )
+            nomisApi.stubUpdateCorporate(corporateId = organisationId)
+            publishUpdateOrganisationDomainEvent(organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the update`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-update-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the  updated`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-update-success"),
+              check {
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get organisation details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation/$organisationId")))
+          }
+
+          @Test
+          fun `will update the organisation in NOMIS`() {
+            nomisApi.verify(putRequestedFor(urlEqualTo("/corporates/$organisationId")))
+          }
+
+          @Test
+          fun `the updated  will contain details of the DPS contact `() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("name", "Test organisation")
+                .withRequestBodyJsonPath("active", true)
+                .withRequestBodyJsonPath("caseloadId", "MDI")
+                .withRequestBodyJsonPath("comment", "some comments")
+                .withRequestBodyJsonPath("programmeNumber", "prog")
+                .withRequestBodyJsonPath("vatNumber", "123 34"),
+            )
+          }
+        }
+      }
     }
+
+    @Nested
+    @DisplayName("organisations-api.organisation.deleted")
+    inner class OrganisationDeleted {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation delete")
+      inner class WhenNomisDeleted {
+
+        @BeforeEach
+        fun setUp() {
+          publishDeleteOrganisationDomainEvent(organisationId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-delete-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation delete")
+      inner class WhenDpsDeleted {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationIdOrNull(
+              dpsOrganisationId = organisationId,
+              OrganisationsMappingDto(
+                dpsId = organisationId.toString(),
+                nomisId = organisationId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubDeleteCorporate(corporateId = organisationId)
+            mappingApi.stubDeleteByNomisOrganisationId(nomisOrganisationId = organisationId)
+            publishDeleteOrganisationDomainEvent(organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the delete`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-delete-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the  deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-delete-success"),
+              check {
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will delete the organisation in NOMIS`() {
+            nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$organisationId")))
+          }
+
+          @Test
+          fun `will delete the organisation mapping`() {
+            mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/corporate/organisation/nomis-organisation-id/$organisationId")))
+          }
+        }
+
+        @Nested
+        @DisplayName("Organisation mapping already deleted")
+        inner class MappingMissing {
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsOrganisationIdOrNull(dpsOrganisationId = organisationId, null)
+            publishDeleteOrganisationDomainEvent(organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the organisation deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-delete-skipped"),
+              check {
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun publishCreateOrganisationDomainEvent(organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation.created") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationMessagePayload(organisationId = organisationId, eventType = this, source = source),
+        )
+      }
+    }
+
+    private fun publishUpdateOrganisationDomainEvent(organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation.updated") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationMessagePayload(organisationId = organisationId, eventType = this, source = source),
+        )
+      }
+    }
+
+    private fun publishDeleteOrganisationDomainEvent(organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation.deleted") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationMessagePayload(
+            eventType = this,
+            source = source,
+            organisationId = organisationId,
+          ),
+        )
+      }
+    }
+
+    fun organisationMessagePayload(
+      eventType: String,
+      source: String = "DPS",
+      organisationId: String = "87654",
+    ) = //language=JSON
+      """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "organisationId": "$organisationId",
+        "source": "$source"
+      }
+    }
+    """
   }
 
   @Nested
@@ -295,7 +607,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun publishUpdateOrganisationTypeDomainEvent(organisationId: String, source: String = "DPS") {
       with("organisations-api.organisation-types.updated") {
-        publishDomainEvent(eventType = this, payload = organisationTypeMessagePayload(eventType = this, organisationId = organisationId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationTypeMessagePayload(eventType = this, organisationId = organisationId, source = source),
+        )
       }
     }
 
@@ -363,7 +678,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 street = "my street",
               ),
             )
-            nomisApi.stubCreateCorporateAddress(corporateId = organisationId, createCorporateAddressResponse().copy(id = nomisAddressId))
+            nomisApi.stubCreateCorporateAddress(
+              corporateId = organisationId,
+              createCorporateAddressResponse().copy(id = nomisAddressId),
+            )
             mappingApi.stubCreateAddressMapping()
             publishCreateOrganisationAddressDomainEvent(addressId = dpsAddressId.toString())
             waitForAnyProcessingToComplete()
@@ -453,7 +771,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporateAddress(corporateId = organisationId, createCorporateAddressResponse().copy(id = nomisAddressId))
+            nomisApi.stubCreateCorporateAddress(
+              corporateId = organisationId,
+              createCorporateAddressResponse().copy(id = nomisAddressId),
+            )
             mappingApi.stubCreateAddressMappingFollowedBySuccess()
             publishCreateOrganisationAddressDomainEvent(addressId = dpsAddressId.toString())
           }
@@ -510,7 +831,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporateAddress(organisationId, createCorporateAddressResponse().copy(id = nomisAddressId))
+            nomisApi.stubCreateCorporateAddress(
+              organisationId,
+              createCorporateAddressResponse().copy(id = nomisAddressId),
+            )
             mappingApi.stubCreateAddressMapping(
               error = DuplicateMappingErrorResponse(
                 moreInfo = DuplicateErrorContentObject(
@@ -721,7 +1045,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.stubDeleteCorporateAddress(corporateId = organisationId, addressId = nomisAddressId)
             mappingApi.stubDeleteByNomisAddressId(nomisAddressId = nomisAddressId)
-            publishDeleteOrganisationAddressDomainEvent(addressId = dpsAddressId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationAddressDomainEvent(
+              addressId = dpsAddressId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -767,7 +1094,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             mappingApi.stubGetByDpsAddressIdOrNull(dpsAddressId = dpsAddressId, null)
-            publishDeleteOrganisationAddressDomainEvent(addressId = dpsAddressId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationAddressDomainEvent(
+              addressId = dpsAddressId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -788,17 +1118,37 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun publishCreateOrganisationAddressDomainEvent(addressId: String, source: String = "DPS") {
       with("organisations-api.organisation-address.created") {
-        publishDomainEvent(eventType = this, payload = organisationAddressMessagePayload(eventType = this, addressId = addressId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressMessagePayload(eventType = this, addressId = addressId, source = source),
+        )
       }
     }
+
     private fun publishUpdateOrganisationAddressDomainEvent(addressId: String, source: String = "DPS") {
       with("organisations-api.organisation-address.updated") {
-        publishDomainEvent(eventType = this, payload = organisationAddressMessagePayload(eventType = this, addressId = addressId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressMessagePayload(eventType = this, addressId = addressId, source = source),
+        )
       }
     }
-    private fun publishDeleteOrganisationAddressDomainEvent(addressId: String, organisationId: String, source: String = "DPS") {
+
+    private fun publishDeleteOrganisationAddressDomainEvent(
+      addressId: String,
+      organisationId: String,
+      source: String = "DPS",
+    ) {
       with("organisations-api.organisation-address.deleted") {
-        publishDomainEvent(eventType = this, payload = organisationAddressMessagePayload(eventType = this, addressId = addressId, organisationId = organisationId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressMessagePayload(
+            eventType = this,
+            addressId = addressId,
+            organisationId = organisationId,
+            source = source,
+          ),
+        )
       }
     }
 
@@ -869,7 +1219,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 extNumber = "x555",
               ),
             )
-            nomisApi.stubCreateCorporatePhone(corporateId = organisationId, createCorporatePhoneResponse().copy(id = nomisPhoneId))
+            nomisApi.stubCreateCorporatePhone(
+              corporateId = organisationId,
+              createCorporatePhoneResponse().copy(id = nomisPhoneId),
+            )
             mappingApi.stubCreatePhoneMapping()
             publishCreateOrganisationPhoneDomainEvent(phoneId = dpsPhoneId.toString())
             waitForAnyProcessingToComplete()
@@ -945,7 +1298,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporatePhone(corporateId = organisationId, createCorporatePhoneResponse().copy(id = nomisPhoneId))
+            nomisApi.stubCreateCorporatePhone(
+              corporateId = organisationId,
+              createCorporatePhoneResponse().copy(id = nomisPhoneId),
+            )
             mappingApi.stubCreatePhoneMappingFollowedBySuccess()
             publishCreateOrganisationPhoneDomainEvent(phoneId = dpsPhoneId.toString())
           }
@@ -1201,7 +1557,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.stubDeleteCorporatePhone(corporateId = organisationId, phoneId = nomisPhoneId)
             mappingApi.stubDeleteByNomisPhoneId(nomisPhoneId = nomisPhoneId)
-            publishDeleteOrganisationPhoneDomainEvent(phoneId = dpsPhoneId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationPhoneDomainEvent(
+              phoneId = dpsPhoneId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -1247,7 +1606,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             mappingApi.stubGetByDpsPhoneIdOrNull(dpsPhoneId = dpsPhoneId, null)
-            publishDeleteOrganisationPhoneDomainEvent(phoneId = dpsPhoneId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationPhoneDomainEvent(
+              phoneId = dpsPhoneId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -1268,17 +1630,37 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun publishCreateOrganisationPhoneDomainEvent(phoneId: String, source: String = "DPS") {
       with("organisations-api.organisation-phone.created") {
-        publishDomainEvent(eventType = this, payload = organisationPhoneMessagePayload(eventType = this, phoneId = phoneId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationPhoneMessagePayload(eventType = this, phoneId = phoneId, source = source),
+        )
       }
     }
+
     private fun publishUpdateOrganisationPhoneDomainEvent(phoneId: String, source: String = "DPS") {
       with("organisations-api.organisation-phone.updated") {
-        publishDomainEvent(eventType = this, payload = organisationPhoneMessagePayload(eventType = this, phoneId = phoneId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationPhoneMessagePayload(eventType = this, phoneId = phoneId, source = source),
+        )
       }
     }
-    private fun publishDeleteOrganisationPhoneDomainEvent(phoneId: String, organisationId: String, source: String = "DPS") {
+
+    private fun publishDeleteOrganisationPhoneDomainEvent(
+      phoneId: String,
+      organisationId: String,
+      source: String = "DPS",
+    ) {
       with("organisations-api.organisation-phone.deleted") {
-        publishDomainEvent(eventType = this, payload = organisationPhoneMessagePayload(eventType = this, phoneId = phoneId, organisationId = organisationId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationPhoneMessagePayload(
+            eventType = this,
+            phoneId = phoneId,
+            organisationId = organisationId,
+            source = source,
+          ),
+        )
       }
     }
 
@@ -1347,7 +1729,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 emailAddress = "07973@somewhere.com",
               ),
             )
-            nomisApi.stubCreateCorporateEmail(corporateId = organisationId, createCorporateEmailResponse().copy(id = nomisEmailId))
+            nomisApi.stubCreateCorporateEmail(
+              corporateId = organisationId,
+              createCorporateEmailResponse().copy(id = nomisEmailId),
+            )
             mappingApi.stubCreateEmailMapping()
             publishCreateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
             waitForAnyProcessingToComplete()
@@ -1421,7 +1806,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporateEmail(corporateId = organisationId, createCorporateEmailResponse().copy(id = nomisEmailId))
+            nomisApi.stubCreateCorporateEmail(
+              corporateId = organisationId,
+              createCorporateEmailResponse().copy(id = nomisEmailId),
+            )
             mappingApi.stubCreateEmailMappingFollowedBySuccess()
             publishCreateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
           }
@@ -1673,7 +2061,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.stubDeleteCorporateEmail(corporateId = organisationId, emailId = nomisEmailId)
             mappingApi.stubDeleteByNomisEmailId(nomisEmailId = nomisEmailId)
-            publishDeleteOrganisationEmailDomainEvent(emailId = dpsEmailId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationEmailDomainEvent(
+              emailId = dpsEmailId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -1719,7 +2110,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             mappingApi.stubGetByDpsEmailIdOrNull(dpsEmailId = dpsEmailId, null)
-            publishDeleteOrganisationEmailDomainEvent(emailId = dpsEmailId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationEmailDomainEvent(
+              emailId = dpsEmailId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -1740,17 +2134,37 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun publishCreateOrganisationEmailDomainEvent(emailId: String, source: String = "DPS") {
       with("organisations-api.organisation-email.created") {
-        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source),
+        )
       }
     }
+
     private fun publishUpdateOrganisationEmailDomainEvent(emailId: String, source: String = "DPS") {
       with("organisations-api.organisation-email.updated") {
-        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source),
+        )
       }
     }
-    private fun publishDeleteOrganisationEmailDomainEvent(emailId: String, organisationId: String, source: String = "DPS") {
+
+    private fun publishDeleteOrganisationEmailDomainEvent(
+      emailId: String,
+      organisationId: String,
+      source: String = "DPS",
+    ) {
       with("organisations-api.organisation-email.deleted") {
-        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, organisationId = organisationId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationEmailMessagePayload(
+            eventType = this,
+            emailId = emailId,
+            organisationId = organisationId,
+            source = source,
+          ),
+        )
       }
     }
 
@@ -1819,7 +2233,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 webAddress = "07973.somewhere.com",
               ),
             )
-            nomisApi.stubCreateCorporateWebAddress(corporateId = organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            nomisApi.stubCreateCorporateWebAddress(
+              corporateId = organisationId,
+              createCorporateWebAddressResponse().copy(id = nomisWebId),
+            )
             mappingApi.stubCreateWebMapping()
             publishCreateOrganisationWebDomainEvent(webId = dpsWebId.toString())
             waitForAnyProcessingToComplete()
@@ -1893,7 +2310,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporateWebAddress(corporateId = organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            nomisApi.stubCreateCorporateWebAddress(
+              corporateId = organisationId,
+              createCorporateWebAddressResponse().copy(id = nomisWebId),
+            )
             mappingApi.stubCreateWebMappingFollowedBySuccess()
             publishCreateOrganisationWebDomainEvent(webId = dpsWebId.toString())
           }
@@ -1950,7 +2370,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
                 organisationId = organisationId,
               ),
             )
-            nomisApi.stubCreateCorporateWebAddress(organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            nomisApi.stubCreateCorporateWebAddress(
+              organisationId,
+              createCorporateWebAddressResponse().copy(id = nomisWebId),
+            )
             mappingApi.stubCreateWebMapping(
               error = DuplicateMappingErrorResponse(
                 moreInfo = DuplicateErrorContentObject(
@@ -2145,7 +2568,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
             )
             nomisApi.stubDeleteCorporateWebAddress(corporateId = organisationId, webAddressId = nomisWebId)
             mappingApi.stubDeleteByNomisWebId(nomisWebId = nomisWebId)
-            publishDeleteOrganisationWebDomainEvent(webId = dpsWebId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationWebDomainEvent(
+              webId = dpsWebId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -2191,7 +2617,10 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
           @BeforeEach
           fun setUp() {
             mappingApi.stubGetByDpsWebIdOrNull(dpsWebId = dpsWebId, null)
-            publishDeleteOrganisationWebDomainEvent(webId = dpsWebId.toString(), organisationId = organisationId.toString())
+            publishDeleteOrganisationWebDomainEvent(
+              webId = dpsWebId.toString(),
+              organisationId = organisationId.toString(),
+            )
             waitForAnyProcessingToComplete()
           }
 
@@ -2212,17 +2641,33 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
 
     private fun publishCreateOrganisationWebDomainEvent(webId: String, source: String = "DPS") {
       with("organisations-api.organisation-web.created") {
-        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source),
+        )
       }
     }
+
     private fun publishUpdateOrganisationWebDomainEvent(webId: String, source: String = "DPS") {
       with("organisations-api.organisation-web.updated") {
-        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source),
+        )
       }
     }
+
     private fun publishDeleteOrganisationWebDomainEvent(webId: String, organisationId: String, source: String = "DPS") {
       with("organisations-api.organisation-web.deleted") {
-        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, organisationId = organisationId, source = source))
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationWebMessagePayload(
+            eventType = this,
+            webId = webId,
+            organisationId = organisationId,
+            source = source,
+          ),
+        )
       }
     }
 
@@ -2244,13 +2689,6 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
     """
   }
 
-  private fun publishDeleteOrganisationDomainEvent(
-    organisationId: String = "565643",
-    source: OrganisationSource = OrganisationSource.DPS,
-  ) {
-    publishOrganisationDomainEvent("organisations-api.organisation.deleted", organisationId, source)
-  }
-
   private fun publishDomainEvent(
     eventType: String,
     payload: String,
@@ -2266,43 +2704,4 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
         ).build(),
     ).get()
   }
-
-  private fun publishOrganisationDomainEvent(
-    eventType: String,
-    organisationId: String,
-    source: OrganisationSource,
-  ) {
-    awsSnsClient.publish(
-      PublishRequest.builder().topicArn(topicArn)
-        .message(
-          organisationMessagePayload(
-            eventType = eventType,
-            organisationId = organisationId,
-            source = source,
-          ),
-        )
-        .messageAttributes(
-          mapOf(
-            "eventType" to MessageAttributeValue.builder().dataType("String")
-              .stringValue(eventType).build(),
-          ),
-        ).build(),
-    ).get()
-  }
 }
-
-fun organisationMessagePayload(
-  eventType: String,
-  organisationId: String,
-  source: OrganisationSource,
-) = //language=JSON
-  """
-    {
-      "eventType":"$eventType", 
-      "detailUrl":"https://somecallback", 
-      "additionalInformation": {
-        "source": "${source.name}",
-        "organisationId": "$organisationId"
-      }
-    }
-    """

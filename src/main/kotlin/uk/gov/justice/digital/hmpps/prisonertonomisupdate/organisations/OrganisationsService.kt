@@ -10,13 +10,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OrganisationsMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateOrganisationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporatePhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCorporateWebAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateEmailRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateOrganisationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporatePhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateTypesRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCorporateWebAddressRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_ADDRESS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_ADDRESS_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsService.Companion.MappingTypes.ORGANISATION_EMAIL
@@ -26,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.Organisa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncEmailResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncTypesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncWebResponse
@@ -62,29 +66,77 @@ class OrganisationsService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun organisationCreated(event: OrganisationEvent) = log.debug("Received organisation created event for organisation {}", event.organisationId)
-  suspend fun organisationUpdated(event: OrganisationEvent) = log.debug("Received organisation updated event for organisation {}", event.organisationId)
+  suspend fun organisationCreated(event: OrganisationEvent) {
+    val entityName = ORGANISATION.entityName
+    val dpsOrganisationId = event.organisationId
+    val telemetryMap = mutableMapOf(
+      "organisationId" to dpsOrganisationId.toString(),
+    )
 
-  suspend fun organisationDeleted(event: OrganisationDeletedEvent) {
-    log.debug("Received organisation deleted event for organisation {}", event.organisationId)
-    val dpsOrganisationId = event.organisationId.toString()
-    val telemetryMap = mutableMapOf("dpsOrganisationId" to dpsOrganisationId)
     if (event.didOriginateInDPS()) {
-      runCatching {
-        mappingApiService.getByDpsOrganisationIdOrNull(dpsOrganisationId)?.also { mapping ->
-          telemetryMap["nomisOrganisationId"] = mapping.nomisId.toString()
-          nomisApiService.deleteCorporateOrganisation(corporateId = mapping.nomisId)
-          tryToDeleteMapping(dpsOrganisationId)
-          telemetryClient.trackEvent("organisation-deleted-success", telemetryMap)
-        } ?: also {
-          telemetryClient.trackEvent("organisation-deleted-skipped", telemetryMap)
+      synchronise {
+        name = entityName
+        telemetryClient = this@OrganisationsService.telemetryClient
+        retryQueueService = organisationsRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getByDpsOrganisationIdOrNull(dpsOrganisationId)
         }
-      }.onFailure { e ->
-        telemetryClient.trackEvent("organisation-deleted-failed", telemetryMap)
-        throw e
+        transform {
+          val dps = dpsApiService.getSyncOrganisation(dpsOrganisationId)
+          nomisApiService.createCorporate(dps.toNomisCreateRequest())
+          OrganisationsMappingDto(
+            dpsId = dpsOrganisationId.toString(),
+            nomisId = dpsOrganisationId,
+            mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+          )
+        }
+        saveMapping { mappingApiService.createOrganisationMapping(it) }
       }
     } else {
-      telemetryClient.trackEvent("organisation-deleted-ignored", telemetryMap)
+      telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
+    }
+  }
+  suspend fun organisationUpdated(event: OrganisationEvent) {
+    val entityName = ORGANISATION.entityName
+    val dpsId = event.organisationId
+    val telemetryMap = mutableMapOf(
+      "organisationId" to dpsId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      val nomisId = mappingApiService.getByDpsOrganisationId(dpsId).nomisId
+      val dps = dpsApiService.getSyncOrganisation(dpsId)
+      nomisApiService.updateCorporate(
+        corporateId = nomisId,
+        dps.toNomisUpdateRequest(),
+      )
+      telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+    } else {
+      telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
+    }
+  }
+  suspend fun organisationDeleted(event: OrganisationEvent) {
+    val entityName = ORGANISATION.entityName
+    val dpsId = event.organisationId
+    val organisationId = event.organisationId
+    val telemetryMap = mutableMapOf(
+      "organisationId" to organisationId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      mappingApiService.getByDpsOrganisationIdOrNull(dpsId)?.nomisId?.also {
+        nomisApiService.deleteCorporate(
+          corporateId = organisationId,
+        )
+        mappingApiService.deleteByNomisOrganisationId(nomisOrganisationId = organisationId)
+        telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+      } ?: run {
+        telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+      }
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
     }
   }
 
@@ -467,22 +519,25 @@ class OrganisationsService(
     }
   }
 
-  private suspend fun tryToDeleteMapping(dpsOrganisationId: String) = runCatching {
-    mappingApiService.deleteByDpsOrganisationId(dpsOrganisationId)
-  }.onFailure { e ->
-    telemetryClient.trackEvent("organisation-mapping-deleted-failed", mapOf("dpsOrganisationId" to dpsOrganisationId))
-    log.warn("Unable to delete mapping for organisation $dpsOrganisationId. Please delete manually", e)
-  }
-
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
+      ORGANISATION -> createOrganisationMapping(message.fromJson())
       ORGANISATION_ADDRESS -> createAddressMapping(message.fromJson())
       ORGANISATION_PHONE -> createPhoneMapping(message.fromJson())
       ORGANISATION_EMAIL -> createEmailMapping(message.fromJson())
       ORGANISATION_WEB -> createWebMapping(message.fromJson())
       ORGANISATION_ADDRESS_PHONE -> createAddressPhoneMapping(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", baseMapping.entityName)
+    }
+  }
+
+  suspend fun createOrganisationMapping(message: CreateMappingRetryMessage<OrganisationsMappingDto>) {
+    mappingApiService.createOrganisationMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "${ORGANISATION.entityName}-create-success",
+        message.telemetryAttributes,
+      )
     }
   }
 
@@ -539,6 +594,25 @@ enum class OrganisationSource {
 private fun SourcedOrganisationsEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
 private fun SourcedOrganisationChildEvent.didOriginateInDPS() = this.additionalInformation.source == "DPS"
 
+private fun SyncOrganisationResponse.toNomisCreateRequest(): CreateCorporateOrganisationRequest = CreateCorporateOrganisationRequest(
+  id = this.organisationId,
+  name = this.organisationName!!,
+  active = this.active,
+  expiryDate = this.deactivatedDate,
+  caseloadId = this.caseloadId,
+  comment = this.comments,
+  programmeNumber = this.programmeNumber,
+  vatNumber = this.vatNumber,
+)
+private fun SyncOrganisationResponse.toNomisUpdateRequest(): UpdateCorporateOrganisationRequest = UpdateCorporateOrganisationRequest(
+  name = this.organisationName!!,
+  active = this.active,
+  expiryDate = this.deactivatedDate,
+  caseloadId = this.caseloadId,
+  comment = this.comments,
+  programmeNumber = this.programmeNumber,
+  vatNumber = this.vatNumber,
+)
 private fun SyncPhoneResponse.toNomisCreateRequest(): CreateCorporatePhoneRequest = CreateCorporatePhoneRequest(
   number = this.phoneNumber,
   extension = this.extNumber,

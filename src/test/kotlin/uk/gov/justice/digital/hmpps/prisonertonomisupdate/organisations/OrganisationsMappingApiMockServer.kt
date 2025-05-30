@@ -2,13 +2,11 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
@@ -20,51 +18,100 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 
 @Component
 class OrganisationsMappingApiMockServer(private val objectMapper: ObjectMapper) {
-  fun stubGetByDpsOrganisationId(
-    dpsOrganisationId: String = "565643",
-    mapping: OrganisationsMappingDto = OrganisationsMappingDto(
-      nomisId = 123456,
-      dpsId = dpsOrganisationId,
+
+  fun stubGetByDpsOrganisationIdOrNull(
+    dpsOrganisationId: Long = 123456,
+    mapping: OrganisationsMappingDto? = OrganisationsMappingDto(
+      nomisId = 654321,
+      dpsId = dpsOrganisationId.toString(),
       mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
     ),
   ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+  fun stubGetByDpsOrganisationId(
+    dpsOrganisationId: Long = 123456,
+    mapping: OrganisationsMappingDto = OrganisationsMappingDto(
+      nomisId = 654321,
+      dpsId = dpsOrganisationId.toString(),
+      mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsOrganisationIdOrNull(dpsOrganisationId, mapping)
+
+  fun stubDeleteByNomisOrganisationId(
+    nomisOrganisationId: Long = 123456,
+  ) {
     mappingServer.stubFor(
-      get(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")).willReturn(
+      delete(urlEqualTo("/mapping/corporate/organisation/nomis-organisation-id/$nomisOrganisationId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(mapping)),
+          .withStatus(HttpStatus.OK.value()),
       ),
     )
   }
-  fun stubGetByDpsOrganisationId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+
+  fun stubCreateOrganisationMapping() {
     mappingServer.stubFor(
-      get(WireMock.urlPathMatching("/mapping/corporate/organisation/dps-organisation-id/.*")).willReturn(
+      post("/mapping/corporate/organisation").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateOrganisationMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/corporate/organisation").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
           .withBody(objectMapper.writeValueAsString(error)),
       ),
     )
   }
 
-  fun stubDeleteByDpsOrganisationId(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubCreateOrganisationMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
-      delete(urlMatching("/mapping/corporate/organisation/dps-organisation-id/.*")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
-      ),
+      post("/mapping/corporate/organisation")
+        .inScenario("Retry Mapping Organisation Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Organisation Success"),
     )
-  }
-  fun stubDeleteByDpsOrganisationId(dpsOrganisationId: String) {
+
     mappingServer.stubFor(
-      delete(urlEqualTo("/mapping/corporate/organisation/dps-organisation-id/$dpsOrganisationId")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.NO_CONTENT.value()),
-      ),
+      post("/mapping/corporate/organisation")
+        .inScenario("Retry Mapping Organisation Scenario")
+        .whenScenarioStateIs("Cause Mapping Organisation Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 

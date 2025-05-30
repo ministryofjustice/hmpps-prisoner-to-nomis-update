@@ -52,6 +52,11 @@ class OrganisationsDpsApiExtension :
 
     fun organisation() = SyncOrganisationResponse(
       organisationId = 234324,
+      organisationName = "Test organisation",
+      caseloadId = "MDI",
+      comments = "some comments",
+      programmeNumber = "prog",
+      vatNumber = "123 34",
       active = true,
       createdBy = "a user",
       createdTime = LocalDateTime.parse("2022-01-01T12:13"),
