@@ -149,7 +149,17 @@ hmpps.sqs:
         { "eventType":[
             "person.csip-record.created",
             "person.csip-record.updated",
-            "person.csip-record.deleted"]}
+            "person.csip-record.deleted"
+        ]}
+    incidents:
+      queueName: hmpps_prisoner_to_nomis_incidents_queue
+      dlqName: hmpps_prisoner_to_nomis_incidents_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "incident.report.created",          
+            "incident.report.amended"          
+        ]}
     personalrelationships:
       queueName: hmpps_prisoner_to_nomis_personalrelationships_queue
       dlqName: hmpps_prisoner_to_nomis_personalrelationships_dlq
