@@ -28,8 +28,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OrganisationsMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationWeb
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporatePhoneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateWebAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
@@ -674,6 +678,950 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
       "additionalInformation": {
         "organisationId": "$organisationId",
         "identifier": "$phoneId",
+        "source": "$source"
+      }
+    }
+    """
+  }
+
+  @Nested
+  inner class Emails {
+    @Nested
+    @DisplayName("organisations-api.organisation-email.created")
+    inner class OrganisationEmailCreated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation email create")
+      inner class WhenNomisCreated {
+
+        @BeforeEach
+        fun setUp() {
+          publishCreateOrganisationEmailDomainEvent(emailId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-email-create-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation email create")
+      inner class WhenDpsCreated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsEmailId = 1234567L
+          private val nomisEmailId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailIdOrNull(dpsEmailId = dpsEmailId, null)
+            dpsApi.stubGetSyncOrganisationEmail(
+              organisationEmailId = dpsEmailId,
+              organisationEmail().copy(
+                organisationEmailId = dpsEmailId,
+                organisationId = organisationId,
+                emailAddress = "07973@somewhere.com",
+              ),
+            )
+            nomisApi.stubCreateCorporateEmail(corporateId = organisationId, createCorporateEmailResponse().copy(id = nomisEmailId))
+            mappingApi.stubCreateEmailMapping()
+            publishCreateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the create`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the email created`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-create-success"),
+              check {
+                assertThat(it).containsEntry("dpsEmailId", dpsEmailId.toString())
+                assertThat(it).containsEntry("nomisEmailId", nomisEmailId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get email details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-email/$dpsEmailId")))
+          }
+
+          @Test
+          fun `will create the email in NOMIS`() {
+            nomisApi.verify(postRequestedFor(urlEqualTo("/corporates/$organisationId/email")))
+          }
+
+          @Test
+          fun `the created email will contain details of the DPS contact email`() {
+            nomisApi.verify(
+              postRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("email", "07973@somewhere.com"),
+            )
+          }
+
+          @Test
+          fun `will create a mapping between the NOMIS and DPS ids`() {
+            mappingApi.verify(
+              postRequestedFor(urlEqualTo("/mapping/corporate/email"))
+                .withRequestBodyJsonPath("dpsId", "$dpsEmailId")
+                .withRequestBodyJsonPath("nomisId", nomisEmailId)
+                .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            )
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service fails once")
+        inner class MappingFailure {
+          private val dpsEmailId = 1234567L
+          private val nomisEmailId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailIdOrNull(dpsEmailId = dpsEmailId, null)
+            dpsApi.stubGetSyncOrganisationEmail(
+              organisationEmailId = dpsEmailId,
+              organisationEmail().copy(
+                organisationEmailId = dpsEmailId,
+                organisationId = organisationId,
+              ),
+            )
+            nomisApi.stubCreateCorporateEmail(corporateId = organisationId, createCorporateEmailResponse().copy(id = nomisEmailId))
+            mappingApi.stubCreateEmailMappingFollowedBySuccess()
+            publishCreateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for initial failure`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-email-mapping-create-failed"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-email-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the email in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-email-create-success"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/email")))
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service detects a duplicate mapping")
+        inner class DuplicateMappingFailure {
+          private val dpsEmailId = 1234567L
+          private val nomisEmailId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailIdOrNull(dpsEmailId = dpsEmailId, null)
+            dpsApi.stubGetSyncOrganisationEmail(
+              organisationEmailId = dpsEmailId,
+              organisationEmail().copy(
+                organisationEmailId = dpsEmailId,
+                organisationId = organisationId,
+              ),
+            )
+            nomisApi.stubCreateCorporateEmail(organisationId, createCorporateEmailResponse().copy(id = nomisEmailId))
+            mappingApi.stubCreateEmailMapping(
+              error = DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = OrganisationsMappingDto(
+                    dpsId = dpsEmailId.toString(),
+                    nomisId = 999999,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                  existing = OrganisationsMappingDto(
+                    dpsId = dpsEmailId.toString(),
+                    nomisId = nomisEmailId,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for duplicate`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-email-duplicate"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the email in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-email-duplicate"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/email")))
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-email.updated")
+    inner class OrganisationEmailUpdated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation email update")
+      inner class WhenNomisUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          publishUpdateOrganisationEmailDomainEvent(emailId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-email-update-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation email update")
+      inner class WhenDpsUpdated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsEmailId = 1234567L
+          private val nomisEmailId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailId(
+              dpsEmailId = dpsEmailId,
+              OrganisationsMappingDto(
+                dpsId = dpsEmailId.toString(),
+                nomisId = nomisEmailId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            dpsApi.stubGetSyncOrganisationEmail(
+              organisationEmailId = dpsEmailId,
+              organisationEmail().copy(
+                organisationEmailId = dpsEmailId,
+                organisationId = organisationId,
+                emailAddress = "07973@somewhere.com",
+              ),
+            )
+            nomisApi.stubUpdateCorporateEmail(corporateId = organisationId, emailId = nomisEmailId)
+            publishUpdateOrganisationEmailDomainEvent(emailId = dpsEmailId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the update`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-update-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the email updated`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-update-success"),
+              check {
+                assertThat(it).containsEntry("dpsEmailId", dpsEmailId.toString())
+                assertThat(it).containsEntry("nomisEmailId", nomisEmailId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get email details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-email/$dpsEmailId")))
+          }
+
+          @Test
+          fun `will update the email in NOMIS`() {
+            nomisApi.verify(putRequestedFor(urlEqualTo("/corporates/$organisationId/email/$nomisEmailId")))
+          }
+
+          @Test
+          fun `the updated email will contain details of the DPS contact email`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("email", "07973@somewhere.com"),
+            )
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-email.deleted")
+    inner class OrganisationEmailDeleted {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation email delete")
+      inner class WhenNomisDeleted {
+
+        @BeforeEach
+        fun setUp() {
+          publishDeleteOrganisationEmailDomainEvent(emailId = "12345", source = "NOMIS", organisationId = "38383")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-email-delete-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation email delete")
+      inner class WhenDpsDeleted {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsEmailId = 1234567L
+          private val nomisEmailId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailIdOrNull(
+              dpsEmailId = dpsEmailId,
+              OrganisationsMappingDto(
+                dpsId = dpsEmailId.toString(),
+                nomisId = nomisEmailId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubDeleteCorporateEmail(corporateId = organisationId, emailId = nomisEmailId)
+            mappingApi.stubDeleteByNomisEmailId(nomisEmailId = nomisEmailId)
+            publishDeleteOrganisationEmailDomainEvent(emailId = dpsEmailId.toString(), organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the delete`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-delete-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the email deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-delete-success"),
+              check {
+                assertThat(it).containsEntry("dpsEmailId", dpsEmailId.toString())
+                assertThat(it).containsEntry("nomisEmailId", nomisEmailId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will delete the email in NOMIS`() {
+            nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$organisationId/email/$nomisEmailId")))
+          }
+
+          @Test
+          fun `will delete the email mapping`() {
+            mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/corporate/email/nomis-internet-address-id/$nomisEmailId")))
+          }
+        }
+
+        @Nested
+        @DisplayName("Email mapping already deleted")
+        inner class EmailMappingMissing {
+          private val dpsEmailId = 1234567L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsEmailIdOrNull(dpsEmailId = dpsEmailId, null)
+            publishDeleteOrganisationEmailDomainEvent(emailId = dpsEmailId.toString(), organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the email deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-email-delete-skipped"),
+              check {
+                assertThat(it).containsEntry("dpsEmailId", dpsEmailId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun publishCreateOrganisationEmailDomainEvent(emailId: String, source: String = "DPS") {
+      with("organisations-api.organisation-email.created") {
+        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source))
+      }
+    }
+    private fun publishUpdateOrganisationEmailDomainEvent(emailId: String, source: String = "DPS") {
+      with("organisations-api.organisation-email.updated") {
+        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, source = source))
+      }
+    }
+    private fun publishDeleteOrganisationEmailDomainEvent(emailId: String, organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation-email.deleted") {
+        publishDomainEvent(eventType = this, payload = organisationEmailMessagePayload(eventType = this, emailId = emailId, organisationId = organisationId, source = source))
+      }
+    }
+
+    fun organisationEmailMessagePayload(
+      eventType: String,
+      emailId: String,
+      source: String = "DPS",
+      organisationId: String = "87654",
+    ) = //language=JSON
+      """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "organisationId": "$organisationId",
+        "identifier": "$emailId",
+        "source": "$source"
+      }
+    }
+    """
+  }
+
+  @Nested
+  inner class WebAddresses {
+    @Nested
+    @DisplayName("organisations-api.organisation-web.created")
+    inner class OrganisationWebCreated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation web create")
+      inner class WhenNomisCreated {
+
+        @BeforeEach
+        fun setUp() {
+          publishCreateOrganisationWebDomainEvent(webId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-web-create-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation web create")
+      inner class WhenDpsCreated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsWebId = 1234567L
+          private val nomisWebId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebIdOrNull(dpsWebId = dpsWebId, null)
+            dpsApi.stubGetSyncOrganisationWeb(
+              organisationWebId = dpsWebId,
+              organisationWeb().copy(
+                organisationWebAddressId = dpsWebId,
+                organisationId = organisationId,
+                webAddress = "07973.somewhere.com",
+              ),
+            )
+            nomisApi.stubCreateCorporateWebAddress(corporateId = organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            mappingApi.stubCreateWebMapping()
+            publishCreateOrganisationWebDomainEvent(webId = dpsWebId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the create`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the web created`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-create-success"),
+              check {
+                assertThat(it).containsEntry("dpsWebId", dpsWebId.toString())
+                assertThat(it).containsEntry("nomisWebId", nomisWebId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get web details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-web/$dpsWebId")))
+          }
+
+          @Test
+          fun `will create the web in NOMIS`() {
+            nomisApi.verify(postRequestedFor(urlEqualTo("/corporates/$organisationId/web-address")))
+          }
+
+          @Test
+          fun `the created web will contain details of the DPS contact web`() {
+            nomisApi.verify(
+              postRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("webAddress", "07973.somewhere.com"),
+            )
+          }
+
+          @Test
+          fun `will create a mapping between the NOMIS and DPS ids`() {
+            mappingApi.verify(
+              postRequestedFor(urlEqualTo("/mapping/corporate/web"))
+                .withRequestBodyJsonPath("dpsId", "$dpsWebId")
+                .withRequestBodyJsonPath("nomisId", nomisWebId)
+                .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            )
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service fails once")
+        inner class MappingFailure {
+          private val dpsWebId = 1234567L
+          private val nomisWebId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebIdOrNull(dpsWebId = dpsWebId, null)
+            dpsApi.stubGetSyncOrganisationWeb(
+              organisationWebId = dpsWebId,
+              organisationWeb().copy(
+                organisationWebAddressId = dpsWebId,
+                organisationId = organisationId,
+              ),
+            )
+            nomisApi.stubCreateCorporateWebAddress(corporateId = organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            mappingApi.stubCreateWebMappingFollowedBySuccess()
+            publishCreateOrganisationWebDomainEvent(webId = dpsWebId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for initial failure`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-web-mapping-create-failed"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-web-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the web in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-web-create-success"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/web-address")))
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service detects a duplicate mapping")
+        inner class DuplicateMappingFailure {
+          private val dpsWebId = 1234567L
+          private val nomisWebId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebIdOrNull(dpsWebId = dpsWebId, null)
+            dpsApi.stubGetSyncOrganisationWeb(
+              organisationWebId = dpsWebId,
+              organisationWeb().copy(
+                organisationWebAddressId = dpsWebId,
+                organisationId = organisationId,
+              ),
+            )
+            nomisApi.stubCreateCorporateWebAddress(organisationId, createCorporateWebAddressResponse().copy(id = nomisWebId))
+            mappingApi.stubCreateWebMapping(
+              error = DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = OrganisationsMappingDto(
+                    dpsId = dpsWebId.toString(),
+                    nomisId = 999999,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                  existing = OrganisationsMappingDto(
+                    dpsId = dpsWebId.toString(),
+                    nomisId = nomisWebId,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateOrganisationWebDomainEvent(webId = dpsWebId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for duplicate`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-web-duplicate"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the web in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-web-duplicate"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/web-address")))
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-web.updated")
+    inner class OrganisationWebUpdated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation web update")
+      inner class WhenNomisUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          publishUpdateOrganisationWebDomainEvent(webId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-web-update-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation web update")
+      inner class WhenDpsUpdated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsWebId = 1234567L
+          private val nomisWebId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebId(
+              dpsWebId = dpsWebId,
+              OrganisationsMappingDto(
+                dpsId = dpsWebId.toString(),
+                nomisId = nomisWebId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            dpsApi.stubGetSyncOrganisationWeb(
+              organisationWebId = dpsWebId,
+              organisationWeb().copy(
+                organisationWebAddressId = dpsWebId,
+                organisationId = organisationId,
+                webAddress = "07973.somewhere.com",
+              ),
+            )
+            nomisApi.stubUpdateCorporateWebAddress(corporateId = organisationId, webAddressId = nomisWebId)
+            publishUpdateOrganisationWebDomainEvent(webId = dpsWebId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the update`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-update-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the web updated`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-update-success"),
+              check {
+                assertThat(it).containsEntry("dpsWebId", dpsWebId.toString())
+                assertThat(it).containsEntry("nomisWebId", nomisWebId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get web details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-web/$dpsWebId")))
+          }
+
+          @Test
+          fun `will update the web in NOMIS`() {
+            nomisApi.verify(putRequestedFor(urlEqualTo("/corporates/$organisationId/web-address/$nomisWebId")))
+          }
+
+          @Test
+          fun `the updated web will contain details of the DPS contact web`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("webAddress", "07973.somewhere.com"),
+            )
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-web.deleted")
+    inner class OrganisationWebDeleted {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation web delete")
+      inner class WhenNomisDeleted {
+
+        @BeforeEach
+        fun setUp() {
+          publishDeleteOrganisationWebDomainEvent(webId = "12345", source = "NOMIS", organisationId = "38383")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-web-delete-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation web delete")
+      inner class WhenDpsDeleted {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsWebId = 1234567L
+          private val nomisWebId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebIdOrNull(
+              dpsWebId = dpsWebId,
+              OrganisationsMappingDto(
+                dpsId = dpsWebId.toString(),
+                nomisId = nomisWebId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubDeleteCorporateWebAddress(corporateId = organisationId, webAddressId = nomisWebId)
+            mappingApi.stubDeleteByNomisWebId(nomisWebId = nomisWebId)
+            publishDeleteOrganisationWebDomainEvent(webId = dpsWebId.toString(), organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the delete`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-delete-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the web deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-delete-success"),
+              check {
+                assertThat(it).containsEntry("dpsWebId", dpsWebId.toString())
+                assertThat(it).containsEntry("nomisWebId", nomisWebId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will delete the web in NOMIS`() {
+            nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$organisationId/web-address/$nomisWebId")))
+          }
+
+          @Test
+          fun `will delete the web mapping`() {
+            mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/corporate/web/nomis-internet-address-id/$nomisWebId")))
+          }
+        }
+
+        @Nested
+        @DisplayName("Web mapping already deleted")
+        inner class WebMappingMissing {
+          private val dpsWebId = 1234567L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsWebIdOrNull(dpsWebId = dpsWebId, null)
+            publishDeleteOrganisationWebDomainEvent(webId = dpsWebId.toString(), organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the web deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-web-delete-skipped"),
+              check {
+                assertThat(it).containsEntry("dpsWebId", dpsWebId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun publishCreateOrganisationWebDomainEvent(webId: String, source: String = "DPS") {
+      with("organisations-api.organisation-web.created") {
+        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source))
+      }
+    }
+    private fun publishUpdateOrganisationWebDomainEvent(webId: String, source: String = "DPS") {
+      with("organisations-api.organisation-web.updated") {
+        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, source = source))
+      }
+    }
+    private fun publishDeleteOrganisationWebDomainEvent(webId: String, organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation-web.deleted") {
+        publishDomainEvent(eventType = this, payload = organisationWebMessagePayload(eventType = this, webId = webId, organisationId = organisationId, source = source))
+      }
+    }
+
+    fun organisationWebMessagePayload(
+      eventType: String,
+      webId: String,
+      source: String = "DPS",
+      organisationId: String = "87654",
+    ) = //language=JSON
+      """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "organisationId": "$organisationId",
+        "identifier": "$webId",
         "source": "$source"
       }
     }
