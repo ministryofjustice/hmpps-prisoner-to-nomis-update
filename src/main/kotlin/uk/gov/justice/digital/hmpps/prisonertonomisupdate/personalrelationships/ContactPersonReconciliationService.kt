@@ -1,17 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
-import kotlinx.coroutines.channels.Channel
-import kotlinx.coroutines.channels.Channel.Factory.UNLIMITED
-import kotlinx.coroutines.channels.ReceiveChannel
-import kotlinx.coroutines.channels.produce
-import kotlinx.coroutines.channels.toList
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -32,7 +24,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 import java.util.*
-import java.util.concurrent.atomic.AtomicInteger
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Service
@@ -53,7 +44,7 @@ class ContactPersonReconciliationService(
   suspend fun generatePrisonerContactReconciliationReport(): ReconciliationResult<MismatchPrisonerContacts> = generateReconciliationReport(
     threadCount = prisonerContactPageSize,
     checkMatch = ::checkPrisonerContactsMatch,
-    produceIds = { producePrisonerIds(it) },
+    nextPage = ::getNextBookingsForPage,
   )
 
   suspend fun generatePersonContactReconciliationReport(): ReconciliationResult<MismatchPersonContacts> {
@@ -62,16 +53,8 @@ class ContactPersonReconciliationService(
     return generateReconciliationReport(
       threadCount = personContactPageSize,
       checkMatch = ::checkPersonContactMatch,
-      produceIds = {
-        produceIds(pagesCount = it, pageSize = prisonerContactPageSize) { last ->
-          getNextPersonsForPage(last)
-        }
-      },
+      nextPage = ::getNextPersonsForPage,
     )
-  }
-
-  fun CoroutineScope.producePrisonerIds(pagesCount: AtomicInteger) = produceIds(pagesCount = pagesCount, pageSize = prisonerContactPageSize) {
-    getNextBookingsForPage(it)
   }
 
   private suspend fun checkTotalsMatch() = runCatching {
@@ -488,83 +471,3 @@ data class MismatchPersonContacts(
   val dpsSummary: PersonSummary?,
   val nomisSummary: PersonSummary?,
 )
-
-data class ReconciliationResult<T>(
-  val mismatches: List<T>,
-  val itemsChecked: Int,
-  val pagesChecked: Int,
-)
-
-private suspend fun <T, R> generateReconciliationReport(
-  threadCount: Int,
-  checkMatch: suspend (T) -> R?,
-  produceIds: suspend CoroutineScope.(pagesCount: AtomicInteger) -> ReceiveChannel<T>,
-): ReconciliationResult<R> = coroutineScope {
-  val itemsCount = AtomicInteger(0)
-  val pagesCount = AtomicInteger(0)
-
-  val mismatchesChannel = Channel<R>(capacity = UNLIMITED)
-  val channel = produceIds(pagesCount)
-  val jobs = (1L..threadCount).map {
-    launch {
-      for (item in channel) {
-        checkMatch(item)?.also { mismatchesChannel.send(it) }
-        itemsCount.incrementAndGet()
-      }
-    }
-  }
-  launch {
-    // when all jobs finished (there are no more items to process), we can shut down the mismatch channel and return the results
-    jobs.forEach { it.join() }
-    mismatchesChannel.close()
-  }
-
-  ReconciliationResult(
-    mismatches = mismatchesChannel.toList(),
-    itemsChecked = itemsCount.get(),
-    pagesChecked = pagesCount.get(),
-  )
-}
-
-sealed class ReconciliationPageResult<T>
-class ReconciliationSuccessPageResult<T>(val ids: List<T>, val last: Long) : ReconciliationPageResult<T>()
-class ReconciliationErrorPageResult<T>(val error: Throwable) : ReconciliationPageResult<T>()
-
-// The last page will be a non-null page with items less than page size
-private fun <T> ReconciliationPageResult<T>.notLastPage(pageSize: Int): Boolean = when (this) {
-  is ReconciliationSuccessPageResult -> ids.size == pageSize
-  is ReconciliationErrorPageResult -> true
-}
-
-@OptIn(ExperimentalCoroutinesApi::class)
-private fun <T> CoroutineScope.produceIds(pagesCount: AtomicInteger, pageSize: Int, nextPage: suspend (Long) -> ReconciliationPageResult<T>) = produce(capacity = pageSize * 2) {
-  var lastId: Long = 0
-  var pageErrorCount = 0L
-
-  do {
-    val result = nextPage(lastId)
-
-    when (result) {
-      is ReconciliationSuccessPageResult -> {
-        if (result.ids.isNotEmpty()) {
-          pagesCount.incrementAndGet()
-          result.ids.forEach {
-            send(it)
-          }
-          lastId = result.last
-        }
-      }
-
-      is ReconciliationErrorPageResult -> {
-        // skip this "page" by moving the bookingId pointer up
-        lastId += pageSize
-        pageErrorCount++
-      }
-    }
-  } while (result.notLastPage(pageSize) && notManyPageErrors(pageErrorCount))
-
-  // no more prisoner ids so signal a close of the channel
-  channel.close()
-}
-
-private fun notManyPageErrors(errors: Long): Boolean = errors < 30
