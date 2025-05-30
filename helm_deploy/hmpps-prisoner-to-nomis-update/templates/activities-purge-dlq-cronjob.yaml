@@ -18,12 +18,55 @@ spec:
       template:
         spec:
           containers:
-            - name: housekeeping
+            - name: activities-purge-dlq
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  # Define environment-specific variables from Helm values
+                  AUTH_BASE_URL="{{ .Values.cron.activitiesPurgeDlqAuthUrl }}"
+                  QUEUE_NAME="{{ .Values.cron.activitiesPurgeDlqQueueName }}"
+
+                  create_secret() {
+                    echo -n "$CRONJOB_CLIENT_ID:$CRONJOB_CLIENT_SECRET" | base64 -w 0
+                  }
+
+                  get_jwt_token() {
+                    local secret=$1
+                    curl -s -X POST "${AUTH_BASE_URL}/oauth/token?grant_type=client_credentials" \
+                      -H 'Content-Type: application/json' \
+                      -H "Authorization: Basic $secret"
+                  }
+
+                  extract_token() {
+                    local jwt=$1
+                    echo -n $jwt | sed -n 's/.*"access_token": *"\([^"]*\)".*/\1/p'
+                  }
+
+                  purge_queue() {
+                    local token=$1
+                    local queue_name=$2
+                    curl --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
+                      -H "Authorization: Bearer $token"
+                  }
+
+                  # Main execution
+                  echo "Starting activities purge DLQ process"
+                  SECRET=$(create_secret)
+                  echo "Secret created"
+
+                  JWT=$(get_jwt_token "$SECRET")
+                  echo "JWT token obtained"
+
+                  TOKEN=$(extract_token "$JWT")
+                  echo "Access token extracted"
+
+                  purge_queue "$TOKEN" "$QUEUE_NAME"
+                  echo "Queue purge completed successfully"
               securityContext:
                 capabilities:
                   drop:
@@ -32,4 +75,7 @@ spec:
                 allowPrivilegeEscalation: false
                 seccompProfile:
                   type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
