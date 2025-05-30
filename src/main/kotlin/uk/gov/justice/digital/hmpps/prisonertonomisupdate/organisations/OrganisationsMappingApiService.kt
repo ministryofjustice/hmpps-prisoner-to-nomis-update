@@ -11,17 +11,34 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Or
 
 @Service
 class OrganisationsMappingApiService(@Qualifier("mappingWebClient") val webClient: WebClient) {
-  suspend fun getByDpsOrganisationIdOrNull(organisationId: String): OrganisationsMappingDto? = webClient.get()
+  suspend fun getByDpsOrganisationIdOrNull(dpsOrganisationId: Long): OrganisationsMappingDto? = webClient.get()
     .uri(
-      "/mapping/corporate/organisation/dps-organisation-id/{organisationId}",
-      organisationId,
+      "/mapping/corporate/organisation/dps-organisation-id/{dpsOrganisationId}",
+      dpsOrganisationId,
     )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun deleteByDpsOrganisationId(dpsOrganisationId: String) {
+  suspend fun getByDpsOrganisationId(dpsOrganisationId: Long): OrganisationsMappingDto = webClient.get()
+    .uri(
+      "/mapping/corporate/organisation/dps-organisation-id/{dpsOrganisationId}",
+      dpsOrganisationId,
+    )
+    .retrieve()
+    .awaitBody()
+
+  suspend fun createOrganisationMapping(mappings: OrganisationsMappingDto) = webClient.post()
+    .uri("/mapping/corporate/organisation")
+    .bodyValue(mappings)
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun deleteByNomisOrganisationId(nomisOrganisationId: Long) {
     webClient.delete()
-      .uri("/mapping/corporate/organisation/dps-organisation-id/{dpsOrganisationId}", dpsOrganisationId)
+      .uri(
+        "/mapping/corporate/organisation/nomis-organisation-id/{nomisOrganisationId}",
+        nomisOrganisationId,
+      )
       .retrieve()
       .awaitBodilessEntity()
   }
