@@ -654,9 +654,9 @@ class OrganisationsNomisApiServiceTest {
     inner class DeleteCorporateAddressPhone {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubDeleteCorporateAddressPhone(corporateId = 1234567, addressId = 67890, phoneId = 8755)
+        mockServer.stubDeleteCorporateAddressPhone(corporateId = 1234567, phoneId = 8755)
 
-        apiService.deleteCorporateAddressPhone(corporateId = 1234567, addressId = 67890, phoneId = 8755)
+        apiService.deleteCorporateAddressPhone(corporateId = 1234567, phoneId = 8755)
 
         mockServer.verify(
           deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -665,12 +665,12 @@ class OrganisationsNomisApiServiceTest {
 
       @Test
       fun `will call delete endpoint`() = runTest {
-        mockServer.stubDeleteCorporateAddressPhone(corporateId = 1234567, addressId = 67890, phoneId = 8755)
+        mockServer.stubDeleteCorporateAddressPhone(corporateId = 1234567, phoneId = 8755)
 
-        apiService.deleteCorporateAddressPhone(corporateId = 1234567, addressId = 67890, phoneId = 8755)
+        apiService.deleteCorporateAddressPhone(corporateId = 1234567, phoneId = 8755)
 
         mockServer.verify(
-          deleteRequestedFor(urlPathEqualTo("/corporates/1234567/address/67890/phone/8755")),
+          deleteRequestedFor(urlPathEqualTo("/corporates/1234567/address/phone/8755")),
         )
       }
     }

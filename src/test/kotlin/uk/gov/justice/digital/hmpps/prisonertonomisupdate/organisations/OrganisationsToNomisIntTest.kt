@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OrganisationsMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationTypes
@@ -2683,6 +2684,568 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
       "additionalInformation": {
         "organisationId": "$organisationId",
         "identifier": "$webId",
+        "source": "$source"
+      }
+    }
+    """
+  }
+
+  @Nested
+  inner class AddressPhones {
+    @Nested
+    @DisplayName("organisations-api.organisation-address-phone.created")
+    inner class OrganisationAddressPhoneCreated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation address phone create")
+      inner class WhenNomisCreated {
+
+        @BeforeEach
+        fun setUp() {
+          publishCreateOrganisationAddressPhoneDomainEvent(addressPhoneId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-address-phone-create-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation address phone create")
+      inner class WhenDpsCreated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsAddressPhoneId = 1234567L
+          private val nomisAddressPhoneId = 7654321L
+          private val dpsAddressId = 76321L
+          private val nomisAddressId = 76321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = dpsAddressPhoneId, null)
+            dpsApi.stubGetSyncOrganisationAddressPhone(
+              organisationAddressPhoneId = dpsAddressPhoneId,
+              organisationAddressPhone().copy(
+                organisationAddressPhoneId = dpsAddressPhoneId,
+                organisationAddressId = dpsAddressId,
+                organisationId = organisationId,
+                phoneNumber = "07973 555 5555",
+                phoneType = "MOB",
+                extNumber = "x555",
+              ),
+            )
+            mappingApi.stubGetByDpsAddressId(
+              dpsAddressId = dpsAddressId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressId.toString(),
+                nomisId = nomisAddressId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubCreateCorporateAddressPhone(
+              corporateId = organisationId,
+              addressId = nomisAddressId,
+              createCorporatePhoneResponse().copy(id = nomisAddressPhoneId),
+            )
+            mappingApi.stubCreateAddressPhoneMapping()
+            publishCreateOrganisationAddressPhoneDomainEvent(addressPhoneId = dpsAddressPhoneId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the create`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-create-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the address phone created`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-create-success"),
+              check {
+                assertThat(it).containsEntry("dpsAddressPhoneId", dpsAddressPhoneId.toString())
+                assertThat(it).containsEntry("nomisAddressPhoneId", nomisAddressPhoneId.toString())
+                assertThat(it).containsEntry("dpsAddressId", dpsAddressId.toString())
+                assertThat(it).containsEntry("nomisAddressId", nomisAddressId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get address phone details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-address-phone/$dpsAddressPhoneId")))
+          }
+
+          @Test
+          fun `will create the address phone in NOMIS`() {
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/address/$nomisAddressId/phone")))
+          }
+
+          @Test
+          fun `the created address phone will contain details of the DPS contact addressPhone`() {
+            nomisApi.verify(
+              postRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("number", "07973 555 5555")
+                .withRequestBodyJsonPath("typeCode", "MOB")
+                .withRequestBodyJsonPath("extension", "x555"),
+            )
+          }
+
+          @Test
+          fun `will create a mapping between the NOMIS and DPS ids`() {
+            mappingApi.verify(
+              postRequestedFor(urlEqualTo("/mapping/corporate/address-phone"))
+                .withRequestBodyJsonPath("dpsId", "$dpsAddressPhoneId")
+                .withRequestBodyJsonPath("nomisId", nomisAddressPhoneId)
+                .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            )
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service fails once")
+        inner class MappingFailure {
+          private val dpsAddressPhoneId = 1234567L
+          private val nomisAddressPhoneId = 7654321L
+          private val dpsAddressId = 76541L
+          private val nomisAddressId = 76321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = dpsAddressPhoneId, null)
+            dpsApi.stubGetSyncOrganisationAddressPhone(
+              organisationAddressPhoneId = dpsAddressPhoneId,
+              organisationAddressPhone().copy(
+                organisationAddressPhoneId = dpsAddressPhoneId,
+                organisationAddressId = dpsAddressId,
+                organisationId = organisationId,
+              ),
+            )
+            mappingApi.stubGetByDpsAddressId(
+              dpsAddressId = dpsAddressId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressId.toString(),
+                nomisId = nomisAddressId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubCreateCorporateAddressPhone(
+              corporateId = organisationId,
+              addressId = nomisAddressId,
+              createCorporatePhoneResponse().copy(id = nomisAddressPhoneId),
+            )
+            mappingApi.stubCreateAddressPhoneMappingFollowedBySuccess()
+            publishCreateOrganisationAddressPhoneDomainEvent(addressPhoneId = dpsAddressPhoneId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for initial failure`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-address-phone-mapping-create-failed"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will eventually send telemetry for success`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-address-phone-create-success"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the address phone in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("organisation-address-phone-create-success"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/address/$nomisAddressId/phone")))
+            }
+          }
+        }
+
+        @Nested
+        @DisplayName("when mapping service detects a duplicate mapping")
+        inner class DuplicateMappingFailure {
+          private val dpsAddressPhoneId = 1234567L
+          private val nomisAddressPhoneId = 7654321L
+          private val dpsAddressId = 12347L
+          private val nomisAddressId = 5431L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = dpsAddressPhoneId, null)
+            dpsApi.stubGetSyncOrganisationAddressPhone(
+              organisationAddressPhoneId = dpsAddressPhoneId,
+              organisationAddressPhone().copy(
+                organisationAddressPhoneId = dpsAddressPhoneId,
+                organisationAddressId = dpsAddressId,
+                organisationId = organisationId,
+              ),
+            )
+            mappingApi.stubGetByDpsAddressId(
+              dpsAddressId = dpsAddressId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressId.toString(),
+                nomisId = nomisAddressId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubCreateCorporateAddressPhone(organisationId, nomisAddressId, createCorporatePhoneResponse().copy(id = nomisAddressPhoneId))
+            mappingApi.stubCreateAddressPhoneMapping(
+              error = DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = OrganisationsMappingDto(
+                    dpsId = dpsAddressPhoneId.toString(),
+                    nomisId = 999999,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                  existing = OrganisationsMappingDto(
+                    dpsId = dpsAddressPhoneId.toString(),
+                    nomisId = nomisAddressPhoneId,
+                    mappingType = OrganisationsMappingDto.MappingType.DPS_CREATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateOrganisationAddressPhoneDomainEvent(addressPhoneId = dpsAddressPhoneId.toString())
+          }
+
+          @Test
+          fun `will send telemetry for duplicate`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-address-phone-duplicate"),
+                any(),
+                isNull(),
+              )
+            }
+          }
+
+          @Test
+          fun `will create the address phone in NOMIS once`() {
+            await untilAsserted {
+              verify(telemetryClient).trackEvent(
+                eq("to-nomis-synch-organisation-address-phone-duplicate"),
+                any(),
+                isNull(),
+              )
+              nomisApi.verify(1, postRequestedFor(urlEqualTo("/corporates/$organisationId/address/$nomisAddressId/phone")))
+            }
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-address-phone.updated")
+    inner class OrganisationAddressPhoneUpdated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation address phone update")
+      inner class WhenNomisUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          publishUpdateOrganisationAddressPhoneDomainEvent(addressPhoneId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-address-phone-update-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation address phone update")
+      inner class WhenDpsUpdated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsAddressPhoneId = 1234567L
+          private val nomisAddressPhoneId = 7654321L
+          private val dpsAddressId = 1234567L
+          private val nomisAddressId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneId(
+              dpsAddressPhoneId = dpsAddressPhoneId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressPhoneId.toString(),
+                nomisId = nomisAddressPhoneId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            dpsApi.stubGetSyncOrganisationAddressPhone(
+              organisationAddressPhoneId = dpsAddressPhoneId,
+              organisationAddressPhone().copy(
+                organisationAddressPhoneId = dpsAddressPhoneId,
+                organisationAddressId = dpsAddressId,
+                organisationId = organisationId,
+                phoneNumber = "07973 555 5555",
+                phoneType = "MOB",
+                extNumber = "x555",
+              ),
+            )
+            mappingApi.stubGetByDpsAddressId(
+              dpsAddressId = dpsAddressId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressId.toString(),
+                nomisId = nomisAddressId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubUpdateCorporateAddressPhone(corporateId = organisationId, addressId = nomisAddressId, phoneId = nomisAddressPhoneId)
+            publishUpdateOrganisationAddressPhoneDomainEvent(addressPhoneId = dpsAddressPhoneId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the update`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-update-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the address phone updated`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-update-success"),
+              check {
+                assertThat(it).containsEntry("dpsAddressPhoneId", dpsAddressPhoneId.toString())
+                assertThat(it).containsEntry("nomisAddressPhoneId", nomisAddressPhoneId.toString())
+                assertThat(it).containsEntry("dpsAddressId", dpsAddressId.toString())
+                assertThat(it).containsEntry("nomisAddressId", nomisAddressId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get address phone details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-address-phone/$dpsAddressPhoneId")))
+          }
+
+          @Test
+          fun `will update the address phone in NOMIS`() {
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/corporates/$organisationId/address/$nomisAddressId/phone/$nomisAddressPhoneId")))
+          }
+
+          @Test
+          fun `the updated address phone will contain details of the DPS contact addressPhone`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("number", "07973 555 5555")
+                .withRequestBodyJsonPath("typeCode", "MOB")
+                .withRequestBodyJsonPath("extension", "x555"),
+            )
+          }
+        }
+      }
+    }
+
+    @Nested
+    @DisplayName("organisations-api.organisation-address-phone.deleted")
+    inner class OrganisationAddressPhoneDeleted {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation address phone delete")
+      inner class WhenNomisDeleted {
+
+        @BeforeEach
+        fun setUp() {
+          publishDeleteOrganisationAddressPhoneDomainEvent(addressPhoneId = "12345", source = "NOMIS", organisationId = "38383")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-address-phone-delete-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation address phone delete")
+      inner class WhenDpsDeleted {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val dpsAddressPhoneId = 1234567L
+          private val nomisAddressPhoneId = 7654321L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneIdOrNull(
+              dpsAddressPhoneId = dpsAddressPhoneId,
+              OrganisationsMappingDto(
+                dpsId = dpsAddressPhoneId.toString(),
+                nomisId = nomisAddressPhoneId,
+                mappingType = OrganisationsMappingDto.MappingType.MIGRATED,
+              ),
+            )
+            nomisApi.stubDeleteCorporateAddressPhone(corporateId = organisationId, phoneId = nomisAddressPhoneId)
+            mappingApi.stubDeleteByNomisAddressPhoneId(nomisAddressPhoneId = nomisAddressPhoneId)
+            publishDeleteOrganisationAddressPhoneDomainEvent(
+              addressPhoneId = dpsAddressPhoneId.toString(),
+              organisationId = organisationId.toString(),
+            )
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the delete`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-delete-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the address phone deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-delete-success"),
+              check {
+                assertThat(it).containsEntry("dpsAddressPhoneId", dpsAddressPhoneId.toString())
+                assertThat(it).containsEntry("nomisAddressPhoneId", nomisAddressPhoneId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will delete the address phone in NOMIS`() {
+            nomisApi.verify(deleteRequestedFor(urlEqualTo("/corporates/$organisationId/address/phone/$nomisAddressPhoneId")))
+          }
+
+          @Test
+          fun `will delete the address phone mapping`() {
+            mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/corporate/address-phone/nomis-phone-id/$nomisAddressPhoneId")))
+          }
+        }
+
+        @Nested
+        @DisplayName("AddressPhone mapping already deleted")
+        inner class AddressPhoneMappingMissing {
+          private val dpsAddressPhoneId = 1234567L
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubGetByDpsAddressPhoneIdOrNull(dpsAddressPhoneId = dpsAddressPhoneId, null)
+            publishDeleteOrganisationAddressPhoneDomainEvent(
+              addressPhoneId = dpsAddressPhoneId.toString(),
+              organisationId = organisationId.toString(),
+            )
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the address phone deleted`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-address-phone-delete-skipped"),
+              check {
+                assertThat(it).containsEntry("dpsAddressPhoneId", dpsAddressPhoneId.toString())
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+    }
+
+    private fun publishCreateOrganisationAddressPhoneDomainEvent(addressPhoneId: String, source: String = "DPS") {
+      with("organisations-api.organisation-address-phone.created") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressPhoneMessagePayload(eventType = this, addressPhoneId = addressPhoneId, source = source),
+        )
+      }
+    }
+
+    private fun publishUpdateOrganisationAddressPhoneDomainEvent(addressPhoneId: String, source: String = "DPS") {
+      with("organisations-api.organisation-address-phone.updated") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressPhoneMessagePayload(eventType = this, addressPhoneId = addressPhoneId, source = source),
+        )
+      }
+    }
+
+    private fun publishDeleteOrganisationAddressPhoneDomainEvent(
+      addressPhoneId: String,
+      organisationId: String,
+      source: String = "DPS",
+    ) {
+      with("organisations-api.organisation-address-phone.deleted") {
+        publishDomainEvent(
+          eventType = this,
+          payload = organisationAddressPhoneMessagePayload(
+            eventType = this,
+            addressPhoneId = addressPhoneId,
+            organisationId = organisationId,
+            source = source,
+          ),
+        )
+      }
+    }
+
+    fun organisationAddressPhoneMessagePayload(
+      eventType: String,
+      addressPhoneId: String,
+      source: String = "DPS",
+      organisationId: String = "87654",
+    ) = //language=JSON
+      """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "organisationId": "$organisationId",
+        "identifier": "$addressPhoneId",
         "source": "$source"
       }
     }
