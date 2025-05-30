@@ -115,3 +115,7 @@ generic-prometheus-alerts:
     visitbalance:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_dlq"
+
+cron:
+  activitiesPurgeDlqAuthUrl: "https://sign-in.hmpps.service.justice.gov.uk/auth"
+  activitiesPurgeDlqQueueName: "syscon-devs-prod-hmpps_prisoner_to_nomis_activity_dlq"
