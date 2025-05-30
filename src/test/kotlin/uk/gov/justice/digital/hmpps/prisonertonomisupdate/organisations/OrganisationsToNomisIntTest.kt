@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Or
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationEmail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationPhone
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationTypes
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.organisationWeb
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateAddressResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsNomisApiMockServer.Companion.createCorporateEmailResponse
@@ -204,6 +205,115 @@ class OrganisationsToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
     }
+  }
+
+  @Nested
+  inner class Types {
+    @Nested
+    @DisplayName("organisations-api.organisation-types.updated")
+    inner class OrganisationTypeUpdated {
+
+      @Nested
+      @DisplayName("when NOMIS is the origin of an organisation type update")
+      inner class WhenNomisUpdated {
+
+        @BeforeEach
+        fun setUp() {
+          publishUpdateOrganisationTypeDomainEvent(organisationId = "12345", source = "NOMIS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("organisation-types-update-ignored"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when DPS is the origin of an organisation type update")
+      inner class WhenDpsUpdated {
+        @Nested
+        @DisplayName("when all goes ok")
+        inner class HappyPath {
+          private val organisationId = 54321L
+
+          @BeforeEach
+          fun setUp() {
+            dpsApi.stubGetSyncOrganisationTypes(
+              organisationId = organisationId,
+              organisationTypes(),
+            )
+            nomisApi.stubUpdateCorporateTypes(corporateId = organisationId)
+            publishUpdateOrganisationTypeDomainEvent(organisationId = organisationId.toString())
+            waitForAnyProcessingToComplete()
+          }
+
+          @Test
+          fun `will send telemetry event showing the update`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-types-update-success"),
+              any(),
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `telemetry will contain key facts about the type updated`() {
+            verify(telemetryClient).trackEvent(
+              eq("organisation-types-update-success"),
+              check {
+                assertThat(it).containsEntry("organisationId", organisationId.toString())
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will call back to DPS to get type details`() {
+            dpsApi.verify(getRequestedFor(urlEqualTo("/sync/organisation-types/$organisationId")))
+          }
+
+          @Test
+          fun `will update the type in NOMIS`() {
+            nomisApi.verify(putRequestedFor(urlEqualTo("/corporates/$organisationId/type")))
+          }
+
+          @Test
+          fun `the updated type will contain details of the DPS contact type`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("typeCodes[0]", "some type"),
+            )
+          }
+        }
+      }
+    }
+
+    private fun publishUpdateOrganisationTypeDomainEvent(organisationId: String, source: String = "DPS") {
+      with("organisations-api.organisation-types.updated") {
+        publishDomainEvent(eventType = this, payload = organisationTypeMessagePayload(eventType = this, organisationId = organisationId, source = source))
+      }
+    }
+
+    fun organisationTypeMessagePayload(
+      eventType: String,
+      organisationId: String,
+      source: String = "DPS",
+    ) = //language=JSON
+      """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "organisationId": "$organisationId",
+        "identifier": "$organisationId",
+        "source": "$source"
+      }
+    }
+    """
   }
 
   @Nested
