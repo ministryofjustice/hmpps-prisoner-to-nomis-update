@@ -230,6 +230,12 @@ hmpps.sqs:
     incidents:
       queueName: "incidents-${random.uuid}"
       dlqName: "incidents-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "incident.report.created",
+          "incident.report.amended"
+        ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120
     personalrelationships:

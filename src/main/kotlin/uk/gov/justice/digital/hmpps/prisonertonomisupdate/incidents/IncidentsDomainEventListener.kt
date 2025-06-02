@@ -7,16 +7,17 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
 @Service
 class IncidentsDomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  private val service: IncidentsService,
+  private val incidentsService: IncidentsService,
   telemetryClient: TelemetryClient,
-) : DomainEventListenerNoMapping(
+) : DomainEventListener(
+  service = incidentsService,
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
@@ -31,8 +32,8 @@ class IncidentsDomainEventListener(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     when (eventType) {
-      "incident.report.created" -> service.incidentCreated(message.fromJson())
-      "incident.report.amended" -> service.incidentUpdated(message.fromJson())
+      "incident.report.created" -> incidentsService.incidentCreated(message.fromJson())
+      "incident.report.amended" -> incidentsService.incidentUpdated(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
