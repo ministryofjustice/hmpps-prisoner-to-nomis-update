@@ -62,13 +62,6 @@ class OrganisationsNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun deleteCorporateOrganisation(corporateId: Long) {
-    webClient.delete()
-      .uri("/corporates/{corporateId}", corporateId)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
-
   suspend fun createCorporate(request: CreateCorporateOrganisationRequest) {
     webClient.post()
       .uri(
@@ -250,12 +243,11 @@ class OrganisationsNomisApiService(
       .retrieve()
       .awaitBodilessEntity()
   }
-  suspend fun deleteCorporateAddressPhone(corporateId: Long, addressId: Long, phoneId: Long) {
+  suspend fun deleteCorporateAddressPhone(corporateId: Long, phoneId: Long) {
     webClient.delete()
       .uri(
-        "/corporates/{corporateId}/address/{addressId}/phone/{phoneId}",
+        "/corporates/{corporateId}/address/phone/{phoneId}",
         corporateId,
-        addressId,
         phoneId,
       )
       .retrieve()
