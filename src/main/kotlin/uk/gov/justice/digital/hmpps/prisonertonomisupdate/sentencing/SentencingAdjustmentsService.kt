@@ -104,6 +104,15 @@ class SentencingAdjustmentsService(
     val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
     if (isDpsCreated(source)) {
       runCatching {
+        val mapping = sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)
+        val adjustment = sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
+        if (mapping == null && adjustment == null) {
+          // adjustment has been deleted, so no need to try to process this update
+          telemetryClient.trackEvent("sentencing-adjustment-updated-skipped", telemetryMap, null)
+          return
+        } else if (mapping == null || adjustment == null) {
+          throw IllegalStateException("Mapping or adjustment not found for adjustment $adjustmentId. Mapping=$mapping, adjustment=$adjustment")
+        }
         val nomisAdjustmentId =
           sentencingAdjustmentsMappingService.getMappingGivenAdjustmentId(adjustmentId).nomisAdjustmentId
             .also { telemetryMap["nomisAdjustmentId"] = it.toString() }

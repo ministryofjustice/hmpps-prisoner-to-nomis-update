@@ -948,13 +948,25 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    @DisplayName("When mapping does not exist - we never received a create domain event")
+    @DisplayName("When mapping does not exist but adjustment exists - we never received a create domain event")
     inner class WhenMappingDoesNotExits {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetByAdjustmentIdWithError(
           adjustmentId = ADJUSTMENT_ID,
           404,
+        )
+
+        sentencingAdjustmentsApi.stubAdjustmentGet(
+          adjustmentId = ADJUSTMENT_ID,
+          sentenceSequence = 1,
+          active = true,
+          adjustmentDays = 99,
+          adjustmentDate = "2022-01-01",
+          adjustmentType = "RX",
+          adjustmentFromDate = "2020-07-19",
+          comment = "Adjusted for remand",
+          bookingId = BOOKING_ID,
         )
 
         await untilCallTo {
@@ -969,6 +981,43 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
         await untilCallTo {
           awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
         } matches { it == 1 }
+      }
+    }
+
+    @Nested
+    @DisplayName("When mapping does not exist and adjustment does not exist")
+    inner class WhenMappingAndAdjustmentDoNotExist {
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetByAdjustmentIdWithError(
+          adjustmentId = ADJUSTMENT_ID,
+          404,
+        )
+
+        sentencingAdjustmentsApi.stubAdjustmentGetWithError(
+          adjustmentId = ADJUSTMENT_ID,
+          404,
+        )
+
+        publishUpdateAdjustmentDomainEvent()
+      }
+
+      @Test
+      fun `will track skipped event and not send to dead letter queue`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentencing-adjustment-updated-skipped"),
+            check {
+              assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
+            },
+            isNull(),
+          )
+        }
+
+        await untilCallTo {
+          awsSqsSentencingDlqClient!!.countAllMessagesOnQueue(sentencingDlqUrl!!).get()
+        } matches { it == 0 }
       }
     }
   }
