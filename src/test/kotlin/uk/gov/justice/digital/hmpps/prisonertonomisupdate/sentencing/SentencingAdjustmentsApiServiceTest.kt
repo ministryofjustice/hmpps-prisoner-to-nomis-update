@@ -107,6 +107,31 @@ internal class SentencingAdjustmentsApiServiceTest {
   }
 
   @Nested
+  inner class GetAdjustmentOrNull {
+    @BeforeEach
+    internal fun setUp() {
+      sentencingAdjustmentsApi.stubAdjustmentGet(adjustmentId = "1234")
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustmentOrNull("1234")
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/legacy/adjustments/1234"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `when adjustment is not found it will return null`() = runTest {
+      sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 404)
+
+      assertThat(sentencingAdjustmentsApiService.getAdjustmentOrNull("1234")).isNull()
+    }
+  }
+
+  @Nested
   @DisplayName("GET /adjustments?person={offenderNo}")
   inner class GetAdjustments {
     @BeforeEach
