@@ -24,6 +24,7 @@ generic-service:
     API_BASE_URL_ALERTS: https://alerts-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_CSIP: https://csip-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://dev.offender-case-notes.service.justice.gov.uk
+    API_BASE_URL_INCIDENTS: https://incident-reporting-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
@@ -88,6 +89,9 @@ generic-prometheus-alerts:
     csip:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_csip_dead_letter_queue"
+    incidents:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_incidents_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_incidents_dlq"
     personalrelationships:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_personalrelationships_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_personalrelationships_dlq"

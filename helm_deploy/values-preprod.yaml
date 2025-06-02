@@ -24,11 +24,14 @@ generic-service:
     API_BASE_URL_ALERTS: https://alerts-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_CSIP: https://csip-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://preprod.offender-case-notes.service.justice.gov.uk
+    API_BASE_URL_INCIDENTS: https://incident-reporting-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_CONTACTS-API_CONTACT_CREATED: false
+    FEATURE_EVENT_INCIDENT_REPORT_CREATED: false
+    FEATURE_EVENT_INCIDENT_REPORT_AMENDED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -92,6 +95,9 @@ generic-prometheus-alerts:
     csip:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csip_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_csip_dead_letter_queue"
+    incidents:
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_incidents_queue"
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_incidents_dlq"
     personalrelationships:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_personalrelationships_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_personalrelationships_dlq"

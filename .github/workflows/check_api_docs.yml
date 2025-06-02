@@ -21,6 +21,7 @@ jobs:
           - casenotes
           - court-sentencing
           - csip
+          - incidents
           - locations
           - nomis-mapping-service
           - nomis-prisoner

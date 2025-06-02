@@ -21,6 +21,7 @@ api.base.url:
   alerts: http://localhost:8095
   casenotes: http://localhost:8096
   csip: http://localhost:8098
+  incidents: http://localhost:8091
   personal.relationships: http://localhost:8099
   organisations: http://localhost:8100
   visit.balance: http://localhost:8101
@@ -226,6 +227,11 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+    incidents:
+      queueName: "incidents-${random.uuid}"
+      dlqName: "incidents-dlq-${random.uuid}"
+      dlqMaxReceiveCount: 2
+      visibilityTimeout: 120
     personalrelationships:
       queueName: "personalrelationships-${random.uuid}"
       dlqName: "personalrelationships-dlq-${random.uuid}"
@@ -327,6 +333,9 @@ reports:
     reconciliation:
       page-size: 10
   csip:
+    reconciliation:
+      page-size: 10
+  incidents:
     reconciliation:
       page-size: 10
   contact-person.profile-details:

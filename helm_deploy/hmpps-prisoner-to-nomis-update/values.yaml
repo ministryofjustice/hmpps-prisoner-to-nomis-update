@@ -121,6 +121,8 @@ generic-service:
     hmpps-prisoner-to-nomis-update-client-creds:
       API_CLIENT_ID: "API_CLIENT_ID"
       API_CLIENT_SECRET: "API_CLIENT_SECRET"
+      INCIDENTS_CLIENT_ID: "INCIDENTS_CLIENT_ID"
+      INCIDENTS_CLIENT_SECRET: "INCIDENTS_CLIENT_SECRET"
     hmpps-prisoner-to-nomis-update:
       MAPPING_CLIENT_ID: "MAPPING_CLIENT_ID"
       MAPPING_CLIENT_SECRET: "MAPPING_CLIENT_SECRET"
@@ -144,10 +146,10 @@ generic-service:
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       ALERTS_CLIENT_ID: "ALERTS_CLIENT_ID"
       ALERTS_CLIENT_SECRET: "ALERTS_CLIENT_SECRET"
-      CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
-      CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
       CASENOTES_CLIENT_ID: "CASENOTES_CLIENT_ID"
       CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
+      CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
+      CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
       PERSONAL_RELATIONSHIPS_CLIENT_ID: "PERSONAL_RELATIONSHIPS_CLIENT_ID"
       PERSONAL_RELATIONSHIPS_CLIENT_SECRET: "PERSONAL_RELATIONSHIPS_CLIENT_SECRET"
       ORGANISATIONS_CLIENT_ID: "ORGANISATIONS_CLIENT_ID"
@@ -202,6 +204,10 @@ generic-service:
       HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip-dlq:
       HMPPS_SQS_QUEUES_CSIP_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-incidents:
+      HMPPS_SQS_QUEUES_INCIDENTS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-incidents-dlq:
+      HMPPS_SQS_QUEUES_INCIDENTS_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships:
       HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships-dlq:
