@@ -335,6 +335,9 @@ reports:
   csip:
     reconciliation:
       page-size: 10
+  incidents:
+    reconciliation:
+      page-size: 10
   contact-person.profile-details:
     reconciliation:
       page-size: 3

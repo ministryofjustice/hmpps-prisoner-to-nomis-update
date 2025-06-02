@@ -204,6 +204,10 @@ generic-service:
       HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-csip-dlq:
       HMPPS_SQS_QUEUES_CSIP_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-incidents:
+      HMPPS_SQS_QUEUES_INCIDENTS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-incidents-dlq:
+      HMPPS_SQS_QUEUES_INCIDENTS_DLQ_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships:
       HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-personalrelationships-dlq:
