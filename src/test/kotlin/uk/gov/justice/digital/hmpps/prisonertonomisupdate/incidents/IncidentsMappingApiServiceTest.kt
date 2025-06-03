@@ -35,9 +35,9 @@ class IncidentsMappingApiServiceTest {
     inner class GetByDpsIncidentIdOrNull {
       @Test
       internal fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubGetByDpsIncidentIdOrNull(dpsIncidentId = 1234567)
+        mockServer.stubGetByDpsIncidentIdOrNull(dpsIncidentId = "1234-567")
 
-        apiService.getByDpsIncidentIdOrNull(dpsIncidentId = 1234567)
+        apiService.getByDpsIncidentIdOrNull(dpsIncidentId = "1234-567")
 
         mockServer.verify(
           getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -48,25 +48,25 @@ class IncidentsMappingApiServiceTest {
       internal fun `will pass DPS id to service`() = runTest {
         mockServer.stubGetByDpsIncidentIdOrNull()
 
-        apiService.getByDpsIncidentIdOrNull(dpsIncidentId = 1234567)
+        apiService.getByDpsIncidentIdOrNull(dpsIncidentId = "1234-567")
 
         mockServer.verify(
-          getRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234567")),
+          getRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234-567")),
         )
       }
 
       @Test
       fun `will return nomisIncidentId when mapping exists`() = runTest {
         mockServer.stubGetByDpsIncidentIdOrNull(
-          dpsIncidentId = 1234567,
+          dpsIncidentId = "1234-567",
           mapping = IncidentMappingDto(
-            dpsIncidentId = "1234567",
+            dpsIncidentId = "1234-567",
             nomisIncidentId = 1234567,
             mappingType = IncidentMappingDto.MappingType.MIGRATED,
           ),
         )
 
-        val mapping = apiService.getByDpsIncidentIdOrNull(dpsIncidentId = 1234567)
+        val mapping = apiService.getByDpsIncidentIdOrNull(dpsIncidentId = "1234-567")
 
         assertThat(mapping?.nomisIncidentId).isEqualTo(1234567)
       }
@@ -74,11 +74,11 @@ class IncidentsMappingApiServiceTest {
       @Test
       fun `will return null if mapping does not exist`() = runTest {
         mockServer.stubGetByDpsIncidentIdOrNull(
-          dpsIncidentId = 1234567,
+          dpsIncidentId = "1234-567",
           mapping = null,
         )
 
-        assertThat(apiService.getByDpsIncidentIdOrNull(dpsIncidentId = 1234567)).isNull()
+        assertThat(apiService.getByDpsIncidentIdOrNull(dpsIncidentId = "1234-567")).isNull()
       }
     }
 
@@ -86,9 +86,9 @@ class IncidentsMappingApiServiceTest {
     inner class GetByDpsIncidentId {
       @Test
       internal fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubGetByDpsIncidentId(dpsIncidentId = 1234567)
+        mockServer.stubGetByDpsIncidentId(dpsIncidentId = "1234-567")
 
-        apiService.getByDpsIncidentId(dpsIncidentId = 1234567)
+        apiService.getByDpsIncidentId(dpsIncidentId = "1234-567")
 
         mockServer.verify(
           getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -97,27 +97,27 @@ class IncidentsMappingApiServiceTest {
 
       @Test
       internal fun `will pass DPS id to service`() = runTest {
-        mockServer.stubGetByDpsIncidentId(dpsIncidentId = 1234567)
+        mockServer.stubGetByDpsIncidentId(dpsIncidentId = "1234-567")
 
-        apiService.getByDpsIncidentId(dpsIncidentId = 1234567)
+        apiService.getByDpsIncidentId(dpsIncidentId = "1234-567")
 
         mockServer.verify(
-          getRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234567")),
+          getRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234-567")),
         )
       }
 
       @Test
       fun `will return dpsIncidentId`() = runTest {
         mockServer.stubGetByDpsIncidentId(
-          dpsIncidentId = 1234567,
+          dpsIncidentId = "1234-567",
           mapping = IncidentMappingDto(
-            dpsIncidentId = "1234567",
+            dpsIncidentId = "1234-567",
             nomisIncidentId = 1234567,
             mappingType = IncidentMappingDto.MappingType.MIGRATED,
           ),
         )
 
-        val mapping = apiService.getByDpsIncidentId(dpsIncidentId = 1234567)
+        val mapping = apiService.getByDpsIncidentId(dpsIncidentId = "1234-567")
 
         assertThat(mapping.nomisIncidentId).isEqualTo(1234567)
       }
@@ -133,7 +133,7 @@ class IncidentsMappingApiServiceTest {
           IncidentMappingDto(
             mappingType = IncidentMappingDto.MappingType.DPS_CREATED,
             nomisIncidentId = 1234567,
-            dpsIncidentId = "1234567",
+            dpsIncidentId = "1234-567",
           ),
         )
 
@@ -190,9 +190,9 @@ class IncidentsMappingApiServiceTest {
     inner class DeleteByDpsIncidentId {
       @Test
       internal fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = 1234567)
+        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = "1234-567")
 
-        apiService.deleteByDpsIncidentId(dpsIncidentId = 1234567)
+        apiService.deleteByDpsIncidentId(dpsIncidentId = "1234-567")
 
         mockServer.verify(
           deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -201,12 +201,12 @@ class IncidentsMappingApiServiceTest {
 
       @Test
       internal fun `will pass DPS id to service`() = runTest {
-        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = 1234567)
+        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = "1234-567")
 
-        apiService.deleteByDpsIncidentId(dpsIncidentId = 1234567)
+        apiService.deleteByDpsIncidentId(dpsIncidentId = "1234-567")
 
         mockServer.verify(
-          deleteRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234567")),
+          deleteRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234-567")),
         )
       }
     }

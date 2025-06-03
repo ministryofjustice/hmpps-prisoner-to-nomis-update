@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.In
 
 @Service
 class IncidentsMappingApiService(@Qualifier("mappingWebClient") val webClient: WebClient) {
-  suspend fun getByDpsIncidentIdOrNull(dpsIncidentId: Long): IncidentMappingDto? = webClient.get()
+  suspend fun getByDpsIncidentIdOrNull(dpsIncidentId: String): IncidentMappingDto? = webClient.get()
     .uri(
       "/mapping/incidents/dps-incident-id/{dpsIncidentId}",
       dpsIncidentId,
@@ -19,7 +19,7 @@ class IncidentsMappingApiService(@Qualifier("mappingWebClient") val webClient: W
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun getByDpsIncidentId(dpsIncidentId: Long): IncidentMappingDto = webClient.get()
+  suspend fun getByDpsIncidentId(dpsIncidentId: String): IncidentMappingDto = webClient.get()
     .uri(
       "/mapping/incidents/dps-incident-id/{dpsIncidentId}",
       dpsIncidentId,
@@ -33,7 +33,7 @@ class IncidentsMappingApiService(@Qualifier("mappingWebClient") val webClient: W
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
-  suspend fun deleteByDpsIncidentId(dpsIncidentId: Long) {
+  suspend fun deleteByDpsIncidentId(dpsIncidentId: String) {
     webClient.delete()
       .uri(
         "/mapping/incidents/dps-incident-id/{dpsIncidentId}",
