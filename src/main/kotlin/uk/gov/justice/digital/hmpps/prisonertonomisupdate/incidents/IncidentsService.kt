@@ -46,7 +46,7 @@ data class IncidentAdditionalInformation(
   val reportReference: Long,
   val source: CreatingSystem,
   // TODO - check - we may not need this
-  val whatChanged: String,
+  val whatChanged: String?,
 )
 
 enum class IncidentSource {
