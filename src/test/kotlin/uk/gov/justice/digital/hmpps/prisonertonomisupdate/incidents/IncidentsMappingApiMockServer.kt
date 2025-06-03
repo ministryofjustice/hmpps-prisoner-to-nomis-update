@@ -20,10 +20,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 class IncidentsMappingApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetByDpsIncidentIdOrNull(
-    dpsIncidentId: Long = 123456,
+    dpsIncidentId: String = "123456",
     mapping: IncidentMappingDto? = IncidentMappingDto(
       nomisIncidentId = 654321,
-      dpsIncidentId = dpsIncidentId.toString(),
+      dpsIncidentId = dpsIncidentId,
       mappingType = IncidentMappingDto.MappingType.MIGRATED,
     ),
   ) {
@@ -48,16 +48,16 @@ class IncidentsMappingApiMockServer(private val objectMapper: ObjectMapper) {
     }
   }
   fun stubGetByDpsIncidentId(
-    dpsIncidentId: Long = 123456,
+    dpsIncidentId: String = "123456",
     mapping: IncidentMappingDto = IncidentMappingDto(
       nomisIncidentId = 654321,
-      dpsIncidentId = dpsIncidentId.toString(),
+      dpsIncidentId = dpsIncidentId,
       mappingType = IncidentMappingDto.MappingType.MIGRATED,
     ),
   ) = stubGetByDpsIncidentIdOrNull(dpsIncidentId, mapping)
 
   fun stubDeleteByDpsIncidentId(
-    dpsIncidentId: Long = 123456,
+    dpsIncidentId: String = "123456",
   ) {
     mappingServer.stubFor(
       delete(urlEqualTo("/mapping/incidents/dps-incident-id/$dpsIncidentId")).willReturn(
