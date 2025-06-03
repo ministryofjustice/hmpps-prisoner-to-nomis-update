@@ -32,6 +32,14 @@ class IncidentsService(
     )
   }
 
+  suspend fun incidentDeleted(event: IncidentEvent) {
+    log.debug("Received incident deleted event for incident {}", event.additionalInformation.id)
+    telemetryClient.trackEvent(
+      "incidents-delete-success",
+      mapOf("incidentId" to event.additionalInformation.id),
+    )
+  }
+
   override suspend fun retryCreateMapping(message: String) {
     TODO("Not yet implemented")
   }

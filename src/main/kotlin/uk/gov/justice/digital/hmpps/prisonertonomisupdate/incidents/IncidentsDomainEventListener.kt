@@ -34,6 +34,7 @@ class IncidentsDomainEventListener(
     when (eventType) {
       "incident.report.created" -> incidentsService.incidentCreated(message.fromJson())
       "incident.report.amended" -> incidentsService.incidentUpdated(message.fromJson())
+      "incident.report.deleted" -> incidentsService.incidentDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

@@ -187,12 +187,12 @@ class IncidentsMappingApiServiceTest {
     }
 
     @Nested
-    inner class DeleteByNomisIncidentId {
+    inner class DeleteByDpsIncidentId {
       @Test
       internal fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubDeleteByNomisIncidentId(nomisIncidentId = 1234567)
+        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = 1234567)
 
-        apiService.deleteByNomisIncidentId(nomisIncidentId = 1234567)
+        apiService.deleteByDpsIncidentId(dpsIncidentId = 1234567)
 
         mockServer.verify(
           deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -200,13 +200,13 @@ class IncidentsMappingApiServiceTest {
       }
 
       @Test
-      internal fun `will pass NOMIS id to service`() = runTest {
-        mockServer.stubDeleteByNomisIncidentId(nomisIncidentId = 1234567)
+      internal fun `will pass DPS id to service`() = runTest {
+        mockServer.stubDeleteByDpsIncidentId(dpsIncidentId = 1234567)
 
-        apiService.deleteByNomisIncidentId(nomisIncidentId = 1234567)
+        apiService.deleteByDpsIncidentId(dpsIncidentId = 1234567)
 
         mockServer.verify(
-          deleteRequestedFor(urlPathEqualTo("/mapping/incidents/nomis-incident-id/1234567")),
+          deleteRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/1234567")),
         )
       }
     }

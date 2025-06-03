@@ -56,11 +56,11 @@ class IncidentsMappingApiMockServer(private val objectMapper: ObjectMapper) {
     ),
   ) = stubGetByDpsIncidentIdOrNull(dpsIncidentId, mapping)
 
-  fun stubDeleteByNomisIncidentId(
-    nomisIncidentId: Long = 123456,
+  fun stubDeleteByDpsIncidentId(
+    dpsIncidentId: Long = 123456,
   ) {
     mappingServer.stubFor(
-      delete(urlEqualTo("/mapping/incidents/nomis-incident-id/$nomisIncidentId")).willReturn(
+      delete(urlEqualTo("/mapping/incidents/dps-incident-id/$dpsIncidentId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value()),

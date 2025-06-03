@@ -33,11 +33,11 @@ class IncidentsMappingApiService(@Qualifier("mappingWebClient") val webClient: W
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
-  suspend fun deleteByNomisIncidentId(nomisIncidentId: Long) {
+  suspend fun deleteByDpsIncidentId(dpsIncidentId: Long) {
     webClient.delete()
       .uri(
-        "/mapping/incidents/nomis-incident-id/{nomisIncidentId}",
-        nomisIncidentId,
+        "/mapping/incidents/dps-incident-id/{dpsIncidentId}",
+        dpsIncidentId,
       )
       .retrieve()
       .awaitBodilessEntity()
