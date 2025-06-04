@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 
 @Service
 class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClient) {
@@ -20,8 +20,8 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .retrieve()
     .awaitBody()
 
-  suspend fun getCourtCaseForReconciliation(id: String): TestCourtCase = courtSentencingApiWebClient.get()
-    .uri("/legacy/court-case/{id}/test", id)
+  suspend fun getCourtCaseForReconciliation(courtCaseUuid: String): ReconciliationCourtCase = courtSentencingApiWebClient.get()
+    .uri("/legacy/court-case//{courtCaseUuid}/reconciliation", courtCaseUuid)
     .retrieve()
     .awaitBody()
 
