@@ -15,7 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.TestCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
@@ -326,9 +326,9 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCourtCaseForReconciliation2(courtCaseId: String, courtCaseResponse: TestCourtCase) {
+  fun stubGetCourtCaseForReconciliation(courtCaseId: String, courtCaseResponse: ReconciliationCourtCase) {
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/test")).willReturn(
+      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/reconciliation")).willReturn(
         WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
@@ -79,6 +80,7 @@ class CourtSentencingNomisApiMockServer {
     caseInfoNumber: String? = "caseRef1",
     caseIndentifiers: List<CaseIdentifierResponse> = emptyList(),
     courtEvents: List<CourtEventResponse> = emptyList(),
+    sentences: List<SentenceResponse> = emptyList(),
     combinedCaseId: Long? = null,
     caseStatus: uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Active"),
     beginDate: LocalDate = LocalDate.now(),
@@ -99,7 +101,7 @@ class CourtSentencingNomisApiMockServer {
       caseInfoNumbers = caseIndentifiers,
       combinedCaseId = combinedCaseId,
       beginDate = beginDate,
-      sentences = emptyList(),
+      sentences = sentences,
     ),
   ) {
     stubGet("/court-cases/$caseId", response)
