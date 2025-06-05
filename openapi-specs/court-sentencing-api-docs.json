@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-02.6946.62b1a1a"
+    "version" : "2025-06-05.7048.ed5907e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2036,7 +2036,7 @@
         "tags" : [ "sentence-controller" ],
         "summary" : "Retrieve sentence details",
         "description" : "This endpoint will retrieve sentence details",
-        "operationId" : "getChargeDetails",
+        "operationId" : "getSentenceDetails",
         "parameters" : [ {
           "name" : "sentenceUuid",
           "in" : "path",
@@ -3143,12 +3143,76 @@
         }
       }
     },
+    "/court-case/paged/search" : {
+      "get" : {
+        "tags" : [ "court-case-controller" ],
+        "summary" : "Retrieve all court cases for person (where each court case has at least one appearance in the past)",
+        "description" : "This endpoint will retrieve all court cases for a person (where each court case has at least one appearance in the past - i.e. there exists a latest court appearance)",
+        "operationId" : "pagedSearchCourtCases",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "pageable",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "appearanceDateSortDirection",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "DESC",
+            "enum" : [ "ASC", "DESC" ]
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns court cases",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/charge/{chargeUuid}" : {
       "get" : {
         "tags" : [ "charge-controller" ],
         "summary" : "Retrieve charge details",
         "description" : "This endpoint will retrieve charge details",
-        "operationId" : "getChargeDetails_1",
+        "operationId" : "getChargeDetails",
         "parameters" : [ {
           "name" : "chargeUuid",
           "in" : "path",
@@ -3815,7 +3879,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4064,7 +4128,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "courtCode" : {
             "type" : "string"
@@ -5270,7 +5334,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "courtCode" : {
             "type" : "string"
@@ -5670,7 +5734,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "charges" : {
             "type" : "array",
@@ -5693,7 +5757,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "courtId" : {
             "type" : "string"
@@ -5784,7 +5848,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -5840,7 +5904,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:33:10.664851561"
+            "example" : "07:20:09.201585398"
           },
           "courtId" : {
             "type" : "string"
@@ -6012,12 +6076,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -6041,6 +6105,313 @@
             "type" : "boolean"
           }
         }
+      },
+      "PagePagedCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PagedCourtCase"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "PagedAppearancePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "order" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+          }
+        },
+        "required" : [ "order", "type" ]
+      },
+      "PagedCharge" : {
+        "type" : "object",
+        "properties" : {
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/PagedChargeOutcome"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          },
+          "sentence" : {
+            "$ref" : "#/components/schemas/PagedSentence"
+          }
+        },
+        "required" : [ "offenceCode" ]
+      },
+      "PagedChargeOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "outcomeUuid" ]
+      },
+      "PagedCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "courtCaseStatus" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX" ]
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+          },
+          "appearanceCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "caseReferences" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "firstDayInCustody" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "overallSentenceLength" : {
+            "$ref" : "#/components/schemas/PagedAppearancePeriodLength"
+          },
+          "latestCourtAppearance" : {
+            "$ref" : "#/components/schemas/PagedLatestCourtAppearance"
+          }
+        },
+        "required" : [ "appearanceCount", "caseReferences", "courtCaseStatus", "courtCaseUuid", "firstDayInCustody", "latestCourtAppearance", "prisonerId" ]
+      },
+      "PagedLatestCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "caseReference" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "warrantDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "warrantType" : {
+            "type" : "string"
+          },
+          "outcome" : {
+            "type" : "string"
+          },
+          "convictionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+          },
+          "nextCourtAppearance" : {
+            "$ref" : "#/components/schemas/PagedNextCourtAppearance"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PagedCharge"
+            }
+          }
+        },
+        "required" : [ "charges", "courtCode", "warrantDate", "warrantType" ]
+      },
+      "PagedNextCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTime" : {
+            "type" : "string",
+            "example" : "07:20:09.201585398"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceTypeDescription" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceTypeDescription" ]
+      },
+      "PagedSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNumber" : {
+            "type" : "string"
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "convictionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceType" : {
+            "$ref" : "#/components/schemas/PagedSentenceType"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "fineAmount" : {
+            "type" : "number"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PagedSentencePeriodLength"
+            }
+          },
+          "hasRecall" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+      },
+      "PagedSentencePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "order" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          }
+        },
+        "required" : [ "order", "periodLengthUuid" ]
+      },
+      "PagedSentenceType" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          }
+        },
+        "required" : [ "classification", "description", "sentenceTypeUuid" ]
       },
       "DeleteRecallResponse" : {
         "type" : "object",
