@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-28.15.600321f"
+    "version" : "2025-06-04.17.e92bb6c"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2193,6 +2193,60 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/sentences/nomis-sentence-ids/get-list" : {
+      "post" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "get sentence mappings by NOMIS sentence IDs",
+        "description" : "Retrieves mappings for a list of NOMIS sentence IDs. Any mappings not found will be missing but the response will still be a 200. Requires role NOMIS_COURT_SENTENCING",
+        "operationId" : "getSentenceMappingsByNomisIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "List of NOMIS sentence IDs",
+                "example" : [ {
+                  "nomisBookingId" : 12345,
+                  "nomisSentenceSequence" : 1
+                }, {
+                  "nomisBookingId" : 12345,
+                  "nomisSentenceSequence" : 2
+                } ],
+                "items" : {
+                  "$ref" : "#/components/schemas/NomisSentenceId"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "List of associated mappings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SentenceMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -15918,6 +15972,25 @@
         },
         "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
       },
+      "NomisSentenceId" : {
+        "type" : "object",
+        "description" : "NOMIS Sentence ID",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 123456
+          },
+          "nomisSentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sentence sequence",
+            "example" : 4
+          }
+        },
+        "required" : [ "nomisBookingId", "nomisSentenceSequence" ]
+      },
       "SentenceMapping" : {
         "type" : "object",
         "properties" : {
@@ -17163,25 +17236,6 @@
         },
         "required" : [ "activityId", "label", "nomisCourseActivityId" ]
       },
-      "NomisSentenceId" : {
-        "type" : "object",
-        "description" : "NOMIS Sentence ID",
-        "properties" : {
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id",
-            "example" : 123456
-          },
-          "nomisSentenceSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "NOMIS sentence sequence",
-            "example" : 4
-          }
-        },
-        "required" : [ "nomisBookingId", "nomisSentenceSequence" ]
-      },
       "NomisDpsSentenceMapping" : {
         "type" : "object",
         "description" : "NOMIS DPS Sentence mapping",
@@ -17316,9 +17370,6 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -17329,6 +17380,9 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -17338,10 +17392,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
