@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController
 class CourtSentencingResource(
   private val telemetryClient: TelemetryClient,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
+  private val courtSentencingRepairService: CourtSentencingRepairService,
 ) {
 
   private companion object {
@@ -55,7 +56,7 @@ class CourtSentencingResource(
     @RequestBody @Valid
     request: CourtChargeRequest,
   ) {
-    courtSentencingReconciliationService.chargeInsertedRepair(request = request)
+    courtSentencingRepairService.chargeInsertedRepair(request = request)
   }
 }
 

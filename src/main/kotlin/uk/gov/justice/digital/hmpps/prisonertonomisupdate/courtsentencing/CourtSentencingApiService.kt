@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
@@ -11,9 +12,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
-class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClient) {
+class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClient, retryApiService: RetryApiService) {
 
   suspend fun getCourtCase(id: String): LegacyCourtCase = courtSentencingApiWebClient.get()
     .uri("/legacy/court-case/{id}", id)
@@ -23,7 +26,11 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
   suspend fun getCourtCaseForReconciliation(courtCaseUuid: String): ReconciliationCourtCase = courtSentencingApiWebClient.get()
     .uri("/legacy/court-case//{courtCaseUuid}/reconciliation", courtCaseUuid)
     .retrieve()
-    .awaitBody()
+    .awaitBodyWithRetry(backoffSpec)
+
+  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "CourtSentencingApiService"),
+  )
 
   suspend fun getCourtAppearance(id: String): LegacyCourtAppearance = courtSentencingApiWebClient.get()
     .uri("/legacy/court-appearance/{id}", id)

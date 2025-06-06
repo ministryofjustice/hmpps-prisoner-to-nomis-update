@@ -6,9 +6,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -18,7 +15,6 @@ class CourtSentencingReconciliationService(
   private val dpsApiService: CourtSentencingApiService,
   private val nomisApiService: CourtSentencingNomisApiService,
   private val mappingService: CourtCaseMappingService,
-  private val courtSentencingService: CourtSentencingService,
   private val objectMapper: ObjectMapper,
 ) {
   private companion object {
@@ -46,11 +42,13 @@ class CourtSentencingReconciliationService(
   }
 
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
-    val nomisResponse = doApiCallWithRetries { nomisApiService.getCourtCaseForMigration(nomisCaseId) }
-    val dpsResponse = doApiCallWithRetries { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
+    val nomisResponse = nomisApiService.getCourtCaseForReconciliation(nomisCaseId)
+    val dpsResponse = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
 
+    // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
     val cc = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
     val sentences = cc.mapNotNull { charge -> charge.sentence }.map {
+      //
       SentenceFields(
         startDate = it.sentenceStartDate,
         sentenceCategory = it.sentenceCategory,
@@ -74,7 +72,7 @@ class CourtSentencingReconciliationService(
           )
         },
       )
-    }
+    }.distinctBy { it.id }
     val dpsFields = CaseFields(
       active = dpsResponse.active,
       id = dpsCaseId,
@@ -167,7 +165,7 @@ class CourtSentencingReconciliationService(
     when (dpsObj) {
       is CaseFields -> {
         if (dpsObj.active != (nomisObj as CaseFields).active) {
-          differences.add(Difference("$parentProperty.active", dpsObj.active, nomisObj.active))
+          differences.add(Difference("$parentProperty.active", dpsObj.active, nomisObj.active, id = dpsObj.id))
         }
         val sortedDpsAppearances = dpsObj.appearances.sortedWith(
           compareBy<AppearanceFields> { it.date }
@@ -182,20 +180,22 @@ class CourtSentencingReconciliationService(
         )
 
         if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
-          differences.add(Difference("$parentProperty.caseReferences", dpsObj.caseReferences, nomisObj.caseReferences))
+          differences.add(Difference("$parentProperty.caseReferences", dpsObj.caseReferences, nomisObj.caseReferences, id = dpsObj.id))
         }
 
         differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.appearances"))
 
         val sortedDpsSentences = dpsObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.sentenceCategory }
-            .thenBy { it.startDate }
+          compareBy<SentenceFields> { it.startDate }
+            .thenBy { it.sentenceCategory }
+            .thenBy { it.sentenceCalcType }
             .thenBy { it.status },
         )
 
         val sortedNomisSentences = nomisObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.sentenceCategory }
-            .thenBy { it.startDate }
+          compareBy<SentenceFields> { it.startDate }
+            .thenBy { it.sentenceCategory }
+            .thenBy { it.sentenceCalcType }
             .thenBy { it.status },
         )
 
@@ -328,26 +328,6 @@ class CourtSentencingReconciliationService(
     }
     return differences
   }
-
-  suspend fun chargeInsertedRepair(request: CourtChargeRequest) {
-    val event: CourtSentencingService.CourtChargeCreatedEvent = CourtSentencingService.CourtChargeCreatedEvent(
-      additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
-        courtChargeId = request.dpsChargeId,
-        courtCaseId = request.dpsCaseId,
-        source = "DPS",
-        courtAppearanceId = null,
-      ),
-      personReference = PersonReferenceList(
-        identifiers = listOf(
-          PersonReference(
-            type = "NOMS",
-            value = request.offenderNo,
-          ),
-        ),
-      ),
-    )
-    courtSentencingService.createCharge(event)
-  }
 }
 
 private fun List<SentenceResponse>.findNomisSentenceForCharge(chargeId: Long, eventId: Long): SentenceResponse? {
@@ -420,6 +400,7 @@ data class SentenceFields(
   val fine: BigDecimal?,
   val status: String,
   val id: String,
+  val offenceCodesForOrdering: String? = null,
   val terms: List<SentenceTermFields> = emptyList(),
 ) {
   override fun equals(other: Any?): Boolean {
