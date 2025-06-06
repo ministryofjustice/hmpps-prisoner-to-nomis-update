@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-04.17.e92bb6c"
+    "version" : "2025-06-05.21.e2b3d38"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -17234,7 +17234,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "activityId", "label", "nomisCourseActivityId" ]
+        "required" : [ "label", "nomisCourseActivityId" ]
       },
       "NomisDpsSentenceMapping" : {
         "type" : "object",
