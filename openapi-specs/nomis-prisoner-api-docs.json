@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-04.68.fb6c006"
+    "version" : "2025-06-05.70.8c0366f"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -29332,9 +29332,14 @@
             "format" : "int64",
             "description" : "Activity id",
             "example" : 1
+          },
+          "hasScheduleRules" : {
+            "type" : "boolean",
+            "description" : "Does the activity have schedule rules?",
+            "example" : true
           }
         },
-        "required" : [ "courseActivityId" ]
+        "required" : [ "courseActivityId", "hasScheduleRules" ]
       },
       "PageFindActiveActivityIdsResponse" : {
         "type" : "object",
