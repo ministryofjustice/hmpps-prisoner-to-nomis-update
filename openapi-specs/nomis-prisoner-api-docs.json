@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-05.70.8c0366f"
+    "version" : "2025-06-06.73.3d5c43c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -4363,6 +4363,156 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/incidents/{incidentId}" : {
+      "get" : {
+        "tags" : [ "incident-resource" ],
+        "summary" : "Get incident details",
+        "description" : "Gets incident details. Requires role NOMIS_INCIDENTS",
+        "operationId" : "getIncident",
+        "parameters" : [ {
+          "name" : "incidentId",
+          "in" : "path",
+          "description" : "Incident id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Incident id"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_INCIDENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "incident-resource" ],
+        "summary" : "creates an incident using the specified id",
+        "description" : "Creates an incident. Requires ROLE_NOMIS_INCIDENTS",
+        "operationId" : "createIncident",
+        "parameters" : [ {
+          "name" : "incidentId",
+          "in" : "path",
+          "description" : "Incident id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Incident id"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateIncidentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Incident Created Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncidentResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_INCIDENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Incident already exists",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -14734,77 +14884,6 @@
         }
       }
     },
-    "/incidents/{incidentId}" : {
-      "get" : {
-        "tags" : [ "incident-resource" ],
-        "summary" : "Get incident details",
-        "description" : "Gets incident details. Requires role NOMIS_INCIDENTS",
-        "operationId" : "getIncident",
-        "parameters" : [ {
-          "name" : "incidentId",
-          "in" : "path",
-          "description" : "Incident id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Incident id"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/IncidentResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_INCIDENTS",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/incidents/reconciliation/agency/{agencyId}/ids" : {
       "get" : {
         "tags" : [ "incident-resource" ],
@@ -19016,6 +19095,559 @@
         },
         "required" : [ "adjustmentDays", "adjustmentFromDate", "adjustmentTypeCode" ]
       },
+      "CreateIncidentRequest" : {
+        "type" : "object",
+        "description" : "Incident Request",
+        "properties" : {
+          "title" : {
+            "type" : "string",
+            "description" : "A summary of the incident"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The incident details"
+          },
+          "location" : {
+            "type" : "string",
+            "description" : "Prison where the incident occurred"
+          },
+          "statusCode" : {
+            "type" : "string",
+            "description" : "Status details"
+          },
+          "typeCode" : {
+            "type" : "string",
+            "description" : "The incident questionnaire type"
+          },
+          "incidentDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the incident"
+          },
+          "reportedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the incident was reported"
+          },
+          "reportedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who reported the incident"
+          }
+        },
+        "required" : [ "incidentDateTime", "location", "reportedBy", "reportedDateTime", "statusCode", "typeCode" ]
+      },
+      "History" : {
+        "type" : "object",
+        "properties" : {
+          "questionnaireId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The history questionnaire id for the incident"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The questionnaire type"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The questionnaire description"
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions asked for the questionnaire",
+            "items" : {
+              "$ref" : "#/components/schemas/HistoryQuestion"
+            }
+          },
+          "incidentChangeDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the questionnaire was changed"
+          },
+          "incidentChangeStaff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "Who changed the questionnaire"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the historical incident questionnaire was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the historical incident questionnaire"
+          }
+        },
+        "required" : [ "createDateTime", "createdBy", "incidentChangeDateTime", "incidentChangeStaff", "questionnaireId", "questions", "type" ]
+      },
+      "HistoryQuestion" : {
+        "type" : "object",
+        "properties" : {
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The sequence number of the response question for this incident"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the question for this incident"
+          },
+          "question" : {
+            "type" : "string",
+            "description" : "The Question being asked"
+          },
+          "answers" : {
+            "type" : "array",
+            "description" : "Historical list of Responses to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/HistoryResponse"
+            }
+          }
+        },
+        "required" : [ "answers", "question", "questionId", "sequence" ]
+      },
+      "HistoryResponse" : {
+        "type" : "object",
+        "properties" : {
+          "questionResponseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the questionnaire question answer"
+          },
+          "responseSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the response for this incident"
+          },
+          "answer" : {
+            "type" : "string",
+            "description" : "The answer text"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment added to the response by recording staff"
+          },
+          "responseDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Response date added to the response by recording staff"
+          },
+          "recordingStaff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "Recording staff"
+          }
+        },
+        "required" : [ "recordingStaff", "responseSequence" ]
+      },
+      "IncidentResponse" : {
+        "type" : "object",
+        "description" : "Incident Details",
+        "properties" : {
+          "incidentId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The incident id"
+          },
+          "questionnaireId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the questionnaire associated with this incident"
+          },
+          "title" : {
+            "type" : "string",
+            "description" : "A summary of the incident"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The incident details"
+          },
+          "agency" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Agency where the incident occurred"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/IncidentStatus",
+            "description" : "Status details"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The incident questionnaire type"
+          },
+          "lockedResponse" : {
+            "type" : "boolean",
+            "description" : "If the response is locked ie if the response is completed"
+          },
+          "incidentDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the incident"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the incident was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the incident"
+          },
+          "lastModifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the incident was last updated"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the incident"
+          },
+          "followUpDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The follow up date for the incident"
+          },
+          "reportingStaff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "The staff member who reported the incident"
+          },
+          "reportedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the incident was reported"
+          },
+          "staffParties" : {
+            "type" : "array",
+            "description" : "Staff involved in the incident",
+            "items" : {
+              "$ref" : "#/components/schemas/StaffParty"
+            }
+          },
+          "offenderParties" : {
+            "type" : "array",
+            "description" : "Offenders involved in the incident",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderParty"
+            }
+          },
+          "requirements" : {
+            "type" : "array",
+            "description" : "Requirements for completing the incident report",
+            "items" : {
+              "$ref" : "#/components/schemas/Requirement"
+            }
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions asked for the incident",
+            "items" : {
+              "$ref" : "#/components/schemas/Question"
+            }
+          },
+          "history" : {
+            "type" : "array",
+            "description" : "Historical questionnaire details for the incident",
+            "items" : {
+              "$ref" : "#/components/schemas/History"
+            }
+          }
+        },
+        "required" : [ "agency", "createDateTime", "createdBy", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ]
+      },
+      "IncidentStatus" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "listSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "standardUser" : {
+            "type" : "boolean"
+          },
+          "enhancedUser" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "code", "description", "enhancedUser", "standardUser" ]
+      },
+      "Offender" : {
+        "type" : "object",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "NOMIS id"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of offender"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name of offender"
+          }
+        },
+        "required" : [ "firstName", "lastName", "offenderNo" ]
+      },
+      "OffenderParty" : {
+        "type" : "object",
+        "properties" : {
+          "offender" : {
+            "$ref" : "#/components/schemas/Offender",
+            "description" : "Offender involved in the incident"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the offender party for this incident"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Offender role in the incident"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The outcome of the incident"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "General information about the incident"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the offender party was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the offender party"
+          },
+          "lastModifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the offender party was last updated"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the offender party"
+          }
+        },
+        "required" : [ "createDateTime", "createdBy", "offender", "role", "sequence" ]
+      },
+      "Question" : {
+        "type" : "object",
+        "properties" : {
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The questionnaire question id"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the question for this incident"
+          },
+          "question" : {
+            "type" : "string",
+            "description" : "The Question being asked"
+          },
+          "answers" : {
+            "type" : "array",
+            "description" : "List of Responses to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/Response"
+            }
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the question was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the question"
+          }
+        },
+        "required" : [ "answers", "createDateTime", "createdBy", "question", "questionId", "sequence" ]
+      },
+      "Requirement" : {
+        "type" : "object",
+        "properties" : {
+          "comment" : {
+            "type" : "string",
+            "description" : "The update required to the incident report"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the requirement for this incident"
+          },
+          "date" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the requirement was recorded"
+          },
+          "staff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "The staff member who made the requirement request"
+          },
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The reporting agency of the staff"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the requirement was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the requirement"
+          },
+          "lastModifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the requirement was last updated"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the requirement"
+          }
+        },
+        "required" : [ "agencyId", "createDateTime", "createdBy", "date", "sequence", "staff" ]
+      },
+      "Response" : {
+        "type" : "object",
+        "properties" : {
+          "questionResponseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the questionnaire question answer"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the response for this incident"
+          },
+          "answer" : {
+            "type" : "string",
+            "description" : "The answer text"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment added to the response by recording staff"
+          },
+          "responseDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Response date added to the response by recording staff"
+          },
+          "recordingStaff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "Recording staff"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the response was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the response"
+          },
+          "lastModifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the response was last updated"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the response"
+          }
+        },
+        "required" : [ "createDateTime", "createdBy", "recordingStaff", "sequence" ]
+      },
+      "Staff" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string",
+            "description" : "Username of first account related to staff"
+          },
+          "staffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS staff id"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of staff member"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name of staff member"
+          },
+          "createdByUsername" : {
+            "type" : "string",
+            "description" : "Username of person who created the record in NOMIS where this staff is used"
+          },
+          "dateAddedToIncident" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "date added in NOMIS to the adjudication incident"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "comment about why they were added to the adjudication incident"
+          }
+        },
+        "required" : [ "firstName", "lastName", "staffId", "username" ]
+      },
+      "StaffParty" : {
+        "type" : "object",
+        "properties" : {
+          "staff" : {
+            "$ref" : "#/components/schemas/Staff",
+            "description" : "Staff involved in the incident"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the staff party for this incident"
+          },
+          "role" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Staff role in the incident"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "General information about the incident"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the staff party was created"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the staff party"
+          },
+          "lastModifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the staff party was last updated"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the staff party"
+          }
+        },
+        "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ]
+      },
       "CreateIncentiveRequest" : {
         "type" : "object",
         "description" : "IEP creation request",
@@ -21578,42 +22210,6 @@
           }
         },
         "required" : [ "createdByUsername", "dateAddedToIncident", "lastName", "offenderNo" ]
-      },
-      "Staff" : {
-        "type" : "object",
-        "properties" : {
-          "username" : {
-            "type" : "string",
-            "description" : "Username of first account related to staff"
-          },
-          "staffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS staff id"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of staff member"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of staff member"
-          },
-          "createdByUsername" : {
-            "type" : "string",
-            "description" : "Username of person who created the record in NOMIS where this staff is used"
-          },
-          "dateAddedToIncident" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "date added in NOMIS to the adjudication incident"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "comment about why they were added to the adjudication incident"
-          }
-        },
-        "required" : [ "firstName", "lastName", "staffId", "username" ]
       },
       "ChargeToCreate" : {
         "type" : "object",
@@ -25105,24 +25701,6 @@
           }
         }
       },
-      "Offender" : {
-        "type" : "object",
-        "properties" : {
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "NOMIS id"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of offender"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Last name of offender"
-          }
-        },
-        "required" : [ "firstName", "lastName", "offenderNo" ]
-      },
       "Plan" : {
         "type" : "object",
         "properties" : {
@@ -26838,464 +27416,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "History" : {
-        "type" : "object",
-        "properties" : {
-          "questionnaireId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The history questionnaire id for the incident"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The questionnaire type"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "The questionnaire description"
-          },
-          "questions" : {
-            "type" : "array",
-            "description" : "Questions asked for the questionnaire",
-            "items" : {
-              "$ref" : "#/components/schemas/HistoryQuestion"
-            }
-          },
-          "incidentChangeDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "When the questionnaire was changed"
-          },
-          "incidentChangeStaff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "Who changed the questionnaire"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the historical incident questionnaire was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the historical incident questionnaire"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy", "incidentChangeDateTime", "incidentChangeStaff", "questionnaireId", "questions", "type" ]
-      },
-      "HistoryQuestion" : {
-        "type" : "object",
-        "properties" : {
-          "questionId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The sequence number of the response question for this incident"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the question for this incident"
-          },
-          "question" : {
-            "type" : "string",
-            "description" : "The Question being asked"
-          },
-          "answers" : {
-            "type" : "array",
-            "description" : "Historical list of Responses to this question",
-            "items" : {
-              "$ref" : "#/components/schemas/HistoryResponse"
-            }
-          }
-        },
-        "required" : [ "answers", "question", "questionId", "sequence" ]
-      },
-      "HistoryResponse" : {
-        "type" : "object",
-        "properties" : {
-          "questionResponseId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the questionnaire question answer"
-          },
-          "responseSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the response for this incident"
-          },
-          "answer" : {
-            "type" : "string",
-            "description" : "The answer text"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment added to the response by recording staff"
-          },
-          "responseDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Response date added to the response by recording staff"
-          },
-          "recordingStaff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "Recording staff"
-          }
-        },
-        "required" : [ "recordingStaff", "responseSequence" ]
-      },
-      "IncidentResponse" : {
-        "type" : "object",
-        "description" : "Incident Details",
-        "properties" : {
-          "incidentId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The incident id"
-          },
-          "questionnaireId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the questionnaire associated with this incident"
-          },
-          "title" : {
-            "type" : "string",
-            "description" : "A summary of the incident"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "The incident details"
-          },
-          "agency" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Agency where the incident occurred"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/IncidentStatus",
-            "description" : "Status details"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The incident questionnaire type"
-          },
-          "lockedResponse" : {
-            "type" : "boolean",
-            "description" : "If the response is locked ie if the response is completed"
-          },
-          "incidentDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time of the incident"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the incident was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the incident"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the incident was last updated"
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the incident"
-          },
-          "followUpDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The follow up date for the incident"
-          },
-          "reportingStaff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "The staff member who reported the incident"
-          },
-          "reportedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the incident was reported"
-          },
-          "staffParties" : {
-            "type" : "array",
-            "description" : "Staff involved in the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/StaffParty"
-            }
-          },
-          "offenderParties" : {
-            "type" : "array",
-            "description" : "Offenders involved in the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/OffenderParty"
-            }
-          },
-          "requirements" : {
-            "type" : "array",
-            "description" : "Requirements for completing the incident report",
-            "items" : {
-              "$ref" : "#/components/schemas/Requirement"
-            }
-          },
-          "questions" : {
-            "type" : "array",
-            "description" : "Questions asked for the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/Question"
-            }
-          },
-          "history" : {
-            "type" : "array",
-            "description" : "Historical questionnaire details for the incident",
-            "items" : {
-              "$ref" : "#/components/schemas/History"
-            }
-          }
-        },
-        "required" : [ "agency", "createDateTime", "createdBy", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ]
-      },
-      "IncidentStatus" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "listSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "standardUser" : {
-            "type" : "boolean"
-          },
-          "enhancedUser" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "code", "description", "enhancedUser", "standardUser" ]
-      },
-      "OffenderParty" : {
-        "type" : "object",
-        "properties" : {
-          "offender" : {
-            "$ref" : "#/components/schemas/Offender",
-            "description" : "Offender involved in the incident"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the offender party for this incident"
-          },
-          "role" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Offender role in the incident"
-          },
-          "outcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome of the incident"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "General information about the incident"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the offender party was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the offender party"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the offender party was last updated"
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the offender party"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy", "offender", "role", "sequence" ]
-      },
-      "Question" : {
-        "type" : "object",
-        "properties" : {
-          "questionId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The questionnaire question id"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the question for this incident"
-          },
-          "question" : {
-            "type" : "string",
-            "description" : "The Question being asked"
-          },
-          "answers" : {
-            "type" : "array",
-            "description" : "List of Responses to this question",
-            "items" : {
-              "$ref" : "#/components/schemas/Response"
-            }
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the question was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the question"
-          }
-        },
-        "required" : [ "answers", "createDateTime", "createdBy", "question", "questionId", "sequence" ]
-      },
-      "Requirement" : {
-        "type" : "object",
-        "properties" : {
-          "comment" : {
-            "type" : "string",
-            "description" : "The update required to the incident report"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the requirement for this incident"
-          },
-          "date" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date the requirement was recorded"
-          },
-          "staff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "The staff member who made the requirement request"
-          },
-          "agencyId" : {
-            "type" : "string",
-            "description" : "The reporting agency of the staff"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the requirement was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the requirement"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the requirement was last updated"
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the requirement"
-          }
-        },
-        "required" : [ "agencyId", "createDateTime", "createdBy", "date", "sequence", "staff" ]
-      },
-      "Response" : {
-        "type" : "object",
-        "properties" : {
-          "questionResponseId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the questionnaire question answer"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the response for this incident"
-          },
-          "answer" : {
-            "type" : "string",
-            "description" : "The answer text"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment added to the response by recording staff"
-          },
-          "responseDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Response date added to the response by recording staff"
-          },
-          "recordingStaff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "Recording staff"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the response was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the response"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the response was last updated"
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the response"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy", "recordingStaff", "sequence" ]
-      },
-      "StaffParty" : {
-        "type" : "object",
-        "properties" : {
-          "staff" : {
-            "$ref" : "#/components/schemas/Staff",
-            "description" : "Staff involved in the incident"
-          },
-          "sequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the staff party for this incident"
-          },
-          "role" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "Staff role in the incident"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "General information about the incident"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the staff party was created"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the staff party"
-          },
-          "lastModifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the staff party was last updated"
-          },
-          "lastModifiedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the staff party"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ]
       },
       "IncidentIdResponse" : {
         "type" : "object",
