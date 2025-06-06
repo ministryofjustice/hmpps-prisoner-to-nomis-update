@@ -107,6 +107,13 @@ class CourtSentencingNomisApiMockServer {
     stubGet("/court-cases/$caseId", response)
   }
 
+  fun stubGetCourtCaseForReconciliation(
+    caseId: Long,
+    response: CourtCaseResponse,
+  ) {
+    stubGet("/court-cases/$caseId", response)
+  }
+
   fun stubGetCourtCasesByOffenderNo(
     offenderNo: String = "G4803UT",
     response: List<CourtCaseResponse> = emptyList(),

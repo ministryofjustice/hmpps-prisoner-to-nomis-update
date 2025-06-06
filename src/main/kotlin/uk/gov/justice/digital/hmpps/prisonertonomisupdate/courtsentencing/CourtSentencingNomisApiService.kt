@@ -6,6 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
@@ -21,9 +23,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
-class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient, retryApiService: RetryApiService) {
 
   suspend fun createCourtCase(offenderNo: String, request: CreateCourtCaseRequest): CreateCourtCaseResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
@@ -75,6 +78,15 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .uri("/court-cases/{courtCaseId}", courtCaseId)
     .retrieve()
     .awaitBody()
+
+  suspend fun getCourtCaseForReconciliation(courtCaseId: Long): CourtCaseResponse = webClient.get()
+    .uri("/court-cases/{courtCaseId}", courtCaseId)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "CourtSentencingNomisApiService"),
+  )
 
   suspend fun getCourtCasesByOffender(offenderNo: String): List<CourtCaseResponse> = webClient.get()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
