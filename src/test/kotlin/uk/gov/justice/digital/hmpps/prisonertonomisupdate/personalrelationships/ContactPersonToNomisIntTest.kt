@@ -827,6 +827,50 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("contacts-api.prisoner-contact.deleted")
+  inner class PrisonerContactDeleted {
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a Contact delete")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-delete-ignored"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Prisoner Contact update")
+    inner class WhenDpsUpdated {
+      @BeforeEach
+      fun setUp() {
+        publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignore`() {
+        verify(telemetryClient).trackEvent(
+          eq("contact-delete-unsupported"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("contacts-api.contact-address.created")
   inner class ContactAddressCreated {
 
@@ -4354,6 +4398,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
   private fun publishUpdatePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
     with("contacts-api.prisoner-contact.updated") {
+      publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
+    }
+  }
+  private fun publishDeletePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
+    with("contacts-api.prisoner-contact.deleted") {
       publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
     }
   }

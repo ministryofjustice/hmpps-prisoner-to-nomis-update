@@ -249,6 +249,7 @@ hmpps.sqs:
           "contacts-api.contact.updated",
           "contacts-api.prisoner-contact.created",
           "contacts-api.prisoner-contact.updated",
+          "contacts-api.prisoner-contact.deleted",
           "contacts-api.contact-address.created",
           "contacts-api.contact-address.updated",
           "contacts-api.contact-address.deleted",
