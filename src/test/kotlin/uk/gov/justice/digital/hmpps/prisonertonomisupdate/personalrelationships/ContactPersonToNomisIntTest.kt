@@ -9,7 +9,9 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
+import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
+import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnDLQQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
@@ -851,8 +854,8 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    @DisplayName("when DPS is the origin of a Prisoner Contact update")
-    inner class WhenDpsUpdated {
+    @DisplayName("when DPS unexpectedly is the origin of a Prisoner Contact delete")
+    inner class WhenDpsDeleted {
       @BeforeEach
       fun setUp() {
         publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", source = "DPS")
@@ -860,12 +863,19 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will send telemetry event showing the ignore`() {
+      fun `will send telemetry event showing the unsupported for each retry`() {
         verify(telemetryClient).trackEvent(
           eq("contact-delete-unsupported"),
           any(),
           isNull(),
         )
+      }
+
+      @Test
+      fun `will add message to DLQ`() {
+        await untilCallTo {
+          personalRelationshipsQueue.countAllMessagesOnDLQQueue()
+        } matches { it == 1 }
       }
     }
   }
@@ -4401,6 +4411,8 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
     }
   }
+
+  @Suppress("SameParameterValue")
   private fun publishDeletePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
     with("contacts-api.prisoner-contact.deleted") {
       publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))

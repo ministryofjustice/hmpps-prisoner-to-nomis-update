@@ -14,6 +14,7 @@ import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
+import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
@@ -182,3 +183,4 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 }
 
 private fun SqsAsyncClient.purgeQueue(queueUrl: String?) = purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl!!).build())
+fun HmppsQueue.countAllMessagesOnDLQQueue(): Int = this.sqsDlqClient!!.countAllMessagesOnQueue(dlqUrl!!).get()
