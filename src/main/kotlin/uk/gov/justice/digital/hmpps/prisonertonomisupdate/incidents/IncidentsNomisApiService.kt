@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -16,16 +18,32 @@ class IncidentsNomisApiService(
   )
 
   suspend fun createIncident(nomisId: Long, request: CreateIncidentRequest) {
-    // TODO: add implementation
-  }
-
-  suspend fun updateIncident(nomisId: Long, request: CreateIncidentRequest) {
-    // TODO: add implementation
+    webClient.put()
+      .uri("/incidents/{incidentId}", nomisId)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
   }
 
   suspend fun deleteIncident(nomisId: Long) {
-    // TODO: add implementation
+    webClient.delete()
+      .uri("/incidents/{incidentId}", nomisId)
+      .retrieve()
+      .awaitBodilessEntity()
   }
 }
 
-data class CreateIncidentRequest(val title: String)
+// data class CreateIncidentQuestionRequest(
+//  val code: String,
+//  val additionalInformation: String?,
+//  val question: String,
+//  val responses: List<CreateIncidentResponseRequest>,
+// )
+//
+// data class CreateIncidentResponseRequest(
+//  val response: String,
+//  val responseDate: LocalDate?,
+//  val additionalInformation: String?,
+//  val recordedAt: LocalDateTime,
+//  val recordedBy: String,
+// )
