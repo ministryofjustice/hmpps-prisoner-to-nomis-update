@@ -285,6 +285,38 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will report a charge difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(offenceDate = LocalDate.of(2022, 3, 3)),
+                nomisChargeResponse(),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse(),
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(2021, 3, 3)),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "2021-03-03", nomis = "2022-03-03", id = DPS_COURT_CHARGE_ID)))
+    }
+
+    @Test
     fun `will report an extra sentence in nomis`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
@@ -385,6 +417,48 @@ internal class CourtSentencingReconciliationServiceTest {
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceTerms", dps = 2, nomis = 3)))
+    }
+
+    @Test
+    fun `will report an sentence term difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              sentenceTerms = listOf(
+                nomisSentenceTermResponse(),
+                nomisSentenceTermResponse(),
+                nomisSentenceTermResponse(),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(
+                    periodLengths = listOf(
+                      dpsPeriodLengthResponse(),
+                      dpsPeriodLengthResponse(),
+                      dpsPeriodLengthResponse().copy(
+                        periodYears = 20,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceTerms[2].years", dps = 20, nomis = 6, id = DPS_PERIOD_LENGTH_ID)))
     }
   }
 }
