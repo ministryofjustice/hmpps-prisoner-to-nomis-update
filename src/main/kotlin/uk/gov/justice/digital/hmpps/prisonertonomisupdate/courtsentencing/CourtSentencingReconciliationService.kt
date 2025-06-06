@@ -243,8 +243,8 @@ class CourtSentencingReconciliationService(
           differences.add(
             Difference(
               "$parentProperty.offenceDate",
-              dpsObj.offenceDate,
-              nomisObj.offenceDate,
+              dpsObj.offenceDate?.toString(),
+              nomisObj.offenceDate?.toString(),
               dpsObj.id,
             ),
           )
@@ -253,8 +253,8 @@ class CourtSentencingReconciliationService(
           differences.add(
             Difference(
               "$parentProperty.offenceEndDate",
-              dpsObj.offenceEndDate,
-              nomisObj.offenceEndDate,
+              dpsObj.offenceEndDate?.toString(),
+              nomisObj.offenceEndDate?.toString(),
               dpsObj.id,
             ),
           )
