@@ -46,8 +46,8 @@ class CourtSentencingReconciliationService(
     val dpsResponse = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
 
     // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
-    val cc = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
-    val sentences = cc.mapNotNull { charge -> charge.sentence }.map {
+    val appearanceCharges = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
+    val sentences = appearanceCharges.mapNotNull { charge -> charge.sentence }.map {
       //
       SentenceFields(
         startDate = it.sentenceStartDate,
@@ -216,7 +216,8 @@ class CourtSentencingReconciliationService(
         fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> = charges.sortedWith(
           compareBy<ChargeFields> { it.offenceCode }
             .thenBy { it.offenceDate }
-            .thenBy { it.outcome },
+            .thenBy { it.outcome }
+            .thenBy { it.offenceEndDate },
         )
         differences.addAll(
           compareLists(
@@ -308,6 +309,27 @@ class CourtSentencingReconciliationService(
             "$parentProperty.sentenceTerms",
           ),
         )
+      }
+
+      is SentenceTermFields -> {
+        if (dpsObj.years != (nomisObj as SentenceTermFields).years) {
+          differences.add(Difference("$parentProperty.years", dpsObj.years, nomisObj.years, dpsObj.id))
+        }
+        if (dpsObj.months != nomisObj.months) {
+          differences.add(Difference("$parentProperty.months", dpsObj.months, nomisObj.months, dpsObj.id))
+        }
+        if (dpsObj.weeks != nomisObj.weeks) {
+          differences.add(Difference("$parentProperty.weeks", dpsObj.weeks, nomisObj.weeks, dpsObj.id))
+        }
+        if (dpsObj.days != nomisObj.days) {
+          differences.add(Difference("$parentProperty.days", dpsObj.days, nomisObj.days, dpsObj.id))
+        }
+        if (dpsObj.lifeSentenceFlag != nomisObj.lifeSentenceFlag) {
+          differences.add(Difference("$parentProperty.lifeSentenceFlag", dpsObj.lifeSentenceFlag, nomisObj.lifeSentenceFlag, dpsObj.id))
+        }
+        if (dpsObj.sentenceTermCode != nomisObj.sentenceTermCode) {
+          differences.add(Difference("$parentProperty.sentenceTermCode", dpsObj.sentenceTermCode, nomisObj.sentenceTermCode, dpsObj.id))
+        }
       }
     }
 
