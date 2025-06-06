@@ -16,7 +16,6 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
-import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
@@ -135,8 +134,14 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `will not track telemetry for the repair`() {
-        verifyNoInteractions(telemetryClient)
+      fun `will create ignored telemetry for the repair`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-repair-ignored"),
+          check {
+            assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
+          },
+          isNull(),
+        )
       }
     }
   }
