@@ -45,10 +45,50 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     private val prisonNumber = "A1234KT"
 
     @Nested
+    inner class NomisInChargeOfAllocation {
+
+      @BeforeEach
+      fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = prisonNumber)
+        sendVisitBalanceAdjustmentToQueue()
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will not call Dps for the adjustment details`() {
+        visitBalanceDpsApi.verify(
+          0,
+          getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjId")),
+        )
+      }
+
+      @Test
+      fun `will not create the adjustment in Nomis`() {
+        visitBalanceNomisApi.verify(
+          0,
+          postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments")),
+        )
+      }
+
+      @Test
+      fun `will send telemetry event showing the ignored event`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-adjustment-ignored"),
+          check {
+            assertThat(it).containsEntry("visitBalanceAdjustmentId", "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef")
+            assertThat(it).containsEntry("prisonNumber", "A1234KT")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class HappyPath {
 
       @BeforeEach
       fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber = prisonNumber, vbAdjId = visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment()
         sendVisitBalanceAdjustmentToQueue()
@@ -77,7 +117,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will send telemetry event showing the create success`() {
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-adjustment-synchronisation-created-success"),
+          eq("visitbalance-synchronisation-adjustment-created-success"),
           check {
             assertThat(it).containsEntry("visitBalanceAdjustmentId", "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef")
             assertThat(it).containsEntry("prisonNumber", "A1234KT")
@@ -94,6 +134,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(
           prisonNumber = prisonNumber,
           vbAdjId = visitBalanceAdjId,
@@ -128,6 +169,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber, visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendVisitBalanceAdjustmentToQueue()
@@ -158,6 +200,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendVisitBalanceAdjustmentToQueue()
         await untilCallTo {
@@ -189,6 +232,60 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     private val movedFromNomsNumber = "A1234AA"
     private val movedToNomsNumber = "B1234BB"
     private val bookingStartDateTime = "2021-07-05T10:55:04"
+
+    @Nested
+    inner class NomisInChargeOfAllocationForAPrisoner {
+
+      @BeforeEach
+      fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = movedFromNomsNumber)
+        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedToNomsNumber)
+        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedToNomsNumber, voBalance = 4, pvoBalance = 5))
+        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedToNomsNumber)
+        sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
+        waitForAnyProcessingToComplete(times = 2)
+      }
+
+      @Test
+      fun `will retrieve the balance details from Dps for one prisoner`() {
+        visitBalanceDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedFromNomsNumber/balance")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$movedToNomsNumber/balance")))
+      }
+
+      @Test
+      fun `will create the balance in Nomis for one prisoner`() {
+        visitBalanceNomisApi.verify(
+          0,
+          putRequestedFor(urlPathEqualTo("/prisoners/$movedFromNomsNumber/visit-balance")),
+        )
+        visitBalanceNomisApi.verify(
+          putRequestedFor(urlPathEqualTo("/prisoners/$movedToNomsNumber/visit-balance"))
+            .withRequestBodyJsonPath("remainingVisitOrders", 4)
+            .withRequestBodyJsonPath("remainingPrivilegedVisitOrders", 5),
+        )
+      }
+
+      @Test
+      fun `will send telemetry event showing the create success and also ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-booking-moved-from-ignored"),
+          check {
+            assertThat(it).containsEntry("prisonNumber", movedFromNomsNumber)
+          },
+          isNull(),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-booking-moved-to"),
+          check {
+            assertThat(it).containsEntry("bookingId", bookingId.toString())
+            assertThat(it).containsEntry("prisonNumber", movedToNomsNumber)
+            assertThat(it).containsEntry("voBalance", "4")
+            assertThat(it).containsEntry("pvoBalance", "5")
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     inner class HappyPath {
@@ -316,6 +413,42 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
   @DisplayName("prisoner-offender-search.prisoner.received")
   inner class PrisonerReceived {
     private val nomsNumber = "A1234AA"
+
+    @Nested
+    inner class NomisInChargeOfAllocation {
+
+      @BeforeEach
+      fun setup() {
+        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = nomsNumber)
+        sendPrisonerReceivedEvent(nomsNumber)
+        waitForAnyProcessingToComplete(times = 1)
+      }
+
+      @Test
+      fun `will not retrieve the balance from Dps`() {
+        visitBalanceDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+      }
+
+      @Test
+      fun `will not create the balance in Nomis`() {
+        visitBalanceNomisApi.verify(
+          0,
+          putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")),
+        )
+      }
+
+      @Test
+      fun `will send telemetry event showing the create ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-prisoner-received-ignored"),
+          check {
+            assertThat(it).containsEntry("reason", "READMISSION_SWITCH_BOOKING")
+            assertThat(it).containsEntry("prisonNumber", nomsNumber)
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     inner class HappyPath {
