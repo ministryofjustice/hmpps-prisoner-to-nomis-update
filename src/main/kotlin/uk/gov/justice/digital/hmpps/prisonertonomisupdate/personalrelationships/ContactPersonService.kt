@@ -238,6 +238,22 @@ class ContactPersonService(
       telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
   }
+  suspend fun prisonerContactDeleted(event: PrisonerContactDeletedEvent) {
+    val entityName = CONTACT.entityName
+
+    val dpsPrisonerContactId = event.additionalInformation.prisonerContactId
+    val telemetryMap = mutableMapOf(
+      "dpsPrisonerContactId" to dpsPrisonerContactId.toString(),
+    )
+
+    if (event.didOriginateInDPS()) {
+      telemetryClient.trackEvent("$entityName-delete-unsupported", telemetryMap)
+      // DPS doesn't currently allow this - if it ever does we would need to support it
+      throw IllegalStateException("Should not be able delete prisoner contact from DPS - if this is happening this needs to be supported by sync")
+    } else {
+      telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
+    }
+  }
 
   suspend fun contactAddressCreated(event: ContactAddressCreatedEvent) {
     val entityName = CONTACT_ADDRESS.entityName
