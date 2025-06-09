@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Type
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertDescriptionAmendmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 
@@ -14,7 +15,6 @@ class IncidentsService(
   private val nomisApiService: IncidentsNomisApiService,
   private val dpsApiService: IncidentsDpsApiService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
 ) {
 
   suspend fun incidentUpsert(event: IncidentEvent) {
@@ -74,7 +74,7 @@ private fun IncidentEvent.didOriginateInDPS() = this.additionalInformation.sourc
 private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = UpsertIncidentRequest(
   title = this.title,
   description = this.description,
-  // descriptionAmendments = this.descriptionAddendums,
+  descriptionAmendments = this.descriptionAddendums.map { it.toNomisUpsertDescriptionAmendmentRequest() },
   typeCode = mapDpsType(this.type),
   location = this.location,
   statusCode = mapDpsStatus(this.status),
@@ -101,6 +101,13 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = Up
 //  recordedAt = this.recordedAt,
 //  recordedBy = this.recordedBy,
 // )
+
+private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): UpsertDescriptionAmendmentRequest = UpsertDescriptionAmendmentRequest(
+  createdDateTime = this.createdAt,
+  firstName = this.firstName,
+  lastName = this.lastName,
+  text = this.text,
+)
 
 private fun ReportWithDetails.mapDpsType(type: Type): String = when (type) {
   Type.ABSCOND_1 -> "ABSCOND"

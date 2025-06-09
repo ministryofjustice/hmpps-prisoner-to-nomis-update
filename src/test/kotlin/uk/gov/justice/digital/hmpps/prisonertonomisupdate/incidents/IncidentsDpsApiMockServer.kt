@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Event
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalResponse
@@ -202,5 +203,14 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   lastModifiedInNomis = true,
   staffInvolvementDone = true,
   prisonerInvolvementDone = true,
-  descriptionAddendums = listOf(),
+  descriptionAddendums = listOf(
+    DescriptionAddendum(
+      sequence = 1,
+      createdAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+      firstName = "Dave",
+      lastName = "Jones",
+      createdBy = "DJONES",
+      text = "There was an amendment",
+    ),
+  ),
 )

@@ -17,6 +17,7 @@ class IncidentsNomisApiMockServer {
     fun upsertIncidentRequest(): UpsertIncidentRequest = UpsertIncidentRequest(
       title = "An incident occurred",
       description = "Fighting and shouting occurred in the prisoner's cell and a chair was thrown.",
+      descriptionAmendments = listOf(),
       location = "BXI",
       statusCode = "AWAN",
       typeCode = "INACTIVE",

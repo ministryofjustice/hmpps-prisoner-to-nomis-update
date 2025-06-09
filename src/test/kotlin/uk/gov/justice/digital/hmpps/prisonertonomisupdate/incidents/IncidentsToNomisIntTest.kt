@@ -62,7 +62,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
         inner class HappyPath {
           private val dpsId = UUID.randomUUID()
           private val nomisId = 7654321L
-          private val incidentId = 54321L
 
           @BeforeEach
           fun setUp() {
@@ -119,6 +118,17 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
+            )
+          }
+
+          @Test
+          fun `the created incident will contain details of the DPS amendment`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("descriptionAmendments[0].text", "There was an amendment")
+                .withRequestBodyJsonPath("descriptionAmendments[0].firstName", "Dave")
+                .withRequestBodyJsonPath("descriptionAmendments[0].lastName", "Jones")
+                .withRequestBodyJsonPath("descriptionAmendments[0].createdDateTime", "2021-07-05T10:35:17"),
             )
           }
         }
