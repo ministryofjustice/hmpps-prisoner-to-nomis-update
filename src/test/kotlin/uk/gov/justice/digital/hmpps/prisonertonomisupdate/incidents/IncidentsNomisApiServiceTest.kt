@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsNomisApiMockServer.Companion.createIncidentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsNomisApiMockServer.Companion.upsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -31,12 +31,12 @@ class IncidentsNomisApiServiceTest {
   inner class Incident {
 
     @Nested
-    inner class CreateIncident {
+    inner class UpsertIncident {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateIncident()
+        mockServer.stubUpsertIncident()
 
-        apiService.createIncident(nomisId = 123456, request = createIncidentRequest())
+        apiService.upsertIncident(nomisId = 123456, request = upsertIncidentRequest())
 
         mockServer.verify(
           putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -45,9 +45,9 @@ class IncidentsNomisApiServiceTest {
 
       @Test
       fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateIncident()
+        mockServer.stubUpsertIncident()
 
-        apiService.createIncident(nomisId = 123456, request = createIncidentRequest())
+        apiService.upsertIncident(nomisId = 123456, request = upsertIncidentRequest())
 
         mockServer.verify(
           putRequestedFor(urlPathEqualTo("/incidents/123456")),

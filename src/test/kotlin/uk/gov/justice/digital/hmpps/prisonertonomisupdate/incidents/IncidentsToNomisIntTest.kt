@@ -3,13 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -23,18 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncidentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
 
 class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
   private lateinit var nomisApi: IncidentsNomisApiMockServer
-
-  @Autowired
-  private lateinit var mappingApi: IncidentsMappingApiMockServer
 
   private val dpsApi = IncidentsDpsApiExtension.Companion.incidentsDpsApi
 
@@ -57,7 +47,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will send telemetry event showing the ignore`() {
           verify(telemetryClient).trackEvent(
-            eq("incident-create-ignored"),
+            eq("incident-upsert-ignored"),
             any(),
             isNull(),
           )
@@ -76,14 +66,12 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @BeforeEach
           fun setUp() {
-            mappingApi.stubGetByDpsIncidentIdOrNull(dpsIncidentId = dpsId.toString(), null)
             dpsApi.stubGetIncident(
               dpsIncident().copy(
                 id = dpsId,
               ),
             )
-            nomisApi.stubCreateIncident(nomisId)
-            mappingApi.stubCreateIncidentMapping()
+            nomisApi.stubUpsertIncident(nomisId)
             publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -91,7 +79,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           @Test
           fun `will send telemetry event showing the create`() {
             verify(telemetryClient).trackEvent(
-              eq("incident-create-success"),
+              eq("incident-upsert-success"),
               any(),
               isNull(),
             )
@@ -100,7 +88,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           @Test
           fun `telemetry will contain key facts about the incident created`() {
             verify(telemetryClient).trackEvent(
-              eq("incident-create-success"),
+              eq("incident-upsert-success"),
               check {
                 assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
                 assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
@@ -133,127 +121,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
             )
           }
-
-          @Test
-          fun `will create a mapping between the NOMIS and DPS ids`() {
-            mappingApi.verify(
-              postRequestedFor(urlEqualTo("/mapping/incidents"))
-                .withRequestBodyJsonPath("dpsIncidentId", "$dpsId")
-                .withRequestBodyJsonPath("nomisIncidentId", nomisId)
-                .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
-            )
-          }
-        }
-
-        @Nested
-        @DisplayName("when mapping service fails once")
-        inner class MappingFailure {
-          private val dpsId = UUID.randomUUID()
-          private val nomisId = 1234L
-
-          @BeforeEach
-          fun setUp() {
-            mappingApi.stubGetByDpsIncidentIdOrNull(dpsIncidentId = dpsId.toString(), null)
-            dpsApi.stubGetIncident(dpsIncident().copy(id = dpsId))
-            mappingApi.stubCreateIncidentMappingFollowedBySuccess()
-            nomisApi.stubCreateIncident(nomisId)
-            publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
-          }
-
-          @Test
-          fun `will send telemetry for initial failure`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("incident-mapping-create-failed"),
-                any(),
-                isNull(),
-              )
-            }
-          }
-
-          @Test
-          fun `will eventually send telemetry for success`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("incident-create-success"),
-                any(),
-                isNull(),
-              )
-            }
-          }
-
-          @Test
-          fun `will create the incident in NOMIS once`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("incident-create-success"),
-                any(),
-                isNull(),
-              )
-              nomisApi.verify(1, putRequestedFor(urlEqualTo("/incidents/$nomisId")))
-            }
-          }
-        }
-
-        @Nested
-        @DisplayName("when mapping service detects a duplicate mapping")
-        inner class DuplicateMappingFailure {
-          private val dpsId = UUID.randomUUID()
-          private val nomisId = 7654321L
-
-          @BeforeEach
-          fun setUp() {
-            mappingApi.stubGetByDpsIncidentIdOrNull(dpsIncidentId = dpsId.toString(), null)
-            dpsApi.stubGetIncident(
-              dpsIncident().copy(
-                id = dpsId,
-              ),
-            )
-            nomisApi.stubCreateIncident(incidentId = nomisId)
-            mappingApi.stubCreateIncidentMapping(
-              error = DuplicateMappingErrorResponse(
-                moreInfo = DuplicateErrorContentObject(
-                  duplicate = IncidentMappingDto(
-                    dpsIncidentId = dpsId.toString(),
-                    nomisIncidentId = 999999,
-                    mappingType = IncidentMappingDto.MappingType.DPS_CREATED,
-                  ),
-                  existing = IncidentMappingDto(
-                    dpsIncidentId = dpsId.toString(),
-                    nomisIncidentId = nomisId,
-                    mappingType = IncidentMappingDto.MappingType.DPS_CREATED,
-                  ),
-                ),
-                errorCode = 1409,
-                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
-                userMessage = "Duplicate mapping",
-              ),
-            )
-            publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
-          }
-
-          @Test
-          fun `will send telemetry for duplicate`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("to-nomis-synch-incident-duplicate"),
-                any(),
-                isNull(),
-              )
-            }
-          }
-
-          @Test
-          fun `will create the incident in NOMIS once`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("to-nomis-synch-incident-duplicate"),
-                any(),
-                isNull(),
-              )
-              nomisApi.verify(1, putRequestedFor(urlEqualTo("/incidents/$nomisId")))
-            }
-          }
         }
       }
     }
@@ -275,7 +142,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will send telemetry event showing the ignore`() {
           verify(telemetryClient).trackEvent(
-            eq("incident-update-ignored"),
+            eq("incident-upsert-ignored"),
             any(),
             isNull(),
           )
@@ -293,20 +160,12 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @BeforeEach
           fun setUp() {
-            mappingApi.stubGetByDpsIncidentId(
-              dpsIncidentId = dpsId.toString(),
-              IncidentMappingDto(
-                dpsIncidentId = dpsId.toString(),
-                nomisIncidentId = nomisId,
-                mappingType = IncidentMappingDto.MappingType.MIGRATED,
-              ),
-            )
             dpsApi.stubGetIncident(
               dpsIncident().copy(
                 id = dpsId,
               ),
             )
-            nomisApi.stubCreateIncident(incidentId = nomisId)
+            nomisApi.stubUpsertIncident(incidentId = nomisId)
             publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -314,7 +173,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           @Test
           fun `will send telemetry event showing the update`() {
             verify(telemetryClient).trackEvent(
-              eq("incident-update-success"),
+              eq("incident-upsert-success"),
               any(),
               isNull(),
             )
@@ -323,7 +182,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           @Test
           fun `telemetry will contain key facts about the  updated`() {
             verify(telemetryClient).trackEvent(
-              eq("incident-update-success"),
+              eq("incident-upsert-success"),
               check {
                 assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
                 assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
@@ -395,16 +254,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @BeforeEach
           fun setUp() {
-            mappingApi.stubGetByDpsIncidentIdOrNull(
-              dpsIncidentId = dpsId.toString(),
-              IncidentMappingDto(
-                dpsIncidentId = dpsId.toString(),
-                nomisIncidentId = nomisId,
-                mappingType = IncidentMappingDto.MappingType.MIGRATED,
-              ),
-            )
             nomisApi.stubDeleteIncident(nomisId)
-            mappingApi.stubDeleteByDpsIncidentId(dpsIncidentId = dpsId.toString())
             publishDeleteIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -433,37 +283,6 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           @Test
           fun `will delete the incident in NOMIS`() {
             nomisApi.verify(deleteRequestedFor(urlEqualTo("/incidents/$nomisId")))
-          }
-
-          @Test
-          fun `will delete the incident mapping`() {
-            mappingApi.verify(deleteRequestedFor(urlPathEqualTo("/mapping/incidents/dps-incident-id/$dpsId")))
-          }
-        }
-
-        @Nested
-        @DisplayName("Incident mapping already deleted")
-        inner class MappingMissing {
-          private val dpsId = UUID.randomUUID()
-          private val nomisId = 54321L
-
-          @BeforeEach
-          fun setUp() {
-            mappingApi.stubGetByDpsIncidentIdOrNull(dpsIncidentId = dpsId.toString(), null)
-            publishDeleteIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
-            waitForAnyProcessingToComplete()
-          }
-
-          @Test
-          fun `telemetry will contain key facts about the incident deleted`() {
-            verify(telemetryClient).trackEvent(
-              eq("incident-delete-skipped"),
-              check {
-                assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
-                assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
-              },
-              isNull(),
-            )
           }
         }
       }

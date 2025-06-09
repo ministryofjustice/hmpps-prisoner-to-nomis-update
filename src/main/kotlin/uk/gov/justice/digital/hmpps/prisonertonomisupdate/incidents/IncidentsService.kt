@@ -1,64 +1,23 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Type
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncidentMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncidentMappingDto.MappingType.DPS_CREATED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncidentRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 
 @Service
 class IncidentsService(
   private val nomisApiService: IncidentsNomisApiService,
   private val dpsApiService: IncidentsDpsApiService,
-  private val mappingApiService: IncidentsMappingApiService,
-  private val incidentsRetryQueueService: IncidentsRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
-) : CreateMappingRetryable {
+) {
 
-  suspend fun incidentCreated(event: IncidentEvent) {
-    val dpsId = event.dpsId
-    val nomisId = event.nomisId
-    val telemetryMap = mutableMapOf(
-      "dpsIncidentId" to dpsId.toString(),
-      "nomisIncidentId" to nomisId.toString(),
-    )
-
-    if (event.didOriginateInDPS()) {
-      synchronise {
-        name = "incident"
-        telemetryClient = this@IncidentsService.telemetryClient
-        retryQueueService = incidentsRetryQueueService
-        eventTelemetry = telemetryMap
-
-        checkMappingDoesNotExist {
-          mappingApiService.getByDpsIncidentIdOrNull(dpsId)
-        }
-        transform {
-          val dps = dpsApiService.getIncident(dpsId)
-          nomisApiService.createIncident(nomisId, dps.toNomisCreateRequest())
-          IncidentMappingDto(
-            dpsIncidentId = dpsId,
-            nomisIncidentId = nomisId,
-            mappingType = DPS_CREATED,
-          )
-        }
-        saveMapping { mappingApiService.createIncidentMapping(it) }
-      }
-    } else {
-      telemetryClient.trackEvent("incident-create-ignored", telemetryMap)
-    }
-  }
-  suspend fun incidentUpdated(event: IncidentEvent) {
+  suspend fun incidentUpsert(event: IncidentEvent) {
     val dpsId = event.dpsId
     val nomisId = event.nomisId
     val telemetryMap = mutableMapOf(
@@ -67,15 +26,14 @@ class IncidentsService(
     )
 
     if (event.didOriginateInDPS()) {
-      mappingApiService.getByDpsIncidentId(dpsId).nomisIncidentId
       val dps = dpsApiService.getIncident(dpsId)
-      nomisApiService.createIncident(
+      nomisApiService.upsertIncident(
         nomisId = nomisId,
-        dps.toNomisCreateRequest(),
+        dps.toNomisUpsertRequest(),
       )
-      telemetryClient.trackEvent("incident-update-success", telemetryMap)
+      telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
     } else {
-      telemetryClient.trackEvent("incident-update-ignored", telemetryMap)
+      telemetryClient.trackEvent("incident-upsert-ignored", telemetryMap)
     }
   }
   suspend fun incidentDeleted(event: IncidentEvent) {
@@ -87,32 +45,12 @@ class IncidentsService(
     )
 
     if (event.didOriginateInDPS()) {
-      mappingApiService.getByDpsIncidentIdOrNull(dpsId)?.nomisIncidentId?.also {
-        nomisApiService.deleteIncident(nomisId = it)
-        mappingApiService.deleteByDpsIncidentId(dpsIncidentId = dpsId)
-        telemetryClient.trackEvent("incident-delete-success", telemetryMap)
-      } ?: run {
-        telemetryClient.trackEvent("incident-delete-skipped", telemetryMap)
-      }
+      nomisApiService.deleteIncident(nomisId = nomisId)
+      telemetryClient.trackEvent("incident-delete-success", telemetryMap)
     } else {
       telemetryClient.trackEvent("incident-delete-ignored", telemetryMap)
     }
   }
-
-  override suspend fun retryCreateMapping(message: String) {
-    createIncidentMapping(message.fromJson())
-  }
-
-  suspend fun createIncidentMapping(message: CreateMappingRetryMessage<IncidentMappingDto>) {
-    mappingApiService.createIncidentMapping(message.mapping).also {
-      telemetryClient.trackEvent(
-        "incident-create-success",
-        message.telemetryAttributes,
-      )
-    }
-  }
-
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 data class IncidentEvent(
   val eventType: String,
@@ -133,7 +71,7 @@ data class IncidentAdditionalInformation(
 
 private fun IncidentEvent.didOriginateInDPS() = this.additionalInformation.source == CreatingSystem.DPS
 
-private fun ReportWithDetails.toNomisCreateRequest(): CreateIncidentRequest = CreateIncidentRequest(
+private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = UpsertIncidentRequest(
   title = this.title,
   description = this.description,
   // descriptionAmendments = this.descriptionAddendums,

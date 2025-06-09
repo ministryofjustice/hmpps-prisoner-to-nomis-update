@@ -4,20 +4,13 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
-import reactor.util.context.Context
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncidentRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 
 @Service
 class IncidentsNomisApiService(
   @Qualifier("nomisApiWebClient") private val webClient: WebClient,
-  retryApiService: RetryApiService,
 ) {
-  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "IncidentsNomisApiService"),
-  )
-
-  suspend fun createIncident(nomisId: Long, request: CreateIncidentRequest) {
+  suspend fun upsertIncident(nomisId: Long, request: UpsertIncidentRequest) {
     webClient.put()
       .uri("/incidents/{incidentId}", nomisId)
       .bodyValue(request)
