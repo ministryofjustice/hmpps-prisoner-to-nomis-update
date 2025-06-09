@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-30.5139.832c67d"
+    "version" : "2025-06-06.5252.1cc8048"
   },
   "servers" : [ {
     "url" : "/",
@@ -27,6 +27,9 @@
   }, {
     "name" : "Sync",
     "description" : "Sync NOMIS to Locations Inside Prison Service API endpoints."
+  }, {
+    "name" : "Cell Certificates",
+    "description" : "Cell Certificate Management"
   }, {
     "name" : "Transactions",
     "description" : "Returns a transaction history applied to a list of locations"
@@ -8006,6 +8009,432 @@
         }
       }
     },
+    "/certification/request-approvals/{id}" : {
+      "get" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Get a certification approval request by ID",
+        "description" : "Requires role LOCATION_CERTIFICATION",
+        "operationId" : "getApprovalRequest",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Approval request ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns the certification approval request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Approval request not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certification/request-approvals/prison/{prisonId}" : {
+      "get" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Get all certification approval requests with optional filtering",
+        "description" : "Requires role LOCATION_CERTIFICATION",
+        "operationId" : "getApprovalRequests",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "PENDING",
+            "enum" : [ "PENDING", "APPROVED", "REJECTED", "WITHDRAWN" ]
+          }
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns a list of certification approval requests",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/cell-certificates/{id}" : {
+      "get" : {
+        "tags" : [ "Cell Certificates" ],
+        "summary" : "Get a cell certificate by ID",
+        "description" : "Returns a cell certificate by ID",
+        "operationId" : "getCellCertificate",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "Cell certificate ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Cell certificate found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellCertificateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "404" : {
+            "description" : "Cell certificate not found",
+            "content" : {
+              "application/json" : { }
+            }
+          }
+        }
+      }
+    },
+    "/cell-certificates/prison/{prisonId}" : {
+      "get" : {
+        "tags" : [ "Cell Certificates" ],
+        "summary" : "Get all cell certificates for a prison",
+        "description" : "Returns all cell certificates for a prison",
+        "operationId" : "getCellCertificatesForPrison",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Cell certificates found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellCertificateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          }
+        }
+      }
+    },
+    "/cell-certificates/prison/{prisonId}/current" : {
+      "get" : {
+        "tags" : [ "Cell Certificates" ],
+        "summary" : "Get the current cell certificate for a prison",
+        "description" : "Returns the current cell certificate for a prison",
+        "operationId" : "getCurrentCellCertificateForPrison",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Current cell certificate found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CellCertificateDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "404" : {
+            "description" : "No current cell certificate found",
+            "content" : {
+              "application/json" : { }
+            }
+          }
+        }
+      }
+    },
     "/sync/delete/{id}" : {
       "delete" : {
         "tags" : [ "Sync" ],
@@ -8212,7 +8641,14 @@
           "capacityOfCertifiedCell" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Indicates the capacity of the certified location (cell)",
+            "deprecated" : true,
+            "description" : "Old name for CNA (Certified normal accommodation)",
+            "example" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "CNA (Certified normal accommodation)",
             "example" : 1
           }
         },
@@ -9174,7 +9610,7 @@
             "example" : 2,
             "maximum" : 99
           },
-          "capacityOfCertifiedCell" : {
+          "certifiedNormalAccommodation" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Indicates the capacity of the certified location (cell)",
@@ -9198,12 +9634,12 @@
               "TCI-A-1-001" : {
                 "maxCapacity" : 2,
                 "workingCapacity" : 1,
-                "capacityOfCertifiedCell" : 2
+                "certifiedNormalAccommodation" : 2
               },
               "TCI-A-1-002" : {
                 "maxCapacity" : 3,
                 "workingCapacity" : 1,
-                "capacityOfCertifiedCell" : 1
+                "certifiedNormalAccommodation" : 1
               }
             }
           }
@@ -9311,9 +9747,121 @@
           "comments" : {
             "type" : "string",
             "description" : "Comments about the approval or rejection"
+          },
+          "certifiedNormalAccommodationChange" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Change in certified normal accommodation",
+            "example" : 1
+          },
+          "workingCapacityChange" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Change in working capacity",
+            "example" : 1
+          },
+          "maxCapacityChange" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Change in maximum capacity",
+            "example" : 1
+          },
+          "locations" : {
+            "type" : "array",
+            "description" : "Locations affected by the approval",
+            "items" : {
+              "$ref" : "#/components/schemas/CertificationApprovalRequestLocationDto"
+            }
           }
         },
-        "required" : [ "id", "locationId", "locationKey", "requestedBy", "requestedDate", "status" ]
+        "required" : [ "certifiedNormalAccommodationChange", "id", "locationId", "locationKey", "maxCapacityChange", "requestedBy", "requestedDate", "status", "workingCapacityChange" ]
+      },
+      "CertificationApprovalRequestLocationDto" : {
+        "type" : "object",
+        "description" : "Location affected by certification approval",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Location ID",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "locationCode" : {
+            "type" : "string",
+            "description" : "Location code",
+            "example" : "MDI-A-1-001"
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark",
+            "example" : "Standard"
+          },
+          "localName" : {
+            "type" : "string",
+            "description" : "Local name",
+            "example" : "Cell 1"
+          },
+          "pathHierarchy" : {
+            "type" : "string",
+            "description" : "Path hierarchy",
+            "example" : "MDI-A-1-001"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Level in the hierarchy",
+            "example" : 3
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Capacity of certified cell",
+            "example" : 2
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Working capacity",
+            "example" : 2
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum capacity",
+            "example" : 2
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "In-cell sanitation",
+            "example" : true
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "Location type",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "CELL"
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist cell types",
+            "example" : "LISTENER,SAFE_CELL",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            }
+          },
+          "convertedCellType" : {
+            "type" : "string",
+            "description" : "Converted cell type",
+            "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ],
+            "example" : "OFFICE"
+          },
+          "subLocations" : {
+            "description" : "Sub-locations"
+          }
+        },
+        "required" : [ "id", "level", "locationCode", "locationType", "pathHierarchy" ]
       },
       "LocationApprovalRequest" : {
         "type" : "object",
@@ -9965,7 +10513,7 @@
             "example" : "A1",
             "minLength" : 1
           },
-          "capacityNormalAccommodation" : {
+          "certifiedNormalAccommodation" : {
             "type" : "integer",
             "format" : "int32",
             "default" : 0,
@@ -10525,12 +11073,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -10547,6 +11089,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -10574,15 +11122,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -11377,7 +11925,7 @@
         "properties" : {
           "template" : {
             "type" : "string",
-            "enum" : [ "list", "list-section", "list-tab", "summary", "summary-section", "parent-child", "parent-child-section" ]
+            "enum" : [ "list", "list-section", "list-tab", "summary", "summary-section", "parent-child", "parent-child-section", "row-section", "row-section-child" ]
           },
           "fields" : {
             "type" : "array",
@@ -11638,6 +12186,145 @@
           }
         },
         "required" : [ "description", "key", "values" ]
+      },
+      "CellCertificateDto" : {
+        "type" : "object",
+        "description" : "Cell Certificate",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "ID of the cell certificate",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "approvedBy" : {
+            "type" : "string",
+            "description" : "Who approved the certificate",
+            "example" : "USER1"
+          },
+          "approvedDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the certificate was approved",
+            "example" : "2023-01-01T12:00:00"
+          },
+          "certificationApprovalRequestId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "ID of the certification approval request",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "totalWorkingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total working capacity for the prison",
+            "example" : 100
+          },
+          "totalMaxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total max capacity for the prison",
+            "example" : 120
+          },
+          "totalCertifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total capacity of certified cells for the prison",
+            "example" : 110
+          },
+          "current" : {
+            "type" : "boolean",
+            "description" : "Whether this is the current certificate",
+            "example" : true
+          },
+          "locations" : {
+            "type" : "array",
+            "description" : "Locations in the certificate",
+            "items" : {
+              "$ref" : "#/components/schemas/CellCertificateLocationDto"
+            }
+          }
+        },
+        "required" : [ "approvedBy", "approvedDate", "certificationApprovalRequestId", "current", "id", "locations", "prisonId", "totalCertifiedNormalAccommodation", "totalMaxCapacity", "totalWorkingCapacity" ]
+      },
+      "CellCertificateLocationDto" : {
+        "type" : "object",
+        "description" : "Cell Certificate Location",
+        "properties" : {
+          "locationCode" : {
+            "type" : "string",
+            "description" : "Location code",
+            "example" : "001"
+          },
+          "pathHierarchy" : {
+            "type" : "string",
+            "description" : "Path hierarchy",
+            "example" : "A-1-001"
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Capacity of certified cell",
+            "example" : 2
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Working capacity",
+            "example" : 1
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Max capacity",
+            "example" : 2
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Whether the cell has in-cell sanitation",
+            "example" : true
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "Location type",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "CELL"
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist cell types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            }
+          },
+          "localName" : {
+            "type" : "string",
+            "description" : "Local name for the location, not used in cells",
+            "example" : "Houseblock A"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Level within the hierarchy",
+            "example" : 3
+          },
+          "convertedCellType" : {
+            "type" : "string",
+            "description" : "If converted, the type of cell this location has been converted to",
+            "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
+          },
+          "subLocations" : {
+            "description" : "Sub locations within this cell certificate location"
+          }
+        },
+        "required" : [ "level", "locationCode", "locationType", "pathHierarchy", "specialistCellTypes" ]
       }
     },
     "securitySchemes" : {
