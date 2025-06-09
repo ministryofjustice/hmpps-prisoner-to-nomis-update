@@ -48,7 +48,9 @@ class CourtSentencingReconciliationService(
     // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
     val appearanceCharges = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
     val sentences = appearanceCharges.mapNotNull { charge -> charge.sentence }.map {
-      //
+      val offenceCodeString = appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
+        charge.offenceCode
+      }.sorted().joinToString(",")
       SentenceFields(
         startDate = it.sentenceStartDate,
         sentenceCategory = it.sentenceCategory,
@@ -60,6 +62,7 @@ class CourtSentencingReconciliationService(
           "I"
         },
         id = it.sentenceUuid.toString(),
+        offenceCodes = offenceCodeString,
         terms = it.periodLengths.map { term ->
           SentenceTermFields(
             sentenceTermCode = term.sentenceTermCode,
@@ -73,6 +76,7 @@ class CourtSentencingReconciliationService(
         },
       )
     }.distinctBy { it.id }
+
     val dpsFields = CaseFields(
       active = dpsResponse.active,
       id = dpsCaseId,
@@ -117,6 +121,7 @@ class CourtSentencingReconciliationService(
         )
       },
       sentences = nomisResponse.sentences.map { sentenceResponse ->
+        val offenderCodeString = sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted().joinToString(",")
         SentenceFields(
           startDate = sentenceResponse.startDate,
           sentenceCategory = sentenceResponse.category.code,
@@ -124,6 +129,7 @@ class CourtSentencingReconciliationService(
           fine = sentenceResponse.fineAmount,
           status = sentenceResponse.status,
           id = sentenceResponse.sentenceSeq.toString(),
+          offenceCodes = offenderCodeString,
           terms = sentenceResponse.sentenceTerms.map { term ->
             SentenceTermFields(
               years = term.years,
@@ -187,6 +193,7 @@ class CourtSentencingReconciliationService(
 
         val sortedDpsSentences = dpsObj.sentences.sortedWith(
           compareBy<SentenceFields> { it.startDate }
+            .thenBy { it.offenceCodes }
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
             .thenBy { it.status },
@@ -194,6 +201,7 @@ class CourtSentencingReconciliationService(
 
         val sortedNomisSentences = nomisObj.sentences.sortedWith(
           compareBy<SentenceFields> { it.startDate }
+            .thenBy { it.offenceCodes }
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
             .thenBy { it.status },
@@ -249,6 +257,7 @@ class CourtSentencingReconciliationService(
             ),
           )
         }
+
         if (dpsObj.offenceEndDate != nomisObj.offenceEndDate) {
           differences.add(
             Difference(
@@ -271,6 +280,16 @@ class CourtSentencingReconciliationService(
               "$parentProperty.sentenceCategory",
               dpsObj.sentenceCategory,
               nomisObj.sentenceCategory,
+              dpsObj.id,
+            ),
+          )
+        }
+        if (dpsObj.offenceCodes != nomisObj.offenceCodes) {
+          differences.add(
+            Difference(
+              "$parentProperty.offenceCodes",
+              dpsObj.offenceCodes,
+              nomisObj.offenceCodes,
               dpsObj.id,
             ),
           )
@@ -422,7 +441,7 @@ data class SentenceFields(
   val fine: BigDecimal?,
   val status: String,
   val id: String,
-  val offenceCodesForOrdering: String? = null,
+  val offenceCodes: String? = null,
   val terms: List<SentenceTermFields> = emptyList(),
 ) {
   override fun equals(other: Any?): Boolean {
