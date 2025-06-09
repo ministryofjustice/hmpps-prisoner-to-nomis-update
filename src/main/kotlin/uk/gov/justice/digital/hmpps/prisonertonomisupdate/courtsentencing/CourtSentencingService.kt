@@ -42,6 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSyste
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
@@ -828,14 +829,15 @@ class CourtSentencingService(
                 active = true,
               )
             },
-            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
+            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it,
                 enteredByStaffUsername = recall.recallBy,
                 recallLength = recall.recallType.toDays()!!,
               )
             },
-
+            // TODO - get this from DPS
+            recallRevocationDate = LocalDate.now().minusDays(1),
           ),
         )
 
@@ -888,13 +890,15 @@ class CourtSentencingService(
                 active = true,
               )
             },
-            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
+            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it,
                 enteredByStaffUsername = recall.recallBy,
                 recallLength = recall.recallType.toDays()!!,
               )
             },
+            // TODO - get this from DPS
+            recallRevocationDate = LocalDate.now().minusDays(1),
           ),
         )
 
@@ -949,13 +953,15 @@ class CourtSentencingService(
                   active = true,
                 )
               },
-              returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?. let {
+              returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
                 ReturnToCustodyRequest(
                   returnToCustodyDate = it,
                   enteredByStaffUsername = recall.recallBy,
                   recallLength = recall.recallType.toDays()!!,
                 )
               },
+              // TODO - get this from DPS
+              recallRevocationDate = LocalDate.now().minusDays(1),
             ),
           )
         } else {
