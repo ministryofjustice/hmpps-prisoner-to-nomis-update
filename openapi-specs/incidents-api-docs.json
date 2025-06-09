@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-05-29.5614.95782c2"
+    "version" : "2025-06-02.5632.55ae35b"
   },
   "servers" : [ {
     "url" : "/",
@@ -6040,16 +6040,16 @@
         "type" : "object",
         "description" : "Incident report updated in NOMIS",
         "properties" : {
+          "initialMigration" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Omit or set to false for updates"
+          },
           "id" : {
             "type" : "string",
             "format" : "uuid",
             "description" : "Incident report ID",
             "example" : "123e4567-e89b-12d3-a456-426614174000"
-          },
-          "initialMigration" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Omit or set to false for updates"
           },
           "incidentReport" : {
             "$ref" : "#/components/schemas/NomisReport",
@@ -7105,17 +7105,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
@@ -7211,17 +7211,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
