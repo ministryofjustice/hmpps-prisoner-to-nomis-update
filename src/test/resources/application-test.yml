@@ -234,7 +234,8 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
           "incident.report.created",
-          "incident.report.amended"
+          "incident.report.amended",
+          "incident.report.deleted"
         ]}
       dlqMaxReceiveCount: 2
       visibilityTimeout: 120

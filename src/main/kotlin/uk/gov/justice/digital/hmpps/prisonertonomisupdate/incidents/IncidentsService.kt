@@ -4,16 +4,12 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsMappingApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsNomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsRetryQueueService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.didOriginateInDPS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Type
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncidentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncidentMappingDto.MappingType.DPS_CREATED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -39,6 +35,7 @@ class IncidentsService(
 
     if (event.didOriginateInDPS()) {
       synchronise {
+        name = "incident"
         telemetryClient = this@IncidentsService.telemetryClient
         retryQueueService = incidentsRetryQueueService
         eventTelemetry = telemetryMap
@@ -63,16 +60,18 @@ class IncidentsService(
   }
   suspend fun incidentUpdated(event: IncidentEvent) {
     val dpsId = event.dpsId
+    val nomisId = event.nomisId
     val telemetryMap = mutableMapOf(
       "dpsIncidentId" to dpsId.toString(),
+      "nomisIncidentId" to nomisId,
     )
 
     if (event.didOriginateInDPS()) {
-      val nomisId = mappingApiService.getByDpsIncidentId(dpsId).nomisIncidentId
+      mappingApiService.getByDpsIncidentId(dpsId).nomisIncidentId
       val dps = dpsApiService.getIncident(dpsId)
-      nomisApiService.updateIncident(
+      nomisApiService.createIncident(
         nomisId = nomisId,
-        dps.toNomisUpdateRequest(),
+        dps.toNomisCreateRequest(),
       )
       telemetryClient.trackEvent("incident-update-success", telemetryMap)
     } else {
@@ -81,8 +80,10 @@ class IncidentsService(
   }
   suspend fun incidentDeleted(event: IncidentEvent) {
     val dpsId = event.dpsId
+    val nomisId = event.nomisId
     val telemetryMap = mutableMapOf(
       "dpsIncidentId" to dpsId.toString(),
+      "nomisIncidentId" to nomisId,
     )
 
     if (event.didOriginateInDPS()) {
@@ -115,7 +116,6 @@ class IncidentsService(
 }
 data class IncidentEvent(
   val eventType: String,
-  val description: String,
   val additionalInformation: IncidentAdditionalInformation,
 ) {
   val dpsId: String
@@ -131,15 +131,96 @@ data class IncidentAdditionalInformation(
   val whatChanged: String?,
 )
 
-enum class IncidentSource {
-  DPS,
-  NOMIS,
-}
 private fun IncidentEvent.didOriginateInDPS() = this.additionalInformation.source == CreatingSystem.DPS
 
 private fun ReportWithDetails.toNomisCreateRequest(): CreateIncidentRequest = CreateIncidentRequest(
   title = this.title,
+  description = this.description,
+  // descriptionAmendments = this.descriptionAddendums,
+  typeCode = mapDpsType(this.type),
+  location = this.location,
+  statusCode = mapDpsStatus(this.status),
+  reportedDateTime = this.reportedAt,
+  reportedBy = this.reportedBy,
+  incidentDateTime = this.incidentDateAndTime,
+//  questions = this.questions.map { it.toNomisQuestionRequest() },
+//  offenderParties = mutableListOf<IncidentOffenderParty>(),
+//  incidentHistory = mutableListOf<IncidentHistory>(),
+//  staffParties =  mutableListOf<IncidentStaffParty>(),
+//  requirements =  mutableListOf<IncidentRequirement>(),
 )
-private fun ReportWithDetails.toNomisUpdateRequest(): CreateIncidentRequest = CreateIncidentRequest(
-  title = this.title,
-)
+//
+// private fun Question.toNomisQuestionRequest(): CreateIncidentQuestionRequest = CreateIncidentQuestionRequest(
+//  code = this.code,
+//  additionalInformation = this.additionalInformation,
+//  question = this.question,
+//  responses = this.responses.map { it.toNomisResponseRequest() }
+// )
+// private fun Response.toNomisResponseRequest(): CreateIncidentResponseRequest = CreateIncidentResponseRequest(
+//  additionalInformation = this.additionalInformation,
+//  response = this.response,
+//  responseDate = this.responseDate,
+//  recordedAt = this.recordedAt,
+//  recordedBy = this.recordedBy,
+// )
+
+private fun ReportWithDetails.mapDpsType(type: Type): String = when (type) {
+  Type.ABSCOND_1 -> "ABSCOND"
+  Type.ASSAULT_1 -> "ASSAULT"
+  Type.ASSAULT_2 -> "ASSAULTS"
+  Type.ASSAULT_3 -> "ASSAULTS1"
+  Type.ASSAULT_4 -> "ASSAULTS2"
+  Type.ASSAULT_5 -> "ASSAULTS3"
+  Type.ATTEMPTED_ESCAPE_FROM_PRISON_1 -> "ATT_ESCAPE"
+  Type.ATTEMPTED_ESCAPE_FROM_ESCORT_1 -> "ATT_ESC_E"
+  Type.BARRICADE_1 -> "BARRICADE"
+  Type.BOMB_1 -> "BOMB"
+  Type.BREACH_OF_SECURITY_1 -> "BREACH"
+  Type.CLOSE_DOWN_SEARCH_1 -> "CLOSE_DOWN"
+  Type.CONCERTED_INDISCIPLINE_1 -> "CON_INDISC"
+  Type.DAMAGE_1 -> "DAMAGE"
+  Type.DEATH_PRISONER_1 -> "DEATH"
+  Type.DEATH_OTHER_1 -> "DEATH_NI"
+  Type.DISORDER_1 -> "DISORDER"
+  Type.DISORDER_2 -> "DISORDER1"
+  Type.DRONE_SIGHTING_1 -> "DRONE"
+  Type.DRONE_SIGHTING_2 -> "DRONE1"
+  Type.DRONE_SIGHTING_3 -> "DRONE2"
+  Type.DRUGS_1 -> "DRUGS"
+  Type.ESCAPE_FROM_PRISON_1 -> "ESCAPE_EST"
+  Type.ESCAPE_FROM_ESCORT_1 -> "ESCAPE_ESC"
+  Type.FIND_1 -> "FINDS"
+  Type.FIND_2 -> "FIND"
+  Type.FIND_3 -> "FIND1"
+  Type.FIND_4 -> "FIND0322"
+  Type.FIND_5 -> "FINDS1"
+  Type.FIND_6 -> "FIND0422"
+  Type.FIRE_1 -> "FIRE"
+  Type.FIREARM_1 -> "FIREARM_ETC"
+  Type.FOOD_REFUSAL_1 -> "FOOD_REF"
+  Type.HOSTAGE_1 -> "HOSTAGE"
+  Type.INCIDENT_AT_HEIGHT_1 -> "ROOF_CLIMB"
+  Type.KEY_OR_LOCK_1 -> "KEY_LOCK"
+  Type.KEY_OR_LOCK_2 -> "KEY_LOCKNEW"
+  Type.MISCELLANEOUS_1 -> "MISC"
+  Type.MOBILE_PHONE_1 -> "MOBILES"
+  Type.RADIO_COMPROMISE_1 -> "RADIO_COMP"
+  Type.RELEASE_IN_ERROR_1 -> "REL_ERROR"
+  Type.SELF_HARM_1 -> "SELF_HARM"
+  Type.TEMPORARY_RELEASE_FAILURE_1 -> "TRF"
+  Type.TEMPORARY_RELEASE_FAILURE_2 -> "TRF1"
+  Type.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
+  Type.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
+  Type.TOOL_LOSS_1 -> "TOOL_LOSS"
+}
+private fun ReportWithDetails.mapDpsStatus(status: Status): String = when (status) {
+  Status.DRAFT, Status.AWAITING_REVIEW -> "AWAN"
+  Status.ON_HOLD -> "INAN"
+  Status.NEEDS_UPDATING -> "INREQ"
+  Status.UPDATED -> "INAME"
+  Status.CLOSED -> "CLOSE"
+  Status.POST_INCIDENT_UPDATE -> "PIU"
+  Status.DUPLICATE, Status.NOT_REPORTABLE -> "DUP"
+  Status.REOPENED -> TODO()
+  Status.WAS_CLOSED -> TODO()
+}
