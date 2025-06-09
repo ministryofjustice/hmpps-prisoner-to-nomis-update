@@ -42,9 +42,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 private const val NOMIS_COURT_CASE_ID = 7L
-private const val NOMIS_COURT_CASE_2_ID = 8L
 private const val DPS_COURT_CASE_ID = "4321"
-private const val DPS_COURT_CASE_2_ID = "4321"
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_APPEARANCE_2_ID = "45591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
@@ -52,16 +50,19 @@ private const val NOMIS_COURT_APPEARANCE_2_ID = 4L
 private const val NOMIS_COURT_CHARGE_ID = 11L
 private const val NOMIS_COURT_CHARGE_2_ID = 12L
 private const val NOMIS_COURT_CHARGE_3_ID = 13L
+private const val NOMIS_COURT_CHARGE_4_ID = 14L
 private const val DPS_COURT_CHARGE_ID = "8576aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_2_ID = "4576aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_3_ID = "2376aa44-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_COURT_CHARGE_4_ID = "2176aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
 private const val PRISON_MDI = "MDI"
 private const val PRISON_LEI = "LEI"
 private const val CASE_REFERENCE = "ABC4999"
-private const val CASE_REFERENCE2 = "ABC4888"
 private const val OFFENCE_CODE_1 = "TR11017"
 private const val OFFENCE_CODE_2 = "PR52028A"
+private const val OFFENCE_CODE_3 = "VV52028A"
+private const val OFFENCE_CODE_4 = "AA52028A"
 private const val OUTCOME_1 = "4001"
 private const val OUTCOME_2 = "3001"
 private const val YEARS = 6
@@ -70,6 +71,9 @@ private const val WEEKS = 4
 private const val DAYS = 3
 private const val DPS_PERIOD_LENGTH_ID = "87591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_SENTENCE_ID = "1c591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_SENTENCE_2_ID = "2c591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_SENTENCE_3_ID = "3c591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_SENTENCE_4_ID = "9a591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val SENTENCE_CATEGORY = "2020"
 private const val SENTENCE_CALC_TYPE = "ADIMP_ORA"
 private const val NOMIS_SENTENCE_SEQ = 3L
@@ -292,7 +296,6 @@ internal class CourtSentencingReconciliationServiceTest {
             nomisAppearanceResponse().copy(
               courtEventCharges = listOf(
                 nomisChargeResponse().copy(offenceDate = LocalDate.of(2022, 3, 3)),
-                nomisChargeResponse(),
               ),
             ),
           ),
@@ -301,7 +304,6 @@ internal class CourtSentencingReconciliationServiceTest {
           appearances = listOf(
             dpsAppearanceResponse().copy(
               charges = listOf(
-                dpsChargeResponse(),
                 dpsChargeResponse().copy(offenceStartDate = LocalDate.of(2021, 3, 3)),
               ),
             ),
@@ -357,7 +359,15 @@ internal class CourtSentencingReconciliationServiceTest {
             ),
           ),
           // 1 sentence from nomis
-          sentences = listOf(nomisSentenceResponse()),
+          sentences = listOf(
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(),
+                nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID, offenceCode = OFFENCE_CODE_2),
+                nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_3_ID),
+              ),
+            ),
+          ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
           appearances = listOf(
@@ -378,6 +388,65 @@ internal class CourtSentencingReconciliationServiceTest {
           dpsCaseId = DPS_COURT_CASE_ID,
         ),
       ).isNull()
+    }
+
+    @Test
+    fun `will process detect sentence differences`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse(offenceCode = OFFENCE_CODE_1),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID, offenceCode = OFFENCE_CODE_2),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_3_ID, offenceCode = OFFENCE_CODE_3),
+                nomisChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_4_ID, offenceCode = OFFENCE_CODE_4),
+              ),
+            ),
+          ),
+          sentences = listOf(
+            nomisSentenceResponse(),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_2))),
+            // will reorder on offence code when comparing
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_4))),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_3))),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse(),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_2).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID),
+                  ),
+                ),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_3).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_3_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_3_ID),
+                  ),
+                ),
+                dpsChargeResponse(offenceCode = OFFENCE_CODE_4).copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_4_ID),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_4_ID),
+                    sentenceCategory = "New Category",
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceCategory", dps = "New Category", nomis = "2020", id = DPS_SENTENCE_4_ID)))
     }
 
     @Test
