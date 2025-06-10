@@ -2743,7 +2743,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenRecallHasBeenInsertedInDPS {
       @BeforeEach
       fun setUp() {
-        // Will change to a legacy specific endpoint once implemented by DPS
         courtSentencingApi.stubGetRecall(
           "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
           LegacyRecall(
@@ -2751,6 +2750,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             recallType = LegacyRecall.RecallType.FTR_14,
             recallBy = "T.SMITH",
             returnToCustodyDate = LocalDate.parse("2025-04-23"),
+            revocationDate = LocalDate.parse("2025-04-01"),
             prisonerId = OFFENDER_NO,
             sentenceIds = listOf(
               UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
@@ -2828,6 +2828,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
             .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+            .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
         )
@@ -2892,6 +2893,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             recallType = LegacyRecall.RecallType.FTR_14,
             recallBy = "T.SMITH",
             returnToCustodyDate = LocalDate.parse("2025-04-23"),
+            revocationDate = LocalDate.parse("2025-04-01"),
             prisonerId = OFFENDER_NO,
             sentenceIds = listOf(
               UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
@@ -2970,6 +2972,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             // always set to active despite original sentence status
             .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+            .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
         )
@@ -3038,6 +3041,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               recallType = LegacyRecall.RecallType.FTR_14,
               recallBy = "T.SMITH",
               returnToCustodyDate = LocalDate.parse("2025-04-23"),
+              revocationDate = LocalDate.parse("2025-04-01"),
               prisonerId = OFFENDER_NO,
               sentenceIds = listOf(
                 UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
@@ -3126,6 +3130,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
               .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
               .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+              .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
               .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
               .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
           )
