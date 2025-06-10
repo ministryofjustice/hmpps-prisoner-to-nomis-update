@@ -34,11 +34,10 @@ jobs:
       environment: ${{ matrix.environments }}
   kotlin_validate:
     name: Validate the kotlin
-    uses: ./.github/workflows/kotlin_localstack_validate.yml # LOCAL_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_localstack_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
-     services: sqs,sns
-     localstack_tag: "4"
+     localstack-tag: "4"
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
