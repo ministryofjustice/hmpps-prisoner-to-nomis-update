@@ -42,7 +42,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSyste
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
@@ -836,8 +835,8 @@ class CourtSentencingService(
                 recallLength = recall.recallType.toDays()!!,
               )
             },
-            // TODO - get this from DPS
-            recallRevocationDate = LocalDate.now().minusDays(1),
+            // should always be present for recalls from DPS
+            recallRevocationDate = recall.revocationDate!!,
           ),
         )
 
@@ -886,7 +885,6 @@ class CourtSentencingService(
                 ),
                 sentenceCategory = sentence.dpsSentence.sentenceCategory,
                 sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
-                // TODO - check with DPS if there is ever a scenario when this can be false
                 active = true,
               )
             },
@@ -897,8 +895,8 @@ class CourtSentencingService(
                 recallLength = recall.recallType.toDays()!!,
               )
             },
-            // TODO - get this from DPS
-            recallRevocationDate = LocalDate.now().minusDays(1),
+            // should always be present for recalls from DPS
+            recallRevocationDate = recall.revocationDate!!,
           ),
         )
 
@@ -960,8 +958,8 @@ class CourtSentencingService(
                   recallLength = recall.recallType.toDays()!!,
                 )
               },
-              // TODO - get this from DPS
-              recallRevocationDate = LocalDate.now().minusDays(1),
+              // should always be present for recalls from DPS
+              recallRevocationDate = recall.revocationDate!!,
             ),
           )
         } else {
