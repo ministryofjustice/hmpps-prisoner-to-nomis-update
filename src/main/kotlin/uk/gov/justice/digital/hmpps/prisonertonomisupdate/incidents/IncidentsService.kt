@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
@@ -20,18 +21,22 @@ class IncidentsService(
   suspend fun incidentUpsert(event: IncidentEvent) {
     val dpsId = event.dpsId
     val nomisId = event.nomisId
-    val telemetryMap = mutableMapOf(
+    val telemetryMap = telemetryOf(
       "dpsIncidentId" to dpsId.toString(),
       "nomisIncidentId" to nomisId,
     )
 
     if (event.didOriginateInDPS()) {
-      val dps = dpsApiService.getIncident(dpsId)
-      nomisApiService.upsertIncident(
-        nomisId = nomisId,
-        dps.toNomisUpsertRequest(),
-      )
-      telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
+      try {
+        val dps = dpsApiService.getIncident(dpsId)
+        nomisApiService.upsertIncident(
+          nomisId = nomisId,
+          dps.toNomisUpsertRequest(),
+        )
+        telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
+      } catch (e: IncidentStatusIgnoredException) {
+        telemetryClient.trackEvent("incident-upsert-status-ignored", telemetryMap + ("status" to e.status.value))
+      }
     } else {
       telemetryClient.trackEvent("incident-upsert-ignored", telemetryMap)
     }
@@ -158,14 +163,17 @@ private fun ReportWithDetails.mapDpsType(type: Type): String = when (type) {
   Type.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   Type.TOOL_LOSS_1 -> "TOOL_LOSS"
 }
+
 private fun ReportWithDetails.mapDpsStatus(status: Status): String = when (status) {
-  Status.DRAFT, Status.AWAITING_REVIEW -> "AWAN"
+  Status.DRAFT -> throw IncidentStatusIgnoredException(status)
+  Status.AWAITING_REVIEW -> "AWAN"
   Status.ON_HOLD -> "INAN"
   Status.NEEDS_UPDATING -> "INREQ"
   Status.UPDATED -> "INAME"
   Status.CLOSED -> "CLOSE"
   Status.POST_INCIDENT_UPDATE -> "PIU"
   Status.DUPLICATE, Status.NOT_REPORTABLE -> "DUP"
-  Status.REOPENED -> TODO()
-  Status.WAS_CLOSED -> TODO()
+  Status.REOPENED, Status.WAS_CLOSED -> throw IncidentStatusIgnoredException(status)
 }
+
+class IncidentStatusIgnoredException(val status: Status) : Exception(status.value)

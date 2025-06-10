@@ -109,7 +109,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   ),
   reportedBy = "FSTAFF_GEN",
   reportedAt = LocalDateTime.parse("2021-07-07T10:35:17"),
-  status = ReportWithDetails.Status.DRAFT,
+  status = ReportWithDetails.Status.AWAITING_REVIEW,
   assignedTo = "BJONES",
   questions = listOf(
     Question(

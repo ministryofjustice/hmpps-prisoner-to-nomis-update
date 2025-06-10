@@ -18,6 +18,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
@@ -49,6 +50,38 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           verify(telemetryClient).trackEvent(
             eq("incident-upsert-ignored"),
             any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when the incident status from DPS is to be ignored")
+      inner class WhenDpsIgnoredStatus {
+        private val dpsId = UUID.randomUUID()
+        private val nomisId = 12345L
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetIncident(
+            dpsIncident().copy(
+              id = dpsId,
+              status = Status.DRAFT,
+            ),
+          )
+          publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("incident-upsert-status-ignored"),
+            check {
+              assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
+              assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+              assertThat(it).containsEntry("status", "DRAFT")
+            },
             isNull(),
           )
         }
@@ -160,6 +193,38 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      @DisplayName("when the incident status from DPS is to be ignored")
+      inner class WhenDpsIgnoredStatus {
+        private val dpsId = UUID.randomUUID()
+        private val nomisId = 12345L
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetIncident(
+            dpsIncident().copy(
+              id = dpsId,
+              status = Status.DRAFT,
+            ),
+          )
+          publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("incident-upsert-status-ignored"),
+            check {
+              assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
+              assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+              assertThat(it).containsEntry("status", "DRAFT")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
       @DisplayName("when DPS is the origin of an incident update")
       inner class WhenDpsUpdated {
         @Nested
@@ -190,7 +255,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `telemetry will contain key facts about the  updated`() {
+          fun `telemetry will contain key facts about the incident updated`() {
             verify(telemetryClient).trackEvent(
               eq("incident-upsert-success"),
               check {
