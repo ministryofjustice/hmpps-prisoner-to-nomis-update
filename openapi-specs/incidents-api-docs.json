@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-02.5632.55ae35b"
+    "version" : "2025-06-09.5676.a4c69b0"
   },
   "servers" : [ {
     "url" : "/",
@@ -7105,17 +7105,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
@@ -7211,17 +7211,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
@@ -7460,7 +7460,7 @@
         "properties" : {
           "template" : {
             "type" : "string",
-            "enum" : [ "list", "list-section", "list-tab", "summary", "summary-section", "parent-child", "parent-child-section" ]
+            "enum" : [ "list", "list-section", "list-tab", "summary", "summary-section", "parent-child", "parent-child-section", "row-section", "row-section-child" ]
           },
           "fields" : {
             "type" : "array",
