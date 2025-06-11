@@ -204,13 +204,14 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
-    fun `will cope with appearances received in different orders`() = runTest {
+    fun `will cope with appearances received in different order from nomis and dps`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
           courtEvents = listOf(
             nomisAppearanceResponseWithoutCharges().copy(
               eventDateTime = LocalDateTime.of(2024, 2, 2, 4, 0, 0),
               outcomeReasonCode = nomisOffenceResult(OUTCOME_2),
+              id = NOMIS_COURT_APPEARANCE_2_ID,
             ),
             nomisAppearanceResponse(
               eventDateTime = LocalDateTime.of(2024, 1, 1, 4, 0, 0),
@@ -223,6 +224,7 @@ internal class CourtSentencingReconciliationServiceTest {
             dpsAppearanceResponseWithoutCharges().copy(
               appearanceDate = LocalDate.of(2024, 2, 2),
               nomisOutcomeCode = OUTCOME_2,
+              appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_2_ID),
             ),
           ),
         ),
@@ -762,7 +764,7 @@ fun dpsSentenceResponse(periodLengths: List<ReconciliationPeriodLength> = listOf
   sentenceUuid = UUID.fromString(DPS_SENTENCE_ID),
   sentenceCategory = SENTENCE_CATEGORY,
   sentenceCalcType = SENTENCE_CALC_TYPE,
-  sentenceStartDate = LocalDate.of(2023, 1, 1),
+  sentenceStartDate = LocalDate.of(2024, 1, 1),
   active = true,
   periodLengths = periodLengths,
   fineAmount = BigDecimal.TEN,

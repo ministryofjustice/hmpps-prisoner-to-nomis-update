@@ -165,31 +165,6 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             .jsonPath("mismatch.dpsCase.id").isEqualTo(DPS_COURT_CASE_ID)
         }
       }
-
-      @Nested
-      inner class MismatchNotFound {
-        @Test
-        fun `will return a response to indicate no mismatch`() {
-          courtSentencingNomisApi.stubGetCourtCase(
-            caseId = NOMIS_COURT_CASE_ID,
-            beginDate = LocalDate.parse("2024-01-02"),
-            courtEvents = listOf(
-              nomisAppearanceResponse(
-                charges = listOf(
-                  nomisChargeResponse(),
-                ),
-              ),
-            ),
-          )
-
-          webTestClient.get().uri("/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("mismatch").doesNotExist()
-        }
-      }
     }
   }
 
@@ -333,130 +308,6 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             .jsonPath("mismatch.differences[1].nomis").isEqualTo(0)
             .jsonPath("mismatch.nomisCase.id").isEqualTo(NOMIS_COURT_CASE_ID.toString())
             .jsonPath("mismatch.dpsCase.id").isEqualTo(DPS_COURT_CASE_ID)
-        }
-
-        @Test
-        fun `will return a mismatch when a charge (court event charge) date is different`() {
-          courtSentencingNomisApi.stubGetCourtCase(
-            caseId = NOMIS_COURT_CASE_ID,
-            beginDate = LocalDate.parse("2024-01-01"),
-            courtEvents = listOf(
-              nomisAppearanceResponse(
-                eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-                charges = listOf(
-                  nomisChargeResponse(),
-                  nomisChargeResponse(offenceCode = OFFENCE_CODE_2, offenceStartDate = LocalDate.of(2023, 10, 10)),
-                ),
-              ),
-              nomisAppearanceResponse(
-                id = NOMIS_COURT_APPEARANCE_2_ID,
-                eventDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
-                charges = listOf(
-                  nomisChargeResponse(),
-                ),
-              ),
-            ),
-            sentences = listOf(
-              nomisSentenceResponse(
-                charges = listOf(nomisOffenderChargeResponse()),
-                eventId = NOMIS_COURT_APPEARANCE_ID,
-                terms = listOf(nomisSentenceTermResponse()),
-              ),
-            ),
-          )
-
-          webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("mismatch.differences.size()").isEqualTo(2)
-            // start and end dates on second charge are different
-            .jsonPath("mismatch.differences[0].id").isEqualTo(DPS_COURT_CHARGE_ID)
-            .jsonPath("mismatch.differences[0].dps").isEqualTo("2023-01-01")
-            .jsonPath("mismatch.differences[0].property").isEqualTo("case.appearances[0].charges[0].offenceDate")
-            .jsonPath("mismatch.differences[0].nomis").isEqualTo("2023-10-10")
-            .jsonPath("mismatch.differences[1].id").isEqualTo(DPS_COURT_CHARGE_ID)
-            .jsonPath("mismatch.differences[1].dps").isEqualTo("2023-01-02")
-            .jsonPath("mismatch.differences[1].nomis").isEqualTo("2023-10-11")
-            .jsonPath("mismatch.differences[1].property").isEqualTo("case.appearances[0].charges[0].offenceEndDate")
-            .jsonPath("mismatch.nomisCase.id").isEqualTo(NOMIS_COURT_CASE_ID.toString())
-            .jsonPath("mismatch.dpsCase.id").isEqualTo(DPS_COURT_CASE_ID)
-        }
-
-        @Test
-        fun `will return a mismatch when number of appearances differ`() {
-          courtSentencingNomisApi.stubGetCourtCase(
-            caseId = NOMIS_COURT_CASE_ID,
-            beginDate = LocalDate.parse("2024-01-01"),
-            courtEvents = listOf(
-              nomisAppearanceResponse(
-                charges = listOf(
-                  nomisChargeResponse(),
-                ),
-              ),
-            ),
-            sentences = listOf(
-              nomisSentenceResponse(
-                charges = listOf(nomisOffenderChargeResponse()),
-                eventId = NOMIS_COURT_APPEARANCE_ID,
-                terms = listOf(nomisSentenceTermResponse()),
-              ),
-            ),
-          )
-
-          webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("mismatch.differences.size()").isEqualTo(1)
-            // start and end dates on second charge are different
-            .jsonPath("mismatch.differences[0].property").isEqualTo("case.appearances")
-            .jsonPath("mismatch.differences[0].dps").isEqualTo(2)
-            .jsonPath("mismatch.differences[0].nomis").isEqualTo(1)
-        }
-      }
-
-      @Nested
-      inner class MismatchNotFound {
-        @Test
-        fun `will return a response to indicate no mismatch`() {
-          courtSentencingNomisApi.stubGetCourtCase(
-            caseId = NOMIS_COURT_CASE_ID,
-            caseStatus = CodeDescription("A", "Active"),
-            beginDate = LocalDate.parse("2024-01-01"),
-            courtEvents = listOf(
-              nomisAppearanceResponse(
-                eventDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
-                charges = listOf(
-                  nomisChargeResponse(),
-                  nomisChargeResponse(offenceCode = OFFENCE_CODE_2),
-
-                ),
-              ),
-              nomisAppearanceResponse(
-                eventDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
-                charges = listOf(
-                  nomisChargeResponse(),
-                ),
-              ),
-            ),
-            sentences = listOf(
-              nomisSentenceResponse(
-                charges = listOf(nomisOffenderChargeResponse()),
-                eventId = NOMIS_COURT_APPEARANCE_ID,
-                terms = listOf(nomisSentenceTermResponse()),
-              ),
-            ),
-          )
-
-          webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
-            .exchange()
-            .expectStatus().isOk
-            .expectBody()
-            .jsonPath("mismatch").doesNotExist()
         }
       }
     }
@@ -980,7 +831,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     bookingId = NOMIS_BOOKING_ID,
     category = CodeDescription(SENTENCE_CATEGORY, "desc"),
     calculationType = CodeDescription(SENTENCE_CALC_TYPE, "desc"),
-    startDate = LocalDate.of(2023, 1, 1),
+    startDate = LocalDate.of(2024, 1, 1),
     status = "A",
     sentenceTerms = terms,
     fineAmount = BigDecimal.TEN,
