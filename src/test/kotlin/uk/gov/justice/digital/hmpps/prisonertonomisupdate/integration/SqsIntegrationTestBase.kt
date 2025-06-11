@@ -5,6 +5,7 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.mockito.Mockito
 import org.mockito.kotlin.any
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
@@ -179,6 +180,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {
     await untilAsserted { verify(telemetryClient, times(times)).trackEvent(any(), any(), isNull()) }
+  }
+  internal fun waitForAnyProcessingToComplete(name: String) {
+    await untilAsserted { verify(telemetryClient).trackEvent(eq(name), any(), isNull()) }
   }
 }
 

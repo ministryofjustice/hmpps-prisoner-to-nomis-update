@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -35,6 +36,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingAdjustmentsService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -64,6 +66,7 @@ class CourtSentencingService(
   enum class EntityType(val displayName: String) {
     COURT_CASE("court-case"),
     COURT_APPEARANCE("court-appearance"),
+    COURT_APPEARANCE_RECALL("court-appearance-recall"),
     COURT_CHARGE("charge"),
     SENTENCE("sentence"),
     SENTENCE_TERM("sentence-term"),
@@ -506,6 +509,14 @@ class CourtSentencingService(
     )
   }
 
+  suspend fun createRecallAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceRecallMappingsDto>) = courtCaseMappingService.createAppearanceRecallMapping(message.mapping).also {
+    telemetryClient.trackEvent(
+      "court-appearance-recall-create-mapping-retry-success",
+      message.telemetryAttributes,
+      null,
+    )
+  }
+
   suspend fun createChargeRetry(message: CreateMappingRetryMessage<CourtChargeMappingDto>) = courtCaseMappingService.createChargeMapping(message.mapping).also {
     telemetryClient.trackEvent(
       "charge-create-mapping-retry-success",
@@ -535,6 +546,7 @@ class CourtSentencingService(
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceRetry(message.fromJson())
+      EntityType.COURT_APPEARANCE_RECALL.displayName -> createRecallAppearanceRetry(message.fromJson())
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
       EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
@@ -838,7 +850,21 @@ class CourtSentencingService(
             // should always be present for recalls from DPS
             recallRevocationDate = recall.revocationDate!!,
           ),
-        )
+        ).takeIf { it.courtEventIds.isNotEmpty() }?.also {
+          val mapping = CourtAppearanceRecallMappingsDto(
+            nomisCourtAppearanceIds = it.courtEventIds,
+            dpsRecallId = recallId,
+          )
+          createMapping(
+            mapping = mapping,
+            telemetryClient = telemetryClient,
+            retryQueueService = courtSentencingRetryQueueService,
+            eventTelemetry = telemetryMap,
+            name = EntityType.COURT_APPEARANCE_RECALL.displayName,
+            postMapping = courtCaseMappingService::createAppearanceRecallMapping,
+            log = log,
+          )
+        }
 
         telemetryClient.trackEvent(
           "recall-inserted-success",
@@ -867,15 +893,13 @@ class CourtSentencingService(
       runCatching {
         val recall = courtSentencingApiService.getRecall(recallId).also {
           telemetryMap["recallType"] = it.recallType.name
-          // TODO remove this when DPS fixes domain event that is missing ids
-          telemetryMap["dpsSentenceIds"] = it.sentenceIds.joinToString()
         }
         val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
         val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
-        // for now call the same endpoint as create until we can establish updating and creating is exactly the same
+        val breachCourtAppearanceIds = courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
         nomisApiService.updateRecallSentences(
           offenderNo,
-          ConvertToRecallRequest(
+          UpdateRecallRequest(
             sentences = sentenceAndMappings.map { sentence ->
               RecallRelatedSentenceDetails(
                 sentenceId =
@@ -897,6 +921,7 @@ class CourtSentencingService(
             },
             // should always be present for recalls from DPS
             recallRevocationDate = recall.revocationDate!!,
+            beachCourtEventIds = breachCourtAppearanceIds,
           ),
         )
 
@@ -934,10 +959,10 @@ class CourtSentencingService(
           }
           val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
-          // for now call the same endpoint as create until we can establish reverting to previous recall and creating is exactly the same
+          val breachCourtAppearanceIds = courtCaseMappingService.getAppearanceRecallMappings(previousRecallId).map { it.nomisCourtAppearanceId }
           nomisApiService.updateRecallSentences(
             offenderNo,
-            ConvertToRecallRequest(
+            UpdateRecallRequest(
               sentences = sentenceAndMappings.map { sentence ->
                 RecallRelatedSentenceDetails(
                   sentenceId =
@@ -960,11 +985,13 @@ class CourtSentencingService(
               },
               // should always be present for recalls from DPS
               recallRevocationDate = recall.revocationDate!!,
+              beachCourtEventIds = breachCourtAppearanceIds,
             ),
           )
         } else {
           val dpsSentenceIds = recallDeletedEvent.additionalInformation.sentenceIds
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
+          val breachCourtAppearanceIds = courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
           nomisApiService.deleteRecallSentences(
             offenderNo,
             DeleteRecallRequest(
@@ -980,6 +1007,7 @@ class CourtSentencingService(
                   active = sentence.dpsSentence.active,
                 )
               },
+              beachCourtEventIds = breachCourtAppearanceIds,
             ),
           )
         }
