@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-28.1782.046e061"
+    "version" : "2025-06-11.1904.4927d84"
   },
   "servers" : [ {
     "url" : "/",
@@ -6058,6 +6058,68 @@
           }
         }
       },
+      "delete" : {
+        "tags" : [ "Prisoner relationships" ],
+        "summary" : "Delete prisoner contact relationship",
+        "description" : "Delete the relationship between the contact and a prisoner. Only allowed if there are no relationship restrictions.",
+        "operationId" : "deleteContactRelationship",
+        "parameters" : [ {
+          "name" : "prisonerContactId",
+          "in" : "path",
+          "description" : "The id of the prisoner contact",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the relationship successfully"
+          },
+          "404" : {
+            "description" : "Could not find the prisoner contact that this relationship relates to",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The relationship has attached entities such as restrictions and cannot be deleted.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "patch" : {
         "tags" : [ "Prisoner relationships" ],
         "summary" : "Update prisoner contact relationship",
@@ -7647,36 +7709,54 @@
         "parameters" : [ {
           "name" : "lastName",
           "in" : "query",
+          "description" : "Last name of the contact",
           "required" : true,
           "schema" : {
             "type" : "string",
             "minLength" : 1,
             "pattern" : "[a-zA-Z\\s,.'-]*"
-          }
+          },
+          "example" : "Jones"
         }, {
           "name" : "firstName",
           "in" : "query",
+          "description" : "First name of the contact",
           "required" : false,
           "schema" : {
             "type" : "string",
             "pattern" : "[a-zA-Z\\s,.'-]*"
-          }
+          },
+          "example" : "Elton"
         }, {
           "name" : "middleNames",
           "in" : "query",
+          "description" : "Middle names of the contact",
           "required" : false,
           "schema" : {
             "type" : "string",
             "pattern" : "[a-zA-Z\\s,.'-]*"
-          }
+          },
+          "example" : "Simon"
         }, {
           "name" : "dateOfBirth",
           "in" : "query",
+          "description" : "Date of Birth of the contact in ISO format",
           "required" : false,
           "schema" : {
             "type" : "string",
             "format" : "date"
-          }
+          },
+          "example" : "30/12/2010"
+        }, {
+          "name" : "includeAnyExistingRelationshipsToPrisoner",
+          "in" : "query",
+          "description" : "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "[a-zA-Z0-9]*"
+          },
+          "example" : "A1234BC"
         }, {
           "name" : "page",
           "in" : "query",
@@ -14783,9 +14863,53 @@
             "type" : "string",
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
+          },
+          "existingRelationships" : {
+            "type" : "array",
+            "description" : "A list of existing relationships to a prisoner if a check against the prisoner number was requested. Empty if there are no existing relationships or null if it was not requested.",
+            "items" : {
+              "$ref" : "#/components/schemas/ExistingRelationshipToPrisoner"
+            }
           }
         },
         "required" : [ "firstName", "id", "lastName" ]
+      },
+      "ExistingRelationshipToPrisoner" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact",
+            "example" : 123456
+          },
+          "relationshipTypeCode" : {
+            "type" : "string",
+            "description" : "\n      Coded value indicating either a social or official contact (mandatory).\n      This is a coded value from the group code CONTACT_TYPE in reference data.\n      Known values are (S) Social or (O) official.\n      ",
+            "example" : "S"
+          },
+          "relationshipTypeDescription" : {
+            "type" : "string",
+            "description" : "The description of the contact relationship type. Description from reference data Official or Social",
+            "example" : "Official"
+          },
+          "relationshipToPrisonerCode" : {
+            "type" : "string",
+            "description" : "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type.",
+            "example" : "FRI"
+          },
+          "relationshipToPrisonerDescription" : {
+            "type" : "string",
+            "description" : "The description of the relationship",
+            "example" : "Friend"
+          },
+          "isRelationshipActive" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship active?",
+            "example" : true
+          }
+        },
+        "required" : [ "isRelationshipActive", "prisonerContactId", "relationshipToPrisonerCode", "relationshipTypeCode", "relationshipTypeDescription" ]
       },
       "PagedModelContactSearchResultItem" : {
         "type" : "object",
