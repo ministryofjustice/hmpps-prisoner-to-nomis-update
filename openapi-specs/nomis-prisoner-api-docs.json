@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-09.83.49c655b"
+    "version" : "2025-06-10.90.3c209f0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -1024,7 +1024,14 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Sentences converted to recall"
+            "description" : "Sentences converted to recall",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ConvertToRecallResponse"
+                }
+              }
+            }
           },
           "400" : {
             "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
@@ -21063,6 +21070,21 @@
           }
         },
         "required" : [ "caseIdentifiers" ]
+      },
+      "ConvertToRecallResponse" : {
+        "type" : "object",
+        "description" : "Recall convert response",
+        "properties" : {
+          "courtEventIds" : {
+            "type" : "array",
+            "description" : "the breach court appearance ids created",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "courtEventIds" ]
       },
       "CreateSentenceResponse" : {
         "type" : "object",
