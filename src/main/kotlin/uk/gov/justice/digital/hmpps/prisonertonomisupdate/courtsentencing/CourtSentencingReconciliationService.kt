@@ -51,8 +51,20 @@ class CourtSentencingReconciliationService(
       val offenceCodeString = appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
         charge.offenceCode
       }.sorted().joinToString(",")
+      val terms = it.periodLengths.map { term ->
+        SentenceTermFields(
+          sentenceTermCode = term.sentenceTermCode,
+          lifeSentenceFlag = term.lifeSentence,
+          years = term.periodYears,
+          months = term.periodMonths,
+          weeks = term.periodWeeks,
+          days = term.periodDays,
+          id = term.periodLengthUuid.toString(),
+        )
+      }
       SentenceFields(
-        startDate = it.sentenceStartDate,
+        // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
+        sentencingAppearanceDate = it.sentenceStartDate,
         sentenceCategory = it.sentenceCategory,
         sentenceCalcType = it.sentenceCalcType,
         fine = it.fineAmount,
@@ -63,17 +75,8 @@ class CourtSentencingReconciliationService(
         },
         id = it.sentenceUuid.toString(),
         offenceCodes = offenceCodeString,
-        terms = it.periodLengths.map { term ->
-          SentenceTermFields(
-            sentenceTermCode = term.sentenceTermCode,
-            lifeSentenceFlag = term.lifeSentence,
-            years = term.periodYears,
-            months = term.periodMonths,
-            weeks = term.periodWeeks,
-            days = term.periodDays,
-            id = term.periodLengthUuid.toString(),
-          )
-        },
+        terms = terms,
+        termsAsString = terms.toString(),
       )
     }.distinctBy { it.id }
 
@@ -122,25 +125,27 @@ class CourtSentencingReconciliationService(
       },
       sentences = nomisResponse.sentences.map { sentenceResponse ->
         val offenderCodeString = sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted().joinToString(",")
+        val terms = sentenceResponse.sentenceTerms.map { term ->
+          SentenceTermFields(
+            years = term.years,
+            months = term.months,
+            weeks = term.weeks,
+            days = term.days,
+            sentenceTermCode = term.sentenceTermType?.code,
+            lifeSentenceFlag = term.lifeSentenceFlag,
+            id = term.termSequence.toString(),
+          )
+        }
         SentenceFields(
-          startDate = sentenceResponse.startDate,
+          sentencingAppearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime!!.toLocalDate(),
           sentenceCategory = sentenceResponse.category.code,
           sentenceCalcType = sentenceResponse.calculationType.code,
           fine = sentenceResponse.fineAmount,
           status = sentenceResponse.status,
           id = sentenceResponse.sentenceSeq.toString(),
           offenceCodes = offenderCodeString,
-          terms = sentenceResponse.sentenceTerms.map { term ->
-            SentenceTermFields(
-              years = term.years,
-              months = term.months,
-              weeks = term.weeks,
-              days = term.days,
-              sentenceTermCode = term.sentenceTermType?.code,
-              lifeSentenceFlag = term.lifeSentenceFlag,
-              id = term.termSequence.toString(),
-            )
-          },
+          terms = terms,
+          termsAsString = terms.toString(),
         )
       },
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
@@ -192,19 +197,22 @@ class CourtSentencingReconciliationService(
         differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.appearances"))
 
         val sortedDpsSentences = dpsObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.startDate }
+          compareBy<SentenceFields> { it.sentencingAppearanceDate }
             .thenBy { it.offenceCodes }
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
-            .thenBy { it.status },
+            .thenBy { it.status }
+            .thenBy { it.termsAsString },
         )
 
         val sortedNomisSentences = nomisObj.sentences.sortedWith(
-          compareBy<SentenceFields> { it.startDate }
+          compareBy<SentenceFields> { it.sentencingAppearanceDate }
             .thenBy { it.offenceCodes }
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
-            .thenBy { it.status },
+            .thenBy { it.status }
+            .thenBy { it.termsAsString },
+
         )
 
         differences.addAll(compareLists(sortedDpsSentences, sortedNomisSentences, "$parentProperty.sentences"))
@@ -307,8 +315,8 @@ class CourtSentencingReconciliationService(
         if (dpsObj.fine != nomisObj.fine) {
           differences.add(Difference("$parentProperty.fine", dpsObj.fine, nomisObj.fine, dpsObj.id))
         }
-        if (dpsObj.startDate != nomisObj.startDate) {
-          differences.add(Difference("$parentProperty.startDate", dpsObj.startDate, nomisObj.startDate, dpsObj.id))
+        if (dpsObj.sentencingAppearanceDate != nomisObj.sentencingAppearanceDate) {
+          differences.add(Difference("$parentProperty.sentencingAppearanceDate", dpsObj.sentencingAppearanceDate, nomisObj.sentencingAppearanceDate, dpsObj.id))
         }
         if (dpsObj.status != nomisObj.status) {
           differences.add(Difference("$parentProperty.status", dpsObj.status, nomisObj.status, dpsObj.id))
@@ -319,7 +327,9 @@ class CourtSentencingReconciliationService(
             .thenBy { it.years }
             .thenBy { it.months }
             .thenBy { it.weeks }
-            .thenBy { it.days },
+            .thenBy { it.days }
+            .thenBy { it.lifeSentenceFlag },
+
         )
         differences.addAll(
           compareLists(
@@ -435,19 +445,21 @@ data class ChargeFields(
 }
 
 data class SentenceFields(
-  val startDate: LocalDate,
+  val sentencingAppearanceDate: LocalDate,
   val sentenceCategory: String?,
   val sentenceCalcType: String?,
   val fine: BigDecimal?,
   val status: String,
   val id: String,
   val offenceCodes: String? = null,
+  // for sorting purposes, multiple sentences can be very similar
+  val termsAsString: String? = null,
   val terms: List<SentenceTermFields> = emptyList(),
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
     other as SentenceFields
-    return startDate == other.startDate &&
+    return sentencingAppearanceDate == other.sentencingAppearanceDate &&
       sentenceCategory == other.sentenceCategory &&
       sentenceCalcType == other.sentenceCalcType &&
       fine == other.fine &&
