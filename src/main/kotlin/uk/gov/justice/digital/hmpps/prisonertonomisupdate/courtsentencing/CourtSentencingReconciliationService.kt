@@ -76,7 +76,7 @@ class CourtSentencingReconciliationService(
         id = it.sentenceUuid.toString(),
         offenceCodes = offenceCodeString,
         terms = terms,
-        termsAsString = terms.toString(),
+        termsAsString = sortTerms(terms).toString(),
       )
     }.distinctBy { it.id }
 
@@ -145,7 +145,7 @@ class CourtSentencingReconciliationService(
           id = sentenceResponse.sentenceSeq.toString(),
           offenceCodes = offenderCodeString,
           terms = terms,
-          termsAsString = terms.toString(),
+          termsAsString = sortTerms(terms).toString(),
         )
       },
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
@@ -322,15 +322,6 @@ class CourtSentencingReconciliationService(
           differences.add(Difference("$parentProperty.status", dpsObj.status, nomisObj.status, dpsObj.id))
         }
 
-        fun sortTerms(terms: List<SentenceTermFields>): List<SentenceTermFields> = terms.sortedWith(
-          compareBy<SentenceTermFields> { it.sentenceTermCode }
-            .thenBy { it.years }
-            .thenBy { it.months }
-            .thenBy { it.weeks }
-            .thenBy { it.days }
-            .thenBy { it.lifeSentenceFlag },
-
-        )
         differences.addAll(
           compareLists(
             sortTerms(dpsObj.terms),
@@ -364,6 +355,15 @@ class CourtSentencingReconciliationService(
 
     return differences
   }
+  fun sortTerms(terms: List<SentenceTermFields>): List<SentenceTermFields> = terms.sortedWith(
+    compareBy<SentenceTermFields> { it.sentenceTermCode }
+      .thenBy { it.years }
+      .thenBy { it.months }
+      .thenBy { it.weeks }
+      .thenBy { it.days }
+      .thenBy { it.lifeSentenceFlag },
+
+  )
 
   fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
     val differences = mutableListOf<Difference>()
