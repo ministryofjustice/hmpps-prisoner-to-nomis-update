@@ -10,6 +10,7 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
@@ -23,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -159,15 +161,15 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
   suspend fun recallSentences(
     offenderNo: String,
     request: ConvertToRecallRequest,
-  ): ResponseEntity<Void> = webClient.post()
+  ): ConvertToRecallResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBody()
 
   suspend fun updateRecallSentences(
     offenderNo: String,
-    request: ConvertToRecallRequest,
+    request: UpdateRecallRequest,
   ): ResponseEntity<Void> = webClient.put()
     .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
     .bodyValue(request)
