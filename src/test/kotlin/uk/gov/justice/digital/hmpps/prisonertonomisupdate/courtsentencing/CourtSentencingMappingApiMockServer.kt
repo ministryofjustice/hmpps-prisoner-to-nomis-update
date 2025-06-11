@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
@@ -225,6 +226,17 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
 
   fun stubCreateSentenceTermWithErrorFollowedBySlowSuccess() {
     stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/sentence-terms", "Sentence term")
+  }
+
+  fun stubCreateAppearanceRecallMapping() {
+    stubCreate("/mapping/court-sentencing/court-appearances/recall")
+  }
+
+  fun stubGetAppearanceRecallMappings(recallId: String, mappings: List<CourtAppearanceRecallMappingDto> = emptyList()) {
+    stubGet(
+      "/mapping/court-sentencing/court-appearances/dps-recall-id/$recallId",
+      response = mappings,
+    )
   }
 
   // helper methods

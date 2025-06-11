@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-05.21.e2b3d38"
+    "version" : "2025-06-11.34.989ef0f"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2505,6 +2505,60 @@
         "responses" : {
           "201" : {
             "description" : "Mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-appearances/recall" : {
+      "post" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Creates new court appearance recall mappings",
+        "description" : "Creates mappings between nomis Court appearance IDs and DPS Recall ID. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "createCourtAppearanceRecallMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtAppearanceRecallMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
             "content" : { }
           },
           "401" : {
@@ -8513,6 +8567,61 @@
         }
       }
     },
+    "/mapping/court-sentencing/court-appearances/dps-recall-id/{recallId}" : {
+      "get" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "get court appearance recall mappings",
+        "description" : "Retrieves mappings by DPS recall id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId" : "getCourtAppearanceRecallMappingsByDpsId",
+        "parameters" : [ {
+          "name" : "recallId",
+          "in" : "path",
+          "description" : "DPS recall id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+          },
+          "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CourtAppearanceRecallMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-appearances/dps-court-appearance-id/{courtAppearanceId}" : {
       "get" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -13523,6 +13632,59 @@
         }
       }
     },
+    "/mapping/activities/migration-count/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "activity-migration-resource" ],
+        "summary" : "Get number of activities migrated",
+        "description" : "Gets the number of activities migrated, ignoring those saved but with no corresponding DPS activity that weren't migrated.",
+        "operationId" : "getMigratedActivityCount",
+        "parameters" : [ {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        }, {
+          "name" : "includeIgnored",
+          "in" : "query",
+          "description" : "Include ignored activities (those with null activity_id), defaults to true",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "description" : "Include ignored activities (those with null activity_id), defaults to true",
+            "example" : false
+          },
+          "example" : false
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ActivityMigrationMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/activities/activity-schedule-id/{activityScheduleId}/scheduled-instance-id/{scheduledInstanceId}" : {
       "get" : {
         "tags" : [ "activity-mapping-resource" ],
@@ -16344,6 +16506,41 @@
         },
         "required" : [ "courtAppearances", "courtCharges", "dpsCourtCaseId", "nomisCourtCaseId", "sentences" ]
       },
+      "CourtAppearanceRecallMappingsDto" : {
+        "type" : "object",
+        "description" : "Court appearance recall mappings",
+        "properties" : {
+          "nomisCourtAppearanceIds" : {
+            "type" : "array",
+            "description" : "List of NOMIS court appearance ids",
+            "example" : [ 123456, 789012 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "minItems" : 1
+          },
+          "dpsRecallId" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : 123456,
+            "minLength" : 1
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          }
+        },
+        "required" : [ "dpsRecallId", "nomisCourtAppearanceIds" ]
+      },
       "CourtAppearanceMapping" : {
         "type" : "object",
         "properties" : {
@@ -17471,6 +17668,42 @@
             "type" : "boolean"
           }
         }
+      },
+      "CourtAppearanceRecallMappingDto" : {
+        "type" : "object",
+        "description" : "Court appearance recall mapping",
+        "properties" : {
+          "nomisCourtAppearanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS court appearance id",
+            "example" : 123456
+          },
+          "dpsRecallId" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : "89442cf5-a22d-4113-b9d8-63daa757c962"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsRecallId", "nomisCourtAppearanceId" ]
       },
       "CourtAppearanceAllMappingDto" : {
         "type" : "object",

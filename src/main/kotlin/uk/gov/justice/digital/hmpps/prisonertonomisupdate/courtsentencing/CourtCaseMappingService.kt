@@ -8,6 +8,8 @@ import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
@@ -55,6 +57,19 @@ class CourtCaseMappingService(
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
   }
+
+  suspend fun createAppearanceRecallMapping(request: CourtAppearanceRecallMappingsDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/court-appearances/recall")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
+  }
+
+  suspend fun getAppearanceRecallMappings(recallId: String): List<CourtAppearanceRecallMappingDto> = webClient.get()
+    .uri("/mapping/court-sentencing/court-appearances/dps-recall-id/{recallId}", recallId)
+    .retrieve()
+    .awaitBody()
 
   suspend fun createChargeMapping(request: CourtChargeMappingDto) {
     webClient.post()

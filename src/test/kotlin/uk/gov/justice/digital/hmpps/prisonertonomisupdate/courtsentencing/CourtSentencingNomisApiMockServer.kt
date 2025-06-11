@@ -11,6 +11,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
@@ -183,12 +184,13 @@ class CourtSentencingNomisApiMockServer {
     stubDelete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq")
   }
 
-  fun stubRecallSentences(offenderNo: String) {
+  fun stubRecallSentences(offenderNo: String, response: ConvertToRecallResponse = ConvertToRecallResponse(courtEventIds = emptyList())) {
     nomisApi.stubFor(
       post("/prisoners/$offenderNo/sentences/recall").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(204),
+          .withStatus(200)
+          .withBody(objectMapper().writeValueAsString(response)),
       ),
     )
   }
