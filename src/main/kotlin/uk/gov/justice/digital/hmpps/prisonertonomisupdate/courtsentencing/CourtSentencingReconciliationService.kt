@@ -67,7 +67,7 @@ class CourtSentencingReconciliationService(
         sentencingAppearanceDate = it.sentenceStartDate,
         sentenceCategory = it.sentenceCategory,
         sentenceCalcType = it.sentenceCalcType,
-        fine = it.fineAmount,
+        fine = it.fineAmount?.stripTrailingZeros(),
         status = if (it.active) {
           "A"
         } else {
@@ -140,7 +140,7 @@ class CourtSentencingReconciliationService(
           sentencingAppearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime!!.toLocalDate(),
           sentenceCategory = sentenceResponse.category.code,
           sentenceCalcType = sentenceResponse.calculationType.code,
-          fine = sentenceResponse.fineAmount,
+          fine = sentenceResponse.fineAmount?.stripTrailingZeros(),
           status = sentenceResponse.status,
           id = sentenceResponse.sentenceSeq.toString(),
           offenceCodes = offenderCodeString,
