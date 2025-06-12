@@ -393,7 +393,7 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
-    fun `will process detect sentence differences`() = runTest {
+    fun `will detect sentence differences`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
           courtEvents = listOf(
@@ -449,6 +449,36 @@ internal class CourtSentencingReconciliationServiceTest {
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceCategory", dps = "New Category", nomis = "2020", id = DPS_SENTENCE_4_ID)))
+    }
+
+    @Test
+    fun `will compare fines correctly`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              fineAmount = BigDecimal("8.10"),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(fineAmount = BigDecimal("8.1")),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
     }
 
     @Test
@@ -710,7 +740,7 @@ fun nomisSentenceResponse(
   startDate = LocalDate.of(2023, 1, 1),
   status = "A",
   sentenceTerms = terms,
-  fineAmount = BigDecimal.TEN,
+  fineAmount = BigDecimal.valueOf(750),
   missingCourtOffenderChargeIds = emptyList(),
   createdByUsername = "Q1251T",
   createdDateTime = LocalDateTime.now(),
@@ -767,7 +797,7 @@ fun dpsSentenceResponse(periodLengths: List<ReconciliationPeriodLength> = listOf
   sentenceStartDate = LocalDate.of(2024, 1, 1),
   active = true,
   periodLengths = periodLengths,
-  fineAmount = BigDecimal.TEN,
+  fineAmount = BigDecimal.valueOf(750.00),
 )
 
 fun dpsPeriodLengthResponse() = ReconciliationPeriodLength(
