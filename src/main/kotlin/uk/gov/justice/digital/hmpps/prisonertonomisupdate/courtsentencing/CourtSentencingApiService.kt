@@ -24,7 +24,7 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .awaitBody()
 
   suspend fun getCourtCaseForReconciliation(courtCaseUuid: String): ReconciliationCourtCase = courtSentencingApiWebClient.get()
-    .uri("/legacy/court-case//{courtCaseUuid}/reconciliation", courtCaseUuid)
+    .uri("/legacy/court-case/{courtCaseUuid}/reconciliation", courtCaseUuid)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
