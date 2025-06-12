@@ -164,6 +164,18 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("descriptionAmendments[0].createdDateTime", "2021-07-05T10:35:17"),
             )
           }
+
+          @Test
+          fun `the created incident will contain details of the DPS correction request`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
+                .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
+                .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
+                .withRequestBodyJsonPath("requirements[0].location", "MDI")
+                .withRequestBodyJsonPath("requirements.length()", "1"),
+            )
+          }
         }
       }
     }
@@ -288,6 +300,18 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
+            )
+          }
+
+          @Test
+          fun `the created incident will contain details of the DPS correction request`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
+                .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
+                .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
+                .withRequestBodyJsonPath("requirements[0].location", "MDI")
+                .withRequestBodyJsonPath("requirements.length()", "1"),
             )
           }
         }

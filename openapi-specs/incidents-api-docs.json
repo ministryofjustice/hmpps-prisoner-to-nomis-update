@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-09.5676.a4c69b0"
+    "version" : "2025-06-11.5699.42b6a21"
   },
   "servers" : [ {
     "url" : "/",
@@ -5819,7 +5819,13 @@
           "date" : {
             "type" : "string",
             "format" : "date",
+            "deprecated" : true,
             "description" : "Date the requirement was recorded"
+          },
+          "recordedDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date and time the requirement was recorded"
           },
           "staff" : {
             "$ref" : "#/components/schemas/NomisStaff",
@@ -6022,15 +6028,15 @@
         "type" : "object",
         "description" : "Incident report created in NOMIS",
         "properties" : {
+          "incidentReport" : {
+            "$ref" : "#/components/schemas/NomisReport",
+            "description" : "Complete incident report payload"
+          },
           "initialMigration" : {
             "type" : "boolean",
             "default" : false,
             "description" : "Set to true for initial migration",
             "example" : true
-          },
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
           }
         },
         "required" : [ "incidentReport" ],
@@ -6040,11 +6046,6 @@
         "type" : "object",
         "description" : "Incident report updated in NOMIS",
         "properties" : {
-          "initialMigration" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Omit or set to false for updates"
-          },
           "id" : {
             "type" : "string",
             "format" : "uuid",
@@ -6054,6 +6055,11 @@
           "incidentReport" : {
             "$ref" : "#/components/schemas/NomisReport",
             "description" : "Complete incident report payload"
+          },
+          "initialMigration" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Omit or set to false for updates"
           }
         },
         "required" : [ "id", "incidentReport" ],

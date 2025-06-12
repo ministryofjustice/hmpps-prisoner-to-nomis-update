@@ -24,6 +24,7 @@ class IncidentsNomisApiMockServer {
       incidentDateTime = LocalDateTime.parse("2023-12-30T13:45"),
       reportedDateTime = LocalDateTime.parse("2024-01-02T09:30"),
       reportedBy = "A_USER",
+      requirements = listOf(),
     )
   }
 
