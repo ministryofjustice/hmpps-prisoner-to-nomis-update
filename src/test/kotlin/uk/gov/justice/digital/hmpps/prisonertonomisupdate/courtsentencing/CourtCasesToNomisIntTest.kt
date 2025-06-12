@@ -3176,15 +3176,15 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           )
 
           courtSentencingMappingApi.stubGetAppearanceRecallMappings(
-            "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+            "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
             mappings = listOf(
               CourtAppearanceRecallMappingDto(
                 nomisCourtAppearanceId = 101,
-                dpsRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+                dpsRecallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
               ),
               CourtAppearanceRecallMappingDto(
                 nomisCourtAppearanceId = 102,
-                dpsRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+                dpsRecallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
               ),
             ),
           )
@@ -3206,7 +3206,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          courtSentencingNomisApi.stubUpdateRecallSentences(OFFENDER_NO)
+          courtSentencingNomisApi.stubRevertRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
             source = "DPS",
             previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
@@ -3227,9 +3227,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `will get breach appearanceIds related to previous recall`() {
+        fun `will get breach appearanceIds related to recall being deleted`() {
           courtSentencingMappingApi.verify(
-            getRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")),
+            getRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")),
           )
         }
 
@@ -3250,7 +3250,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will update NOMIS sentence information with previous recall data`() {
           courtSentencingNomisApi.verify(
-            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall/restore-previous"))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
               .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
@@ -3262,7 +3262,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
               .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
               .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
-              .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
               .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
               .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH")))
               .withRequestBody(matchingJsonPath("beachCourtEventIds[0]", equalTo("101")))

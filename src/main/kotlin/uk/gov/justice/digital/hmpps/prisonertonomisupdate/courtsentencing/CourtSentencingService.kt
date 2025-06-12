@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.De
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RecallRelatedSentenceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReturnToCustodyRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RevertRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
@@ -959,10 +960,10 @@ class CourtSentencingService(
           }
           val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
-          val breachCourtAppearanceIds = courtCaseMappingService.getAppearanceRecallMappings(previousRecallId).map { it.nomisCourtAppearanceId }
-          nomisApiService.updateRecallSentences(
+          val breachCourtAppearanceIds = courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
+          nomisApiService.revertRecallSentences(
             offenderNo,
-            UpdateRecallRequest(
+            RevertRecallRequest(
               sentences = sentenceAndMappings.map { sentence ->
                 RecallRelatedSentenceDetails(
                   sentenceId =
@@ -983,8 +984,6 @@ class CourtSentencingService(
                   recallLength = recall.recallType.toDays()!!,
                 )
               },
-              // should always be present for recalls from DPS
-              recallRevocationDate = recall.revocationDate!!,
               beachCourtEventIds = breachCourtAppearanceIds,
             ),
           )

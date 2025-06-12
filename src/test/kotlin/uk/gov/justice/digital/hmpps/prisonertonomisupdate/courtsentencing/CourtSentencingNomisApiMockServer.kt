@@ -204,6 +204,16 @@ class CourtSentencingNomisApiMockServer {
     )
   }
 
+  fun stubRevertRecallSentences(offenderNo: String) {
+    nomisApi.stubFor(
+      put("/prisoners/$offenderNo/sentences/recall/restore-previous").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(204),
+      ),
+    )
+  }
+
   fun stubDeleteRecallSentences(offenderNo: String) {
     nomisApi.stubFor(
       put("/prisoners/$offenderNo/sentences/recall/restore-original").willReturn(
