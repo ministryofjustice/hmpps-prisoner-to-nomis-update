@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RevertRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
@@ -172,6 +173,15 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     request: UpdateRecallRequest,
   ): ResponseEntity<Void> = webClient.put()
     .uri("/prisoners/{offenderNo}/sentences/recall", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
+  suspend fun revertRecallSentences(
+    offenderNo: String,
+    request: RevertRecallRequest,
+  ): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentences/recall/restore-previous", offenderNo)
     .bodyValue(request)
     .retrieve()
     .awaitBodilessEntity()
