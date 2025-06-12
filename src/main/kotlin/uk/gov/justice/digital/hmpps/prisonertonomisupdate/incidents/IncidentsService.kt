@@ -3,12 +3,14 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Type
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertDescriptionAmendmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequirementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 
 @Service
@@ -86,32 +88,21 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = Up
   reportedDateTime = this.reportedAt,
   reportedBy = this.reportedBy,
   incidentDateTime = this.incidentDateAndTime,
-//  questions = this.questions.map { it.toNomisQuestionRequest() },
-//  offenderParties = mutableListOf<IncidentOffenderParty>(),
-//  incidentHistory = mutableListOf<IncidentHistory>(),
-//  staffParties =  mutableListOf<IncidentStaffParty>(),
-//  requirements =  mutableListOf<IncidentRequirement>(),
+  requirements = this.correctionRequests.map { it.toNomisUpsertIncidentRequirementRequest() },
 )
-//
-// private fun Question.toNomisQuestionRequest(): CreateIncidentQuestionRequest = CreateIncidentQuestionRequest(
-//  code = this.code,
-//  additionalInformation = this.additionalInformation,
-//  question = this.question,
-//  responses = this.responses.map { it.toNomisResponseRequest() }
-// )
-// private fun Response.toNomisResponseRequest(): CreateIncidentResponseRequest = CreateIncidentResponseRequest(
-//  additionalInformation = this.additionalInformation,
-//  response = this.response,
-//  responseDate = this.responseDate,
-//  recordedAt = this.recordedAt,
-//  recordedBy = this.recordedBy,
-// )
 
 private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): UpsertDescriptionAmendmentRequest = UpsertDescriptionAmendmentRequest(
   createdDateTime = this.createdAt,
   firstName = this.firstName,
   lastName = this.lastName,
   text = this.text,
+)
+
+private fun CorrectionRequest.toNomisUpsertIncidentRequirementRequest(): UpsertIncidentRequirementRequest = UpsertIncidentRequirementRequest(
+  date = this.correctionRequestedAt,
+  username = this.correctionRequestedBy,
+  location = this.location!!, // TODO (PGP): Confirm that this can be nullable and work out what to default to if is
+  comment = this.descriptionOfChange,
 )
 
 private fun ReportWithDetails.mapDpsType(type: Type): String = when (type) {

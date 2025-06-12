@@ -190,10 +190,11 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   ),
   correctionRequests = listOf(
     CorrectionRequest(
-      sequence = 1,
+      sequence = 0,
       descriptionOfChange = "There was a change",
       correctionRequestedBy = "Fred Black",
       correctionRequestedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+      location = "MDI",
     ),
   ),
   createdAt = LocalDateTime.parse("2021-07-05T10:35:17"),
