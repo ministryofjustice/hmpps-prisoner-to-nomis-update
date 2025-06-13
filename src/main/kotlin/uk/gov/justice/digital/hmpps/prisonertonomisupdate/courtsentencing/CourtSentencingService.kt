@@ -263,6 +263,12 @@ class CourtSentencingService(
     telemetryClient.trackEvent("court-case-mapping-deleted-failed", mapOf("dpsCourtCaseId" to dpsCaseId))
     log.warn("Unable to delete mapping for Court Case $dpsCaseId. Please delete manually", e)
   }
+  private suspend fun tryToDeleteRecallMapping(dpsRecallId: String) = runCatching {
+    courtCaseMappingService.deleteAppearanceRecallMappings(dpsRecallId)
+  }.onFailure { e ->
+    telemetryClient.trackEvent("recall-appearance-deleted-failed", mapOf("dpsRecallId" to dpsRecallId))
+    log.warn("Unable to delete mapping for Recall $dpsRecallId. Please delete manually", e)
+  }
 
   private suspend fun tryToDeleteCourtAppearanceMapping(dpsAppearanceId: String) = runCatching {
     courtCaseMappingService.deleteCourtAppearanceMappingByDpsId(dpsAppearanceId)
@@ -510,7 +516,7 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createRecallAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceRecallMappingsDto>) = courtCaseMappingService.createAppearanceRecallMapping(message.mapping).also {
+  suspend fun createRecallAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceRecallMappingsDto>) = courtCaseMappingService.createAppearanceRecallMappings(message.mapping).also {
     telemetryClient.trackEvent(
       "court-appearance-recall-create-mapping-retry-success",
       message.telemetryAttributes,
@@ -862,7 +868,7 @@ class CourtSentencingService(
             retryQueueService = courtSentencingRetryQueueService,
             eventTelemetry = telemetryMap,
             name = EntityType.COURT_APPEARANCE_RECALL.displayName,
-            postMapping = courtCaseMappingService::createAppearanceRecallMapping,
+            postMapping = courtCaseMappingService::createAppearanceRecallMappings,
             log = log,
           )
         }
@@ -1011,6 +1017,7 @@ class CourtSentencingService(
           )
         }
 
+        tryToDeleteRecallMapping(recallId)
         telemetryClient.trackEvent(
           "recall-deleted-success",
           telemetryMap,

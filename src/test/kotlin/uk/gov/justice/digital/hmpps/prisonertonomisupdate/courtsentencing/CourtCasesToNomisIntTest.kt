@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -3188,6 +3189,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               ),
             ),
           )
+          courtSentencingMappingApi.stubDeleteAppearanceRecallMappings("ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")
 
           courtSentencingApi.stubGetSentences(
             sentences = listOf(
@@ -3270,6 +3272,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `will delete breach appearanceIds related to deleted recall`() {
+          courtSentencingMappingApi.verify(
+            deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")),
+          )
+        }
+
+        @Test
         fun `will create success telemetry`() {
           verify(telemetryClient).trackEvent(
             eq("recall-deleted-success"),
@@ -3337,6 +3346,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               ),
             ),
           )
+          courtSentencingMappingApi.stubDeleteAppearanceRecallMappings("ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")
 
           courtSentencingNomisApi.stubDeleteRecallSentences(OFFENDER_NO)
           publishRecallDeletedDomainEvent(
@@ -3394,6 +3404,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("beachCourtEventIds[0]", equalTo("101")))
               .withRequestBody(matchingJsonPath("beachCourtEventIds[1]", equalTo("102"))),
 
+          )
+        }
+
+        @Test
+        fun `will delete breach appearanceIds related to deleted recall`() {
+          courtSentencingMappingApi.verify(
+            deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-recall-id/ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")),
           )
         }
 
