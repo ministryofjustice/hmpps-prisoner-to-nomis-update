@@ -33,7 +33,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.contactPerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -106,19 +105,6 @@ internal class CourtSentencingReconciliationServiceTest {
 
   @Nested
   inner class CheckCourtCasesMatch {
-    val personId = 1L
-    val nomisPerson = contactPerson(personId = personId).copy(
-      firstName = "KWEKU",
-      lastName = "KOFI",
-      phoneNumbers = emptyList(),
-      employments = emptyList(),
-      identifiers = emptyList(),
-      addresses = emptyList(),
-      emailAddresses = emptyList(),
-      contacts = emptyList(),
-      restrictions = emptyList(),
-    )
-
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
