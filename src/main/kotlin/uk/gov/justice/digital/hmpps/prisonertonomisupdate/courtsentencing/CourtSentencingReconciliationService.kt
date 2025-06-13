@@ -55,27 +55,40 @@ class CourtSentencingReconciliationService(
     )
   }
 
-  suspend fun checkPrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = manualCheckCaseOffenderNo(prisonerId.offenderNo)
-    .filter { it.mismatch != null }
-    .takeIf { it.isNotEmpty() }?.let {
-      MismatchPrisonerCasesResponse(
-        offenderNo = prisonerId.offenderNo,
-        mismatches = it,
-      )
-    }?.also {
-      it.mismatches.forEach { mismatch ->
-        telemetryClient.trackEvent(
-          "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
-          mapOf(
-            "offenderNo" to it.offenderNo,
-            "dpsCaseId" to mismatch.dpsCaseId,
-            "nomisCaseId" to mismatch.nomisCaseId.toString(),
-            "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
-          ),
-          null,
+  suspend fun checkPrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = runCatching {
+    manualCheckCaseOffenderNo(prisonerId.offenderNo)
+      .filter { it.mismatch != null }
+      .takeIf { it.isNotEmpty() }?.let {
+        MismatchPrisonerCasesResponse(
+          offenderNo = prisonerId.offenderNo,
+          mismatches = it,
         )
+      }?.also {
+        it.mismatches.forEach { mismatch ->
+          telemetryClient.trackEvent(
+            "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
+            mapOf(
+              "offenderNo" to it.offenderNo,
+              "dpsCaseId" to mismatch.dpsCaseId,
+              "nomisCaseId" to mismatch.nomisCaseId.toString(),
+              "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
+            ),
+            null,
+          )
+        }
       }
-    }
+  }.onFailure {
+    log.error("Unable to match prisoner: ${prisonerId.offenderNo}", it)
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-error",
+      mapOf(
+        "offenderNo" to prisonerId.offenderNo,
+        "reason" to (it.message ?: "unknown"),
+      ),
+      null,
+    )
+  }.getOrNull()
+
   suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
     manualCheckCaseNomis(nomisCaseId = it.id)
   }
