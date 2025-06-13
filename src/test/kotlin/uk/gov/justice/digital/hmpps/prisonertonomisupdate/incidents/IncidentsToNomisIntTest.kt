@@ -1,8 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
@@ -176,6 +178,33 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("requirements.length()", "1"),
             )
           }
+
+          @Test
+          fun `the updated incident will contain details of the DPS prisoners involved`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
+                .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
+                .withRequestBodyJsonPath("offenderParties[0].role", "ABS")
+                .withRequestBodyJsonPath("offenderParties[0].outcome", "POR")
+                .withRequestBody(matchingJsonPath("offenderParties[1].comment", absent()))
+                .withRequestBodyJsonPath("offenderParties[1].prisonNumber", "A1234BD")
+                .withRequestBodyJsonPath("offenderParties[1].role", "FIGHT")
+                .withRequestBodyJsonPath("offenderParties[1].outcome", "IPOL")
+                .withRequestBodyJsonPath("offenderParties.length()", "2"),
+            )
+          }
+
+          @Test
+          fun `the updated incident will contain details of the DPS staff involved`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
+                .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
+                .withRequestBodyJsonPath("staffParties[0].role", "AI")
+                .withRequestBodyJsonPath("staffParties.length()", "1"),
+            )
+          }
         }
       }
     }
@@ -304,7 +333,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `the created incident will contain details of the DPS correction request`() {
+          fun `the updated incident will contain details of the DPS correction request`() {
             nomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
@@ -312,6 +341,33 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
                 .withRequestBodyJsonPath("requirements[0].location", "MDI")
                 .withRequestBodyJsonPath("requirements.length()", "1"),
+            )
+          }
+
+          @Test
+          fun `the updated incident will contain details of the DPS prisoners involved`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
+                .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
+                .withRequestBodyJsonPath("offenderParties[0].role", "ABS")
+                .withRequestBodyJsonPath("offenderParties[0].outcome", "POR")
+                .withRequestBody(matchingJsonPath("offenderParties[1].comment", absent()))
+                .withRequestBodyJsonPath("offenderParties[1].prisonNumber", "A1234BD")
+                .withRequestBodyJsonPath("offenderParties[1].role", "FIGHT")
+                .withRequestBodyJsonPath("offenderParties[1].outcome", "IPOL")
+                .withRequestBodyJsonPath("offenderParties.length()", "2"),
+            )
+          }
+
+          @Test
+          fun `the updated incident will contain details of the DPS staff involved`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
+                .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
+                .withRequestBodyJsonPath("staffParties[0].role", "AI")
+                .withRequestBodyJsonPath("staffParties.length()", "1"),
             )
           }
         }
