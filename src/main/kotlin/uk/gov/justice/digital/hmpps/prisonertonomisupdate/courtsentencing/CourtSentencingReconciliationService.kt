@@ -4,8 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 import java.time.LocalDate
 
@@ -14,12 +23,21 @@ class CourtSentencingReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsApiService: CourtSentencingApiService,
   private val nomisApiService: CourtSentencingNomisApiService,
+  private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: CourtCaseMappingService,
   private val objectMapper: ObjectMapper,
+  @Value("\${reports.court-case.prisoner.reconciliation.page-size:10}") private val prisonerPageSize: Int = 10,
 ) {
-  private companion object {
+  companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+    const val TELEMETRY_COURT_CASE_PRISONER_PREFIX = "court-case-prisoner-reconciliation"
   }
+
+  suspend fun generatePrisonerCourtCasesReconciliationReport(): ReconciliationResult<MismatchPrisonerCasesResponse> = generateReconciliationReport(
+    threadCount = prisonerPageSize,
+    checkMatch = ::checkPrisonerCasesMatch,
+    nextPage = ::getNextBookingsForPage,
+  )
 
   suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
     MismatchCaseResponse(
@@ -37,9 +55,50 @@ class CourtSentencingReconciliationService(
     )
   }
 
+  suspend fun checkPrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = manualCheckCaseOffenderNo(prisonerId.offenderNo)
+    .filter { it.mismatch != null }
+    .takeIf { it.isNotEmpty() }?.let {
+      MismatchPrisonerCasesResponse(
+        offenderNo = prisonerId.offenderNo,
+        mismatches = it,
+      )
+    }?.also {
+      it.mismatches.forEach { mismatch ->
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
+          mapOf(
+            "offenderNo" to it.offenderNo,
+            "dpsCaseId" to mismatch.dpsCaseId,
+            "nomisCaseId" to mismatch.nomisCaseId.toString(),
+            "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
+          ),
+          null,
+        )
+      }
+    }
   suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
     manualCheckCaseNomis(nomisCaseId = it.id)
   }
+
+  private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
+    nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerPageSize)
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch-page-error",
+      mapOf(
+        "booking" to lastBookingId.toString(),
+      ),
+    )
+    log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
+  }
+    .map {
+      ReconciliationSuccessPageResult(
+        ids = it.prisonerIds,
+        last = it.lastBookingId,
+      )
+    }
+    .getOrElse { ReconciliationErrorPageResult(it) }
+    .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
 
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
     val nomisResponse = nomisApiService.getCourtCaseForReconciliation(nomisCaseId)
@@ -387,9 +446,15 @@ private fun List<SentenceResponse>.findNomisSentenceForCharge(chargeId: Long, ev
 }
 
 data class MismatchCaseResponse(
+  val offenderNo: String = "TODO",
   val dpsCaseId: String,
   val nomisCaseId: Long,
   val mismatch: MismatchCase?,
+)
+
+data class MismatchPrisonerCasesResponse(
+  val offenderNo: String,
+  val mismatches: List<MismatchCaseResponse>,
 )
 
 data class CaseFields(
