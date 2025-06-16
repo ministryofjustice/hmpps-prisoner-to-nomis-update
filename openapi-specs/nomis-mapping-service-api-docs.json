@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-11.34.989ef0f"
+    "version" : "2025-06-12.38.bc972e3"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -8611,6 +8611,50 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Deletes court appearance recall mappings",
+        "description" : "Deletes court appearance recall mappings by DPS recall id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId" : "deleteCourtAppearanceRecallMappingByDpsId",
+        "parameters" : [ {
+          "name" : "recallId",
+          "in" : "path",
+          "description" : "DPS recall id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+          },
+          "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mappings Deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -17567,6 +17611,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -17577,9 +17624,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
