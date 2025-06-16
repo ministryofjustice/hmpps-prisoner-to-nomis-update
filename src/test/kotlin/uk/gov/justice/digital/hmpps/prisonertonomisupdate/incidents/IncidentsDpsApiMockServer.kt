@@ -168,6 +168,13 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       firstName = "Dave",
       lastName = "Jones",
     ),
+    StaffInvolvement(
+      sequence = 2,
+      staffRole = StaffInvolvement.StaffRole.CR_SUPERVISOR,
+      comment = "Dave wasn't hit",
+      firstName = "Dave",
+      lastName = "Smith",
+    ),
   ),
   prisonersInvolved = listOf(
     PrisonerInvolvement(
@@ -181,9 +188,9 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
     ),
     PrisonerInvolvement(
       sequence = 2,
-      prisonerNumber = "A1234BC",
-      prisonerRole = PrisonerInvolvement.PrisonerRole.ABSCONDER,
-      outcome = PrisonerInvolvement.Outcome.PLACED_ON_REPORT,
+      prisonerNumber = "A1234BD",
+      prisonerRole = PrisonerInvolvement.PrisonerRole.FIGHTER,
+      outcome = PrisonerInvolvement.Outcome.POLICE_INVESTIGATION,
       firstName = "Dave",
       lastName = "Jones",
     ),

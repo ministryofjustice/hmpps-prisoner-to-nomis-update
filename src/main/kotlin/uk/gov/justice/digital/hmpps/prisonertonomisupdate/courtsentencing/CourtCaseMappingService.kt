@@ -58,12 +58,18 @@ class CourtCaseMappingService(
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun createAppearanceRecallMapping(request: CourtAppearanceRecallMappingsDto) {
+  suspend fun createAppearanceRecallMappings(request: CourtAppearanceRecallMappingsDto) {
     webClient.post()
       .uri("/mapping/court-sentencing/court-appearances/recall")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
+  }
+  suspend fun deleteAppearanceRecallMappings(recallId: String) {
+    webClient.delete()
+      .uri("/mapping/court-sentencing/court-appearances/dps-recall-id/{recallId}", recallId)
+      .retrieve()
+      .awaitBodilessEntity()
   }
 
   suspend fun getAppearanceRecallMappings(recallId: String): List<CourtAppearanceRecallMappingDto> = webClient.get()

@@ -239,6 +239,12 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
+  fun stubDeleteAppearanceRecallMappings(recallId: String) {
+    stubDelete(
+      "/mapping/court-sentencing/court-appearances/dps-recall-id/$recallId",
+    )
+  }
+
   // helper methods
 
   fun stubCreate(url: String) {
