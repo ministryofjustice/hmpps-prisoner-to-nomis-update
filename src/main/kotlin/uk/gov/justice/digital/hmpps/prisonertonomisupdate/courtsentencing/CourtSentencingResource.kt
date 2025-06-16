@@ -31,26 +31,26 @@ class CourtSentencingResource(
   @GetMapping("/court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   suspend fun getCaseReconciliationByDpsCaseId(
     @PathVariable dpsCaseId: String,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseDps(dpsCaseId = dpsCaseId).also { log.info(it.toString()) }
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseDps(dpsCaseId = dpsCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @GetMapping("/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
   suspend fun getCaseReconciliationByNomisCaseId(
     @PathVariable nomisCaseId: Long,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(nomisCaseId = nomisCaseId).also { log.info(it.toString()) }
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(nomisCaseId = nomisCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @GetMapping("/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/dps-case-id/{dpsCaseId}/reconciliation")
-  suspend fun getCaseReconciliationByNomisCaseId(
+  suspend fun getCaseReconciliationByCaseId(
     @PathVariable nomisCaseId: Long,
     @PathVariable dpsCaseId: String,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId).also { log.info(it.toString()) }
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,
-  ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo).also { log.info(it.toString()) }
+  ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @PostMapping("/court-sentencing/court-charges/repair")

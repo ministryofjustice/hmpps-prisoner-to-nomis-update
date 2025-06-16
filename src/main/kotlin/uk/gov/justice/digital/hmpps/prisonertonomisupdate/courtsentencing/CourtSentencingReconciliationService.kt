@@ -238,7 +238,7 @@ class CourtSentencingReconciliationService(
 
     val differenceList = compareObjects(dpsFields, nomisFields)
     if (differenceList.isNotEmpty()) {
-      log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       return MismatchCase(
         nomisCase = nomisFields,
         dpsCase = dpsFields,
