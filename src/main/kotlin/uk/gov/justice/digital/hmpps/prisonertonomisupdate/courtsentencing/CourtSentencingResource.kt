@@ -40,6 +40,13 @@ class CourtSentencingResource(
   ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(nomisCaseId = nomisCaseId).also { log.info(it.toString()) }
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
+  @GetMapping("/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/dps-case-id/{dpsCaseId}/reconciliation")
+  suspend fun getCaseReconciliationByNomisCaseId(
+    @PathVariable nomisCaseId: Long,
+    @PathVariable dpsCaseId: String,
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId).also { log.info(it.toString()) }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,

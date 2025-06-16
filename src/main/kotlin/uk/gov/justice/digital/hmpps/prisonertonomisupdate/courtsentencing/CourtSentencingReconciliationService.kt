@@ -94,7 +94,11 @@ class CourtSentencingReconciliationService(
   }
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
-    nomisPrisonerApiService.getAllLatestBookings(lastBookingId = lastBookingId, activeOnly = true, pageSize = prisonerPageSize)
+    nomisPrisonerApiService.getAllLatestBookings(
+      lastBookingId = lastBookingId,
+      activeOnly = true,
+      pageSize = prisonerPageSize,
+    )
   }.onFailure {
     telemetryClient.trackEvent(
       "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch-page-error",
@@ -113,6 +117,12 @@ class CourtSentencingReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
 
+  suspend fun manualCheckCase(nomisCaseId: Long, dpsCaseId: String): MismatchCaseResponse = MismatchCaseResponse(
+    nomisCaseId = nomisCaseId,
+    dpsCaseId = dpsCaseId,
+    mismatch = checkCase(dpsCaseId = dpsCaseId, nomisCaseId = nomisCaseId),
+  )
+
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
     val nomisResponse = nomisApiService.getCourtCaseForReconciliation(nomisCaseId)
     val dpsResponse = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
@@ -120,9 +130,10 @@ class CourtSentencingReconciliationService(
     // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
     val appearanceCharges = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
     val sentences = appearanceCharges.mapNotNull { charge -> charge.sentence }.map {
-      val offenceCodeString = appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
-        charge.offenceCode
-      }.sorted().joinToString(",")
+      val offenceCodeString =
+        appearanceCharges.filter { charge -> charge.sentence?.sentenceUuid == it.sentenceUuid }.map { charge ->
+          charge.offenceCode
+        }.sorted().joinToString(",")
       val terms = it.periodLengths.map { term ->
         SentenceTermFields(
           sentenceTermCode = term.sentenceTermCode,
@@ -196,7 +207,9 @@ class CourtSentencingReconciliationService(
         )
       },
       sentences = nomisResponse.sentences.map { sentenceResponse ->
-        val offenderCodeString = sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted().joinToString(",")
+        val offenderCodeString =
+          sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted()
+            .joinToString(",")
         val terms = sentenceResponse.sentenceTerms.map { term ->
           SentenceTermFields(
             years = term.years,
@@ -263,7 +276,14 @@ class CourtSentencingReconciliationService(
         )
 
         if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
-          differences.add(Difference("$parentProperty.caseReferences", dpsObj.caseReferences, nomisObj.caseReferences, id = dpsObj.id))
+          differences.add(
+            Difference(
+              "$parentProperty.caseReferences",
+              dpsObj.caseReferences,
+              nomisObj.caseReferences,
+              id = dpsObj.id,
+            ),
+          )
         }
 
         differences.addAll(compareLists(sortedDpsAppearances, sortedNomisAppearances, "$parentProperty.appearances"))
@@ -388,7 +408,14 @@ class CourtSentencingReconciliationService(
           differences.add(Difference("$parentProperty.fine", dpsObj.fine, nomisObj.fine, dpsObj.id))
         }
         if (dpsObj.sentencingAppearanceDate != nomisObj.sentencingAppearanceDate) {
-          differences.add(Difference("$parentProperty.sentencingAppearanceDate", dpsObj.sentencingAppearanceDate, nomisObj.sentencingAppearanceDate, dpsObj.id))
+          differences.add(
+            Difference(
+              "$parentProperty.sentencingAppearanceDate",
+              dpsObj.sentencingAppearanceDate,
+              nomisObj.sentencingAppearanceDate,
+              dpsObj.id,
+            ),
+          )
         }
         if (dpsObj.status != nomisObj.status) {
           differences.add(Difference("$parentProperty.status", dpsObj.status, nomisObj.status, dpsObj.id))
@@ -417,16 +444,31 @@ class CourtSentencingReconciliationService(
           differences.add(Difference("$parentProperty.days", dpsObj.days, nomisObj.days, dpsObj.id))
         }
         if (dpsObj.lifeSentenceFlag != nomisObj.lifeSentenceFlag) {
-          differences.add(Difference("$parentProperty.lifeSentenceFlag", dpsObj.lifeSentenceFlag, nomisObj.lifeSentenceFlag, dpsObj.id))
+          differences.add(
+            Difference(
+              "$parentProperty.lifeSentenceFlag",
+              dpsObj.lifeSentenceFlag,
+              nomisObj.lifeSentenceFlag,
+              dpsObj.id,
+            ),
+          )
         }
         if (dpsObj.sentenceTermCode != nomisObj.sentenceTermCode) {
-          differences.add(Difference("$parentProperty.sentenceTermCode", dpsObj.sentenceTermCode, nomisObj.sentenceTermCode, dpsObj.id))
+          differences.add(
+            Difference(
+              "$parentProperty.sentenceTermCode",
+              dpsObj.sentenceTermCode,
+              nomisObj.sentenceTermCode,
+              dpsObj.id,
+            ),
+          )
         }
       }
     }
 
     return differences
   }
+
   fun sortTerms(terms: List<SentenceTermFields>): List<SentenceTermFields> = terms.sortedWith(
     compareBy<SentenceTermFields> { it.sentenceTermCode }
       .thenBy { it.years }
