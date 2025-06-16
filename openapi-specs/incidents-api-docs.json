@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-11.5699.42b6a21"
+    "version" : "2025-06-12.5716.23e2515"
   },
   "servers" : [ {
     "url" : "/",
@@ -5816,12 +5816,6 @@
             "type" : "string",
             "description" : "The update required to the incident report"
           },
-          "date" : {
-            "type" : "string",
-            "format" : "date",
-            "deprecated" : true,
-            "description" : "Date the requirement was recorded"
-          },
           "recordedDate" : {
             "type" : "string",
             "format" : "date-time",
@@ -5854,7 +5848,7 @@
             "description" : "The username of the person who last updated the requirement"
           }
         },
-        "required" : [ "createDateTime", "createdBy", "date", "prisonId", "sequence", "staff" ]
+        "required" : [ "createDateTime", "createdBy", "prisonId", "recordedDate", "sequence", "staff" ]
       },
       "NomisResponse" : {
         "type" : "object",
