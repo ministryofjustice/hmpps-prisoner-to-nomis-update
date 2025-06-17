@@ -180,7 +180,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `the updated incident will contain details of the DPS prisoners involved`() {
+          fun `the created incident will contain details of the DPS prisoners involved`() {
             nomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
@@ -196,13 +196,22 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `the updated incident will contain details of the DPS staff involved`() {
+          fun `the created incident will contain details of the DPS staff involved`() {
             nomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
                 .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
                 .withRequestBodyJsonPath("staffParties[0].role", "AI")
                 .withRequestBodyJsonPath("staffParties.length()", "1"),
+            )
+          }
+
+          @Test
+          fun `the created incident will contain details of the questions`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("questions[0].questionId", "1234")
+                .withRequestBodyJsonPath("questions.length()", "1"),
             )
           }
         }
@@ -368,6 +377,15 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
                 .withRequestBodyJsonPath("staffParties[0].role", "AI")
                 .withRequestBodyJsonPath("staffParties.length()", "1"),
+            )
+          }
+
+          @Test
+          fun `the updated incident will contain details of the questions`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("questions[0].questionId", "1234")
+                .withRequestBodyJsonPath("questions.length()", "1"),
             )
           }
         }
