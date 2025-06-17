@@ -39,16 +39,21 @@ class SentencingAdjustmentsService(
           sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(createEvent.additionalInformation.id)
         }
         transform {
-          sentencingAdjustmentsApiService.getAdjustment(createEvent.additionalInformation.id)
-            .let { adjustment ->
-              createTransformedAdjustment(adjustment).let { nomisAdjustment ->
-                SentencingAdjustmentMappingDto(
-                  nomisAdjustmentId = nomisAdjustment.id,
-                  nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-                  adjustmentId = createEvent.additionalInformation.id,
-                )
-              }
-            }
+          sentencingAdjustmentsApiService.getAdjustmentOrNull(createEvent.additionalInformation.id)
+            ?.let { adjustment ->
+              SentencingAdjustmentMappingDto(
+                nomisAdjustmentId = createTransformedAdjustment(adjustment).id,
+                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
+                adjustmentId = createEvent.additionalInformation.id,
+              )
+            } ?: run {
+            this@SentencingAdjustmentsService.telemetryClient.trackEvent(
+              "sentencing-adjustment-create-skipped",
+              telemetryMap,
+              null,
+            )
+            null
+          }
         }
         saveMapping { sentencingAdjustmentsMappingService.createMapping(it) }
       }
