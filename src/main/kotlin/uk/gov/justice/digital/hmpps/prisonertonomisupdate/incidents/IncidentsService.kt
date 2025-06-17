@@ -6,10 +6,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.PrisonerInvolvement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Question
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertDescriptionAmendmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentQuestionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequirementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertOffenderPartyRequest
@@ -95,7 +97,7 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = Up
   offenderParties = this.prisonersInvolved.map { it.toNomisUpsertOffenderPartyRequest() },
   // only interested in staff that are actually in NOMIS
   staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
-  questions = emptyList(),
+  questions = this.questions.map { it.toNomisUpsertIncidentQuestionRequest() },
 )
 
 private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): UpsertDescriptionAmendmentRequest = UpsertDescriptionAmendmentRequest(
@@ -123,6 +125,11 @@ private fun StaffInvolvement.toNomisUpsertStaffPartyRequest(): UpsertStaffPartyR
   comment = this.comment,
   username = this.staffUsername!!,
   role = this.staffRole.mapDps(),
+)
+
+private fun Question.toNomisUpsertIncidentQuestionRequest(): UpsertIncidentQuestionRequest = UpsertIncidentQuestionRequest(
+  questionId = this.code.toLong(),
+  responses = listOf(),
 )
 
 class IncidentStatusIgnoredException(val status: Status) : Exception(status.value)
