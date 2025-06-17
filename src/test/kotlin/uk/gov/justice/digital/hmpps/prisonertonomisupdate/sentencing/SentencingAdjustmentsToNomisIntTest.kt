@@ -470,6 +470,36 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      inner class WhenAdjustmentNoLongerExists {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetByAdjustmentIdWithError(
+            adjustmentId = ADJUSTMENT_ID,
+            404,
+          )
+
+          sentencingAdjustmentsApi.stubAdjustmentGetWithError(
+            adjustmentId = ADJUSTMENT_ID,
+            404,
+          )
+          publishCreateAdjustmentDomainEvent().also { waitForAnyProcessingToComplete(2) }
+        }
+
+        @Test
+        fun `will skip adjustment insert`() {
+          nomisApi.verify(
+            0,
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/sentences/$sentenceSequence/adjustments")),
+          )
+          verify(telemetryClient).trackEvent(
+            eq("sentencing-adjustment-create-skipped"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
       inner class WhenAdjustmentServiceKeepsFailing {
         @BeforeEach
         fun setUp() {
