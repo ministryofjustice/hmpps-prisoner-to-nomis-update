@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-11.5699.42b6a21"
+    "version" : "2025-06-17.5764.5c12c5f"
   },
   "servers" : [ {
     "url" : "/",
@@ -25,9 +25,6 @@
   "tags" : [ {
     "name" : "Constants",
     "description" : "Constants and enumerations used in incident reports"
-  }, {
-    "name" : "Incident events",
-    "description" : "Retrieve events. These are groups of reports related to one incident"
   }, {
     "name" : "Questions and responses forming an incident report",
     "description" : "Create, retrieve and delete question-response pairs that form incident reports"
@@ -2838,18 +2835,6 @@
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
-        }, {
-          "name" : "deleteOrphanedEvents",
-          "in" : "query",
-          "description" : "Whether orphaned events should also be deleted",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "default" : true,
-            "description" : "Whether orphaned events should also be deleted",
-            "example" : false
-          },
-          "example" : false
         } ],
         "responses" : {
           "403" : {
@@ -4124,351 +4109,6 @@
         }
       }
     },
-    "/incident-events" : {
-      "get" : {
-        "tags" : [ "Incident events" ],
-        "summary" : "Returns pages of events (without contained reports)",
-        "description" : "Requires role VIEW_INCIDENT_REPORTS",
-        "operationId" : "getEvents",
-        "parameters" : [ {
-          "name" : "reference",
-          "in" : "query",
-          "description" : "Filter by given human-readable event reference",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Filter by given human-readable event reference",
-            "example" : "11124143",
-            "maxLength" : 25,
-            "minLength" : 1,
-            "pattern" : "^\\d+$"
-          },
-          "example" : "11124143"
-        }, {
-          "name" : "location",
-          "in" : "query",
-          "description" : "Filter by given locations, typically prison IDs",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "default" : null,
-            "items" : {
-              "type" : "string",
-              "example" : "MDI",
-              "maxLength" : 20,
-              "minLength" : 2
-            }
-          },
-          "example" : "[LEI,MDI]"
-        }, {
-          "name" : "eventDateFrom",
-          "in" : "query",
-          "description" : "Filter for events that happened since this date (inclusive)",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date",
-            "default" : null,
-            "description" : "Filter for events that happened since this date (inclusive)",
-            "example" : "2024-01-01"
-          },
-          "example" : "2024-01-01"
-        }, {
-          "name" : "eventDateUntil",
-          "in" : "query",
-          "description" : "Filter for events that happened until this date (inclusive)",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date",
-            "default" : null,
-            "description" : "Filter for events that happened until this date (inclusive)",
-            "example" : "2024-05-31"
-          },
-          "example" : "2024-05-31"
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "description" : "Zero-based page index (0..N)",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "default" : 0,
-            "minimum" : 0
-          }
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "description" : "The size of the page to be returned",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "default" : 20,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "default" : [ "eventDateAndTime,DESC" ],
-            "items" : {
-              "type" : "string"
-            }
-          }
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "When input parameters are not valid",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns a page of events",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SimplePageEventWithBasicReports"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/incident-events/{id}" : {
-      "get" : {
-        "tags" : [ "Incident events" ],
-        "summary" : "Returns the event (without contained reports) for this ID",
-        "description" : "Requires role VIEW_INCIDENT_REPORTS",
-        "operationId" : "getEventById",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The event id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The event id",
-            "example" : "11111111-2222-3333-4444-555555555555"
-          },
-          "example" : "11111111-2222-3333-4444-555555555555"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns an event",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EventWithBasicReports"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Data not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/incident-events/reference/{eventReference}" : {
-      "get" : {
-        "tags" : [ "Incident events" ],
-        "summary" : "Returns the event (without contained reports) for this reference",
-        "description" : "Requires role VIEW_INCIDENT_REPORTS",
-        "operationId" : "getEventByReference",
-        "parameters" : [ {
-          "name" : "eventReference",
-          "in" : "path",
-          "description" : "The event reference",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "The event reference",
-            "example" : "11124143"
-          },
-          "example" : "11124143"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns an event",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/EventWithBasicReports"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Data not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/definitions" : {
       "get" : {
         "tags" : [ "Report Definition API" ],
@@ -5297,6 +4937,12 @@
         "type" : "object",
         "description" : "A response to a question",
         "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "The response code; used as a unique identifier within one report",
+            "maxLength" : 60,
+            "minLength" : 1
+          },
           "response" : {
             "type" : "string",
             "description" : "The response text as seen by downstream data consumers",
@@ -5391,6 +5037,10 @@
         "type" : "object",
         "description" : "Response to a question making up an incident report",
         "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Unique identifier for a response to a question"
+          },
           "response" : {
             "type" : "string",
             "description" : "The response text as seen by downstream data consumers"
@@ -5816,12 +5466,6 @@
             "type" : "string",
             "description" : "The update required to the incident report"
           },
-          "date" : {
-            "type" : "string",
-            "format" : "date",
-            "deprecated" : true,
-            "description" : "Date the requirement was recorded"
-          },
           "recordedDate" : {
             "type" : "string",
             "format" : "date-time",
@@ -5854,7 +5498,7 @@
             "description" : "The username of the person who last updated the requirement"
           }
         },
-        "required" : [ "createDateTime", "createdBy", "date", "prisonId", "sequence", "staff" ]
+        "required" : [ "createDateTime", "createdBy", "prisonId", "recordedDate", "sequence", "staff" ]
       },
       "NomisResponse" : {
         "type" : "object",
@@ -6111,16 +5755,6 @@
             "description" : "Longer summary of the incident",
             "maxLength" : 2147483647,
             "minLength" : 1
-          },
-          "createNewEvent" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Whether to link to a new event"
-          },
-          "linkedEventReference" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Which existing event to link to"
           }
         },
         "required" : [ "description", "incidentDateAndTime", "location", "title", "type" ],
@@ -6157,64 +5791,6 @@
         },
         "readOnly" : true,
         "required" : [ "correctionRequestedAt", "correctionRequestedBy", "descriptionOfChange", "sequence" ]
-      },
-      "Event" : {
-        "type" : "object",
-        "description" : "Event linking multiple incident reports",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The internal ID of this event"
-          },
-          "eventReference" : {
-            "type" : "string",
-            "description" : "The human-readable identifier of this event"
-          },
-          "eventDateAndTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "When the incident took place",
-            "example" : "2024-04-29T12:34:56.789012"
-          },
-          "location" : {
-            "type" : "string",
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI"
-          },
-          "title" : {
-            "type" : "string",
-            "description" : "Brief title describing the event"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Longer summary of the event"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "When the event was first created",
-            "example" : "2024-04-29T12:34:56.789012"
-          },
-          "modifiedAt" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "When the event was last changed",
-            "example" : "2024-04-29T12:34:56.789012"
-          },
-          "modifiedBy" : {
-            "type" : "string",
-            "description" : "Username of the person who last changed this event"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI"
-          }
-        },
-        "readOnly" : true,
-        "required" : [ "createdAt", "description", "eventDateAndTime", "eventReference", "id", "location", "modifiedAt", "modifiedBy", "prisonId", "title" ]
       },
       "HistoricalQuestion" : {
         "type" : "object",
@@ -6253,6 +5829,10 @@
         "type" : "object",
         "description" : "Previous response to a question making up a previous version of an incident report",
         "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Unique identifier for a response to a question"
+          },
           "response" : {
             "type" : "string",
             "description" : "The response text as seen by downstream data consumers"
@@ -6428,11 +6008,6 @@
           "lastModifiedInNomis" : {
             "type" : "boolean"
           },
-          "event" : {
-            "$ref" : "#/components/schemas/Event",
-            "description" : "Event linking multiple incident reports together",
-            "readOnly" : true
-          },
           "questions" : {
             "type" : "array",
             "description" : "The question-response pairs that make up this report",
@@ -6501,7 +6076,7 @@
           }
         },
         "readOnly" : true,
-        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "event", "history", "historyOfStatuses", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonId", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
+        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonId", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
       },
       "StaffInvolvement" : {
         "type" : "object",
@@ -6890,12 +6465,6 @@
             "type" : "boolean",
             "default" : false,
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
-          },
-          "updateEvent" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Whether the parent event should also be updated",
-            "example" : true
           }
         },
         "writeOnly" : true
@@ -7083,112 +6652,6 @@
             "example" : "[Item1,Item2]",
             "items" : {
               "$ref" : "#/components/schemas/ReportBasic"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Page number (0-based)",
-            "example" : 0
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Page size",
-            "example" : 20
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Total number of elements in all pages",
-            "example" : 55
-          },
-          "sort" : {
-            "type" : "array",
-            "description" : "Sort orders",
-            "example" : [ "property,ASC" ],
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          }
-        },
-        "readOnly" : true,
-        "required" : [ "content", "number", "numberOfElements", "size", "sort", "totalElements", "totalPages" ]
-      },
-      "EventWithBasicReports" : {
-        "type" : "object",
-        "description" : "Event linking multiple incident reports (including key report information)",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "eventReference" : {
-            "type" : "string"
-          },
-          "eventDateAndTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "location" : {
-            "type" : "string"
-          },
-          "title" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "createdAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "modifiedAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "modifiedBy" : {
-            "type" : "string"
-          },
-          "reports" : {
-            "type" : "array",
-            "description" : "The contained reports with key information only",
-            "items" : {
-              "$ref" : "#/components/schemas/ReportBasic"
-            }
-          },
-          "prisonId" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI"
-          }
-        },
-        "readOnly" : true,
-        "required" : [ "createdAt", "description", "eventDateAndTime", "eventReference", "id", "location", "modifiedAt", "modifiedBy", "prisonId", "reports", "title" ]
-      },
-      "SimplePageEventWithBasicReports" : {
-        "type" : "object",
-        "description" : "Page of results",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "description" : "Elements in this pages",
-            "example" : "[Item1,Item2]",
-            "items" : {
-              "$ref" : "#/components/schemas/EventWithBasicReports"
             }
           },
           "number" : {

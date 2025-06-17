@@ -13,7 +13,6 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Event
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.History
@@ -95,18 +94,6 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   description = "Fred and Jimmy were fighting outside.",
   nomisType = "ATT_ESC_E",
   nomisStatus = "AWAN",
-  event = Event(
-    id = UUID.randomUUID(),
-    eventReference = "1234",
-    eventDateAndTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-    prisonId = "ASI",
-    location = "ASI",
-    title = "There was a problem",
-    description = "Fighting was happening",
-    createdAt = LocalDateTime.parse("2021-07-23T10:35:17"),
-    modifiedAt = LocalDateTime.parse("2021-07-23T10:35:17"),
-    modifiedBy = "JSMITH",
-  ),
   reportedBy = "FSTAFF_GEN",
   reportedAt = LocalDateTime.parse("2021-07-07T10:35:17"),
   status = ReportWithDetails.Status.AWAITING_REVIEW,
