@@ -96,6 +96,11 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .retrieve()
     .awaitBody()
 
+  suspend fun getCourtCaseIdsByOffender(offenderNo: String): List<Long> = webClient.get()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/ids", offenderNo)
+    .retrieve()
+    .awaitBody()
+
   suspend fun createSentence(
     offenderNo: String,
     caseId: Long,

@@ -358,18 +358,9 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           dpsCourtCaseId = DPS_COURT_CASE_2_ID,
         )
 
-        courtSentencingNomisApi.stubGetCourtCasesByOffenderNo(
+        courtSentencingNomisApi.stubGetCourtCaseIdsByOffenderNo(
           offenderNo = OFFENDER_NO,
-          response = listOf(
-            nomisCaseResponse(
-              id = NOMIS_COURT_CASE_ID,
-              beginDate = LocalDate.parse("2024-01-01"),
-            ),
-            nomisCaseResponse(
-              id = NOMIS_COURT_CASE_2_ID,
-              beginDate = LocalDate.parse("2024-01-01"),
-            ),
-          ),
+          response = listOf(NOMIS_COURT_CASE_ID, NOMIS_COURT_CASE_2_ID),
         )
 
         CourtSentencingApiExtension.courtSentencingApi.stubGetCourtCaseForReconciliation(

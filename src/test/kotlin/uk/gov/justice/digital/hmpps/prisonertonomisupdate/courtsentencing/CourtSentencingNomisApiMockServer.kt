@@ -115,11 +115,11 @@ class CourtSentencingNomisApiMockServer {
     stubGet("/court-cases/$caseId", response)
   }
 
-  fun stubGetCourtCasesByOffenderNo(
+  fun stubGetCourtCaseIdsByOffenderNo(
     offenderNo: String = "G4803UT",
-    response: List<CourtCaseResponse> = emptyList(),
+    response: List<Long> = emptyList(),
   ) {
-    stubGet("/prisoners/$offenderNo/sentencing/court-cases", response)
+    stubGet("/prisoners/$offenderNo/sentencing/court-cases/ids", response)
   }
 
   fun stubCourtAppearanceCreate(offenderNo: String, courtCaseId: Long, response: CreateCourtAppearanceResponse) {

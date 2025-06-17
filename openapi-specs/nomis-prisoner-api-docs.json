@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-13.115.667201d"
+    "version" : "2025-06-17.122.235c02c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13137,6 +13137,72 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-cases/ids" : {
+      "get" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "get court case ids for an offender",
+        "description" : "Requires role NOMIS_SENTENCING. Retrieves all court case ids by offender",
+        "operationId" : "getCourtCaseIdsByOffender",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No",
+            "example" : "AA12345"
+          },
+          "example" : "AA12345"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "the list of court case ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "integer",
+                    "format" : "int64"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/sentencing/court-appearances/{id}" : {
       "get" : {
         "tags" : [ "sentencing-resource" ],
@@ -19240,6 +19306,24 @@
         },
         "required" : [ "createdDateTime", "firstName", "lastName", "text" ]
       },
+      "UpsertIncidentQuestionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "questionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The questionnaire question id"
+          },
+          "responses" : {
+            "type" : "array",
+            "description" : "List of Responses to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/UpsertIncidentResponseRequest"
+            }
+          }
+        },
+        "required" : [ "questionId", "responses" ]
+      },
       "UpsertIncidentRequest" : {
         "type" : "object",
         "description" : "Incident Request",
@@ -19305,9 +19389,16 @@
             "items" : {
               "$ref" : "#/components/schemas/UpsertStaffPartyRequest"
             }
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions asked for the incident",
+            "items" : {
+              "$ref" : "#/components/schemas/UpsertIncidentQuestionRequest"
+            }
           }
         },
-        "required" : [ "description", "descriptionAmendments", "incidentDateTime", "location", "offenderParties", "reportedBy", "reportedDateTime", "requirements", "staffParties", "statusCode", "title", "typeCode" ]
+        "required" : [ "description", "descriptionAmendments", "incidentDateTime", "location", "offenderParties", "questions", "reportedBy", "reportedDateTime", "requirements", "staffParties", "statusCode", "title", "typeCode" ]
       },
       "UpsertIncidentRequirementRequest" : {
         "type" : "object",
@@ -19331,6 +19422,33 @@
           }
         },
         "required" : [ "date", "location", "username" ]
+      },
+      "UpsertIncidentResponseRequest" : {
+        "type" : "object",
+        "properties" : {
+          "response" : {
+            "type" : "string",
+            "description" : "The text of the questionnaire question answer"
+          },
+          "answer" : {
+            "type" : "string",
+            "description" : "The answer text"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment added to the response by recording staff"
+          },
+          "responseDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Response date added to the response by recording staff"
+          },
+          "recordingUsername" : {
+            "type" : "string",
+            "description" : "Recording staff"
+          }
+        },
+        "required" : [ "recordingUsername", "response" ]
       },
       "UpsertOffenderPartyRequest" : {
         "type" : "object",
