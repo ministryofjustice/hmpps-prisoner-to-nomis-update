@@ -95,6 +95,7 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = Up
   offenderParties = this.prisonersInvolved.map { it.toNomisUpsertOffenderPartyRequest() },
   // only interested in staff that are actually in NOMIS
   staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
+  questions = emptyList(),
 )
 
 private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): UpsertDescriptionAmendmentRequest = UpsertDescriptionAmendmentRequest(

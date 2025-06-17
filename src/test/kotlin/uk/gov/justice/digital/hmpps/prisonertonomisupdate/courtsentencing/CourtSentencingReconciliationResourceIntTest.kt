@@ -111,7 +111,7 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
   }
 
   private fun stubCases(offenderNo: String, nomisCases: List<CourtCaseResponse>, dpsCases: List<ReconciliationCourtCase>) {
-    nomisApi.stubGetCourtCasesByOffenderNo(offenderNo, response = nomisCases)
+    nomisApi.stubGetCourtCaseIdsByOffenderNo(offenderNo, response = nomisCases.map { it.id })
 
     nomisCases.zip(dpsCases).forEach { (nomisCase, dpsCase) ->
       courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(nomisCase.id, dpsCase.courtCaseUuid)

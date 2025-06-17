@@ -89,8 +89,8 @@ class CourtSentencingReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCasesByOffender(offenderNo).map {
-    manualCheckCaseNomis(nomisCaseId = it.id)
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCaseIdsByOffender(offenderNo).map {
+    manualCheckCaseNomis(nomisCaseId = it)
   }
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
