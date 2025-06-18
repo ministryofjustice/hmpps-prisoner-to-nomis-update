@@ -6,6 +6,7 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "9-59/10 * * * *"
+  suspend: {{ .Values.cron.activitiesPurgeDlqSuspend }}
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
@@ -14,7 +15,6 @@ spec:
     spec:
       # Tidy up all jobs after 4 days
       ttlSecondsAfterFinished: 345600
-      suspend: {{ .Values.cron.activitiesPurgeDlqSuspend }}
       template:
         spec:
           containers:
