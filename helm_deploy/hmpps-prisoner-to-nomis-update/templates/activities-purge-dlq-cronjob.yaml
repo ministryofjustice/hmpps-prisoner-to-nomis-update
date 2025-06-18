@@ -32,7 +32,7 @@ spec:
                   #!/bin/bash
                   set -eu
 
-                  source hmpps-auth-token-requests.sh
+                  . /bin/hmpps-auth-token-requests.sh
 
                   AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
                   QUEUE_NAME="{{ .Values.cron.activitiesPurgeDlqQueueName }}"
@@ -40,8 +40,11 @@ spec:
                   purge_queue() {
                     local token=$1
                     local queue_name=$2
-                    curl --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
-                      -H "Authorization: Bearer $token"
+
+                    response=$(curl -s -w "\n%{http_code}" --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
+                      -H "Authorization: Bearer $token")
+
+                    echo $(parse_curl_response response)
                   }
 
                   # Main execution
@@ -49,7 +52,7 @@ spec:
                   echo "Access token retrieved from HMPPS Auth"
 
                   purge_queue "$TOKEN" "$QUEUE_NAME"
-                  echo "Queue purge completed successfully"
+                  echo "Queue $QUEUE_NAME purge completed successfully"
               securityContext:
                 capabilities:
                   drop:
