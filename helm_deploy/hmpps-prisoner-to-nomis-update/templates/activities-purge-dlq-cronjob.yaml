@@ -65,5 +65,5 @@ spec:
           volumes:
             - name: hmpps-auth-token-requests
               configMap:
-                name: hmpps-auth-token-requests
+                name: hmpps-auth-token-requests-script
                 defaultMode: 0755
