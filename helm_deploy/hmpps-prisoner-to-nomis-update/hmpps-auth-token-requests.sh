@@ -1,6 +1,21 @@
 #!/bin/bash
 set -eu
 
+parse_curl_response() {
+  local response=$1
+
+  http_body=$(echo "$response" | sed '$d')
+  http_code=$(echo "$response" | tail -n1)
+
+  if [ "$http_code" -ge 400 ]; then
+    echo "Error: HTTP $http_code from curl"
+    echo "$http_body"
+    exit 1
+  fi
+
+  echo "$http_body"
+}
+
 get_auth_token() {
   if (( $# < 3 )); then
     echo "Error: Missing required parameter(s)." >&2
@@ -20,10 +35,13 @@ get_auth_token() {
 
   call_auth() {
     local auth_host=$1
-    local secret=$1
-    curl -s -X POST "$auth_host/oauth/token?grant_type=client_credentials" \
+    local secret=$2
+
+    response=$(curl -s -w "\n%{http_code}" -X POST "$auth_host/oauth/token?grant_type=client_credentials" \
       -H 'Content-Type: application/json' \
-      -H "Authorization: Basic $secret"
+      -H "Authorization: Basic $secret")
+
+    echo $(parse_curl_response response)
   }
 
   extract_token() {
