@@ -111,5 +111,4 @@ cron:
   activitiesTidyMappingsSuspend: false
   activitiesPurgeDlqSuspend: false
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"
-  activitiesPurgeDlqAuthUrl: "https://sign-in-preprod.hmpps.service.justice.gov.uk/auth"
   activitiesPurgeDlqQueueName: "syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq"

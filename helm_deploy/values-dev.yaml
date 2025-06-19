@@ -104,5 +104,4 @@ generic-prometheus-alerts:
 
 cron:
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"
-  activitiesPurgeDlqAuthUrl: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
   activitiesPurgeDlqQueueName: "syscon-devs-dev-hmpps_prisoner_to_nomis_activity_dlq"

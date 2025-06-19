@@ -6,6 +6,7 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "9-59/10 * * * *"
+  suspend: {{ .Values.cron.activitiesPurgeDlqSuspend }}
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
@@ -14,12 +15,16 @@ spec:
     spec:
       # Tidy up all jobs after 4 days
       ttlSecondsAfterFinished: 345600
-      suspend: {{ .Values.cron.activitiesPurgeDlqSuspend }}
       template:
         spec:
           containers:
             - name: activities-purge-dlq
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: hmpps-auth-token-requests
+                  mountPath: /bin/hmpps-auth-token-requests.sh
+                  readOnly: true
+                  subPath: hmpps-auth-token-requests.sh
               args:
                 - /bin/sh
                 - -c
@@ -27,46 +32,27 @@ spec:
                   #!/bin/bash
                   set -eu
 
-                  # Define environment-specific variables from Helm values
-                  AUTH_BASE_URL="{{ .Values.cron.activitiesPurgeDlqAuthUrl }}"
+                  . /bin/hmpps-auth-token-requests.sh
+
+                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
                   QUEUE_NAME="{{ .Values.cron.activitiesPurgeDlqQueueName }}"
-
-                  create_secret() {
-                    echo -n "$CRONJOB_CLIENT_ID:$CRONJOB_CLIENT_SECRET" | base64 -w 0
-                  }
-
-                  get_jwt_token() {
-                    local secret=$1
-                    curl -s -X POST "${AUTH_BASE_URL}/oauth/token?grant_type=client_credentials" \
-                      -H 'Content-Type: application/json' \
-                      -H "Authorization: Basic $secret"
-                  }
-
-                  extract_token() {
-                    local jwt=$1
-                    echo -n $jwt | sed -n 's/.*"access_token": *"\([^"]*\)".*/\1/p'
-                  }
 
                   purge_queue() {
                     local token=$1
                     local queue_name=$2
-                    curl --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
-                      -H "Authorization: Bearer $token"
+
+                    response=$(curl -s -w "\n%{http_code}" --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
+                      -H "Authorization: Bearer $token")
+
+                    echo $(parse_curl_response response)
                   }
 
                   # Main execution
-                  echo "Starting activities purge DLQ process"
-                  SECRET=$(create_secret)
-                  echo "Secret created"
-
-                  JWT=$(get_jwt_token "$SECRET")
-                  echo "JWT token obtained"
-
-                  TOKEN=$(extract_token "$JWT")
-                  echo "Access token extracted"
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
 
                   purge_queue "$TOKEN" "$QUEUE_NAME"
-                  echo "Queue purge completed successfully"
+                  echo "Queue $QUEUE_NAME purge completed successfully"
               securityContext:
                 capabilities:
                   drop:
@@ -79,3 +65,8 @@ spec:
                 - secretRef:
                     name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
+          volumes:
+            - name: hmpps-auth-token-requests
+              configMap:
+                name: hmpps-auth-token-requests-script
+                defaultMode: 0755
