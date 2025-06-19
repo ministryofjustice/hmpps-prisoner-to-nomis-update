@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Report
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Response
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StatusHistory
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -106,10 +107,36 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       sequence = 1,
       responses = listOf(
         Response(
+          code = "123",
           response = "Yes",
           recordedBy = "JSMITH",
+          responseDate = LocalDate.parse("2021-06-05"),
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
           additionalInformation = null,
+          sequence = 1,
+        ),
+      ),
+    ),
+    Question(
+      code = "12345",
+      question = "Where was the drone?",
+      additionalInformation = null,
+      sequence = 1,
+      responses = listOf(
+        Response(
+          code = "456",
+          response = "No",
+          recordedBy = "JSMITH",
+          recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+          additionalInformation = "some comment",
+          sequence = 1,
+        ),
+        Response(
+          code = "789",
+          response = "Bob",
+          recordedBy = "JSMITH",
+          recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+          additionalInformation = "some additional comment",
           sequence = 1,
         ),
       ),

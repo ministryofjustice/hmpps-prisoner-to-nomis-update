@@ -9,11 +9,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Question
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Response
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertDescriptionAmendmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentQuestionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequirementRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentResponseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertOffenderPartyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertStaffPartyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
@@ -83,22 +85,29 @@ data class IncidentAdditionalInformation(
 
 private fun IncidentEvent.didOriginateInDPS() = this.additionalInformation.source == CreatingSystem.DPS
 
-private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest = UpsertIncidentRequest(
-  title = this.title,
-  description = this.description,
-  descriptionAmendments = this.descriptionAddendums.map { it.toNomisUpsertDescriptionAmendmentRequest() },
-  typeCode = this.type.mapDps(),
-  location = this.location,
-  statusCode = this.status.mapDps(),
-  reportedDateTime = this.reportedAt,
-  reportedBy = this.reportedBy,
-  incidentDateTime = this.incidentDateAndTime,
-  requirements = this.correctionRequests.map { it.toNomisUpsertIncidentRequirementRequest() },
-  offenderParties = this.prisonersInvolved.map { it.toNomisUpsertOffenderPartyRequest() },
-  // only interested in staff that are actually in NOMIS
-  staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
-  questions = this.questions.map { it.toNomisUpsertIncidentQuestionRequest() },
-)
+private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest {
+  // incident response sequence unique across all questions
+  val sequence = IncidentResponseSequence(0)
+  return UpsertIncidentRequest(
+    title = this.title,
+    description = this.description,
+    descriptionAmendments = this.descriptionAddendums.map { it.toNomisUpsertDescriptionAmendmentRequest() },
+    typeCode = this.type.mapDps(),
+    location = this.location,
+    statusCode = this.status.mapDps(),
+    reportedDateTime = this.reportedAt,
+    reportedBy = this.reportedBy,
+    incidentDateTime = this.incidentDateAndTime,
+    requirements = this.correctionRequests.map { it.toNomisUpsertIncidentRequirementRequest() },
+    offenderParties = this.prisonersInvolved.map { it.toNomisUpsertOffenderPartyRequest() },
+    // only interested in staff that are actually in NOMIS
+    staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
+    questions = this.questions.map { it.toNomisUpsertIncidentQuestionRequest(sequence) },
+  )
+}
+
+// response sequence is unique across all the questions, rather than specific to a single question
+data class IncidentResponseSequence(var value: Int)
 
 private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): UpsertDescriptionAmendmentRequest = UpsertDescriptionAmendmentRequest(
   createdDateTime = this.createdAt,
@@ -127,9 +136,18 @@ private fun StaffInvolvement.toNomisUpsertStaffPartyRequest(): UpsertStaffPartyR
   role = this.staffRole.mapDps(),
 )
 
-private fun Question.toNomisUpsertIncidentQuestionRequest(): UpsertIncidentQuestionRequest = UpsertIncidentQuestionRequest(
+private fun Question.toNomisUpsertIncidentQuestionRequest(incidentResponseSequence: IncidentResponseSequence): UpsertIncidentQuestionRequest = UpsertIncidentQuestionRequest(
   questionId = this.code.toLong(),
-  responses = listOf(),
+  responses = this.responses.map { it.toNomisUpsertIncidentResponseRequest(incidentResponseSequence) },
+)
+
+private fun Response.toNomisUpsertIncidentResponseRequest(incidentResponseSequence: IncidentResponseSequence): UpsertIncidentResponseRequest = UpsertIncidentResponseRequest(
+  answerId = this.code!!.toLong(),
+  comment = this.additionalInformation,
+  responseDate = this.responseDate,
+  response = this.response,
+  recordingUsername = this.recordedBy,
+  sequence = incidentResponseSequence.value++,
 )
 
 class IncidentStatusIgnoredException(val status: Status) : Exception(status.value)
