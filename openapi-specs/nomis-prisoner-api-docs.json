@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-19.128.280a444"
+    "version" : "2025-06-19.130.1c488d0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19431,14 +19431,6 @@
             "format" : "int64",
             "description" : "The questionnaire answer id"
           },
-          "response" : {
-            "type" : "string",
-            "description" : "The text of the questionnaire question answer"
-          },
-          "answer" : {
-            "type" : "string",
-            "description" : "The answer text"
-          },
           "comment" : {
             "type" : "string",
             "description" : "Comment added to the response by recording staff"
@@ -19458,7 +19450,7 @@
             "description" : "Sequence number across all responses for an incident"
           }
         },
-        "required" : [ "answerId", "recordingUsername", "response", "sequence" ]
+        "required" : [ "answerId", "recordingUsername", "sequence" ]
       },
       "UpsertOffenderPartyRequest" : {
         "type" : "object",
