@@ -1060,7 +1060,6 @@ class CourtSentencingService(
     LegacyRecall.RecallType.LR -> null
     LegacyRecall.RecallType.FTR_14 -> 14
     LegacyRecall.RecallType.FTR_28 -> 28
-    LegacyRecall.RecallType.LR_HDC -> null
     LegacyRecall.RecallType.FTR_HDC_14 -> 14
     LegacyRecall.RecallType.FTR_HDC_28 -> 28
     LegacyRecall.RecallType.CUR_HDC -> null
@@ -1070,7 +1069,6 @@ class CourtSentencingService(
     LegacyRecall.RecallType.LR -> false
     LegacyRecall.RecallType.FTR_14 -> true
     LegacyRecall.RecallType.FTR_28 -> true
-    LegacyRecall.RecallType.LR_HDC -> false
     LegacyRecall.RecallType.FTR_HDC_14 -> true
     LegacyRecall.RecallType.FTR_HDC_28 -> true
     LegacyRecall.RecallType.CUR_HDC -> false
