@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-11.34.989ef0f"
+    "version" : "2025-06-16.41.10dfdb1"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1172,12 +1172,98 @@
         }
       }
     },
+    "/mapping/visit-balance-adjustment" : {
+      "post" : {
+        "tags" : [ "visit-balance-adjustment-mapping-resource" ],
+        "summary" : "Creates a prisoner visit balance adjustment mapping",
+        "description" : "Creates a prisoner visit balance adjustment mapping. Requires ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "createMapping_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VisitBalanceAdjustmentMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "visit-balance-adjustment-mapping-resource" ],
+        "summary" : "Deletes all visit balance adjustment mappings",
+        "description" : "Deletes all visit balance adjustment mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "deleteAllMappings",
+        "responses" : {
+          "204" : {
+            "description" : "All mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/visit-balance" : {
       "post" : {
         "tags" : [ "visit-balance-mapping-resource" ],
         "summary" : "Creates a prisoner visit balance mapping",
         "description" : "Creates a prisoner visit balance mapping. Requires ROLE_NOMIS_VISIT_BALANCE",
-        "operationId" : "createMapping_2",
+        "operationId" : "createMapping_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1229,7 +1315,7 @@
         "tags" : [ "visit-balance-mapping-resource" ],
         "summary" : "Deletes all prisoner visit order balance mappings",
         "description" : "Deletes all prisoner visit order balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_VISIT_BALANCE",
-        "operationId" : "deleteAllMappings",
+        "operationId" : "deleteAllMappings_1",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -1299,7 +1385,7 @@
         "tags" : [ "sentencing-mapping-resource" ],
         "summary" : "Creates a new sentence adjustment mapping",
         "description" : "Creates a mapping between nomis sentence adjustment ids and Sentencing service id. Requires ROLE_NOMIS_SENTENCING",
-        "operationId" : "createMapping_3",
+        "operationId" : "createMapping_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1392,7 +1478,7 @@
         "tags" : [ "non-associations-mapping-resource" ],
         "summary" : "Creates a new Non-association mapping",
         "description" : "Creates a mapping between a Nomis non-association and non-association instance id. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId" : "createMapping_4",
+        "operationId" : "createMapping_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1475,7 +1561,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "Creates a new Location mapping",
         "description" : "Creates a mapping between a Nomis location id and a DPS location id. Requires role NOMIS_LOCATIONS",
-        "operationId" : "createMapping_5",
+        "operationId" : "createMapping_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1558,7 +1644,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "Creates a new Incident Report mapping",
         "description" : "Creates a mapping between a Nomis incident report id and DPS Incident report id. Requires role NOMIS_INCIDENTS",
-        "operationId" : "createMapping_6",
+        "operationId" : "createMapping_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1641,7 +1727,7 @@
         "tags" : [ "incentive-mapping-resource" ],
         "summary" : "Creates a new incentive mapping",
         "description" : "Creates a mapping between nomis Incentive ids and Incentive service id. Requires ROLE_NOMIS_INCENTIVES",
-        "operationId" : "createMapping_7",
+        "operationId" : "createMapping_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1734,7 +1820,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "Creates a new hearing mapping",
         "description" : "Creates a record of a DPS hearing Id and a NOMIS hearing Id . Requires NOMIS_ADJUDICATIONS",
-        "operationId" : "createMapping_8",
+        "operationId" : "createMapping_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2114,7 +2200,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Deletes CSIP mappings.",
         "description" : "Deletes all rows from the csip mapping table. Requires role NOMIS_CSIP",
-        "operationId" : "deleteAllMappings_1",
+        "operationId" : "deleteAllMappings_2",
         "parameters" : [ {
           "name" : "onlyMigrated",
           "in" : "query",
@@ -2155,7 +2241,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Creates a new CSIP Report mapping",
         "description" : "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_CSIP",
-        "operationId" : "createMapping_9",
+        "operationId" : "createMapping_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2491,7 +2577,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Creates a new court case hierarchical mapping",
         "description" : "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId" : "createMapping_10",
+        "operationId" : "createMapping_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3944,7 +4030,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a new casenote mapping",
         "description" : "Creates a mapping between nomis casenote id and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId" : "createMapping_11",
+        "operationId" : "createMapping_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4029,7 +4115,7 @@
         "tags" : [ "appointment-mapping-resource" ],
         "summary" : "Creates a new appointment mapping",
         "description" : "Creates a mapping between nomis id and Appointment instance id. Requires NOMIS_APPOINTMENTS",
-        "operationId" : "createMapping_12",
+        "operationId" : "createMapping_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4083,7 +4169,7 @@
         "tags" : [ "allocation-migration-resource" ],
         "summary" : "Creates a new allocation migration mapping",
         "description" : "Creates a mapping between nomis allocation id and Actvities allocation id. Requires NOMIS_ACTIVITIES",
-        "operationId" : "createMapping_13",
+        "operationId" : "createMapping_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4230,7 +4316,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a new alert mapping",
         "description" : "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "createMapping_14",
+        "operationId" : "createMapping_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4282,7 +4368,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes all alert mappings",
         "description" : "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "deleteAllMappings_2",
+        "operationId" : "deleteAllMappings_3",
         "responses" : {
           "204" : {
             "description" : "Mappings deleted",
@@ -4425,7 +4511,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "Creates a new adjudication mapping",
         "description" : "Creates a record of a adjudication number. Requires NOMIS_ADJUDICATIONS",
-        "operationId" : "createMapping_15",
+        "operationId" : "createMapping_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4469,7 +4555,7 @@
         "tags" : [ "activity-migration-resource" ],
         "summary" : "Creates a new activity migration mapping",
         "description" : "Creates a mapping between nomis id and up to 2 Activity service ids. Requires NOMIS_ACTIVITIES",
-        "operationId" : "createMapping_16",
+        "operationId" : "createMapping_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5186,6 +5272,178 @@
         "summary" : "Deletes Prisoner visit balance mapping",
         "description" : "Deletes Prisoner visit balance mapping by DPS id. Requires role NOMIS_VISIT_BALANCE",
         "operationId" : "deleteMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/visit-balance-adjustment/nomis-id/{nomisVisitBalanceAdjustmentId}" : {
+      "get" : {
+        "tags" : [ "visit-balance-adjustment-mapping-resource" ],
+        "summary" : "Get prisoner visit balance adjustment mapping by Nomis visit balance adjustment id",
+        "description" : "Retrieves the prisoner visit balance adjustment mapping by Nomis visit balance adjustment id. Requires role ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getMappingByNomisId_2",
+        "parameters" : [ {
+          "name" : "nomisVisitBalanceAdjustmentId",
+          "in" : "path",
+          "description" : "NOMIS visit balance adjustment id.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS visit balance adjustment id.",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit order balance mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitBalanceAdjustmentMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/visit-balance-adjustment/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "visit-balance-adjustment-mapping-resource" ],
+        "summary" : "Get visit balance adjustments mappings by DPS id",
+        "description" : "Retrieves a list of visit balance adjustment mappings by DPS id. Requires role ROLE_NOMIS_VISIT_BALANCE",
+        "operationId" : "getMappingsByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Visit balance adjustment mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VisitBalanceAdjustmentMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "visit-balance-adjustment-mapping-resource" ],
+        "summary" : "Deletes visit balance adjustment mappings",
+        "description" : "Deletes visit balance adjustment mappings by DPS id. Multiple rows may be deleted. Requires role NOMIS_VISIT_BALANCE",
+        "operationId" : "deleteMappingsByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -6088,7 +6346,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisIncidentId. Requires role NOMIS_INCIDENTS",
-        "operationId" : "getMappingByNomisId_2",
+        "operationId" : "getMappingByNomisId_3",
         "parameters" : [ {
           "name" : "nomisIncidentId",
           "in" : "path",
@@ -6739,7 +6997,7 @@
         "tags" : [ "csip-review-mapping-resource" ],
         "summary" : "get CSIP Review mapping",
         "description" : "Retrieves a CSIP Review mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_3",
+        "operationId" : "getMappingByNomisId_4",
         "parameters" : [ {
           "name" : "nomisCSIPReviewId",
           "in" : "path",
@@ -6888,7 +7146,7 @@
         "tags" : [ "csip-plan-mapping-resource" ],
         "summary" : "get CSIP Plan mapping",
         "description" : "Retrieves a CSIP Plan mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_4",
+        "operationId" : "getMappingByNomisId_5",
         "parameters" : [ {
           "name" : "nomisCSIPPlanId",
           "in" : "path",
@@ -7037,7 +7295,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisCSIPId. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_5",
+        "operationId" : "getMappingByNomisId_6",
         "parameters" : [ {
           "name" : "nomisCSIPId",
           "in" : "path",
@@ -7221,7 +7479,7 @@
         "tags" : [ "csip-interview-mapping-resource" ],
         "summary" : "get CSIP Interview mapping",
         "description" : "Retrieves a CSIP Interview mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_6",
+        "operationId" : "getMappingByNomisId_7",
         "parameters" : [ {
           "name" : "nomisCSIPInterviewId",
           "in" : "path",
@@ -7370,7 +7628,7 @@
         "tags" : [ "csip-factor-mapping-resource" ],
         "summary" : "get CSIP Factor mapping",
         "description" : "Retrieves a CSIP Factor mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_7",
+        "operationId" : "getMappingByNomisId_8",
         "parameters" : [ {
           "name" : "nomisCSIPFactorId",
           "in" : "path",
@@ -7623,7 +7881,7 @@
         "tags" : [ "csip-attendee-mapping-resource" ],
         "summary" : "get CSIP Attendee mapping",
         "description" : "Retrieves a CSIP Attendee mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_8",
+        "operationId" : "getMappingByNomisId_9",
         "parameters" : [ {
           "name" : "nomisCSIPAttendeeId",
           "in" : "path",
@@ -8414,7 +8672,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId" : "getMappingByNomisId_9",
+        "operationId" : "getMappingByNomisId_10",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -8611,6 +8869,50 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Deletes court appearance recall mappings",
+        "description" : "Deletes court appearance recall mappings by DPS recall id. Requires role NOMIS_COURT_SENTENCING",
+        "operationId" : "deleteCourtAppearanceRecallMappingByDpsId",
+        "parameters" : [ {
+          "name" : "recallId",
+          "in" : "path",
+          "description" : "DPS recall id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS recall id",
+            "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+          },
+          "example" : "f6ec6d17-a062-4272-9c21-1017b06d556c"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mappings Deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -12400,7 +12702,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_CASENOTES",
-        "operationId" : "getMappingByNomisId_10",
+        "operationId" : "getMappingByNomisId_11",
         "parameters" : [ {
           "name" : "caseNoteId",
           "in" : "path",
@@ -12552,7 +12854,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get multiple mappings",
         "description" : "Retrieves mappings by DPS id. In case of past merges, there could be > 1 nomis id per dps id. Requires role NOMIS_CASENOTES",
-        "operationId" : "getMappingsByDpsId",
+        "operationId" : "getMappingsByDpsId_1",
         "parameters" : [ {
           "name" : "dpsCaseNoteId",
           "in" : "path",
@@ -14575,7 +14877,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "delete all mappings",
         "description" : "Deletes all mappings, typically used before repeating a migration. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId" : "deleteAllMappings_3",
+        "operationId" : "deleteAllMappings_4",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -14655,7 +14957,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Deletes all corporate mappings",
         "description" : "Deletes all corporate mappings regardless of source. This includes corporate, phone, address, address phone, email, web. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "deleteAllMappings_4",
+        "operationId" : "deleteAllMappings_5",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -14689,7 +14991,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Deletes all core person mappings",
         "description" : "Deletes all core person mappings regardless of source. This includes person and address. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CORE_PERSON",
-        "operationId" : "deleteAllMappings_5",
+        "operationId" : "deleteAllMappings_6",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -14723,7 +15025,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Deletes all contact person mappings",
         "description" : "Deletes all contact person mappings regardless of source. This includes person, phone, address, email, employment, identifiers, restrictions, contacts and contact restrictions. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "deleteAllMappings_6",
+        "operationId" : "deleteAllMappings_7",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -14804,7 +15106,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes mapping by DPS id (there could be more than one nomis id if a merge has taken place). Requires role NOMIS_CASENOTES",
-        "operationId" : "deleteMappingsByDpsId",
+        "operationId" : "deleteMappingsByDpsId_1",
         "parameters" : [ {
           "name" : "dpsCaseNoteId",
           "in" : "path",
@@ -15446,6 +15748,39 @@
           }
         },
         "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
+      },
+      "VisitBalanceAdjustmentMappingDto" : {
+        "type" : "object",
+        "description" : "Prisoner Visit Order Balance mapping",
+        "properties" : {
+          "nomisVisitBalanceAdjustmentId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS Visit Balance adjustment ID"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS representation of the offender"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisVisitBalanceAdjustmentId" ]
       },
       "VisitBalanceMappingDto" : {
         "type" : "object",
@@ -17522,12 +17857,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17544,6 +17873,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17634,12 +17969,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17656,6 +17985,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17759,12 +18094,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17781,6 +18110,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17863,12 +18198,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17885,6 +18214,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -17963,12 +18298,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -17985,6 +18314,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -18009,12 +18344,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -18031,6 +18360,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -18083,12 +18418,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -18105,6 +18434,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -18151,12 +18486,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -18173,6 +18502,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
