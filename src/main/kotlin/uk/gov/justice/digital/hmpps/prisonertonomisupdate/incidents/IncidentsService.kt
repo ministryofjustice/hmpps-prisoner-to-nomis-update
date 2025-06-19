@@ -145,7 +145,6 @@ private fun Response.toNomisUpsertIncidentResponseRequest(incidentResponseSequen
   answerId = this.code!!.toLong(),
   comment = this.additionalInformation,
   responseDate = this.responseDate,
-  response = this.response,
   recordingUsername = this.recordedBy,
   sequence = incidentResponseSequence.value++,
 )
