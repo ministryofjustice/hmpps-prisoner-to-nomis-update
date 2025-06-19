@@ -41,7 +41,7 @@ get_auth_token() {
       -H 'Content-Type: application/json' \
       -H "Authorization: Basic $secret")
 
-    echo $(parse_curl_response response)
+    echo $(parse_curl_response "$response")
   }
 
   extract_token() {
@@ -49,7 +49,7 @@ get_auth_token() {
     echo -n $jwt | sed -n 's/.*"access_token": *"\([^"]*\)".*/\1/p'
   }
 
-  local secret=$(create_secret client_id client_secret)
-  local response=$(call_auth auth_host secret)
-  echo $(extract_token response)
+  local secret=$(create_secret "$client_id" "$client_secret")
+  local response=$(call_auth "$auth_host" "$secret")
+  echo $(extract_token "$response")
 }

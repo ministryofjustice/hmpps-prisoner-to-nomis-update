@@ -44,7 +44,7 @@ spec:
                     response=$(curl -s -w "\n%{http_code}" --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
                       -H "Authorization: Bearer $token")
 
-                    echo $(parse_curl_response response)
+                    echo $(parse_curl_response "$response")
                   }
 
                   # Main execution
