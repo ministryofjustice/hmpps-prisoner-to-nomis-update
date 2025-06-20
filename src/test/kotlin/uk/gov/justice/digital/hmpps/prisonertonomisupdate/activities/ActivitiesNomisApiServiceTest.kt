@@ -454,16 +454,16 @@ class ActivitiesNomisApiServiceTest {
   }
 
   @Nested
-  inner class GetServicePrisons {
+  inner class GetServiceAgencies {
 
     private fun jsonResponse() = """
       [
         {
-          "prisonId": "BXI",
+          "agencyId": "BXI",
           "name": "Brixton"
         },
         {
-          "prisonId": "MDI",
+          "agencyId": "MDI",
           "name": "Moorland"
         }
       ]
@@ -471,35 +471,35 @@ class ActivitiesNomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      nomisApi.stubGetServicePrisons("ACTIVITY", jsonResponse())
+      nomisApi.stubGetServiceAgencies("ACTIVITY", jsonResponse())
 
-      activitiesNomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServiceAgencies("ACTIVITY")
 
       nomisApi.verify(
-        getRequestedFor(urlEqualTo("/service-prisons/ACTIVITY"))
+        getRequestedFor(urlEqualTo("/agency-switches/ACTIVITY"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `should parse response`() = runTest {
-      nomisApi.stubGetServicePrisons("ACTIVITY", jsonResponse())
+      nomisApi.stubGetServiceAgencies("ACTIVITY", jsonResponse())
 
-      val response = activitiesNomisApiService.getServicePrisons("ACTIVITY")
+      val response = activitiesNomisApiService.getServiceAgencies("ACTIVITY")
 
       assertThat(response.size).isEqualTo(2)
-      assertThat(response[0].prisonId).isEqualTo("BXI")
+      assertThat(response[0].agencyId).isEqualTo("BXI")
       assertThat(response[0].name).isEqualTo("Brixton")
-      assertThat(response[1].prisonId).isEqualTo("MDI")
+      assertThat(response[1].agencyId).isEqualTo("MDI")
       assertThat(response[1].name).isEqualTo("Moorland")
     }
 
     @Test
     fun `should throw exception on error`() = runTest {
-      nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 400)
+      nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 400)
 
       assertThrows<BadRequest> {
-        activitiesNomisApiService.getServicePrisons("ACTIVITY")
+        activitiesNomisApiService.getServiceAgencies("ACTIVITY")
       }
     }
   }

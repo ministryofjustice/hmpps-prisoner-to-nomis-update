@@ -82,7 +82,7 @@ class VisitBalanceService(
     }
   }
 
-  suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isServicePrisonOnForPrisoner(
+  suspend fun isDpsInChargeOfVisitAllocation(nomisPrisonNumber: String): Boolean = nomisApiService.isAgencySwitchOnForPrisoner(
     serviceCode = VISIT_ALLOCATION_SERVICE,
     prisonNumber = nomisPrisonNumber,
   )

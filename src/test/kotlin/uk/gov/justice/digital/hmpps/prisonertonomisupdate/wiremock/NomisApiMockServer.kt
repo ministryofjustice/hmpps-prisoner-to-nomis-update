@@ -69,18 +69,18 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCheckServicePrisonForPrisoner(serviceCode: String = "VISIT_ALLOCATION", prisonNumber: String = "A1234BC") {
+  fun stubCheckAgencySwitchForPrisoner(serviceCode: String = "VISIT_ALLOCATION", prisonNumber: String = "A1234BC") {
     stubFor(
-      get(urlPathEqualTo("/service-prisons/$serviceCode/prisoner/$prisonNumber")).willReturn(
+      get(urlPathEqualTo("/agency-switches/$serviceCode/prisoner/$prisonNumber")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NO_CONTENT.value()),
       ),
     )
   }
-  fun stubCheckServicePrisonForPrisonerNotFound(serviceCode: String = "VISIT_ALLOCATION", prisonNumber: String = "A1234BC") {
+  fun stubCheckAgencySwitchForPrisonerNotFound(serviceCode: String = "VISIT_ALLOCATION", prisonNumber: String = "A1234BC") {
     stubFor(
-      get(urlPathEqualTo("/service-prisons/$serviceCode/prisoner/$prisonNumber")).willReturn(
+      get(urlPathEqualTo("/agency-switches/$serviceCode/prisoner/$prisonNumber")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NOT_FOUND.value()),
@@ -424,9 +424,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetServicePrisons(serviceCode: String, response: String) {
+  fun stubGetServiceAgencies(serviceCode: String, response: String) {
     stubFor(
-      get("/service-prisons/$serviceCode")
+      get("/agency-switches/$serviceCode")
         .willReturn(
           aResponse()
             .withHeader("Content-type", "application/json")
@@ -436,9 +436,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetServicePrisonsWithError(serviceCode: String, status: Int = 500) {
+  fun stubGetServiceAgenciesWithError(serviceCode: String, status: Int = 500) {
     stubFor(
-      get("/service-prisons/$serviceCode")
+      get("/agency-switches/$serviceCode")
         .willReturn(
           aResponse()
             .withHeader("Content-type", "application/json")

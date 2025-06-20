@@ -26,11 +26,11 @@ class ActivitiesReconService(
 
   suspend fun allocationReconciliationReport() {
     val prisons = try {
-      activitiesNomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServiceAgencies("ACTIVITY")
         .also {
           telemetryClient.trackEvent(
             "activity-allocation-reconciliation-report-requested",
-            mapOf("prisons" to it.map { prison -> prison.prisonId }.toString()),
+            mapOf("prisons" to it.map { prison -> prison.agencyId }.toString()),
           )
         }
     } catch (e: Exception) {
@@ -38,7 +38,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { allocationsReconciliationReport(it.prisonId) } }
+    prisons.forEach { reportScope.launch { allocationsReconciliationReport(it.agencyId) } }
   }
 
   suspend fun allocationsReconciliationReport(prisonId: String) = try {
@@ -56,11 +56,11 @@ class ActivitiesReconService(
 
   suspend fun suspendedAllocationReconciliationReport() {
     val prisons = try {
-      activitiesNomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServiceAgencies("ACTIVITY")
         .also {
           telemetryClient.trackEvent(
             "activity-suspended-allocation-reconciliation-report-requested",
-            mapOf("prisons" to it.map { prison -> prison.prisonId }.toString()),
+            mapOf("prisons" to it.map { prison -> prison.agencyId }.toString()),
           )
         }
     } catch (e: Exception) {
@@ -68,7 +68,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { suspendedAllocationsReconciliationReport(it.prisonId) } }
+    prisons.forEach { reportScope.launch { suspendedAllocationsReconciliationReport(it.agencyId) } }
   }
 
   suspend fun suspendedAllocationsReconciliationReport(prisonId: String) = try {
@@ -86,11 +86,11 @@ class ActivitiesReconService(
 
   suspend fun attendanceReconciliationReport(date: LocalDate) {
     val prisons = try {
-      activitiesNomisApiService.getServicePrisons("ACTIVITY")
+      activitiesNomisApiService.getServiceAgencies("ACTIVITY")
         .also {
           telemetryClient.trackEvent(
             "activity-attendance-reconciliation-report-requested",
-            mapOf("prisons" to it.map { prison -> prison.prisonId }.toString(), "date" to "$date"),
+            mapOf("prisons" to it.map { prison -> prison.agencyId }.toString(), "date" to "$date"),
           )
         }
     } catch (e: Exception) {
@@ -98,7 +98,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { attendancesReconciliationReport(it.prisonId, date) } }
+    prisons.forEach { reportScope.launch { attendancesReconciliationReport(it.agencyId, date) } }
   }
 
   suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) = try {

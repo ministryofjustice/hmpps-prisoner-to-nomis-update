@@ -56,12 +56,12 @@ internal class NomisApiServiceTest {
   private lateinit var nomisApiService: NomisApiService
 
   @Nested
-  inner class IsServicePrisonOnForPrisoner {
+  inner class IsAgencySwitchOnForPrisoner {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      nomisApi.stubCheckServicePrisonForPrisoner()
+      nomisApi.stubCheckAgencySwitchForPrisoner()
 
-      nomisApiService.isServicePrisonOnForPrisoner(
+      nomisApiService.isAgencySwitchOnForPrisoner(
         serviceCode = "VISIT_ALLOCATION",
         prisonNumber = "A1234BC",
       )
@@ -72,23 +72,23 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    internal fun `will call the  service endpoint`() = runTest {
-      nomisApi.stubCheckServicePrisonForPrisoner()
+    internal fun `will call the service endpoint`() = runTest {
+      nomisApi.stubCheckAgencySwitchForPrisoner()
 
-      nomisApiService.isServicePrisonOnForPrisoner(
+      nomisApiService.isAgencySwitchOnForPrisoner(
         serviceCode = "VISIT_ALLOCATION",
         prisonNumber = "A1234BC",
       )
 
-      nomisApi.verify(getRequestedFor(urlPathEqualTo("/service-prisons/VISIT_ALLOCATION/prisoner/A1234BC")))
+      nomisApi.verify(getRequestedFor(urlPathEqualTo("/agency-switches/VISIT_ALLOCATION/prisoner/A1234BC")))
     }
 
     @Test
-    fun `will return true when service is on for prisoner's prison`() = runTest {
-      nomisApi.stubCheckServicePrisonForPrisoner()
+    fun `will return true when service is on for prisoner's agency`() = runTest {
+      nomisApi.stubCheckAgencySwitchForPrisoner()
 
       assertThat(
-        nomisApiService.isServicePrisonOnForPrisoner(
+        nomisApiService.isAgencySwitchOnForPrisoner(
           serviceCode = "VISIT_ALLOCATION",
           prisonNumber = "A1234BC",
         ),
@@ -96,10 +96,10 @@ internal class NomisApiServiceTest {
     }
 
     @Test
-    fun `will return false if exception thrown when service not on for prisoner's prison`() = runTest {
-      nomisApi.stubCheckServicePrisonForPrisonerNotFound()
+    fun `will return false if exception thrown when service not on for prisoner's agency`() = runTest {
+      nomisApi.stubCheckAgencySwitchForPrisonerNotFound()
       assertThat(
-        nomisApiService.isServicePrisonOnForPrisoner(
+        nomisApiService.isAgencySwitchOnForPrisoner(
           serviceCode = "VISIT_ALLOCATION",
           prisonNumber = "A1234BC",
         ),

@@ -49,7 +49,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = prisonNumber)
         sendVisitBalanceAdjustmentToQueue()
         waitForAnyProcessingToComplete()
       }
@@ -88,7 +88,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber = prisonNumber, vbAdjId = visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment()
         sendVisitBalanceAdjustmentToQueue()
@@ -134,7 +134,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(
           prisonNumber = prisonNumber,
           vbAdjId = visitBalanceAdjId,
@@ -169,7 +169,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(prisonNumber, visitBalanceAdjId)
         visitBalanceNomisApi.stubPostVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendVisitBalanceAdjustmentToQueue()
@@ -200,7 +200,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalanceAdjustment(status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendVisitBalanceAdjustmentToQueue()
         await untilCallTo {
@@ -238,8 +238,8 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = movedFromNomsNumber)
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedToNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = movedFromNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = movedToNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedToNomsNumber, voBalance = 4, pvoBalance = 5))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedToNomsNumber)
         sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
@@ -292,8 +292,8 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedFromNomsNumber)
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedToNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = movedFromNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = movedToNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedFromNomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedFromNomsNumber)
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedToNomsNumber)
@@ -351,7 +351,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedFromNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = movedFromNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = movedFromNomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = movedFromNomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
@@ -383,7 +383,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = movedFromNomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = movedFromNomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(movedFromNomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendBookingMovedEvent(bookingId, movedFromNomsNumber, movedToNomsNumber, bookingStartDateTime)
         await untilCallTo {
@@ -419,7 +419,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = nomsNumber)
         sendPrisonerReceivedEvent(nomsNumber)
         waitForAnyProcessingToComplete(times = 1)
       }
@@ -455,7 +455,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber)
         sendPrisonerReceivedEvent(nomsNumber)
@@ -496,7 +496,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendPrisonerReceivedEvent(nomsNumber)
@@ -528,7 +528,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
         visitBalanceDpsApi.stubGetVisitBalance(nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
         sendPrisonerReceivedEvent(nomsNumber)
         await untilCallTo {
