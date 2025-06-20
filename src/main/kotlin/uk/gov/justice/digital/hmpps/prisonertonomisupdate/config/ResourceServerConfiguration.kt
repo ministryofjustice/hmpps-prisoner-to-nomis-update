@@ -10,12 +10,10 @@ class ResourceServerConfiguration {
   fun resourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     unauthorizedRequestPaths {
       addPaths = setOf(
-        "/queue-admin/retry-all-dlqs",
         "/incentives/reports/reconciliation",
         "/non-associations/reports/reconciliation",
         "/locations/reports/reconciliation",
         "/allocations/reports/reconciliation",
-        "/suspended-allocations/reports/reconciliation",
         "/attendances/reports/reconciliation",
         "/sentencing/reports/reconciliation",
         "/adjudications/reports/reconciliation",
@@ -23,7 +21,6 @@ class ResourceServerConfiguration {
         "/casenotes/reports/reconciliation",
         "/csip/reports/reconciliation",
         "/organisations/reports/reconciliation",
-        "/activities/mappings/unknown-mappings",
         "/contact-person/profile-details/reports/reconciliation",
         "/contact-person/prisoner-contact/reports/reconciliation",
         "/contact-person/person-contact/reports/reconciliation",

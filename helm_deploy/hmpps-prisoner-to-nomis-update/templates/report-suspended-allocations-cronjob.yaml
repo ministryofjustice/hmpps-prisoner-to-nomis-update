@@ -19,10 +19,37 @@ spec:
           containers:
             - name: report-suspended-allocations
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: hmpps-auth-token-requests
+                  mountPath: /bin/hmpps-auth-token-requests.sh
+                  readOnly: true
+                  subPath: hmpps-auth-token-requests.sh
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPOST http://hmpps-prisoner-to-nomis-update/suspended-allocations/reports/reconciliation
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/hmpps-auth-token-requests.sh
+
+                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
+
+                  suspended_allocations_reconciliation() {
+                    local token=$1
+
+                    response=$(curl -s -w "\n%{http_code}" --retry 2 -XPOST http://hmpps-prisoner-to-nomis-update/suspended-allocations/reports/reconciliation \
+                      -H "Authorization: Bearer $token")
+
+                    echo $(parse_curl_response "$response")
+                  }
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  suspended_allocations_reconciliation "$TOKEN"
+                  echo "Suspended allocation reconciliation report submitted successfully"
               securityContext:
                 capabilities:
                   drop:
@@ -31,4 +58,12 @@ spec:
                 allowPrivilegeEscalation: false
                 seccompProfile:
                   type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
+          volumes:
+            - name: hmpps-auth-token-requests
+              configMap:
+                name: hmpps-auth-token-requests-script
+                defaultMode: 0755

@@ -24,10 +24,6 @@ generic-service:
     annotations:
       nginx.ingress.kubernetes.io/server-snippet: |
         server_tokens off;
-        location /queue-admin/retry-all-dlqs {
-          deny all;
-          return 401;
-        }
         location /incentives/reports/reconciliation {
           deny all;
           return 401;
@@ -41,10 +37,6 @@ generic-service:
           return 401;
         }
         location /allocations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /suspended-allocations/reports/reconciliation {
           deny all;
           return 401;
         }
@@ -65,10 +57,6 @@ generic-service:
           return 401;
         }
         location /casenotes/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /activities/mappings/unknown-mappings {
           deny all;
           return 401;
         }
