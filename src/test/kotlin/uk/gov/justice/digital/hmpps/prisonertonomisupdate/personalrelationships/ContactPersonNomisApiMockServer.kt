@@ -336,6 +336,19 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubDeletePersonContact(
+    personId: Long = 123456,
+    contactId: Long = 7373737,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/persons/$personId/contact/$contactId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubCreatePersonAddress(
     personId: Long = 123456,
     response: CreatePersonAddressResponse = createPersonAddressResponse(),

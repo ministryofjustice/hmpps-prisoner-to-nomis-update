@@ -242,14 +242,26 @@ class ContactPersonService(
     val entityName = CONTACT.entityName
 
     val dpsPrisonerContactId = event.additionalInformation.prisonerContactId
+    val dpsContactId = event.contactId()
     val telemetryMap = mutableMapOf(
       "dpsPrisonerContactId" to dpsPrisonerContactId.toString(),
     )
 
     if (event.didOriginateInDPS()) {
-      telemetryClient.trackEvent("$entityName-delete-unsupported", telemetryMap)
-      // DPS doesn't currently allow this - if it ever does we would need to support it
-      throw IllegalStateException("Should not be able delete prisoner contact from DPS - if this is happening this needs to be supported by sync")
+      val nomisContactId = mappingApiService.getByDpsPrisonerContactId(dpsPrisonerContactId).nomisId.also {
+        telemetryMap["nomisContactId"] = it.toString()
+        telemetryMap["nomisPersonId"] = dpsContactId.toString()
+        telemetryMap["dpsContactId"] = dpsContactId.toString()
+      }
+      nomisApiService.deletePersonContact(
+        personId = dpsContactId,
+        contactId = nomisContactId,
+      )
+      telemetryClient.trackEvent(
+        "$entityName-delete-success",
+        telemetryMap,
+        null,
+      )
     } else {
       telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
     }

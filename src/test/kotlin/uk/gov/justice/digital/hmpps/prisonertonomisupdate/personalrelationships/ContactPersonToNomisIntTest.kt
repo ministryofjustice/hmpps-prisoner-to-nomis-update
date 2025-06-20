@@ -9,9 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
 import org.awaitility.kotlin.untilAsserted
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -25,7 +23,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnDLQQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
@@ -835,11 +832,11 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
     @Nested
     @DisplayName("when NOMIS is the origin of a Contact delete")
-    inner class WhenNomisUpdated {
+    inner class WhenNomisDeleted {
 
       @BeforeEach
       fun setUp() {
-        publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", source = "NOMIS")
+        publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", contactId = "213", source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -854,28 +851,39 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    @DisplayName("when DPS unexpectedly is the origin of a Prisoner Contact delete")
+    @DisplayName("when DPS is the origin of a Prisoner Contact delete")
     inner class WhenDpsDeleted {
+      private val nomisPersonIdAndDpsContactId = 54321L
+      private val nomisContactId = 974592L
+      private val dpsPrisonerContactId = 2751731L
+
       @BeforeEach
       fun setUp() {
-        publishDeletePrisonerContactDomainEvent(prisonerContactId = "12345", source = "DPS")
+        mappingApi.stubGetByDpsPrisonerContactId(dpsPrisonerContactId = dpsPrisonerContactId, PersonContactMappingDto(dpsId = dpsPrisonerContactId.toString(), nomisId = nomisContactId, mappingType = PersonContactMappingDto.MappingType.DPS_CREATED))
+        nomisApi.stubDeletePersonContact(personId = nomisPersonIdAndDpsContactId, contactId = nomisContactId)
+        publishDeletePrisonerContactDomainEvent(prisonerContactId = dpsPrisonerContactId.toString(), contactId = nomisPersonIdAndDpsContactId.toString(), source = "DPS")
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete the person contact in NOMIS`() {
+        nomisApi.verify(
+          deleteRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/contact/$nomisContactId")),
+        )
       }
 
       @Test
       fun `will send telemetry event showing the unsupported for each retry`() {
         verify(telemetryClient).trackEvent(
-          eq("contact-delete-unsupported"),
-          any(),
+          eq("contact-delete-success"),
+          check {
+            assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+            assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            assertThat(it).containsEntry("dpsPrisonerContactId", dpsPrisonerContactId.toString())
+            assertThat(it).containsEntry("nomisContactId", nomisContactId.toString())
+          },
           isNull(),
         )
-      }
-
-      @Test
-      fun `will add message to DLQ`() {
-        await untilCallTo {
-          personalRelationshipsQueue.countAllMessagesOnDLQQueue()
-        } matches { it == 1 }
       }
     }
   }
@@ -4413,9 +4421,9 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Suppress("SameParameterValue")
-  private fun publishDeletePrisonerContactDomainEvent(prisonerContactId: String, source: String = "DPS") {
+  private fun publishDeletePrisonerContactDomainEvent(contactId: String, prisonerContactId: String, source: String = "DPS") {
     with("contacts-api.prisoner-contact.deleted") {
-      publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, prisonerContactId = prisonerContactId, source = source))
+      publishDomainEvent(eventType = this, payload = prisonerContactMessagePayload(eventType = this, contactId = contactId, prisonerContactId = prisonerContactId, source = source))
     }
   }
 
