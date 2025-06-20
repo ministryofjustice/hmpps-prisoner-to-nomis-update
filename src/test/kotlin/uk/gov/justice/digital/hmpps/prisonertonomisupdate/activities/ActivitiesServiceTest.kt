@@ -378,6 +378,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       cancelled = false,
       attendances = listOf(),
       timeSlot = ScheduledInstance.TimeSlot.AM,
+      advanceAttendances = listOf(),
     ),
     ScheduledInstance(
       id = 2,
@@ -387,6 +388,7 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
       cancelled = false,
       attendances = listOf(),
       timeSlot = ScheduledInstance.TimeSlot.AM,
+      advanceAttendances = listOf(),
     ),
   ),
   allocations = emptyList(),

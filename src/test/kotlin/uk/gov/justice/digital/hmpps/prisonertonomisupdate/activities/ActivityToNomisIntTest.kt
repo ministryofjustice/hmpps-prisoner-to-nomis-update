@@ -521,7 +521,8 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
       "attendances": [],
-      "timeSlot": "AM"
+      "timeSlot": "AM",
+      "advanceAttendances": []
     },
     {
       "id": ${SCHEDULE_INSTANCE_ID + 1},
@@ -532,7 +533,8 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
       "attendances": [],
-      "timeSlot": "PM"
+      "timeSlot": "PM",
+      "advanceAttendances": []
     }
   ],
   "allocations": [],
@@ -630,7 +632,8 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
       "cancelledTime": "2023-01-13T09:38:26.092Z",
       "cancelledBy": "Adam Smith",
       "attendances": [],
-      "timeSlot": "PM"
+      "timeSlot": "PM",
+      "advanceAttendances": []
     }
   ],
   "allocations": [],
