@@ -22,13 +22,15 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.util.UUID
 
 class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
-  private lateinit var nomisApi: IncidentsNomisApiMockServer
+  private lateinit var incidentsNomisApi: IncidentsNomisApiMockServer
 
+  private val nomisApi = NomisApiExtension.Companion.nomisApi
   private val dpsApi = IncidentsDpsApiExtension.Companion.incidentsDpsApi
 
   @Nested
@@ -105,7 +107,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 id = dpsId,
               ),
             )
-            nomisApi.stubUpsertIncident(nomisId)
+            incidentsNomisApi.stubUpsertIncident(nomisId)
             publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -138,12 +140,12 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `will create the incident in NOMIS`() {
-            nomisApi.verify(putRequestedFor(urlEqualTo("/incidents/$nomisId")))
+            incidentsNomisApi.verify(putRequestedFor(urlEqualTo("/incidents/$nomisId")))
           }
 
           @Test
           fun `the created incident will contain details of the DPS incident`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("location", "ASI")
                 .withRequestBodyJsonPath("statusCode", "AWAN")
@@ -158,7 +160,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the DPS amendment`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("descriptionAmendments[0].text", "There was an amendment")
                 .withRequestBodyJsonPath("descriptionAmendments[0].firstName", "Dave")
@@ -169,7 +171,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the DPS correction request`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
                 .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
@@ -181,7 +183,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the DPS prisoners involved`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
                 .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
@@ -197,7 +199,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the DPS staff involved`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
                 .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
@@ -208,7 +210,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the questions`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("questions[0].questionId", "1234")
                 .withRequestBodyJsonPath("questions[1].questionId", "12345")
@@ -218,7 +220,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the created incident will contain details of the responses`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("questions[0].questionId", "1234")
                 .withRequestBodyJsonPath("questions[0].responses[0].answerId", "123")
@@ -300,6 +302,44 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      @DisplayName("when the incident location from DPS is to be ignored")
+      inner class WhenAgencyLocationNotEnabled {
+        private val dpsId = UUID.randomUUID()
+        private val nomisId = 12345L
+
+        @BeforeEach
+        fun setUp() {
+          dpsApi.stubGetIncident(
+            dpsIncident().copy(
+              id = dpsId,
+              status = Status.AWAITING_REVIEW,
+            ),
+          )
+          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
+          publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the ignore`() {
+          verify(telemetryClient).trackEvent(
+            eq("incident-upsert-location-ignored"),
+            check {
+              assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
+              assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+              assertThat(it).containsEntry("location", "ASI")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get incident details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/incident-reports/$dpsId/with-details")))
+        }
+      }
+
+      @Nested
       @DisplayName("when DPS is the origin of an incident update")
       inner class WhenDpsUpdated {
         @Nested
@@ -315,7 +355,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 id = dpsId,
               ),
             )
-            nomisApi.stubUpsertIncident(incidentId = nomisId)
+            incidentsNomisApi.stubUpsertIncident(incidentId = nomisId)
             publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -348,12 +388,12 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `will update the incident in NOMIS`() {
-            nomisApi.verify(putRequestedFor(urlEqualTo("/incidents/$nomisId")))
+            incidentsNomisApi.verify(putRequestedFor(urlEqualTo("/incidents/$nomisId")))
           }
 
           @Test
           fun `the updated incident will contain details of the DPS incident`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("location", "ASI")
                 .withRequestBodyJsonPath("statusCode", "AWAN")
@@ -368,7 +408,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the updated incident will contain details of the DPS correction request`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
                 .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
@@ -380,7 +420,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the updated incident will contain details of the DPS prisoners involved`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
                 .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
@@ -396,7 +436,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the updated incident will contain details of the DPS staff involved`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
                 .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
@@ -407,7 +447,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the updated incident will contain details of the questions`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("questions[0].questionId", "1234")
                 .withRequestBodyJsonPath("questions[1].questionId", "12345")
@@ -417,7 +457,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `the updated incident will contain details of the responses`() {
-            nomisApi.verify(
+            incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("questions[0].questionId", "1234")
                 .withRequestBodyJsonPath("questions[0].responses[0].answerId", "123")
@@ -477,7 +517,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @BeforeEach
           fun setUp() {
-            nomisApi.stubDeleteIncident(nomisId)
+            incidentsNomisApi.stubDeleteIncident(nomisId)
             publishDeleteIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -505,7 +545,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
           @Test
           fun `will delete the incident in NOMIS`() {
-            nomisApi.verify(deleteRequestedFor(urlEqualTo("/incidents/$nomisId")))
+            incidentsNomisApi.verify(deleteRequestedFor(urlEqualTo("/incidents/$nomisId")))
           }
         }
       }

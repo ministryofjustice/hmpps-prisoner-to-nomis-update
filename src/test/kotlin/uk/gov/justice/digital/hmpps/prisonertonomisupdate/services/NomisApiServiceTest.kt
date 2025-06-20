@@ -108,6 +108,58 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class IsAgencySwitchOnForAgency {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubCheckAgencySwitchForAgency()
+
+      nomisApiService.isAgencySwitchOnForAgency(
+        serviceCode = "VISIT_ALLOCATION",
+        agencyId = "MDI",
+      )
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will call the service endpoint`() = runTest {
+      nomisApi.stubCheckAgencySwitchForAgency()
+
+      nomisApiService.isAgencySwitchOnForAgency(
+        serviceCode = "VISIT_ALLOCATION",
+        agencyId = "MDI",
+      )
+
+      nomisApi.verify(getRequestedFor(urlPathEqualTo("/agency-switches/VISIT_ALLOCATION/agency/MDI")))
+    }
+
+    @Test
+    fun `will return true when service is on for agency`() = runTest {
+      nomisApi.stubCheckAgencySwitchForAgency()
+
+      assertThat(
+        nomisApiService.isAgencySwitchOnForAgency(
+          serviceCode = "VISIT_ALLOCATION",
+          agencyId = "MDI",
+        ),
+      ).isTrue
+    }
+
+    @Test
+    fun `will return false if exception thrown when service not on for agency`() = runTest {
+      nomisApi.stubCheckAgencySwitchForAgencyNotFound()
+      assertThat(
+        nomisApiService.isAgencySwitchOnForAgency(
+          serviceCode = "VISIT_ALLOCATION",
+          agencyId = "MDI",
+        ),
+      ).isFalse
+    }
+  }
+
+  @Nested
   inner class CreateVisit {
 
     @Test
