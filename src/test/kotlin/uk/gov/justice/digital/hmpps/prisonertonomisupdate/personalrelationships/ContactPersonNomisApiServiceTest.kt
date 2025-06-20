@@ -201,6 +201,34 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class DeleteContactPerson {
+    private val personId = 17171L
+    private val contactId = 9233L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePersonContact(personId, contactId)
+
+      apiService.deletePersonContact(personId, contactId)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call delete endpoint`() = runTest {
+      mockServer.stubDeletePersonContact(personId, contactId)
+
+      apiService.deletePersonContact(personId, contactId)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/persons/$personId/contact/$contactId")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreatePersonAddress {
     @Test
     fun `will pass oath2 token to service`() = runTest {

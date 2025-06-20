@@ -96,6 +96,17 @@ class ContactPersonNomisApiService(
       .awaitBodilessEntity()
   }
 
+  suspend fun deletePersonContact(personId: Long, contactId: Long) {
+    webClient.delete()
+      .uri(
+        "/persons/{personId}/contact/{contactId}",
+        personId,
+        contactId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
   suspend fun createPersonAddress(personId: Long, request: CreatePersonAddressRequest): CreatePersonAddressResponse = webClient.post()
     .uri(
       "/persons/{personId}/address",
