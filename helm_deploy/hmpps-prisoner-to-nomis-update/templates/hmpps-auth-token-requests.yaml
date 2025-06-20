@@ -1,9 +1,0 @@
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: hmpps-auth-token-requests-script
-  labels:
-    {{- include "app.labels" . | nindent 4 }}
-data:
-  hmpps-auth-token-requests.sh: |-
-{{ .Files.Get "hmpps-auth-token-requests.sh" | indent 4 }}

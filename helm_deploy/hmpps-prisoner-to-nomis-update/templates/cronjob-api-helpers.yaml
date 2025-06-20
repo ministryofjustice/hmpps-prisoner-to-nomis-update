@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cronjob-api-helpers-script
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+data:
+  cronjob-api-helpers.sh: |-
+{{ .Files.Get "cronjob-api-helpers.sh" | indent 4 }}
