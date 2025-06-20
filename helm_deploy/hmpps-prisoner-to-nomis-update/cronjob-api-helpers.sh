@@ -16,6 +16,24 @@ parse_curl_response() {
   echo "$http_body"
 }
 
+    call_api() {
+        if (( $# < 3 )); then
+          echo "Error: Missing required parameter(s)." >&2
+          echo "Usage: get_auth_token <auth_host> <client_id> <client_secret>" >&2
+          return 1
+        fi
+
+        local http_method=$1
+        local url=$2
+        local token=$3
+
+        response=$(curl -s -w "\n%{http_code}" --retry 2 -X "$http_method" "$url" \
+          -H "Authorization: Bearer $token")
+
+        echo $(parse_curl_response "$response")
+      }
+    }
+
 get_auth_token() {
   if (( $# < 3 )); then
     echo "Error: Missing required parameter(s)." >&2

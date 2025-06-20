@@ -415,11 +415,35 @@ class ActivityResourceIntTest : IntegrationTestBase() {
   @Nested
   inner class DeleteUnknownActivityMappings {
     @Test
+    fun `access forbidden when no authority`() {
+      webTestClient.delete().uri("/activities/mappings/unknown-mappings")
+        .exchange()
+        .expectStatus().isUnauthorized
+    }
+
+    @Test
+    fun `access forbidden when no role`() {
+      webTestClient.delete().uri("/activities/mappings/unknown-mappings")
+        .headers(setAuthorisation(roles = listOf()))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
+    fun `access forbidden with wrong role`() {
+      webTestClient.delete().uri("/activities/mappings/unknown-mappings")
+        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+        .exchange()
+        .expectStatus().isForbidden
+    }
+
+    @Test
     fun `should delete unknown mappings`() {
       nomisApi.stubGetMaxCourseScheduleId(100)
       mappingServer.stubDeleteMappingsGreaterThan(100)
 
       webTestClient.delete().uri("/activities/mappings/unknown-mappings")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW")))
         .exchange()
         .expectStatus().isOk
 
