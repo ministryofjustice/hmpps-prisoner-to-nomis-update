@@ -80,6 +80,11 @@ class NomisApiService(
     .retrieve()
     .awaitBodilessEntityAsTrueNotFoundAsFalse()
 
+  suspend fun isAgencySwitchOnForAgency(serviceCode: String, agencyId: String) = webClient.get()
+    .uri("/agency-switches/{serviceCode}/agency/{agencyId}", serviceCode, agencyId)
+    .retrieve()
+    .awaitBodilessEntityAsTrueNotFoundAsFalse()
+
   // ////////// VISITS //////////////
 
   suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto = webClient.post()

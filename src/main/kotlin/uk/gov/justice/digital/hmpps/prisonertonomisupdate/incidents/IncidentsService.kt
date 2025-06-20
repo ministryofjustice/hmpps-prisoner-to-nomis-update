@@ -19,10 +19,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertOffenderPartyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertStaffPartyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
 @Service
 class IncidentsService(
-  private val nomisApiService: IncidentsNomisApiService,
+  private val incidentsNomisApiService: IncidentsNomisApiService,
+  private val nomisApiService: NomisApiService,
   private val dpsApiService: IncidentsDpsApiService,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -38,11 +40,15 @@ class IncidentsService(
     if (event.didOriginateInDPS()) {
       try {
         val dps = dpsApiService.getIncident(dpsId)
-        nomisApiService.upsertIncident(
-          nomisId = nomisId,
-          dps.toNomisUpsertRequest(),
-        )
-        telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
+        if (nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
+          incidentsNomisApiService.upsertIncident(
+            nomisId = nomisId,
+            dps.toNomisUpsertRequest(),
+          )
+          telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
+        } else {
+          telemetryClient.trackEvent("incident-upsert-location-ignored", telemetryMap + ("location" to dps.location))
+        }
       } catch (e: IncidentStatusIgnoredException) {
         telemetryClient.trackEvent("incident-upsert-status-ignored", telemetryMap + ("status" to e.status.value))
       }
@@ -59,7 +65,7 @@ class IncidentsService(
     )
 
     if (event.didOriginateInDPS()) {
-      nomisApiService.deleteIncident(nomisId = nomisId)
+      incidentsNomisApiService.deleteIncident(nomisId = nomisId)
       telemetryClient.trackEvent("incident-delete-success", telemetryMap)
     } else {
       telemetryClient.trackEvent("incident-delete-ignored", telemetryMap)

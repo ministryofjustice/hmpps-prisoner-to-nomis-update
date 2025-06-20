@@ -88,6 +88,25 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubCheckAgencySwitchForAgency(serviceCode: String = "VISIT_ALLOCATION", agencyId: String = "MDI") {
+    stubFor(
+      get(urlPathEqualTo("/agency-switches/$serviceCode/agency/$agencyId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+  fun stubCheckAgencySwitchForAgencyNotFound(serviceCode: String = "VISIT_ALLOCATION", agencyId: String = "MDI") {
+    stubFor(
+      get(urlPathEqualTo("/agency-switches/$serviceCode/agency/$agencyId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NOT_FOUND.value()),
+      ),
+    )
+  }
+
   // *************************************************** Visits **********************************************
 
   fun stubVisitCreate(prisonerId: String, response: String = CREATE_VISIT_RESPONSE) {
