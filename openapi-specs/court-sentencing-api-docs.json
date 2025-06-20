@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-18.13.a367943"
+    "version" : "2025-06-20.42.3bb8059"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3265,6 +3265,54 @@
         }
       }
     },
+    "/court-case/{courtCaseUuid}/count-numbers" : {
+      "get" : {
+        "tags" : [ "court-case-controller" ],
+        "summary" : "Retrieve count numbers for case",
+        "description" : "This endpoint will retrieve all unique count numbers for a case",
+        "operationId" : "getAllCountNumbers",
+        "parameters" : [ {
+          "name" : "courtCaseUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns all count numbers",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseCountNumbers"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseCountNumbers"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseCountNumbers"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/search" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
@@ -4133,7 +4181,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4424,7 +4472,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "courtCode" : {
             "type" : "string"
@@ -5607,7 +5655,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "courtCode" : {
             "type" : "string"
@@ -6011,7 +6059,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "charges" : {
             "type" : "array",
@@ -6034,7 +6082,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "courtId" : {
             "type" : "string"
@@ -6125,7 +6173,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6181,7 +6229,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "courtId" : {
             "type" : "string"
@@ -6276,6 +6324,28 @@
         },
         "required" : [ "draftUuid", "sessionBlob" ]
       },
+      "CourtCaseCountNumber" : {
+        "type" : "object",
+        "properties" : {
+          "countNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "countNumber" ]
+      },
+      "CourtCaseCountNumbers" : {
+        "type" : "object",
+        "properties" : {
+          "countNumbers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtCaseCountNumber"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "countNumbers" ]
+      },
       "Pageable" : {
         "type" : "object",
         "properties" : {
@@ -6308,12 +6378,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -6330,6 +6394,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -6394,12 +6464,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -6416,6 +6480,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -6620,7 +6690,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "14:48:38.682104514"
+            "example" : "07:24:46.276779642"
           },
           "courtCode" : {
             "type" : "string"
