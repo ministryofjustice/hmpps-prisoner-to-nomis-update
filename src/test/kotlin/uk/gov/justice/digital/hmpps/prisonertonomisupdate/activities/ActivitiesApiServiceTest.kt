@@ -76,7 +76,8 @@ internal class ActivitiesApiServiceTest {
                 "pieces": 0,
                 "attendanceHistory": []
               }
-            ]
+            ],
+            "advanceAttendances": []
           }
         ],
         "allocations": [
@@ -304,7 +305,8 @@ internal class ActivitiesApiServiceTest {
                   "pieces": 0,
                   "attendanceHistory": []
                 }
-              ]
+              ],
+              "advanceAttendances": []
             }
           ],
           "allocations": [

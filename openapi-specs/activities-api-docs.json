@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-22.27303.5495127"
+    "version" : "2025-06-19.28247.c5f840c"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -1446,7 +1446,7 @@
       "get" : {
         "tags" : [ "scheduled-event-controller" ],
         "summary" : "Get a list of scheduled events for a prison, prisoner, date range (max 3 months) and optional time slot.",
-        "description" : "\n      Returns scheduled events for the prison, prisoner, date range (max 3 months) and optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as active for appointments and/or activities.\n      (Intended usage: Prisoner calendar / schedule)\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n      Returns scheduled events for the prison, prisoner, date range (max 3 months) and optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as active for appointments and/or activities.\n      (Intended usage: Prisoner calendar / schedule)\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getScheduledEventsForSinglePrisoner",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -1548,7 +1548,7 @@
       "post" : {
         "tags" : [ "scheduled-event-controller" ],
         "summary" : "Get a list of scheduled events for a prison and list of prisoner numbers for a date and time slot",
-        "description" : "\n      Returns scheduled events for the prison, prisoner numbers, single date and an optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as rolled-out for activities and/or appointments.\n      (Intended usage: Unlock list)\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n      Returns scheduled events for the prison, prisoner numbers, single date and an optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as rolled-out for activities and/or appointments.\n      (Intended usage: Unlock list)\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getScheduledEventsForMultiplePrisoners",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -2752,7 +2752,7 @@
       "post" : {
         "tags" : [ "appointment-controller" ],
         "summary" : "Search for appointments within the specified prison",
-        "description" : "\n    Uses the supplied prison code and search parameters to filter and return appointment search results.\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n    Uses the supplied prison code and search parameters to filter and return appointment search results.\n    \n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "searchAppointments",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -4247,7 +4247,7 @@
       "get" : {
         "tags" : [ "activity-schedule-controller" ],
         "summary" : "Get an activity schedule by its id",
-        "description" : "Returns a single activity schedule by its unique identifier.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES",
+        "description" : "Returns a single activity schedule by its unique identifier.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getScheduleById",
         "parameters" : [ {
           "name" : "scheduleId",
@@ -5083,7 +5083,7 @@
       "get" : {
         "tags" : [ "prison-controller" ],
         "summary" : "Get a list of pay bands at a given prison",
-        "description" : "Returns the pay bands at a given prison or a default list of values if none present.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "Returns the pay bands at a given prison or a default list of values if none present.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getPrisonPayBands",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -5134,7 +5134,7 @@
       "get" : {
         "tags" : [ "prison-controller" ],
         "summary" : "Get list of activities running at a specified prison. Optionally and by default, only currently LIVE activities are returned",
-        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES_MANAGEMENT__RO",
+        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES_MANAGEMENT__RO\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getActivities",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -5201,7 +5201,7 @@
       "get" : {
         "tags" : [ "prison-controller" ],
         "summary" : "Get a prison regime by its code",
-        "description" : "Returns a single prison regime and its details by its unique prison code.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "Returns a single prison regime and its details by its unique prison code.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getPrisonRegimeByPrisonCode",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -5671,7 +5671,8 @@
           "schema" : {
             "type" : "integer",
             "format" : "int32",
-            "default" : 10
+            "default" : 10,
+            "exclusiveMinimum" : 0
           }
         }, {
           "name" : "sortDirection",
@@ -5926,7 +5927,7 @@
       "get" : {
         "tags" : [ "attendance-reason-controller" ],
         "summary" : "Get the list of attendance reasons",
-        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getAttendanceReasons",
         "responses" : {
           "200" : {
@@ -6732,7 +6733,7 @@
       "get" : {
         "tags" : [ "activity-controller" ],
         "summary" : "Get the capacity and number of allocated slots in an activity",
-        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getActivitySchedules",
         "parameters" : [ {
           "name" : "activityId",
@@ -6749,7 +6750,10 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ActivityScheduleLite"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ActivityScheduleLite"
+                  }
                 }
               }
             }
@@ -8462,8 +8466,7 @@
           },
           "internalLocation" : {
             "$ref" : "#/components/schemas/InternalLocation",
-            "description" : "The NOMIS internal location for this schedule",
-            "example" : 98877667
+            "description" : "The NOMIS internal location for this schedule"
           },
           "capacity" : {
             "type" : "integer",
@@ -8541,7 +8544,7 @@
           "daysOfWeek" : {
             "type" : "array",
             "description" : "The days of the week on which the schedule slot takes place",
-            "example" : "[Mon,Tue,Wed]",
+            "example" : "['Mon','Tue','Wed']",
             "items" : {
               "type" : "string"
             }
@@ -9575,13 +9578,15 @@
             "type" : "string",
             "description" : "The alternative text to use in place of the description e.g. Low, Medium, High",
             "example" : "Low",
-            "minLength" : 1
+            "maxLength" : 30,
+            "minLength" : 0
           },
           "description" : {
             "type" : "string",
             "description" : "The description of pay band in this prison",
             "example" : "Pay band 1",
-            "minLength" : 1
+            "maxLength" : 100,
+            "minLength" : 0
           },
           "nomisPayBand" : {
             "type" : "integer",
@@ -10246,6 +10251,11 @@
             "type" : "string",
             "format" : "date",
             "description" : "\n    The start date to match with the appointments. Will restrict the search results to appointments\n    that have the matching start date when this search parameter is supplied but no end date is supplied.\n    When an end date is also supplied, the search uses a date range and will restrict the search results to\n    appointments that have a start date within the date range.\n    "
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "\n    When an end date is supplied alongside the start date, the search uses a date range and will restrict the search results to\n    appointments that have a start date within the date range.\n    "
           },
           "timeSlots" : {
             "type" : "array",
@@ -11793,9 +11803,16 @@
             "items" : {
               "$ref" : "#/components/schemas/Attendance"
             }
+          },
+          "advanceAttendances" : {
+            "type" : "array",
+            "description" : "The list of advance attendances. payAmount and attendanceHistory will be null.",
+            "items" : {
+              "$ref" : "#/components/schemas/AdvanceAttendance"
+            }
           }
         },
-        "required" : [ "attendances", "cancelled", "date", "endTime", "id", "startTime", "timeSlot" ]
+        "required" : [ "advanceAttendances", "attendances", "cancelled", "date", "endTime", "id", "startTime", "timeSlot" ]
       },
       "Suspension" : {
         "type" : "object",
@@ -11862,7 +11879,8 @@
             "type" : "string",
             "description" : "The alternative text to use in place of the description e.g. Low, Medium, High",
             "example" : "Low",
-            "minLength" : 1
+            "maxLength" : 30,
+            "minLength" : 0
           }
         },
         "required" : [ "alias" ]
