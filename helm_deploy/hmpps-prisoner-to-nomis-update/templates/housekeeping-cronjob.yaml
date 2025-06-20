@@ -19,28 +19,10 @@ spec:
           containers:
             - name: housekeeping
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
-              volumeMounts:
-                - name: cronjob-api-helpers
-                  mountPath: /bin/cronjob-api-helpers.sh
-                  readOnly: true
-                  subPath: cronjob-api-helpers.sh
               args:
                 - /bin/sh
                 - -c
-                - |
-                  #!/bin/bash
-                  set -eu
-
-                  . /bin/cronjob-api-helpers.sh
-
-                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
-
-                  # Main execution
-                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
-                  echo "Access token retrieved from HMPPS Auth"
-
-                  call_api "PUT" "http://hmpps-prisoner-to-nomis-update/queue-admin/retry-all-dlqs" "$TOKEN"
-                  echo "DLQ retry completed successfully"
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/retry-all-dlqs
               securityContext:
                 capabilities:
                   drop:
@@ -49,12 +31,4 @@ spec:
                 allowPrivilegeEscalation: false
                 seccompProfile:
                   type: RuntimeDefault
-              envFrom:
-                - secretRef:
-                    name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
-          volumes:
-            - name: cronjob-api-helpers
-              configMap:
-                name: cronjob-api-helpers-script
-                defaultMode: 0755

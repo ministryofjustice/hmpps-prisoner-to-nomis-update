@@ -10,6 +10,7 @@ class ResourceServerConfiguration {
   fun resourceServerCustomizer() = ResourceServerConfigurationCustomizer {
     unauthorizedRequestPaths {
       addPaths = setOf(
+        "/queue-admin/retry-all-dlqs",
         "/incentives/reports/reconciliation",
         "/non-associations/reports/reconciliation",
         "/locations/reports/reconciliation",
