@@ -108,6 +108,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               ),
             )
             incidentsNomisApi.stubUpsertIncident(nomisId)
+            nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
             publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
@@ -283,6 +284,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               status = Status.DRAFT,
             ),
           )
+          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
           waitForAnyProcessingToComplete()
         }
@@ -315,7 +317,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               status = Status.AWAITING_REVIEW,
             ),
           )
-          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
+          nomisApi.stubCheckAgencySwitchForAgencyNotFound("INCIDENTS", "ASI")
           publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
           waitForAnyProcessingToComplete()
         }
@@ -356,6 +358,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               ),
             )
             incidentsNomisApi.stubUpsertIncident(incidentId = nomisId)
+            nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
             publishUpdateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
             waitForAnyProcessingToComplete()
           }
