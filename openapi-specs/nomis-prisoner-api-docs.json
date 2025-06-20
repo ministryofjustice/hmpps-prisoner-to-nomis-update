@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-19.130.1c488d0"
+    "version" : "2025-06-20.133.e37e55b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -7876,7 +7876,7 @@
     },
     "/service-prisons/{serviceCode}/prison/{prisonId}" : {
       "get" : {
-        "tags" : [ "service-agency-switches-resource" ],
+        "tags" : [ "service-prison-switches-resource" ],
         "summary" : "Returns if the service is switched on for the specified service code / prison id.",
         "description" : "Returns 204 if the service is switched on for the service code / prison id combination.\n    If the service is not switched on then 404 is returned.\n    This endpoint also takes into account the special `*ALL*` prison id - if the service code has a prison entry of\n    `*ALL*` then the service is deemed to be switched on for all prisons and will therefore return 204 irrespective of the\n    prison id that is passed in.\n    Requires role NOMIS_ACTIVITIES or ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "checkServicePrison",
@@ -7950,7 +7950,7 @@
         }
       },
       "post" : {
-        "tags" : [ "service-agency-switches-resource" ],
+        "tags" : [ "service-prison-switches-resource" ],
         "summary" : "Turn on a service for a prison",
         "description" : "Turn on a service for a prison. Requires role NOMIS_ACTIVITIES",
         "operationId" : "createServicePrison",
@@ -11307,6 +11307,156 @@
         }
       }
     },
+    "/agency-switches/{serviceCode}/agency/{agencyId}" : {
+      "get" : {
+        "tags" : [ "service-agency-switches-resource" ],
+        "summary" : "Returns if the service is switched on for the specified service code / agency id.",
+        "description" : "Returns 204 if the service is switched on for the service code / agency id combination.\n    If the service is not switched on then 404 is returned.\n    This endpoint also takes into account the special `*ALL*` agency id - if the service code has a agency entry of\n    `*ALL*` then the service is deemed to be switched on for all agencies and will therefore return 204 irrespective of the\n    agency id that is passed in.\n    Requires role NOMIS_ACTIVITIES or ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "checkServiceAgency",
+        "parameters" : [ {
+          "name" : "serviceCode",
+          "in" : "path",
+          "description" : "The code of the service from the EXTERNAL_SERVICES table",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The code of the service from the EXTERNAL_SERVICES table",
+            "example" : "ACTIVITY"
+          },
+          "example" : "ACTIVITY"
+        }, {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "The id of the agency",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The id of the agency",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Service is switched on for the service code and agency id."
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The service code does not exist or the service is not switched on for the agency.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "service-agency-switches-resource" ],
+        "summary" : "Turn on a service for a agency",
+        "description" : "Turn on a service for a agency. Requires role NOMIS_ACTIVITIES",
+        "operationId" : "createServiceAgency",
+        "parameters" : [ {
+          "name" : "serviceCode",
+          "in" : "path",
+          "description" : "The code of the service from the EXTERNAL_SERVICES table",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The code of the service from the EXTERNAL_SERVICES table",
+            "example" : "ACTIVITY"
+          },
+          "example" : "ACTIVITY"
+        }, {
+          "name" : "agencyId",
+          "in" : "path",
+          "description" : "The id of the agency",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The id of the agency",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "201" : {
+            "description" : "Created"
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_ACTIVITIES",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found, the service or agency do not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/adjudications/adjudication-number/{adjudicationNumber}/hearings" : {
       "post" : {
         "tags" : [ "adjudication-resource" ],
@@ -12337,7 +12487,7 @@
     },
     "/service-prisons/{serviceCode}" : {
       "get" : {
-        "tags" : [ "service-agency-switches-resource" ],
+        "tags" : [ "service-prison-switches-resource" ],
         "summary" : "Retrieve a list of prisons switched on for the service code",
         "description" : "Returns a list of prisons switched on for the service code.\n      A special prisonId of `*ALL*` is used to designate that the service is switched on for all prisons.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getServicePrisons",
@@ -12400,7 +12550,7 @@
     },
     "/service-prisons/{serviceCode}/prisoner/{prisonNumber}" : {
       "get" : {
-        "tags" : [ "service-agency-switches-resource" ],
+        "tags" : [ "service-prison-switches-resource" ],
         "summary" : "Check if a service is turned on for the prison relating to this prisoner",
         "description" : "Check if the prisoner's current prison is turned on for a service. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "checkServicePrisonForPrisoner",
@@ -17108,6 +17258,145 @@
           },
           "404" : {
             "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency-switches/{serviceCode}" : {
+      "get" : {
+        "tags" : [ "service-agency-switches-resource" ],
+        "summary" : "Retrieve a list of agencies switched on for the service code",
+        "description" : "Returns a list of agencies switched on for the service code.\n      A special agencyId of `*ALL*` is used to designate that the service is switched on for all agencies.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAgencySwitches",
+        "parameters" : [ {
+          "name" : "serviceCode",
+          "in" : "path",
+          "description" : "The code of the service from the EXTERNAL_SERVICES table",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The code of the service from the EXTERNAL_SERVICES table"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AgencyDetails"
+                  }
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agency-switches/{serviceCode}/prisoner/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "service-agency-switches-resource" ],
+        "summary" : "Check if a service is turned on for the prison relating to this prisoner",
+        "description" : "Check if the prisoner's current prison is turned on for a service. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "checkServicePrisonForPrisoner_1",
+        "parameters" : [ {
+          "name" : "serviceCode",
+          "in" : "path",
+          "description" : "The code of the service from the EXTERNAL_SERVICES table",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "The code of the service from the EXTERNAL_SERVICES table",
+            "example" : "ACTIVITY"
+          },
+          "example" : "ACTIVITY"
+        }, {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "Offender No AKA prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No AKA prisoner number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "OK"
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found, the service is not turned on for the prison",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23667,12 +23956,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -23689,6 +23972,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -23712,6 +24001,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -23722,9 +24014,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -23856,12 +24145,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -23878,6 +24161,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -24273,12 +24562,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -24295,6 +24578,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26231,12 +26520,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26253,6 +26536,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26295,12 +26584,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26317,6 +26600,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -26942,12 +27231,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -26964,6 +27247,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27098,12 +27387,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27120,6 +27403,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27319,12 +27608,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27341,6 +27624,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27835,12 +28124,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27857,6 +28140,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27945,12 +28234,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27967,6 +28250,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28076,12 +28365,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28098,6 +28381,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28382,12 +28671,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28404,6 +28687,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29143,12 +29432,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29165,6 +29448,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29440,12 +29729,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29463,6 +29746,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
@@ -29474,6 +29763,23 @@
             "type" : "boolean"
           }
         }
+      },
+      "AgencyDetails" : {
+        "type" : "object",
+        "description" : "A agency",
+        "properties" : {
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The agency code. Normally a prison, but can be any location e.g. a prisoner escort service area.",
+            "example" : "BXI"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The agency name",
+            "example" : "Brixton"
+          }
+        },
+        "required" : [ "agencyId", "name" ]
       },
       "AdjustmentIdResponse" : {
         "type" : "object",
@@ -29502,12 +29808,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29524,6 +29824,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29569,12 +29875,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29591,6 +29891,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29867,12 +30173,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29889,6 +30189,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",

@@ -150,7 +150,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     inner class ReportFailsDueToError {
       @Test
       fun `should publish error telemetry if fails to get prisons from NOMIS`() {
-        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 404)
+        nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
           .exchange()
@@ -249,8 +249,8 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     }
 
     private fun stubGetPrisons(vararg prisons: String) {
-      val prisonsResponse = prisons.map { """{ "prisonId": "$it", "name": "$it" }""" }
-      nomisApi.stubGetServicePrisons("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
+      val prisonsResponse = prisons.map { """{ "agencyId": "$it", "name": "$it" }""" }
+      nomisApi.stubGetServiceAgencies("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
     }
 
     private fun stubBookingCounts(prisonId: String, vararg bookingCounts: BookingDetailsStub) {
@@ -440,7 +440,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     inner class ReportFailsDueToError {
       @Test
       fun `should publish error telemetry if fails to get prisons from NOMIS`() {
-        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 404)
+        nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
           .exchange()
@@ -539,8 +539,8 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     }
 
     private fun stubGetPrisons(vararg prisons: String) {
-      val prisonsResponse = prisons.map { """{ "prisonId": "$it", "name": "$it" }""" }
-      nomisApi.stubGetServicePrisons("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
+      val prisonsResponse = prisons.map { """{ "agencyId": "$it", "name": "$it" }""" }
+      nomisApi.stubGetServiceAgencies("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
     }
 
     private fun stubBookingCounts(prisonId: String, vararg bookingCounts: BookingDetailsStub) {
@@ -700,7 +700,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
 
       @Test
       fun `should publish error telemetry if fails to get prisons from NOMIS`() {
-        nomisApi.stubGetServicePrisonsWithError("ACTIVITY", 404)
+        nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
           .exchange()
@@ -799,8 +799,8 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     }
 
     private fun stubGetPrisons(vararg prisons: String) {
-      val prisonsResponse = prisons.map { """{ "prisonId": "$it", "name": "$it" }""" }
-      nomisApi.stubGetServicePrisons("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
+      val prisonsResponse = prisons.map { """{ "agencyId": "$it", "name": "$it" }""" }
+      nomisApi.stubGetServiceAgencies("ACTIVITY", """ [ ${prisonsResponse.joinToString(",")} ] """)
     }
 
     private fun stubBookingCounts(prisonId: String, date: LocalDate, vararg bookingCounts: BookingDetailsStub) {

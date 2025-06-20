@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test
 import org.mockito.Mockito.eq
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -62,7 +61,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisoner(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
         visitBalanceDpsApi.stubGetVisitBalance()
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = prisonNumber)
 
@@ -74,7 +73,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `will perform VISIT_ALLOCATION service agency check`() {
-        nomisApi.verify(getRequestedFor(urlPathEqualTo("/service-prisons/VISIT_ALLOCATION/prisoner/$prisonNumber")))
+        nomisApi.verify(getRequestedFor(urlPathEqualTo("/agency-switches/VISIT_ALLOCATION/prisoner/$prisonNumber")))
       }
 
       @Test
@@ -110,7 +109,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckServicePrisonForPrisonerNotFound(prisonNumber = prisonNumber)
+        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = prisonNumber)
 
         webTestClient.post().uri("/prisoners/$prisonNumber/visit-balance/repair")
           .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
@@ -120,7 +119,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
 
       @Test
       fun `will perform VISIT_ALLOCATION service agency check`() {
-        nomisApi.verify(getRequestedFor(urlPathEqualTo("/service-prisons/VISIT_ALLOCATION/prisoner/$prisonNumber")))
+        nomisApi.verify(getRequestedFor(urlPathEqualTo("/agency-switches/VISIT_ALLOCATION/prisoner/$prisonNumber")))
       }
 
       @Test
