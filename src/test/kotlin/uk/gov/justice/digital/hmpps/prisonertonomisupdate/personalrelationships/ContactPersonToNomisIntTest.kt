@@ -841,7 +841,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will send telemetry event showing the delete`() {
+      fun `will send telemetry event showing the ignore`() {
         verify(telemetryClient).trackEvent(
           eq("contact-delete-ignored"),
           any(),
@@ -873,7 +873,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will send telemetry event showing the unsupported for each retry`() {
+      fun `will send telemetry event showing the delete success`() {
         verify(telemetryClient).trackEvent(
           eq("contact-delete-success"),
           check {
