@@ -20,6 +20,32 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
   @Nested
   inner class AllocationReconciliationReport {
     @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no authority`() {
+        webTestClient.post().uri("/allocations/reports/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+    }
+
+    @Nested
     inner class ReportRunsOk {
       @Test
       fun `should publish success telemetry if no differences`() {
@@ -27,6 +53,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -52,6 +79,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -80,6 +108,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -109,6 +138,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -153,6 +183,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().is5xxServerError
 
@@ -168,6 +199,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = null, dpsCount = 1))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -194,6 +226,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         activitiesApi.stubAllocationReconciliationWithError("BXI", 400)
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -221,6 +254,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -617,6 +651,32 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     private val today = LocalDate.now()
 
     @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no authority`() {
+        webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+    }
+
+    @Nested
     inner class ReportRunsOk {
       @Test
       fun `should publish success telemetry if no differences`() {
@@ -624,6 +684,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", today, BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -649,6 +710,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", today, BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -686,6 +748,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", today, BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -729,6 +792,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       @Test
       fun `should return bad request if no date`() {
         webTestClient.post().uri("/attendances/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isBadRequest
       }
@@ -738,6 +802,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().is5xxServerError
 
@@ -753,6 +818,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", today, BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = null, dpsCount = 1))
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -779,6 +845,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         activitiesApi.stubAttendanceReconciliationWithError("BXI", today, 400)
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -806,6 +873,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", today, BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/attendances/reports/reconciliation?date=$today")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 

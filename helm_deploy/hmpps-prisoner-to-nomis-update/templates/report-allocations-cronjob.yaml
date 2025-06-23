@@ -19,10 +19,28 @@ spec:
           containers:
             - name: report-allocations
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
               args:
                 - /bin/sh
                 - -c
-                - curl --retry 2 -XPOST http://hmpps-prisoner-to-nomis-update/allocations/reports/reconciliation
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/allocations/reports/reconciliation" "$TOKEN"
+                  echo "Allocation reconciliation report submitted successfully"
               securityContext:
                 capabilities:
                   drop:
@@ -31,4 +49,12 @@ spec:
                 allowPrivilegeEscalation: false
                 seccompProfile:
                   type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
