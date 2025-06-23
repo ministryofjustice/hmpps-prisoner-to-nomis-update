@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-20.42.3bb8059"
+    "version" : "2025-06-20.49.0cce52b"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2378,6 +2378,81 @@
         }
       }
     },
+    "/sentence-type/{sentenceTypeUuid}/is-still-valid" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Check the sentence type is still valid",
+        "description" : "This endpoint will determine if the sentence type is still valid with the age, conviction date, statuses, offence date parameters",
+        "operationId" : "sentenceTypeStillValid",
+        "parameters" : [ {
+          "name" : "sentenceTypeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        }, {
+          "name" : "age",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        }, {
+          "name" : "convictionDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "statuses",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "ACTIVE" ],
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVE", "INACTIVE" ]
+            }
+          }
+        }, {
+          "name" : "offenceDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns whether the sentence type is still valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeIsValid"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeIsValid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sentence-type/uuid/multiple" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -4181,7 +4256,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4472,7 +4547,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "courtCode" : {
             "type" : "string"
@@ -5316,6 +5391,15 @@
         },
         "required" : [ "sentences" ]
       },
+      "SentenceTypeIsValid" : {
+        "type" : "object",
+        "properties" : {
+          "isStillValid" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "isStillValid" ]
+      },
       "Recall" : {
         "type" : "object",
         "properties" : {
@@ -5655,7 +5739,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "courtCode" : {
             "type" : "string"
@@ -6059,7 +6143,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "charges" : {
             "type" : "array",
@@ -6082,7 +6166,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "courtId" : {
             "type" : "string"
@@ -6173,7 +6257,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6229,7 +6313,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "courtId" : {
             "type" : "string"
@@ -6378,6 +6462,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -6394,12 +6484,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -6427,12 +6511,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -6464,6 +6548,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -6480,12 +6570,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -6690,7 +6774,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:46.276779642"
+            "example" : "16:47:08.279268768"
           },
           "courtCode" : {
             "type" : "string"
