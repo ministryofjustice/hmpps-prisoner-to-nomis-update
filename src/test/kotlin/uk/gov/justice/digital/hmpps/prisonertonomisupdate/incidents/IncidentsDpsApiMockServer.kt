@@ -149,10 +149,11 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       changedBy = "JSMITH",
       questions = listOf(
         HistoricalQuestion(
-          code = "HQ1",
+          code = "998",
           question = "Were tools involved?",
           responses = listOf(
             HistoricalResponse(
+              code = "123",
               response = "Yes",
               sequence = 1,
               recordedBy = "Fred Jones",
@@ -162,6 +163,20 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           ),
           additionalInformation = "some info",
           sequence = 1,
+        ),
+        HistoricalQuestion(
+          code = "999",
+          question = "Was paper involved?",
+          responses = listOf(
+            HistoricalResponse(
+              code = "456",
+              response = "Yes",
+              sequence = 1,
+              recordedBy = "Fred Jones",
+              recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+            ),
+          ),
+          sequence = 2,
         ),
       ),
     ),

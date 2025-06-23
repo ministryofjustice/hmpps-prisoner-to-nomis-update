@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Type
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement.StaffRole
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.History.Type as HistoryType
 
 internal fun Type.mapDps(): String = when (this) {
   Type.ABSCOND_1 -> "ABSCOND"
@@ -54,6 +55,58 @@ internal fun Type.mapDps(): String = when (this) {
   Type.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
   Type.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
   Type.TOOL_LOSS_1 -> "TOOL_LOSS"
+}
+
+// This is a duplicate mapping of above. In incident reporting it is one enum, but gets converted into two different
+// ones when imported from the json :shrug:
+internal fun HistoryType.mapDps(): String = when (this) {
+  HistoryType.ABSCOND_1 -> "ABSCOND"
+  HistoryType.ASSAULT_1 -> "ASSAULT"
+  HistoryType.ASSAULT_2 -> "ASSAULTS"
+  HistoryType.ASSAULT_3 -> "ASSAULTS1"
+  HistoryType.ASSAULT_4 -> "ASSAULTS2"
+  HistoryType.ASSAULT_5 -> "ASSAULTS3"
+  HistoryType.ATTEMPTED_ESCAPE_FROM_PRISON_1 -> "ATT_ESCAPE"
+  HistoryType.ATTEMPTED_ESCAPE_FROM_ESCORT_1 -> "ATT_ESC_E"
+  HistoryType.BARRICADE_1 -> "BARRICADE"
+  HistoryType.BOMB_1 -> "BOMB"
+  HistoryType.BREACH_OF_SECURITY_1 -> "BREACH"
+  HistoryType.CLOSE_DOWN_SEARCH_1 -> "CLOSE_DOWN"
+  HistoryType.CONCERTED_INDISCIPLINE_1 -> "CON_INDISC"
+  HistoryType.DAMAGE_1 -> "DAMAGE"
+  HistoryType.DEATH_PRISONER_1 -> "DEATH"
+  HistoryType.DEATH_OTHER_1 -> "DEATH_NI"
+  HistoryType.DISORDER_1 -> "DISORDER"
+  HistoryType.DISORDER_2 -> "DISORDER1"
+  HistoryType.DRONE_SIGHTING_1 -> "DRONE"
+  HistoryType.DRONE_SIGHTING_2 -> "DRONE1"
+  HistoryType.DRONE_SIGHTING_3 -> "DRONE2"
+  HistoryType.DRUGS_1 -> "DRUGS"
+  HistoryType.ESCAPE_FROM_PRISON_1 -> "ESCAPE_EST"
+  HistoryType.ESCAPE_FROM_ESCORT_1 -> "ESCAPE_ESC"
+  HistoryType.FIND_1 -> "FINDS"
+  HistoryType.FIND_2 -> "FIND"
+  HistoryType.FIND_3 -> "FIND1"
+  HistoryType.FIND_4 -> "FIND0322"
+  HistoryType.FIND_5 -> "FINDS1"
+  HistoryType.FIND_6 -> "FIND0422"
+  HistoryType.FIRE_1 -> "FIRE"
+  HistoryType.FIREARM_1 -> "FIREARM_ETC"
+  HistoryType.FOOD_REFUSAL_1 -> "FOOD_REF"
+  HistoryType.HOSTAGE_1 -> "HOSTAGE"
+  HistoryType.INCIDENT_AT_HEIGHT_1 -> "ROOF_CLIMB"
+  HistoryType.KEY_OR_LOCK_1 -> "KEY_LOCK"
+  HistoryType.KEY_OR_LOCK_2 -> "KEY_LOCKNEW"
+  HistoryType.MISCELLANEOUS_1 -> "MISC"
+  HistoryType.MOBILE_PHONE_1 -> "MOBILES"
+  HistoryType.RADIO_COMPROMISE_1 -> "RADIO_COMP"
+  HistoryType.RELEASE_IN_ERROR_1 -> "REL_ERROR"
+  HistoryType.SELF_HARM_1 -> "SELF_HARM"
+  HistoryType.TEMPORARY_RELEASE_FAILURE_1 -> "TRF"
+  HistoryType.TEMPORARY_RELEASE_FAILURE_2 -> "TRF1"
+  HistoryType.TEMPORARY_RELEASE_FAILURE_3 -> "TRF2"
+  HistoryType.TEMPORARY_RELEASE_FAILURE_4 -> "TRF3"
+  HistoryType.TOOL_LOSS_1 -> "TOOL_LOSS"
 }
 
 internal fun Status.mapDps(): String = when (this) {
