@@ -28,6 +28,7 @@ class IncidentsNomisApiMockServer {
       staffParties = listOf(),
       offenderParties = listOf(),
       questions = listOf(),
+      history = listOf(),
     )
   }
 

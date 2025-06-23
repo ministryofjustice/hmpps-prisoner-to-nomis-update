@@ -242,6 +242,28 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBody(matchingJsonPath("questions[1].responses[1].responseDate", absent())),
             )
           }
+
+          @Test
+          fun `the created incident will contain details of the history`() {
+            nomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("history[0].typeCode", "ABSCOND")
+                .withRequestBodyJsonPath("history[0].incidentChangeDateTime", "2021-07-05T10:35:17")
+                .withRequestBodyJsonPath("history[0].incidentChangeUsername", "JSMITH")
+                .withRequestBodyJsonPath("history[0].questions[0].questionId", "998")
+                .withRequestBodyJsonPath("history[0].questions[0].responses[0].answerId", "123")
+                .withRequestBodyJsonPath("history[0].questions[0].responses[0].sequence", 0)
+                .withRequestBodyJsonPath("history[0].questions[0].responses[0].recordingUsername", "Fred Jones")
+                .withRequestBodyJsonPath("history[0].questions[0].responses[0].comment", "more info")
+                .withRequestBody(matchingJsonPath("history[0].questions[0].responses[0].responseDate", absent()))
+                .withRequestBodyJsonPath("history[0].questions[1].questionId", "999")
+                .withRequestBodyJsonPath("history[0].questions[1].responses[0].answerId", "456")
+                .withRequestBodyJsonPath("history[0].questions[1].responses[0].sequence", 1)
+                .withRequestBodyJsonPath("history[0].questions[1].responses[0].recordingUsername", "Fred Jones")
+                .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].comment", absent()))
+                .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].responseDate", absent())),
+            )
+          }
         }
       }
     }

@@ -5,6 +5,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.History
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.PrisonerInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Question
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
@@ -12,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Report
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Response
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertDescriptionAmendmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentHistoryRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentQuestionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertIncidentRequirementRequest
@@ -109,6 +113,7 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest {
     // only interested in staff that are actually in NOMIS
     staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
     questions = this.questions.map { it.toNomisUpsertIncidentQuestionRequest(sequence) },
+    history = this.history.map { it.toNomisUpsertIncidentHistoryRequest() },
   )
 }
 
@@ -147,6 +152,11 @@ private fun Question.toNomisUpsertIncidentQuestionRequest(incidentResponseSequen
   responses = this.responses.map { it.toNomisUpsertIncidentResponseRequest(incidentResponseSequence) },
 )
 
+private fun HistoricalQuestion.toNomisUpsertIncidentQuestionRequest(incidentResponseSequence: IncidentResponseSequence): UpsertIncidentQuestionRequest = UpsertIncidentQuestionRequest(
+  questionId = this.code.toLong(),
+  responses = this.responses.map { it.toNomisUpsertIncidentResponseRequest(incidentResponseSequence) },
+)
+
 private fun Response.toNomisUpsertIncidentResponseRequest(incidentResponseSequence: IncidentResponseSequence): UpsertIncidentResponseRequest = UpsertIncidentResponseRequest(
   answerId = this.code!!.toLong(),
   comment = this.additionalInformation,
@@ -154,5 +164,23 @@ private fun Response.toNomisUpsertIncidentResponseRequest(incidentResponseSequen
   recordingUsername = this.recordedBy,
   sequence = incidentResponseSequence.value++,
 )
+
+private fun HistoricalResponse.toNomisUpsertIncidentResponseRequest(incidentResponseSequence: IncidentResponseSequence): UpsertIncidentResponseRequest = UpsertIncidentResponseRequest(
+  answerId = this.code!!.toLong(),
+  comment = this.additionalInformation,
+  responseDate = this.responseDate,
+  recordingUsername = this.recordedBy,
+  sequence = incidentResponseSequence.value++,
+)
+
+private fun History.toNomisUpsertIncidentHistoryRequest(): UpsertIncidentHistoryRequest {
+  val sequence = IncidentResponseSequence(0)
+  return UpsertIncidentHistoryRequest(
+    typeCode = this.type.mapDps(),
+    incidentChangeDateTime = this.changedAt,
+    incidentChangeUsername = this.changedBy,
+    questions = this.questions.map { it.toNomisUpsertIncidentQuestionRequest(sequence) },
+  )
+}
 
 class IncidentStatusIgnoredException(val status: Status) : Exception(status.value)
