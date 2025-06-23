@@ -44,10 +44,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /suspended-allocations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /attendances/reports/reconciliation {
           deny all;
           return 401;
@@ -65,10 +61,6 @@ generic-service:
           return 401;
         }
         location /casenotes/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /activities/mappings/unknown-mappings {
           deny all;
           return 401;
         }

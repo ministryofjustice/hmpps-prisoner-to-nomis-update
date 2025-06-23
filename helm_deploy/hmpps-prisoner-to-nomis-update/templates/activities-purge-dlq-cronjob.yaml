@@ -21,10 +21,10 @@ spec:
             - name: activities-purge-dlq
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               volumeMounts:
-                - name: hmpps-auth-token-requests
-                  mountPath: /bin/hmpps-auth-token-requests.sh
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
                   readOnly: true
-                  subPath: hmpps-auth-token-requests.sh
+                  subPath: cronjob-api-helpers.sh
               args:
                 - /bin/sh
                 - -c
@@ -32,26 +32,16 @@ spec:
                   #!/bin/bash
                   set -eu
 
-                  . /bin/hmpps-auth-token-requests.sh
+                  . /bin/cronjob-api-helpers.sh
 
                   AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
                   QUEUE_NAME="{{ .Values.cron.activitiesPurgeDlqQueueName }}"
-
-                  purge_queue() {
-                    local token=$1
-                    local queue_name=$2
-
-                    response=$(curl -s -w "\n%{http_code}" --retry 2 -XPUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$queue_name" \
-                      -H "Authorization: Bearer $token")
-
-                    echo $(parse_curl_response "$response")
-                  }
 
                   # Main execution
                   TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
                   echo "Access token retrieved from HMPPS Auth"
 
-                  purge_queue "$TOKEN" "$QUEUE_NAME"
+                  call_api PUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$QUEUE_NAME" "$TOKEN"
                   echo "Queue $QUEUE_NAME purge completed successfully"
               securityContext:
                 capabilities:
@@ -66,7 +56,7 @@ spec:
                     name: hmpps-prisoner-to-nomis-update
           restartPolicy: Never
           volumes:
-            - name: hmpps-auth-token-requests
+            - name: cronjob-api-helpers
               configMap:
-                name: hmpps-auth-token-requests-script
+                name: cronjob-api-helpers-script
                 defaultMode: 0755

@@ -289,6 +289,32 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
   @Nested
   inner class SuspendedAllocationReconciliationReport {
     @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no authority`() {
+        webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+    }
+
+    @Nested
     inner class ReportRunsOk {
       @Test
       fun `should publish success telemetry if no differences`() {
@@ -296,6 +322,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -321,6 +348,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -349,6 +377,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -370,6 +399,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         nomisApi.stubGetPrisonerDetails("[]")
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -399,6 +429,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2))
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -443,6 +474,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().is5xxServerError
 
@@ -458,6 +490,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         nomisApi.stubSuspendedAllocationReconciliationWithError("BXI", 500)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -484,6 +517,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         activitiesApi.stubSuspendedAllocationReconciliationWithError("BXI", 400)
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 
@@ -511,6 +545,7 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 1))
 
         webTestClient.post().uri("/suspended-allocations/reports/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
           .exchange()
           .expectStatus().isAccepted
 

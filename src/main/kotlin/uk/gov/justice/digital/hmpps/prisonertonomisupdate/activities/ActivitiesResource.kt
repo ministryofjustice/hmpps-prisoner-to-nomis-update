@@ -151,6 +151,7 @@ class ActivitiesResource(
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
 
+  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
   @PostMapping("/suspended-allocations/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun suspendedAllocationsReconciliation() = activitiesReconService.suspendedAllocationReconciliationReport()
@@ -166,6 +167,7 @@ class ActivitiesResource(
    *
    * When run after a preprod refresh of the mappings DB, this endpoint will remove any mappings that don't exist in NOMIS.
    */
+  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW')")
   @DeleteMapping("/activities/mappings/unknown-mappings")
   suspend fun deleteUnknownActivityMappings() = schedulesService.deleteUnknownMappings()
 
