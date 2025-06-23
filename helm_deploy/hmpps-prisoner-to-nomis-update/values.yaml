@@ -40,14 +40,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /allocations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /attendances/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /sentencing/reports/reconciliation {
           deny all;
           return 401;
@@ -69,10 +61,6 @@ generic-service:
           return 401;
         }
         location /organisations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /contact-person/profile-details/reports/reconciliation {
           deny all;
           return 401;
         }

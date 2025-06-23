@@ -147,6 +147,7 @@ class ActivitiesResource(
     attendanceService.upsertAttendance(attendanceId)
   }
 
+  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
   @PostMapping("/allocations/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
@@ -156,6 +157,7 @@ class ActivitiesResource(
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun suspendedAllocationsReconciliation() = activitiesReconService.suspendedAllocationReconciliationReport()
 
+  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
   @PostMapping("/attendances/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) = activitiesReconService.attendanceReconciliationReport(date)

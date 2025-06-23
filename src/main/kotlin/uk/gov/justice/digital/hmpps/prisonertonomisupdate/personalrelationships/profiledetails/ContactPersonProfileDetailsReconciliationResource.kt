@@ -5,6 +5,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
+import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
@@ -17,6 +18,7 @@ import kotlin.runCatching
 import kotlin.to
 
 @RestController
+@PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
 class ContactPersonProfileDetailsReconciliationResource(
   private val reconciliationService: ContactPersonProfileDetailsReconciliationService,
   private val nomisApiService: NomisApiService,
