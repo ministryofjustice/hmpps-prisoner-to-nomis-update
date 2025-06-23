@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.2.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "8.3.0-beta"
   kotlin("plugin.spring") version "2.1.21"
   id("org.openapi.generator") version "7.13.0"
 }
