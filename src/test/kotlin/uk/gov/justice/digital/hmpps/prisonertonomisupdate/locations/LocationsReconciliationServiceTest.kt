@@ -5,6 +5,7 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyMap
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
@@ -59,9 +60,17 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
-  fun `will report mismatch where locations have a different comment`() = runTest {
-    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse("comment1"))
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false)).thenReturn(dpsResponse(DPS_LOCATION_ID, "comment3"))
+  fun `will report mismatch where locations have a different sequence number`() = runTest {
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID)).thenReturn(nomisResponse(listSequence = 3))
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false)).thenReturn(dpsResponse(DPS_LOCATION_ID))
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(PARENT_NOMIS_LOCATION_ID))
+      .thenReturn(
+        LocationMappingDto(
+          dpsLocationId = PARENT_DPS_LOCATION_ID,
+          nomisLocationId = PARENT_NOMIS_LOCATION_ID,
+          mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+        ),
+      )
 
     assertThat(locationsReconciliationService.checkMatch(locationMappingDto))
       .isEqualTo(
@@ -77,7 +86,7 @@ class LocationsReconciliationServiceTest {
             operationalCapacity = 12,
             certified = true,
             cnaCapacity = 13,
-            comment = "comment1",
+            comment = null,
             active = true,
             attributes = 2,
             usages = 1,
@@ -92,7 +101,7 @@ class LocationsReconciliationServiceTest {
             operationalCapacity = 12,
             certified = true,
             cnaCapacity = 13,
-            comment = "comment3",
+            comment = null,
             active = true,
             attributes = 2,
             usages = 1,
@@ -177,7 +186,7 @@ class LocationsReconciliationServiceTest {
 
     verify(telemetryClient, times(1)).trackEvent(
       eq("locations-reports-reconciliation-retrieval-error"),
-      org.mockito.kotlin.check {
+      check {
         assertThat(it).containsEntry("nomis-location-id", "999")
       },
       isNull(),
@@ -189,7 +198,7 @@ class LocationsReconciliationServiceTest {
     )
   }
 
-  private fun nomisResponse(comment: String? = null) = LocationResponse(
+  private fun nomisResponse(listSequence: Int? = 4, comment: String? = null) = LocationResponse(
     locationId = NOMIS_LOCATION_ID,
     comment = comment,
     locationType = "LAND",
@@ -199,7 +208,7 @@ class LocationsReconciliationServiceTest {
     parentKey = "MDI-C",
     userDescription = "Wing C, landing 3",
     prisonId = "MDI",
-    listSequence = 4,
+    listSequence = listSequence,
     unitType = LocationResponse.UnitType.REC,
     capacity = 14,
     operationalCapacity = 12,
