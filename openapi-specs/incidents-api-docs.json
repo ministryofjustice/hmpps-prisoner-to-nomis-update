@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-18.6.52dca94"
+    "version" : "2025-06-23.13.24248f3"
   },
   "servers" : [ {
     "url" : "/",
@@ -6058,15 +6058,15 @@
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
           },
-          "nomisStatus" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
-          },
           "nomisType" : {
             "type" : "string",
             "deprecated" : true,
             "description" : "NOMIS incident report type code, which may be null for newer incident types"
+          },
+          "nomisStatus" : {
+            "type" : "string",
+            "deprecated" : true,
+            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
           },
           "prisonId" : {
             "type" : "string",
@@ -6680,17 +6680,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
