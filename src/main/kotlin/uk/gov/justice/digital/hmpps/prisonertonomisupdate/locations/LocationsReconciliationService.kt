@@ -10,7 +10,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.ChangeHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AmendmentResponse
@@ -19,8 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import java.time.format.DateTimeFormatter
-import java.util.*
 
 @Service
 class LocationsReconciliationService(
@@ -244,12 +241,8 @@ class LocationsReconciliationService(
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
     if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"
-    // There are 100s of key mismatches not counting BOX and POSI, general position is that we dont care.
-    // if (nomis.description != dps.key && nomis.locationType != "BOX" && nomis.locationType != "POSI") return "Location key mismatch: ${nomis.description} != ${dps.key}"
-    // IN DPS can be inactive if parent is inactive:  if (nomis.active != dps.active) return "Location active mismatch"
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"
-    if (nomis.comment != dps.comments) return "Comment mismatch"
     if (dps.residentialHousingType != null && dps.locationType == LegacyLocation.LocationType.CELL) {
       if (dps.residentialHousingType != LegacyLocation.ResidentialHousingType.HOLDING_CELL) {
         val oc = nomis.operationalCapacity // satisfy the finickety compiler
@@ -266,79 +259,9 @@ class LocationsReconciliationService(
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"
     }
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
-//    if (historyDoesNotMatch(nomis, dps)) {
-//      return "Location history mismatch:\n${reportHistory(nomis.amendments, dps.changeHistory)}"
-//    }
+    // There are 100s of key mismatches not counting BOX and POSI, general position is that we dont care.
+    // we also dont care about comment mismatches or location history mismatches
     return null
-  }
-
-  fun historyDoesNotMatch(nomis: LocationResponse, dps: LegacyLocation): Boolean {
-    val filteredAmendmentResponses = filterAmendmentResponses(nomis.amendments)
-    val filteredDpsHistoryResponses = dps.changeHistory?.filter { it.attribute != "Converted Cell Type" }
-    if ((filteredAmendmentResponses?.size ?: 0) != (filteredDpsHistoryResponses?.size ?: 0)) {
-      return true
-    }
-    val nomisListConverted = filteredAmendmentResponses?.map { a ->
-      ChangeHistory(
-        attribute = toHistoryAttribute(a.columnName),
-        amendedBy = a.amendedBy,
-        amendedDate = a.amendDateTime,
-        transactionId = UUID.fromString(a.oldValue),
-        transactionType = a.newValue?.let { ChangeHistory.TransactionType.valueOf(a.newValue!!) },
-      )
-    } ?: emptyList()
-    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
-    val dpsSetSorted = filteredDpsHistoryResponses?.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy } ?: emptyList()
-
-    if (dpsSetSorted.size > nomisSetSorted.size) {
-      return true
-    }
-
-    return nomisSetSorted.zip(dpsSetSorted)
-      .any { (nomisItem, dpsItem) ->
-        nomisItem.attribute != dpsItem.attribute ||
-          nomisItem.amendedBy != dpsItem.amendedBy ||
-          nomisItem.amendedDate != dpsItem.amendedDate
-      }
-  }
-
-  private fun reportHistory(nomisList: List<AmendmentResponse>?, dpsList: List<ChangeHistory>?): String {
-    val nomisListConverted = filterAmendmentResponses(nomisList)?.map { nomis ->
-      ChangeHistory(
-        attribute = toHistoryAttribute(nomis.columnName),
-        amendedBy = nomis.amendedBy,
-        amendedDate = nomis.amendDateTime,
-        transactionId = UUID.fromString(nomis.oldValue),
-        transactionType = nomis.newValue?.let { ChangeHistory.TransactionType.valueOf(nomis.newValue!!) },
-      )
-    } ?: emptyList()
-
-    val dpsListNonNull = dpsList ?: emptyList()
-    val onlyInDps = dpsListNonNull - nomisListConverted.toSet()
-    val onlyInNomis = nomisListConverted - dpsListNonNull.toSet()
-
-    if (onlyInDps.isNotEmpty() || onlyInNomis.isNotEmpty()) {
-      return """  Only in Dps: $onlyInDps
-          |  Only in Nomis: $onlyInNomis
-      """.trimMargin()
-    }
-
-    val nomisSetSorted = nomisListConverted.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
-    val dpsSetSorted = dpsListNonNull.sortedBy { it.amendedDate.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME) + it.attribute + it.amendedBy }
-
-    nomisSetSorted.zip(dpsSetSorted).forEachIndexed { index, (nomisItem, dpsItem) ->
-      if (nomisItem.attribute != dpsItem.attribute ||
-        nomisItem.amendedBy != dpsItem.amendedBy ||
-        nomisItem.amendedDate != dpsItem.amendedDate
-      ) {
-        return """Item at index $index doesn't match :
-            | prev  ${dpsSetSorted.elementAtOrNull(index - 1)}
-            | nomis $nomisItem
-            | dps   $dpsItem
-        """.trimMargin()
-      }
-    }
-    return ""
   }
 
   private fun expectedDpsAttributesSize(profiles: List<ProfileRequest>?) = (
@@ -376,51 +299,6 @@ class LocationsReconciliationService(
     ?.filterNot { it.columnName == "DESCRIPTION" }
     // eliminate duplicate entries with timestamps within same second (about 120)
     ?.toSet()
-
-  private fun toHistoryAttribute(columnName: String?): String = when (columnName) {
-    "Unit Type" -> "RESIDENTIAL_HOUSING_TYPE"
-    "Active" -> "ACTIVE"
-    "Living Unit Id" -> "CODE"
-    "Comments" -> "COMMENTS"
-    "Accommodation Type" -> "LOCATION_TYPE"
-    "Certified" -> "CERTIFIED"
-    "Description" -> "DESCRIPTION"
-    "Baseline CNA" -> "CERTIFIED_CAPACITY"
-    "Operational Capacity" -> "OPERATIONAL_CAPACITY"
-    "Deactivate Reason" -> "DEACTIVATED_REASON"
-    "Proposed Reactivate Date" -> "PROPOSED_REACTIVATION_DATE"
-    "Sequence" -> "ORDER_WITHIN_PARENT_LOCATION"
-    "Deactivate Date" -> "DEACTIVATED_DATE"
-    "Maximum Capacity" -> "CAPACITY"
-    null -> "ATTRIBUTES"
-    else -> throw IllegalArgumentException("Unknown history attribute column name $columnName")
-  }.let {
-    LocationAttribute.valueOf(it).description
-  }
-}
-
-// Copied from locations api
-enum class LocationAttribute(
-  val description: String,
-) {
-  CODE("Code"),
-  LOCATION_TYPE("Location Type"),
-  RESIDENTIAL_HOUSING_TYPE("Residential Housing Type"),
-  OPERATIONAL_CAPACITY("Working Capacity"),
-  CAPACITY("Max Capacity"),
-  CERTIFIED_CAPACITY("Baseline Certified Capacity"),
-  CERTIFIED("Certified"),
-  PARENT_LOCATION("Parent Location"),
-  ORDER_WITHIN_PARENT_LOCATION("Order within parent location"),
-  COMMENTS("Comments"),
-  DESCRIPTION("Local Name"),
-  ATTRIBUTES("Attributes"),
-  USAGE("Usage"),
-  NON_RESIDENTIAL_CAPACITY("Non Residential Capacity"),
-  ACTIVE("Active"),
-  DEACTIVATED_DATE("Deactivated Date"),
-  DEACTIVATED_REASON("Deactivated Reason"),
-  PROPOSED_REACTIVATION_DATE("Proposed Reactivation Date"),
 }
 
 data class LocationReportDetail(
