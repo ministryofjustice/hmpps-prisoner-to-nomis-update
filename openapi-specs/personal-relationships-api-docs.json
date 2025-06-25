@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-17.1954.05d417e"
+    "version" : "2025-06-24.2013.56f8057"
   },
   "servers" : [ {
     "url" : "/",
@@ -239,6 +239,188 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/prisoner-restriction/{prisonerRestrictionId}" : {
+      "get" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Returns the data for a prisoner restriction by id",
+        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to get the details for one prisoner restriction.\n      ",
+        "operationId" : "syncGetPrisonerRestrictionById",
+        "parameters" : [ {
+          "name" : "prisonerRestrictionId",
+          "in" : "path",
+          "description" : "The internal ID for a prisoner restriction.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Found the prisoner restriction",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncPrisonerRestriction"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prisoner restriction reference with that id could be found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Updates an existing prisoner restriction by internal ID",
+        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to update a prisoner restriction.\n      ",
+        "operationId" : "syncUpdatePrisonerRestriction",
+        "parameters" : [ {
+          "name" : "prisonerRestrictionId",
+          "in" : "path",
+          "description" : "The internal ID for the prisoner restriction.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncUpdatePrisonerRestrictionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated prisoner restriction",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncPrisonerRestriction"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request has invalid or missing fields",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prisoner restriction reference with that id could be found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncPrisonerRestriction"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Deletes one prisoner restriction by internal ID",
+        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to delete a prisoner restriction.\n      ",
+        "operationId" : "syncDeletePrisonerRestrictionById",
+        "parameters" : [ {
+          "name" : "prisonerRestrictionId",
+          "in" : "path",
+          "description" : "The internal ID for the prisoner restriction.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Successfully deleted prisoner restriction"
+          },
+          "404" : {
+            "description" : "No prisoner restriction reference with that id could be found"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
@@ -3815,6 +3997,66 @@
         }
       }
     },
+    "/sync/prisoner-restriction" : {
+      "post" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Creates a new prisoner restriction",
+        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to create a prisoner restriction.\n      ",
+        "operationId" : "syncCreatePrisonerRestriction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreatePrisonerRestrictionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Successfully created prisoner restriction",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncPrisonerRestriction"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request has invalid or missing fields",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/prisoner-contact" : {
       "post" : {
         "tags" : [ "Migrate and sync" ],
@@ -4634,6 +4876,76 @@
           },
           "404" : {
             "description" : "Could not find the the prisoner contact relationship this prisoner contact restriction is for",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/prisoner-restrictions" : {
+      "post" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Migrate restrictions for prisoner",
+        "description" : "Migrate a prisoner's restrictions from NOMIS.",
+        "operationId" : "migratePrisonerRestrictions",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigratePrisonerRestrictionsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The restrictions were migrated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestrictionsMigrationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find reference data for the supplied restriction type",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7243,6 +7555,135 @@
         },
         "required" : [ "active", "id" ]
       },
+      "SyncUpdatePrisonerRestrictionRequest" : {
+        "type" : "object",
+        "description" : "Request to update a prisoner restriction",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC",
+            "minLength" : 1
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the person who last updated the record",
+            "example" : "JDOE_ADM"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was last updated"
+          }
+        },
+        "required" : [ "authorisedUsername", "effectiveDate", "prisonerNumber", "restrictionType", "updatedBy" ]
+      },
+      "SyncPrisonerRestriction" : {
+        "type" : "object",
+        "description" : "Prisoner restriction sync response",
+        "properties" : {
+          "prisonerRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal ID for the prisoner restriction",
+            "example" : 12345
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed"
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the person who created the record",
+            "example" : "JSMITH_ADM"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was created"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the person who last updated the record",
+            "example" : "JDOE_ADM"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was last updated"
+          }
+        },
+        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType" ]
+      },
       "SyncUpdatePrisonerContactRequest" : {
         "type" : "object",
         "description" : "Request object to update prisoner contact details",
@@ -9568,6 +10009,66 @@
         },
         "required" : [ "contactAddressId", "contactAddressPhoneId", "contactId", "contactPhoneId", "createdBy", "createdTime", "phoneNumber", "phoneType", "phoneTypeDescription" ]
       },
+      "SyncCreatePrisonerRestrictionRequest" : {
+        "type" : "object",
+        "description" : "Request to create a prisoner restriction",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC",
+            "minLength" : 1
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the person who created the record",
+            "example" : "JSMITH_ADM",
+            "minLength" : 1
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was created"
+          }
+        },
+        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "restrictionType" ]
+      },
       "SyncCreatePrisonerContactRequest" : {
         "type" : "object",
         "description" : "Request object to create a prisoner contact details",
@@ -10601,6 +11102,110 @@
           }
         },
         "required" : [ "restrictionType", "startDate" ]
+      },
+      "MigratePrisonerRestrictionsRequest" : {
+        "type" : "object",
+        "description" : "Request to migrate a prisoner's restrictions",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "restrictions" : {
+            "type" : "array",
+            "description" : "Restriction records",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerRestrictionDetailsRequest"
+            },
+            "maxItems" : 2147483647,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "prisonerNumber", "restrictions" ]
+      },
+      "PrisonerRestrictionDetailsRequest" : {
+        "type" : "object",
+        "description" : "Details of a prisoner restriction record",
+        "properties" : {
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the person who created the record",
+            "example" : "JSMITH_ADM"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was created"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the person who last updated the record",
+            "example" : "JDOE_ADM"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was last updated"
+          }
+        },
+        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "restrictionType" ]
+      },
+      "PrisonerRestrictionsMigrationResponse" : {
+        "type" : "object",
+        "description" : "Response after migrating prisoner restrictions",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "prisonerRestrictionsIds" : {
+            "type" : "array",
+            "description" : "IDs of the migrated restriction records",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "prisonerNumber", "prisonerRestrictionsIds" ]
       },
       "MigratePrisonerNumberOfChildrenRequest" : {
         "type" : "object",
