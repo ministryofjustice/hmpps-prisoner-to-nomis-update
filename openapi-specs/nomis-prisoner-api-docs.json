@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-23.146.e1008fc"
+    "version" : "2025-06-24.159.290ca2f"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13611,6 +13611,64 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/restrictions" : {
+      "get" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Gets a prisoner's restrictions",
+        "description" : "Retrieves all restrictions across all bookings for a prisoner. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerWithRestrictions",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No aka prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No aka prisoner number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        }, {
+          "name" : "latest-booking-only",
+          "in" : "query",
+          "description" : "When true only return restrictions that related to latest booking",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          },
+          "example" : false
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Restrictions Information Returned",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/merges" : {
       "get" : {
         "tags" : [ "prisoners-resource" ],
@@ -14060,6 +14118,74 @@
           },
           "404" : {
             "description" : "Prisoner does not exist or has no bookings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/restrictions/ids" : {
+      "get" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Get all prisoner restriction Ids",
+        "description" : "Retrieves all restriction Ids - typically for a migration. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerRestrictionIds",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Filter results by restrictions that were created on or after the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2021-11-03"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Filter results by restrictions that were created on or before the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2021-11-03"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Page of restriction Ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagePrisonerRestrictionIdResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -24034,12 +24160,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -26541,6 +26667,63 @@
           }
         },
         "required" : [ "latestBookingAlerts" ]
+      },
+      "PagePrisonerRestrictionIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerRestrictionIdResponse"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "PrisonerRestrictionIdResponse" : {
+        "type" : "object",
+        "properties" : {
+          "restrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The restriction Id"
+          }
+        },
+        "required" : [ "restrictionId" ]
       },
       "PagePrisonerIds" : {
         "type" : "object",
