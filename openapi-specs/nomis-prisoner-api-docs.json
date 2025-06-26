@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-24.159.290ca2f"
+    "version" : "2025-06-25.161.8736aaa"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14129,6 +14129,65 @@
         }
       }
     },
+    "/prisoners/restrictions/{restrictionId}" : {
+      "get" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Get a prisoner restriction by ID",
+        "description" : "Retrieves a single restriction by its ID. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerRestriction",
+        "parameters" : [ {
+          "name" : "restrictionId",
+          "in" : "path",
+          "description" : "Restriction Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Restriction Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Restriction Information Returned",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Restriction not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/restrictions/ids" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -24160,9 +24219,6 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -24170,6 +24226,9 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
