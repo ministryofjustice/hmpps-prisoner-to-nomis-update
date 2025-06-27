@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-08.71.1d95ffe"
+    "version" : "2025-06-26.109.1150694"
   },
   "servers" : [ {
     "url" : "/",
@@ -4212,17 +4212,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "mailAddress", "noFixedAddress", "nomisAddressId", "phoneNumbers", "primaryAddress", "serviceAddress" ]
@@ -4243,17 +4251,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "email", "nomisEmailAddressId" ]
@@ -4283,17 +4299,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "nomisPhoneId", "number", "type" ]
@@ -4391,17 +4415,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "active", "addresses", "emailAddresses", "nomisCorporateId", "organisationName", "organisationTypes", "phoneNumbers", "webAddresses" ]
@@ -4416,17 +4448,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "type" ]
@@ -4447,17 +4487,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "nomisWebAddressId", "webAddress" ]
