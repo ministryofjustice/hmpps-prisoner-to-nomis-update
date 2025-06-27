@@ -11,19 +11,20 @@ class ResourceServerConfiguration {
     unauthorizedRequestPaths {
       addPaths = setOf(
         "/queue-admin/retry-all-dlqs",
-        "/incentives/reports/reconciliation",
-        "/non-associations/reports/reconciliation",
-        "/locations/reports/reconciliation",
-        "/sentencing/reports/reconciliation",
         "/adjudications/reports/reconciliation",
         "/alerts/reports/reconciliation",
         "/casenotes/reports/reconciliation",
-        "/csip/reports/reconciliation",
-        "/organisations/reports/reconciliation",
         "/contact-person/prisoner-contact/reports/reconciliation",
         "/contact-person/person-contact/reports/reconciliation",
-        "/visit-balance/reports/reconciliation",
         "/court-sentencing/court-cases/prisoner/reports/reconciliation",
+        "/csip/reports/reconciliation",
+        "/incentives/reports/reconciliation",
+        "/incidents/reports/reconciliation",
+        "/locations/reports/reconciliation",
+        "/non-associations/reports/reconciliation",
+        "/organisations/reports/reconciliation",
+        "/sentencing/reports/reconciliation",
+        "/visit-balance/reports/reconciliation",
       )
     }
   }

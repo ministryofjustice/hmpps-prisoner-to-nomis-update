@@ -72,6 +72,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /incidents/reports/reconciliation {
+          deny all;
+          return 401;
+        }
         location /visit-balance/reports/reconciliation {
           deny all;
           return 401;
@@ -225,3 +229,5 @@ cron:
   activitiesPurgeDlqSuspend: true
   activitiesTidyMappingsSchedule: "15 7 * * 1-5"
   contactPersonProfileDetailsReportSchedule: "30 3 * * *"
+  report_incidents:
+    suspend: false

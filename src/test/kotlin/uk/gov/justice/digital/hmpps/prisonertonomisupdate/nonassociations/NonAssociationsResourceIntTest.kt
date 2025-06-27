@@ -519,7 +519,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody().consumeWith(System.out::println)
+          .expectBody()
           .jsonPath("[0].id.offenderNo1").isEqualTo(prisonNumber1)
           .jsonPath("[0].id.offenderNo2").isEqualTo(prisonNumber2)
           .jsonPath("[0].nomisNonAssociation.type").isEqualTo("LAND")
