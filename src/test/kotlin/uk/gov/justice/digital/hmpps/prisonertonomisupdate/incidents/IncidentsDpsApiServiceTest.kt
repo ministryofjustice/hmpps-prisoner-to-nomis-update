@@ -4,14 +4,19 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -55,6 +60,83 @@ class IncidentsDpsApiServiceTest {
 
       assertThat(incident.id.toString()).isEqualTo(dpsIncidentId)
       assertThat(incident.title).isEqualTo("There was a problem")
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /incident-reports/reference/{nomisIncidentId}/with-details")
+  inner class GetIncidentDetailsByNomisId {
+    @BeforeEach
+    internal fun setUp() {
+      incidentsDpsApi.stubGetIncidentByNomisId(1234)
+
+      runBlocking {
+        apiService.getIncidentDetailsByNomisId(1234)
+      }
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() {
+      incidentsDpsApi.verify(
+        getRequestedFor(urlEqualTo("/incident-reports/reference/1234/with-details"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will retrieve incident data from the api`() {
+      runBlocking {
+        val incident = apiService.getIncidentDetailsByNomisId(1234)
+
+        with(incident) {
+          assertThat(id).isNotNull()
+          assertThat(reportReference).isEqualTo("1234")
+          assertThat(type).isEqualTo(ReportWithDetails.Type.ATTEMPTED_ESCAPE_FROM_ESCORT_1)
+          assertThat(incidentDateAndTime).isEqualTo("2021-07-05T10:35:17")
+          assertThat(prisonId).isEqualTo("ASI")
+          assertThat(title).isEqualTo("There was an incident in the exercise yard")
+          assertThat(description).isEqualTo("Fred and Jimmy were fighting outside.")
+          assertThat(reportedBy).isEqualTo("FSTAFF_GEN")
+          assertThat(reportedAt).isEqualTo("2021-07-07T10:35:17")
+          assertThat(status).isEqualTo(ReportWithDetails.Status.AWAITING_REVIEW)
+          assertThat(assignedTo).isEqualTo("BJONES")
+          assertThat(createdAt).isEqualTo("2021-07-05T10:35:17")
+          assertThat(modifiedAt).isEqualTo("2021-07-15T10:35:17")
+          assertThat(modifiedBy).isEqualTo("JSMITH")
+          assertThat(createdInNomis).isEqualTo(false)
+          assertThat(prisonersInvolved[0].prisonerNumber).isEqualTo("A1234BC")
+          assertThat(questions[0].question).isEqualTo("Was anybody hurt?")
+          assertThat(questions[0].responses[0].response).isEqualTo("Yes")
+        }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /incident-reports")
+  inner class GetIncidentsByAgencyAndStatus {
+    @BeforeEach
+    internal fun setUp() {
+      incidentsDpsApi.stubGetIncidentCounts(5, 5)
+
+      runBlocking {
+        apiService.getOpenIncidentsCount(agencyId = "ASI")
+      }
+    }
+
+    @Test
+    fun `should call api with OAuth2 token`() {
+      incidentsDpsApi.verify(
+        getRequestedFor(urlMatching("/incident-reports?.*"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will retrieve paged incidents from the api`() {
+      runBlocking {
+        assertThat(apiService.getOpenIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
+      }
     }
   }
 }

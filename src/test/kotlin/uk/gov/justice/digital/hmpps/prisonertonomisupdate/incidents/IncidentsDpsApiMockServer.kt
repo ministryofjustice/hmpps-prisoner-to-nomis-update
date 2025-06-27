@@ -2,15 +2,23 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.matching
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
+import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
@@ -18,13 +26,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Histor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.History
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.PrisonerInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Question
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportBasic
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Response
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.SimplePageReportBasic
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StatusHistory
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.math.min
 
 class IncidentsDpsApiExtension :
   BeforeAllCallback,
@@ -78,11 +89,89 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetIncidentByNomisId(nomisIncidentId: Long) {
+    stubFor(
+      get(urlMatching("/incident-reports/reference/$nomisIncidentId/with-details")).willReturn(
+        aResponse()
+          .withStatus(HttpStatus.OK.value())
+          .withHeader("Content-Type", APPLICATION_JSON_VALUE)
+          .withBody(dpsIncident().copy(reportReference = nomisIncidentId.toString())),
+      ),
+    )
+  }
+
+  fun stubGetIncidents(startIncidentId: Long, endIncidentId: Long) {
+    (startIncidentId..endIncidentId).forEach { nomisIncidentId ->
+      stubGetIncidentByNomisId(nomisIncidentId)
+    }
+  }
+  fun stubGetIncidentsWithError(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    stubFor(
+      get(urlPathMatching("/incident-reports"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(error),
+        ),
+    )
+  }
+
+  fun stubGetIncidentCounts(totalElements: Long = 3, pageSize: Long = 20, urlMatch: MappingBuilder = get(urlPathMatching("/incident-reports"))) {
+    val content: List<ReportBasic> = (1..min(pageSize, totalElements)).map {
+      dpsBasicIncident(dpsIncidentId = UUID.randomUUID().toString())
+    }
+    stubFor(
+      urlMatch
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              SimplePageReportBasic(
+                content = content,
+                number = 0,
+                propertySize = pageSize.toInt(),
+                totalElements = totalElements,
+                sort = listOf("incidentDateAndTime,DESC"),
+                numberOfElements = pageSize.toInt(),
+                totalPages = totalElements.toInt(),
+              ),
+            ),
+        ),
+    )
+  }
+  fun stubGetASIClosedIncidentCounts() = stubGetIncidentCounts(totalElements = 8, urlMatch = get(urlPathMatching("/incident-reports")).withQueryParam("prisonId", matching("ASI")).withQueryParam("status", matching("CLOSED")))
+
+  fun verifyGetIncidentCounts(times: Int = 1) = verify(exactly(times), getRequestedFor(urlPathMatching("/incident-reports")))
+
+  fun verifyGetIncidentDetail(times: Int = 1) = verify(exactly(times), getRequestedFor(urlMatching("/incident-reports/reference/[0-9]+/with-details")))
+
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
     this.withBody(IncidentsDpsApiExtension.objectMapper.writeValueAsString(body))
     return this
   }
 }
+
+fun dpsBasicIncident(dpsIncidentId: String = "fb4b2e91-91e7-457b-aa17-797f8c5c2f42", prisonId: String = "ASI") = ReportBasic(
+  id = UUID.fromString(dpsIncidentId),
+  reportReference = "1234",
+  type = ReportBasic.Type.SELF_HARM_1,
+  incidentDateAndTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  prisonId = prisonId,
+  location = prisonId,
+  title = "There was an incident in the exercise yard",
+  description = "Fred and Jimmy were fighting outside.",
+  reportedBy = "JSMITH",
+  reportedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+  status = ReportBasic.Status.DRAFT,
+  assignedTo = "BJONES",
+  createdAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+  modifiedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+  modifiedBy = "JSMITH",
+  createdInNomis = true,
+  lastModifiedInNomis = true,
+)
 
 fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   id = UUID.randomUUID(),
@@ -121,7 +210,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       code = "12345",
       question = "Where was the drone?",
       additionalInformation = null,
-      sequence = 1,
+      sequence = 2,
       responses = listOf(
         Response(
           code = "456",
@@ -129,7 +218,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           recordedBy = "JSMITH",
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
           additionalInformation = "some comment",
-          sequence = 1,
+          sequence = 2,
         ),
         Response(
           code = "789",
@@ -137,7 +226,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           recordedBy = "JSMITH",
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
           additionalInformation = "some additional comment",
-          sequence = 1,
+          sequence = 3,
         ),
       ),
     ),

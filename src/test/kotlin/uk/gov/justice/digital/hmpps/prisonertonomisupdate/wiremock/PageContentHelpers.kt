@@ -4,6 +4,20 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import kotlin.text.trimIndent
 
 fun pageContent(
+  content: String,
+  pageSize: Long,
+  pageNumber: Long,
+  totalElements: Long,
+  size: Int,
+) = pageContentWithContent(
+  outerContent = "[$content]",
+  pageSize = pageSize,
+  pageNumber = pageNumber,
+  totalElements = totalElements,
+  size = size,
+)
+
+fun pageContent(
   objectMapper: ObjectMapper,
   content: List<Any>,
   pageSize: Long,
