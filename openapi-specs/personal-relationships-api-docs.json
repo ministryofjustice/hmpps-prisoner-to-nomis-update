@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-24.2013.56f8057"
+    "version" : "2025-06-26.2044.2562cec"
   },
   "servers" : [ {
     "url" : "/",
@@ -4930,6 +4930,85 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonerRestrictionsMigrationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find reference data for the supplied restriction type",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/prisoner-restriction/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "Migrate and sync" ],
+        "summary" : "Migrate restriction for prisoner",
+        "description" : "Migrate a prisoner's restriction from NOMIS.",
+        "operationId" : "migratePrisonerRestrictions_1",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The internal ID for the prisoner in NOMIS.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigratePrisonerRestrictionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The restriction was migrated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestrictionMigrationResponse"
                 }
               }
             }
@@ -10785,17 +10864,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "active", "approvedVisitor", "contactId", "contactType", "currentTerm", "emergencyContact", "id", "nextOfKin", "prisonerNumber", "relationshipType", "restrictions" ]
@@ -10832,17 +10919,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "id", "restrictionType", "startDate" ]
@@ -11207,6 +11302,86 @@
         },
         "required" : [ "prisonerNumber", "prisonerRestrictionsIds" ]
       },
+      "MigratePrisonerRestrictionRequest" : {
+        "type" : "object",
+        "description" : "Request to migrate a prisoner's restriction",
+        "properties" : {
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the person who created the record",
+            "example" : "JSMITH_ADM"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was created"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the person who last updated the record",
+            "example" : "JDOE_ADM"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was last updated"
+          }
+        },
+        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "restrictionType" ]
+      },
+      "PrisonerRestrictionMigrationResponse" : {
+        "type" : "object",
+        "description" : "Response after migrating prisoner restriction",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "prisonerRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "ID of the migrated restriction record"
+          }
+        },
+        "required" : [ "prisonerNumber", "prisonerRestrictionId" ]
+      },
       "MigratePrisonerNumberOfChildrenRequest" : {
         "type" : "object",
         "description" : "Request to migrate a prisoner's number of children",
@@ -11459,17 +11634,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "addressId", "mailAddress", "noFixedAddress", "phoneNumbers", "primaryAddress", "validatedPAF" ]
@@ -11595,17 +11778,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "addresses", "contacts", "emailAddresses", "employments", "firstName", "identifiers", "interpreterRequired", "lastName", "personId", "phoneNumbers", "remitter", "restrictions", "staff" ]
@@ -11626,17 +11817,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "email", "emailAddressId" ]
@@ -11661,17 +11860,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "active", "corporate", "sequence" ]
@@ -11701,17 +11908,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "identifier", "sequence", "type" ]
@@ -11741,17 +11956,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "number", "phoneId", "type" ]
@@ -11788,17 +12011,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "id", "restrictionType", "startDate" ]
@@ -11871,17 +12102,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "active", "approvedVisitor", "contactType", "currentTerm", "emergencyContact", "id", "nextOfKin", "prisonerNumber", "relationshipType", "restrictions" ]
@@ -11918,17 +12157,25 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time"
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
           }
         },
         "required" : [ "effectiveDate", "id", "type" ]
