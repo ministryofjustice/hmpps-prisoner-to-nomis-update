@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import org.springframework.web.server.MissingRequestValueException
 import org.springframework.web.server.ServerWebInputException
 import reactor.core.publisher.Mono
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.NotFoundException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 
 @RestControllerAdvice
 class HmppsPrisonerToNomisUpdateExceptionHandler {
@@ -74,7 +74,7 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
   }
 
   @ExceptionHandler(NotFoundException::class)
-  fun handleNotFoundException(e: NotFoundException): ResponseEntity<ErrorResponse> {
+  fun handleNotFoundException(e: Exception): ResponseEntity<ErrorResponse?>? {
     log.info("Not Found: {}", e.message)
     return ResponseEntity
       .status(HttpStatus.NOT_FOUND)

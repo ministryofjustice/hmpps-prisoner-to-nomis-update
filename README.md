@@ -71,12 +71,6 @@ configuration two tasks are created:
 So, for example, running
 ```shell
 ./gradlew writeNonAssociationsJson compileKotlin compileTestKotlin
-./gradlew writeOrganisationsJson compileKotlin compileTestKotlin
-
-./gradlew writeNomisPrisonerJson compileKotlin compileTestKotlin
-./gradlew writeCSIPJson compileKotlin compileTestKotlin
-./gradlew writeVisitBalanceJson compileKotlin compileTestKotlin
-./gradlew buildVisitBalanceApiModel compileKotlin compileTestKotlin
 ```
 
 Will download the non associations Open API specification from dev, generate the model and then compile the code.
