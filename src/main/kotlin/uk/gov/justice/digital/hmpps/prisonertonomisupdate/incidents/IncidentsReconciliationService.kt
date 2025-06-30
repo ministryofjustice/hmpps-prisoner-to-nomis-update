@@ -24,7 +24,7 @@ class IncidentsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsIncidentsApiService: IncidentsDpsApiService,
   private val nomisIncidentsApiService: IncidentsNomisApiService,
-  @Value("\${reports.incidents.reconciliation.page-size}")
+  @Value("\${reports.incidents.reconciliation.page-size:20}")
   private val pageSize: Long = 20,
 ) {
   private companion object {
