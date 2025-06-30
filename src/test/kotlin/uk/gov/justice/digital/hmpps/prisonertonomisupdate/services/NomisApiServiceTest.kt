@@ -31,6 +31,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.OpenClosedStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.VisitType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.EvidenceToUpdateOrAdd
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ExistingHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.HearingResultAwardRequest
@@ -166,7 +169,7 @@ internal class NomisApiServiceTest {
     fun `should call nomis api with OAuth2 token`() = runTest {
       nomisApi.stubVisitCreate("AB123D")
 
-      nomisApiService.createVisit(newVisit())
+      nomisApiService.createVisit("AB123D", newVisit())
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
@@ -178,11 +181,11 @@ internal class NomisApiServiceTest {
     fun `will post visit data to nomis api`() = runTest {
       nomisApi.stubVisitCreate("AB123D")
 
-      nomisApiService.createVisit(newVisit(offenderNo = "AB123D"))
+      nomisApiService.createVisit("AB123D", newVisit())
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/AB123D/visits"))
-          .withRequestBody(matchingJsonPath("$.offenderNo", equalTo("AB123D"))),
+          .withRequestBody(matchingJsonPath("$.prisonId", equalTo("MDI"))),
       )
     }
 
@@ -191,7 +194,7 @@ internal class NomisApiServiceTest {
       nomisApi.stubVisitCreateWithError("AB123D", 404)
 
       assertThrows<NotFound> {
-        nomisApiService.createVisit(newVisit())
+        nomisApiService.createVisit("AB123D", newVisit())
       }
     }
 
@@ -200,7 +203,7 @@ internal class NomisApiServiceTest {
       nomisApi.stubVisitCreateWithError("AB123D", 503)
 
       assertThrows<ServiceUnavailable> {
-        nomisApiService.createVisit(newVisit())
+        nomisApiService.createVisit("AB123D", newVisit())
       }
     }
   }
@@ -1409,18 +1412,17 @@ internal class NomisApiServiceTest {
   }
 }
 
-fun newVisit(offenderNo: String = "AB123D"): CreateVisitDto = CreateVisitDto(
-  offenderNo = offenderNo,
+fun newVisit(): CreateVisitRequest = CreateVisitRequest(
   prisonId = "MDI",
   startDateTime = LocalDateTime.now(),
-  endTime = LocalTime.MIDNIGHT,
+  endTime = LocalTime.MIDNIGHT.toString(),
   visitorPersonIds = listOf(),
-  visitType = "SCON",
+  visitType = VisitType.SCON,
   issueDate = LocalDate.now(),
   visitComment = "VSIP ref: 123",
   visitOrderComment = "VO VSIP ref: 123",
   room = "Main visits room",
-  openClosedStatus = "CLOSED",
+  openClosedStatus = OpenClosedStatus.CLOSED,
 )
 
 fun cancelVisit(): CancelVisitDto = CancelVisitDto(offenderNo = "AB123D", nomisVisitId = "12", outcome = "VISCANC")

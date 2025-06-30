@@ -61,12 +61,12 @@ class VisitToNomisTest : SqsIntegrationTestBase() {
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/A32323Y/visits"))
-          .withRequestBody(matchingJsonPath("offenderNo", equalTo("A32323Y")))
           .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
           .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
           .withRequestBody(matchingJsonPath("room", equalTo("Main visits room")))
           .withRequestBody(matchingJsonPath("openClosedStatus", equalTo("OPEN")))
           .withRequestBody(matchingJsonPath("startDateTime", equalTo("2019-12-02T09:00:00")))
+          .withRequestBody(matchingJsonPath("endTime", equalTo("10:00")))
           .withRequestBody(matchingJsonPath("issueDate", equalTo("2021-03-05")))
           .withRequestBody(
             matchingJsonPath(

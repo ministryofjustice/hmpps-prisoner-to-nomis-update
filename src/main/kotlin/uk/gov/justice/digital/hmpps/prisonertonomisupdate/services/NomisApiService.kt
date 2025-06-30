@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultResponse
@@ -87,8 +88,8 @@ class NomisApiService(
 
   // ////////// VISITS //////////////
 
-  suspend fun createVisit(request: CreateVisitDto): CreateVisitResponseDto = webClient.post()
-    .uri("/prisoners/{offenderNo}/visits", request.offenderNo)
+  suspend fun createVisit(prisonerId: String, request: CreateVisitRequest): CreateVisitResponseDto = webClient.post()
+    .uri("/prisoners/{offenderNo}/visits", prisonerId)
     .bodyValue(request)
     .retrieve()
     .bodyToMono(CreateVisitResponseDto::class.java)
@@ -668,24 +669,6 @@ class NomisApiService(
     .retrieve()
     .awaitBody()
 }
-
-data class CreateVisitDto(
-  val offenderNo: String,
-  val prisonId: String,
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val startDateTime: LocalDateTime,
-  @JsonFormat(pattern = "HH:mm:ss")
-  val endTime: LocalTime,
-  val visitorPersonIds: List<Long>,
-  val decrementBalance: Boolean = true,
-  val visitType: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val issueDate: LocalDate,
-  val visitComment: String,
-  val visitOrderComment: String,
-  val room: String,
-  val openClosedStatus: String,
-)
 
 data class CancelVisitDto(
   val offenderNo: String,

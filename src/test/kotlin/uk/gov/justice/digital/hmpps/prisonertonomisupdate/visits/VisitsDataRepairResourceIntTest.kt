@@ -81,7 +81,6 @@ class VisitsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `will create visit and mappings`() {
         nomisApi.verify(
           postRequestedFor(urlEqualTo("/prisoners/$offenderNo/visits"))
-            .withRequestBody(matchingJsonPath("offenderNo", equalTo(offenderNo)))
             .withRequestBody(matchingJsonPath("prisonId", equalTo("MDI")))
             .withRequestBody(matchingJsonPath("visitType", equalTo("SCON")))
             .withRequestBody(matchingJsonPath("room", equalTo("Main visits room")))
