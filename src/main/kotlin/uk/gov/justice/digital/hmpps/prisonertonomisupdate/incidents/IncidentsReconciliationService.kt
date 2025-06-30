@@ -179,8 +179,8 @@ class IncidentsReconciliationService(
     if (nomis.reportingStaff.username != dps.reportedBy) return "Reporting Staff mismatch"
     if (nomis.offenderParties.size != dps.prisonersInvolved.size) return "Offender parties mismatch"
     if (nomis.staffParties.size != dps.staffInvolved.size) return "Staff parties mismatch"
-    if (nomis.type != dps.nomisType) return "type mismatch"
-    if (nomis.status.code != dps.nomisStatus) return "status mismatch"
+    if (nomis.type != dps.type.mapDps()) return "type mismatch"
+    if (nomis.status.code != dps.status.mapDps()) return "status mismatch"
     if (nomis.reportedDateTime != dps.reportedAt) return "reported date mismatch"
     val offendersDifference = nomis.offenderParties.map { it.offender.offenderNo }.compare(dps.prisonersInvolved.map { it.prisonerNumber })
     if (offendersDifference.isNotEmpty()) return "offender parties mismatch $offendersDifference"
@@ -247,8 +247,8 @@ fun IncidentResponse.toReportDetail() = IncidentReportDetail(
 )
 
 fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
-  nomisType,
-  nomisStatus,
+  type.mapDps(),
+  status.mapDps(),
   reportedBy,
   reportedAt,
   prisonersInvolved.map { it.prisonerNumber },
