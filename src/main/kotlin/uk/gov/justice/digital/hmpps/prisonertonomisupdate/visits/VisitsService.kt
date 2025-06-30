@@ -6,10 +6,12 @@ import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.OpenClosedStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.VisitType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService.CreateVisitDuplicateResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateVisitDto
@@ -60,24 +62,26 @@ class VisitsService(
 
           runCatching {
             nomisApiService.createVisit(
-              CreateVisitDto(
-                offenderNo = visit.prisonerId,
+              visit.prisonerId,
+              CreateVisitRequest(
                 prisonId = visit.prisonId,
                 startDateTime = visit.startTimestamp,
-                endTime = visit.endTimestamp.toLocalTime(),
+                endTime = visit.endTimestamp.toLocalTime().toString(),
                 visitorPersonIds = visit.visitors.map { it.nomisPersonId },
                 issueDate = visitBookedEvent.bookingDate,
-                visitType = when (visit.visitType) {
-                  "SOCIAL" -> "SCON"
-                  "FAMILY" -> "SCON"
-                  else -> throw ValidationException("Invalid visit type ${visit.visitType}")
-                },
+                visitType = VisitType.valueOf(
+                  when (visit.visitType) {
+                    "SOCIAL" -> "SCON"
+                    "FAMILY" -> "SCON"
+                    else -> throw ValidationException("Invalid visit type ${visit.visitType}")
+                  },
+                ),
                 visitComment = visit.visitorSupport?.let {
                   "DPS booking reference: ${visit.reference} - ${it.description}"
                 } ?: "DPS booking reference: ${visit.reference}",
                 visitOrderComment = "DPS booking reference: ${visit.reference}",
                 room = visit.visitRoom,
-                openClosedStatus = visit.visitRestriction,
+                openClosedStatus = OpenClosedStatus.valueOf(visit.visitRestriction),
               ),
             )
           }.map {
