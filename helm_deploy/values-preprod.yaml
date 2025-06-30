@@ -112,3 +112,5 @@ cron:
   activitiesPurgeDlqSuspend: false
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"
   activitiesPurgeDlqQueueName: "syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq"
+  report_incidents:
+    suspend: true
