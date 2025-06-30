@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-25.161.8736aaa"
+    "version" : "2025-06-27.174.a8872b5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13643,7 +13643,11 @@
           "200" : {
             "description" : "Restrictions Information Returned",
             "content" : {
-              "application/json" : { }
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerWithRestrictions"
+                }
+              }
             }
           },
           "401" : {
@@ -14152,7 +14156,11 @@
           "200" : {
             "description" : "Restriction Information Returned",
             "content" : {
-              "application/json" : { }
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestriction"
+                }
+              }
             }
           },
           "401" : {
@@ -24223,12 +24231,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -24348,9 +24356,13 @@
           "createUsername" : {
             "type" : "string",
             "description" : "Who created the adjustment"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this adjustment is for the latest booking"
           }
         },
-        "required" : [ "adjustmentDate", "adjustmentReason", "createUsername" ]
+        "required" : [ "adjustmentDate", "adjustmentReason", "createUsername", "latestBooking" ]
       },
       "PageVisitBalanceIdResponse" : {
         "type" : "object",
@@ -25032,6 +25044,13 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "sourceCombinedCaseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
           "statusUpdateStaffId" : {
             "type" : "integer",
             "format" : "int64"
@@ -25090,7 +25109,7 @@
             }
           }
         },
-        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "lidsCaseNumber", "offenderCharges", "offenderNo", "sentences" ]
+        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "lidsCaseNumber", "offenderCharges", "offenderNo", "sentences", "sourceCombinedCaseIds" ]
       },
       "CourtEventChargeResponse" : {
         "type" : "object",
@@ -25612,6 +25631,86 @@
           }
         },
         "required" : [ "courtCasesCreated", "courtCasesDeactivated" ]
+      },
+      "ContactRestrictionEnteredStaff" : {
+        "type" : "object",
+        "properties" : {
+          "staffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS staff id"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "username for staff member. For staff with multiple accounts this will be the general account username."
+          }
+        },
+        "required" : [ "staffId", "username" ]
+      },
+      "PrisonerRestriction" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a prisoner's visit restrictions",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of the restriction"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of booking associated with the contact"
+          },
+          "bookingSequence" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking sequence this contact is related to. When 1 this indicates contact is for current term"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "Restriction type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment text"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction became active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction is no longer active"
+          },
+          "enteredStaff" : {
+            "$ref" : "#/components/schemas/ContactRestrictionEnteredStaff",
+            "description" : "Staff member who created the restriction"
+          },
+          "authorisedStaff" : {
+            "$ref" : "#/components/schemas/ContactRestrictionEnteredStaff",
+            "description" : "Staff member who authorised the restriction"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "bookingSequence", "effectiveDate", "enteredStaff", "id", "type" ]
+      },
+      "PrisonerWithRestrictions" : {
+        "type" : "object",
+        "properties" : {
+          "restrictions" : {
+            "type" : "array",
+            "description" : "List of restrictions for this prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerRestriction"
+            }
+          }
+        },
+        "required" : [ "restrictions" ]
       },
       "BookingProfileDetailsResponse" : {
         "type" : "object",
@@ -26446,21 +26545,6 @@
           }
         },
         "required" : [ "audit", "effectiveDate", "enteredStaff", "id", "type" ]
-      },
-      "ContactRestrictionEnteredStaff" : {
-        "type" : "object",
-        "properties" : {
-          "staffId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS staff id"
-          },
-          "username" : {
-            "type" : "string",
-            "description" : "username for staff member. For staff with multiple accounts this will be the general account username."
-          }
-        },
-        "required" : [ "staffId", "username" ]
       },
       "PrisonerContact" : {
         "type" : "object",
