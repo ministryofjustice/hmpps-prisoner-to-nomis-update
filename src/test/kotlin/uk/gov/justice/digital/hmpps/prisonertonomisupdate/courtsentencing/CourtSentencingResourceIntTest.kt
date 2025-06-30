@@ -723,6 +723,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     caseSequence = 1,
     caseInfoNumbers = emptyList(),
     sentences = sentences,
+    sourceCombinedCaseIds = emptyList(),
   )
 
   fun nomisAppearanceResponse(

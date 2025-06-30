@@ -101,6 +101,7 @@ class CourtSentencingNomisApiMockServer {
       primaryCaseInfoNumber = "caseRef1",
       caseInfoNumbers = caseIndentifiers,
       combinedCaseId = combinedCaseId,
+      sourceCombinedCaseIds = emptyList(),
       beginDate = beginDate,
       sentences = sentences,
     ),
