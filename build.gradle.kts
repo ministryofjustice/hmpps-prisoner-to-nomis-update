@@ -57,10 +57,11 @@ kotlin {
   }
 }
 
-data class ModelConfiguration(val name: String, val packageName: String, val url: String, val models: String = "") {
+data class ModelConfiguration(val name: String, val packageName: String, val testPackageName: String? = null, val url: String, val models: String = "") {
   fun toBuildModelTaskName(): String = "build${nameToCamel()}ApiModel"
   fun toWriteJsonTaskName(): String = "write${nameToCamel()}Json"
   fun toReadProductionVersionTaskName(): String = "read${nameToCamel()}ProductionVersion"
+  fun toTestTaskName(): String = "test${nameToCamel()}"
   private val snakeRegex = "-[a-zA-Z]".toRegex()
   private fun nameToCamel(): String = snakeRegex.replace(name) {
     it.value.replace("-", "").uppercase()
@@ -81,12 +82,14 @@ val models = listOf(
   ModelConfiguration(
     name = "adjudications",
     packageName = "adjudications",
+    testPackageName = "adjudications",
     url = "https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "CombinedOutcomeDto,DisIssueHistoryDto,HearingDto,HearingOutcomeDto,IncidentDetailsDto,IncidentRoleDto,IncidentStatementDto,OffenceDto,OffenceRuleDto,OffenceRuleDetailsDto,OutcomeDto,OutcomeHistoryDto,PunishmentDto,PunishmentCommentDto,PunishmentScheduleDto,RehabilitativeActivityDto,ReportedAdjudicationDto,ReportedAdjudicationResponse,ReportedDamageDto,ReportedEvidenceDto,ReportedWitnessDto",
   ),
   ModelConfiguration(
     name = "alerts",
     packageName = "alerts",
+    testPackageName = "alerts",
     url = "https://alerts-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "Alert,AlertCode,AlertCodeSummary,AlertType",
   ),
@@ -99,6 +102,7 @@ val models = listOf(
   ModelConfiguration(
     name = "court-sentencing",
     packageName = "court.sentencing",
+    testPackageName = "courtsentencing",
     url = "https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
@@ -138,11 +142,13 @@ val models = listOf(
   ModelConfiguration(
     name = "organisations",
     packageName = "organisations",
+    testPackageName = "organisations",
     url = "https://organisations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
     name = "personal-relationships",
     packageName = "personalrelationships",
+    testPackageName = "personalrelationships",
     url = "https://personal-relationships-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
@@ -172,6 +178,7 @@ tasks {
     mustRunAfter(models.map { it.toBuildModelTaskName() })
   }
 }
+val separateTestPackages = mutableListOf<String>()
 models.forEach {
   tasks.register(it.toBuildModelTaskName(), GenerateTask::class) {
     group = "Generate model from API JSON definition"
@@ -208,6 +215,27 @@ models.forEach {
       val json = URI.create(productionUrl).toURL().readText()
       val version = ObjectMapper().readTree(json).at("/build/version").asText()
       println(version)
+    }
+  }
+  if (it.testPackageName != null) {
+    separateTestPackages.add(it.testPackageName)
+    val task = tasks.register(it.toTestTaskName(), Test::class) {
+      group = "Run tests"
+      description = "Run tests for ${it.name}"
+      shouldRunAfter("test")
+      useJUnitPlatform()
+      filter {
+        includeTestsMatching("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.testPackageName}.*")
+      }
+    }
+    tasks.check { dependsOn(task) }
+  }
+}
+
+tasks.test {
+  filter {
+    separateTestPackages.forEach {
+      excludeTestsMatching("uk.gov.justice.digital.hmpps.prisonertonomisupdate.$it.*")
     }
   }
 }

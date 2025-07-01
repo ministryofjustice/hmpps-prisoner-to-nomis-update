@@ -32,18 +32,38 @@ jobs:
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
-  gradle_verify:
+  gradle-build:
+    name: Validate the kotlin
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    secrets: inherit
+    with:
+      gradle-command: './gradlew ktlintCheck'
+  gradle-verify:
     name: Run the tests
+    strategy:
+      matrix:
+        tests: [
+          'test',
+          'testAdjudications',
+          'testAlerts',
+          'testCourtSentencing',
+          'testOrganisations',
+          'testPersonalRelationships',
+        ]
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_localstack_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
-     localstack-tag: "4"
+      gradle-command: ./gradlew ${{ matrix.tests }}
+      localstack-tag: "4"
+      artifact-name: ${{ matrix.tests }}
+    needs:
+      - gradle-build
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/docker_build.yml@v2 # WORKFLOW_VERSION
     needs:
-      - gradle_verify
+      - gradle-verify
     with:
       docker_registry: 'ghcr.io'
       registry_org: 'ministryofjustice'
