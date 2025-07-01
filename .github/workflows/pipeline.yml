@@ -38,18 +38,15 @@ jobs:
     secrets: inherit
     with:
       gradle-command: './gradlew ktlintCheck'
+      upload-test-artifacts: false
+  setup-test-matrix:
+    name: Create test matrix
+    uses: ./.github/workflows/setup_test_matrix.yml # LOCAL_VERSION
+    secrets: inherit
   gradle-verify:
     name: Run the tests
     strategy:
-      matrix:
-        tests: [
-          'test',
-          'testAdjudications',
-          'testAlerts',
-          'testCourtSentencing',
-          'testOrganisations',
-          'testPersonalRelationships',
-        ]
+      matrix: ${{ fromJson(needs.setup-test-matrix.outputs.matrix) }}
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_localstack_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
@@ -58,6 +55,7 @@ jobs:
       artifact-name: ${{ matrix.tests }}
     needs:
       - gradle-build
+      - setup-test-matrix
   build:
     name: Build docker image from hmpps-github-actions
     if: github.ref == 'refs/heads/main'
