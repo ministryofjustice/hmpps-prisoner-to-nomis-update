@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-27.174.a8872b5"
+    "version" : "2025-06-30.185.61b9081"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -25656,6 +25656,11 @@
             "format" : "int64",
             "description" : "Unique NOMIS Id of the restriction"
           },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Offender no aka prisoner number",
+            "example" : "A1234AA"
+          },
           "bookingId" : {
             "type" : "integer",
             "format" : "int64",
@@ -25697,7 +25702,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "bookingSequence", "effectiveDate", "enteredStaff", "id", "type" ]
+        "required" : [ "audit", "authorisedStaff", "bookingId", "bookingSequence", "effectiveDate", "enteredStaff", "id", "offenderNo", "type" ]
       },
       "PrisonerWithRestrictions" : {
         "type" : "object",
