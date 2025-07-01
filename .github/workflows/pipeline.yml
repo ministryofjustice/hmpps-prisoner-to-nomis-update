@@ -34,10 +34,11 @@ jobs:
       environment: ${{ matrix.environments }}
   gradle-build:
     name: Validate the kotlin
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
+    uses: ./.github/workflows/gradle_verify.yml
     secrets: inherit
     with:
       gradle-command: './gradlew ktlintCheck'
+      upload-test-artifacts: false
   gradle-verify:
     name: Run the tests
     strategy:
@@ -50,12 +51,13 @@ jobs:
           'testOrganisations',
           'testPersonalRelationships',
         ]
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_localstack_verify.yml@v2 # WORKFLOW_VERSION
+    uses: ./.github/workflows/gradle_localstack_verify.yml
     secrets: inherit
     with:
       gradle-command: ./gradlew ${{ matrix.tests }}
       localstack-tag: "4"
       artifact-name: ${{ matrix.tests }}
+      upload-test-artifacts: true
     needs:
       - gradle-build
   build:
