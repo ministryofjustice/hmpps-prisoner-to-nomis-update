@@ -1,0 +1,36 @@
+name: Setup test matrix
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        type: string
+        required: false
+        default: '21'
+    outputs:
+      matrix:
+        value: ${{ jobs.create_matrix.outputs.task_output }}
+
+permissions:
+  contents: read
+jobs:
+  create_matrix:
+    name: Create test matrix
+    runs-on: ubuntu-latest
+    outputs:
+      task_output: ${{ steps.create_matrix.outputs.taskoutput }}
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v4
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '${{ inputs.java-version }}'
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+      - name: Create test matrix
+        id: create_matrix
+        shell: bash
+        run: |
+          TASKS=$(./gradlew tasks | awk 'BEGIN { print "test"} /- Run tests/ {print $1}')
+          echo "taskoutput=$(echo "$TASKS" | jq -cRn "{"tests":[inputs]}")" >> $GITHUB_OUTPUT
