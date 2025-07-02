@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-06-23.13.24248f3"
+    "version" : "2025-07-01.34.46c3167"
   },
   "servers" : [ {
     "url" : "/",
@@ -694,22 +694,6 @@
             }
           },
           "example" : "[LEI,MDI]"
-        }, {
-          "name" : "prisonId",
-          "in" : "query",
-          "description" : "Filter by given location, typically a prison ID. Ignored if `location` is also used.",
-          "required" : false,
-          "deprecated" : true,
-          "schema" : {
-            "type" : "string",
-            "default" : null,
-            "deprecated" : true,
-            "description" : "Filter by given location, typically a prison ID. Ignored if `location` is also used.",
-            "example" : "MDI",
-            "maxLength" : 6,
-            "minLength" : 2
-          },
-          "example" : "MDI"
         }, {
           "name" : "source",
           "in" : "query",
@@ -5152,12 +5136,6 @@
               "$ref" : "#/components/schemas/NomisHistoryQuestion"
             }
           },
-          "incidentChangeDate" : {
-            "type" : "string",
-            "format" : "date",
-            "deprecated" : true,
-            "description" : "When the questionnaire was changed"
-          },
           "incidentChangeDateTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -5988,9 +5966,6 @@
             "type" : "string",
             "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
           },
-          "assignedTo" : {
-            "type" : "string"
-          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -6067,16 +6042,10 @@
             "type" : "string",
             "deprecated" : true,
             "description" : "NOMIS incident report type code, which may be null for newer incident types"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI"
           }
         },
         "readOnly" : true,
-        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonId", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
+        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
       },
       "StaffInvolvement" : {
         "type" : "object",
@@ -6522,12 +6491,6 @@
             "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
             "example" : "DRAFT"
           },
-          "assignedTo" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "Optional user who this report is currently assigned to (NB: this field will probably be removed)",
-            "example" : null
-          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time",
@@ -6549,16 +6512,10 @@
           },
           "lastModifiedInNomis" : {
             "type" : "boolean"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI"
           }
         },
         "readOnly" : true,
-        "required" : [ "createdAt", "createdInNomis", "description", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonId", "reportReference", "reportedAt", "reportedBy", "status", "title", "type" ]
+        "required" : [ "createdAt", "createdInNomis", "description", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "reportReference", "reportedAt", "reportedBy", "status", "title", "type" ]
       },
       "ChangeTypeRequest" : {
         "type" : "object",
