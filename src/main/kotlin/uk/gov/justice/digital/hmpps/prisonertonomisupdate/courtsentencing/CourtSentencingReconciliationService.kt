@@ -2,6 +2,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -15,8 +18,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
 import java.time.LocalDate
+import kotlin.collections.map
 
 @Service
 class CourtSentencingReconciliationService(
@@ -50,6 +55,14 @@ class CourtSentencingReconciliationService(
   suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
     MismatchCaseResponse(
       nomisCaseId = nomisCaseId,
+      dpsCaseId = it.dpsCourtCaseId,
+      mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
+    )
+  }
+
+  suspend fun checkCasesNomis(nomisCaseIds: List<Long>): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
+    MismatchCaseResponse(
+      nomisCaseId = it.nomisCourtCaseId,
       dpsCaseId = it.dpsCourtCaseId,
       mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
     )
@@ -89,9 +102,7 @@ class CourtSentencingReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = nomisApiService.getCourtCaseIdsByOffender(offenderNo).map {
-    manualCheckCaseNomis(nomisCaseId = it)
-  }
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = checkCasesNomis(nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo))
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
@@ -124,8 +135,10 @@ class CourtSentencingReconciliationService(
   )
 
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
-    val nomisResponse = nomisApiService.getCourtCaseForReconciliation(nomisCaseId)
-    val dpsResponse = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
+    val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getCourtCaseForReconciliation(nomisCaseId) } to
+        async { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
+    }.awaitBoth()
 
     // DPS hierarchy view of sentencing means that sentences can be repeated when associated with multiple charges
     val appearanceCharges = dpsResponse.appearances.flatMap { appearance -> appearance.charges }
