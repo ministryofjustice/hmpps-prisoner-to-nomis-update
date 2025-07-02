@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-19.28247.c5f840c"
+    "version" : "2025-07-01.28758.a3c8bdf"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -1067,7 +1067,7 @@
     "/waiting-list-applications/{prisonCode}/search" : {
       "post" : {
         "tags" : [ "waiting-list-application-controller" ],
-        "description" : "Search waiting list applications\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES_MANAGEMENT__RO",
+        "description" : "Search waiting list applications\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES_MANAGEMENT__RO\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "searchWaitingLists",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -2481,6 +2481,26 @@
         }
       }
     },
+    "/job/fix-locations" : {
+      "post" : {
+        "tags" : [ "job-trigger-controller" ],
+        "summary" : "Trigger the job fix activity and appointment locations",
+        "description" : "Can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
+        "operationId" : "triggerActivitiesLocationsJob",
+        "responses" : {
+          "202" : {
+            "description" : "Accepted",
+            "content" : {
+              "text/plain" : {
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/job/create-scheduled-instances" : {
       "post" : {
         "tags" : [ "job-trigger-controller" ],
@@ -2560,26 +2580,6 @@
         "responses" : {
           "201" : {
             "description" : "Created",
-            "content" : {
-              "text/plain" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/job/activities-fix-locations" : {
-      "post" : {
-        "tags" : [ "job-trigger-controller" ],
-        "summary" : "Trigger the job fix zero pay activities",
-        "description" : "Can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
-        "operationId" : "triggerActivitiesLocationsJob",
-        "responses" : {
-          "202" : {
-            "description" : "Accepted",
             "content" : {
               "text/plain" : {
                 "schema" : {
@@ -6647,7 +6647,7 @@
       "get" : {
         "tags" : [ "allocation-controller" ],
         "summary" : "Get the list of deallocation reasons",
-        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* ACTIVITIES__HMPPS_INTEGRATION_API",
         "operationId" : "getDeallocationReasons",
         "responses" : {
           "200" : {
@@ -7574,6 +7574,12 @@
             "items" : {
               "$ref" : "#/components/schemas/Appointment"
             }
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The optional DPS location UUID for this appointment series",
+            "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           }
         },
         "required" : [ "appointmentType", "appointments", "categoryCode", "createdBy", "createdTime", "id", "inCell", "prisonCode", "startDate", "startTime" ]
@@ -9112,7 +9118,7 @@
             "example" : "SICK"
           }
         },
-        "required" : [ "autoSuspended", "cancelled", "inCell", "offWing", "onWing", "outsidePrison", "priority", "startTime", "suspended" ]
+        "required" : [ "autoSuspended", "cancelled", "inCell", "offWing", "onWing", "outsidePrison", "priority", "suspended" ]
       },
       "InternalLocationEvents" : {
         "type" : "object",
@@ -10026,6 +10032,12 @@
             "format" : "int64",
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The optional DPS location UUID for this appointment",
+            "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "inCell" : {
             "type" : "boolean",
@@ -10982,6 +10994,12 @@
             "format" : "int64",
             "description" : "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
             "example" : 123
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The optional DPS location UUID for this appointment series",
+            "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "inCell" : {
             "type" : "boolean",
