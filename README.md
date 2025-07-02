@@ -495,3 +495,5 @@ NOTE: You should still investigate the error in case of other scenarios not fore
 ## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)
+
+This is a line at the end which represents a change
