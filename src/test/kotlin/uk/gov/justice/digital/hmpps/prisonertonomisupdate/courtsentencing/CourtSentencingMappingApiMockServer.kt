@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @Component
 class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper) {
@@ -57,6 +59,31 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         dpsCourtCaseId = dpsCourtCaseId,
         mappingType = CourtCaseMappingDto.MappingType.DPS_CREATED,
       ),
+    )
+  }
+
+  fun stubPostCourtCaseMappingsGivenNomisIds(ids: List<Long>, dpsCourtCaseIds: List<String> = listOf("54321")) {
+    val response = ids.mapIndexed { index, id ->
+      CourtCaseMappingDto(
+        nomisCourtCaseId = id,
+        dpsCourtCaseId = dpsCourtCaseIds[index],
+        mappingType = CourtCaseMappingDto.MappingType.DPS_CREATED,
+      )
+    }
+    mappingServer.stubFor(
+      post("/mapping/court-sentencing/court-cases/nomis-case-ids/get-list")
+        // just check the first one to differentiate
+        .withRequestBodyJsonPath("[0]", WireMock.equalTo(ids.first().toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              objectMapper.writeValueAsString(
+                response,
+              ),
+            )
+            .withStatus(200),
+        ),
     )
   }
 

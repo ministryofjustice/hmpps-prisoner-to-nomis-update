@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -112,11 +113,15 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
 
   private fun stubCases(offenderNo: String, nomisCases: List<CourtCaseResponse>, dpsCases: List<ReconciliationCourtCase>) {
     nomisApi.stubGetCourtCaseIdsByOffenderNo(offenderNo, response = nomisCases.map { it.id })
-
-    nomisCases.zip(dpsCases).forEach { (nomisCase, dpsCase) ->
-      courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(nomisCase.id, dpsCase.courtCaseUuid)
-      nomisApi.stubGetCourtCaseForReconciliation(nomisCase.id, nomisCase)
-      dpsApi.stubGetCourtCaseForReconciliation(dpsCase.courtCaseUuid, dpsCase)
+    if (nomisCases.isNotEmpty()) {
+      courtSentencingMappingApi.stubPostCourtCaseMappingsGivenNomisIds(
+        nomisCases.map { it.id },
+        dpsCases.map { it.courtCaseUuid },
+      )
+      nomisCases.zip(dpsCases).forEach { (nomisCase, dpsCase) ->
+        nomisApi.stubGetCourtCaseForReconciliation(nomisCase.id, nomisCase)
+        dpsApi.stubGetCourtCaseForReconciliation(dpsCase.courtCaseUuid, dpsCase)
+      }
     }
   }
 }
