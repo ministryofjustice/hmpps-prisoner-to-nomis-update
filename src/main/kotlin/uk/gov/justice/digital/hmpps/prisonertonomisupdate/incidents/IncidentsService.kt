@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
@@ -60,6 +61,7 @@ class IncidentsService(
       telemetryClient.trackEvent("incident-upsert-ignored", telemetryMap)
     }
   }
+
   suspend fun incidentDeleted(event: IncidentEvent) {
     val dpsId = event.dpsId
     val nomisId = event.nomisId
@@ -75,7 +77,20 @@ class IncidentsService(
       telemetryClient.trackEvent("incident-delete-ignored", telemetryMap)
     }
   }
+
+  suspend fun repairIncident(incidentId: Long) {
+    val dps = dpsApiService.getIncidentDetailsByNomisId(incidentId)
+    if (!nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
+      throw BadRequestException("Incidents not switched on for ${dps.location}")
+    }
+    incidentsNomisApiService.upsertIncident(
+      nomisId = incidentId,
+      dps.toNomisUpsertRequest(),
+    )
+    telemetryClient.trackEvent("incident-repair-success", telemetryOf("incidentId" to incidentId))
+  }
 }
+
 data class IncidentEvent(
   val eventType: String,
   val additionalInformation: IncidentAdditionalInformation,
