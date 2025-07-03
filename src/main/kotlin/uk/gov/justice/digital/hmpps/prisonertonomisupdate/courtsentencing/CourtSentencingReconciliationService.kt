@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationResult
@@ -279,13 +278,15 @@ class CourtSentencingReconciliationService(
         val sortedDpsAppearances = dpsObj.appearances.sortedWith(
           compareBy<AppearanceFields> { it.date }
             .thenBy { it.court }
-            .thenBy { it.outcome },
+            .thenBy { it.outcome }
+            .thenBy { it.charges.size },
         )
 
         val sortedNomisAppearances = nomisObj.appearances.sortedWith(
           compareBy<AppearanceFields> { it.date }
             .thenBy { it.court }
-            .thenBy { it.outcome },
+            .thenBy { it.outcome }
+            .thenBy { it.charges.size },
         )
 
         if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
@@ -307,7 +308,8 @@ class CourtSentencingReconciliationService(
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
             .thenBy { it.status }
-            .thenBy { it.termsAsString },
+            .thenBy { it.termsAsString }
+            .thenBy { it.fine },
         )
 
         val sortedNomisSentences = nomisObj.sentences.sortedWith(
@@ -316,7 +318,8 @@ class CourtSentencingReconciliationService(
             .thenBy { it.sentenceCategory }
             .thenBy { it.sentenceCalcType }
             .thenBy { it.status }
-            .thenBy { it.termsAsString },
+            .thenBy { it.termsAsString }
+            .thenBy { it.fine },
 
         )
 
@@ -506,11 +509,6 @@ class CourtSentencingReconciliationService(
     }
     return differences
   }
-}
-
-private fun List<SentenceResponse>.findNomisSentenceForCharge(chargeId: Long, eventId: Long): SentenceResponse? {
-  val sentencesForAppearance = this.filter { sentence -> sentence.courtOrder?.eventId == eventId }
-  return sentencesForAppearance.find { sentence -> sentence.offenderCharges.any { it.id == chargeId } }
 }
 
 data class MismatchCaseResponse(

@@ -468,6 +468,47 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will reorder on fines when only difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
+            ),
+          ),
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              fineAmount = BigDecimal("8.10"),
+            ),
+            nomisSentenceResponse().copy(
+              fineAmount = BigDecimal("2.3"),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(fineAmount = BigDecimal("2.3")),
+                ),
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID), fineAmount = BigDecimal("8.1")),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
+    }
+
+    @Test
     fun `will report an extra sentence term in nomis`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
