@@ -226,6 +226,37 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will reorder appearances correctly for comparison when charge outcome is the only difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(nomisChargeResponse().copy(resultCode1 = nomisOffenceResult(OUTCOME_2))),
+            ),
+            nomisAppearanceResponse(id = NOMIS_COURT_APPEARANCE_2_ID),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse(
+              appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_2_ID),
+              charges = listOf(dpsChargeResponse(sentenceResponse = null)),
+            ),
+            dpsAppearanceResponse().copy(
+              charges = listOf(dpsChargeResponse().copy(nomisOutcomeCode = OUTCOME_2)),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
+    }
+
+    @Test
     fun `will report an appearance outcome difference`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
@@ -499,7 +530,10 @@ internal class CourtSentencingReconciliationServiceTest {
           sentences = listOf(
             nomisSentenceResponse().copy(
               sentenceSeq = 2,
-              sentenceTerms = listOf(nomisSentenceTermResponse().copy(termSequence = 9), nomisSentenceTermResponse().copy(termSequence = 8)),
+              sentenceTerms = listOf(
+                nomisSentenceTermResponse().copy(termSequence = 9),
+                nomisSentenceTermResponse().copy(termSequence = 8),
+              ),
             ),
             nomisSentenceResponse(),
           ),
