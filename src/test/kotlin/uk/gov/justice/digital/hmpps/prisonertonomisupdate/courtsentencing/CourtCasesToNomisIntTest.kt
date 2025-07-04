@@ -31,6 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -2853,6 +2854,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("nomisCourtAppearanceIds[0]", equalTo("101")))
               .withRequestBody(matchingJsonPath("nomisCourtAppearanceIds[1]", equalTo("102"))),
           )
+        }
+
+        @Test
+        fun `will send message to nomis migration to sync sentence adjustments`() {
+          await untilAsserted {
+            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+          }
         }
 
         @Test

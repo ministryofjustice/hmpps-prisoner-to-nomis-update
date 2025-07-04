@@ -87,6 +87,8 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val courtSentencingQueueUrl by lazy { courtSentencingQueue.queueUrl }
   internal val courtSentencingDlqUrl by lazy { courtSentencingQueue.dlqUrl }
 
+  internal val fromNomisCourtSentencingQueue by lazy { hmppsQueueService.findByQueueId("fromnomiscourtsentencing") as HmppsQueue }
+
   internal val alertsQueue by lazy { hmppsQueueService.findByQueueId("alerts") as HmppsQueue }
 
   internal val awsSqsAlertsClient by lazy { alertsQueue.sqsClient }
@@ -176,6 +178,8 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     visitBalanceQueueClient.purgeQueue(visitBalanceQueueUrl).get()
     visitBalanceDlqClient?.purgeQueue(visitBalanceDlqUrl)?.get()
+
+    fromNomisCourtSentencingQueue.purgeQueue()
   }
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {
@@ -185,6 +189,8 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
     await untilAsserted { verify(telemetryClient).trackEvent(eq(name), any(), isNull()) }
   }
 }
+private fun HmppsQueue.purgeQueue() = this.sqsClient.purgeQueue(PurgeQueueRequest.builder().queueUrl(this.queueUrl).build())
 
 private fun SqsAsyncClient.purgeQueue(queueUrl: String?) = purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl!!).build())
 fun HmppsQueue.countAllMessagesOnDLQQueue(): Int = this.sqsDlqClient!!.countAllMessagesOnQueue(dlqUrl!!).get()
+fun HmppsQueue.countAllMessagesOnQueue(): Int = this.sqsClient.countAllMessagesOnQueue(queueUrl).get()
