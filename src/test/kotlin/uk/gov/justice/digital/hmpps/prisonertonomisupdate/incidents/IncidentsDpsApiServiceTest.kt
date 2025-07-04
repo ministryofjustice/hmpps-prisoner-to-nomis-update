@@ -126,7 +126,14 @@ class IncidentsDpsApiServiceTest {
     fun `should call api with OAuth2 token`() {
       incidentsDpsApi.verify(
         getRequestedFor(urlMatching("/incident-reports?.*"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+          .withQueryParam("location", equalTo("ASI"))
+          .withQueryParam("status", equalTo("AWAITING_REVIEW"))
+          .withQueryParam("status", equalTo("NEEDS_UPDATING"))
+          .withQueryParam("status", equalTo("ON_HOLD"))
+          .withQueryParam("status", equalTo("POST_INCIDENT_UPDATE"))
+          .withQueryParam("status", equalTo("UPDATED"))
+          .withQueryParam("size", equalTo("1")),
       )
     }
 
