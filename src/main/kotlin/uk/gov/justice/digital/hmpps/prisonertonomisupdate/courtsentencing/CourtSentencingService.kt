@@ -851,9 +851,9 @@ class CourtSentencingService(
                 active = true,
               )
             },
-            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
               ReturnToCustodyRequest(
-                returnToCustodyDate = it,
+                returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                 enteredByStaffUsername = recall.recallBy,
                 recallLength = recall.recallType.toDays()!!,
               )
@@ -947,9 +947,9 @@ class CourtSentencingService(
                 active = true,
               )
             },
-            returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
               ReturnToCustodyRequest(
-                returnToCustodyDate = it,
+                returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                 enteredByStaffUsername = recall.recallBy,
                 recallLength = recall.recallType.toDays()!!,
               )
@@ -1011,9 +1011,9 @@ class CourtSentencingService(
                   active = true,
                 )
               },
-              returnToCustody = recall.returnToCustodyDate?.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+              returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
                 ReturnToCustodyRequest(
-                  returnToCustodyDate = it,
+                  returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                   enteredByStaffUsername = recall.recallBy,
                   recallLength = recall.recallType.toDays()!!,
                 )

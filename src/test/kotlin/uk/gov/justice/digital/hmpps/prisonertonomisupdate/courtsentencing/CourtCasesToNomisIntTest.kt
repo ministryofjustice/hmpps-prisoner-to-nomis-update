@@ -3021,7 +3021,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
             recallType = LegacyRecall.RecallType.FTR_14,
             recallBy = "T.SMITH",
-            returnToCustodyDate = LocalDate.parse("2025-04-23"),
+            returnToCustodyDate = null,
             revocationDate = LocalDate.parse("2025-04-01"),
             prisonerId = OFFENDER_NO,
             sentenceIds = listOf(
@@ -3120,7 +3120,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
             // always set to active despite original sentence status
             .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
-            .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+            .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
             .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH")))
