@@ -141,7 +141,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-  fun stubGetASIClosedIncidentCounts() = stubGetIncidentCounts(totalElements = 8, urlMatch = get(urlPathMatching("/incident-reports")).withQueryParam("prisonId", matching("ASI")).withQueryParam("status", matching("CLOSED")))
+  fun stubGetASIClosedIncidentCounts() = stubGetIncidentCounts(totalElements = 8, urlMatch = get(urlPathMatching("/incident-reports")).withQueryParam("location", matching("ASI")).withQueryParam("status", matching("CLOSED")))
 
   fun verifyGetIncidentCounts(times: Int = 1) = verify(exactly(times), getRequestedFor(urlPathMatching("/incident-reports")))
 
