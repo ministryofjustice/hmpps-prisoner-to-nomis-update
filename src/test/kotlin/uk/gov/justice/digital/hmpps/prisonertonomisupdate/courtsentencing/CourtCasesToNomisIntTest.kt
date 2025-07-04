@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -32,6 +34,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -83,6 +87,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
   @Autowired
   private lateinit var courtSentencingMappingApi: CourtSentencingMappingApiMockServer
+
+  @Autowired
+  private lateinit var objectMapper: ObjectMapper
+
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   @Nested
   inner class CreateCourtCase {
@@ -2861,6 +2870,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
           }
+          val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
+          val sqsMessage: SQSMessage = rawMessage.fromJson()
+
+          assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.sentence-adjustments")
+          val request: SyncSentenceAdjustment = sqsMessage.Message.fromJson()
+          assertThat(request.sentenceIds).hasSize(2)
+          assertThat(request.sentenceIds[0].sentenceSequence).isEqualTo(1)
+          assertThat(request.sentenceIds[1].sentenceSequence).isEqualTo(2)
+          assertThat(request.sentenceIds[0].offenderBookingId).isEqualTo(BOOKING_ID)
+          assertThat(request.sentenceIds[1].offenderBookingId).isEqualTo(BOOKING_ID)
         }
 
         @Test
