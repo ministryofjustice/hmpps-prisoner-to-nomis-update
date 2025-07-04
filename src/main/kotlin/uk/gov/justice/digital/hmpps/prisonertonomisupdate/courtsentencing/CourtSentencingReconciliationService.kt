@@ -180,20 +180,22 @@ class CourtSentencingReconciliationService(
       active = dpsResponse.active,
       id = dpsCaseId,
       appearances = dpsResponse.appearances.map { appearanceResponse ->
+        val charges = appearanceResponse.charges.map { appearanceChargeResponse ->
+          ChargeFields(
+            offenceCode = appearanceChargeResponse.offenceCode,
+            offenceDate = appearanceChargeResponse.offenceStartDate,
+            offenceEndDate = appearanceChargeResponse.offenceEndDate,
+            outcome = appearanceChargeResponse.nomisOutcomeCode,
+            id = appearanceChargeResponse.chargeUuid.toString(),
+          )
+        }
         AppearanceFields(
           date = appearanceResponse.appearanceDate,
           court = appearanceResponse.courtCode,
           outcome = appearanceResponse.nomisOutcomeCode,
           id = appearanceResponse.appearanceUuid.toString(),
-          charges = appearanceResponse.charges.map { appearanceChargeResponse ->
-            ChargeFields(
-              offenceCode = appearanceChargeResponse.offenceCode,
-              offenceDate = appearanceChargeResponse.offenceStartDate,
-              offenceEndDate = appearanceChargeResponse.offenceEndDate,
-              outcome = appearanceChargeResponse.nomisOutcomeCode,
-              id = appearanceChargeResponse.chargeUuid.toString(),
-            )
-          },
+          charges = charges,
+          chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
       },
       sentences = sentences,
@@ -203,20 +205,22 @@ class CourtSentencingReconciliationService(
       active = nomisResponse.caseStatus.code == "A",
       id = nomisResponse.id.toString(),
       appearances = nomisResponse.courtEvents.map { eventResponse ->
+        val charges = eventResponse.courtEventCharges.map { chargeResponse ->
+          ChargeFields(
+            offenceCode = chargeResponse.offenderCharge.offence.offenceCode,
+            offenceDate = chargeResponse.offenceDate,
+            offenceEndDate = chargeResponse.offenceEndDate,
+            outcome = chargeResponse.resultCode1?.code,
+            id = chargeResponse.offenderCharge.id.toString(),
+          )
+        }
         AppearanceFields(
           date = eventResponse.eventDateTime.toLocalDate(),
           court = eventResponse.courtId,
           outcome = eventResponse.outcomeReasonCode?.code,
           id = eventResponse.id.toString(),
-          charges = eventResponse.courtEventCharges.map { chargeResponse ->
-            ChargeFields(
-              offenceCode = chargeResponse.offenderCharge.offence.offenceCode,
-              offenceDate = chargeResponse.offenceDate,
-              offenceEndDate = chargeResponse.offenceEndDate,
-              outcome = chargeResponse.resultCode1?.code,
-              id = chargeResponse.offenderCharge.id.toString(),
-            )
-          },
+          charges = charges,
+          chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
       },
       sentences = nomisResponse.sentences.map { sentenceResponse ->
@@ -280,14 +284,16 @@ class CourtSentencingReconciliationService(
           compareBy<AppearanceFields> { it.date }
             .thenBy { it.court }
             .thenBy { it.outcome }
-            .thenBy { it.charges.size },
+            .thenBy { it.charges.size }
+            .thenBy { it.chargeAsString },
         )
 
         val sortedNomisAppearances = nomisObj.appearances.sortedWith(
           compareBy<AppearanceFields> { it.date }
             .thenBy { it.court }
             .thenBy { it.outcome }
-            .thenBy { it.charges.size },
+            .thenBy { it.charges.size }
+            .thenBy { it.chargeAsString },
         )
 
         if (!dpsObj.caseReferences.containsAll(nomisObj.caseReferences)) {
@@ -337,13 +343,6 @@ class CourtSentencingReconciliationService(
         if (dpsObj.outcome != nomisObj.outcome) {
           differences.add(Difference("$parentProperty.outcome", dpsObj.outcome, nomisObj.outcome, dpsObj.id))
         }
-
-        fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> = charges.sortedWith(
-          compareBy<ChargeFields> { it.offenceCode }
-            .thenBy { it.offenceDate }
-            .thenBy { it.outcome }
-            .thenBy { it.offenceEndDate },
-        )
         differences.addAll(
           compareLists(
             sortCharges(dpsObj.charges),
@@ -496,6 +495,13 @@ class CourtSentencingReconciliationService(
 
   )
 
+  fun sortCharges(charges: List<ChargeFields>): List<ChargeFields> = charges.sortedWith(
+    compareBy<ChargeFields> { it.offenceCode }
+      .thenBy { it.offenceDate }
+      .thenBy { it.outcome }
+      .thenBy { it.offenceEndDate },
+  )
+
   fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
     val differences = mutableListOf<Difference>()
     val maxSize = maxOf(dpsList.size, nomisList.size)
@@ -549,6 +555,8 @@ data class AppearanceFields(
   val outcome: String?,
   val id: String,
   val charges: List<ChargeFields> = emptyList(),
+  // for sorting purposes, sometimes charge outcome is required to differentiate between appearances on the same day with the same charge
+  val chargeAsString: String? = null,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -574,6 +582,8 @@ data class ChargeFields(
       offenceEndDate == other.offenceEndDate &&
       outcome == other.outcome
   }
+
+  fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode')"
 }
 
 data class SentenceFields(
