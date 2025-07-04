@@ -22,7 +22,7 @@ class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val web
   suspend fun getIncidentsByAgencyAndStatus(agencyId: String, statusValues: List<String>): SimplePageReportBasic = webClient.get()
     .uri {
       it.path("/incident-reports")
-        .queryParam("prisonId", agencyId)
+        .queryParam("location", agencyId)
         .queryParam("status", statusValues)
         .queryParam("size", 1)
         .build()
