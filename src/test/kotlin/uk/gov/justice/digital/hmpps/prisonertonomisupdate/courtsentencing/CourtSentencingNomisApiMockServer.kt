@@ -185,7 +185,7 @@ class CourtSentencingNomisApiMockServer {
     stubDelete("/prisoners/$offenderNo/court-cases/$caseId/sentences/$sentenceSeq/sentence-terms/$termSeq")
   }
 
-  fun stubRecallSentences(offenderNo: String, response: ConvertToRecallResponse = ConvertToRecallResponse(courtEventIds = emptyList())) {
+  fun stubRecallSentences(offenderNo: String, response: ConvertToRecallResponse = ConvertToRecallResponse(courtEventIds = emptyList(), sentenceAdjustmentsActivated = emptyList())) {
     nomisApi.stubFor(
       post("/prisoners/$offenderNo/sentences/recall").willReturn(
         aResponse()
