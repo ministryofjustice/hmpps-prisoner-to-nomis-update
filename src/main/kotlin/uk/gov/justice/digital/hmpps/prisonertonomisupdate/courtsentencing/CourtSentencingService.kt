@@ -17,6 +17,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.sendMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -876,17 +877,27 @@ class CourtSentencingService(
           )
         }
 
-        fromNOMISQueue.sendMessage(
-          eventType = "courtsentencing.resync.sentence-adjustments",
-          message = SyncSentenceAdjustment(
-            sentenceAndMappings.map {
-              SentenceId(
-                offenderBookingId = it.nomisBookingId,
-                sentenceSequence = it.nomisSentenceSequence,
-              )
-            },
-          ).toJson(),
-        )
+        runCatching {
+          SQSMessage(
+            Type = "courtsentencing.resync.sentence-adjustments",
+            Message = SyncSentenceAdjustment(
+              sentenceAndMappings.map {
+                SentenceId(
+                  offenderBookingId = it.nomisBookingId,
+                  sentenceSequence = it.nomisSentenceSequence,
+                )
+              },
+            ).toJson(),
+          ).also {
+            fromNOMISQueue.sendMessage(
+              eventType = it.Type,
+              message = it.toJson(),
+            )
+          }
+        }.onFailure {
+          // this requires manual intervention; we have retried several times and just can not send
+          telemetryClient.trackEvent("sentence-adjustments-resync-failed", telemetryMap, null)
+        }
         telemetryClient.trackEvent(
           "recall-inserted-success",
           telemetryMap,

@@ -12,6 +12,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sqs.SqsAsyncClient
 import software.amazon.awssdk.services.sqs.model.PurgeQueueRequest
+import software.amazon.awssdk.services.sqs.model.ReceiveMessageRequest
 import uk.gov.justice.hmpps.sqs.HmppsQueue
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import uk.gov.justice.hmpps.sqs.HmppsTopic
@@ -194,3 +195,14 @@ private fun HmppsQueue.purgeQueue() = this.sqsClient.purgeQueue(PurgeQueueReques
 private fun SqsAsyncClient.purgeQueue(queueUrl: String?) = purgeQueue(PurgeQueueRequest.builder().queueUrl(queueUrl!!).build())
 fun HmppsQueue.countAllMessagesOnDLQQueue(): Int = this.sqsDlqClient!!.countAllMessagesOnQueue(dlqUrl!!).get()
 fun HmppsQueue.countAllMessagesOnQueue(): Int = this.sqsClient.countAllMessagesOnQueue(queueUrl).get()
+
+fun HmppsQueue.readRawMessages(): List<String> {
+  val messageResult = this.sqsClient.receiveMessage(
+    ReceiveMessageRequest.builder().queueUrl(this.queueUrl).build(),
+  ).get()
+  return messageResult
+    .messages()
+    .stream()
+    .map { it.body() }
+    .toList()
+}
