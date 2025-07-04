@@ -123,6 +123,8 @@ hmpps.sqs:
         "court-appearance.inserted",
         "legacy.court-case-references.updated",
         "court-appearance.updated"]}
+    fromnomiscourtsentencing:
+      queueName: hmpps_prisoner_from_nomis_court_sentencing_queue
     alerts:
       queueName: hmpps_prisoner_to_nomis_alerts_queue
       dlqName: hmpps_prisoner_to_nomis_alerts_dlq

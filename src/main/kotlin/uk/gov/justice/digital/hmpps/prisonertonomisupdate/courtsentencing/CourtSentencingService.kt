@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.sendMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -38,13 +39,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRecallRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingAdjustmentsService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.hmpps.sqs.HmppsQueue
+import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
@@ -57,8 +59,9 @@ class CourtSentencingService(
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
-  private val sentencingAdjustmentsService: SentencingAdjustmentsService,
+  private val hmppsQueueService: HmppsQueueService,
 ) : CreateMappingRetryable {
+  private val fromNOMISQueue by lazy { hmppsQueueService.findByQueueId("fromnomiscourtsentencing") as HmppsQueue }
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -873,6 +876,17 @@ class CourtSentencingService(
           )
         }
 
+        fromNOMISQueue.sendMessage(
+          eventType = "courtsentencing.resync.sentence-adjustments",
+          message = SyncSentenceAdjustment(
+            sentenceAndMappings.map {
+              SentenceId(
+                offenderBookingId = it.nomisBookingId,
+                sentenceSequence = it.nomisSentenceSequence,
+              )
+            },
+          ).toJson(),
+        )
         telemetryClient.trackEvent(
           "recall-inserted-success",
           telemetryMap,
@@ -1220,6 +1234,7 @@ class CourtSentencingService(
   }
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private fun Any.toJson(): String = objectMapper.writeValueAsString(this)
 
   suspend fun refreshCaseReferences(createEvent: CaseReferencesUpdatedEvent) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
@@ -1430,3 +1445,5 @@ fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTerm
 )
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
+
+data class SyncSentenceAdjustment(val sentenceIds: List<SentenceId>)
