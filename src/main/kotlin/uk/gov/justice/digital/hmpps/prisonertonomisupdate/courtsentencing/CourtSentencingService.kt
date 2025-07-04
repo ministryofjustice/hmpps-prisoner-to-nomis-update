@@ -836,7 +836,7 @@ class CourtSentencingService(
         }
         val sentenceAndMappings = getSentenceAndMappings(sentenceIds).also { telemetryMap.toTelemetry(it) }
 
-        nomisApiService.recallSentences(
+        val response = nomisApiService.recallSentences(
           offenderNo,
           ConvertToRecallRequest(
             sentences = sentenceAndMappings.map { sentence ->
@@ -861,7 +861,9 @@ class CourtSentencingService(
             // should always be present for recalls from DPS
             recallRevocationDate = recall.revocationDate!!,
           ),
-        ).takeIf { it.courtEventIds.isNotEmpty() }?.also {
+        )
+
+        response.takeIf { it.courtEventIds.isNotEmpty() }?.also {
           val mapping = CourtAppearanceRecallMappingsDto(
             nomisCourtAppearanceIds = it.courtEventIds,
             dpsRecallId = recallId,
@@ -881,10 +883,11 @@ class CourtSentencingService(
           SQSMessage(
             Type = "courtsentencing.resync.sentence-adjustments",
             Message = SyncSentenceAdjustment(
-              sentenceAndMappings.map {
-                SentenceId(
-                  offenderBookingId = it.nomisBookingId,
-                  sentenceSequence = it.nomisSentenceSequence,
+              offenderNo = offenderNo,
+              sentences = response.sentenceAdjustmentsActivated.map {
+                SentenceIdAndAdjustmentIds(
+                  sentenceId = it.sentenceId,
+                  adjustmentIds = it.adjustmentIds,
                 )
               },
             ).toJson(),
@@ -1457,4 +1460,12 @@ fun LegacyPeriodLength.toNomisSentenceTerm(): SentenceTermRequest = SentenceTerm
 
 private fun CourtChargeBatchUpdateMappingDto.hasAnyMappingsToUpdate(): Boolean = this.courtChargesToCreate.isNotEmpty() || this.courtChargesToDelete.isNotEmpty()
 
-data class SyncSentenceAdjustment(val sentenceIds: List<SentenceId>)
+data class SentenceIdAndAdjustmentIds(
+  val sentenceId: SentenceId,
+  val adjustmentIds: List<Long>,
+)
+
+data class SyncSentenceAdjustment(
+  val offenderNo: String,
+  val sentences: List<SentenceIdAndAdjustmentIds>,
+)

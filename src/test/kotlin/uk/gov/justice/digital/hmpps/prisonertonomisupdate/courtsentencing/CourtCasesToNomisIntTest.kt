@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.BOOKING_ID
 import java.time.LocalDate
@@ -370,13 +371,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to delete the court case`() {
         waitForHearingProcessingToBeComplete()
-        courtSentencingNomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION")))
+        courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
         waitForHearingProcessingToBeComplete()
-        courtSentencingMappingApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/dps-court-case-id/$COURT_CASE_ID_FOR_CREATION")))
+        courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/dps-court-case-id/$COURT_CASE_ID_FOR_CREATION")))
       }
     }
 
@@ -404,7 +405,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingNomisApi.verify(
           0,
-          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+          deleteRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -979,13 +980,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to delete the court appearance`() {
         waitForHearingProcessingToBeComplete()
-        courtSentencingNomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID")))
+        courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/court-appearances/$NOMIS_COURT_APPEARANCE_ID")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
         waitForHearingProcessingToBeComplete()
-        courtSentencingMappingApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$DPS_COURT_APPEARANCE_ID")))
+        courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$DPS_COURT_APPEARANCE_ID")))
       }
     }
 
@@ -1013,7 +1014,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingNomisApi.verify(
           0,
-          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+          deleteRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -2073,13 +2074,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to delete the sentence`() {
         waitForAnyProcessingToComplete()
-        courtSentencingNomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ")))
+        courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
         waitForAnyProcessingToComplete()
-        courtSentencingMappingApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-id/$DPS_SENTENCE_ID")))
+        courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-id/$DPS_SENTENCE_ID")))
       }
     }
 
@@ -2107,7 +2108,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingNomisApi.verify(
           0,
-          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+          deleteRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -2595,13 +2596,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to delete the sentence term`() {
         waitForAnyProcessingToComplete()
-        courtSentencingNomisApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
+        courtSentencingNomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/sentences/$NOMIS_SENTENCE_SEQ/sentence-terms/$NOMIS_TERM_SEQ")))
       }
 
       @Test
       fun `will call the mapping service to delete the mapping`() {
         waitForAnyProcessingToComplete()
-        courtSentencingMappingApi.verify(WireMock.deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
+        courtSentencingMappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/court-sentencing/sentence-terms/dps-term-id/$DPS_TERM_ID")))
       }
     }
 
@@ -2630,7 +2631,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingNomisApi.verify(
           0,
-          WireMock.deleteRequestedFor(WireMock.anyUrl()),
+          deleteRequestedFor(WireMock.anyUrl()),
         )
       }
     }
@@ -2793,7 +2794,18 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
 
-        courtSentencingNomisApi.stubRecallSentences(OFFENDER_NO, response = ConvertToRecallResponse(courtEventIds = listOf(101, 102)))
+        courtSentencingNomisApi.stubRecallSentences(
+          OFFENDER_NO,
+          response = ConvertToRecallResponse(
+            courtEventIds = listOf(101, 102),
+            sentenceAdjustmentsActivated = listOf(
+              uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds(
+                sentenceId = SentenceId(offenderBookingId = BOOKING_ID, sentenceSequence = 2),
+                adjustmentIds = listOf(1, 2),
+              ),
+            ),
+          ),
+        )
       }
 
       @Nested
@@ -2866,7 +2878,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `will send message to nomis migration to sync sentence adjustments`() {
+        fun `will send message to nomis migration to sync sentence adjustments that have been activated`() {
           await untilAsserted {
             assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
           }
@@ -2875,11 +2887,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
           assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.sentence-adjustments")
           val request: SyncSentenceAdjustment = sqsMessage.Message.fromJson()
-          assertThat(request.sentenceIds).hasSize(2)
-          assertThat(request.sentenceIds[0].sentenceSequence).isEqualTo(1)
-          assertThat(request.sentenceIds[1].sentenceSequence).isEqualTo(2)
-          assertThat(request.sentenceIds[0].offenderBookingId).isEqualTo(BOOKING_ID)
-          assertThat(request.sentenceIds[1].offenderBookingId).isEqualTo(BOOKING_ID)
+          assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(request.sentences).hasSize(1)
+          assertThat(request.sentences[0].sentenceId.offenderBookingId).isEqualTo(BOOKING_ID)
+          assertThat(request.sentences[0].sentenceId.sentenceSequence).isEqualTo(2)
+          assertThat(request.sentences[0].adjustmentIds).contains(1L, 2L)
         }
 
         @Test
