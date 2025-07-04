@@ -171,7 +171,8 @@ class CourtSentencingReconciliationService(
         id = it.sentenceUuid.toString(),
         offenceCodes = offenceCodeString,
         terms = terms,
-        termsAsString = sortTerms(terms).toString(),
+        // this can't have the id in it for sorting
+        termsAsString = sortTerms(terms).map { it.toSortString() }.toString(),
       )
     }.distinctBy { it.id }
 
@@ -242,7 +243,7 @@ class CourtSentencingReconciliationService(
           id = sentenceResponse.sentenceSeq.toString(),
           offenceCodes = offenderCodeString,
           terms = terms,
-          termsAsString = sortTerms(terms).toString(),
+          termsAsString = sortTerms(terms).map { it.toSortString() }.toString(),
         )
       },
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
@@ -441,7 +442,7 @@ class CourtSentencingReconciliationService(
           compareLists(
             sortTerms(dpsObj.terms),
             sortTerms(nomisObj.terms),
-            "$parentProperty.sentenceTerms",
+            "$parentProperty.terms",
           ),
         )
       }
@@ -617,6 +618,8 @@ data class SentenceTermFields(
       weeks == other.weeks &&
       lifeSentenceFlag == other.lifeSentenceFlag
   }
+
+  fun toSortString(): String = "SentenceTermFields(sentenceTermCode=$sentenceTermCode, years=$years, months=$months, weeks=$weeks, days=$days, lifeSentenceFlag=$lifeSentenceFlag)"
 }
 
 data class MismatchCase(

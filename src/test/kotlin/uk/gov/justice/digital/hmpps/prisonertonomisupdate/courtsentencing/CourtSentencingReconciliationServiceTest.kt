@@ -69,6 +69,8 @@ private const val MONTHS = 5
 private const val WEEKS = 4
 private const val DAYS = 3
 private const val DPS_PERIOD_LENGTH_ID = "87591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_PERIOD_LENGTH_2_ID = "11591b18-642a-484a-a967-2d17b5c9c5a1"
+private const val DPS_PERIOD_LENGTH_3_ID = "21591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_SENTENCE_ID = "1c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_SENTENCE_2_ID = "2c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_SENTENCE_3_ID = "3c591b18-642a-484a-a967-2d17b5c9c5a1"
@@ -303,7 +305,16 @@ internal class CourtSentencingReconciliationServiceTest {
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "2021-03-03", nomis = "2022-03-03", id = DPS_COURT_CHARGE_ID)))
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.appearances[0].charges[0].offenceDate",
+            dps = "2021-03-03",
+            nomis = "2022-03-03",
+            id = DPS_COURT_CHARGE_ID,
+          ),
+        ),
+      )
     }
 
     @Test
@@ -434,7 +445,16 @@ internal class CourtSentencingReconciliationServiceTest {
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceCategory", dps = "New Category", nomis = "2020", id = DPS_SENTENCE_4_ID)))
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.sentences[0].sentenceCategory",
+            dps = "New Category",
+            nomis = "2020",
+            id = DPS_SENTENCE_4_ID,
+          ),
+        ),
+      )
     }
 
     @Test
@@ -453,6 +473,50 @@ internal class CourtSentencingReconciliationServiceTest {
               charges = listOf(
                 dpsChargeResponse().copy(
                   sentence = dpsSentenceResponse().copy(fineAmount = BigDecimal("8.1")),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `will order sentences using terms when only difference is the terms`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
+            ),
+          ),
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              sentenceSeq = 2,
+              sentenceTerms = listOf(nomisSentenceTermResponse().copy(termSequence = 9), nomisSentenceTermResponse().copy(termSequence = 8)),
+            ),
+            nomisSentenceResponse(),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse(),
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID),
+                    periodLengths = listOf(
+                      dpsPeriodLengthResponse().copy(periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_2_ID)),
+                      dpsPeriodLengthResponse().copy(periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_3_ID)),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -493,7 +557,10 @@ internal class CourtSentencingReconciliationServiceTest {
                   sentence = dpsSentenceResponse().copy(fineAmount = BigDecimal("2.3")),
                 ),
                 dpsChargeResponse().copy(
-                  sentence = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID), fineAmount = BigDecimal("8.1")),
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID),
+                    fineAmount = BigDecimal("8.1"),
+                  ),
                 ),
               ),
             ),
@@ -544,7 +611,7 @@ internal class CourtSentencingReconciliationServiceTest {
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceTerms", dps = 2, nomis = 3)))
+      ).isEqualTo(listOf(Difference(property = "case.sentences[0].terms", dps = 2, nomis = 3)))
     }
 
     @Test
@@ -586,7 +653,16 @@ internal class CourtSentencingReconciliationServiceTest {
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.sentences[0].sentenceTerms[2].years", dps = 20, nomis = 6, id = DPS_PERIOD_LENGTH_ID)))
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.sentences[0].terms[2].years",
+            dps = 20,
+            nomis = 6,
+            id = DPS_PERIOD_LENGTH_ID,
+          ),
+        ),
+      )
     }
   }
 }
