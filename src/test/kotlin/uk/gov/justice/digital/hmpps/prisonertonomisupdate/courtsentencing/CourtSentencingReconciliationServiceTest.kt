@@ -78,6 +78,8 @@ private const val DPS_SENTENCE_4_ID = "9a591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val SENTENCE_CATEGORY = "2020"
 private const val SENTENCE_CALC_TYPE = "ADIMP_ORA"
 private const val NOMIS_SENTENCE_SEQ = 3L
+private const val NOMIS_SENTENCE_2_SEQ = 4L
+private const val NOMIS_SENTENCE_3_SEQ = 5L
 private const val NOMIS_TERM_SEQ = 4L
 private const val SENTENCE_TERM_TYPE = "IMP"
 
@@ -384,12 +386,22 @@ internal class CourtSentencingReconciliationServiceTest {
               courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
             ),
           ),
-          sentences = listOf(nomisSentenceResponse(), nomisSentenceResponse(), nomisSentenceResponse(charges = emptyList())),
+          sentences = listOf(
+            nomisSentenceResponse(),
+            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_2_SEQ),
+            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_3_SEQ, charges = emptyList()),
+          ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
           appearances = listOf(
             dpsAppearanceResponse().copy(
-              charges = listOf(dpsChargeResponse(), dpsChargeResponse()),
+              charges = listOf(
+                dpsChargeResponse(),
+                dpsChargeResponse().copy(
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
+                  sentence = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID)),
+                ),
+              ),
             ),
           ),
         ),
@@ -398,8 +410,8 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
-        )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.sentences", dps = 1, nomis = 2)))
+        ),
+      ).isNull()
     }
 
     @Test
@@ -897,8 +909,9 @@ fun nomisSentenceResponse(
   eventId: Long = NOMIS_COURT_APPEARANCE_ID,
   terms: List<SentenceTermResponse> = listOf(nomisSentenceTermResponse()),
   charges: List<OffenderChargeResponse> = listOf(nomisOffenderChargeResponse()),
+  sentenceSeq: Long = NOMIS_SENTENCE_SEQ,
 ) = SentenceResponse(
-  sentenceSeq = NOMIS_SENTENCE_SEQ,
+  sentenceSeq = sentenceSeq,
   bookingId = NOMIS_BOOKING_ID,
   category = CodeDescription(SENTENCE_CATEGORY, "desc"),
   calculationType = CodeDescription(SENTENCE_CALC_TYPE, "desc"),
