@@ -16,24 +16,30 @@ val DEFAULT_RETRY_POLICY: RetryPolicy = SimpleRetryPolicy().apply { maxAttempts 
 val DEFAULT_BACKOFF_POLICY: BackOffPolicy = ExponentialBackOffPolicy().apply { initialInterval = 1000L }
 private val log = LoggerFactory.getLogger(HmppsQueue::class.java)
 
-internal fun SqsAsyncClient.sendMessage(queueUrl: String, eventType: String, message: String): SendMessageResponse {
-  val retryTemplate = RetryTemplate().apply {
-    setRetryPolicy(DEFAULT_RETRY_POLICY)
-    setBackOffPolicy(DEFAULT_BACKOFF_POLICY)
+internal fun SqsAsyncClient.sendMessage(queueUrl: String, eventType: String, message: String, retryTemplate: RetryTemplate): SendMessageResponse = runCatching {
+  retryTemplate.execute<SendMessageResponse, Exception> {
+    sendMessage(
+      SendMessageRequest.builder().queueUrl(queueUrl)
+        .messageBody(message)
+        .eventTypeMessageAttributes(eventType)
+        .build(),
+    ).get()
   }
+}.onFailure {
+  log.error("""Unable to send message {} with body "{}"""", eventType, message)
+}.getOrThrow()
 
-  return runCatching {
-    retryTemplate.execute<SendMessageResponse, Exception> {
-      sendMessage(
-        SendMessageRequest.builder().queueUrl(queueUrl)
-          .messageBody(message)
-          .eventTypeMessageAttributes(eventType)
-          .build(),
-      ).get()
-    }
-  }.onFailure {
-    log.error("""Unable to send message {} with body "{}"""", eventType, message)
-  }.getOrThrow()
-}
-
-internal fun HmppsQueue.sendMessage(eventType: String, message: String) = this.sqsClient.sendMessage(this.queueUrl, eventType = eventType, message = message)
+internal fun HmppsQueue.sendMessage(
+  eventType: String,
+  message: String,
+  retryPolicy: RetryPolicy = DEFAULT_RETRY_POLICY,
+  backOffPolicy: BackOffPolicy = DEFAULT_BACKOFF_POLICY,
+) = this.sqsClient.sendMessage(
+  this.queueUrl,
+  eventType = eventType,
+  message = message,
+  retryTemplate = RetryTemplate().apply {
+    setRetryPolicy(retryPolicy)
+    setBackOffPolicy(backOffPolicy)
+  },
+)

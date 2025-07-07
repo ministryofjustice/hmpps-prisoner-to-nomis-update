@@ -16,8 +16,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.sendMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
@@ -44,10 +42,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.QueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
-import uk.gov.justice.hmpps.sqs.HmppsQueue
-import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
@@ -60,9 +57,8 @@ class CourtSentencingService(
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
-  private val hmppsQueueService: HmppsQueueService,
+  private val queueService: QueueService,
 ) : CreateMappingRetryable {
-  private val fromNOMISQueue by lazy { hmppsQueueService.findByQueueId("fromnomiscourtsentencing") as HmppsQueue }
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -879,28 +875,19 @@ class CourtSentencingService(
           )
         }
 
-        runCatching {
-          SQSMessage(
-            Type = "courtsentencing.resync.sentence-adjustments",
-            Message = SyncSentenceAdjustment(
-              offenderNo = offenderNo,
-              sentences = response.sentenceAdjustmentsActivated.map {
-                SentenceIdAndAdjustmentIds(
-                  sentenceId = it.sentenceId,
-                  adjustmentIds = it.adjustmentIds,
-                )
-              },
-            ).toJson(),
-          ).also {
-            fromNOMISQueue.sendMessage(
-              eventType = it.Type,
-              message = it.toJson(),
-            )
-          }
-        }.onFailure {
-          // this requires manual intervention; we have retried several times and just can not send
-          telemetryClient.trackEvent("sentence-adjustments-resync-failed", telemetryMap, null)
-        }
+        queueService.sendMessageTrackOnFailure(
+          queueId = "fromnomiscourtsentencing",
+          eventType = "courtsentencing.resync.sentence-adjustments",
+          message = SyncSentenceAdjustment(
+            offenderNo = offenderNo,
+            sentences = response.sentenceAdjustmentsActivated.map {
+              SentenceIdAndAdjustmentIds(
+                sentenceId = it.sentenceId,
+                adjustmentIds = it.adjustmentIds,
+              )
+            },
+          ),
+        )
         telemetryClient.trackEvent(
           "recall-inserted-success",
           telemetryMap,
