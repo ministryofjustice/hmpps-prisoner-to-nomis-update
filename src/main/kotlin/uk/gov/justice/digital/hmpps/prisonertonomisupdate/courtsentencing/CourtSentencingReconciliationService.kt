@@ -223,7 +223,8 @@ class CourtSentencingReconciliationService(
           chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
       },
-      sentences = nomisResponse.sentences.map { sentenceResponse ->
+      // TODO remove this temp fix for nomis sentences without any charges (bad data)
+      sentences = nomisResponse.sentences.filter { it.offenderCharges.isNotEmpty() }.map { sentenceResponse ->
         val offenderCodeString =
           sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted()
             .joinToString(",")
