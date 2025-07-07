@@ -194,6 +194,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
         Response(
           code = "123",
           response = "Yes",
+          label = "Yes",
           recordedBy = "JSMITH",
           responseDate = LocalDate.parse("2021-06-05"),
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -201,6 +202,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           sequence = 1,
         ),
       ),
+      label = "Was anybody hurt?",
     ),
     Question(
       code = "12345",
@@ -210,6 +212,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       responses = listOf(
         Response(
           code = "456",
+          label = "No",
           response = "No",
           recordedBy = "JSMITH",
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -218,6 +221,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
         ),
         Response(
           code = "789",
+          label = "Billy Bob",
           response = "Bob",
           recordedBy = "JSMITH",
           recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -225,6 +229,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           sequence = 3,
         ),
       ),
+      label = "Where was the drone?",
     ),
   ),
   history = listOf(
@@ -240,6 +245,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
             HistoricalResponse(
               code = "123",
               response = "Yes",
+              label = "Yes",
               sequence = 1,
               recordedBy = "Fred Jones",
               recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -248,6 +254,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
           ),
           additionalInformation = "some info",
           sequence = 1,
+          label = "Were tools involved?",
         ),
         HistoricalQuestion(
           code = "999",
@@ -256,12 +263,14 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
             HistoricalResponse(
               code = "456",
               response = "Yes",
+              label = "Yes",
               sequence = 1,
               recordedBy = "Fred Jones",
               recordedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
             ),
           ),
           sequence = 2,
+          label = "Was paper involved?",
         ),
       ),
     ),
