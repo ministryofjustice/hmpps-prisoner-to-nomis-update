@@ -614,6 +614,7 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
 
         assertThat(mismatch.nomisIncident!!.totalResponses).isEqualTo(0)
         assertThat(mismatch.dpsIncident!!.totalResponses).isEqualTo(3)
+        assertThat(mismatch.verdict).isEqualTo("responses mismatch for question: 1234")
 
         verify(telemetryClient).trackEvent(
           eq("incidents-reports-reconciliation-detail-mismatch"),
