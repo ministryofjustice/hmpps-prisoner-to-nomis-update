@@ -151,9 +151,10 @@ class IncidentsReconciliationService(
         dpsId = dpsOpenIncident.id,
         nomisIncident = nomisOpenIncident.toReportDetail(),
         dpsIncident = dpsOpenIncident.toReportDetail(),
+        verdict = verdict,
       )
         .also { mismatch ->
-          log.info("Incident Mismatch found  $mismatch")
+          log.info("Incident mismatch found $mismatch")
           telemetryClient.trackEvent(
             "incidents-reports-reconciliation-detail-mismatch",
             mapOf(
@@ -220,6 +221,7 @@ data class MismatchIncident(
   val dpsId: UUID,
   val nomisIncident: IncidentReportDetail? = null,
   val dpsIncident: IncidentReportDetail? = null,
+  val verdict: String,
 )
 
 data class IncidentReportDetail(
