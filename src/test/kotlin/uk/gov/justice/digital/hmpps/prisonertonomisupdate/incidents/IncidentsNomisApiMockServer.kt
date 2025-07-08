@@ -362,7 +362,7 @@ private fun incidentResponse(
           ),
           createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
           createdBy = "JSMITH",
-          questionResponseId = null,
+          questionResponseId = 123,
           answer = "Yes",
           responseDate = null,
           comment = null,
