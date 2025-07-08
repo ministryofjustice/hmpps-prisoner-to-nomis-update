@@ -285,7 +285,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   staffInvolved = listOf(
     StaffInvolvement(
       sequence = 1,
-      staffUsername = "Dave Jones",
+      staffUsername = "DJONES",
       staffRole = StaffInvolvement.StaffRole.ACTIVELY_INVOLVED,
       comment = "Dave was hit",
       firstName = "Dave",
@@ -293,8 +293,16 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
     ),
     StaffInvolvement(
       sequence = 2,
+      staffUsername = "DSMITH",
       staffRole = StaffInvolvement.StaffRole.CR_SUPERVISOR,
       comment = "Dave wasn't hit",
+      firstName = "Dave",
+      lastName = "Smith",
+    ),
+    StaffInvolvement(
+      sequence = 2,
+      staffRole = StaffInvolvement.StaffRole.CR_SUPERVISOR,
+      comment = "DPS User that isn't held in Nomis - is ignored as no staffUsername set",
       firstName = "Dave",
       lastName = "Smith",
     ),

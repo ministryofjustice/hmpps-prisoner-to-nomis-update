@@ -203,9 +203,9 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
             incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
-                .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
+                .withRequestBodyJsonPath("staffParties[0].username", "DJONES")
                 .withRequestBodyJsonPath("staffParties[0].role", "AI")
-                .withRequestBodyJsonPath("staffParties.length()", "1"),
+                .withRequestBodyJsonPath("staffParties.length()", "2"),
             )
           }
 
@@ -464,9 +464,9 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
             incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
-                .withRequestBodyJsonPath("staffParties[0].username", "Dave Jones")
+                .withRequestBodyJsonPath("staffParties[0].username", "DJONES")
                 .withRequestBodyJsonPath("staffParties[0].role", "AI")
-                .withRequestBodyJsonPath("staffParties.length()", "1"),
+                .withRequestBodyJsonPath("staffParties.length()", "2"),
             )
           }
 
