@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
