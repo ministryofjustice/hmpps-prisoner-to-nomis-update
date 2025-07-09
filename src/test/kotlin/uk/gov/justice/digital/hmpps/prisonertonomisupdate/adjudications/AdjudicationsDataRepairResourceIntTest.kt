@@ -19,6 +19,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
@@ -27,7 +28,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Ou
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentScheduleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension.Companion.adjudicationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate

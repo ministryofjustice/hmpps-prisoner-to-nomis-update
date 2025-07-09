@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Ou
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsMappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -41,6 +42,7 @@ internal class AdjudicationsServiceTest {
   private val adjudicationsMappingService: AdjudicationsMappingService = mock()
   private val hearingMappingService: HearingsMappingService = mock()
   private val punishmentMappingService: PunishmentsMappingService = mock()
+  private val locationsMappingService: LocationsMappingService = mock()
   private val adjudicationsRetryQueueService: AdjudicationsRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val objectMapper: ObjectMapper = mock()

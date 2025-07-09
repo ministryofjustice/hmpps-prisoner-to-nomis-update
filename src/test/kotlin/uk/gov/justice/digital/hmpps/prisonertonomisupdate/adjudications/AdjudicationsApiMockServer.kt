@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
@@ -79,11 +79,13 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     punishments: List<PunishmentDto> = listOf(),
     status: String = "UNSCHEDULED",
     hearingId: Long = 345,
+    hearingLocationUuid: UUID = UUID.randomUUID(),
+    incidentLocationUuid: UUID = UUID.randomUUID(),
     hearings: List<HearingDto> = listOf(
       HearingDto(
         id = hearingId,
         locationId = 27187,
-        locationUuid = UUID.randomUUID(),
+        locationUuid = hearingLocationUuid,
         dateTimeOfHearing = LocalDateTime.parse("2023-08-23T14:25:00"),
         oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
         agencyId = "MDI",
@@ -102,7 +104,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
         locationId = 197683,
-        locationUuid = UUID.randomUUID(),
+        locationUuid = incidentLocationUuid,
         dateTimeOfIncident = LocalDateTime.parse("2023-07-11T09:00:00"),
         dateTimeOfDiscovery = LocalDateTime.parse("2023-07-11T09:00:00"),
         handoverDeadline = LocalDateTime.parse("2023-07-13T09:00:00"),
