@@ -54,6 +54,7 @@ internal class AdjudicationsServiceTest {
     hearingMappingService = hearingMappingService,
     adjudicationsApiService = adjudicationsApiService,
     punishmentsMappingService = punishmentMappingService,
+    locationsMappingService = locationsMappingService,
     nomisApiService = nomisApiService,
     objectMapper = objectMapper,
   )
