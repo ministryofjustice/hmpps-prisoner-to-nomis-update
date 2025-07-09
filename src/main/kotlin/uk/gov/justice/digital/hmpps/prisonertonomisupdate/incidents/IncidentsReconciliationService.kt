@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentAgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
@@ -179,23 +180,27 @@ class IncidentsReconciliationService(
     // and therefore the values will be out of sync
     if (nomis.reportingStaff.username != dps.reportedBy) return "Reporting Staff mismatch"
     if (nomis.offenderParties.size != dps.prisonersInvolved.size) return "Offender parties mismatch"
-    if (nomis.staffParties.size != dps.staffInvolved.size) return "Staff parties mismatch"
+    if (nomis.staffParties.size != dps.nomisOnlyStaff().size) return "Staff parties mismatch"
     if (nomis.type != dps.type.mapDps()) return "type mismatch"
     if (nomis.status.code != dps.status.mapDps()) return "status mismatch"
     if (nomis.reportedDateTime != dps.reportedAt) return "reported date mismatch"
-    val offendersDifference = nomis.offenderParties.map { it.offender.offenderNo }.compare(dps.prisonersInvolved.map { it.prisonerNumber })
-    if (offendersDifference.isNotEmpty()) return "offender parties mismatch $offendersDifference"
-    if (nomis.questions.size != dps.questions.size) return "questions mismatch"
-    if (nomis.requirements.size != dps.correctionRequests.size) return "requirements mismatch"
 
-    nomis.questions.forEach { nomisQuestion ->
-      dps.questions.find {
-        it.code == nomisQuestion.questionId.toString() && it.sequence == nomisQuestion.sequence
+    val offendersDifference =
+      nomis.offenderParties.map { it.offender.offenderNo }.compare(dps.prisonersInvolved.map { it.prisonerNumber })
+    if (offendersDifference.isNotEmpty()) return "Offender parties mismatch $offendersDifference"
+
+    if (nomis.requirements.size != dps.correctionRequests.size) return "requirements mismatch"
+    if (nomis.questions.size != dps.questions.size) {
+      return "questions mismatch"
+    }
+    nomis.questions.forEachIndexed { i, nomisQuestion ->
+      val dpsQuestion = dps.questions[i]
+      if (dpsQuestion.code != nomisQuestion.questionId.toString()) {
+        return "Code mismatch for question: ${nomisQuestion.questionId}"
       }
-        ?.let { dpsQuestion ->
-          if (nomisQuestion.answers.size != dpsQuestion.responses.size) return "responses mismatch for question: ${nomisQuestion.questionId}"
-        }
-        ?: return "responses mismatch for question: ${nomisQuestion.questionId}"
+      if (nomisQuestion.answers.size != dpsQuestion.responses.size) {
+        return "responses mismatch for question: ${nomisQuestion.questionId}"
+      }
     }
 
     return null
@@ -206,6 +211,8 @@ class IncidentsReconciliationService(
     return both.filterNot { this.contains(it) && otherList.contains(it) }
   }
 }
+
+fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
 data class MismatchIncidents(
   val agencyId: String,
@@ -254,7 +261,7 @@ fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
   reportedBy,
   reportedAt,
   prisonersInvolved.map { it.prisonerNumber },
-  staffInvolved.size,
+  nomisOnlyStaff().size,
   questions.size,
   correctionRequests.size,
   questions.flatMap { it.responses }.size,

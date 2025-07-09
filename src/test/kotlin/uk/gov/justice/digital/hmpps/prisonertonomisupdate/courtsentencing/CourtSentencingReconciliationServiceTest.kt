@@ -359,7 +359,7 @@ internal class CourtSentencingReconciliationServiceTest {
               courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
             ),
           ),
-          sentences = listOf(nomisSentenceResponse(), nomisSentenceResponse()),
+          sentences = listOf(nomisSentenceResponse(), nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID)))),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
           appearances = listOf(
@@ -388,7 +388,7 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
           sentences = listOf(
             nomisSentenceResponse(),
-            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_2_SEQ),
+            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_2_SEQ, charges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
             nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_3_SEQ, charges = emptyList()),
           ),
         ),
@@ -401,6 +401,40 @@ internal class CourtSentencingReconciliationServiceTest {
                   chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
                   sentence = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID)),
                 ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `will ignore duplicate nomis sentences (same OffenderCharge record)`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(nomisChargeResponse()),
+            ),
+          ),
+          sentences = listOf(
+            nomisSentenceResponse(),
+            // ignore these next 2 as they have the same OffenderChargeId
+            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_2_SEQ),
+            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_3_SEQ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse(),
               ),
             ),
           ),
@@ -475,10 +509,10 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
           sentences = listOf(
             nomisSentenceResponse(),
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_2))),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_2, offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
             // will reorder on offence code when comparing
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_4))),
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_3))),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_4, offenderChargeId = NOMIS_COURT_CHARGE_3_ID))),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_3, offenderChargeId = NOMIS_COURT_CHARGE_4_ID))),
           ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
@@ -574,7 +608,7 @@ internal class CourtSentencingReconciliationServiceTest {
                 nomisSentenceTermResponse().copy(termSequence = 8),
               ),
             ),
-            nomisSentenceResponse(),
+            nomisSentenceResponse().copy(offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
           ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
@@ -619,6 +653,7 @@ internal class CourtSentencingReconciliationServiceTest {
             ),
             nomisSentenceResponse().copy(
               fineAmount = BigDecimal("2.3"),
+              offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID)),
             ),
           ),
         ),
@@ -634,6 +669,7 @@ internal class CourtSentencingReconciliationServiceTest {
                     sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID),
                     fineAmount = BigDecimal("8.1"),
                   ),
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
                 ),
               ),
             ),
