@@ -37,7 +37,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.incident.reportingStaffUsername).isEqualTo("GBROWN")
     assertThat(nomisAdjudication.incident.incidentDate).isEqualTo("2023-07-28")
@@ -66,7 +66,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:1B")
@@ -88,7 +88,7 @@ class AdjudicationTransformationTest {
       ),
     )
 
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:12A")
@@ -119,7 +119,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:25D")
@@ -151,7 +151,7 @@ class AdjudicationTransformationTest {
       ),
     )
 
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.charges).hasSize(1)
     assertThat(nomisAdjudication.charges[0].offenceCode).isEqualTo("51:1B")
@@ -169,7 +169,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.evidence).hasSize(4)
     assertThat(nomisAdjudication.evidence[0].typeCode.name).isEqualTo("PHOTO")
@@ -197,7 +197,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
 
     assertThat(nomisAdjudication.incident.repairs).hasSize(7)
     assertThat(nomisAdjudication.incident.repairs[0].typeCode.name).isEqualTo("ELEC")
@@ -232,7 +232,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
     assertThat(nomisAdjudication.incident.prisonerVictimsOffenderNumbers).hasSize(1).containsExactly("A1234AA")
     assertThat(nomisAdjudication.incident.staffVictimsUsernames).hasSize(0)
   }
@@ -254,7 +254,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
     assertThat(nomisAdjudication.incident.prisonerVictimsOffenderNumbers).hasSize(0)
   }
 
@@ -274,7 +274,7 @@ class AdjudicationTransformationTest {
         ),
       ),
     )
-    val nomisAdjudication = dpsAdjudication.toNomisAdjudication()
+    val nomisAdjudication = dpsAdjudication.toNomisAdjudication(543311)
     assertThat(nomisAdjudication.incident.prisonerVictimsOffenderNumbers).hasSize(0)
     assertThat(nomisAdjudication.incident.staffVictimsUsernames).hasSize(1).containsExactly("J.SMITH")
   }

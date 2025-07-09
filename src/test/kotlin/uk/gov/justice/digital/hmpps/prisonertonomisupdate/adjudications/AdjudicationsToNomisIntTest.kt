@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import java.util.UUID
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
 private const val CHARGE_NUMBER_FOR_UPDATE = "12345-1"
@@ -37,6 +38,15 @@ private const val CHARGE_SEQ = 1
 private const val ADJUDICATION_NUMBER = 12345L
 private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
+private const val INTERNAL_LOCATION_DPS_ID = "be1ee367-8cfa-4499-942b-3938d375f41e"
+private const val INTERNAL_LOCATION_NOMIS_ID = 197683L
+val locationMappingResponse = """
+    {
+      "dpsLocationId": "$INTERNAL_LOCATION_DPS_ID",
+      "nomisLocationId": $INTERNAL_LOCATION_NOMIS_ID,
+      "mappingType": "LOCATION_CREATED"
+    }
+""".trimIndent()
 
 class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -46,10 +56,81 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenChargeHasBeenCreatedInDPS {
       @BeforeEach
       fun setUp() {
-        adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          incidentLocationUuid = UUID.fromString(INTERNAL_LOCATION_DPS_ID),
+        )
         nomisApi.stubAdjudicationCreate(OFFENDER_NO, ADJUDICATION_NUMBER, CHARGE_SEQ)
         mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
         mappingServer.stubCreateAdjudication()
+        mappingServer.stubGetMappingGivenDpsLocationId(INTERNAL_LOCATION_DPS_ID, locationMappingResponse)
+        publishCreateAdjudicationDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to adjudication service to get more details`() {
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("adjudication-create-success"),
+          check {
+            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the adjudication`() {
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/adjudications")))
+      }
+
+      @Test
+      fun `will create a mapping between the two adjudications`() {
+        waitForCreateAdjudicationProcessingToBeComplete()
+
+        await untilAsserted {
+          mappingServer.verify(
+            postRequestedFor(urlEqualTo("/mapping/adjudications"))
+              .withRequestBody(
+                matchingJsonPath(
+                  "adjudicationNumber",
+                  equalTo(ADJUDICATION_NUMBER.toString()),
+                ),
+              )
+              .withRequestBody(matchingJsonPath("chargeSequence", equalTo(CHARGE_SEQ.toString())))
+              .withRequestBody(matchingJsonPath("chargeNumber", equalTo(CHARGE_NUMBER_FOR_CREATION))),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class WhenLocationMappingDoesNotExist {
+      @BeforeEach
+      fun setUp() {
+        adjudicationsApiServer.stubChargeGet(
+          CHARGE_NUMBER_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          incidentLocationUuid = UUID.fromString(INTERNAL_LOCATION_DPS_ID),
+        )
+        nomisApi.stubAdjudicationCreate(OFFENDER_NO, ADJUDICATION_NUMBER, CHARGE_SEQ)
+        mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
+        mappingServer.stubCreateAdjudication()
+        mappingServer.stubGetMappingGivenDpsLocationIdWithError(INTERNAL_LOCATION_DPS_ID, 404)
         publishCreateAdjudicationDomainEvent()
       }
 
@@ -139,7 +220,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
         mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
         mappingServer.stubCreateAdjudicationWithErrorFollowedBySlowSuccess()
         nomisApi.stubAdjudicationCreate(OFFENDER_NO, adjudicationNumber = 12345)
-        adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
+        adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, incidentLocationUuid = UUID.fromString(INTERNAL_LOCATION_DPS_ID))
         publishCreateAdjudicationDomainEvent()
 
         await untilCallTo { adjudicationsApiServer.getCountFor("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2") } matches { it == 1 }
