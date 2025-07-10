@@ -171,12 +171,12 @@ class AppointmentsService(
     }
   }
 
-  private fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
+  private suspend fun toCreateAppointmentRequest(instance: AppointmentInstance) = CreateAppointmentRequest(
     bookingId = instance.bookingId,
     internalLocationId = if (instance.inCell) {
       null
     } else {
-      instance.internalLocationId
+      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(instance.dpsLocationId).nomisLocationId }
     },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
@@ -185,11 +185,11 @@ class AppointmentsService(
     comment = constructComment(instance),
   )
 
-  private fun toUpdateAppointmentRequest(instance: AppointmentInstance) = UpdateAppointmentRequest(
+  private suspend fun toUpdateAppointmentRequest(instance: AppointmentInstance) = UpdateAppointmentRequest(
     internalLocationId = if (instance.inCell) {
       null
     } else {
-      instance.internalLocationId
+      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(instance.dpsLocationId).nomisLocationId }
     },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),

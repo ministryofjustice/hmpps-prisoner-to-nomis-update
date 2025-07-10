@@ -8,7 +8,9 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
 class AppointmentMappingService(
@@ -44,6 +46,12 @@ class AppointmentMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+
+  suspend fun getLocationMappingGivenDpsId(id: UUID): LocationMappingDto = webClient.get()
+    .uri("/mapping/locations/dps/{id}", id.toString())
+    .retrieve()
+    .bodyToMono(LocationMappingDto::class.java)
+    .awaitSingle()
 }
 
 data class AppointmentMappingDto(
