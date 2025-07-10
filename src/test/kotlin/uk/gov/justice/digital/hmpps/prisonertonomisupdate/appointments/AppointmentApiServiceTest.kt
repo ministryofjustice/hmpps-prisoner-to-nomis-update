@@ -32,6 +32,7 @@ internal class AppointmentApiServiceTest {
       "appointmentType": "INDIVIDUAL",
       "bookingId": 12345,
       "internalLocationId": 34567,
+      "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f",
       "appointmentDate": "2023-03-14",
       "startTime": "10:15",
       "endTime":  "11:42",

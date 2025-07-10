@@ -34,16 +34,24 @@ import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
 const val APPOINTMENT_INSTANCE_ID = 1234567L
 const val BOOKING_ID = 987651L
-const val LOCATION_ID = 987651L
+const val APPOINTMENT_NOMIS_LOCATION_ID = 987651L
 const val EVENT_ID = 111222333L
-
+const val APPOINTMENT_DPS_LOCATION_ID = "17f5a650-f82b-444d-aed3-aef1719cfa8f"
+internal val appointmentLocationMappingResponse = """
+    {
+      "dpsLocationId": "$APPOINTMENT_DPS_LOCATION_ID",
+      "nomisLocationId": $APPOINTMENT_NOMIS_LOCATION_ID,
+      "mappingType": "LOCATION_CREATED"
+    }
+""".trimIndent()
 class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
   private val appointmentResponse = """{
       "id": $APPOINTMENT_INSTANCE_ID,
       "appointmentType": "INDIVIDUAL",
       "bookingId": $BOOKING_ID,
-      "internalLocationId": $LOCATION_ID,
+      "internalLocationId": $APPOINTMENT_NOMIS_LOCATION_ID,
+      "dpsLocationId": "$APPOINTMENT_DPS_LOCATION_ID",
       "appointmentDate": "2023-03-14",
       "startTime": "10:15",
       "endTime":  "11:42",
@@ -72,6 +80,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
         mappingServer.stubCreateAppointment()
       }
 
@@ -94,12 +103,20 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `will get the NOMIS location`() {
+          await untilAsserted {
+            mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/locations/dps/$APPOINTMENT_DPS_LOCATION_ID")))
+          }
+          await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
         fun `will create an appointment in NOMIS`() {
           await untilAsserted {
             nomisApi.verify(
               postRequestedFor(urlEqualTo("/appointments"))
                 .withRequestBody(matchingJsonPath("bookingId", equalTo("$BOOKING_ID")))
-                .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$LOCATION_ID")))
+                .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$APPOINTMENT_NOMIS_LOCATION_ID")))
                 .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
                 .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
                 .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
@@ -135,7 +152,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
               check {
                 assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
                 assertThat(it["bookingId"]).isEqualTo(BOOKING_ID.toString())
-                assertThat(it["locationId"]).isEqualTo(LOCATION_ID.toString())
+                assertThat(it["locationId"]).isEqualTo(APPOINTMENT_NOMIS_LOCATION_ID.toString())
                 assertThat(it["date"]).isEqualTo("2023-03-14")
                 assertThat(it["start"]).isEqualTo("10:15")
                 assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
@@ -196,6 +213,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           mappingServer.stubCreateAppointment()
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(
@@ -226,7 +244,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
               1,
               postRequestedFor(urlEqualTo("/appointments"))
                 .withRequestBody(matchingJsonPath("bookingId", equalTo("$BOOKING_ID")))
-                .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$LOCATION_ID")))
+                .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$APPOINTMENT_NOMIS_LOCATION_ID")))
                 .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
                 .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
                 .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
@@ -279,6 +297,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           mappingServer.stubCreateAppointment()
           nomisApi.stubAppointmentCreateWithErrorFollowedBySlowSuccess("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
@@ -323,6 +342,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
 
           nomisApi.stubAppointmentCreateWithError(503)
@@ -353,6 +373,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           mappingServer.stubCreateAppointmentWithErrorFollowedBySlowSuccess()
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
@@ -400,6 +421,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           mappingServer.stubCreateAppointmentWithError(status = 503)
           nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
           appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
@@ -426,11 +448,37 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
           } matches { it == 1 }
         }
       }
+
+      @Nested
+      inner class WhenMappingServiceFailsOnLocation {
+        @BeforeEach
+        fun setUp() {
+          mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
+          mappingServer.stubGetMappingGivenDpsLocationIdWithError(APPOINTMENT_DPS_LOCATION_ID, 404)
+          mappingServer.stubCreateAppointment()
+          nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
+          appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 0 }
+
+          publishAppointmentEvent("appointments.appointment-instance.created")
+        }
+
+        @Test
+        fun `will add message to dead letter queue`() {
+          await untilCallTo {
+            awsSqsAppointmentDlqClient!!.countAllMessagesOnQueue(appointmentDlqUrl!!).get()
+          } matches { it == 1 }
+        }
+      }
     }
 
     @Test
     fun `will log when duplicate is detected`() {
       appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
+      mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
       mappingServer.stubGetMappingGivenAppointmentInstanceIdWithError(APPOINTMENT_INSTANCE_ID, 404)
       nomisApi.stubAppointmentCreate("""{ "eventId": $EVENT_ID }""")
       mappingServer.stubCreateAppointmentWithDuplicateError(
@@ -477,6 +525,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         appointmentsApi.stubGetAppointmentInstance(id = APPOINTMENT_INSTANCE_ID, response = appointmentResponse)
         mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
         nomisApi.stubAppointmentUpdate(EVENT_ID)
         publishAppointmentEvent("appointments.appointment-instance.updated")
       }
@@ -489,11 +538,19 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will get the NOMIS location`() {
+        await untilAsserted {
+          mappingServer.verify(getRequestedFor(urlEqualTo("/mapping/locations/dps/$APPOINTMENT_DPS_LOCATION_ID")))
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+
+      @Test
       fun `will update an appointment in NOMIS`() {
         await untilAsserted {
           nomisApi.verify(
             putRequestedFor(urlEqualTo("/appointments/$EVENT_ID"))
-              .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$LOCATION_ID")))
+              .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$APPOINTMENT_NOMIS_LOCATION_ID")))
               .withRequestBody(matchingJsonPath("eventDate", equalTo("2023-03-14")))
               .withRequestBody(matchingJsonPath("startTime", equalTo("10:15")))
               .withRequestBody(matchingJsonPath("endTime", equalTo("11:42")))
@@ -529,6 +586,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             id = APPOINTMENT_INSTANCE_ID,
             response = appointmentResponse,
           )
+          mappingServer.stubGetMappingGivenDpsLocationId(APPOINTMENT_DPS_LOCATION_ID, appointmentLocationMappingResponse)
           mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
           nomisApi.stubAppointmentUpdate(EVENT_ID)
           publishAppointmentEvent("appointments.appointment-instance.updated")
