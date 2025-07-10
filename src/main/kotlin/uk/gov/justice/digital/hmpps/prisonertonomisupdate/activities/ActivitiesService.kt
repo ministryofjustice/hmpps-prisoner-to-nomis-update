@@ -141,7 +141,7 @@ class ActivitiesService(
     }
   }
 
-  private fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, outsideWork: Boolean, mappings: ActivityMappingDto) = UpdateActivityRequest(
+  private suspend fun ActivitySchedule.toUpdateActivityRequest(pay: List<ActivityPay>, categoryCode: String, outsideWork: Boolean, mappings: ActivityMappingDto) = UpdateActivityRequest(
     startDate = startDate,
     capacity = capacity,
     payRates = pay.toPayRateRequests(),
@@ -152,16 +152,16 @@ class ActivitiesService(
     excludeBankHolidays = !runsOnBankHoliday,
     outsideWork = outsideWork,
     endDate = endDate,
-    internalLocationId = internalLocation?.id?.toLong(),
+    internalLocationId = mappingService.getLocationMappingGivenDpsId(internalLocation!!.dpsLocationId!!).nomisLocationId,
     programCode = categoryCode,
   )
 
-  private fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest = CreateActivityRequest(
+  private suspend fun toCreateActivityRequest(schedule: ActivitySchedule, activity: Activity): CreateActivityRequest = CreateActivityRequest(
     code = schedule.id.toString(),
     startDate = activity.startDate,
     endDate = activity.endDate,
     prisonId = activity.prisonCode,
-    internalLocationId = schedule.internalLocation?.id?.toLong(),
+    internalLocationId = mappingService.getLocationMappingGivenDpsId(schedule.internalLocation!!.dpsLocationId!!).nomisLocationId,
     capacity = schedule.capacity,
     payRates = activity.pay.toPayRateRequests(),
     description = toNomisActivityDescription(activity.summary),

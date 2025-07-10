@@ -60,6 +60,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       awsSnsClient.publish(
@@ -82,7 +83,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("startDate", equalTo("2023-01-12")))
           .withRequestBody(matchingJsonPath("endDate", equalTo("2023-01-13")))
           .withRequestBody(matchingJsonPath("prisonId", equalTo("PVI")))
-          .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
+          .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$ACTIVITIES_NOMIS_LOCATION_ID")))
           .withRequestBody(matchingJsonPath("capacity", equalTo("10")))
           .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
           .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
@@ -127,6 +128,9 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].nomisCourseScheduleId", equalTo("${NOMIS_CRS_SCH_ID + 1}")))
           .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_CREATED"))),
       )
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/locations/dps/$ACTIVITIES_DPS_LOCATION_ID")),
+      )
     }
 
     @Test
@@ -134,6 +138,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
       mappingServer.stubCreateActivityWithErrorFollowedBySuccess()
 
@@ -179,6 +184,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithDuplicateError(
         activityScheduleId = ACTIVITY_SCHEDULE_ID,
@@ -232,6 +238,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate("""{ "courseActivityId": $NOMIS_CRS_ACTY_ID, "courseSchedules": [] }""")
       mappingServer.stubCreateActivityWithError()
 
@@ -275,10 +282,37 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Test
+    fun `location mapping failure will result in DLQ message`() {
+      activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
+      activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
+      mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      // cannot find DPS mapping
+      mappingServer.stubGetMappingGivenDpsLocationIdWithError(ACTIVITIES_DPS_LOCATION_ID, 404)
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(activityMessagePayload("activities.activity-schedule.created", ACTIVITY_SCHEDULE_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.activity-schedule.created").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { activitiesApi.getCountFor("/activities/$ACTIVITY_ID/filtered?earliestSessionDate=$today") } matches { it == 1 }
+
+      await untilCallTo {
+        awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()
+      } matches { it == 1 }
+    }
+
+    @Test
     fun `will retry and publish telemetry after a Nomis update failure`() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       mappingServer.stubCreateActivity()
       nomisApi.stubActivityCreateWithError(status = 500)
 
@@ -320,6 +354,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponse())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
       mappingServer.stubUpdateActivity()
 
@@ -339,7 +374,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("payPerSession", equalTo("F")))
             .withRequestBody(matchingJsonPath("outsideWork", equalTo("true")))
             .withRequestBody(matchingJsonPath("excludeBankHolidays", equalTo("false")))
-            .withRequestBody(matchingJsonPath("internalLocationId", equalTo("98877667")))
+            .withRequestBody(matchingJsonPath("internalLocationId", equalTo("$ACTIVITIES_NOMIS_LOCATION_ID")))
             .withRequestBody(matchingJsonPath("payRates[0].incentiveLevel", equalTo("BAS")))
             .withRequestBody(matchingJsonPath("payRates[0].payBand", equalTo("1")))
             .withRequestBody(matchingJsonPath("payRates[0].rate", equalTo("1.5")))
@@ -377,6 +412,9 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_UPDATED"))),
         )
       }
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/locations/dps/$ACTIVITIES_DPS_LOCATION_ID")),
+      )
       await untilAsserted { mappingServer.verify(putRequestedFor(urlEqualTo("/mapping/activities"))) }
       assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
     }
@@ -401,6 +439,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
       activitiesApi.stubGetSchedule(ACTIVITY_SCHEDULE_ID, buildGetScheduleResponseWithMissingInstance())
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
       mappingServer.stubUpdateActivity()
 
@@ -426,6 +465,9 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("scheduledInstanceMappings[1].mappingType", equalTo("ACTIVITY_UPDATED"))),
         )
       }
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/locations/dps/$ACTIVITIES_DPS_LOCATION_ID")),
+      )
       assertThat(awsSqsActivityDlqClient.countAllMessagesOnQueue(activityDlqUrl).get()).isEqualTo(0)
     }
 
@@ -546,9 +588,10 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     }
   ],
   "internalLocation": {
-    "id": 98877667,
+    "id": $ACTIVITIES_NOMIS_LOCATION_ID,
     "code": "EDU-ROOM-1",
-    "description": "Education - R1"
+    "description": "Education - R1",
+    "dpsLocationId": "$ACTIVITIES_DPS_LOCATION_ID"
   },
   "capacity": 10,
   "activity": {
@@ -645,9 +688,10 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     }
   ],
   "internalLocation": {
-    "id": 98877667,
+    "id": $ACTIVITIES_NOMIS_LOCATION_ID,
     "code": "EDU-ROOM-1",
-    "description": "Education - R1"
+    "description": "Education - R1",
+    "dpsLocationId": "$ACTIVITIES_DPS_LOCATION_ID"
   },
   "capacity": 10,
   "activity": {

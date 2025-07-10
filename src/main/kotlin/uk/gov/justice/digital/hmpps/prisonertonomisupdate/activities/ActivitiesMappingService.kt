@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -7,7 +8,9 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
 class ActivitiesMappingService(
@@ -63,6 +66,11 @@ class ActivitiesMappingService(
       .retrieve()
       .awaitBodilessEntity()
   }
+  suspend fun getLocationMappingGivenDpsId(id: UUID): LocationMappingDto = webClient.get()
+    .uri("/mapping/locations/dps/{id}", id.toString())
+    .retrieve()
+    .bodyToMono(LocationMappingDto::class.java)
+    .awaitSingle()
 }
 
 data class ActivityMappingDto(
