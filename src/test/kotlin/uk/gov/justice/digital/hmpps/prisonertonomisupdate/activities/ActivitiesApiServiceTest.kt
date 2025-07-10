@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(ActivitiesApiService::class, ActivitiesConfiguration::class)
@@ -119,7 +120,8 @@ internal class ActivitiesApiServiceTest {
         "internalLocation": {
           "id": 98877667,
           "code": "EDU-ROOM-1",
-          "description": "Education - R1"
+          "description": "Education - R1",
+          "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f"
         },
         "capacity": 10,
         "activity": {
@@ -199,6 +201,7 @@ internal class ActivitiesApiServiceTest {
       assertThat(schedule.description).isEqualTo("Monday AM Houseblock 3")
       assertThat(schedule.internalLocation?.id).isEqualTo(98877667)
       assertThat(schedule.internalLocation?.code).isEqualTo("EDU-ROOM-1")
+      assertThat(schedule.internalLocation?.dpsLocationId).isEqualTo(UUID.fromString("17f5a650-f82b-444d-aed3-aef1719cfa8f"))
       assertThat(schedule.capacity).isEqualTo(10)
       assertThat(schedule.activity.payPerSession).isEqualTo(ActivityLite.PayPerSession.F)
       with(schedule.instances.first()) {
@@ -348,7 +351,8 @@ internal class ActivitiesApiServiceTest {
           "internalLocation": {
             "id": 98877667,
             "code": "EDU-ROOM-1",
-            "description": "Education - R1"
+            "description": "Education - R1",
+            "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f"
           },
           "capacity": 10,
           "activity": {
@@ -431,6 +435,7 @@ internal class ActivitiesApiServiceTest {
           "pieceRateItems": 10
         }
       ],
+      "payChange": [],
       "startDate": "2022-12-30",
       "endDate": "2022-12-31",
       "riskLevel": "High",
@@ -705,7 +710,8 @@ internal class ActivitiesApiServiceTest {
     "internalLocation": {
       "id": 197684,
       "code": "ASSO",
-      "description": "ASSOCIATION"
+      "description": "ASSOCIATION",
+      "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f"
     },
     "capacity": 10,
     "activity": {

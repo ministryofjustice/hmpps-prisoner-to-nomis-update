@@ -526,6 +526,7 @@ fun buildGetActivityResponse(
   "schedules": [],
   "waitingList": [],
   $payRates
+  "payChange": [],
   "startDate": "2023-01-12",
   "endDate": "2023-01-13",
   "riskLevel": "High",

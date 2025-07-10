@@ -485,6 +485,7 @@ private fun newActivity(): Activity = Activity(
       rate = 150,
     ),
   ),
+  payChange = listOf(),
   startDate = LocalDate.now(),
   createdTime = LocalDateTime.now(),
   createdBy = "me",
