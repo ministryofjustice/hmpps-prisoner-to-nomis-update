@@ -25,6 +25,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
+const val ACTIVITIES_NOMIS_LOCATION_ID = 12345
+const val ACTIVITIES_DPS_LOCATION_ID = "17f5a650-f82b-444d-aed3-aef1719cfa8f"
+internal val activitiesLocationMappingResponse = """
+    {
+      "dpsLocationId": "$ACTIVITIES_DPS_LOCATION_ID",
+      "nomisLocationId": $ACTIVITIES_NOMIS_LOCATION_ID,
+      "mappingType": "LOCATION_CREATED"
+    }
+""".trimIndent()
+
 class ActivityResourceIntTest : IntegrationTestBase() {
 
   @Nested
@@ -58,6 +68,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
@@ -74,6 +85,9 @@ class ActivityResourceIntTest : IntegrationTestBase() {
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_CREATED"))),
+      )
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/locations/dps/$ACTIVITIES_DPS_LOCATION_ID")),
       )
       verify(telemetryClient).trackEvent("activity-create-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
       verify(telemetryClient).trackEvent(
@@ -92,6 +106,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse(payRates = """"pay": [],"""))
       mappingServer.stubGetMappingsWithError(ACTIVITY_SCHEDULE_ID, 404)
       mappingServer.stubCreateActivity()
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
@@ -155,6 +170,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetActivity(ACTIVITY_ID, buildGetActivityResponse())
       mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
       mappingServer.stubUpdateActivity()
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
@@ -170,6 +186,9 @@ class ActivityResourceIntTest : IntegrationTestBase() {
           .withRequestBody(matchingJsonPath("nomisCourseActivityId", equalTo("$NOMIS_CRS_ACTY_ID")))
           .withRequestBody(matchingJsonPath("activityScheduleId", equalTo("$ACTIVITY_SCHEDULE_ID")))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("ACTIVITY_UPDATED"))),
+      )
+      mappingServer.verify(
+        getRequestedFor(urlEqualTo("/mapping/locations/dps/$ACTIVITIES_DPS_LOCATION_ID")),
       )
       verify(telemetryClient).trackEvent("activity-amend-requested", mapOf("dpsActivityScheduleId" to ACTIVITY_SCHEDULE_ID.toString()), null)
       verify(telemetryClient).trackEvent(
@@ -189,6 +208,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
       nomisApi.stubActivityUpdate(NOMIS_CRS_ACTY_ID, buildNomisActivityResponse())
       mappingServer.stubUpdateActivity()
+      mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
         .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))

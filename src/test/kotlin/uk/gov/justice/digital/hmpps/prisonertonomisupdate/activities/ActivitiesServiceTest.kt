@@ -30,12 +30,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Inter
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto.MappingType.LOCATION_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PayRateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.*
 
 internal class ActivitiesServiceTest {
 
@@ -70,6 +73,9 @@ internal class ActivitiesServiceTest {
         newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
+      whenever(mappingService.getLocationMappingGivenDpsId(any())).thenReturn(
+        LocationMappingDto(ACTIVITIES_DPS_LOCATION_ID, ACTIVITIES_NOMIS_LOCATION_ID.toLong(), LOCATION_CREATED),
+      )
       whenever(nomisApiService.createActivity(any())).thenReturn(
         CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
@@ -96,6 +102,9 @@ internal class ActivitiesServiceTest {
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(
         newActivity().copy(summary = "An activity summary that is very very very long"),
+      )
+      whenever(mappingService.getLocationMappingGivenDpsId(any())).thenReturn(
+        LocationMappingDto(ACTIVITIES_DPS_LOCATION_ID, ACTIVITIES_NOMIS_LOCATION_ID.toLong(), LOCATION_CREATED),
       )
       whenever(nomisApiService.createActivity(any())).thenReturn(
         CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
@@ -137,6 +146,9 @@ internal class ActivitiesServiceTest {
         newActivitySchedule(),
       )
       whenever(activitiesApiService.getActivity(ACTIVITY_ID)).thenReturn(newActivity())
+      whenever(mappingService.getLocationMappingGivenDpsId(any())).thenReturn(
+        LocationMappingDto(ACTIVITIES_DPS_LOCATION_ID, ACTIVITIES_NOMIS_LOCATION_ID.toLong(), LOCATION_CREATED),
+      )
       whenever(nomisApiService.createActivity(any())).thenReturn(
         CreateActivityResponse(courseActivityId = NOMIS_CRS_ACTY_ID, courseSchedules = listOf()),
       )
@@ -259,6 +271,9 @@ internal class ActivitiesServiceTest {
     fun `should throw and raise telemetry if fail to update Nomis`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule())
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(mappingService.getLocationMappingGivenDpsId(any())).thenReturn(
+        LocationMappingDto(ACTIVITIES_DPS_LOCATION_ID, ACTIVITIES_NOMIS_LOCATION_ID.toLong(), LOCATION_CREATED),
+      )
       whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
           NOMIS_CRS_ACTY_ID,
@@ -297,6 +312,9 @@ internal class ActivitiesServiceTest {
     fun `should raise telemetry when update of Nomis successful`() = runTest {
       whenever(activitiesApiService.getActivitySchedule(anyLong())).thenReturn(newActivitySchedule(endDate = LocalDate.now().plusDays(1)))
       whenever(activitiesApiService.getActivity(anyLong())).thenReturn(newActivity())
+      whenever(mappingService.getLocationMappingGivenDpsId(any())).thenReturn(
+        LocationMappingDto(ACTIVITIES_DPS_LOCATION_ID, ACTIVITIES_NOMIS_LOCATION_ID.toLong(), LOCATION_CREATED),
+      )
       whenever(nomisApiService.updateActivity(anyLong(), any())).thenReturn(CreateActivityResponse(1L, listOf()))
       whenever(mappingService.getMappings(anyLong())).thenReturn(
         ActivityMappingDto(
@@ -315,7 +333,7 @@ internal class ActivitiesServiceTest {
         eq(NOMIS_CRS_ACTY_ID),
         check {
           assertThat(it.endDate).isEqualTo(LocalDate.now().plusDays(1))
-          assertThat(it.internalLocationId).isEqualTo(345)
+          assertThat(it.internalLocationId).isEqualTo(ACTIVITIES_NOMIS_LOCATION_ID.toLong())
           assertThat(it.payRates).containsExactlyElementsOf(listOf(PayRateRequest("BAS", "1", BigDecimal.valueOf(1.5).setScale(2))))
         },
       )
@@ -396,9 +414,10 @@ private fun newActivitySchedule(endDate: LocalDate? = null): ActivitySchedule = 
   suspensions = emptyList(),
   capacity = 35,
   internalLocation = InternalLocation(
-    id = 345,
+    id = ACTIVITIES_NOMIS_LOCATION_ID,
     code = "A-ROOM",
     description = "Room description",
+    dpsLocationId = UUID.fromString(ACTIVITIES_DPS_LOCATION_ID),
   ),
   activity = ActivityLite(
     id = ACTIVITY_ID,
@@ -466,6 +485,7 @@ private fun newActivity(): Activity = Activity(
       rate = 150,
     ),
   ),
+  payChange = listOf(),
   startDate = LocalDate.now(),
   createdTime = LocalDateTime.now(),
   createdBy = "me",
