@@ -152,7 +152,7 @@ class ActivitiesService(
     excludeBankHolidays = !runsOnBankHoliday,
     outsideWork = outsideWork,
     endDate = endDate,
-    internalLocationId = mappingService.getLocationMappingGivenDpsId(internalLocation!!.dpsLocationId!!).nomisLocationId,
+    internalLocationId = internalLocation?.let { mappingService.getLocationMappingGivenDpsId(internalLocation.dpsLocationId!!).nomisLocationId },
     programCode = categoryCode,
   )
 
@@ -161,7 +161,7 @@ class ActivitiesService(
     startDate = activity.startDate,
     endDate = activity.endDate,
     prisonId = activity.prisonCode,
-    internalLocationId = mappingService.getLocationMappingGivenDpsId(schedule.internalLocation!!.dpsLocationId!!).nomisLocationId,
+    internalLocationId = schedule.internalLocation?.let { mappingService.getLocationMappingGivenDpsId(schedule.internalLocation.dpsLocationId!!).nomisLocationId },
     capacity = schedule.capacity,
     payRates = activity.pay.toPayRateRequests(),
     description = toNomisActivityDescription(activity.summary),
