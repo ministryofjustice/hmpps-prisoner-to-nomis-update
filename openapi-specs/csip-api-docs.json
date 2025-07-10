@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-08.76.954eda0"
+    "version" : "2025-07-09.168.303e9ae"
   },
   "servers" : [ {
     "url" : "https://csip-api-dev.hmpps.service.justice.gov.uk",
@@ -3290,6 +3290,10 @@
             "items" : {
               "$ref" : "#/components/schemas/Review"
             }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
         "required" : [ "identifiedNeeds", "reviews" ]
