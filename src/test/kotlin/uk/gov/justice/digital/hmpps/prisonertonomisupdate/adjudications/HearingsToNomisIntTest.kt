@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.times
@@ -17,9 +18,9 @@ import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import java.util.UUID
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
 private const val CHARGE_NUMBER = "12345-1"
@@ -28,18 +29,28 @@ private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
 private const val DPS_HEARING_ID = "345"
 private const val NOMIS_HEARING_ID = 2345L
+private const val HEARING_LOCATION_DPS_ID = "be1ee367-8cfa-4499-942b-3938d375f41e"
 
 class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class CreateHearing {
+    val locationMappingResponse = """
+    {
+      "dpsLocationId": "$HEARING_LOCATION_DPS_ID",
+      "nomisLocationId": 345,
+      "mappingType": "LOCATION_CREATED"
+    }
+    """.trimIndent()
+
     @Nested
     inner class WhenHearingHasBeenCreatedInDPS {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
         NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(HEARING_LOCATION_DPS_ID, locationMappingResponse)
         MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
         MappingExtension.mappingServer.stubCreateHearing()
         publishCreateHearingDomainEvent()
@@ -58,7 +69,59 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("hearing-create-success"),
-          org.mockito.kotlin.check {
+          check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the hearing`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")))
+      }
+
+      @Test
+      fun `will create a mapping between the two hearings`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        await untilAsserted {
+          MappingExtension.mappingServer.verify(
+            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/hearings"))
+              .withRequestBody(WireMock.matchingJsonPath("dpsHearingId", WireMock.equalTo(DPS_HEARING_ID)))
+              .withRequestBody(WireMock.matchingJsonPath("nomisHearingId", WireMock.equalTo(NOMIS_HEARING_ID.toString()))),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class WhenLocationMappingDoesNotExist {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
+        NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
+        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
+        MappingExtension.mappingServer.stubCreateHearing()
+        publishCreateHearingDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForCreateHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("hearing-create-success"),
+          check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
@@ -107,7 +170,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("hearing-create-duplicate"),
-          org.mockito.kotlin.check {
+          check {
             Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -130,7 +193,8 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubCreateHearingWithErrorFollowedBySlowSuccess()
         NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(HEARING_LOCATION_DPS_ID, locationMappingResponse)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
         publishCreateHearingDomainEvent()
 
         await untilCallTo { AdjudicationsApiExtension.adjudicationsApiServer.getCountFor("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2") } matches { it == 1 }
@@ -185,8 +249,9 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
         NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(HEARING_LOCATION_DPS_ID, locationMappingResponse)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishUpdateHearingDomainEvent()
       }
@@ -204,7 +269,44 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("hearing-updated-success"),
-          org.mockito.kotlin.check {
+          check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the hearing`() {
+        waitForHearingProcessingToBeComplete()
+
+        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
+      }
+    }
+
+    @Nested
+    inner class WhenLocationMappingDoesNotExist {
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
+        NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishUpdateHearingDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("hearing-updated-success"),
+          check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
@@ -238,7 +340,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("hearing-updated-failed"),
-            org.mockito.kotlin.check {
+            check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
               Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -252,6 +354,44 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
           0,
           WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")),
         )
+      }
+    }
+
+    @Nested
+    inner class WhenNoLocationMappingExistsForHearing {
+
+      @BeforeEach
+      fun setUp() {
+        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
+        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
+        NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
+        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
+        publishUpdateHearingDomainEvent()
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForHearingProcessingToBeComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("hearing-updated-success"),
+          check {
+            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the hearing`() {
+        waitForHearingProcessingToBeComplete()
+
+        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
       }
     }
 
@@ -279,7 +419,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
 
         verify(telemetryClient).trackEvent(
           eq("hearing-deleted-success"),
-          org.mockito.kotlin.check {
+          check {
             Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
             Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
             Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
@@ -317,7 +457,7 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("hearing-deleted-failed"),
-            org.mockito.kotlin.check {
+            check {
               Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
               Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
               Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.Re
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedDamageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedEvidenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsMappingService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationDeleteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationHearingMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AdjudicationMappingDto
@@ -52,6 +53,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.UUID
 
 @Service
 class AdjudicationsService(
@@ -61,6 +63,7 @@ class AdjudicationsService(
   private val hearingMappingService: HearingsMappingService,
   private val adjudicationsApiService: AdjudicationsApiService,
   private val punishmentsMappingService: PunishmentsMappingService,
+  private val locationsMappingService: LocationsMappingService,
   private val nomisApiService: NomisApiService,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
@@ -100,8 +103,15 @@ class AdjudicationsService(
         val adjudication = adjudicationsApiService.getCharge(chargeNumber, prisonId)
         val offenderNo = adjudication.reportedAdjudication.prisonerNumber
         telemetryMap["offenderNo"] = offenderNo
+
+        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
+        val locationId = getNomisLocationByDpsId(
+          originalNomisLocationId = adjudication.reportedAdjudication.incidentDetails.locationId!!,
+          dpsLocationId = adjudication.reportedAdjudication.incidentDetails.locationUuid,
+        )
         val nomisAdjudicationResponse =
-          nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication())
+          nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication(locationId))
+
         createdNomisAdjudicationNumber = nomisAdjudicationResponse.adjudicationNumber
         AdjudicationMappingDto(
           adjudicationNumber = nomisAdjudicationResponse.adjudicationNumber,
@@ -362,8 +372,9 @@ class AdjudicationsService(
         ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == dpsHearingId } ?: throw IllegalStateException(
           "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
         )
-        val nomisAdjudicationResponse =
-          nomisApiService.createHearing(adjudicationNumber, hearing.toNomisCreateHearing())
+        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
+        val nomisLocationId = getNomisLocationByDpsId(originalNomisLocationId = hearing.locationId!!, dpsLocationId = hearing.locationUuid)
+        val nomisAdjudicationResponse = nomisApiService.createHearing(adjudicationNumber, hearing.toNomisCreateHearing(nomisLocationId))
 
         telemetryMap["nomisHearingId"] = nomisAdjudicationResponse.hearingId.toString()
 
@@ -394,7 +405,9 @@ class AdjudicationsService(
         eventData.chargeNumber,
         eventData.prisonId,
       ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == eventData.hearingId }?.let {
-        nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing())
+        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
+        val hearingLocationId = getNomisLocationByDpsId(it.locationId!!, it.locationUuid)
+        nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing(hearingLocationId))
         telemetryClient.trackEvent("hearing-updated-success", telemetryMap, null)
       } ?: throw IllegalStateException(
         "Hearing ${eventData.hearingId} not found for DPS adjudication with charge no ${eventData.chargeNumber}",
@@ -403,6 +416,14 @@ class AdjudicationsService(
       telemetryClient.trackEvent("hearing-updated-failed", telemetryMap, null)
       throw e
     }
+  }
+
+  // TODO future change Remove logging and use value only from mapping service once satisfied location picked up correctly
+  suspend fun getNomisLocationByDpsId(originalNomisLocationId: Long, dpsLocationId: UUID): Long = runCatching {
+    locationsMappingService.getMappingGivenDpsId(dpsLocationId.toString()).nomisLocationId
+  }.getOrElse {
+    log.debug("Failed to get Location mapping for Dps Id {}", dpsLocationId)
+    originalNomisLocationId
   }
 
   suspend fun deleteHearing(deleteEvent: HearingEvent) {
@@ -1110,12 +1131,11 @@ private fun Type.toNomisSanctionType(): HearingResultAwardRequest.SanctionType =
   Type.PAYBACK -> HearingResultAwardRequest.SanctionType.PP
 }
 
-private fun HearingDto.toNomisUpdateHearing(): UpdateHearingRequest = UpdateHearingRequest(
+private fun HearingDto.toNomisUpdateHearing(nomisInternalLocationId: Long): UpdateHearingRequest = UpdateHearingRequest(
   hearingType = this.oicHearingType.name,
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
-  // TODO future change to look up NOMIS id from DPS this.locationUuid
-  internalLocationId = this.locationId!!,
+  internalLocationId = nomisInternalLocationId,
 )
 
 // If OutcomeDto exists use code, else use code from hearingOutcomeDto
@@ -1220,15 +1240,14 @@ private fun PunishmentsAdditionalInformation.toTelemetryMap(): MutableMap<String
   "offenderNo" to this.prisonerNumber,
 )
 
-internal fun ReportedAdjudicationResponse.toNomisAdjudication() = CreateAdjudicationRequest(
+internal fun ReportedAdjudicationResponse.toNomisAdjudication(nomisInternalLocationId: Long) = CreateAdjudicationRequest(
   incident = IncidentToCreate(
     reportingStaffUsername = reportedAdjudication.createdByUserId,
     incidentDate = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalDate(),
     incidentTime = reportedAdjudication.incidentDetails.dateTimeOfDiscovery.toLocalTimeAtMinute().toString(),
     reportedDate = reportedAdjudication.createdDateTime.toLocalDate(),
     reportedTime = reportedAdjudication.createdDateTime.toLocalTimeAtMinute().toString(),
-    // TODO future change to look up NOMIS id from DPS this.locationUuid
-    internalLocationId = reportedAdjudication.incidentDetails.locationId!!,
+    internalLocationId = nomisInternalLocationId,
     details = reportedAdjudication.incidentStatement.statement,
     prisonId = reportedAdjudication.originatingAgencyId,
     prisonerVictimsOffenderNumbers = reportedAdjudication.offenceDetails.victimPrisonersNumber
@@ -1331,13 +1350,12 @@ data class AdjudicationEvidenceUpdateEvent(
   val additionalInformation: AdjudicationAdditionalInformation,
 )
 
-private fun HearingDto.toNomisCreateHearing() = CreateHearingRequest(
+private fun HearingDto.toNomisCreateHearing(nomisInternalLocationId: Long) = CreateHearingRequest(
   hearingType = this.oicHearingType.name,
   hearingDate = this.dateTimeOfHearing.toLocalDate(),
   hearingTime = this.dateTimeOfHearing.toLocalTimeAtMinute().toString(),
   agencyId = this.agencyId,
-  // TODO future change to look up NOMIS id from DPS this.locationUuid
-  internalLocationId = this.locationId!!,
+  internalLocationId = nomisInternalLocationId,
 )
 
 data class HearingAdditionalInformation(
