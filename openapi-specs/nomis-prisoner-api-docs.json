@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-10.254.c88b5e8"
+    "version" : "2025-07-10.277.ffa221d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19825,10 +19825,6 @@
             "type" : "string",
             "description" : "Staff role in the incident"
           },
-          "outcome" : {
-            "type" : "string",
-            "description" : "The outcome of the incident"
-          },
           "comment" : {
             "type" : "string",
             "description" : "General information about the incident"
@@ -27618,7 +27614,7 @@
           }
         }
       },
-      "BookingTemporaryAbsencesResponse" : {
+      "BookingTemporaryAbsences" : {
         "type" : "object",
         "description" : "Booking temporary absences",
         "properties" : {
@@ -27631,21 +27627,21 @@
             "type" : "array",
             "description" : "Temporary absence applications",
             "items" : {
-              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationResponse"
+              "$ref" : "#/components/schemas/TemporaryAbsenceApplication"
             }
           },
           "unscheduledTemporaryAbsences" : {
             "type" : "array",
             "description" : "Unscheduled temporary absences OUT - those without an application or a schedule",
             "items" : {
-              "$ref" : "#/components/schemas/TemporaryAbsenceResponse"
+              "$ref" : "#/components/schemas/TemporaryAbsence"
             }
           },
           "unscheduledTemporaryAbsenceReturns" : {
             "type" : "array",
             "description" : "Unscheduled temporary absences IN - those without an application or a schedule",
             "items" : {
-              "$ref" : "#/components/schemas/TemporaryAbsenceReturnResponse"
+              "$ref" : "#/components/schemas/TemporaryAbsenceReturn"
             }
           }
         },
@@ -27659,13 +27655,13 @@
             "type" : "array",
             "description" : "List of bookings with their temporary absences and external movements",
             "items" : {
-              "$ref" : "#/components/schemas/BookingTemporaryAbsencesResponse"
+              "$ref" : "#/components/schemas/BookingTemporaryAbsences"
             }
           }
         },
         "required" : [ "bookings" ]
       },
-      "ScheduledTemporaryAbsenceResponse" : {
+      "ScheduledTemporaryAbsence" : {
         "type" : "object",
         "description" : "Scheduled temporary absence response",
         "properties" : {
@@ -27740,11 +27736,15 @@
             "type" : "string",
             "format" : "date-time",
             "description" : "Application time"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "escort", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime", "transportType" ]
+        "required" : [ "applicationDate", "audit", "escort", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime", "transportType" ]
       },
-      "ScheduledTemporaryAbsenceReturnResponse" : {
+      "ScheduledTemporaryAbsenceReturn" : {
         "type" : "object",
         "description" : "Scheduled temporary absence return response",
         "properties" : {
@@ -27786,11 +27786,78 @@
           "toPrison" : {
             "type" : "string",
             "description" : "To prison"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "escort", "eventId", "eventStatus", "eventSubType" ]
+        "required" : [ "audit", "escort", "eventId", "eventStatus", "eventSubType" ]
       },
-      "TemporaryAbsenceApplicationResponse" : {
+      "TemporaryAbsence" : {
+        "type" : "object",
+        "description" : "Temporary absence response",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement sequence"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "arrestAgency" : {
+            "type" : "string",
+            "description" : "Arresting Agency"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "escortText" : {
+            "type" : "string",
+            "description" : "Escort text"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toAgency" : {
+            "type" : "string",
+            "description" : "To agency"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          },
+          "toAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "To address owner class"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "movementDate", "movementReason", "movementTime", "sequence" ]
+      },
+      "TemporaryAbsenceApplication" : {
         "type" : "object",
         "description" : "Temporary absence application response",
         "properties" : {
@@ -27878,70 +27945,83 @@
             "description" : "Temporary absence sub type"
           },
           "scheduledTemporaryAbsence" : {
-            "$ref" : "#/components/schemas/ScheduledTemporaryAbsenceResponse",
+            "$ref" : "#/components/schemas/ScheduledTemporaryAbsence",
             "description" : "Scheduled temporary absence"
           },
           "scheduledTemporaryAbsenceReturn" : {
-            "$ref" : "#/components/schemas/ScheduledTemporaryAbsenceReturnResponse",
+            "$ref" : "#/components/schemas/ScheduledTemporaryAbsenceReturn",
             "description" : "Scheduled temporary absence return"
           },
           "temporaryAbsence" : {
-            "$ref" : "#/components/schemas/TemporaryAbsenceResponse",
+            "$ref" : "#/components/schemas/TemporaryAbsence",
             "description" : "Temporary absence"
           },
           "temporaryAbsenceReturn" : {
-            "$ref" : "#/components/schemas/TemporaryAbsenceReturnResponse",
+            "$ref" : "#/components/schemas/TemporaryAbsenceReturn",
             "description" : "Temporary absence return"
+          },
+          "outsideMovements" : {
+            "type" : "array",
+            "description" : "Outside movements",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationOutsideMovement"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "movementApplicationId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "outsideMovements", "releaseTime", "returnTime", "toDate" ]
       },
-      "TemporaryAbsenceResponse" : {
+      "TemporaryAbsenceApplicationOutsideMovement" : {
         "type" : "object",
-        "description" : "Temporary absence response",
+        "description" : "Temporary absence application outside movement response",
         "properties" : {
-          "sequence" : {
+          "outsideMovementId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Movement sequence"
+            "description" : "Movement application ID"
           },
-          "movementDate" : {
+          "temporaryAbsenceType" : {
+            "type" : "string",
+            "description" : "Temporary absence type"
+          },
+          "temporaryAbsenceSubType" : {
+            "type" : "string",
+            "description" : "Temporary absence sub type"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "fromDate" : {
             "type" : "string",
             "format" : "date",
-            "description" : "Movement date"
+            "description" : "From date"
           },
-          "movementTime" : {
+          "releaseTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "Movement time"
+            "description" : "Release time"
           },
-          "movementReason" : {
+          "toDate" : {
             "type" : "string",
-            "description" : "Movement reason"
+            "format" : "date",
+            "description" : "To date"
           },
-          "arrestAgency" : {
+          "returnTime" : {
             "type" : "string",
-            "description" : "Arresting Agency"
+            "format" : "date-time",
+            "description" : "Return time"
           },
-          "escort" : {
+          "comment" : {
             "type" : "string",
-            "description" : "Escort"
+            "description" : "Comment"
           },
-          "escortText" : {
+          "toAgencyId" : {
             "type" : "string",
-            "description" : "Escort text"
-          },
-          "fromPrison" : {
-            "type" : "string",
-            "description" : "From prison"
-          },
-          "toAgency" : {
-            "type" : "string",
-            "description" : "To agency"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Comment text"
+            "description" : "To agency ID"
           },
           "toAddressId" : {
             "type" : "integer",
@@ -27951,11 +28031,19 @@
           "toAddressOwnerClass" : {
             "type" : "string",
             "description" : "To address owner class"
+          },
+          "contactPersonName" : {
+            "type" : "string",
+            "description" : "Contact person name"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "movementDate", "movementReason", "movementTime", "sequence" ]
+        "required" : [ "audit", "eventSubType", "fromDate", "outsideMovementId", "releaseTime", "returnTime", "toDate" ]
       },
-      "TemporaryAbsenceReturnResponse" : {
+      "TemporaryAbsenceReturn" : {
         "type" : "object",
         "description" : "Temporary absence return response",
         "properties" : {
@@ -28006,9 +28094,13 @@
           "fromAddressOwnerClass" : {
             "type" : "string",
             "description" : "From address owner class"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "movementDate", "movementReason", "movementTime", "sequence" ]
+        "required" : [ "audit", "movementDate", "movementReason", "movementTime", "sequence" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
