@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-09.209.b729063"
+    "version" : "2025-07-10.232.9c07c1c"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -43,6 +43,9 @@
   }, {
     "name" : "sentence-controller",
     "description" : "Sentences"
+  }, {
+    "name" : "document-admin-controller",
+    "description" : "Endpoints for document admin operations"
   }, {
     "name" : "legacy-recall-controller",
     "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
@@ -2285,6 +2288,55 @@
         }
       }
     },
+    "/sentence/{sentenceUuid}/sentences-after-on-other-court-appearance-details" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Sentences after on other court appearance details",
+        "description" : "This endpoint will return details of the court appearances of sentences after this sentence",
+        "operationId" : "sentencesAfterOnOtherCourtAppearanceDetails",
+        "parameters" : [ {
+          "name" : "sentenceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns true or false",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesAfterOnOtherCourtAppearanceDetailsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesAfterOnOtherCourtAppearanceDetailsResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentencesAfterOnOtherCourtAppearanceDetailsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sentence/{sentenceUuid}/has-sentences-after-on-other-court-appearance" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
@@ -4207,6 +4259,19 @@
           }
         }
       }
+    },
+    "/document-admin/cleanup" : {
+      "delete" : {
+        "tags" : [ "document-admin-controller" ],
+        "summary" : "Deletes uploaded documents without an appearance ID",
+        "description" : "Deletes all uploaded documents where the appearance ID is null",
+        "operationId" : "cleanupDocument",
+        "responses" : {
+          "200" : {
+            "description" : "Cleanup completed"
+          }
+        }
+      }
     }
   },
   "components" : {
@@ -4481,7 +4546,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4778,7 +4843,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "courtCode" : {
             "type" : "string"
@@ -5572,6 +5637,38 @@
         },
         "required" : [ "classification", "description", "displayOrder", "sentenceTypeUuid" ]
       },
+      "CourtAppearanceAfterSentence" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "caseReference" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "courtCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceUuid", "courtCode" ]
+      },
+      "SentencesAfterOnOtherCourtAppearanceDetailsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceAfterSentence"
+            }
+          }
+        },
+        "required" : [ "appearances" ]
+      },
       "HasSentenceAfterOnOtherCourtAppearanceResponse" : {
         "type" : "object",
         "properties" : {
@@ -5982,7 +6079,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "courtCode" : {
             "type" : "string"
@@ -6386,7 +6483,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "charges" : {
             "type" : "array",
@@ -6409,7 +6506,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "courtId" : {
             "type" : "string"
@@ -6500,7 +6597,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6556,7 +6653,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "courtId" : {
             "type" : "string"
@@ -7153,7 +7250,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:17:01.577966712"
+            "example" : "16:03:11.850660691"
           },
           "courtCode" : {
             "type" : "string"
