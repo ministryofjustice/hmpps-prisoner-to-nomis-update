@@ -422,7 +422,7 @@ class AdjudicationsService(
   suspend fun getNomisLocationByDpsId(originalNomisLocationId: Long, dpsLocationId: UUID): Long = runCatching {
     locationsMappingService.getMappingGivenDpsId(dpsLocationId.toString()).nomisLocationId
   }.getOrElse {
-    log.debug("Failed to get Location mapping for Dps Id {}", dpsLocationId)
+    log.debug("Failed to get Location mapping for Dps Id {}, using Nomis Id {} due to {}", dpsLocationId, originalNomisLocationId, it.message)
     originalNomisLocationId
   }
 
