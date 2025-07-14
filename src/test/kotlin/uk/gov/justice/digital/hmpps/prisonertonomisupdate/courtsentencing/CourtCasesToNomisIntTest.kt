@@ -1847,6 +1847,227 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  inner class CreateSentenceRequiringResync {
+
+    @Nested
+    inner class WhenMultichargeSentenceHasBeenSplitInDPS {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetSentence(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+          chargeUuid = DPS_COURT_CHARGE_ID,
+          startDate = LocalDate.of(2024, 1, 1),
+          consecutiveToLifetimeUuid = UUID.fromString(DPS_SENTENCE_ID_2),
+        )
+        courtSentencingNomisApi.stubSentenceCreate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisSentenceCreateResponseWithOneTerm(),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID_2,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ_2,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          id = DPS_COURT_CHARGE_ID,
+          nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
+        courtSentencingMappingApi.stubCreateSentence()
+
+        publishCreateSentenceRequiringResyncDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/sentence/${DPS_SENTENCE_ID}")))
+      }
+
+      @Test
+      fun `will send message to nomis migration to resync created sentence details back to nomis`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+        }
+        val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
+        val sqsMessage: SQSMessage = rawMessage.fromJson()
+
+        assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.sentence")
+        val request: OffenderSentenceResynchronisationEvent = sqsMessage.Message.fromJson()
+        assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+        assertThat(request.sentenceSeq).isEqualTo(NOMIS_SENTENCE_SEQ)
+        assertThat(request.bookingId).isEqualTo(NOMIS_BOOKING_ID)
+        assertThat(request.dpsSentenceUuid).isEqualTo(DPS_SENTENCE_ID)
+        assertThat(request.dpsConsecutiveSentenceUuid).isEqualTo(DPS_SENTENCE_ID_2)
+        assertThat(request.dpsAppearanceUuid).isEqualTo(DPS_COURT_APPEARANCE_ID)
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-create-success"),
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
+            assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
+            assertThat(it["requiresSentenceResync"]).isEqualTo("true")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingAlreadyCreatedForSentence {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+        publishCreateSentenceRequiringResyncDomainEvent()
+      }
+
+      @Test
+      fun `will not create a sentence in NOMIS`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("sentence-create-duplicate"),
+          check {
+            assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+
+        courtSentencingNomisApi.verify(
+          0,
+          postRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingServiceFailsOnce {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetSentence(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+          chargeUuid = DPS_COURT_CHARGE_ID,
+        )
+        courtSentencingNomisApi.stubSentenceCreate(
+          offenderNo = OFFENDER_NO,
+          caseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisSentenceCreateResponseWithOneTerm(),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          id = DPS_COURT_CHARGE_ID,
+          nomisCourtChargeId = NOMIS_COURT_CHARGE_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          id = DPS_COURT_APPEARANCE_ID,
+          nomisCourtAppearanceId = NOMIS_COURT_APPEARANCE_ID,
+        )
+
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
+        courtSentencingMappingApi.stubCreateSentenceWithErrorFollowedBySlowSuccess()
+
+        publishCreateSentenceRequiringResyncDomainEvent()
+
+        await untilCallTo { courtSentencingApi.getCountFor("/legacy/sentence/$DPS_SENTENCE_ID") } matches { it == 1 }
+        await untilCallTo { courtSentencingNomisApi.postCountFor("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences") } matches { it == 1 }
+      }
+
+      @Test
+      fun `should only create the NOMIS sentence once`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentence-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+        courtSentencingNomisApi.verify(
+          1,
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/sentences")),
+        )
+      }
+
+      @Test
+      fun `will eventually create a mapping after NOMIS sentence is created`() {
+        await untilAsserted {
+          courtSentencingMappingApi.verify(
+            2,
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences"))
+              .withRequestBody(
+                matchingJsonPath(
+                  "dpsSentenceId",
+                  equalTo(DPS_SENTENCE_ID),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "nomisSentenceSequence",
+                  equalTo(
+                    NOMIS_SENTENCE_SEQ.toString(),
+                  ),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "nomisBookingId",
+                  equalTo(
+                    NOMIS_BOOKING_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("sentence-mapping-retry-success"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+    }
+  }
+
+  @Nested
   inner class UpdateSentence {
 
     @Nested
@@ -3416,7 +3637,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will not retrieve DPS recall information for previous recall`() {
-          courtSentencingApi.verify(0, getRequestedFor(urlEqualTo("/legacy/recall/ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")))
+          courtSentencingApi.verify(
+            0,
+            getRequestedFor(urlEqualTo("/legacy/recall/ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")),
+          )
         }
 
         @Test
@@ -3669,6 +3893,29 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
+  private fun publishCreateSentenceRequiringResyncDomainEvent(source: String = "DPS") {
+    val eventType = "sentence.fix-single-charge.inserted"
+    awsSnsClient.publish(
+      PublishRequest.builder().topicArn(topicArn)
+        .message(
+          sentenceMessagePayload(
+            sentenceId = DPS_SENTENCE_ID,
+            courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+            courtCaseId = COURT_CASE_ID_FOR_CREATION,
+            offenderNo = OFFENDER_NO,
+            eventType = eventType,
+            source = source,
+          ),
+        )
+        .messageAttributes(
+          mapOf(
+            "eventType" to MessageAttributeValue.builder().dataType("String")
+              .stringValue(eventType).build(),
+          ),
+        ).build(),
+    ).get()
+  }
+
   private fun publishUpdateSentenceDomainEvent(source: String = "DPS") {
     val eventType = "sentence.updated"
     awsSnsClient.publish(
@@ -3787,7 +4034,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishRecallInsertedDomainEvent(@Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+  private fun publishRecallInsertedDomainEvent(
+    @Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(),
+    sentenceIds: List<String> = listOf(UUID.randomUUID().toString()),
+    source: String = "DPS",
+  ) {
     val eventType = "recall.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -3809,7 +4060,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishRecallUpdatedDomainEvent(@Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(), sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+  private fun publishRecallUpdatedDomainEvent(
+    @Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(),
+    sentenceIds: List<String> = listOf(UUID.randomUUID().toString()),
+    source: String = "DPS",
+  ) {
     val eventType = "recall.updated"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -3830,7 +4085,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         ).build(),
     ).get()
   }
-  private fun publishRecallDeletedDomainEvent(recallId: String = UUID.randomUUID().toString(), previousRecallId: String? = null, sentenceIds: List<String> = listOf(UUID.randomUUID().toString()), source: String = "DPS") {
+
+  private fun publishRecallDeletedDomainEvent(
+    recallId: String = UUID.randomUUID().toString(),
+    previousRecallId: String? = null,
+    sentenceIds: List<String> = listOf(UUID.randomUUID().toString()),
+    source: String = "DPS",
+  ) {
     val eventType = "recall.deleted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
@@ -3898,13 +4159,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "previousRecallId": ${previousRecallId?.let {"\"$it\""}},  "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "previousRecallId": ${previousRecallId?.let { "\"$it\"" }},  "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtAppearanceCreateResponse(): CreateCourtAppearanceResponse = CreateCourtAppearanceResponse(id = NOMIS_COURT_APPEARANCE_ID, courtEventChargesIds = emptyList())
 
   fun nomisCourtAppearanceUpdateResponseWithTwoDeletedCharges(): UpdateCourtAppearanceResponse = UpdateCourtAppearanceResponse(
     createdCourtEventChargesIds = emptyList(),
-    deletedOffenderChargesIds = listOf(OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_5_ID), OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_6_ID)),
+    deletedOffenderChargesIds = listOf(
+      OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_5_ID),
+      OffenderChargeIdResponse(offenderChargeId = NOMIS_COURT_CHARGE_6_ID),
+    ),
   )
 
   fun nomisSentenceCreateResponseWithOneTerm(): CreateSentenceResponse = CreateSentenceResponse(

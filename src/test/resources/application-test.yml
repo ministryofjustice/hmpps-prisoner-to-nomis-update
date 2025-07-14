@@ -175,6 +175,7 @@ hmpps.sqs:
         "sentence.period-length.deleted",
         "sentence.period-length.updated",
         "sentence.inserted",
+        "sentence.fix-single-charge.inserted",
         "sentence.deleted",
         "sentence.updated",
         "recall.inserted",
