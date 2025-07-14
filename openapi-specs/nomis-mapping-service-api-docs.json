@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-09.62.7d276c7"
+    "version" : "2025-07-11.68.e519f78"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3586,6 +3586,125 @@
         "responses" : {
           "200" : {
             "description" : "Mappings replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/replace/prisoner-restrictions/{retainedOffenderNo}/replaces/{removedOffenderNo}" : {
+      "post" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Replace prisoner restriction mappings for an offender and removes any for the removed offender",
+        "description" : "Deletes all existing prisoner restriction mappings for the given retained offender number and removed offender number and creates new mappings from the provided list. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "replacePrisonerRestrictionAfterMergeMappings",
+        "parameters" : [ {
+          "name" : "retainedOffenderNo",
+          "in" : "path",
+          "description" : "Prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prisoner number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "removedOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerRestrictionMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner restriction mappings replaced successfully",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/contact-person/replace/prisoner-restrictions/{offenderNo}" : {
+      "post" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Replace prisoner restriction mappings for an offender",
+        "description" : "Deletes all existing prisoner restriction mappings for the given offender number and creates new mappings from the provided list. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "replacePrisonerRestrictionMappings",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prisoner number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerRestrictionMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner restriction mappings replaced successfully",
             "content" : { }
           },
           "401" : {
@@ -11619,6 +11738,61 @@
         }
       }
     },
+    "/mapping/contact-person/prisoner-restrictions/prisoners/{offenderNo}" : {
+      "get" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Get all prisoner restriction mappings for a particular offender number",
+        "description" : "Retrieves all prisoner restriction mappings for the given offender number. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerRestrictionMappingsByOffenderNo",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of Prisoner Restriction mappings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerRestrictionMappingDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/contact-person/prisoner-restriction/nomis-prisoner-restriction-id/{nomisPrisonerRestrictionId}" : {
       "get" : {
         "tags" : [ "contact-person-mapping-resource" ],
@@ -11671,6 +11845,51 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Delete prisoner restriction mapping by nomis prisoner restriction Id",
+        "description" : "Delete the prisoner restriction mapping by NOMIS Prisoner Restriction Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "deletePrisonerRestrictionMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisPrisonerRestrictionId",
+          "in" : "path",
+          "description" : "NOMIS prisoner restriction id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS prisoner restriction id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Prisoner Restriction mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -18116,6 +18335,31 @@
         },
         "required" : [ "dpsId", "nomisId" ]
       },
+      "PrisonerRestrictionMappingsDto" : {
+        "type" : "object",
+        "description" : "New and old mappings related to a prisoner's restrictions",
+        "properties" : {
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "mappings" : {
+            "type" : "array",
+            "description" : "Restrictions mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactPersonSimpleMappingIdDto"
+            }
+          }
+        },
+        "required" : [ "mappingType", "mappings" ]
+      },
       "ContactPersonMappingsDto" : {
         "type" : "object",
         "description" : "Mappings for a Person and there associated child entities",
@@ -18826,6 +19070,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -18842,12 +19092,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -18952,6 +19196,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -18968,12 +19218,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19077,6 +19321,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19093,12 +19343,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19181,6 +19425,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19197,12 +19447,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19281,6 +19525,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19297,12 +19547,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19327,6 +19571,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19343,12 +19593,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19373,6 +19617,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19389,12 +19639,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19447,6 +19691,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19463,12 +19713,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19515,6 +19759,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19531,12 +19781,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
