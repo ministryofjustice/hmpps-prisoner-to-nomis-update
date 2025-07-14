@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-10.277.ffa221d"
+    "version" : "2025-07-11.279.dd4a020"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15193,6 +15193,81 @@
         }
       }
     },
+    "/incidents/reconciliation/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "incident-resource" ],
+        "summary" : "Gets open incident Ids from a given id number",
+        "description" : "Retrieves paged ids for open incidents - used for reconciliation\n      Gets the specified number of open incidents starting after the given id number.\n      Clients can iterate through all incidents by calling this endpoint using the id from the last call (omit for first call).\n      Iteration ends when the returned incidentIds list has size less than the requested page size.\n      Requires role NOMIS_INCIDENTS",
+        "operationId" : "getOpenIncidentIdsFromId",
+        "parameters" : [ {
+          "name" : "incidentId",
+          "in" : "query",
+          "description" : "If supplied get incidents starting after this id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get incidents starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of incidents to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10,
+            "description" : "Number of incidents to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Pageable list of reconciliation ids are returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IncidentIdsWithLast"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_INCIDENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/incidents/reconciliation/agency/{agencyId}/ids" : {
       "get" : {
         "tags" : [ "incident-resource" ],
@@ -28780,6 +28855,23 @@
           }
         },
         "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ]
+      },
+      "IncidentIdsWithLast" : {
+        "type" : "object",
+        "properties" : {
+          "incidentIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "lastIncidentId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "incidentIds", "lastIncidentId" ]
       },
       "IncidentIdResponse" : {
         "type" : "object",
