@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-11.279.dd4a020"
+    "version" : "2025-07-14.288.b0a6626"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12250,6 +12250,138 @@
         }
       }
     },
+    "/transactions/{transactionId}" : {
+      "get" : {
+        "tags" : [ "transactions-resource" ],
+        "summary" : "get a transaction group by id",
+        "description" : "Retrieves transactions (all in sequence) identified by id. Requires NOMIS_TRANSACTIONS",
+        "operationId" : "getTransaction",
+        "parameters" : [ {
+          "name" : "transactionId",
+          "in" : "path",
+          "description" : "Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OffenderTransactionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_TRANSACTIONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/{transactionId}/general-ledger" : {
+      "get" : {
+        "tags" : [ "transactions-resource" ],
+        "summary" : "get a transaction by id and sequence number",
+        "description" : "Retrieves a prisoner transaction. Requires NOMIS_TRANSACTIONS",
+        "operationId" : "getGLTransaction",
+        "parameters" : [ {
+          "name" : "transactionId",
+          "in" : "path",
+          "description" : "Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Id",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GeneralLedgerTransactionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_TRANSACTIONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/splash-screens/{moduleName}" : {
       "get" : {
         "tags" : [ "splash-screen-resource" ],
@@ -24341,6 +24473,197 @@
           }
         },
         "required" : [ "visitBalanceId" ]
+      },
+      "GeneralLedgerTransactionDto" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a general ledger transaction",
+        "properties" : {
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction id",
+            "example" : 12345678
+          },
+          "transactionEntrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number",
+            "example" : 3
+          },
+          "generalLedgerEntrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The GL entry number",
+            "example" : 2
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload",
+            "example" : "MDI"
+          },
+          "amount" : {
+            "type" : "number",
+            "description" : "The transaction amount",
+            "example" : 2.14
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The transaction type defined in the TRANSACTION_TYPES table",
+            "example" : "CANT"
+          },
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The account code",
+            "example" : 21020
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the transaction entry",
+            "example" : "???"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the transaction occurred",
+            "example" : "2025-07-14T12:13:14"
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "The transaction reference",
+            "example" : 1423558449
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByDisplayName" : {
+            "type" : "string"
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastModifiedBy" : {
+            "type" : "string"
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accountCode", "amount", "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntrySequence", "transactionEntrySequence", "transactionId", "transactionTimestamp", "type" ]
+      },
+      "OffenderTransactionDto" : {
+        "type" : "object",
+        "description" : "The data held in NOMIS about a financial transaction",
+        "properties" : {
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction id",
+            "example" : 12345678
+          },
+          "transactionEntrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number",
+            "example" : 3
+          },
+          "offenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender id",
+            "example" : 1234567
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The prisoner number or noms id",
+            "example" : "A1234AA"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 12345678
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The caseload",
+            "example" : "MDI"
+          },
+          "amount" : {
+            "type" : "number",
+            "description" : "The transaction amount",
+            "example" : 2.14
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The transaction type defined in the TRANSACTION_TYPES table",
+            "example" : "CANT"
+          },
+          "postingType" : {
+            "type" : "string",
+            "description" : "Whether credit or debit",
+            "enum" : [ "CR", "DR" ]
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the transaction entry",
+            "example" : "???"
+          },
+          "entryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The transaction date",
+            "example" : "2025-06-14"
+          },
+          "clientReference" : {
+            "type" : "string",
+            "description" : "The client unique reference",
+            "example" : "MKI6431RETAILRECEIPTPHONE"
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "The transaction reference",
+            "example" : 1423558449
+          },
+          "subAccountType" : {
+            "type" : "string",
+            "description" : "The account type",
+            "enum" : [ "REG", "SAV", "SPND" ]
+          },
+          "generalLedgerTransactions" : {
+            "type" : "array",
+            "description" : "Dependent GL transaction entries",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerTransactionDto"
+            }
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdBy" : {
+            "type" : "string"
+          },
+          "createdByDisplayName" : {
+            "type" : "string"
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "lastModifiedBy" : {
+            "type" : "string"
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "amount", "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "entryDate", "generalLedgerTransactions", "offenderId", "offenderNo", "postingType", "subAccountType", "transactionEntrySequence", "transactionId", "type" ]
       },
       "SplashConditionDto" : {
         "type" : "object",
