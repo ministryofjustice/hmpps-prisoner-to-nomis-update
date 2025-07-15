@@ -619,7 +619,7 @@ class CourtSentencingService(
                             offenderNo = offenderNo,
                             dpsSentenceUuid = dpsSentence.lifetimeUuid.toString(),
                             dpsAppearanceUuid = createEvent.additionalInformation.courtAppearanceId,
-                            dpsConsecutiveSentenceUuid = dpsSentence.consecutiveToLifetimeUuid.toString(),
+                            dpsConsecutiveSentenceUuid = dpsSentence.consecutiveToLifetimeUuid?.toString(),
                             bookingId = nomisSentenceResponse.bookingId,
                             sentenceSeq = nomisSentenceResponse.sentenceSeq.toInt(),
                             caseId = courtCaseMapping.nomisCourtCaseId,
