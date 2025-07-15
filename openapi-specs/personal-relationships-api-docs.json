@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-08.2124.20e3471"
+    "version" : "2025-07-14.2168.1af1bbe"
   },
   "servers" : [ {
     "url" : "/",
@@ -2287,23 +2287,31 @@
         "parameters" : [ {
           "name" : "keepingPrisonerNumber",
           "in" : "path",
+          "description" : "Keeping prisoner's number",
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
+          },
+          "example" : "ABC123D"
         }, {
           "name" : "removedPrisonerNumber",
           "in" : "path",
+          "description" : "Removed prisoner's number",
           "required" : true,
           "schema" : {
             "type" : "string"
-          }
+          },
+          "example" : "ABC123F"
         } ],
         "responses" : {
           "200" : {
             "description" : "Successfully merged Prisoner's restrictions records",
             "content" : {
-              "application/json" : { }
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MergedRestrictionsResponse"
+                }
+              }
             }
           },
           "401" : {
@@ -4758,21 +4766,15 @@
           "200" : {
             "description" : "Successfully reset Prisoner's restrictions records",
             "content" : {
-              "application/json" : { }
-            }
-          },
-          "400" : {
-            "description" : "The request failed validation with invalid or missing data supplied",
-            "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ChangedRestrictionsResponse"
                 }
               }
             }
           },
-          "404" : {
-            "description" : "Could not find reference data for the supplied restriction type",
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data supplied",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7352,6 +7354,100 @@
         }
       }
     },
+    "/prisoner-restrictions/{prisonerNumber}" : {
+      "get" : {
+        "tags" : [ "Prisoner Restrictions" ],
+        "summary" : "Get all restrictions for a prisoner",
+        "description" : "Returns all restrictions for a prisoner, optionally filtering by current term only, with paging.",
+        "operationId" : "getPrisonerRestrictions",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "currentTermOnly",
+          "in" : "query",
+          "description" : "filter results by current terms",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          },
+          "example" : true
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "schema" : {
+            "type" : "integer",
+            "default" : 20
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Found restrictions",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelPrisonerRestrictionDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/{contactId}/name" : {
       "get" : {
         "tags" : [ "Contacts" ],
@@ -9259,6 +9355,36 @@
           }
         },
         "required" : [ "active", "id" ]
+      },
+      "MergedRestrictionsResponse" : {
+        "type" : "object",
+        "description" : "Response class for merged restrictions operations.",
+        "properties" : {
+          "hasChanged" : {
+            "type" : "boolean",
+            "description" : "Indicates if any restrictions have changed",
+            "example" : true
+          },
+          "createdRestrictions" : {
+            "type" : "array",
+            "description" : "List of IDs for created restrictions",
+            "example" : [ 101, 102 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "deletedRestrictions" : {
+            "type" : "array",
+            "description" : "List of IDs for deleted restrictions",
+            "example" : [ 201, 202 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "createdRestrictions", "deletedRestrictions", "hasChanged" ]
       },
       "UpdatePrisonerContactRestrictionRequest" : {
         "type" : "object",
@@ -11269,6 +11395,7 @@
           "prisonerNumber" : {
             "type" : "string",
             "description" : "The prisoner number to reset restrictions for",
+            "example" : "A1234BC",
             "minLength" : 1
           },
           "restrictions" : {
@@ -11282,6 +11409,36 @@
           }
         },
         "required" : [ "prisonerNumber", "restrictions" ]
+      },
+      "ChangedRestrictionsResponse" : {
+        "type" : "object",
+        "description" : "Response class for changed restrictions operations.",
+        "properties" : {
+          "hasChanged" : {
+            "type" : "boolean",
+            "description" : "Indicates if any restrictions have changed",
+            "example" : true
+          },
+          "createdRestrictions" : {
+            "type" : "array",
+            "description" : "List of IDs for created restrictions",
+            "example" : [ 101, 102 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "deletedRestrictions" : {
+            "type" : "array",
+            "description" : "List of IDs for deleted restrictions",
+            "example" : [ 201, 202 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "createdRestrictions", "deletedRestrictions", "hasChanged" ]
       },
       "AddContactRelationshipRequest" : {
         "type" : "object",
@@ -14590,6 +14747,90 @@
           }
         },
         "required" : [ "official", "social" ]
+      },
+      "PagedModelPrisonerRestrictionDetails" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerRestrictionDetails"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "PrisonerRestrictionDetails" : {
+        "type" : "object",
+        "description" : "Prisoner restriction details response",
+        "properties" : {
+          "prisonerRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal ID for the prisoner restriction",
+            "example" : 12345
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "The restriction type",
+            "example" : "NO_VISIT"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date of the restriction",
+            "example" : "2024-06-11"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date of the restriction",
+            "example" : "2024-12-31"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text",
+            "example" : "No visits allowed"
+          },
+          "authorisedUsername" : {
+            "type" : "string",
+            "description" : "Authorised staff user name",
+            "example" : "JSMITH"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
+            "example" : true
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username of the person who created the record",
+            "example" : "JSMITH_ADM"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was created"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the person who last updated the record",
+            "example" : "JDOE_ADM"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp when the record was last updated"
+          }
+        },
+        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType" ]
       },
       "PrisonerContactRestrictionsResponse" : {
         "type" : "object",
