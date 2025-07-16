@@ -15,7 +15,8 @@ class WebClientConfiguration(
   @Value("\${api.base.url.mapping}") val mappingBaseUri: String,
   @Value("\${api.base.url.hmpps-auth}") val oauthApiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.timeout:90s}") val timeout: Duration,
+  @Value("\${api.timeout:60s}") val timeout: Duration,
+  @Value("\${api.mapping-timeout:10s}") val mappingTimeout: Duration,
 ) {
 
   @Bean
@@ -37,7 +38,7 @@ class WebClientConfiguration(
     authorizedClientManager = authorizedClientManager,
     registrationId = "mapping-api",
     url = mappingBaseUri,
-    timeout = timeout,
+    timeout = mappingTimeout,
   )
 
   @Bean
