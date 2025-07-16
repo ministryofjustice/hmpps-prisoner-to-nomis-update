@@ -972,6 +972,84 @@ class ContactPersonNomisApiServiceTest {
   }
 
   @Nested
+  inner class GetPrisonerRestrictionIds {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIds()
+
+      apiService.getPrisonerRestrictionIds()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIds()
+
+      apiService.getPrisonerRestrictionIds()
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/restrictions/ids/all-from-id")),
+      )
+    }
+
+    @Test
+    fun `will request just a page of restriction ids from specified restriction`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIds(lastRestrictionId = 1234)
+
+      apiService.getPrisonerRestrictionIds(lastRestrictionId = 1234, pageSize = 100)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("restrictionId", equalTo("1234"))
+          .withQueryParam("pageSize", equalTo("100")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetPrisonerRestrictionIdsTotals {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIdsTotals()
+
+      apiService.getPrisonerRestrictionIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIdsTotals()
+
+      apiService.getPrisonerRestrictionIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/restrictions/ids")),
+      )
+    }
+
+    @Test
+    fun `will request just a single page with 1 item`() = runTest {
+      mockServer.stubGetPrisonerRestrictionIdsTotals()
+
+      apiService.getPrisonerRestrictionIdsTotals()
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withQueryParam("size", equalTo("1"))
+          .withQueryParam("page", equalTo("0")),
+      )
+    }
+  }
+
+  @Nested
   inner class GetPerson {
     @Test
     fun `will pass oath2 token to service`() = runTest {
