@@ -1,0 +1,60 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "app.fullname" . }}-report-con-person
+  labels:
+    {{- include "app.labels" . | nindent 4 }}
+spec:
+  schedule: "20 3 * * 6"
+  suspend: true
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-contactperson-prisonercontact
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/contact-person/prisoner-restriction/reports/reconciliation" "$TOKEN"
+                  echo "Prisoner restrictions reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755

@@ -25,8 +25,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePrisonerRestrictionIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RestrictionIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
@@ -341,6 +343,24 @@ class ContactPersonNomisApiService(
 
   suspend fun getContactsForPrisoner(offenderNo: String): PrisonerWithContacts = webClient.get()
     .uri("/prisoners/{offenderNo}/contacts?active-only={activeOnly}&latest-booking-only={latestBookingOnly}", offenderNo, false, true)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPrisonerRestrictionIds(lastRestrictionId: Long = 0, pageSize: Int = 20): RestrictionIdsWithLast = webClient.get()
+    .uri("/prisoners/restrictions/ids/all-from-id?restrictionId={lastRestrictionId}&pageSize={pageSize}", lastRestrictionId, pageSize)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPrisonerRestrictionIdsTotals(
+    pageNumber: Long = 0,
+    pageSize: Long = 1,
+  ): PagePrisonerRestrictionIdResponse = webClient.get()
+    .uri {
+      it.path("/prisoners/restrictions/ids")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 

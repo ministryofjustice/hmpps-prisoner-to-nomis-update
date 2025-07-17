@@ -36,6 +36,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePrisonerRestrictionIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonEmailAddress
@@ -46,6 +47,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RestrictionIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonContactRequest
@@ -267,6 +269,11 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
 
     fun pagePersonIdResponse(total: Long) = PagePersonIdResponse(
+      totalElements = total,
+      totalPages = 100,
+    )
+
+    fun pagePrisonerRestrictionIdResponse(total: Long) = PagePrisonerRestrictionIdResponse(
       totalElements = total,
       totalPages = 100,
     )
@@ -665,6 +672,29 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetPersonIdsTotals(response: PagePersonIdResponse = pagePersonIdResponse(100)) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/persons/ids"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetPrisonerRestrictionIds(lastRestrictionId: Long = 0, response: RestrictionIdsWithLast = RestrictionIdsWithLast(lastRestrictionId = 0, restrictionIds = emptyList())) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/restrictions/ids/all-from-id")).withQueryParam("restrictionId", equalTo("$lastRestrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetPrisonerRestrictionIdsTotals(response: PagePrisonerRestrictionIdResponse = pagePrisonerRestrictionIdResponse(100)) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/restrictions/ids"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
