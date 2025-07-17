@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-07-04.43.8eee575"
+    "version" : "2025-07-11.67.4eee9aa"
   },
   "servers" : [ {
     "url" : "/",
@@ -3363,8 +3363,7 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "type" : "boolean"
           }
         }, {
           "name" : "filters",
@@ -3497,8 +3496,7 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "type" : "boolean"
           }
         }, {
           "name" : "filters",
@@ -6061,15 +6059,15 @@
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
           },
-          "nomisStatus" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
-          },
           "nomisType" : {
             "type" : "string",
             "deprecated" : true,
             "description" : "NOMIS incident report type code, which may be null for newer incident types"
+          },
+          "nomisStatus" : {
+            "type" : "string",
+            "deprecated" : true,
+            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
           }
         },
         "readOnly" : true,
@@ -6795,6 +6793,10 @@
           },
           "defaultsort" : {
             "type" : "boolean"
+          },
+          "sortDirection" : {
+            "type" : "string",
+            "enum" : [ "asc", "desc" ]
           },
           "type" : {
             "type" : "string",
