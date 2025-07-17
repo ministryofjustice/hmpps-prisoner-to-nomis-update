@@ -106,7 +106,7 @@ class CourtSentencingReconciliationService(
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
       lastBookingId = lastBookingId,
-      activeOnly = true,
+      activeOnly = false,
       pageSize = prisonerPageSize,
     )
   }.onFailure {
