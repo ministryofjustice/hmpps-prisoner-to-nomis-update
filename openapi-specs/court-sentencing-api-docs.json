@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-15.253.e397413"
+    "version" : "2025-07-16.257.8b3f34e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3489,12 +3489,19 @@
       "get" : {
         "tags" : [ "court-case-controller" ],
         "summary" : "Retrieve the latest offence date for a court case (checks both offence start and end dates)",
-        "description" : "This endpoint returns the most recent offence start or end date across all appearances and charges for a given court case.",
+        "description" : "\n      This endpoint returns the most recent offence start or end date across all appearances and charges for a given court case.     \n      Optionally, the result can exclude offences tied to a specific court appearance, used when editing a court appearance in the UI (the latest version of the offence dates are in the UI session).\n      ",
         "operationId" : "getLatestOffenceDate",
         "parameters" : [ {
           "name" : "courtCaseUuid",
           "in" : "path",
           "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "appearanceUuidToExclude",
+          "in" : "query",
+          "required" : false,
           "schema" : {
             "type" : "string"
           }
@@ -4549,7 +4556,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4846,7 +4853,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "courtCode" : {
             "type" : "string"
@@ -6088,7 +6095,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "courtCode" : {
             "type" : "string"
@@ -6492,7 +6499,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "charges" : {
             "type" : "array",
@@ -6515,7 +6522,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "courtId" : {
             "type" : "string"
@@ -6606,7 +6613,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6662,7 +6669,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "courtId" : {
             "type" : "string"
@@ -6947,12 +6954,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -7033,12 +7040,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -7259,7 +7266,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "17:05:39.483057426"
+            "example" : "09:07:13.717167376"
           },
           "courtCode" : {
             "type" : "string"
