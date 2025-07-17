@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-14.2168.1af1bbe"
+    "version" : "2025-07-15.2183.a9f2631"
   },
   "servers" : [ {
     "url" : "/",
@@ -11403,9 +11403,7 @@
             "description" : "Restriction records to be added",
             "items" : {
               "$ref" : "#/components/schemas/PrisonerRestrictionDetailsRequest"
-            },
-            "maxItems" : 2147483647,
-            "minItems" : 1
+            }
           }
         },
         "required" : [ "prisonerNumber", "restrictions" ]
