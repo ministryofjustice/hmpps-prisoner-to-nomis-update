@@ -773,6 +773,28 @@ internal class CourtSentencingReconciliationServiceTest {
         ),
       )
     }
+
+    @Test
+    fun `will ignore a nomis "SUP" sentenceTermCode - temporary hack until DPS fix`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              sentenceTerms = listOf(
+                nomisSentenceTermResponse(termType = "SUP"),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse(),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isNull()
+    }
   }
 }
 

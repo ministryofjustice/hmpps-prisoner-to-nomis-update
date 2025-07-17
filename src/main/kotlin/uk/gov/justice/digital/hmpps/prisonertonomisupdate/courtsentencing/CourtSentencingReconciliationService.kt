@@ -255,7 +255,9 @@ class CourtSentencingReconciliationService(
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
     )
 
-    val differenceList = compareObjects(dpsFields, nomisFields)
+    // TODO remove SUP/IMP hack once DPS fix their side
+    val differenceList = compareObjects(dpsFields, nomisFields).filterNot { it -> (it.nomis == "SUP" && it.dps == "IMP") }
+
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       return MismatchCase(
