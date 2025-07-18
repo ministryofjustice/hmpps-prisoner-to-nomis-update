@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-15.2183.a9f2631"
+    "version" : "2025-07-17.2231.61a1d97"
   },
   "servers" : [ {
     "url" : "/",
@@ -2278,65 +2278,6 @@
         }
       }
     },
-    "/prisoner-restrictions/keep/{keepingPrisonerNumber}/remove/{removedPrisonerNumber}" : {
-      "put" : {
-        "tags" : [ "Prisoner restrictions admin" ],
-        "summary" : "Handle the details of a prisoner when merging prisoner restrictions records",
-        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to merge a prisoner's restrictions records with another prisoner's restrictions .\n      ",
-        "operationId" : "merge",
-        "parameters" : [ {
-          "name" : "keepingPrisonerNumber",
-          "in" : "path",
-          "description" : "Keeping prisoner's number",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "ABC123D"
-        }, {
-          "name" : "removedPrisonerNumber",
-          "in" : "path",
-          "description" : "Removed prisoner's number",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "ABC123F"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Successfully merged Prisoner's restrictions records",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/MergedRestrictionsResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/prisoner-contact/{prisonerContactId}/restriction/{prisonerContactRestrictionId}" : {
       "put" : {
         "tags" : [ "Restrictions" ],
@@ -2433,7 +2374,7 @@
         "tags" : [ "Offender merge" ],
         "summary" : "Handle the details of a prisoner when merging prisoner records",
         "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\n      Used to merge a prisoner's records.\n      ",
-        "operationId" : "merge_1",
+        "operationId" : "merge",
         "parameters" : [ {
           "name" : "keepingPrisonerNumber",
           "in" : "path",
@@ -4765,6 +4706,66 @@
         "responses" : {
           "200" : {
             "description" : "Successfully reset Prisoner's restrictions records",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ChangedRestrictionsResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data supplied",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoner-restrictions/merge" : {
+      "post" : {
+        "tags" : [ "Prisoner restrictions admin" ],
+        "summary" : "Merge prisoner restrictions from one prisoner to another, deleting all from the removed prisoner and resetting the list for the retained prisoner.",
+        "description" : "\n      Requires role: PERSONAL_RELATIONSHIPS_MIGRATION.\\n\" +\n      \"Used to merge a prisoner's restrictions records with another prisoner's restrictions.\\n\" +\n      \"Deletes all restrictions from the removed prisoner and resets the retained prisoner's restrictions to those in the request.\"\n     ",
+        "operationId" : "mergePrisonerRestrictions",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MergePrisonerRestrictionsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully merged Prisoner's restrictions records",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7448,6 +7449,64 @@
         }
       }
     },
+    "/prisoner-restrictions/{prisonerNumber}/reconcile" : {
+      "get" : {
+        "tags" : [ "Prisoner restrictions admin" ],
+        "summary" : "Reconciliation endpoint for a single prisoner by prisoner number (restriction IDs only)",
+        "description" : "Get a list of restriction IDs for a given prisoner number",
+        "operationId" : "reconcilePrisonerRestrictionIds",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of restriction IDs for the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestrictionIdsResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No restrictions found for that prisoner number",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestrictionIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/{contactId}/name" : {
       "get" : {
         "tags" : [ "Contacts" ],
@@ -9355,36 +9414,6 @@
           }
         },
         "required" : [ "active", "id" ]
-      },
-      "MergedRestrictionsResponse" : {
-        "type" : "object",
-        "description" : "Response class for merged restrictions operations.",
-        "properties" : {
-          "hasChanged" : {
-            "type" : "boolean",
-            "description" : "Indicates if any restrictions have changed",
-            "example" : true
-          },
-          "createdRestrictions" : {
-            "type" : "array",
-            "description" : "List of IDs for created restrictions",
-            "example" : [ 101, 102 ],
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
-          "deletedRestrictions" : {
-            "type" : "array",
-            "description" : "List of IDs for deleted restrictions",
-            "example" : [ 201, 202 ],
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          }
-        },
-        "required" : [ "createdRestrictions", "deletedRestrictions", "hasChanged" ]
       },
       "UpdatePrisonerContactRestrictionRequest" : {
         "type" : "object",
@@ -11437,6 +11466,32 @@
           }
         },
         "required" : [ "createdRestrictions", "deletedRestrictions", "hasChanged" ]
+      },
+      "MergePrisonerRestrictionsRequest" : {
+        "type" : "object",
+        "description" : "The request to merge restrictions from one prisoner to another, resetting the retained prisoner's restrictions to those in the request and deleting all from the removed prisoner.",
+        "properties" : {
+          "keepingPrisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number to retain restrictions for",
+            "example" : "A1234BC",
+            "minLength" : 1
+          },
+          "removingPrisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number to remove restrictions from",
+            "example" : "A1234BD",
+            "minLength" : 1
+          },
+          "restrictions" : {
+            "type" : "array",
+            "description" : "Restriction records to be set for the retained prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerRestrictionDetailsRequest"
+            }
+          }
+        },
+        "required" : [ "keepingPrisonerNumber", "removingPrisonerNumber", "restrictions" ]
       },
       "AddContactRelationshipRequest" : {
         "type" : "object",
@@ -14829,6 +14884,27 @@
           }
         },
         "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType" ]
+      },
+      "PrisonerRestrictionIdsResponse" : {
+        "type" : "object",
+        "description" : "Response object for a list of prisoner restriction IDs for a given prisoner",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "restrictionIds" : {
+            "type" : "array",
+            "description" : "List of restriction IDs",
+            "example" : [ 123, 456, 789 ],
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "prisonerNumber", "restrictionIds" ]
       },
       "PrisonerContactRestrictionsResponse" : {
         "type" : "object",
