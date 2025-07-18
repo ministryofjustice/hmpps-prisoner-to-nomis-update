@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-07-11.67.4eee9aa"
+    "version" : "2025-07-17.70.b395850"
   },
   "servers" : [ {
     "url" : "/",
@@ -6059,15 +6059,15 @@
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
           },
-          "nomisType" : {
-            "type" : "string",
-            "deprecated" : true,
-            "description" : "NOMIS incident report type code, which may be null for newer incident types"
-          },
           "nomisStatus" : {
             "type" : "string",
             "deprecated" : true,
             "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
+          },
+          "nomisType" : {
+            "type" : "string",
+            "deprecated" : true,
+            "description" : "NOMIS incident report type code, which may be null for newer incident types"
           }
         },
         "readOnly" : true,
@@ -6690,6 +6690,10 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "loadType" : {
+            "type" : "string",
+            "enum" : [ "sync", "async" ]
           }
         },
         "required" : [ "id", "name" ]
@@ -6735,9 +6739,16 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "isMissing" : {
+            "type" : "boolean"
+          },
+          "loadType" : {
+            "type" : "string",
+            "enum" : [ "sync", "async" ]
           }
         },
-        "required" : [ "id", "name" ]
+        "required" : [ "id", "isMissing", "name" ]
       },
       "ChildVariantDefinition" : {
         "type" : "object",
