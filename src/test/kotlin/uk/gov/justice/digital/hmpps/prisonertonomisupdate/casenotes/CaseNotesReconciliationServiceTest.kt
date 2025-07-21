@@ -236,45 +236,46 @@ class CaseNotesReconciliationServiceTest {
     }
 
     @Test
-    fun `text with unicode chars last modified before 7 july 2025 match with old algorithm`() = runTest {
+    fun `text with unicode chars near the end DO NOT match with old algorithm`() = runTest {
+      val oldAlgorithmDate = parse("2024-01-01T01:02:03")
       whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         nomisPrisoner(
-          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS$SEE_DPS_REPLACEMENT",
-          creationDateTime = parse("2024-01-01T01:02:03"),
+          text = "${"0123456789".repeat(397)}01234$SEE_DPS_REPLACEMENT",
+          creationDateTime = oldAlgorithmDate,
           amendments = listOf(),
         ),
       )
       whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
         dpsPrisoner(
           text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS this is too long, stretching over 25 chars",
-          creationDateTime = parse("2024-01-01T01:02:03"),
+          creationDateTime = oldAlgorithmDate,
+          amendments = listOf(),
+        ),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNotNull()
+    }
+
+    @Test
+    fun `text with unicode chars near the end DO match with new algorithm`() = runTest {
+      val newAlgorithmDate = parse("2025-08-01T01:02:03")
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        nomisPrisoner(
+          text = "${"0123456789".repeat(397)}01234$SEE_DPS_REPLACEMENT",
+          creationDateTime = newAlgorithmDate,
+          amendments = listOf(),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        dpsPrisoner(
+          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS this is too long, stretching over 25 chars",
+          creationDateTime = newAlgorithmDate,
           amendments = listOf(),
         ),
       )
 
       assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
       verifyNoInteractions(telemetryClient)
-    }
-
-    @Test
-    fun `text with unicode chars last modified before 7 july 2025 do not match with new algorithm`() = runTest {
-      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
-        nomisPrisoner(
-          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS$SEE_DPS_REPLACEMENT",
-          creationDateTime = parse("2024-01-01T01:02:03"),
-          amendments = listOf(),
-        ),
-      )
-      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
-        dpsPrisoner(
-          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS this is too long, stretching over 25 chars",
-          creationDateTime = parse("2024-01-01T01:02:03"),
-          amendments = listOf(),
-        ),
-      )
-
-      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNotNull()
-      // verifyNoInteractions(telemetryClient)
     }
 
     @Test
@@ -680,6 +681,43 @@ class CaseNotesReconciliationServiceTest {
       )
 
       verifyNoInteractions(caseNotesNomisApiService)
+    }
+  }
+
+  @Nested
+  inner class GetLastModified {
+    @Test
+    fun `will get newest amendment creation date`() = runTest {
+      val creationDateTime = parse("2025-01-01T12:00:00")
+      val amendment1date = parse("2025-01-02T12:00:00")
+      val amendment2date = parse("2025-01-04T12:00:00")
+      val amendment3date = parse("2025-01-03T12:00:00")
+      val templateAmendment = DpsCaseNoteAmendment(authorUserName = "me", authorName = "Me", additionalNoteText = "text")
+      assertThat(
+        templateDpsCaseNote(
+          dpsId = DPS_CASE_NOTE_ID,
+          prisonerNo = OFFENDER_NO,
+          creationDateTime = creationDateTime,
+          amendments = listOf(
+            templateAmendment.copy(creationDateTime = amendment1date),
+            templateAmendment.copy(creationDateTime = amendment2date),
+            templateAmendment.copy(creationDateTime = amendment3date),
+          ),
+        ).getLastModified(),
+      ).isEqualTo(amendment2date)
+    }
+
+    @Test
+    fun `will get creation date of unmodified case note`() = runTest {
+      val creationDateTime = parse("2025-01-01T12:00:00")
+      assertThat(
+        templateDpsCaseNote(
+          dpsId = DPS_CASE_NOTE_ID,
+          prisonerNo = OFFENDER_NO,
+          creationDateTime = creationDateTime,
+          amendments = listOf(),
+        ).getLastModified(),
+      ).isEqualTo(creationDateTime)
     }
   }
 }
