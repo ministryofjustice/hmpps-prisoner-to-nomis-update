@@ -17,8 +17,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Objects
+
+const val SEE_DPS_REPLACEMENT = "... see DPS for full text"
+private const val MAX_CASENOTE_LENGTH_BYTES: Int = 4000
 
 @Service
 class CaseNotesReconciliationService(
@@ -32,8 +36,6 @@ class CaseNotesReconciliationService(
 ) {
   internal companion object {
     internal val log: Logger = LoggerFactory.getLogger(this::class.java)
-    private const val SEE_DPS_REPLACEMENT = "... see DPS for full text"
-    private const val MAX_CASENOTE_LENGTH_BYTES: Int = 4000
   }
 
   suspend fun generateReconciliationReport(prisonerCount: Long, activeOnly: Boolean): List<MismatchCaseNote> {
@@ -248,7 +250,8 @@ class CaseNotesReconciliationService(
     }.toSortedSet(amendmentComparator)
     return ComparisonCaseNote(
       id = caseNoteId,
-      text = (text + sortedAmendments.joinToString("") { it.toNomisAmendment() }).truncateToFixNomisMaxLength(),
+      text = (text + sortedAmendments.joinToString("") { it.toNomisAmendment() })
+        .truncateToFitNomis(getLastModified()),
       type = type,
       subType = subType,
       occurrenceDateTime = occurrenceDateTime.format(truncatedToSecondsFormatter),
@@ -278,15 +281,59 @@ class CaseNotesReconciliationService(
       legacyId = caseNoteId,
     )
   }
-
-  // same logic as in nomis prisoner api
-  private fun String.truncateToFixNomisMaxLength(): String = // encodedLength always >= length
-    if (Utf8.encodedLength(this) <= MAX_CASENOTE_LENGTH_BYTES) {
-      this
-    } else {
-      substring(0, MAX_CASENOTE_LENGTH_BYTES - (Utf8.encodedLength(this) - length) - SEE_DPS_REPLACEMENT.length) + SEE_DPS_REPLACEMENT
-    }
 }
+
+private val algorithmChangeDate = LocalDateTime.parse("2025-07-17T08:08:00")
+
+private fun String.truncateToFitNomis(amendmentDateTime: LocalDateTime): String = if (
+  amendmentDateTime.isBefore(algorithmChangeDate)
+) {
+  this.truncateToFixNomisMaxLength()
+} else {
+  this.truncateToUtf8Length(MAX_CASENOTE_LENGTH_BYTES, true)
+}
+
+// same OLD logic as in nomis prisoner api (pre 17/7/2025 08:08)
+private fun String.truncateToFixNomisMaxLength(): String = // encodedLength always >= length
+  if (Utf8.encodedLength(this) <= MAX_CASENOTE_LENGTH_BYTES) {
+    this
+  } else {
+    substring(0, MAX_CASENOTE_LENGTH_BYTES - (Utf8.encodedLength(this) - length) - SEE_DPS_REPLACEMENT.length) + SEE_DPS_REPLACEMENT
+  }
+
+// same NEW logic as in nomis prisoner api
+fun String.truncateToUtf8Length(maxLength: Int, includeSeeDpsSuffix: Boolean = false): String {
+  // ensure doesn't exceed the number of bytes Oracle can take - allowing for suffix to be added
+  return if (Utf8.encodedLength(this) <= maxLength) {
+    this
+  } else {
+    val suffix = if (includeSeeDpsSuffix) SEE_DPS_REPLACEMENT else ""
+    this.truncateByOneCharacterUntilFitToUtf8Length(maxLength - suffix.length) + suffix
+  }
+}
+
+private fun String.truncateByOneCharacterUntilFitToUtf8Length(maxLength: Int): String {
+  // so we don't cut into a double/triple byte character while truncating check
+  // we still have a valid string before returning, even if it fits the number of bytes
+  if (this.isStillValid() && Utf8.encodedLength(this) <= maxLength) return this
+  // Keep knocking of the last character until it fits the number of bytes and remains a valid string
+  return this.take(this.length - 1).truncateByOneCharacterUntilFitToUtf8Length(maxLength)
+}
+
+// Utf8.encodedLength will throw if the resulting String is cut at the incorrect boundary
+private fun String.isStillValid(): Boolean = runCatching { Utf8.encodedLength(this) }.map { true }.getOrDefault(false)
+
+internal fun CaseNote.getLastModified(): LocalDateTime = amendments
+  .reduceOrNull { acc, cur ->
+    val cdt = cur.creationDateTime
+    if (cdt != null && cdt.isAfter(acc.creationDateTime)) {
+      cur
+    } else {
+      acc
+    }
+  }
+  ?.creationDateTime
+  ?: creationDateTime
 
 data class MismatchCaseNote(
   val offenderNo: String,

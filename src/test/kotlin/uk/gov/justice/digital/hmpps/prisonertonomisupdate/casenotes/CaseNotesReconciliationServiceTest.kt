@@ -24,11 +24,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCaseNotesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDateTime
 import java.time.LocalDateTime.parse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.model.CaseNoteAmendment as DpsCaseNoteAmendment
 
 private const val OFFENDER_NO = "A3456GH"
 private const val DPS_CASE_NOTE_ID = "12345678-0000-0000-0000-000011112222"
+private const val TWO_UNICODE_CHARS = "⌘⌥"
 
 class CaseNotesReconciliationServiceTest {
 
@@ -37,18 +39,45 @@ class CaseNotesReconciliationServiceTest {
   private val nomisApiService: NomisApiService = mock()
   private val caseNotesMappingApiService: CaseNotesMappingApiService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val seeDpsReplacement = "... see DPS for full text"
 
   fun nomisPrisoner(
     type: String = "CODE",
     subType: String = "SUBCODE",
     authorUsername: String = "USER",
     authorUsernames: List<String>? = listOf("USER"),
-  ) = PrisonerCaseNotesResponse(listOf(templateNomisCaseNote(1, 1, type, subType, authorUsername, authorUsernames)))
+    creationDateTime: LocalDateTime = parse("2024-02-02T01:02:03"),
+    text: String = "the actual text",
+    amendmentText: String = "the amendment text",
+    amendments: List<CaseNoteAmendment> = listOf(
+      CaseNoteAmendment(
+        text = amendmentText,
+        authorUsername = "AMUSER",
+        createdDateTime = parse("2024-01-01T01:02:03"),
+        sourceSystem = CaseNoteAmendment.SourceSystem.NOMIS,
+      ),
+    ),
+  ) = PrisonerCaseNotesResponse(
+    listOf(
+      templateNomisCaseNote(
+        caseNoteId = 1,
+        bookingId = 1,
+        type = type,
+        subType = subType,
+        authorUsername = authorUsername,
+        authorUsernames = authorUsernames,
+        creationDateTime = creationDateTime,
+        text = text,
+        amendmentText = amendmentText,
+        amendments = amendments,
+      ),
+    ),
+  )
 
   fun dpsPrisoner(
     type: String = "CODE",
     subType: String = "SUBCODE",
+    creationDateTime: LocalDateTime = parse("2024-02-02T01:02:03.567"),
+    text: String = "the actual text",
     amendmentText: String = "the amendment text",
     amendments: List<DpsCaseNoteAmendment> = listOf(
       DpsCaseNoteAmendment(
@@ -59,7 +88,16 @@ class CaseNotesReconciliationServiceTest {
       ),
     ),
   ) = listOf(
-    templateDpsCaseNote(DPS_CASE_NOTE_ID, OFFENDER_NO, type, subType, amendmentText, amendments),
+    templateDpsCaseNote(
+      dpsId = DPS_CASE_NOTE_ID,
+      prisonerNo = OFFENDER_NO,
+      type = type,
+      subType = subType,
+      creationDateTime = creationDateTime,
+      text = text,
+      amendmentText = amendmentText,
+      amendments = amendments,
+    ),
   )
 
   private val caseNotesReconciliationService =
@@ -131,7 +169,7 @@ class CaseNotesReconciliationServiceTest {
         PrisonerCaseNotesResponse(
           listOf(
             nomisPrisoner().caseNotes[0].copy(
-              caseNoteText = "${"0123456789".repeat(397)}01234$seeDpsReplacement",
+              caseNoteText = "${"0123456789".repeat(397)}01234$SEE_DPS_REPLACEMENT",
               amendments = listOf(),
             ),
           ),
@@ -152,7 +190,7 @@ class CaseNotesReconciliationServiceTest {
         PrisonerCaseNotesResponse(
           listOf(
             nomisPrisoner().caseNotes[0].let {
-              it.copy(amendments = listOf(it.amendments[0].copy(text = "${"0123456789".repeat(390)}0$seeDpsReplacement")))
+              it.copy(amendments = listOf(it.amendments[0].copy(text = "${"0123456789".repeat(390)}0$SEE_DPS_REPLACEMENT")))
             },
           ),
         ),
@@ -176,7 +214,7 @@ class CaseNotesReconciliationServiceTest {
         PrisonerCaseNotesResponse(
           listOf(
             nomisPrisoner().caseNotes[0].copy(
-              caseNoteText = "$baseNote ...[AMUSER updated the case notes on 2024/0$seeDpsReplacement",
+              caseNoteText = "$baseNote ...[AMUSER updated the case notes on 2024/0$SEE_DPS_REPLACEMENT",
               amendments = listOf(),
             ),
           ),
@@ -190,6 +228,49 @@ class CaseNotesReconciliationServiceTest {
               amendments = listOf(it.amendments[0].copy(additionalNoteText = "0123456789".repeat(2))),
             )
           },
+        ),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+      verifyNoInteractions(telemetryClient)
+    }
+
+    @Test
+    fun `text with unicode chars near the end DO NOT match with old algorithm`() = runTest {
+      val oldAlgorithmDate = parse("2024-01-01T01:02:03")
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        nomisPrisoner(
+          text = "${"0123456789".repeat(397)}01234$SEE_DPS_REPLACEMENT",
+          creationDateTime = oldAlgorithmDate,
+          amendments = listOf(),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        dpsPrisoner(
+          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS this is too long, stretching over 25 chars",
+          creationDateTime = oldAlgorithmDate,
+          amendments = listOf(),
+        ),
+      )
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNotNull()
+    }
+
+    @Test
+    fun `text with unicode chars near the end DO match with new algorithm`() = runTest {
+      val newAlgorithmDate = parse("2025-08-01T01:02:03")
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        nomisPrisoner(
+          text = "${"0123456789".repeat(397)}01234$SEE_DPS_REPLACEMENT",
+          creationDateTime = newAlgorithmDate,
+          amendments = listOf(),
+        ),
+      )
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(
+        dpsPrisoner(
+          text = "${"0123456789".repeat(397)}01234$TWO_UNICODE_CHARS this is too long, stretching over 25 chars",
+          creationDateTime = newAlgorithmDate,
+          amendments = listOf(),
         ),
       )
 
@@ -602,6 +683,43 @@ class CaseNotesReconciliationServiceTest {
       verifyNoInteractions(caseNotesNomisApiService)
     }
   }
+
+  @Nested
+  inner class GetLastModified {
+    @Test
+    fun `will get newest amendment creation date`() = runTest {
+      val creationDateTime = parse("2025-01-01T12:00:00")
+      val amendment1date = parse("2025-01-02T12:00:00")
+      val amendment2date = parse("2025-01-04T12:00:00")
+      val amendment3date = parse("2025-01-03T12:00:00")
+      val templateAmendment = DpsCaseNoteAmendment(authorUserName = "me", authorName = "Me", additionalNoteText = "text")
+      assertThat(
+        templateDpsCaseNote(
+          dpsId = DPS_CASE_NOTE_ID,
+          prisonerNo = OFFENDER_NO,
+          creationDateTime = creationDateTime,
+          amendments = listOf(
+            templateAmendment.copy(creationDateTime = amendment1date),
+            templateAmendment.copy(creationDateTime = amendment2date),
+            templateAmendment.copy(creationDateTime = amendment3date),
+          ),
+        ).getLastModified(),
+      ).isEqualTo(amendment2date)
+    }
+
+    @Test
+    fun `will get creation date of unmodified case note`() = runTest {
+      val creationDateTime = parse("2025-01-01T12:00:00")
+      assertThat(
+        templateDpsCaseNote(
+          dpsId = DPS_CASE_NOTE_ID,
+          prisonerNo = OFFENDER_NO,
+          creationDateTime = creationDateTime,
+          amendments = listOf(),
+        ).getLastModified(),
+      ).isEqualTo(creationDateTime)
+    }
+  }
 }
 
 private fun templateComparison(id: String, text: String, legacyId: Long = -1) = ComparisonCaseNote(
@@ -619,6 +737,8 @@ private fun templateDpsCaseNote(
   prisonerNo: String,
   type: String = "CODE",
   subType: String = "SUBCODE",
+  creationDateTime: LocalDateTime = parse("2024-02-02T01:02:03.567"),
+  text: String = "the actual text",
   amendmentText: String = "the amendment text",
   amendments: List<DpsCaseNoteAmendment> = listOf(
     DpsCaseNoteAmendment(
@@ -630,14 +750,14 @@ private fun templateDpsCaseNote(
   ),
 ): CaseNote = CaseNote(
   caseNoteId = dpsId,
-  text = "the actual text",
+  text = text,
   type = type,
   subType = subType,
   offenderIdentifier = prisonerNo,
   typeDescription = "notused",
   subTypeDescription = "notused",
   source = "notused",
-  creationDateTime = parse("2024-02-02T01:02:03.567"),
+  creationDateTime = creationDateTime,
   occurrenceDateTime = parse("2024-01-01T01:02:03.678"),
   authorName = "notused",
   authorUserId = "notused",
@@ -664,6 +784,17 @@ private fun templateNomisCaseNote(
   subType: String = "SUBCODE",
   authorUsername: String = "USER",
   authorUsernames: List<String>? = listOf("USER"),
+  creationDateTime: LocalDateTime = parse("2024-02-02T01:02:03"),
+  text: String = "the actual text",
+  amendmentText: String = "the amendment text",
+  amendments: List<CaseNoteAmendment> = listOf(
+    CaseNoteAmendment(
+      text = amendmentText,
+      authorUsername = "AMUSER",
+      createdDateTime = parse("2024-01-01T01:02:03"),
+      sourceSystem = CaseNoteAmendment.SourceSystem.NOMIS,
+    ),
+  ),
 ): CaseNoteResponse = CaseNoteResponse(
   caseNoteId = caseNoteId,
   bookingId = bookingId,
@@ -673,17 +804,10 @@ private fun templateNomisCaseNote(
   authorUsername = authorUsername,
   authorUsernames = authorUsernames,
   authorLastName = "SMITH",
-  caseNoteText = "the actual text",
-  amendments = listOf(
-    CaseNoteAmendment(
-      text = "the amendment text",
-      authorUsername = "AMUSER",
-      createdDateTime = parse("2024-01-01T01:02:03"),
-      sourceSystem = CaseNoteAmendment.SourceSystem.NOMIS,
-    ),
-  ),
+  caseNoteText = text,
+  amendments = amendments,
   occurrenceDateTime = parse("2024-01-01T01:02:03"),
-  creationDateTime = parse("2024-02-02T01:02:03"),
+  creationDateTime = creationDateTime,
   createdDatetime = parse("2022-02-02T01:02:03"),
   createdUsername = "notused",
   sourceSystem = CaseNoteResponse.SourceSystem.NOMIS,
