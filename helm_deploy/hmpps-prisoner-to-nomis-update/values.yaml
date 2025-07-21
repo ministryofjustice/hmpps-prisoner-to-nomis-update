@@ -231,5 +231,6 @@ cron:
   activitiesPurgeDlqSuspend: true
   activitiesTidyMappingsSchedule: "15 7 * * 1-5"
   contactPersonProfileDetailsReportSchedule: "30 3 * * *"
+  visitBalanceReportSchedule: "45 4 * * *"
   report_incidents:
     suspend: false
