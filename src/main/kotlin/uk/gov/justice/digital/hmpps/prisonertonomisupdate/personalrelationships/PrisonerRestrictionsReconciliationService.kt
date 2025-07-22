@@ -10,7 +10,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Service
@@ -78,29 +81,83 @@ class PrisonerRestrictionsReconciliationService(
     .also { log.info("Page requested from person: $lastRestrictionId, with $pageSize restriction") }
 
   suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? {
-    val (_, dpsRestriction) = withContext(Dispatchers.Unconfined) {
+    val (nomisRestriction, dpsRestriction: SyncPrisonerRestriction?) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getPrisonerRestrictionById(restrictionId) } to
         async {
-          mappingApiService.getByNomisPrisonerRestrictionIdOrNull(restrictionId)?.let {
-            dpsApiService.getPrisonerRestriction(it.dpsId.toLong())
+          var dpsRestriction: SyncPrisonerRestriction? = null
+          val mapping = mappingApiService.getByNomisPrisonerRestrictionIdOrNull(restrictionId)
+          if (mapping != null) {
+            dpsRestriction = dpsApiService.getPrisonerRestrictionOrNull(mapping.dpsId.toLong())
+            if (dpsRestriction == null) {
+              telemetryClient.trackEvent(
+                "$TELEMETRY_PRISONER_PREFIX-mismatch",
+                mapOf(
+                  "nomisRestrictionId" to restrictionId.toString(),
+                  "reason" to "dps-record-missing",
+                ),
+              )
+            }
+          } else {
+            telemetryClient.trackEvent(
+              "$TELEMETRY_PRISONER_PREFIX-mismatch",
+              mapOf(
+                "nomisRestrictionId" to restrictionId.toString(),
+                "reason" to "restriction-mapping-missing",
+              ),
+            )
           }
+
+          dpsRestriction
         }
     }.awaitBoth()
 
     if (dpsRestriction == null) {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_PRISONER_PREFIX-mismatch",
-        mapOf(
-          "nomisRestrictionId" to restrictionId.toString(),
-          "reason" to "restriction-mapping-missing",
-        ),
-      )
       return MismatchPrisonerRestriction(restrictionId = restrictionId)
+    } else {
+      if (nomisRestriction.asSummary() != dpsRestriction.asSummary()) {
+        log.info("Mismatch found for restriction: {} {}", nomisRestriction.asSummary(), dpsRestriction.asSummary())
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
+          mapOf(
+            "nomisRestrictionId" to restrictionId.toString(),
+            "dpsRestrictionId" to dpsRestriction.prisonerRestrictionId.toString(),
+            "offenderNo" to nomisRestriction.offenderNo,
+            "reason" to "restriction-different-details",
+          ),
+        )
+        return MismatchPrisonerRestriction(restrictionId = restrictionId)
+      }
     }
 
     return null
   }
 }
+
+private fun PrisonerRestriction.asSummary() = PrisonerRestrictionSummary(
+  prisonerNumber = this.offenderNo,
+  currentTerm = this.bookingSequence == 1L,
+  restrictionType = this.type.code,
+  startDate = this.effectiveDate,
+  expiryDate = this.expiryDate,
+  comment = this.comment?.uppercase(),
+)
+private fun SyncPrisonerRestriction.asSummary() = PrisonerRestrictionSummary(
+  prisonerNumber = this.prisonerNumber,
+  currentTerm = this.currentTerm,
+  restrictionType = this.restrictionType,
+  startDate = this.effectiveDate,
+  expiryDate = this.expiryDate,
+  comment = this.commentText?.uppercase(),
+)
+
+data class PrisonerRestrictionSummary(
+  val prisonerNumber: String,
+  val currentTerm: Boolean,
+  val restrictionType: String,
+  val startDate: LocalDate?,
+  val expiryDate: LocalDate?,
+  val comment: String?,
+)
 
 data class MismatchPrisonerRestriction(
   val restrictionId: Long,
