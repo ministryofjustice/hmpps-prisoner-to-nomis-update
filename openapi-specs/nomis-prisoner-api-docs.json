@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-16.292.e0f80eb"
+    "version" : "2025-07-21.301.a7e7cc4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17284,6 +17284,16 @@
             "type" : "integer",
             "description" : "Course Activity ID"
           }
+        }, {
+          "name" : "activeOnDate",
+          "in" : "query",
+          "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow."
+          }
         } ],
         "responses" : {
           "200" : {
@@ -17425,6 +17435,16 @@
             "type" : "integer",
             "description" : "Course Activity ID"
           }
+        }, {
+          "name" : "activeOnDate",
+          "in" : "query",
+          "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow."
+          }
         } ],
         "responses" : {
           "200" : {
@@ -17503,6 +17523,16 @@
           "schema" : {
             "type" : "integer",
             "description" : "Course Activity ID"
+          }
+        }, {
+          "name" : "activeOnDate",
+          "in" : "query",
+          "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Allocations must be active on this date to be included. For migrations this is the date we switch to DPS. Defaults to tomorrow."
           }
         } ],
         "responses" : {
@@ -28227,7 +28257,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "audit", "escort", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime", "transportType" ]
+        "required" : [ "applicationDate", "audit", "escort", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime" ]
       },
       "ScheduledTemporaryAbsenceReturn" : {
         "type" : "object",
