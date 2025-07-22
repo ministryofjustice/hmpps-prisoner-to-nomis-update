@@ -415,16 +415,27 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerRestriction(prisonerRestrictionId: Long, response: SyncPrisonerRestriction = prisonerRestriction()) {
-    stubFor(
-      get("/sync/prisoner-restriction/$prisonerRestrictionId")
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
-        ),
-    )
+  fun stubGetPrisonerRestrictionOrNull(prisonerRestrictionId: Long, response: SyncPrisonerRestriction? = prisonerRestriction()) {
+    if (response != null) {
+      stubFor(
+        get("/sync/prisoner-restriction/$prisonerRestrictionId")
+          .willReturn(
+            aResponse()
+              .withStatus(200)
+              .withHeader("Content-Type", "application/json")
+              .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+          ),
+      )
+    } else {
+      stubFor(
+        get("/sync/prisoner-restriction/$prisonerRestrictionId")
+          .willReturn(
+            aResponse()
+              .withStatus(404)
+              .withHeader("Content-Type", "application/json"),
+          ),
+      )
+    }
   }
 
   fun stubGetPrisonerContactRestriction(prisonerContactRestrictionId: Long, response: SyncPrisonerContactRestriction = prisonerContactRestriction()) {

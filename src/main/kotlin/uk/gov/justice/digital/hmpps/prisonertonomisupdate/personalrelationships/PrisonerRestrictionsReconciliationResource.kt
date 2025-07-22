@@ -54,4 +54,4 @@ class PrisonerRestrictionsReconciliationResource(
     }
   }
 }
-private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }
+private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this.sortedBy { it.restrictionId }.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }

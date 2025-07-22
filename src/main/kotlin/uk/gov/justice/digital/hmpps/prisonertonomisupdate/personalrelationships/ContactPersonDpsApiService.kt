@@ -94,8 +94,8 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
 
-  suspend fun getPrisonerRestriction(prisonerRestrictionId: Long): SyncPrisonerRestriction = webClient.get()
+  suspend fun getPrisonerRestrictionOrNull(prisonerRestrictionId: Long): SyncPrisonerRestriction? = webClient.get()
     .uri("/sync/prisoner-restriction/{prisonerRestrictionId}", prisonerRestrictionId)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrNullForNotFound(backoffSpec)
 }
