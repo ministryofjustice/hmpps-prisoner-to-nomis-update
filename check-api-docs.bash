@@ -1,12 +1,13 @@
 #!/usr/bin/env bash
 set -e
 
-PROJECT=${1?No project specified}
+JSON_TASK=${1?No json task specified}
+WORKING_DIR=${2:-.}
+PROJECT=$(echo "$JSON_TASK" | sed -e 's/^write//' -e 's/Json$//' -e 's/.*/\l&/' | sed -r 's/([a-z0-9])([A-Z])/\1-\L\2/g' )
 PROJECT_CAMEL=$(echo "$PROJECT" | sed -r 's/(^|-)([a-z])/\U\2/g')
 MODEL_TASK="build${PROJECT_CAMEL}ApiModel"
-JSON_TASK="write${PROJECT_CAMEL}Json"
 PROD_VERSION_TASK="read${PROJECT_CAMEL}ProductionVersion"
-SPECS_JSON="openapi-specs/$PROJECT-api-docs.json"
+SPECS_JSON="${WORKING_DIR}/openapi-specs/$PROJECT-api-docs.json"
 if [[ -z ${GITHUB_OUTPUT+x} ]]; then
   GITHUB_OUTPUT=check-api-docs.log
   OUTPUT_COMPARISON=true
@@ -21,7 +22,7 @@ echo "old_version=$OLD_VERSION" >>"$GITHUB_OUTPUT"
 # build the model and grab new json
 ./gradlew "$MODEL_TASK" "$JSON_TASK"
 
-mv "build/generated/$PROJECT" build/model_copy
+mv "${WORKING_DIR}/build/generated/$PROJECT" "${WORKING_DIR}/build/model_copy"
 
 NEW_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "new_version=$NEW_VERSION" >>"$GITHUB_OUTPUT"
@@ -36,7 +37,7 @@ fi
 ./gradlew "$MODEL_TASK"
 
 # and compare
-if ! diff -r build/model_copy "build/generated/$PROJECT" >"build/api.diff"; then
+if ! diff -r build/model_copy "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
   echo "Found differences between old ($OLD_VERSION) and new ($NEW_VERSION) models"
   {
     printf "differences=true\nproduction_version="
