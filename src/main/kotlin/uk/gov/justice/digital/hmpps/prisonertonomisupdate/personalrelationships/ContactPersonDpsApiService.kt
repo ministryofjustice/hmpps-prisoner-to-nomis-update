@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerReconcile
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -92,4 +93,9 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .uri("/sync/contact/{contactId}/reconcile", contactId)
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
+
+  suspend fun getPrisonerRestriction(prisonerRestrictionId: Long): SyncPrisonerRestriction = webClient.get()
+    .uri("/sync/prisoner-restriction/{prisonerRestrictionId}", prisonerRestrictionId)
+    .retrieve()
+    .awaitBody()
 }

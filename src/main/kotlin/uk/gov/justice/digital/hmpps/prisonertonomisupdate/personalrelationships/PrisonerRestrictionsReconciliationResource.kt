@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerReconciliationReconciliationService.Companion.TELEMETRY_PRISONER_PREFIX
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService.Companion.TELEMETRY_PRISONER_PREFIX
 
 @RestController
 class PrisonerRestrictionsReconciliationResource(
   private val telemetryClient: TelemetryClient,
-  private val reconciliationService: PrisonerReconciliationReconciliationService,
+  private val reconciliationService: PrisonerRestrictionsReconciliationService,
   private val reportScope: CoroutineScope,
 ) {
 
@@ -54,4 +54,4 @@ class PrisonerRestrictionsReconciliationResource(
     }
   }
 }
-private fun List<MismatchPrisonerRestriction>.asMap(): Map<String, String> = this.take(10).associate { it.restrictionId.toString() to "TODO" }
+private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }
