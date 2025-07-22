@@ -18,7 +18,7 @@ jobs:
       - uses: actions/create-github-app-token@v2
         id: generate-token
         with:
-          repositories: hmpps-prisoner-to-nomis-update
+          repositories: ${{ github.event.repository.name }}
           owner: ministryofjustice
           # Created by PGP following instructions in https://github.com/peter-evans/create-pull-request/blob/main/docs/concepts-guidelines.md#authenticating-with-github-app-generated-tokens
           app-id: ${{ secrets.APP_ID }}
@@ -36,6 +36,7 @@ jobs:
           pr_title: Combined update of api docs
           labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
+          create_from_scratch: true
 
       - name: Check status of PRs
         id: check-prs
