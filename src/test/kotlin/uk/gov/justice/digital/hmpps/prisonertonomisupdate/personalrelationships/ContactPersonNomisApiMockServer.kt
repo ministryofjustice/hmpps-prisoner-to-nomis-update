@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonPhoneNumber
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerContact
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RestrictionIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
@@ -276,6 +277,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     fun pagePrisonerRestrictionIdResponse(total: Long) = PagePrisonerRestrictionIdResponse(
       totalElements = total,
       totalPages = 100,
+    )
+
+    fun nomisPrisonerRestriction() = PrisonerRestriction(
+      id = 1234,
+      bookingId = 456,
+      bookingSequence = 1,
+      offenderNo = "A1234KT",
+      type = CodeDescription("BAN", "Banned"),
+      effectiveDate = LocalDate.now(),
+      enteredStaff = ContactRestrictionEnteredStaff(1234, "T.SMITH"),
+      authorisedStaff = ContactRestrictionEnteredStaff(1235, "M.SMITH"),
+      audit = nomisAudit(),
     )
   }
 
@@ -717,6 +730,18 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
   }
+
+  fun stubGetPrisonerRestrictionById(restrictionId: Long, response: PrisonerRestriction = nomisPrisonerRestriction()) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/restrictions/$restrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }

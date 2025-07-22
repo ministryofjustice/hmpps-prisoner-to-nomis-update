@@ -22,7 +22,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import java.util.UUID
 
 @Component
 class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) {
@@ -902,6 +904,37 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
 
         ).willSetStateTo(Scenario.STARTED),
     )
+  }
+
+  fun stubGetByNomisPrisonerRestrictionIdOrNull(
+    nomisRestrictionId: Long = 123456,
+    dpsRestrictionId: String = UUID.randomUUID().toString(),
+    mapping: PrisonerRestrictionMappingDto? = PrisonerRestrictionMappingDto(
+      offenderNo = "A1234KT",
+      nomisId = nomisRestrictionId,
+      dpsId = dpsRestrictionId,
+      mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/prisoner-restriction/nomis-prisoner-restriction-id/$nomisRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/prisoner-restriction/nomis-prisoner-restriction-id/$nomisRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
   }
 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)

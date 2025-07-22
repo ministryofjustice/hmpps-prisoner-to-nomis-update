@@ -1082,4 +1082,29 @@ class ContactPersonNomisApiServiceTest {
       assertThat(person.lastName).isEqualTo("Smith")
     }
   }
+
+  @Nested
+  inner class GetPrisonerRestrictionById {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerRestrictionById(restrictionId = 1234567)
+
+      apiService.getPrisonerRestrictionById(prisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubGetPrisonerRestrictionById(restrictionId = 1234567)
+
+      apiService.getPrisonerRestrictionById(prisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/restrictions/1234567")),
+      )
+    }
+  }
 }

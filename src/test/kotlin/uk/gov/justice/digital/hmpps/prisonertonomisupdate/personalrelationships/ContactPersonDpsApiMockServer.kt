@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerContactRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddress
@@ -48,6 +49,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerContactRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerReconcile
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -263,6 +265,21 @@ class ContactPersonDpsApiExtension :
       startDate = LocalDate.parse("2020-01-01"),
       expiryDate = null,
     )
+
+    fun prisonerRestriction() = SyncPrisonerRestriction(
+      prisonerRestrictionId = 1234567,
+      prisonerNumber = "A1234KT",
+      restrictionType = "BAN",
+      effectiveDate = LocalDate.now(),
+      authorisedUsername = "T.SMITH",
+      currentTerm = true,
+      createdBy = "J.SMITH",
+      createdTime = LocalDateTime.now(),
+      expiryDate = null,
+      commentText = "Bannded for LIfe",
+      updatedBy = "K.SMITH",
+      updatedTime = LocalDateTime.now(),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -389,6 +406,18 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetContactRestriction(contactRestrictionId: Long, response: SyncContactRestriction = contactRestriction()) {
     stubFor(
       get("/sync/contact-restriction/$contactRestrictionId")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetPrisonerRestriction(prisonerRestrictionId: Long, response: SyncPrisonerRestriction = prisonerRestriction()) {
+    stubFor(
+      get("/sync/prisoner-restriction/$prisonerRestrictionId")
         .willReturn(
           aResponse()
             .withStatus(200)

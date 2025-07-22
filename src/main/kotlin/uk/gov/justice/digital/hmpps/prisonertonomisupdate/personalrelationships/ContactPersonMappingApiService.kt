@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
@@ -16,9 +17,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
-class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClient: WebClient) {
+class ContactPersonMappingApiService(
+  @Qualifier("mappingWebClient") val webClient: WebClient,
+  retryApiService: RetryApiService,
+) {
+  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "ContactPersonMappingApiService"),
+  )
+
   suspend fun getByDpsContactIdOrNull(dpsContactId: Long): PersonMappingDto? = webClient.get()
     .uri(
       "/mapping/contact-person/person/dps-contact-id/{dpsContactId}",
@@ -290,4 +300,12 @@ class ContactPersonMappingApiService(@Qualifier("mappingWebClient") val webClien
     .bodyValue(mappings)
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getByNomisPrisonerRestrictionIdOrNull(nomisPrisonerRestrictionId: Long): PrisonerRestrictionMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/prisoner-restriction/nomis-prisoner-restriction-id/{nomisPrisonerRestrictionId}",
+      nomisPrisonerRestrictionId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound(backoffSpec)
 }

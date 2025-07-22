@@ -14,10 +14,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 
 @OptIn(ExperimentalCoroutinesApi::class)
 @Service
-class PrisonerReconciliationReconciliationService(
+class PrisonerRestrictionsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: ContactPersonNomisApiService,
-  @Value("\${reports.contact-person.prisoner-restrictions.reconciliation.page-size:10}") private val pageSize: Int = 10,
+  private val mappingApiService: ContactPersonMappingApiService,
+  private val dpsApiService: ContactPersonDpsApiService,
+
+  @param:Value($$"${reports.contact-person.prisoner-restrictions.reconciliation.page-size:10}") private val pageSize: Int = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -25,7 +28,8 @@ class PrisonerReconciliationReconciliationService(
   }
 
   suspend fun generatePrisonerRestrictionsReconciliationReport(): ReconciliationResult<MismatchPrisonerRestriction> {
-    checkTotalsMatch()
+    // TODO add this in when DPS have a totals endpoint
+    // checkTotalsMatch()
 
     return generateReconciliationReport(
       threadCount = pageSize,
@@ -34,6 +38,7 @@ class PrisonerReconciliationReconciliationService(
     )
   }
 
+  @Suppress("unused")
   private suspend fun checkTotalsMatch() = runCatching {
     // TODO - request DPS paging service
     val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
@@ -72,7 +77,29 @@ class PrisonerReconciliationReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from person: $lastRestrictionId, with $pageSize restriction") }
 
-  suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? = null
+  suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? {
+    val (_, dpsRestriction) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getPrisonerRestrictionById(restrictionId) } to
+        async {
+          mappingApiService.getByNomisPrisonerRestrictionIdOrNull(restrictionId)?.let {
+            dpsApiService.getPrisonerRestriction(it.dpsId.toLong())
+          }
+        }
+    }.awaitBoth()
+
+    if (dpsRestriction == null) {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_PRISONER_PREFIX-mismatch",
+        mapOf(
+          "nomisRestrictionId" to restrictionId.toString(),
+          "reason" to "restriction-mapping-missing",
+        ),
+      )
+      return MismatchPrisonerRestriction(restrictionId = restrictionId)
+    }
+
+    return null
+  }
 }
 
 data class MismatchPrisonerRestriction(

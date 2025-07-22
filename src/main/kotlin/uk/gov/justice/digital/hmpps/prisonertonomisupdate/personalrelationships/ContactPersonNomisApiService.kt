@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePrisonerRestrictionIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerWithContacts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RestrictionIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateContactPersonRestrictionRequest
@@ -348,6 +349,13 @@ class ContactPersonNomisApiService(
 
   suspend fun getPrisonerRestrictionIds(lastRestrictionId: Long = 0, pageSize: Int = 20): RestrictionIdsWithLast = webClient.get()
     .uri("/prisoners/restrictions/ids/all-from-id?restrictionId={lastRestrictionId}&pageSize={pageSize}", lastRestrictionId, pageSize)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPrisonerRestrictionById(
+    prisonerRestrictionId: Long,
+  ): PrisonerRestriction = webClient.get()
+    .uri("/prisoners/restrictions/{restrictionId}", prisonerRestrictionId)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 

@@ -27,9 +27,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(ContactPersonMappingApiService::class, ContactPersonMappingApiMockServer::class)
+@Import(ContactPersonMappingApiService::class, ContactPersonMappingApiMockServer::class, RetryApiService::class)
 class ContactPersonMappingApiServiceTest {
   @Autowired
   private lateinit var apiService: ContactPersonMappingApiService
@@ -1693,6 +1694,31 @@ class ContactPersonMappingApiServiceTest {
       assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
+    }
+  }
+
+  @Nested
+  inner class GetByNomisPrisonerRestrictionId {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByNomisPrisonerRestrictionIdOrNull(nomisRestrictionId = 1234567)
+
+      apiService.getByNomisPrisonerRestrictionIdOrNull(nomisPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubGetByNomisPrisonerRestrictionIdOrNull(nomisRestrictionId = 1234567)
+
+      apiService.getByNomisPrisonerRestrictionIdOrNull(nomisPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/prisoner-restriction/nomis-prisoner-restriction-id/1234567")),
+      )
     }
   }
 }
