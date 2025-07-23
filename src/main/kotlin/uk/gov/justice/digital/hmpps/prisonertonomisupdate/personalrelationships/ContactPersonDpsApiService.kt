@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -7,7 +8,9 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerRestrictionId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -98,4 +101,20 @@ class ContactPersonDpsApiService(@Qualifier("personalRelationshipsApiWebClient")
     .uri("/sync/prisoner-restriction/{prisonerRestrictionId}", prisonerRestrictionId)
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
+
+  suspend fun getPrisonerRestrictionIds(pageNumber: Int = 0, pageSize: Int = 1): PagedModelPrisonerRestrictionId = webClient.get()
+    .uri("/prisoner-restrictions/reconcile?page={pageNumber}&size={pageSize}", pageNumber, pageSize)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
 }
+
+// TODO - missing from DPS OpenAPI
+data class PagedModelPrisonerRestrictionId(
+
+  @get:JsonProperty("content")
+  val content: List<PrisonerRestrictionId>? = null,
+
+  @get:JsonProperty("page")
+  val page: PageMetadata? = null,
+
+)

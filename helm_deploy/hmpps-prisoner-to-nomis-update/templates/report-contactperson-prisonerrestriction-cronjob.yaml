@@ -5,8 +5,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "20 3 * * 6"
-  suspend: true
+  schedule: "{{ .Values.cron.contactPersonRestrictionsReportSchedule }}"
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
@@ -18,7 +17,7 @@ spec:
       template:
         spec:
           containers:
-            - name: report-contactperson-prisonercontact
+            - name: report-contactperson-prisonerrestriction
               image: ghcr.io/ministryofjustice/hmpps-devops-tools
               volumeMounts:
                 - name: cronjob-api-helpers

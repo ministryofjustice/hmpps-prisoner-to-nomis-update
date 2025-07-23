@@ -108,6 +108,7 @@ cron:
   activitiesTidyMappingsSuspend: false
   activitiesPurgeDlqSuspend: false
   contactPersonProfileDetailsReportSchedule: "30 7 * * *"
+  contactPersonRestrictionsReportSchedule: "55 7 * * *"
   visitBalanceReportSchedule: "0 18 * * 1-5"
   activitiesPurgeDlqQueueName: "syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq"
   report_incidents:

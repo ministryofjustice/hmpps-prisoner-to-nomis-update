@@ -31,8 +31,7 @@ class PrisonerRestrictionsReconciliationService(
   }
 
   suspend fun generatePrisonerRestrictionsReconciliationReport(): ReconciliationResult<MismatchPrisonerRestriction> {
-    // TODO add this in when DPS have a totals endpoint
-    // checkTotalsMatch()
+    checkTotalsMatch()
 
     return generateReconciliationReport(
       threadCount = pageSize,
@@ -43,10 +42,9 @@ class PrisonerRestrictionsReconciliationService(
 
   @Suppress("unused")
   private suspend fun checkTotalsMatch() = runCatching {
-    // TODO - request DPS paging service
     val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getPrisonerRestrictionIdsTotals().totalElements } to
-        async { nomisApiService.getPrisonerRestrictionIdsTotals().totalElements }
+        async { dpsApiService.getPrisonerRestrictionIds().page!!.totalElements!! }
     }.awaitBoth()
 
     if (nomisTotal != dpsTotal) {
