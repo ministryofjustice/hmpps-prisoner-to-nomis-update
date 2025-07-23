@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-17.2231.61a1d97"
+    "version" : "2025-07-22.2296.8eae440"
   },
   "servers" : [ {
     "url" : "/",
@@ -7043,6 +7043,17 @@
         "summary" : "Endpoint to return reference data for a provided group key. Sorted by display order then description by default.",
         "operationId" : "getReferenceDataByGroup",
         "parameters" : [ {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "displayOrder,asc"
+        }, {
           "name" : "groupCode",
           "in" : "path",
           "description" : "The group code of the reference codes to load",
@@ -7051,14 +7062,6 @@
             "$ref" : "#/components/schemas/ReferenceCodeGroup"
           },
           "example" : "PHONE_TYPE"
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "description" : "Sort configuration - default displayOrder, description",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/Sort"
-          }
         }, {
           "name" : "activeOnly",
           "in" : "query",
@@ -7449,37 +7452,53 @@
         }
       }
     },
-    "/prisoner-restrictions/{prisonerNumber}/reconcile" : {
+    "/prisoner-restrictions/reconcile" : {
       "get" : {
         "tags" : [ "Prisoner restrictions admin" ],
-        "summary" : "Reconciliation endpoint for a single prisoner by prisoner number (restriction IDs only)",
-        "description" : "Get a list of restriction IDs for a given prisoner number",
-        "operationId" : "reconcilePrisonerRestrictionIds",
+        "summary" : "Reconciliation endpoint for all prisoner restrictions (paged restriction IDs only)",
+        "description" : "Get a paged list of all prisoner restriction IDs for reconciliation purposes",
+        "operationId" : "reconcileAllPrisonerRestrictionIds",
         "parameters" : [ {
-          "name" : "prisonerNumber",
-          "in" : "path",
+          "name" : "pageable",
+          "in" : "query",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "schema" : {
+            "type" : "integer",
+            "default" : 20
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
           "200" : {
-            "description" : "List of restriction IDs for the prisoner",
+            "description" : "Page of restriction IDs",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerRestrictionIdsResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "No restrictions found for that prisoner number",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerRestrictionIdsResponse"
+                  "$ref" : "#/components/schemas/PrisonerRestrictionId"
                 }
               }
             }
@@ -14478,17 +14497,6 @@
         "type" : "string",
         "enum" : [ "DOMESTIC_STS", "OFFICIAL_RELATIONSHIP", "ID_TYPE", "LANGUAGE", "GENDER", "SOCIAL_RELATIONSHIP", "CITY", "COUNTY", "RELATIONSHIP_TYPE", "COUNTRY", "ADDRESS_TYPE", "PHONE_TYPE", "RESTRICTION", "TITLE", "TEST_TYPE" ]
       },
-      "Sort" : {
-        "type" : "object",
-        "properties" : {
-          "sort" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }
-      },
       "ReferenceCode" : {
         "type" : "object",
         "description" : "Describes the details of a reference code",
@@ -14885,26 +14893,39 @@
         },
         "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType" ]
       },
-      "PrisonerRestrictionIdsResponse" : {
+      "Pageable" : {
         "type" : "object",
-        "description" : "Response object for a list of prisoner restriction IDs for a given prisoner",
         "properties" : {
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The prisoner number",
-            "example" : "A1234BC"
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 0
           },
-          "restrictionIds" : {
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "sort" : {
             "type" : "array",
-            "description" : "List of restriction IDs",
-            "example" : [ 123, 456, 789 ],
             "items" : {
-              "type" : "integer",
-              "format" : "int64"
+              "type" : "string"
             }
           }
+        }
+      },
+      "PrisonerRestrictionId" : {
+        "type" : "object",
+        "description" : "Response object for prisoner restriction reconciliation",
+        "properties" : {
+          "prisonerRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID for prisoner restriction",
+            "example" : 111111
+          }
         },
-        "required" : [ "prisonerNumber", "restrictionIds" ]
+        "required" : [ "prisonerRestrictionId" ]
       },
       "PrisonerContactRestrictionsResponse" : {
         "type" : "object",
