@@ -146,6 +146,7 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
         eq(
           mapOf(
             "nomisRestrictionId" to "2",
+            "offenderNo" to "A1234KT",
             "reason" to "restriction-mapping-missing",
           ),
         ),
@@ -166,6 +167,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
         eq(
           mapOf(
             "nomisRestrictionId" to "3",
+            "dpsRestrictionId" to "103",
+            "offenderNo" to "A1234KT",
             "reason" to "dps-record-missing",
           ),
         ),

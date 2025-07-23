@@ -78,56 +78,72 @@ class PrisonerRestrictionsReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from person: $lastRestrictionId, with $pageSize restriction") }
 
+  sealed interface DpsRestrictionResult
+  data class Restriction(val restriction: SyncPrisonerRestriction) : DpsRestrictionResult
+  class NoMapping : DpsRestrictionResult
+  data class NoRestriction(val restrictionId: String) : DpsRestrictionResult
+
   suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? {
-    val (nomisRestriction, dpsRestriction: SyncPrisonerRestriction?) = withContext(Dispatchers.Unconfined) {
+    val (nomisRestriction, dpsRestrictionResult: DpsRestrictionResult) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getPrisonerRestrictionById(restrictionId) } to
         async {
-          var dpsRestriction: SyncPrisonerRestriction? = null
           val mapping = mappingApiService.getByNomisPrisonerRestrictionIdOrNull(restrictionId)
           if (mapping != null) {
-            dpsRestriction = dpsApiService.getPrisonerRestrictionOrNull(mapping.dpsId.toLong())
+            val dpsRestriction = dpsApiService.getPrisonerRestrictionOrNull(mapping.dpsId.toLong())
             if (dpsRestriction == null) {
-              telemetryClient.trackEvent(
-                "$TELEMETRY_PRISONER_PREFIX-mismatch",
-                mapOf(
-                  "nomisRestrictionId" to restrictionId.toString(),
-                  "reason" to "dps-record-missing",
-                ),
-              )
+              NoRestriction(mapping.dpsId)
+            } else {
+              Restriction(dpsRestriction)
             }
           } else {
-            telemetryClient.trackEvent(
-              "$TELEMETRY_PRISONER_PREFIX-mismatch",
-              mapOf(
-                "nomisRestrictionId" to restrictionId.toString(),
-                "reason" to "restriction-mapping-missing",
-              ),
-            )
+            NoMapping()
           }
-
-          dpsRestriction
         }
     }.awaitBoth()
 
-    if (dpsRestriction == null) {
-      return MismatchPrisonerRestriction(restrictionId = restrictionId)
-    } else {
-      if (nomisRestriction.asSummary() != dpsRestriction.asSummary()) {
-        log.info("Mismatch found for restriction: {} {}", nomisRestriction.asSummary(), dpsRestriction.asSummary())
+    return when (dpsRestrictionResult) {
+      is NoMapping -> {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           mapOf(
             "nomisRestrictionId" to restrictionId.toString(),
-            "dpsRestrictionId" to dpsRestriction.prisonerRestrictionId.toString(),
             "offenderNo" to nomisRestriction.offenderNo,
-            "reason" to "restriction-different-details",
+            "reason" to "restriction-mapping-missing",
           ),
         )
-        return MismatchPrisonerRestriction(restrictionId = restrictionId)
+        MismatchPrisonerRestriction(restrictionId = restrictionId)
+      }
+      is NoRestriction -> {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-mismatch",
+          mapOf(
+            "nomisRestrictionId" to restrictionId.toString(),
+            "dpsRestrictionId" to dpsRestrictionResult.restrictionId,
+            "offenderNo" to nomisRestriction.offenderNo,
+            "reason" to "dps-record-missing",
+          ),
+        )
+        MismatchPrisonerRestriction(restrictionId = restrictionId)
+      }
+      is Restriction -> {
+        val dpsRestriction = dpsRestrictionResult.restriction
+        if (nomisRestriction.asSummary() != dpsRestriction.asSummary()) {
+          log.info("Mismatch found for restriction: {} {}", nomisRestriction.asSummary(), dpsRestriction.asSummary())
+          telemetryClient.trackEvent(
+            "$TELEMETRY_PRISONER_PREFIX-mismatch",
+            mapOf(
+              "nomisRestrictionId" to restrictionId.toString(),
+              "dpsRestrictionId" to dpsRestriction.prisonerRestrictionId.toString(),
+              "offenderNo" to nomisRestriction.offenderNo,
+              "reason" to "restriction-different-details",
+            ),
+          )
+          MismatchPrisonerRestriction(restrictionId = restrictionId)
+        } else {
+          null
+        }
       }
     }
-
-    return null
   }
 }
 
