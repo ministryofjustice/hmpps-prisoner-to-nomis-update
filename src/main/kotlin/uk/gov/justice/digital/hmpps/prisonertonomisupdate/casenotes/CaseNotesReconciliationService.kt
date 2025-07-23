@@ -285,8 +285,8 @@ class CaseNotesReconciliationService(
 
 private val algorithmChangeDate = LocalDateTime.parse("2025-07-17T08:08:00")
 
-private fun String.truncateToFitNomis(amendmentDateTime: LocalDateTime): String = if (
-  amendmentDateTime.isBefore(algorithmChangeDate)
+private fun String.truncateToFitNomis(modifiedDateTime: LocalDateTime): String = if (
+  modifiedDateTime.isBefore(algorithmChangeDate)
 ) {
   this.truncateToFixNomisMaxLength()
 } else {

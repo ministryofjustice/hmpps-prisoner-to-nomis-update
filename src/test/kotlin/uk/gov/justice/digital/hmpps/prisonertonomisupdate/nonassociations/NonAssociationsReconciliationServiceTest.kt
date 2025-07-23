@@ -52,7 +52,6 @@ class NonAssociationsReconciliationServiceTest {
           roleReason = "VICTIM",
           roleReason2 = "PERPETRATOR",
           dpsReason = "BULLYING",
-          comment = "comment",
         ),
       ),
     )
@@ -87,11 +86,11 @@ class NonAssociationsReconciliationServiceTest {
   @Test
   fun `will not report mismatch where NA details match`() = runTest {
     whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
-      listOf(nomisResponse(1, EXP, "comment1")),
+      listOf(nomisResponse(1, EXP, "LAND")),
     )
 
     whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
-      listOf(dpsResponse(1L, "comment1")),
+      listOf(dpsResponse(1L, NonAssociation.RestrictionType.LANDING)),
     )
 
     assertThat(nonAssociationsReconciliationService.checkMatch(NonAssociationIdResponse(OFFENDER1, OFFENDER2)).first)
@@ -102,15 +101,15 @@ class NonAssociationsReconciliationServiceTest {
   fun `will not report mismatch where 2 NA details are swapped`() = runTest {
     whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        nomisResponse(1, EXP, "comment1"),
-        nomisResponse(2, EXP, "comment2"),
+        nomisResponse(1, EXP, "LAND"),
+        nomisResponse(2, EXP, "WING"),
       ),
     )
 
     whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        dpsResponse(1L, "comment2"),
-        dpsResponse(2L, "comment1"),
+        dpsResponse(1L, NonAssociation.RestrictionType.WING),
+        dpsResponse(2L, NonAssociation.RestrictionType.LANDING),
       ),
     )
 
@@ -122,15 +121,15 @@ class NonAssociationsReconciliationServiceTest {
   fun `will report mismatch where 2 NA details have a difference`() = runTest {
     whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        nomisResponse(1, EXP, "comment1"),
-        nomisResponse(2, EXP, "comment2"),
+        nomisResponse(1, EXP),
+        nomisResponse(2, EXP, "WING"),
       ),
     )
 
     whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        dpsResponse(1L, "comment1"),
-        dpsResponse(2L, "comment3"),
+        dpsResponse(1L),
+        dpsResponse(2L, NonAssociation.RestrictionType.CELL),
       ),
     )
 
@@ -139,21 +138,19 @@ class NonAssociationsReconciliationServiceTest {
         MismatchNonAssociation(
           NonAssociationIdResponse(OFFENDER1, OFFENDER2),
           NonAssociationReportDetail(
-            type = "LAND",
+            type = "WING",
             createdDate = LocalDate.parse("2022-01-01"),
             expiryDate = LocalDate.parse("2022-01-01"),
             roleReason = "VIC",
             roleReason2 = "PER",
-            comment = "comment2",
           ),
           NonAssociationReportDetail(
-            type = "LANDING",
+            type = "CELL",
             createdDate = LocalDate.parse("2022-01-01"),
             closed = true,
             roleReason = "VICTIM",
             roleReason2 = "PERPETRATOR",
             dpsReason = "BULLYING",
-            comment = "comment3",
           ),
         ),
       )
@@ -172,17 +169,17 @@ class NonAssociationsReconciliationServiceTest {
   fun `will correctly sort NAs with same start date`() = runTest {
     whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        nomisResponse(1, EXP, "comment1"),
-        nomisResponse(3, EXP, "comment3"),
-        nomisResponse(2, EXP, "comment2"),
+        nomisResponse(1, EXP),
+        nomisResponse(3, EXP),
+        nomisResponse(2, EXP),
       ),
     )
 
     whenever(nonAssociationsApiService.getNonAssociationsBetween(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
-        dpsResponse(3L, "comment3"),
-        dpsResponse(2L, "comment2"),
-        dpsResponse(1L, "comment1"),
+        dpsResponse(3L),
+        dpsResponse(2L),
+        dpsResponse(1L),
       ),
     )
 
@@ -190,20 +187,19 @@ class NonAssociationsReconciliationServiceTest {
       .isEmpty()
   }
 
-  private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, comment: String? = null) = NonAssociationResponse(
+  private fun nomisResponse(typeSequence: Int, expiryDate: LocalDate?, type: String = "LAND") = NonAssociationResponse(
     OFFENDER1,
     OFFENDER2,
     typeSequence,
     "VIC",
     "PER",
-    "LAND",
+    type,
     effectiveDate = LocalDate.parse("2022-01-01"),
     expiryDate = expiryDate,
-    comment = comment,
     updatedBy = "M_HALMA",
   )
 
-  private fun dpsResponse(id: Long, comment: String = "comment") = NonAssociation(
+  private fun dpsResponse(id: Long, type: NonAssociation.RestrictionType = NonAssociation.RestrictionType.LANDING) = NonAssociation(
     id,
     OFFENDER1,
     NonAssociation.FirstPrisonerRole.VICTIM,
@@ -213,9 +209,9 @@ class NonAssociationsReconciliationServiceTest {
     "roledesc",
     NonAssociation.Reason.BULLYING,
     "reasondesc",
-    NonAssociation.RestrictionType.LANDING,
+    type,
     "typedesc",
-    comment = comment,
+    comment = "",
     whenCreated = LocalDateTime.parse("2022-01-01T10:00:00"),
     whenUpdated = LocalDateTime.parse("2022-01-01T10:00:00"),
     updatedBy = "me",
