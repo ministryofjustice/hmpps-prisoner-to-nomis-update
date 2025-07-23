@@ -26,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PagedModelSyncContactId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.PrisonerRestrictionId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileAddressPhone
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.ReconcileEmail
@@ -468,6 +469,17 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = totalElements), content = contactIds.map { SyncContactId(it) }))),
+      ),
+    )
+  }
+
+  fun stubGetPrisonerRestrictionsIds(prisonerRestrictionsIds: List<Long> = emptyList(), totalElements: Long = prisonerRestrictionsIds.size.toLong()) {
+    stubFor(
+      get(urlPathEqualTo("/prisoner-restrictions/reconcile")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelPrisonerRestrictionId(page = PageMetadata(totalElements = totalElements), content = prisonerRestrictionsIds.map { PrisonerRestrictionId(it) }))),
       ),
     )
   }

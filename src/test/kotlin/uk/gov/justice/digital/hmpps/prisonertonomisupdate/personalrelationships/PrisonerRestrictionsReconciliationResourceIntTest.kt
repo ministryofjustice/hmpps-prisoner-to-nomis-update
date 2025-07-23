@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RestrictionIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.prisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.nomisPrisonerRestriction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.pagePrisonerRestrictionIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import java.time.LocalDate
 
@@ -38,6 +39,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
+      nomisApi.stubGetPrisonerRestrictionIdsTotals(pagePrisonerRestrictionIdResponse(4))
+      dpsApi.stubGetPrisonerRestrictionsIds(listOf(101), totalElements = 2)
       nomisApi.stubGetPrisonerRestrictionIds(
         lastRestrictionId = 0,
         response = RestrictionIdsWithLast(
@@ -164,6 +167,26 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
           mapOf(
             "nomisRestrictionId" to "3",
             "reason" to "dps-record-missing",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch of totals`() {
+      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
+        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
+        .exchange()
+        .expectStatus().isAccepted
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-restriction-reconciliation-mismatch-totals"),
+        eq(
+          mapOf(
+            "nomisTotal" to "4",
+            "dpsTotal" to "2",
           ),
         ),
         isNull(),
