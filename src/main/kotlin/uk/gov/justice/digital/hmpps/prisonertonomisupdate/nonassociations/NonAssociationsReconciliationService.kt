@@ -18,8 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 
-private const val NO_COMMENT_PROVIDED = "No comment provided"
-
 @Service
 class NonAssociationsReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -84,7 +82,6 @@ class NonAssociationsReconciliationService(
               it.firstPrisonerRole.name,
               it.secondPrisonerRole.name,
               it.reason.name,
-              it.comment,
             ),
           )
           log.info("NonAssociation Mismatch found extra DPS NA $it")
@@ -167,7 +164,6 @@ class NonAssociationsReconciliationService(
               nomisList[index].reason,
               nomisList[index].recipReason,
               null,
-              nomisList[index].comment,
             ),
             null,
           )
@@ -197,7 +193,6 @@ class NonAssociationsReconciliationService(
               dpsList[index].firstPrisonerRole.name,
               dpsList[index].secondPrisonerRole.name,
               dpsList[index].reason.name,
-              dpsList[index].comment,
             ),
           )
             .also { mismatch ->
@@ -228,7 +223,6 @@ class NonAssociationsReconciliationService(
                 nomisList[index].reason,
                 nomisList[index].recipReason,
                 null,
-                nomisList[index].comment,
               ),
               NonAssociationReportDetail(
                 dpsList[index].restrictionType.name,
@@ -238,7 +232,6 @@ class NonAssociationsReconciliationService(
                 dpsList[index].firstPrisonerRole.name,
                 dpsList[index].secondPrisonerRole.name,
                 dpsList[index].reason.name,
-                dpsList[index].comment,
               ),
             )
           log.info("NonAssociation Mismatch found $mismatch")
@@ -264,9 +257,7 @@ class NonAssociationsReconciliationService(
     val today = LocalDate.now()
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
       (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate != dps.whenCreated.toLocalDate()) ||
-      (closedInNomis(nomis, today) xor dps.isClosed) ||
-      (nomis.comment == null && dps.comment != NO_COMMENT_PROVIDED) ||
-      (nomis.comment != null && nomis.comment != dps.comment)
+      (closedInNomis(nomis, today) xor dps.isClosed)
   }
 
   internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?): Boolean {
@@ -281,54 +272,6 @@ class NonAssociationsReconciliationService(
     "NONEX", "TNA", "WING" -> dpsType != NonAssociation.RestrictionType.WING
     else -> nomisType != dpsType.name.take(4)
   }
-
-  // NOTE this is a copy of the code in SyncAndMigrateService
-  fun translateToRolesAndReason(firstPrisonerReason: String, secondPrisonerReason: String): Triple<NonAssociation.FirstPrisonerRole, NonAssociation.SecondPrisonerRole, NonAssociation.Reason> {
-    var firstPrisonerRole = NonAssociation.FirstPrisonerRole.UNKNOWN
-    var secondPrisonerRole = NonAssociation.SecondPrisonerRole.UNKNOWN
-    var reason = NonAssociation.Reason.OTHER
-
-    if (firstPrisonerReason == "BUL") {
-      firstPrisonerRole = NonAssociation.FirstPrisonerRole.UNKNOWN
-      reason = NonAssociation.Reason.BULLYING
-    }
-    if (secondPrisonerReason == "BUL") {
-      secondPrisonerRole = NonAssociation.SecondPrisonerRole.UNKNOWN
-      reason = NonAssociation.Reason.BULLYING
-    }
-
-    if (firstPrisonerReason == "RIV") {
-      firstPrisonerRole = NonAssociation.FirstPrisonerRole.NOT_RELEVANT
-      reason = NonAssociation.Reason.GANG_RELATED
-    }
-    if (secondPrisonerReason == "RIV") {
-      secondPrisonerRole = NonAssociation.SecondPrisonerRole.NOT_RELEVANT
-      reason = NonAssociation.Reason.GANG_RELATED
-    }
-
-    if (firstPrisonerReason == "VIC") {
-      firstPrisonerRole = NonAssociation.FirstPrisonerRole.VICTIM
-    }
-    if (secondPrisonerReason == "VIC") {
-      secondPrisonerRole = NonAssociation.SecondPrisonerRole.VICTIM
-    }
-
-    if (firstPrisonerReason == "PER") {
-      firstPrisonerRole = NonAssociation.FirstPrisonerRole.PERPETRATOR
-    }
-    if (secondPrisonerReason == "PER") {
-      secondPrisonerRole = NonAssociation.SecondPrisonerRole.PERPETRATOR
-    }
-
-    if (firstPrisonerReason == "NOT_REL") {
-      firstPrisonerRole = NonAssociation.FirstPrisonerRole.NOT_RELEVANT
-    }
-    if (secondPrisonerReason == "NOT_REL") {
-      secondPrisonerRole = NonAssociation.SecondPrisonerRole.NOT_RELEVANT
-    }
-
-    return Triple(firstPrisonerRole, secondPrisonerRole, reason)
-  }
 }
 
 data class NonAssociationReportDetail(
@@ -339,7 +282,6 @@ data class NonAssociationReportDetail(
   val roleReason: String,
   val roleReason2: String,
   val dpsReason: String? = null,
-  val comment: String? = null,
 )
 
 data class MismatchNonAssociation(
