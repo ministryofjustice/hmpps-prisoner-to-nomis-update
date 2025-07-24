@@ -68,8 +68,8 @@ class AppointmentsService(
           // If the appointment doesn't exist in DPS but does in the mapping service, then we should keep retrying
           throw RuntimeException(ed)
         } catch (em: WebClientResponseException.NotFound) {
-          telemetryMap["dps-error"] = ed.message.toString()
-          telemetryMap["mapping-error"] = em.message.toString()
+          telemetryMap["dps-error"] = ed.message ?: ed.javaClass.name
+          telemetryMap["mapping-error"] = em.message ?: em.javaClass.name
           telemetryClient.trackEvent("appointment-amend-missing-ignored", telemetryMap, null)
           return
         }
@@ -104,13 +104,19 @@ class AppointmentsService(
           throw RuntimeException(em)
         } catch (ed: WebClientResponseException.NotFound) {
           // Here it means the appointment does not exist in DPS nor in the mapping table, so it was genuinely deleted and we can ignore it
-          telemetryMap["dps-error"] = ed.message.toString()
-          telemetryMap["mapping-error"] = em.message.toString()
+          telemetryMap["dps-error"] = ed.message ?: ed.javaClass.name
+          telemetryMap["mapping-error"] = em.message ?: em.javaClass.name
           telemetryClient.trackEvent("appointment-cancel-missing-ignored", telemetryMap, null)
           return
         }
       }
-      nomisApiService.cancelAppointment(nomisEventId)
+      try {
+        nomisApiService.cancelAppointment(nomisEventId)
+      } catch (en: WebClientResponseException.NotFound) {
+        // Ignore event if appointment does not exist in Nomis
+        telemetryMap["nomis-error"] = en.message ?: en.javaClass.name
+        telemetryClient.trackEvent("appointment-cancel-missing-nomis-ignored", telemetryMap, null)
+      }
     }.onSuccess {
       telemetryClient.trackEvent("appointment-cancel-success", telemetryMap, null)
     }.onFailure { e ->
@@ -150,7 +156,7 @@ class AppointmentsService(
         mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
           .also { telemetryMap["nomisEventId"] = it.toString() }
       } catch (e: WebClientResponseException.NotFound) {
-        telemetryMap["error"] = e.message.toString()
+        telemetryMap["error"] = e.message ?: e.javaClass.name
         telemetryClient.trackEvent("appointment-delete-missing-mapping-ignored", telemetryMap, null)
         return
       }
@@ -158,7 +164,7 @@ class AppointmentsService(
           try {
             nomisApiService.deleteAppointment(it)
           } catch (e: WebClientResponseException.NotFound) {
-            telemetryMap["error"] = e.message.toString()
+            telemetryMap["error"] = e.message ?: e.javaClass.name
             telemetryClient.trackEvent("appointment-delete-missing-nomis-ignored", telemetryMap, null)
           }
         }

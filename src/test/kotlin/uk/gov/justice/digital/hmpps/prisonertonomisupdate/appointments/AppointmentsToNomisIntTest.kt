@@ -757,6 +757,32 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenAppointmentHasBeenCancelledButNotFoundInNomis {
+
+      @BeforeEach
+      fun setUp() {
+        mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
+        nomisApi.stubAppointmentCancelWithError(EVENT_ID, 404)
+        publishAppointmentEvent("appointments.appointment-instance.cancelled")
+      }
+
+      @Test
+      fun `will create ignored telemetry`() {
+        await untilAsserted {
+          verify(telemetryClient).trackEvent(
+            eq("appointment-cancel-missing-nomis-ignored"),
+            check {
+              assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
+              assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
+              assertThat(it["nomis-error"]).isEqualTo("404 Not Found from PUT http://localhost:8082/appointments/$EVENT_ID/cancel")
+            },
+            isNull(),
+          )
+        }
+      }
+    }
+
+    @Nested
     inner class Exceptions {
 
       @Nested
@@ -844,27 +870,6 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             )
           }
           nomisApi.verify(0, putRequestedFor(urlPathMatching("/.+")))
-        }
-      }
-
-      @Nested
-      inner class WhenNotInDPS {
-        @BeforeEach
-        fun setUp() {
-          appointmentsApi.stubGetAppointmentInstanceWithError(id = APPOINTMENT_INSTANCE_ID, 404)
-          mappingServer.stubGetMappingGivenAppointmentInstanceId(APPOINTMENT_INSTANCE_ID, mappingResponse)
-          publishAppointmentEvent("appointments.appointment-instance.cancelled")
-        }
-
-        @Test
-        fun `will create failure telemetry`() {
-          await untilAsserted {
-            verify(telemetryClient, times(3)).trackEvent(
-              eq("appointment-cancel-failed"),
-              anyMap(),
-              isNull(),
-            )
-          }
         }
       }
 
