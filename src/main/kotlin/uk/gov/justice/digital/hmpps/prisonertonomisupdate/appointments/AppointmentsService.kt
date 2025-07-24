@@ -110,12 +110,9 @@ class AppointmentsService(
           return
         }
       }
-      try {
-        nomisApiService.cancelAppointment(nomisEventId)
-      } catch (en: WebClientResponseException.NotFound) {
+      if (!nomisApiService.cancelAppointmentIgnoreIfNotFound(nomisEventId)) {
         // Ignore event if appointment does not exist in Nomis
-        telemetryMap["nomis-error"] = en.message ?: en.javaClass.name
-        telemetryClient.trackEvent("appointment-cancel-missing-nomis-ignored", telemetryMap, null)
+        telemetryMap["nomis-error"] = "'404 Not found in Nomis: ignored"
       }
     }.onSuccess {
       telemetryClient.trackEvent("appointment-cancel-success", telemetryMap, null)
@@ -182,7 +179,7 @@ class AppointmentsService(
     internalLocationId = if (instance.inCell) {
       null
     } else {
-      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(instance.dpsLocationId).nomisLocationId }
+      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(it).nomisLocationId }
     },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),
@@ -195,7 +192,7 @@ class AppointmentsService(
     internalLocationId = if (instance.inCell) {
       null
     } else {
-      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(instance.dpsLocationId).nomisLocationId }
+      instance.dpsLocationId?.let { mappingService.getLocationMappingGivenDpsId(it).nomisLocationId }
     },
     eventDate = instance.appointmentDate,
     startTime = LocalTime.parse(instance.startTime),

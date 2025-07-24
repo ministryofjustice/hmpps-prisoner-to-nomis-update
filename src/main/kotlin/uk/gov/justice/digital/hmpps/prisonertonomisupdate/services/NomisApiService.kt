@@ -149,10 +149,10 @@ class NomisApiService(
     .retrieve()
     .awaitBodilessEntity()
 
-  suspend fun cancelAppointment(nomisEventId: Long): ResponseEntity<Void> = webClient.put()
+  suspend fun cancelAppointmentIgnoreIfNotFound(nomisEventId: Long): Boolean = webClient.put()
     .uri("/appointments/{nomisEventId}/cancel", nomisEventId)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityAsTrueNotFoundAsFalse()
 
   suspend fun uncancelAppointment(nomisEventId: Long): ResponseEntity<Void> = webClient.put()
     .uri("/appointments/{nomisEventId}/uncancel", nomisEventId)

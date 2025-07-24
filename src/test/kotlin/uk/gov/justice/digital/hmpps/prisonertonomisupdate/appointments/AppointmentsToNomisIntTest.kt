@@ -770,11 +770,11 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create ignored telemetry`() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("appointment-cancel-missing-nomis-ignored"),
+            eq("appointment-cancel-success"),
             check {
               assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
               assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
-              assertThat(it["nomis-error"]).isEqualTo("404 Not Found from PUT http://localhost:8082/appointments/$EVENT_ID/cancel")
+              assertThat(it["nomis-error"]).isEqualTo("'404 Not found in Nomis: ignored")
             },
             isNull(),
           )
