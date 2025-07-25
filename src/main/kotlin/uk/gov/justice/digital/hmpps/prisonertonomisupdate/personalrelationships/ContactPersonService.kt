@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateContactPersonRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonAddressRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonContactRequest
@@ -41,6 +42,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_PHONE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.CONTACT_RESTRICTION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.PRISONER_CONTACT_RESTRICTION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.PRISONER_RESTRICTION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncContactAddressPhone
@@ -76,6 +78,7 @@ class ContactPersonService(
       CONTACT_IDENTITY("contact-identity"),
       CONTACT_EMPLOYMENT("contact-employment"),
       PRISONER_CONTACT_RESTRICTION("prisoner-contact-restriction"),
+      PRISONER_RESTRICTION("prisoner-restriction"),
       CONTACT_RESTRICTION("contact-restriction"),
       ;
 
@@ -1008,6 +1011,7 @@ class ContactPersonService(
       PRISONER_CONTACT_RESTRICTION -> createContactRestrictionMapping(message.fromJson())
       CONTACT_RESTRICTION -> createPersonRestrictionMapping(message.fromJson())
       CONTACT_EMPLOYMENT -> createContactEmploymentMapping(message.fromJson())
+      PRISONER_RESTRICTION -> createPrisonerRestrictionMapping(message.fromJson())
     }
   }
 
@@ -1100,6 +1104,16 @@ class ContactPersonService(
     mappingApiService.createPersonRestrictionMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "contact-restriction-create-success",
+        message.telemetryAttributes,
+        null,
+      )
+    }
+  }
+
+  suspend fun createPrisonerRestrictionMapping(message: CreateMappingRetryMessage<PrisonerRestrictionMappingDto>) {
+    mappingApiService.createPrisonerRestrictionMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "prisoner-restriction-create-success",
         message.telemetryAttributes,
         null,
       )

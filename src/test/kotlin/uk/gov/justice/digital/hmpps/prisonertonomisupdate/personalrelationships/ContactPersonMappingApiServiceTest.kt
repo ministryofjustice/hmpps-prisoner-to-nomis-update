@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Pe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonPhoneMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonRestrictionMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -1686,6 +1687,73 @@ class ContactPersonMappingApiServiceTest {
             mappingType = PersonRestrictionMappingDto.MappingType.NOMIS_CREATED,
             nomisId = nomisId,
             dpsId = dpsId,
+          ),
+        )
+      }.error
+
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
+    }
+  }
+
+  @Nested
+  inner class CreatePrisonerRestrictionMapping {
+    @Test
+    internal fun `will pass oath2 token to create prisoner restriction mapping endpoint`() = runTest {
+      mockServer.stubCreatePrisonerRestrictionMapping()
+
+      apiService.createPrisonerRestrictionMapping(
+        PrisonerRestrictionMappingDto(
+          mappingType = PrisonerRestrictionMappingDto.MappingType.DPS_CREATED,
+          nomisId = 1234567,
+          dpsId = "1234567",
+          offenderNo = "A1234BC",
+        ),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/mapping/contact-person/prisoner-restriction"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will throw error when 409 conflict`() = runTest {
+      val nomisId = 2234567890
+      val dpsId = "2234567890"
+      val existingNomisId = 3234567890
+
+      mockServer.stubCreatePrisonerRestrictionMapping(
+        error = DuplicateMappingErrorResponse(
+          moreInfo = DuplicateErrorContentObject(
+            duplicate = PrisonerRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = nomisId,
+              offenderNo = "A1234BC",
+              mappingType = PrisonerRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+            existing = PrisonerRestrictionMappingDto(
+              dpsId = dpsId,
+              nomisId = existingNomisId,
+              offenderNo = "A1234BC",
+              mappingType = PrisonerRestrictionMappingDto.MappingType.DPS_CREATED,
+            ),
+          ),
+          errorCode = 1409,
+          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+          userMessage = "Duplicate mapping",
+        ),
+      )
+
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createPrisonerRestrictionMapping(
+          PrisonerRestrictionMappingDto(
+            mappingType = PrisonerRestrictionMappingDto.MappingType.NOMIS_CREATED,
+            nomisId = nomisId,
+            dpsId = dpsId,
+            offenderNo = "A1234BC",
           ),
         )
       }.error

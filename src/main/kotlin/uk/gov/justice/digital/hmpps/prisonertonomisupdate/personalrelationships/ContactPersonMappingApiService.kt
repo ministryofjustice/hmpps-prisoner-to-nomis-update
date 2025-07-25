@@ -308,4 +308,10 @@ class ContactPersonMappingApiService(
     )
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
+
+  suspend fun createPrisonerRestrictionMapping(mappings: PrisonerRestrictionMappingDto) = webClient.post()
+    .uri("/mapping/contact-person/prisoner-restriction")
+    .bodyValue(mappings)
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
 }

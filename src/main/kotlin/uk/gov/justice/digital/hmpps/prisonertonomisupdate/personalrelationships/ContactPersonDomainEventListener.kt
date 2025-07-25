@@ -17,6 +17,7 @@ class ContactPersonDomainEventListener(
   eventFeatureSwitch: EventFeatureSwitch,
   val contactPersonService: ContactPersonService,
   val profileDetailsService: ContactPersonProfileDetailsSyncService,
+  val prisonerRestrictionsService: PrisonerRestrictionsService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = contactPersonService,
@@ -67,6 +68,9 @@ class ContactPersonDomainEventListener(
       "personal-relationships-api.domestic-status.deleted" -> profileDetailsService.deleteDomesticStatus(message.fromJson())
       "personal-relationships-api.number-of-children.deleted" -> profileDetailsService.deleteNumberOfChildren(message.fromJson())
       "prisoner-offender-search.prisoner.received" -> profileDetailsService.readmissionSwitchBooking(message.fromJson())
+      "personal-relationships-api.prisoner-restriction.created" -> prisonerRestrictionsService.restrictionCreated(message.fromJson())
+      "personal-relationships-api.prisoner-restriction.updated" -> prisonerRestrictionsService.restrictionUpdated(message.fromJson())
+      "personal-relationships-api.prisoner-restriction.deleted" -> prisonerRestrictionsService.restrictionDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -350,3 +354,27 @@ interface ContactIdReferencedEvent {
 }
 
 fun ContactIdReferencedEvent.contactId() = personReference.identifiers.first { it.type == "DPS_CONTACT_ID" }.value.toLong()
+
+data class PrisonerRestrictionAdditionalData(
+  val prisonerRestrictionId: Long,
+  override val source: String = "DPS",
+) : SourcedAdditionalData
+
+interface SourcedPrisonerRestrictionEvent {
+  val additionalInformation: PrisonerRestrictionAdditionalData
+}
+
+data class PrisonerIdentifiers(val identifiers: List<PrisonerReference>)
+data class PrisonerReference(val type: String, val value: String)
+
+data class PrisonerRestrictionEvent(
+  override val additionalInformation: PrisonerRestrictionAdditionalData,
+  override val personReference: PrisonerIdentifiers,
+) : SourcedPrisonerRestrictionEvent,
+  PrisonerReferencedEvent
+
+interface PrisonerReferencedEvent {
+  val personReference: PrisonerIdentifiers
+}
+
+fun PrisonerReferencedEvent.prisonerNumber() = personReference.identifiers.first { it.type == "NOMS" }.value

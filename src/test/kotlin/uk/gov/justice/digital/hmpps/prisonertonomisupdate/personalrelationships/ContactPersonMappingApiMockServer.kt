@@ -937,6 +937,53 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     }
   }
 
+  fun stubCreatePrisonerRestrictionMapping() {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/prisoner-restriction").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreatePrisonerRestrictionMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/prisoner-restriction").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreatePrisonerRestrictionMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/contact-person/prisoner-restriction")
+        .inScenario("Retry Mapping Prisoner Restriction Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause Mapping Prisoner Restriction Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/contact-person/prisoner-restriction")
+        .inScenario("Retry Mapping Prisoner Restriction Scenario")
+        .whenScenarioStateIs("Cause Mapping Prisoner Restriction Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
