@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-07-22.75.77615d0"
+    "version" : "2025-07-25.85.2bcd38b"
   },
   "servers" : [ {
     "url" : "/",
@@ -6663,17 +6663,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
