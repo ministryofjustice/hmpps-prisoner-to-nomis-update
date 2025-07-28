@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-23.275.284f595"
+    "version" : "2025-07-25.295.6fc8869"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -85,6 +85,9 @@
   }, {
     "name" : "appearance-type-controller",
     "description" : "Appearance Type"
+  }, {
+    "name" : "sentence-type-update-controller",
+    "description" : "Sentence Type Updates"
   } ],
   "paths" : {
     "/recall/{recallUuid}" : {
@@ -2172,6 +2175,95 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/CreateCourtCaseResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/court-case/{courtCaseUuid}/sentences/update-types" : {
+      "post" : {
+        "tags" : [ "sentence-type-update-controller" ],
+        "summary" : "Update sentence types for unknown pre-recall sentences",
+        "description" : "This endpoint updates the sentence types for sentences that are currently marked as 'unknown pre-recall sentence'. All updates are performed atomically - if any update fails, all changes are rolled back.",
+        "operationId" : "updateSentenceTypes",
+        "parameters" : [ {
+          "name" : "courtCaseUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateSentenceTypeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "All sentence types successfully updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid request (invalid sentence type, missing fields)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Court case or sentence not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
+                }
+              }
+            }
+          },
+          "422" : {
+            "description" : "Business rule violation (e.g., sentence not in 'unknown pre-recall sentence' state)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdateSentenceTypeResponse"
                 }
               }
             }
@@ -4592,7 +4684,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4864,7 +4956,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "courtCode" : {
             "type" : "string"
@@ -5547,6 +5639,46 @@
         },
         "required" : [ "courtCaseUuid", "draftAppearances" ]
       },
+      "SentenceTypeUpdate" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceTypeId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "sentenceTypeId", "sentenceUuid" ]
+      },
+      "UpdateSentenceTypeRequest" : {
+        "type" : "object",
+        "properties" : {
+          "updates" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceTypeUpdate"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "updates" ]
+      },
+      "UpdateSentenceTypeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "updatedSentenceUuids" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "updatedSentenceUuids" ]
+      },
       "FineAmount" : {
         "type" : "object",
         "properties" : {
@@ -6106,7 +6238,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "courtCode" : {
             "type" : "string"
@@ -6510,7 +6642,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "charges" : {
             "type" : "array",
@@ -6533,7 +6665,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "courtId" : {
             "type" : "string"
@@ -6624,7 +6756,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6680,7 +6812,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "courtId" : {
             "type" : "string"
@@ -6991,15 +7123,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -7277,7 +7409,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:43.371486255"
+            "example" : "08:23:16.170531982"
           },
           "courtCode" : {
             "type" : "string"
