@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-21.301.a7e7cc4"
+    "version" : "2025-07-28.313.e4491f7"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -1215,6 +1215,158 @@
           },
           "404" : {
             "description" : "One or more sentence does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/restriction/{prisonerRestrictionId}" : {
+      "put" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Updates a prisoner restriction",
+        "description" : "Updates a prisoner restriction. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "updatePrisonerRestriction",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No aka prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No aka prisoner number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        }, {
+          "name" : "prisonerRestrictionId",
+          "in" : "path",
+          "description" : "Prisoner restriction Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prisoner restriction Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdatePrisonerRestrictionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner Restriction Updated"
+          },
+          "400" : {
+            "description" : "The request contains bad data or the restriction does not belong to the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner or Restriction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Deletes a prisoner restriction",
+        "description" : "Deletes a prisoner restriction. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "deletePrisonerRestriction",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No aka prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No aka prisoner number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        }, {
+          "name" : "prisonerRestrictionId",
+          "in" : "path",
+          "description" : "Prisoner restriction Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prisoner restriction Id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Prisoner Restriction Deleted"
+          },
+          "400" : {
+            "description" : "The restriction does not belong to the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8496,6 +8648,88 @@
           },
           "404" : {
             "description" : "Court case does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/restriction" : {
+      "post" : {
+        "tags" : [ "contact-person-resource" ],
+        "summary" : "Creates a prisoner restriction",
+        "description" : "Creates a prisoner restriction. Requires ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "createPrisonerRestriction",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No aka prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No aka prisoner number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreatePrisonerRestrictionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Prisoner Restriction ID Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreatePrisonerRestrictionResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request contains bad data for example restriction type does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_CONTACTPERSONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -19113,6 +19347,39 @@
         },
         "required" : [ "beachCourtEventIds", "sentences" ]
       },
+      "UpdatePrisonerRestrictionRequest" : {
+        "type" : "object",
+        "description" : "Request to update a prisoner in NOMIS",
+        "properties" : {
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Restriction type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment text"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction became active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction is no longer active"
+          },
+          "enteredStaffUsername" : {
+            "type" : "string",
+            "description" : "Username Staff member who updated the restriction"
+          },
+          "authorisedStaffUsername" : {
+            "type" : "string",
+            "description" : "Username Staff member who authorised the restriction"
+          }
+        },
+        "required" : [ "authorisedStaffUsername", "effectiveDate", "enteredStaffUsername", "typeCode" ]
+      },
       "UpsertProfileDetailsRequest" : {
         "type" : "object",
         "description" : "Profile Details to update a prisoner",
@@ -22090,6 +22357,50 @@
           }
         },
         "required" : [ "adjustmentIds", "sentenceId" ]
+      },
+      "CreatePrisonerRestrictionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique NOMIS Id of the restriction"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "CreatePrisonerRestrictionRequest" : {
+        "type" : "object",
+        "description" : "Request to create a prisoner restriction in NOMIS",
+        "properties" : {
+          "typeCode" : {
+            "type" : "string",
+            "description" : "Restriction type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Free format comment text"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction became active"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date restriction is no longer active"
+          },
+          "enteredStaffUsername" : {
+            "type" : "string",
+            "description" : "Username Staff member who created the restriction"
+          },
+          "authorisedStaffUsername" : {
+            "type" : "string",
+            "description" : "Username Staff member who authorised the restriction"
+          }
+        },
+        "required" : [ "authorisedStaffUsername", "effectiveDate", "enteredStaffUsername", "typeCode" ]
       },
       "CreateSentenceResponse" : {
         "type" : "object",
