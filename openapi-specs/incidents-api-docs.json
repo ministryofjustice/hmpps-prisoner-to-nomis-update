@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-07-25.85.2bcd38b"
+    "version" : "2025-07-28.96.e96e61d"
   },
   "servers" : [ {
     "url" : "/",
@@ -4359,6 +4359,130 @@
         } ]
       }
     },
+    "/constants/user-types" : {
+      "get" : {
+        "tags" : [ "Constants" ],
+        "summary" : "List codes and descriptions of user types",
+        "operationId" : "userTypes",
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns codes and descriptions",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserTypeConstantDescription"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/user-actions" : {
+      "get" : {
+        "tags" : [ "Constants" ],
+        "summary" : "List codes and descriptions of user actions",
+        "operationId" : "userActions",
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns codes and descriptions",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/UserActionConstantDescription"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/constants/types" : {
       "get" : {
         "tags" : [ "Constants" ],
@@ -5783,6 +5907,20 @@
           "location" : {
             "type" : "string",
             "description" : "The reporting location of the staff"
+          },
+          "userAction" : {
+            "type" : "string",
+            "description" : "Action taken by the user on the report",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+          },
+          "originalReportReference" : {
+            "type" : "string",
+            "description" : "Reference number of the original report of which this report is a duplicate of"
+          },
+          "userType" : {
+            "type" : "string",
+            "description" : "Type of user that submitted this action on the report",
+            "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
         "readOnly" : true,
@@ -6272,9 +6410,28 @@
             "description" : "The location where the staff member is raising the correction",
             "maxLength" : 20,
             "minLength" : 2
+          },
+          "userAction" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Action taken by the user on the report",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+          },
+          "originalReportReference" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Reference number of the original report of which this report is a duplicate of",
+            "maxLength" : 25,
+            "minLength" : 1
+          },
+          "userType" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Type of user that submitted this action on the report",
+            "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
-        "required" : [ "descriptionOfChange" ],
+        "required" : [ "descriptionOfChange", "userAction", "userType" ],
         "writeOnly" : true
       },
       "UpdateStaffInvolvement" : {
@@ -6414,8 +6571,28 @@
             "description" : "The location where the staff member is raising the correction",
             "maxLength" : 20,
             "minLength" : 2
+          },
+          "userAction" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Action taken by the user on the report",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+          },
+          "originalReportReference" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Reference number of the original report of which this report is a duplicate of",
+            "maxLength" : 25,
+            "minLength" : 1
+          },
+          "userType" : {
+            "type" : "string",
+            "default" : "null",
+            "description" : "Type of user that submitted this action on the report",
+            "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
+        "required" : [ "userAction", "userType" ],
         "writeOnly" : true
       },
       "UpdateReportRequest" : {
@@ -7142,6 +7319,42 @@
           }
         },
         "required" : [ "equals", "id" ]
+      },
+      "UserTypeConstantDescription" : {
+        "type" : "object",
+        "description" : "User action constant",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Machine-readable identifier of this value",
+            "example" : "REPORTING_OFFICER"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Human-readable description of this value",
+            "example" : "Reporting officer"
+          }
+        },
+        "readOnly" : true,
+        "required" : [ "code", "description" ]
+      },
+      "UserActionConstantDescription" : {
+        "type" : "object",
+        "description" : "User type constant",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Machine-readable identifier of this value",
+            "example" : "REQUEST_CORRECTION"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Human-readable description of this value",
+            "example" : "Request correction"
+          }
+        },
+        "readOnly" : true,
+        "required" : [ "code", "description" ]
       },
       "TypeConstantDescription" : {
         "type" : "object",
