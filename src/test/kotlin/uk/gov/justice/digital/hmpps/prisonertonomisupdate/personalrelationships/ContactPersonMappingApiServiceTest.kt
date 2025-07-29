@@ -1789,4 +1789,83 @@ class ContactPersonMappingApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetByDpsPrisonerRestrictionIdOrNull {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)
+
+      apiService.getByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)
+
+      apiService.getByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/1234567")),
+      )
+    }
+
+    @Test
+    fun `will return mapping when mapping exists`() = runTest {
+      mockServer.stubGetByDpsPrisonerRestrictionIdOrNull(
+        dpsPrisonerRestrictionId = 1234567,
+        mapping = PrisonerRestrictionMappingDto(
+          offenderNo = "A1234BC",
+          nomisId = 654321,
+          dpsId = "1234567",
+          mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)
+
+      assertThat(mapping?.nomisId).isEqualTo(654321)
+      assertThat(mapping?.dpsId).isEqualTo("1234567")
+      assertThat(mapping?.offenderNo).isEqualTo("A1234BC")
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsPrisonerRestrictionIdOrNull(
+        dpsPrisonerRestrictionId = 1234567,
+        mapping = null,
+      )
+
+      assertThat(apiService.getByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = 1234567)).isNull()
+    }
+  }
+
+  @Nested
+  inner class DeleteByDpsPrisonerRestrictionIdO {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+
+      apiService.deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass DPS id to service`() = runTest {
+      mockServer.stubDeleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+
+      apiService.deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/1234567")),
+      )
+    }
+  }
 }

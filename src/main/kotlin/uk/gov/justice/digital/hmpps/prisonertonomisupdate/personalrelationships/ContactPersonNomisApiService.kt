@@ -24,6 +24,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePrisonerRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePrisonerRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePrisonerRestrictionIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PersonIdsWithLast
@@ -38,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -397,4 +400,36 @@ class ContactPersonNomisApiService(
     )
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun createPrisonerRestriction(offenderNo: String, request: CreatePrisonerRestrictionRequest): CreatePrisonerRestrictionResponse = webClient.post()
+    .uri(
+      "/prisoners/{offenderNo}/restriction",
+      offenderNo,
+    )
+    .bodyValue(request)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun updatePrisonerRestriction(offenderNo: String, prisonerRestrictionId: Long, request: UpdatePrisonerRestrictionRequest) {
+    webClient.put()
+      .uri(
+        "/prisoners/{offenderNo}/restriction/{prisonerRestrictionId}",
+        offenderNo,
+        prisonerRestrictionId,
+      )
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun deletePrisonerRestriction(offenderNo: String, prisonerRestrictionId: Long) {
+    webClient.delete()
+      .uri(
+        "/prisoners/{offenderNo}/restriction/{prisonerRestrictionId}",
+        offenderNo,
+        prisonerRestrictionId,
+      )
+      .retrieve()
+      .awaitBodilessEntity()
+  }
 }
