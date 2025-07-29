@@ -98,6 +98,16 @@ class CourtSentencingService(
           val nomisResponse =
             nomisApiService.createCourtCase(offenderNo, courtCase.toNomisCourtCase())
 
+          queueService.sendMessageTrackOnFailure(
+            queueId = "fromnomiscourtsentencing",
+            eventType = "courtsentencing.resync.case",
+            message = OffenderCaseResynchronisationEvent(
+              offenderNo = offenderNo,
+              caseId = nomisResponse.id,
+              dpsCaseUuid = courtCaseId,
+            ),
+          )
+
           CourtCaseAllMappingDto(
             nomisCourtCaseId = nomisResponse.id,
             dpsCourtCaseId = courtCaseId,
@@ -1482,4 +1492,10 @@ data class OffenderSentenceResynchronisationEvent(
   val caseId: Long,
   val dpsAppearanceUuid: String,
   val dpsConsecutiveSentenceUuid: String?,
+)
+
+data class OffenderCaseResynchronisationEvent(
+  val dpsCaseUuid: String,
+  val offenderNo: String,
+  val caseId: Long,
 )

@@ -178,6 +178,21 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will send message to nomis migration to resync created case details back to DPS`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+        }
+        val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
+        val sqsMessage: SQSMessage = rawMessage.fromJson()
+
+        assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case")
+        val request: OffenderCaseResynchronisationEvent = sqsMessage.Message.fromJson()
+        assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+        assertThat(request.caseId).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION)
+        assertThat(request.dpsCaseUuid).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+      }
+
+      @Test
       fun `will create a mapping between the two court cases`() {
         waitForAnyProcessingToComplete()
 
