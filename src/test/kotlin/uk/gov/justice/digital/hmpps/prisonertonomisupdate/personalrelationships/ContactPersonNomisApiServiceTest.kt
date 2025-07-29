@@ -1107,4 +1107,137 @@ class ContactPersonNomisApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class CreatePrisonerRestriction {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubCreatePrisonerRestriction(offenderNo = "A1234BC")
+
+      apiService.createPrisonerRestriction(offenderNo = "A1234BC", request = ContactPersonNomisApiMockServer.createPrisonerRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass offender number to service`() = runTest {
+      mockServer.stubCreatePrisonerRestriction(offenderNo = "A1234BC")
+
+      apiService.createPrisonerRestriction(offenderNo = "A1234BC", request = ContactPersonNomisApiMockServer.createPrisonerRestrictionRequest())
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/prisoners/A1234BC/restriction")),
+      )
+    }
+
+    @Test
+    fun `will return restriction id`() = runTest {
+      mockServer.stubCreatePrisonerRestriction(
+        offenderNo = "A1234BC",
+        response = ContactPersonNomisApiMockServer.createPrisonerRestrictionResponse().copy(id = 54321),
+      )
+
+      val response = apiService.createPrisonerRestriction(
+        offenderNo = "A1234BC",
+        request = ContactPersonNomisApiMockServer.createPrisonerRestrictionRequest(),
+      )
+
+      assertThat(response.id).isEqualTo(54321)
+    }
+  }
+
+  @Nested
+  inner class UpdatePrisonerRestriction {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubUpdatePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.updatePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+        request = ContactPersonNomisApiMockServer.updatePrisonerRestrictionRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass offender number to service`() = runTest {
+      mockServer.stubUpdatePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.updatePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+        request = ContactPersonNomisApiMockServer.updatePrisonerRestrictionRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/restriction/54321")),
+      )
+    }
+
+    @Test
+    fun `will pass prisoner restriction ID to service`() = runTest {
+      mockServer.stubUpdatePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.updatePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+        request = ContactPersonNomisApiMockServer.updatePrisonerRestrictionRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/prisoners/A1234BC/restriction/54321")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeletePrisonerRestriction {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeletePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.deletePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass offender number to service`() = runTest {
+      mockServer.stubDeletePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.deletePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/prisoners/A1234BC/restriction/54321")),
+      )
+    }
+
+    @Test
+    fun `will pass prisoner restriction ID to service`() = runTest {
+      mockServer.stubDeletePrisonerRestriction(offenderNo = "A1234BC", prisonerRestrictionId = 54321)
+
+      apiService.deletePrisonerRestriction(
+        offenderNo = "A1234BC",
+        prisonerRestrictionId = 54321,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/prisoners/A1234BC/restriction/54321")),
+      )
+    }
+  }
 }

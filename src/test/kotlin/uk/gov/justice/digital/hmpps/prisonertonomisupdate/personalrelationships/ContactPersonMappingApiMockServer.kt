@@ -987,4 +987,46 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
+
+  fun stubGetByDpsPrisonerRestrictionIdOrNull(
+    dpsPrisonerRestrictionId: Long = 123456,
+    mapping: PrisonerRestrictionMappingDto? = PrisonerRestrictionMappingDto(
+      offenderNo = "A1234KT",
+      nomisId = 654321,
+      dpsId = dpsPrisonerRestrictionId.toString(),
+      mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/$dpsPrisonerRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/$dpsPrisonerRestrictionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubDeleteByDpsPrisonerRestrictionIdO(
+    dpsPrisonerRestrictionId: Long = 123456,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/$dpsPrisonerRestrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
 }

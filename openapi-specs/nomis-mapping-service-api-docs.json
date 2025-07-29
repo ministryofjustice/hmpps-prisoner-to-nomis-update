@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-21.72.954ccdf"
+    "version" : "2025-07-28.80.dbd97d8"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -11960,6 +11960,112 @@
         }
       }
     },
+    "/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/{dpsPrisonerRestrictionId}" : {
+      "get" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Get prisoner restriction mapping by dps prisoner restriction Id",
+        "description" : "Retrieves the prisoner restriction mapping by DPS Prisoner Restriction Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "getPrisonerRestrictionMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsPrisonerRestrictionId",
+          "in" : "path",
+          "description" : "DPS prisoner restriction id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS prisoner restriction id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner Restriction mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerRestrictionMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "contact-person-mapping-resource" ],
+        "summary" : "Delete prisoner restriction mapping by DPS prisoner restriction Id",
+        "description" : "Delete the prisoner restriction mapping by DPS Prisoner Restriction Id. Requires role ROLE_NOMIS_CONTACTPERSONS",
+        "operationId" : "deletePrisonerRestrictionMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsPrisonerRestrictionId",
+          "in" : "path",
+          "description" : "DPS prisoner restriction id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS prisoner restriction id",
+            "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+          },
+          "example" : "edcd118c-41ba-42ea-b5c4-404b453ad58b"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Prisoner Restriction mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/contact-person/phone/nomis-phone-id/{nomisPhoneId}" : {
       "get" : {
         "tags" : [ "contact-person-mapping-resource" ],
@@ -18501,14 +18607,17 @@
             "description" : "Prisoner number"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18533,14 +18642,17 @@
             "enum" : [ "ADDRESS", "PERSON" ]
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18560,14 +18672,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18587,14 +18702,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18619,14 +18737,17 @@
             "description" : "NOMIS sequence"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18651,14 +18772,17 @@
             "description" : "NOMIS sequence"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18678,14 +18802,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18705,14 +18832,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18732,14 +18862,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -18759,14 +18892,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -19119,15 +19255,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -19374,14 +19510,17 @@
             "enum" : [ "ADDRESS", "CORE_PERSON" ]
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -19400,14 +19539,17 @@
             "description" : "NOMIS Prison number aka Offender number"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -19473,14 +19615,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
@@ -19500,14 +19645,17 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string"
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
             "type" : "string",
+            "description" : "Mapping type",
             "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
           },
           "whenCreated" : {
             "type" : "string",
+            "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }

@@ -34,6 +34,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePrisonerRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePrisonerRestrictionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePersonIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagePrisonerRestrictionIdResponse
@@ -57,6 +59,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonPhoneRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePersonRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.nomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
@@ -289,6 +292,28 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
       enteredStaff = ContactRestrictionEnteredStaff(1234, "T.SMITH"),
       authorisedStaff = ContactRestrictionEnteredStaff(1235, "M.SMITH"),
       audit = nomisAudit(),
+    )
+
+    fun createPrisonerRestrictionRequest(): CreatePrisonerRestrictionRequest = CreatePrisonerRestrictionRequest(
+      typeCode = "BAN",
+      comment = "Banned for life",
+      effectiveDate = LocalDate.parse("2020-01-01"),
+      expiryDate = LocalDate.parse("2026-01-01"),
+      enteredStaffUsername = "j.much",
+      authorisedStaffUsername = "a.manager",
+    )
+
+    fun createPrisonerRestrictionResponse(): CreatePrisonerRestrictionResponse = CreatePrisonerRestrictionResponse(
+      id = 12345,
+    )
+
+    fun updatePrisonerRestrictionRequest(): UpdatePrisonerRestrictionRequest = UpdatePrisonerRestrictionRequest(
+      typeCode = "BAN",
+      comment = "Banned for life - updated",
+      effectiveDate = LocalDate.parse("2020-01-01"),
+      expiryDate = LocalDate.parse("2026-01-01"),
+      enteredStaffUsername = "j.much",
+      authorisedStaffUsername = "a.manager",
     )
   }
 
@@ -738,6 +763,46 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreatePrisonerRestriction(
+    offenderNo: String = "A1234KT",
+    response: CreatePrisonerRestrictionResponse = createPrisonerRestrictionResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlEqualTo("/prisoners/$offenderNo/restriction")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubUpdatePrisonerRestriction(
+    offenderNo: String = "A1234KT",
+    prisonerRestrictionId: Long = 12345,
+  ) {
+    nomisApi.stubFor(
+      put(urlEqualTo("/prisoners/$offenderNo/restriction/$prisonerRestrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
+      ),
+    )
+  }
+
+  fun stubDeletePrisonerRestriction(
+    offenderNo: String = "A1234KT",
+    prisonerRestrictionId: Long = 12345,
+  ) {
+    nomisApi.stubFor(
+      delete(urlEqualTo("/prisoners/$offenderNo/restriction/$prisonerRestrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value()),
       ),
     )
   }

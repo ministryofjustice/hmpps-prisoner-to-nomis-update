@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
@@ -314,4 +315,20 @@ class ContactPersonMappingApiService(
     .bodyValue(mappings)
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId: Long): PrisonerRestrictionMappingDto? = webClient.get()
+    .uri(
+      "/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/{dpsPrisonerRestrictionId}",
+      dpsPrisonerRestrictionId,
+    )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId: Long): ResponseEntity<Void> = webClient.delete()
+    .uri(
+      "/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/{dpsPrisonerRestrictionId}",
+      dpsPrisonerRestrictionId,
+    )
+    .retrieve()
+    .awaitBodilessEntity()
 }
