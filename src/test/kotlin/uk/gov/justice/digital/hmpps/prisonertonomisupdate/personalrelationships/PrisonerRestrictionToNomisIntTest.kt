@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -389,7 +390,7 @@ class PrisonerRestrictionToNomisIntTest : SqsIntegrationTestBase() {
 
     @Nested
     @DisplayName("when NOMIS is the origin of a Restriction delete")
-    inner class WhenNomisUpdated {
+    inner class WhenNomisDeleted {
 
       @BeforeEach
       fun setUp() {
@@ -404,6 +405,102 @@ class PrisonerRestrictionToNomisIntTest : SqsIntegrationTestBase() {
           eq(mapOf("dpsRestrictionId" to "12345", "offenderNo" to "A1234KT")),
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Restriction delete")
+    inner class WhenDpsDeleted {
+      @Nested
+      @DisplayName("when a mapping exists and deletion is successful")
+      inner class MappingExists {
+        private val dpsPrisonerRestrictionId = 1234567L
+        private val nomisRestrictionId = 7654321L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsPrisonerRestrictionIdOrNull(
+            dpsPrisonerRestrictionId = dpsPrisonerRestrictionId,
+            PrisonerRestrictionMappingDto(
+              dpsId = dpsPrisonerRestrictionId.toString(),
+              nomisId = nomisRestrictionId,
+              offenderNo = offenderNo,
+              mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          nomisApi.stubDeletePrisonerRestriction(offenderNo = offenderNo, prisonerRestrictionId = nomisRestrictionId)
+          mappingApi.stubDeleteByDpsPrisonerRestrictionId(dpsPrisonerRestrictionId = dpsPrisonerRestrictionId)
+          publishDeletePrisonerRestrictionDomainEvent(prisonerRestrictionId = dpsPrisonerRestrictionId.toString(), offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete success`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-delete-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the restriction deleted`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-delete-success"),
+            check {
+              assertThat(it).containsEntry("dpsRestrictionId", dpsPrisonerRestrictionId.toString())
+              assertThat(it).containsEntry("nomisRestrictionId", nomisRestrictionId.toString())
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will delete the restriction from NOMIS`() {
+          nomisApi.verify(deleteRequestedFor(urlEqualTo("/prisoners/$offenderNo/restriction/$nomisRestrictionId")))
+        }
+
+        @Test
+        fun `will delete the restriction mapping`() {
+          mappingApi.verify(deleteRequestedFor(urlEqualTo("/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/$dpsPrisonerRestrictionId")))
+        }
+      }
+
+      @Nested
+      @DisplayName("when no mapping exists")
+      inner class NoMappingExists {
+        private val dpsPrisonerRestrictionId = 1234567L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId = dpsPrisonerRestrictionId, null)
+          publishDeletePrisonerRestrictionDomainEvent(prisonerRestrictionId = dpsPrisonerRestrictionId.toString(), offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing mapping not found`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-delete-skipped"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the restriction`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-delete-skipped"),
+            check {
+              assertThat(it).containsEntry("dpsRestrictionId", dpsPrisonerRestrictionId.toString())
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+            },
+            isNull(),
+          )
+        }
       }
     }
   }

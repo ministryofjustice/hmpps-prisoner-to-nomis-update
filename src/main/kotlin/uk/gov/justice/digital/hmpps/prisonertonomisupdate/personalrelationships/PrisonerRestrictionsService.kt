@@ -90,13 +90,28 @@ class PrisonerRestrictionsService(
     val entityName = PRISONER_RESTRICTION.entityName
 
     val dpsRestrictionId = event.additionalInformation.prisonerRestrictionId
+    val offenderNo = event.prisonerNumber()
     val telemetryMap = mutableMapOf(
       "dpsRestrictionId" to dpsRestrictionId.toString(),
-      "offenderNo" to event.prisonerNumber(),
+      "offenderNo" to offenderNo,
     )
 
     if (event.didOriginateInDPS()) {
-      throw UnsupportedOperationException("DPS deleted restrictions are not currently supported")
+      try {
+        val mapping = mappingApiService.getByDpsPrisonerRestrictionIdOrNull(dpsRestrictionId)
+        if (mapping != null) {
+          telemetryMap["nomisRestrictionId"] = mapping.nomisId.toString()
+          nomisApiService.deletePrisonerRestriction(offenderNo = offenderNo, prisonerRestrictionId = mapping.nomisId)
+          mappingApiService.deleteByDpsPrisonerRestrictionIdO(dpsRestrictionId)
+          telemetryClient.trackEvent("$entityName-delete-success", telemetryMap)
+        } else {
+          telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
+        }
+      } catch (e: Exception) {
+        telemetryMap["error"] = e.message.toString()
+        telemetryClient.trackEvent("$entityName-delete-failed", telemetryMap)
+        throw e
+      }
     } else {
       telemetryClient.trackEvent("$entityName-delete-ignored", telemetryMap)
     }

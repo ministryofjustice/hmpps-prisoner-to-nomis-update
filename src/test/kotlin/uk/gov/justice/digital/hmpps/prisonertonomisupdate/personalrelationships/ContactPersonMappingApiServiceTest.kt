@@ -1848,7 +1848,7 @@ class ContactPersonMappingApiServiceTest {
   inner class DeleteByDpsPrisonerRestrictionIdO {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubDeleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+      mockServer.stubDeleteByDpsPrisonerRestrictionId(dpsPrisonerRestrictionId = 1234567)
 
       apiService.deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
 
@@ -1859,7 +1859,7 @@ class ContactPersonMappingApiServiceTest {
 
     @Test
     internal fun `will pass DPS id to service`() = runTest {
-      mockServer.stubDeleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
+      mockServer.stubDeleteByDpsPrisonerRestrictionId(dpsPrisonerRestrictionId = 1234567)
 
       apiService.deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId = 1234567)
 
