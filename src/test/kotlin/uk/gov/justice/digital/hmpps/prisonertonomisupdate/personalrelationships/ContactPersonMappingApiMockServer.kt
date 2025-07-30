@@ -1028,7 +1028,7 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     ),
   ) = stubGetByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId, mapping)
 
-  fun stubDeleteByDpsPrisonerRestrictionIdO(
+  fun stubDeleteByDpsPrisonerRestrictionId(
     dpsPrisonerRestrictionId: Long = 123456,
   ) {
     mappingServer.stubFor(
