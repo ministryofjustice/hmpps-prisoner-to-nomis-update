@@ -32,14 +32,24 @@ jobs:
     secrets: inherit
     with:
       environment: ${{ matrix.environments }}
+  app_version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.app_version.outputs.version }}
+    steps:
+      - id: app_version
+        name: Application version creators
+        uses: ministryofjustice/hmpps-github-actions/.github/actions/build-test-and-deploy/create_app_version@v2 # WORKFLOW_VERSION
   gradle-build:
     name: Validate the kotlin
     uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
-      gradle-command: './gradlew assemble ktlintCheck'
+      gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble ktlintCheck'
       upload-test-artifacts: false
-      upload-build-artifacts: true
+      upload-build-artifacts: ${{ github.ref == 'refs/heads/main' }}
+    needs:
+      - app_version
   setup-test-matrix:
     name: Create test matrix
     uses: ./.github/workflows/setup_test_matrix.yml # LOCAL_VERSION
