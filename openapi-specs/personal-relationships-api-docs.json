@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-22.2296.8eae440"
+    "version" : "2025-07-29.2327.9d15942"
   },
   "servers" : [ {
     "url" : "/",
@@ -45,6 +45,25 @@
     "description" : "Endpoints use by synchronisation for administrative purposes"
   } ],
   "paths" : {
+    "/utility/remove-pom-dob" : {
+      "put" : {
+        "tags" : [ "Utility Controller" ],
+        "summary" : "Endpoint to remove the date of birth from contacts in a POM relationship with no other social relationships",
+        "operationId" : "removePomDateOfBirth",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpdatePomDobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/{prisonerNumber}/number-of-children" : {
       "get" : {
         "tags" : [ "Migrate and sync" ],
@@ -7797,6 +7816,19 @@
   },
   "components" : {
     "schemas" : {
+      "UpdatePomDobResponse" : {
+        "type" : "object",
+        "properties" : {
+          "contactsUpdated" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "contactsUpdated" ]
+      },
       "SyncUpdatePrisonerNumberOfChildrenRequest" : {
         "type" : "object",
         "description" : "Request to update a prisoner's number of children",
