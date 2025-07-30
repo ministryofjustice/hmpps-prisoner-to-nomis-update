@@ -416,6 +416,8 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetPrisonerRestriction(prisonerRestrictionId: Long, response: SyncPrisonerRestriction = prisonerRestriction()) = stubGetPrisonerRestrictionOrNull(prisonerRestrictionId, response = response)
+
   fun stubGetPrisonerRestrictionOrNull(prisonerRestrictionId: Long, response: SyncPrisonerRestriction? = prisonerRestriction()) {
     if (response != null) {
       stubFor(
