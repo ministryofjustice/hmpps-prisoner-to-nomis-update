@@ -324,6 +324,14 @@ class ContactPersonMappingApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getByDpsPrisonerRestrictionId(dpsPrisonerRestrictionId: Long): PrisonerRestrictionMappingDto = webClient.get()
+    .uri(
+      "/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/{dpsPrisonerRestrictionId}",
+      dpsPrisonerRestrictionId,
+    )
+    .retrieve()
+    .awaitBody()
+
   suspend fun deleteByDpsPrisonerRestrictionIdO(dpsPrisonerRestrictionId: Long): ResponseEntity<Void> = webClient.delete()
     .uri(
       "/mapping/contact-person/prisoner-restriction/dps-prisoner-restriction-id/{dpsPrisonerRestrictionId}",

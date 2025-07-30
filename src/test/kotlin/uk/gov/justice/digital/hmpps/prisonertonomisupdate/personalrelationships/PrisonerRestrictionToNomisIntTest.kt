@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -293,6 +294,91 @@ class PrisonerRestrictionToNomisIntTest : SqsIntegrationTestBase() {
           eq(mapOf("dpsRestrictionId" to "12345", "offenderNo" to "A1234KT")),
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a Restriction update")
+    inner class WhenDpsUpdated {
+      @Nested
+      @DisplayName("when all goes ok")
+      inner class HappyPath {
+        private val dpsPrisonerRestrictionId = 1234567L
+        private val nomisRestrictionId = 7654321L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetByDpsPrisonerRestrictionId(
+            dpsPrisonerRestrictionId = dpsPrisonerRestrictionId,
+            PrisonerRestrictionMappingDto(
+              dpsId = dpsPrisonerRestrictionId.toString(),
+              nomisId = nomisRestrictionId,
+              offenderNo = offenderNo,
+              mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          dpsApi.stubGetPrisonerRestriction(
+            prisonerRestrictionId = dpsPrisonerRestrictionId,
+            prisonerRestriction().copy(
+              prisonerRestrictionId = dpsPrisonerRestrictionId,
+              prisonerNumber = offenderNo,
+              restrictionType = "BAN",
+              commentText = "Banned for life",
+              effectiveDate = LocalDate.parse("2020-01-01"),
+              expiryDate = LocalDate.parse("2026-01-01"),
+              createdBy = "T.FREE",
+              updatedBy = "T.SWIFT",
+            ),
+          )
+          nomisApi.stubUpdatePrisonerRestriction(offenderNo = offenderNo, prisonerRestrictionId = nomisRestrictionId)
+          publishUpdatePrisonerRestrictionDomainEvent(prisonerRestrictionId = dpsPrisonerRestrictionId.toString(), offenderNo = offenderNo)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `telemetry will contain key facts about the restriction updated`() {
+          verify(telemetryClient).trackEvent(
+            eq("prisoner-restriction-update-success"),
+            check {
+              assertThat(it).containsEntry("dpsRestrictionId", dpsPrisonerRestrictionId.toString())
+              assertThat(it).containsEntry("nomisRestrictionId", nomisRestrictionId.toString())
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call back to DPS to get restriction details`() {
+          dpsApi.verify(getRequestedFor(urlEqualTo("/sync/prisoner-restriction/$dpsPrisonerRestrictionId")))
+        }
+
+        @Test
+        fun `will update the restriction in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$offenderNo/restriction/$nomisRestrictionId")))
+        }
+
+        @Test
+        fun `the update restriction will contain details of the DPS prisoner restriction`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("typeCode", "BAN")
+              .withRequestBodyJsonPath("comment", "Banned for life")
+              .withRequestBodyJsonPath("enteredStaffUsername", "T.SWIFT")
+              .withRequestBodyJsonPath("effectiveDate", "2020-01-01")
+              .withRequestBodyJsonPath("expiryDate", "2026-01-01"),
+          )
+        }
       }
     }
   }

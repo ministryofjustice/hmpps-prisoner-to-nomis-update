@@ -3406,7 +3406,7 @@ class ContactPersonToNomisIntTest : SqsIntegrationTestBase() {
 
     @Nested
     @DisplayName("when DPS is the origin of a Contact Restriction update")
-    inner class WhenDpsCreated {
+    inner class WhenDpsUpdated {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {

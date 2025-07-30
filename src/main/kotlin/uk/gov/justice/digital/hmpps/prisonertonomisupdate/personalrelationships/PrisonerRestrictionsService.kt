@@ -6,6 +6,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PrisonerRestrictionMappingDto.MappingType.DPS_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreatePrisonerRestrictionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdatePrisonerRestrictionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonService.Companion.MappingTypes.PRISONER_RESTRICTION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -69,7 +70,18 @@ class PrisonerRestrictionsService(
     )
 
     if (event.didOriginateInDPS()) {
-      throw UnsupportedOperationException("DPS updated restrictions are not currently supported")
+      try {
+        val nomisRestrictionId = mappingApiService.getByDpsPrisonerRestrictionId(dpsRestrictionId).nomisId.also {
+          telemetryMap["nomisRestrictionId"] = it.toString()
+        }
+        val dpsRestriction = dpsApiService.getPrisonerRestriction(dpsRestrictionId)
+        nomisApiService.updatePrisonerRestriction(offenderNo = offenderNo, prisonerRestrictionId = nomisRestrictionId, dpsRestriction.toNomisUpdateRequest())
+        telemetryClient.trackEvent("$entityName-update-success", telemetryMap)
+      } catch (e: Exception) {
+        telemetryMap["error"] = e.message.toString()
+        telemetryClient.trackEvent("$entityName-update-failed", telemetryMap)
+        throw e
+      }
     } else {
       telemetryClient.trackEvent("$entityName-update-ignored", telemetryMap)
     }
@@ -99,5 +111,14 @@ private fun SyncPrisonerRestriction.toNomisCreateRequest() = CreatePrisonerRestr
   expiryDate = this.expiryDate,
   comment = this.commentText,
   enteredStaffUsername = this.createdBy,
+  authorisedStaffUsername = this.authorisedUsername,
+)
+
+private fun SyncPrisonerRestriction.toNomisUpdateRequest() = UpdatePrisonerRestrictionRequest(
+  typeCode = this.restrictionType,
+  effectiveDate = this.effectiveDate,
+  expiryDate = this.expiryDate,
+  comment = this.commentText,
+  enteredStaffUsername = this.updatedBy ?: this.createdBy,
   authorisedStaffUsername = this.authorisedUsername,
 )
