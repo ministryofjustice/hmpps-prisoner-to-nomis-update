@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-28.313.e4491f7"
+    "version" : "2025-07-29"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28568,7 +28568,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "audit", "escort", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime" ]
+        "required" : [ "applicationDate", "audit", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime" ]
       },
       "ScheduledTemporaryAbsenceReturn" : {
         "type" : "object",
@@ -28618,7 +28618,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "escort", "eventId", "eventStatus", "eventSubType" ]
+        "required" : [ "audit", "eventId", "eventStatus", "eventSubType" ]
       },
       "TemporaryAbsence" : {
         "type" : "object",
