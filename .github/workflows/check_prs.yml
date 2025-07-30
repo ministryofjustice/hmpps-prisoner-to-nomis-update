@@ -5,13 +5,12 @@ on:
     - cron: "0 8 * * MON-FRI" # Every weekday at 08:00 UTC
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
-  checks: read
-
 jobs:
   check-prs:
+    permissions:
+      contents: write
+      pull-requests: write
+      checks: read
     runs-on: ubuntu-latest
 
     steps:
@@ -36,7 +35,12 @@ jobs:
           pr_title: Combined update of api docs
           labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
-          create_from_scratch: true
+
+      - name: Set automerge on combined PR
+        if: steps.combine-prs.outputs.pr_number
+        run: gh pr merge --auto --squash ${{ steps.combine-prs.outputs.pr_number }}
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Check status of PRs
         id: check-prs
