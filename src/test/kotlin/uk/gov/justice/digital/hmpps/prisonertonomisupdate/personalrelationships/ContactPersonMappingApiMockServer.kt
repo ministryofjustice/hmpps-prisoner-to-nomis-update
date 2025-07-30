@@ -1018,6 +1018,16 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
     }
   }
 
+  fun stubGetByDpsPrisonerRestrictionId(
+    dpsPrisonerRestrictionId: Long = 123456,
+    mapping: PrisonerRestrictionMappingDto = PrisonerRestrictionMappingDto(
+      offenderNo = "A1234KT",
+      nomisId = 654321,
+      dpsId = dpsPrisonerRestrictionId.toString(),
+      mappingType = PrisonerRestrictionMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetByDpsPrisonerRestrictionIdOrNull(dpsPrisonerRestrictionId, mapping)
+
   fun stubDeleteByDpsPrisonerRestrictionIdO(
     dpsPrisonerRestrictionId: Long = 123456,
   ) {
