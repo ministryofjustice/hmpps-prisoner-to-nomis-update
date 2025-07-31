@@ -36,12 +36,6 @@ jobs:
           labels: combined-pr
           github_token: ${{ steps.generate-token.outputs.token }}
 
-      - name: Set automerge on combined PR
-        if: steps.combine-prs.outputs.pr_number
-        run: gh pr merge --auto --squash ${{ steps.combine-prs.outputs.pr_number }}
-        env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
-
       - name: Check status of PRs
         id: check-prs
         run: ./check-prs.bash
