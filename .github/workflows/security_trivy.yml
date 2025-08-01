@@ -2,9 +2,9 @@ name: Security trivy dependency check
 on:
   workflow_dispatch:
   schedule:
-    - cron: "12 9 * * MON-FRI" # Every weekday at 09:12 UTC
+    - cron: "59 7 * * MON-FRI" # Every weekday at 07:59 UTC
 jobs:
-  security-trivy-check:
+  security-kotlin-trivy-check:
     permissions:
       contents: read
       actions: read
