@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-07-28.96.e96e61d"
+    "version" : "2025-08-01.119.14224b3"
   },
   "servers" : [ {
     "url" : "/",
@@ -6147,6 +6147,10 @@
           "lastModifiedInNomis" : {
             "type" : "boolean"
           },
+          "duplicatedReportId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "questions" : {
             "type" : "array",
             "description" : "The question-response pairs that make up this report",
@@ -6637,6 +6641,12 @@
             "type" : "boolean",
             "default" : false,
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
+          },
+          "duplicatedReportId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "default" : "null",
+            "description" : "ID of the original report of which this report is a duplicate of"
           }
         },
         "writeOnly" : true
@@ -6715,6 +6725,11 @@
           },
           "lastModifiedInNomis" : {
             "type" : "boolean"
+          },
+          "duplicatedReportId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "ID of the original report of which this report is a duplicate of"
           }
         },
         "readOnly" : true,
