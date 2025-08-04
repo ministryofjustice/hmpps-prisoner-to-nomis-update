@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-01.336.1926b8f"
+    "version" : "2025-08-01.339.dcf20da"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -9394,6 +9394,79 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/booking-id/{bookingId}/sentencing/court-cases/clone" : {
+      "post" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "Clones court cases from the supplied booking to the current booking",
+        "description" : "Required role NOMIS_SENTENCING. Court cases and all child elements including adjustments are copied to the current booking",
+        "operationId" : "cloneCourtCasesFromBooking",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking id",
+            "example" : 1233
+          },
+          "example" : 1233
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Created Court cases",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCourtCaseCloneResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Booking id supplied is already the latest booking",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_SENTENCING not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -23283,6 +23356,774 @@
         },
         "required" : [ "active", "bookingId", "location", "offenderNo" ]
       },
+      "BookingCourtCaseCloneResponse" : {
+        "type" : "object",
+        "description" : "Response for Court Cases bookig clone operations",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Court Cases created",
+            "items" : {
+              "$ref" : "#/components/schemas/ClonedCourtCaseResponse"
+            }
+          }
+        },
+        "required" : [ "courtCases" ]
+      },
+      "CaseIdentifierResponse" : {
+        "type" : "object",
+        "description" : "Case related reference",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "The type of case identifier",
+            "example" : "CASE/INFO#"
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "The value of the case identifier",
+            "example" : "asd/123"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time the case identifier was created",
+            "example" : "2020-07-17T12:34:56"
+          },
+          "modifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time the case identifier was last changed",
+            "example" : "2021-07-16T12:34:56"
+          },
+          "auditModuleName" : {
+            "type" : "string",
+            "description" : "The name of the module that last changed it, indicates if this was NOMIS or the synchronisation service",
+            "example" : "DPS_SYNCHRONISATION"
+          }
+        },
+        "required" : [ "createDateTime", "reference", "type" ]
+      },
+      "ClonedCourtCaseResponse" : {
+        "type" : "object",
+        "description" : "Court Cases created due to a booking clone operation",
+        "properties" : {
+          "courtCase" : {
+            "$ref" : "#/components/schemas/CourtCaseResponse",
+            "description" : "Created court case and children"
+          },
+          "sourceCaseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the source court case used for the clone"
+          }
+        },
+        "required" : [ "courtCase", "sourceCaseId" ]
+      },
+      "CourtCaseResponse" : {
+        "type" : "object",
+        "description" : "Court Case",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "primaryCaseInfoNumber" : {
+            "type" : "string"
+          },
+          "caseSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "caseStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "legalCaseType" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "beginDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "combinedCaseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sourceCombinedCaseIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "statusUpdateStaffId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "statusUpdateDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "statusUpdateComment" : {
+            "type" : "string"
+          },
+          "statusUpdateReason" : {
+            "type" : "string"
+          },
+          "lidsCaseId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lidsCombinedCaseId" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "lidsCaseNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "courtEvents" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventResponse"
+            }
+          },
+          "offenderCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderChargeResponse"
+            }
+          },
+          "caseInfoNumbers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CaseIdentifierResponse"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceResponse"
+            }
+          }
+        },
+        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "lidsCaseNumber", "offenderCharges", "offenderNo", "sentences", "sourceCombinedCaseIds" ]
+      },
+      "CourtEventChargeResponse" : {
+        "type" : "object",
+        "description" : "Court Event Charge",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenderCharge" : {
+            "$ref" : "#/components/schemas/OffenderChargeResponse"
+          },
+          "offencesCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "plea" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "propertyValue" : {
+            "type" : "number"
+          },
+          "totalPropertyValue" : {
+            "type" : "number"
+          },
+          "cjitCode1" : {
+            "type" : "string"
+          },
+          "cjitCode2" : {
+            "type" : "string"
+          },
+          "cjitCode3" : {
+            "type" : "string"
+          },
+          "resultCode1" : {
+            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
+          },
+          "resultCode2" : {
+            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
+          },
+          "mostSeriousFlag" : {
+            "type" : "boolean"
+          },
+          "linkedCaseDetails" : {
+            "$ref" : "#/components/schemas/LinkedCaseChargeDetails"
+          }
+        },
+        "required" : [ "eventId", "mostSeriousFlag", "offenderCharge" ]
+      },
+      "CourtEventResponse" : {
+        "type" : "object",
+        "description" : "Court Event",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "eventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "courtEventType" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "eventStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "directionCode" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "judgeName" : {
+            "type" : "string"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "outcomeReasonCode" : {
+            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
+          },
+          "commentText" : {
+            "type" : "string"
+          },
+          "orderRequestedFlag" : {
+            "type" : "boolean"
+          },
+          "holdFlag" : {
+            "type" : "boolean"
+          },
+          "nextEventRequestFlag" : {
+            "type" : "boolean"
+          },
+          "nextEventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "courtEventCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventChargeResponse"
+            }
+          },
+          "courtOrders" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtOrderResponse"
+            }
+          }
+        },
+        "required" : [ "courtEventCharges", "courtEventType", "courtId", "courtOrders", "createdByUsername", "createdDateTime", "eventDateTime", "eventStatus", "id", "offenderNo" ]
+      },
+      "CourtOrderResponse" : {
+        "type" : "object",
+        "description" : "Court Order",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "courtDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "issuingCourt" : {
+            "type" : "string"
+          },
+          "courtInfoId" : {
+            "type" : "string"
+          },
+          "orderType" : {
+            "type" : "string"
+          },
+          "orderStatus" : {
+            "type" : "string"
+          },
+          "dueDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "requestDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "seriousnessLevel" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "commentText" : {
+            "type" : "string"
+          },
+          "nonReportFlag" : {
+            "type" : "boolean"
+          },
+          "sentencePurposes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentencePurposeResponse"
+            }
+          }
+        },
+        "required" : [ "courtDate", "eventId", "id", "issuingCourt", "orderStatus", "orderType", "sentencePurposes" ]
+      },
+      "LinkedCaseChargeDetails" : {
+        "type" : "object",
+        "description" : "Linked case details for a court event charge",
+        "properties" : {
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Source caseId"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Target court eventId"
+          },
+          "dateLinked" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "caseId", "dateLinked", "eventId" ]
+      },
+      "OffenceResponse" : {
+        "type" : "object",
+        "description" : "Offence",
+        "properties" : {
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "statuteCode" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "description", "offenceCode", "statuteCode" ]
+      },
+      "OffenceResultCodeResponse" : {
+        "type" : "object",
+        "description" : "Offence Result Code",
+        "properties" : {
+          "chargeStatus" : {
+            "type" : "string"
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "dispositionCode" : {
+            "type" : "string"
+          },
+          "conviction" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "chargeStatus", "code", "conviction", "description", "dispositionCode" ]
+      },
+      "OffenderChargeResponse" : {
+        "type" : "object",
+        "description" : "Offender Charge",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offence" : {
+            "$ref" : "#/components/schemas/OffenceResponse"
+          },
+          "offencesCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "plea" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "propertyValue" : {
+            "type" : "number"
+          },
+          "totalPropertyValue" : {
+            "type" : "number"
+          },
+          "cjitCode1" : {
+            "type" : "string"
+          },
+          "cjitCode2" : {
+            "type" : "string"
+          },
+          "cjitCode3" : {
+            "type" : "string"
+          },
+          "chargeStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "resultCode1" : {
+            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
+          },
+          "resultCode2" : {
+            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
+          },
+          "mostSeriousFlag" : {
+            "type" : "boolean"
+          },
+          "lidsOffenceNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "id", "mostSeriousFlag", "offence" ]
+      },
+      "RecallCustodyDate" : {
+        "type" : "object",
+        "description" : "Recall custody return date data",
+        "properties" : {
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "recallLength" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "comments" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "recallLength", "returnToCustodyDate" ]
+      },
+      "SentencePurposeResponse" : {
+        "type" : "object",
+        "description" : "Sentence Purpose",
+        "properties" : {
+          "orderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "orderPartyCode" : {
+            "type" : "string"
+          },
+          "purposeCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "orderId", "orderPartyCode", "purposeCode" ]
+      },
+      "SentenceResponse" : {
+        "type" : "object",
+        "description" : "Offender Sentence",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sentenceSeq" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "calculationType" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "category" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "courtOrder" : {
+            "$ref" : "#/components/schemas/CourtOrderResponse"
+          },
+          "consecSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "commentText" : {
+            "type" : "string"
+          },
+          "absenceCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "etdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "mtdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "ltdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "ardCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "crdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "pedCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "npdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "ledCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sedCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "prrdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "tariffCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "dprrdCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "tusedCalculatedDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "aggSentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "aggAdjustDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sentenceLevel" : {
+            "type" : "string"
+          },
+          "extendedDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "counts" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "statusUpdateReason" : {
+            "type" : "string"
+          },
+          "statusUpdateComment" : {
+            "type" : "string"
+          },
+          "statusUpdateDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "statusUpdateStaffId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "fineAmount" : {
+            "type" : "number"
+          },
+          "dischargeDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "nomSentDetailRef" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomConsToSentDetailRef" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomConsFromSentDetailRef" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomConsWithSentDetailRef" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "lineSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "hdcExclusionFlag" : {
+            "type" : "boolean"
+          },
+          "hdcExclusionReason" : {
+            "type" : "string"
+          },
+          "cjaAct" : {
+            "type" : "string"
+          },
+          "sled2Calc" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "startDate2Calc" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceTermResponse"
+            }
+          },
+          "offenderCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderChargeResponse"
+            }
+          },
+          "missingCourtOffenderChargeIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "prisonId" : {
+            "type" : "string"
+          },
+          "recallCustodyDate" : {
+            "$ref" : "#/components/schemas/RecallCustodyDate"
+          }
+        },
+        "required" : [ "bookingId", "calculationType", "category", "createdByUsername", "createdDateTime", "missingCourtOffenderChargeIds", "offenderCharges", "prisonId", "sentenceSeq", "sentenceTerms", "startDate", "status" ]
+      },
+      "SentenceTermResponse" : {
+        "type" : "object",
+        "description" : "Sentence Term",
+        "properties" : {
+          "termSequence" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sentenceTermType" : {
+            "$ref" : "#/components/schemas/CodeDescription"
+          },
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "hours" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "lifeSentenceFlag" : {
+            "type" : "boolean"
+          },
+          "prisonId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
+      },
       "CreateSentenceAdjustmentRequest" : {
         "type" : "object",
         "description" : "Sentence adjustment create request",
@@ -25509,744 +26350,6 @@
           }
         },
         "required" : [ "remainingPrivilegedVisitOrders", "remainingVisitOrders" ]
-      },
-      "OffenceResponse" : {
-        "type" : "object",
-        "description" : "Offence",
-        "properties" : {
-          "offenceCode" : {
-            "type" : "string"
-          },
-          "statuteCode" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "description", "offenceCode", "statuteCode" ]
-      },
-      "OffenceResultCodeResponse" : {
-        "type" : "object",
-        "description" : "Offence Result Code",
-        "properties" : {
-          "chargeStatus" : {
-            "type" : "string"
-          },
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "dispositionCode" : {
-            "type" : "string"
-          },
-          "conviction" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "chargeStatus", "code", "conviction", "description", "dispositionCode" ]
-      },
-      "OffenderChargeResponse" : {
-        "type" : "object",
-        "description" : "Offender Charge",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "offence" : {
-            "$ref" : "#/components/schemas/OffenceResponse"
-          },
-          "offencesCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "offenceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "plea" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "propertyValue" : {
-            "type" : "number"
-          },
-          "totalPropertyValue" : {
-            "type" : "number"
-          },
-          "cjitCode1" : {
-            "type" : "string"
-          },
-          "cjitCode2" : {
-            "type" : "string"
-          },
-          "cjitCode3" : {
-            "type" : "string"
-          },
-          "chargeStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "resultCode1" : {
-            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
-          },
-          "resultCode2" : {
-            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
-          },
-          "mostSeriousFlag" : {
-            "type" : "boolean"
-          },
-          "lidsOffenceNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "id", "mostSeriousFlag", "offence" ]
-      },
-      "CaseIdentifierResponse" : {
-        "type" : "object",
-        "description" : "Case related reference",
-        "properties" : {
-          "type" : {
-            "type" : "string",
-            "description" : "The type of case identifier",
-            "example" : "CASE/INFO#"
-          },
-          "reference" : {
-            "type" : "string",
-            "description" : "The value of the case identifier",
-            "example" : "asd/123"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the case identifier was created",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "modifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the case identifier was last changed",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "auditModuleName" : {
-            "type" : "string",
-            "description" : "The name of the module that last changed it, indicates if this was NOMIS or the synchronisation service",
-            "example" : "DPS_SYNCHRONISATION"
-          }
-        },
-        "required" : [ "createDateTime", "reference", "type" ]
-      },
-      "CourtCaseResponse" : {
-        "type" : "object",
-        "description" : "Court Case",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "offenderNo" : {
-            "type" : "string"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "primaryCaseInfoNumber" : {
-            "type" : "string"
-          },
-          "caseSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "caseStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "legalCaseType" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "beginDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "courtId" : {
-            "type" : "string"
-          },
-          "combinedCaseId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sourceCombinedCaseIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
-          "statusUpdateStaffId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "statusUpdateDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "statusUpdateComment" : {
-            "type" : "string"
-          },
-          "statusUpdateReason" : {
-            "type" : "string"
-          },
-          "lidsCaseId" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "lidsCombinedCaseId" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "lidsCaseNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createdByUsername" : {
-            "type" : "string"
-          },
-          "courtEvents" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtEventResponse"
-            }
-          },
-          "offenderCharges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OffenderChargeResponse"
-            }
-          },
-          "caseInfoNumbers" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CaseIdentifierResponse"
-            }
-          },
-          "sentences" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceResponse"
-            }
-          }
-        },
-        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "lidsCaseNumber", "offenderCharges", "offenderNo", "sentences", "sourceCombinedCaseIds" ]
-      },
-      "CourtEventChargeResponse" : {
-        "type" : "object",
-        "description" : "Court Event Charge",
-        "properties" : {
-          "eventId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "offenderCharge" : {
-            "$ref" : "#/components/schemas/OffenderChargeResponse"
-          },
-          "offencesCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "offenceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "plea" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "propertyValue" : {
-            "type" : "number"
-          },
-          "totalPropertyValue" : {
-            "type" : "number"
-          },
-          "cjitCode1" : {
-            "type" : "string"
-          },
-          "cjitCode2" : {
-            "type" : "string"
-          },
-          "cjitCode3" : {
-            "type" : "string"
-          },
-          "resultCode1" : {
-            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
-          },
-          "resultCode2" : {
-            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
-          },
-          "mostSeriousFlag" : {
-            "type" : "boolean"
-          },
-          "linkedCaseDetails" : {
-            "$ref" : "#/components/schemas/LinkedCaseChargeDetails"
-          }
-        },
-        "required" : [ "eventId", "mostSeriousFlag", "offenderCharge" ]
-      },
-      "CourtEventResponse" : {
-        "type" : "object",
-        "description" : "Court Event",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "caseId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "offenderNo" : {
-            "type" : "string"
-          },
-          "eventDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "courtEventType" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "eventStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "directionCode" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "judgeName" : {
-            "type" : "string"
-          },
-          "courtId" : {
-            "type" : "string"
-          },
-          "outcomeReasonCode" : {
-            "$ref" : "#/components/schemas/OffenceResultCodeResponse"
-          },
-          "commentText" : {
-            "type" : "string"
-          },
-          "orderRequestedFlag" : {
-            "type" : "boolean"
-          },
-          "holdFlag" : {
-            "type" : "boolean"
-          },
-          "nextEventRequestFlag" : {
-            "type" : "boolean"
-          },
-          "nextEventDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createdByUsername" : {
-            "type" : "string"
-          },
-          "courtEventCharges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtEventChargeResponse"
-            }
-          },
-          "courtOrders" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtOrderResponse"
-            }
-          }
-        },
-        "required" : [ "courtEventCharges", "courtEventType", "courtId", "courtOrders", "createdByUsername", "createdDateTime", "eventDateTime", "eventStatus", "id", "offenderNo" ]
-      },
-      "CourtOrderResponse" : {
-        "type" : "object",
-        "description" : "Court Order",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "eventId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "courtDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "issuingCourt" : {
-            "type" : "string"
-          },
-          "courtInfoId" : {
-            "type" : "string"
-          },
-          "orderType" : {
-            "type" : "string"
-          },
-          "orderStatus" : {
-            "type" : "string"
-          },
-          "dueDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "requestDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "seriousnessLevel" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "commentText" : {
-            "type" : "string"
-          },
-          "nonReportFlag" : {
-            "type" : "boolean"
-          },
-          "sentencePurposes" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SentencePurposeResponse"
-            }
-          }
-        },
-        "required" : [ "courtDate", "eventId", "id", "issuingCourt", "orderStatus", "orderType", "sentencePurposes" ]
-      },
-      "LinkedCaseChargeDetails" : {
-        "type" : "object",
-        "description" : "Linked case details for a court event charge",
-        "properties" : {
-          "caseId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Source caseId"
-          },
-          "eventId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Target court eventId"
-          },
-          "dateLinked" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        },
-        "required" : [ "caseId", "dateLinked", "eventId" ]
-      },
-      "RecallCustodyDate" : {
-        "type" : "object",
-        "description" : "Recall custody return date data",
-        "properties" : {
-          "returnToCustodyDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "recallLength" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "comments" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "recallLength", "returnToCustodyDate" ]
-      },
-      "SentencePurposeResponse" : {
-        "type" : "object",
-        "description" : "Sentence Purpose",
-        "properties" : {
-          "orderId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "orderPartyCode" : {
-            "type" : "string"
-          },
-          "purposeCode" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "orderId", "orderPartyCode", "purposeCode" ]
-      },
-      "SentenceResponse" : {
-        "type" : "object",
-        "description" : "Offender Sentence",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sentenceSeq" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "status" : {
-            "type" : "string"
-          },
-          "calculationType" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "category" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "courtOrder" : {
-            "$ref" : "#/components/schemas/CourtOrderResponse"
-          },
-          "consecSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "endDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "commentText" : {
-            "type" : "string"
-          },
-          "absenceCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "caseId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "etdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "mtdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "ltdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "ardCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "crdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "pedCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "npdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "ledCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "sedCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "prrdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "tariffCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "dprrdCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "tusedCalculatedDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "aggSentenceSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "aggAdjustDays" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sentenceLevel" : {
-            "type" : "string"
-          },
-          "extendedDays" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "counts" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "statusUpdateReason" : {
-            "type" : "string"
-          },
-          "statusUpdateComment" : {
-            "type" : "string"
-          },
-          "statusUpdateDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "statusUpdateStaffId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "fineAmount" : {
-            "type" : "number"
-          },
-          "dischargeDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "nomSentDetailRef" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomConsToSentDetailRef" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomConsFromSentDetailRef" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomConsWithSentDetailRef" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "lineSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "hdcExclusionFlag" : {
-            "type" : "boolean"
-          },
-          "hdcExclusionReason" : {
-            "type" : "string"
-          },
-          "cjaAct" : {
-            "type" : "string"
-          },
-          "sled2Calc" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "startDate2Calc" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "createdDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createdByUsername" : {
-            "type" : "string"
-          },
-          "sentenceTerms" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceTermResponse"
-            }
-          },
-          "offenderCharges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/OffenderChargeResponse"
-            }
-          },
-          "missingCourtOffenderChargeIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "integer",
-              "format" : "int64"
-            }
-          },
-          "prisonId" : {
-            "type" : "string"
-          },
-          "recallCustodyDate" : {
-            "$ref" : "#/components/schemas/RecallCustodyDate"
-          }
-        },
-        "required" : [ "bookingId", "calculationType", "category", "createdByUsername", "createdDateTime", "missingCourtOffenderChargeIds", "offenderCharges", "prisonId", "sentenceSeq", "sentenceTerms", "startDate", "status" ]
-      },
-      "SentenceTermResponse" : {
-        "type" : "object",
-        "description" : "Sentence Term",
-        "properties" : {
-          "termSequence" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sentenceTermType" : {
-            "$ref" : "#/components/schemas/CodeDescription"
-          },
-          "years" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "months" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "weeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "days" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "hours" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "endDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "lifeSentenceFlag" : {
-            "type" : "boolean"
-          },
-          "prisonId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
       },
       "PostPrisonerMergeCaseChanges" : {
         "type" : "object",
