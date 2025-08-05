@@ -329,7 +329,6 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will create failed telemetry`() {
         await untilAsserted {
-
           verify(telemetryClient, times(3)).trackEvent(
             eq("hearing-updated-failed"),
             check {
