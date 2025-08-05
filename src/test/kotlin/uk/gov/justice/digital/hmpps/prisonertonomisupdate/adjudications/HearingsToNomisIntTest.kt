@@ -20,6 +20,7 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.util.UUID
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
@@ -103,54 +104,41 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenLocationMappingDoesNotExist {
+    inner class WhenNoLocationMappingExistsForHearing {
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER_FOR_CREATION, ADJUDICATION_NUMBER)
         AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
-        NomisApiExtension.nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
-        MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
-        MappingExtension.mappingServer.stubCreateHearing()
         publishCreateHearingDomainEvent()
       }
 
       @Test
-      fun `will create success telemetry`() {
-        waitForCreateHearingProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("hearing-create-success"),
-          check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-          },
-          isNull(),
-        )
+      fun `will put the failed message onto the dlq`() {
+        await untilCallTo { awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get() } matches { it == 1 }
       }
 
       @Test
-      fun `will call nomis api to create the hearing`() {
-        waitForCreateHearingProcessingToBeComplete()
-
-        NomisApiExtension.nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings")))
-      }
-
-      @Test
-      fun `will create a mapping between the two hearings`() {
-        waitForCreateHearingProcessingToBeComplete()
-
+      fun `will create failed telemetry`() {
         await untilAsserted {
-          MappingExtension.mappingServer.verify(
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/hearings"))
-              .withRequestBody(WireMock.matchingJsonPath("dpsHearingId", WireMock.equalTo(DPS_HEARING_ID)))
-              .withRequestBody(WireMock.matchingJsonPath("nomisHearingId", WireMock.equalTo(NOMIS_HEARING_ID.toString()))),
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-create-failed"),
+            check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+            },
+            isNull(),
           )
         }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+
+      @Test
+      fun `will not call nomis api to update the hearing`() {
+        await untilCallTo { awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get() } matches { it == 1 }
+
+        NomisApiExtension.nomisApi.verify(0, WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
       }
     }
 
@@ -289,49 +277,13 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenLocationMappingDoesNotExist {
-      @BeforeEach
-      fun setUp() {
-        MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
-        NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
-        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
-        MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
-        publishUpdateHearingDomainEvent()
-      }
-
-      @Test
-      fun `will create success telemetry`() {
-        waitForHearingProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("hearing-updated-success"),
-          check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-          },
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `will call nomis api to update the hearing`() {
-        waitForHearingProcessingToBeComplete()
-
-        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
-      }
-    }
-
-    @Nested
     inner class WhenNoMappingExistsForHearing {
 
       @BeforeEach
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         MappingExtension.mappingServer.stubGetByDpsHearingIdWithError(hearingId = DPS_HEARING_ID, 404)
+        MappingExtension.mappingServer.stubGetMappingGivenDpsLocationId(HEARING_LOCATION_DPS_ID, locationMappingResponse)
         publishUpdateHearingDomainEvent()
       }
 
@@ -364,34 +316,38 @@ class HearingsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         MappingExtension.mappingServer.stubGetByChargeNumber(CHARGE_NUMBER, ADJUDICATION_NUMBER)
         AdjudicationsApiExtension.adjudicationsApiServer.stubChargeGet(CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingLocationUuid = UUID.fromString(HEARING_LOCATION_DPS_ID))
-        NomisApiExtension.nomisApi.stubHearingUpdate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         MappingExtension.mappingServer.stubGetMappingGivenDpsLocationIdWithError(HEARING_LOCATION_DPS_ID, 404)
         MappingExtension.mappingServer.stubGetByDpsHearingId(DPS_HEARING_ID, NOMIS_HEARING_ID)
         publishUpdateHearingDomainEvent()
       }
 
       @Test
-      fun `will create success telemetry`() {
-        waitForHearingProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("hearing-updated-success"),
-          check {
-            Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-            Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
-            Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
-          },
-          isNull(),
-        )
+      fun `will put the failed message onto the dlq`() {
+        await untilCallTo { awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get() } matches { it == 1 }
       }
 
       @Test
-      fun `will call nomis api to update the hearing`() {
-        waitForHearingProcessingToBeComplete()
+      fun `will create failed telemetry`() {
+        await untilAsserted {
 
-        NomisApiExtension.nomisApi.verify(WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("hearing-updated-failed"),
+            check {
+              Assertions.assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER)
+              Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              Assertions.assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+              Assertions.assertThat(it["dpsHearingId"]).isEqualTo(DPS_HEARING_ID)
+              Assertions.assertThat(it["nomisHearingId"]).isEqualTo(NOMIS_HEARING_ID.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Test
+      fun `will not call nomis api to update the hearing`() {
+        await untilCallTo { awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get() } matches { it == 1 }
+        NomisApiExtension.nomisApi.verify(0, WireMock.putRequestedFor(WireMock.urlEqualTo("/adjudications/adjudication-number/$ADJUDICATION_NUMBER/hearings/$NOMIS_HEARING_ID")))
       }
     }
 

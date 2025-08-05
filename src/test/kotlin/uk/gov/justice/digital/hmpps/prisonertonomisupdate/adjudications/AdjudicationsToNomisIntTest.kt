@@ -30,6 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
+import uk.gov.justice.hmpps.sqs.countMessagesOnQueue
 import java.util.UUID
 
 private const val CHARGE_NUMBER_FOR_CREATION = "12345"
@@ -127,60 +128,41 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           incidentLocationUuid = UUID.fromString(INTERNAL_LOCATION_DPS_ID),
         )
-        nomisApi.stubAdjudicationCreate(OFFENDER_NO, ADJUDICATION_NUMBER, CHARGE_SEQ)
         mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
-        mappingServer.stubCreateAdjudication()
-        mappingServer.stubGetMappingGivenDpsLocationIdWithError(INTERNAL_LOCATION_DPS_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationIdWithError(INTERNAL_LOCATION_DPS_ID)
         publishCreateAdjudicationDomainEvent()
       }
 
       @Test
-      fun `will callback back to adjudication service to get more details`() {
-        waitForCreateAdjudicationProcessingToBeComplete()
-
-        adjudicationsApiServer.verify(getRequestedFor(urlEqualTo("/reported-adjudications/$CHARGE_NUMBER_FOR_CREATION/v2")))
+      fun `will put the failed message onto the dlq`() {
+        await untilCallTo { awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get() } matches { it == 1 }
       }
 
       @Test
-      fun `will create success telemetry`() {
-        waitForCreateAdjudicationProcessingToBeComplete()
-
-        verify(telemetryClient).trackEvent(
-          eq("adjudication-create-success"),
-          check {
-            assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
-            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
-          },
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `will call nomis api to create the adjudication`() {
-        waitForCreateAdjudicationProcessingToBeComplete()
-
-        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/adjudications")))
-      }
-
-      @Test
-      fun `will create a mapping between the two adjudications`() {
-        waitForCreateAdjudicationProcessingToBeComplete()
-
+      fun `will create failed telemetry`() {
         await untilAsserted {
-          mappingServer.verify(
-            postRequestedFor(urlEqualTo("/mapping/adjudications"))
-              .withRequestBody(
-                matchingJsonPath(
-                  "adjudicationNumber",
-                  equalTo(ADJUDICATION_NUMBER.toString()),
-                ),
-              )
-              .withRequestBody(matchingJsonPath("chargeSequence", equalTo(CHARGE_SEQ.toString())))
-              .withRequestBody(matchingJsonPath("chargeNumber", equalTo(CHARGE_NUMBER_FOR_CREATION))),
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("adjudication-create-failed"),
+            check {
+              assertThat(it["chargeNumber"]).isEqualTo(CHARGE_NUMBER_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["prisonId"]).isEqualTo(PRISON_ID)
+            },
+            isNull(),
           )
         }
-        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+
+      @Test
+      fun `will not call nomis api to update the adjudication`() {
+        await untilCallTo {
+          awsSqsAdjudicationDlqClient!!.countMessagesOnQueue(adjudicationDlqUrl!!).get()
+        } matches { it == 1 }
+
+        nomisApi.verify(
+          0,
+          postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/adjudications")),
+        )
       }
     }
 
@@ -219,6 +201,7 @@ class AdjudicationsToNomisIntTest : SqsIntegrationTestBase() {
       fun setUp() {
         mappingServer.stubGetByChargeNumberWithError(CHARGE_NUMBER_FOR_CREATION, 404)
         mappingServer.stubCreateAdjudicationWithErrorFollowedBySlowSuccess()
+        mappingServer.stubGetMappingGivenDpsLocationId(INTERNAL_LOCATION_DPS_ID, locationMappingResponse)
         nomisApi.stubAdjudicationCreate(OFFENDER_NO, adjudicationNumber = 12345)
         adjudicationsApiServer.stubChargeGet(chargeNumber = CHARGE_NUMBER_FOR_CREATION, offenderNo = OFFENDER_NO, incidentLocationUuid = UUID.fromString(INTERNAL_LOCATION_DPS_ID))
         publishCreateAdjudicationDomainEvent()
