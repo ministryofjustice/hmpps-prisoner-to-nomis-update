@@ -53,7 +53,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
 
 @Service
 class AdjudicationsService(
@@ -104,13 +103,9 @@ class AdjudicationsService(
         val offenderNo = adjudication.reportedAdjudication.prisonerNumber
         telemetryMap["offenderNo"] = offenderNo
 
-        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
-        val locationId = getNomisLocationByDpsId(
-          originalNomisLocationId = adjudication.reportedAdjudication.incidentDetails.locationId!!,
-          dpsLocationId = adjudication.reportedAdjudication.incidentDetails.locationUuid,
-        )
+        val nomisLocationId = locationsMappingService.getMappingGivenDpsId(adjudication.reportedAdjudication.incidentDetails.locationUuid.toString()).nomisLocationId
         val nomisAdjudicationResponse =
-          nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication(locationId))
+          nomisApiService.createAdjudication(offenderNo, adjudication.toNomisAdjudication(nomisLocationId))
 
         createdNomisAdjudicationNumber = nomisAdjudicationResponse.adjudicationNumber
         AdjudicationMappingDto(
@@ -372,8 +367,7 @@ class AdjudicationsService(
         ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == dpsHearingId } ?: throw IllegalStateException(
           "Hearing $dpsHearingId not found for DPS adjudication with charge no $chargeNumber",
         )
-        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
-        val nomisLocationId = getNomisLocationByDpsId(originalNomisLocationId = hearing.locationId!!, dpsLocationId = hearing.locationUuid)
+        val nomisLocationId = locationsMappingService.getMappingGivenDpsId(hearing.locationUuid.toString()).nomisLocationId
         val nomisAdjudicationResponse = nomisApiService.createHearing(adjudicationNumber, hearing.toNomisCreateHearing(nomisLocationId))
 
         telemetryMap["nomisHearingId"] = nomisAdjudicationResponse.hearingId.toString()
@@ -405,9 +399,8 @@ class AdjudicationsService(
         eventData.chargeNumber,
         eventData.prisonId,
       ).reportedAdjudication.hearings.lastOrNull { it.id.toString() == eventData.hearingId }?.let {
-        // TODO future change Just call mapping service to get nomisLocationId once satisfied location picked up correctly
-        val hearingLocationId = getNomisLocationByDpsId(it.locationId!!, it.locationUuid)
-        nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing(hearingLocationId))
+        val nomisLocationId = locationsMappingService.getMappingGivenDpsId(it.locationUuid.toString()).nomisLocationId
+        nomisApiService.updateHearing(adjudicationNumber, nomisHearingId, it.toNomisUpdateHearing(nomisLocationId))
         telemetryClient.trackEvent("hearing-updated-success", telemetryMap, null)
       } ?: throw IllegalStateException(
         "Hearing ${eventData.hearingId} not found for DPS adjudication with charge no ${eventData.chargeNumber}",
@@ -416,14 +409,6 @@ class AdjudicationsService(
       telemetryClient.trackEvent("hearing-updated-failed", telemetryMap, null)
       throw e
     }
-  }
-
-  // TODO future change Remove logging and use value only from mapping service once satisfied location picked up correctly
-  suspend fun getNomisLocationByDpsId(originalNomisLocationId: Long, dpsLocationId: UUID): Long = runCatching {
-    locationsMappingService.getMappingGivenDpsId(dpsLocationId.toString()).nomisLocationId
-  }.getOrElse {
-    log.debug("Failed to get Location mapping for Dps Id {}, using Nomis Id {} due to {}", dpsLocationId, originalNomisLocationId, it.message)
-    originalNomisLocationId
   }
 
   suspend fun deleteHearing(deleteEvent: HearingEvent) {

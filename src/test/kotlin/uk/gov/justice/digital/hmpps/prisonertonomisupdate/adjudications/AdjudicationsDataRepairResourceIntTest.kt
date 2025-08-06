@@ -42,7 +42,17 @@ private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
 private const val NOMIS_HEARING_ID = 2345L
 
+private val DPS_LOCATION_ID = UUID.fromString("e2916107-661f-4a71-ace1-b561a222ff9d")
+private const val NOMIS_LOCATION_ID = 197683
+
 class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
+  val adjLocationMappingResponse = """
+    {
+      "dpsLocationId": "$DPS_LOCATION_ID",
+      "nomisLocationId": $NOMIS_LOCATION_ID,
+      "mappingType": "LOCATION_CREATED"
+    }
+  """.trimIndent()
 
   @DisplayName("POST /prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/repair")
   @Nested
@@ -80,12 +90,13 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       fun setUp() {
         mappingServer.stubDeleteMappingsForAdjudication()
         adjudicationsApiServer.stubChargeGet(
-          DPS_CHARGE_NUMBER,
+          incidentLocationUuid = DPS_LOCATION_ID,
+          chargeNumber = DPS_CHARGE_NUMBER,
           offenderNo = OFFENDER_NO,
           hearings = listOf(
             HearingDto(
               locationId = 188489,
-              locationUuid = UUID.randomUUID(),
+              locationUuid = DPS_LOCATION_ID,
               dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
@@ -101,7 +112,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             ),
             HearingDto(
               locationId = 138711,
-              locationUuid = UUID.randomUUID(),
+              locationUuid = DPS_LOCATION_ID,
               dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
               agencyId = PRISON_ID,
@@ -183,6 +194,7 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
         nomisApi.stubHearingsCreate(ADJUDICATION_NUMBER, 1634775, 1634798)
         mappingServer.stubGetByDpsHearingIdNotFoundFollowedByFound(dpsHearingId = "634775", nomisHearingId = 1634775)
         mappingServer.stubGetByDpsHearingIdNotFoundFollowedByFound(dpsHearingId = "634798", nomisHearingId = 1634798)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_LOCATION_ID.toString(), adjLocationMappingResponse)
         mappingServer.stubCreateHearing()
         nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, nomisHearingId = 1634775)
         nomisApi.stubHearingResultUpsert(ADJUDICATION_NUMBER, nomisHearingId = 1634798)
@@ -739,9 +751,10 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         mappingServer.stubGetByChargeNumber(DPS_CHARGE_NUMBER, ADJUDICATION_NUMBER)
-        adjudicationsApiServer.stubChargeGet(DPS_CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingId = DPS_HEARING_ID.toLong())
+        adjudicationsApiServer.stubChargeGet(hearingLocationUuid = DPS_LOCATION_ID, chargeNumber = DPS_CHARGE_NUMBER, offenderNo = OFFENDER_NO, hearingId = DPS_HEARING_ID.toLong())
         nomisApi.stubHearingCreate(ADJUDICATION_NUMBER, NOMIS_HEARING_ID)
         mappingServer.stubGetByDpsHearingIdWithError(DPS_HEARING_ID, 404)
+        mappingServer.stubGetMappingGivenDpsLocationId(DPS_LOCATION_ID.toString(), adjLocationMappingResponse)
         mappingServer.stubCreateHearing()
 
         webTestClient.post().uri("/prisons/$PRISON_ID/prisoners/$OFFENDER_NO/adjudication/dps-charge-number/$DPS_CHARGE_NUMBER/hearing/dps-hearing-id/$DPS_HEARING_ID")
