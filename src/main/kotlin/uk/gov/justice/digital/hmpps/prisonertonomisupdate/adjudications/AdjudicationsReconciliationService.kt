@@ -134,7 +134,7 @@ private val dpsAdaTypes = listOf(PunishmentDto.Type.ADDITIONAL_DAYS, PunishmentD
 
 private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
   val adaPunishments = this.flatMap { it.punishments }.filter { it.type in dpsAdaTypes }
-  return AdaSummary(count = adaPunishments.size, days = adaPunishments.sumOf { it.schedule.days })
+  return AdaSummary(count = adaPunishments.size, days = adaPunishments.sumOf { it.schedule.duration ?: 0 })
 }
 
 private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })
