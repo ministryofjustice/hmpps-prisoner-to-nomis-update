@@ -22,7 +22,6 @@ class AdjudicationTransformationTest {
       reportedAdjudication = dpsAdjudication().reportedAdjudication.copy(
         chargeNumber = "1234567",
         incidentDetails = IncidentDetailsDto(
-          locationId = 543311,
           locationUuid = UUID.randomUUID(),
           dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
           dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
@@ -286,7 +285,6 @@ private fun dpsAdjudication() = ReportedAdjudicationResponse(
     prisonerNumber = "A1234AK",
     gender = ReportedAdjudicationDto.Gender.FEMALE,
     incidentDetails = IncidentDetailsDto(
-      locationId = 543311,
       dateTimeOfIncident = LocalDateTime.parse("2023-07-27T23:30:00"),
       dateTimeOfDiscovery = LocalDateTime.parse("2023-07-28T01:12:00"),
       handoverDeadline = LocalDateTime.parse("2023-07-30T01:12:00"),

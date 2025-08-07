@@ -115,7 +115,6 @@ internal class AdjudicationsServiceTest {
       prisonerNumber = PRISONER_NUMBER,
       gender = ReportedAdjudicationDto.Gender.MALE,
       incidentDetails = IncidentDetailsDto(
-        locationId = 2,
         locationUuid = UUID.randomUUID(),
         dateTimeOfDiscovery = LocalDateTime.parse("2023-09-26T08:15:00"),
         dateTimeOfIncident = LocalDateTime.parse("2023-09-26T08:15:00"),
@@ -138,7 +137,6 @@ internal class AdjudicationsServiceTest {
       hearings = listOf(
         HearingDto(
           id = DPS_HEARING_ID.toLong(),
-          locationId = 123,
           locationUuid = UUID.randomUUID(),
           dateTimeOfHearing = LocalDateTime.now(),
           oicHearingType = oicHearingType,
@@ -154,7 +152,6 @@ internal class AdjudicationsServiceTest {
         OutcomeHistoryDto(
           hearing = HearingDto(
             id = DPS_HEARING_ID.toLong(),
-            locationId = 123,
             locationUuid = UUID.randomUUID(),
             dateTimeOfHearing = LocalDateTime.now(),
             oicHearingType = oicHearingType,

@@ -1153,7 +1153,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 id = 812,
-                locationId = 27187,
                 locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
@@ -1252,7 +1251,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               OutcomeHistoryDto(
                 hearing = HearingDto(
                   id = 812,
-                  locationId = 27187,
                   locationUuid = UUID.randomUUID(),
                   dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
@@ -1328,7 +1326,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 id = 812,
-                locationId = 27187,
                 locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
@@ -1448,7 +1445,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
             OutcomeHistoryDto(
               hearing = HearingDto(
                 id = 812,
-                locationId = 27187,
                 locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                 oicHearingType = HearingDto.OicHearingType.INAD_ADULT,
@@ -1623,7 +1619,6 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               OutcomeHistoryDto(
                 hearing = HearingDto(
                   id = 812,
-                  locationId = 27187,
                   locationUuid = UUID.randomUUID(),
                   dateTimeOfHearing = LocalDateTime.parse("2023-10-26T15:30:00"),
                   oicHearingType = HearingDto.OicHearingType.INAD_ADULT,

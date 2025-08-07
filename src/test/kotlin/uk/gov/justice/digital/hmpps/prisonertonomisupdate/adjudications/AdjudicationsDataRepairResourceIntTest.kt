@@ -95,7 +95,6 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
           offenderNo = OFFENDER_NO,
           hearings = listOf(
             HearingDto(
-              locationId = 188489,
               locationUuid = DPS_LOCATION_ID,
               dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
@@ -111,7 +110,6 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
               ),
             ),
             HearingDto(
-              locationId = 138711,
               locationUuid = DPS_LOCATION_ID,
               dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
               oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
@@ -143,7 +141,6 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
           outcomes = listOf(
             OutcomeHistoryDto(
               hearing = HearingDto(
-                locationId = 188489,
                 locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2013-09-09T10:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
@@ -161,7 +158,6 @@ class AdjudicationsDataRepairResourceIntTest : IntegrationTestBase() {
             ),
             OutcomeHistoryDto(
               hearing = HearingDto(
-                locationId = 138711,
                 locationUuid = UUID.randomUUID(),
                 dateTimeOfHearing = LocalDateTime.parse("2013-12-03T09:00:00"),
                 oicHearingType = HearingDto.OicHearingType.GOV_ADULT,

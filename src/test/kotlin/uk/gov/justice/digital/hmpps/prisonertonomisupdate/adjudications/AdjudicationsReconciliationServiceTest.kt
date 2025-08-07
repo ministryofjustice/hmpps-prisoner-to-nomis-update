@@ -596,7 +596,6 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   prisonerNumber = prisonerNumber,
   gender = ReportedAdjudicationDto.Gender.FEMALE,
   incidentDetails = IncidentDetailsDto(
-    locationId = 1234,
     locationUuid = UUID.randomUUID(),
     dateTimeOfIncident = LocalDateTime.parse("2023-01-01T10:00"),
     dateTimeOfDiscovery = LocalDateTime.parse("2023-01-01T10:00"),
