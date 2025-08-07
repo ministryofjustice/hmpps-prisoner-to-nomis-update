@@ -304,6 +304,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -319,6 +320,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -332,6 +334,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -346,6 +349,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -392,6 +396,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   suspendedUntil = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -404,6 +409,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
                 canEdit = true,
@@ -415,6 +421,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -427,6 +434,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   suspendedUntil = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -439,6 +447,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
                 canEdit = true,
@@ -450,6 +459,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -528,6 +538,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -541,6 +552,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 12,
+                  duration = 12,
                   suspendedUntil = LocalDate.parse("2023-10-18"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -768,6 +780,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -781,6 +794,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 12,
+                  duration = 12,
                   suspendedUntil = LocalDate.parse("2023-10-18"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -1019,6 +1033,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 3,
+                  duration = 3,
                   startDate = LocalDate.parse("2023-10-04"),
                   endDate = LocalDate.parse("2023-10-06"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
@@ -1032,6 +1047,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 rehabilitativeActivities = emptyList(),
                 schedule = PunishmentScheduleDto(
                   days = 12,
+                  duration = 12,
                   suspendedUntil = LocalDate.parse("2023-10-18"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -1144,6 +1160,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
               canRemove = true,
               schedule = PunishmentScheduleDto(
                 days = 12,
+                duration = 12,
                 suspendedUntil = LocalDate.parse("2023-10-18"),
                 measurement = PunishmentScheduleDto.Measurement.DAYS,
               ),
@@ -1242,6 +1259,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 canRemove = true,
                 schedule = PunishmentScheduleDto(
                   days = 12,
+                  duration = 12,
                   suspendedUntil = LocalDate.parse("2023-10-18"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
@@ -1663,6 +1681,7 @@ class PunishmentsToNomisIntTest : SqsIntegrationTestBase() {
                 canRemove = true,
                 schedule = PunishmentScheduleDto(
                   days = 12,
+                  duration = 12,
                   suspendedUntil = LocalDate.parse("2023-10-18"),
                   measurement = PunishmentScheduleDto.Measurement.DAYS,
                 ),
