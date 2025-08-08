@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-29.2327.9d15942"
+    "version" : "2025-08-07.2423.1bdfd3d"
   },
   "servers" : [ {
     "url" : "/",
@@ -45,18 +45,18 @@
     "description" : "Endpoints use by synchronisation for administrative purposes"
   } ],
   "paths" : {
-    "/utility/remove-pom-dob" : {
+    "/utility/remove-internal-official-dob" : {
       "put" : {
         "tags" : [ "Utility Controller" ],
-        "summary" : "Endpoint to remove the date of birth from contacts in a POM relationship with no other social relationships",
-        "operationId" : "removePomDateOfBirth",
+        "summary" : "Endpoint to remove the date of birth from contacts in solely internal official relationships",
+        "operationId" : "removeDateOfBirth",
         "responses" : {
           "200" : {
             "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/UpdatePomDobResponse"
+                  "$ref" : "#/components/schemas/UpdateInternalOfficialDobResponse"
                 }
               }
             }
@@ -7816,7 +7816,7 @@
   },
   "components" : {
     "schemas" : {
-      "UpdatePomDobResponse" : {
+      "UpdateInternalOfficialDobResponse" : {
         "type" : "object",
         "properties" : {
           "contactsUpdated" : {
@@ -10086,7 +10086,7 @@
             "type" : "string",
             "description" : "Building or house number or name",
             "example" : "Mansion House",
-            "maxLength" : 50,
+            "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
@@ -12711,7 +12711,7 @@
             "type" : "string",
             "description" : "Building or house number or name",
             "example" : "Mansion House",
-            "maxLength" : 50,
+            "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
@@ -13509,7 +13509,7 @@
             "type" : "string",
             "description" : "Building or house number or name",
             "example" : "Mansion House",
-            "maxLength" : 50,
+            "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
@@ -13912,7 +13912,7 @@
             "type" : "string",
             "description" : "Building or house number or name",
             "example" : "Mansion House",
-            "maxLength" : 50,
+            "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
