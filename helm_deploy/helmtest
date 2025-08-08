@@ -1,0 +1,2681 @@
+Release "hmpps-prisoner-to-nomis-update" has been upgraded. Happy Helming!
+NAME: hmpps-prisoner-to-nomis-update
+LAST DEPLOYED: Tue Aug  5 13:25:32 2025
+NAMESPACE: hmpps-prisoner-to-nomis-update-dev
+STATUS: pending-upgrade
+REVISION: 1280
+TEST SUITE: None
+HOOKS:
+MANIFEST:
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/pdb.yaml
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: hmpps-prisoner-to-nomis-update
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+spec:
+  minAvailable: 1
+  selector:
+    matchLabels:
+      app: hmpps-prisoner-to-nomis-update
+      release: hmpps-prisoner-to-nomis-update
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/hmpps-auth-tokens-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hmpps-auth-tokens-script
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+data:
+  hmpps-auth-token-requests.sh: |-
+    #!/bin/bash
+    
+    parse_curl_response() {
+      local response=$1
+    
+      http_body=$(echo "$response" | sed '$d')
+      http_code=$(echo "$response" | tail -n1)
+    
+      if [ "$http_code" -ge 400 ]; then
+        echo "Error: HTTP $http_code from curl"
+        echo "$http_body"
+        exit 1
+      fi
+    
+      echo "$http_body"
+    }
+    
+    call_api() {
+      if (( $# < 3 )); then
+        echo "Error: Missing required parameter(s)." >&2
+        echo "Usage: call_api <http_method> <url> <token>" >&2
+        return 1
+      fi
+    
+      local http_method=$1
+      local url=$2
+      local token=$3
+    
+      response=$(curl -s -w "\n%{http_code}" --retry 2 -X "$http_method" "$url" \
+        -H "Authorization: Bearer $token")
+    
+      echo $(parse_curl_response "$response")
+    }
+    
+    get_auth_token() {
+      if (( $# < 3 )); then
+        echo "Error: Missing required parameter(s)." >&2
+        echo "Usage: get_auth_token <auth_host> <client_id> <client_secret>" >&2
+        return 1
+      fi
+    
+      local auth_host=$1
+      local client_id=$2
+      local client_secret=$3
+    
+      create_secret() {
+        local client_id=$1
+        local client_secret=$2
+        echo -n "$client_id:$client_secret" | base64 -w 0
+      }
+    
+      call_auth() {
+        local auth_host=$1
+        local secret=$2
+    
+        response=$(curl -s -w "\n%{http_code}" -X POST "$auth_host/oauth/token?grant_type=client_credentials" \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Basic $secret")
+    
+        echo $(parse_curl_response "$response")
+      }
+    
+      extract_token() {
+        local jwt=$1
+        echo -n $jwt | sed -n 's/.*"access_token": *"\([^"]*\)".*/\1/p'
+      }
+    
+      local secret=$(create_secret "$client_id" "$client_secret")
+      local response=$(call_auth "$auth_host" "$secret")
+      echo $(extract_token "$response")
+    }
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/cronjob-api-helpers.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: cronjob-api-helpers-script
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+data:
+  cronjob-api-helpers.sh: |-
+    #!/bin/bash
+    set -eu
+    
+    parse_curl_response() {
+      local response=$1
+    
+      http_body=$(echo "$response" | sed '$d')
+      http_code=$(echo "$response" | tail -n1)
+    
+      if [ "$http_code" -ge 400 ]; then
+        echo "Error: HTTP $http_code from curl"
+        echo "$http_body"
+        exit 1
+      fi
+    
+      echo "$http_body"
+    }
+    
+    call_api() {
+      if (( $# < 3 )); then
+        echo "Error: Missing required parameter(s)." >&2
+        echo "Usage: call_api <http_method> <url> <token>" >&2
+        return 1
+      fi
+    
+      local http_method=$1
+      local url=$2
+      local token=$3
+    
+      response=$(curl -s -w "\n%{http_code}" --retry 2 -X "$http_method" "$url" \
+        -H "Authorization: Bearer $token")
+    
+      echo $(parse_curl_response "$response")
+    }
+    
+    get_auth_token() {
+      if (( $# < 3 )); then
+        echo "Error: Missing required parameter(s)." >&2
+        echo "Usage: get_auth_token <auth_host> <client_id> <client_secret>" >&2
+        return 1
+      fi
+    
+      local auth_host=$1
+      local client_id=$2
+      local client_secret=$3
+    
+      create_secret() {
+        local client_id=$1
+        local client_secret=$2
+        echo -n "$client_id:$client_secret" | base64 -w 0
+      }
+    
+      call_auth() {
+        local auth_host=$1
+        local secret=$2
+    
+        response=$(curl -s -w "\n%{http_code}" -X POST "$auth_host/oauth/token?grant_type=client_credentials" \
+          -H 'Content-Type: application/json' \
+          -H "Authorization: Basic $secret")
+    
+        echo $(parse_curl_response "$response")
+      }
+    
+      extract_token() {
+        local jwt=$1
+        echo -n $jwt | sed -n 's/.*"access_token": *"\([^"]*\)".*/\1/p'
+      }
+    
+      local secret=$(create_secret "$client_id" "$client_secret")
+      local response=$(call_auth "$auth_host" "$secret")
+      echo $(extract_token "$response")
+    }
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: hmpps-prisoner-to-nomis-update
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hmpps-prisoner-to-nomis-update
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+spec:
+  replicas: 2
+  revisionHistoryLimit: 2
+  minReadySeconds: 10
+  strategy:
+    rollingUpdate:
+      maxSurge: 100%
+      maxUnavailable: 0
+    type: RollingUpdate
+  selector:
+    matchLabels:
+      app: hmpps-prisoner-to-nomis-update
+      release: hmpps-prisoner-to-nomis-update
+  template:
+    metadata:
+      labels:
+        app: hmpps-prisoner-to-nomis-update
+        release: hmpps-prisoner-to-nomis-update
+    spec:
+      serviceAccountName: hmpps-prisoner-to-nomis-update
+      securityContext:
+        {}
+      containers:
+        - name: hmpps-prisoner-to-nomis-update
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
+            runAsNonRoot: true
+            seccompProfile:
+              type: RuntimeDefault
+          image: "ghcr.io/ministryofjustice/hmpps-prisoner-to-nomis-update:app_version"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /health/liveness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          readinessProbe:
+            failureThreshold: 10
+            httpGet:
+              path: /health/readiness
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+            timeoutSeconds: 10
+          resources:
+            limits:
+              cpu: 2000m
+              memory: 2048Mi
+            requests:
+              cpu: 10m
+              memory: 640Mi
+          env:
+            - name: PRODUCT_ID
+              value: "DPS060"
+            - name: HMPPS_SQS_QUEUES_ACTIVITY_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-activity
+            - name: HMPPS_SQS_QUEUES_ACTIVITY_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-activity-dlq
+            - name: HMPPS_SQS_QUEUES_ALERTS_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-alerts
+            - name: HMPPS_SQS_QUEUES_ALERTS_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-alerts-dlq
+            - name: HMPPS_SQS_QUEUES_APPOINTMENT_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-appointment
+            - name: HMPPS_SQS_QUEUES_APPOINTMENT_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-appointment-dlq
+            - name: HMPPS_SQS_QUEUES_CASENOTES_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-casenotes
+            - name: HMPPS_SQS_QUEUES_CASENOTES_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-casenotes-dlq
+            - name: HMPPS_SQS_QUEUES_COURTSENTENCING_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-court-sentencing
+            - name: HMPPS_SQS_QUEUES_COURTSENTENCING_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-court-sentencing-dlq
+            - name: HMPPS_SQS_QUEUES_CSIP_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-csip
+            - name: HMPPS_SQS_QUEUES_CSIP_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-csip-dlq
+            - name: HMPPS_SQS_QUEUES_INCENTIVE_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-incentive
+            - name: HMPPS_SQS_QUEUES_INCENTIVE_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-incentive-dlq
+            - name: HMPPS_SQS_QUEUES_INCIDENTS_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-incidents
+            - name: HMPPS_SQS_QUEUES_INCIDENTS_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-incidents-dlq
+            - name: HMPPS_SQS_QUEUES_ORGANISATIONS_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-organisations
+            - name: HMPPS_SQS_QUEUES_ORGANISATIONS_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-organisations-dlq
+            - name: HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-personalrelationships
+            - name: HMPPS_SQS_QUEUES_PERSONALRELATIONSHIPS_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-personalrelationships-dlq
+            - name: HMPPS_SQS_QUEUES_SENTENCING_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-sentencing
+            - name: HMPPS_SQS_QUEUES_SENTENCING_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-sentencing-dlq
+            - name: HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-visit
+            - name: HMPPS_SQS_QUEUES_VISIT_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-visit-dlq
+            - name: HMPPS_SQS_QUEUES_VISITBALANCE_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-visitbalance
+            - name: HMPPS_SQS_QUEUES_VISITBALANCE_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: domain-events-sqs-nomis-update-visitbalance-dlq
+            - name: ACTIVITIES_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ACTIVITIES_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ACTIVITIES_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: ACTIVITIES_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ADJUDICATIONS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ADJUDICATIONS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ADJUDICATIONS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: ADJUDICATIONS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ALERTS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ALERTS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ALERTS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: ALERTS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: APPOINTMENTS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: APPOINTMENTS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: APPOINTMENTS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: APPOINTMENTS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: CASENOTES_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CASENOTES_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: CASENOTES_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: CASENOTES_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: COURT_SENTENCING_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: COURT_SENTENCING_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: COURT_SENTENCING_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: COURT_SENTENCING_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: CSIP_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: CSIP_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: CSIP_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: CSIP_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: INCENTIVES_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: INCENTIVES_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: INCENTIVES_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: INCENTIVES_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: LOCATIONS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: LOCATIONS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: LOCATIONS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: LOCATIONS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: MAPPING_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: MAPPING_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: MAPPING_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: MAPPING_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: NON_ASSOCIATIONS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: NON_ASSOCIATIONS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: NON_ASSOCIATIONS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: NON_ASSOCIATIONS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ORGANISATIONS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: ORGANISATIONS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: ORGANISATIONS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: ORGANISATIONS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: PERSONAL_RELATIONSHIPS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: PERSONAL_RELATIONSHIPS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: PERSONAL_RELATIONSHIPS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: PERSONAL_RELATIONSHIPS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: SENTENCE_ADJUSTMENTS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: SENTENCE_ADJUSTMENTS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: SENTENCE_ADJUSTMENTS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: SENTENCE_ADJUSTMENTS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: VISITS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: VISITS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: VISITS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: VISITS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: VISIT_BALANCE_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: VISIT_BALANCE_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update
+            - name: VISIT_BALANCE_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: VISIT_BALANCE_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update
+            - name: APPLICATIONINSIGHTS_CONNECTION_STRING
+              valueFrom:
+                secretKeyRef:
+                  key: APPLICATIONINSIGHTS_CONNECTION_STRING
+                  name: hmpps-prisoner-to-nomis-update-application-insights
+            - name: API_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: API_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update-client-creds
+            - name: API_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: API_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update-client-creds
+            - name: INCIDENTS_CLIENT_ID
+              valueFrom:
+                secretKeyRef:
+                  key: INCIDENTS_CLIENT_ID
+                  name: hmpps-prisoner-to-nomis-update-client-creds
+            - name: INCIDENTS_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  key: INCIDENTS_CLIENT_SECRET
+                  name: hmpps-prisoner-to-nomis-update-client-creds
+            - name: HMPPS_SQS_QUEUES_FROMNOMISCOURTSENTENCING_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: prisoner-from-nomis-courtsentencing-queue
+            - name: HMPPS_SQS_QUEUES_ADJUDICATION_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-adjudication-dlq-secret
+            - name: HMPPS_SQS_QUEUES_ADJUDICATION_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-adjudication-secret
+            - name: HMPPS_SQS_QUEUES_LOCATION_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-location-dlq-secret
+            - name: HMPPS_SQS_QUEUES_LOCATION_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-location-secret
+            - name: HMPPS_SQS_QUEUES_NONASSOCIATION_DLQ_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-nonassociation-dlq-secret
+            - name: HMPPS_SQS_QUEUES_NONASSOCIATION_QUEUE_NAME
+              valueFrom:
+                secretKeyRef:
+                  key: sqs_queue_name
+                  name: sqs-nomis-update-nonassociation-secret
+            - name: API_BASE_URL_ACTIVITIES
+              value: "https://activities-api-dev.prison.service.justice.gov.uk"
+            - name: API_BASE_URL_ADJUDICATIONS
+              value: "https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_ALERTS
+              value: "https://alerts-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_APPOINTMENTS
+              value: "https://activities-api-dev.prison.service.justice.gov.uk"
+            - name: API_BASE_URL_CASENOTES
+              value: "https://dev.offender-case-notes.service.justice.gov.uk"
+            - name: API_BASE_URL_COURT_SENTENCING
+              value: "https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_CSIP
+              value: "https://csip-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_HMPPS_AUTH
+              value: "https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+            - name: API_BASE_URL_INCENTIVES
+              value: "https://incentives-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_INCIDENTS
+              value: "https://incident-reporting-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_LOCATIONS
+              value: "https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_MAPPING
+              value: "https://nomis-sync-prisoner-mapping-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_NOMIS
+              value: "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk"
+            - name: API_BASE_URL_NON_ASSOCIATIONS
+              value: "https://non-associations-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_ORGANISATIONS
+              value: "https://organisations-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_PERSONAL_RELATIONSHIPS
+              value: "https://personal-relationships-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_SENTENCE_ADJUSTMENTS
+              value: "https://adjustments-api-dev.hmpps.service.justice.gov.uk"
+            - name: API_BASE_URL_VISITS
+              value: "https://visit-scheduler-dev.prison.service.justice.gov.uk"
+            - name: API_BASE_URL_VISIT_BALANCE
+              value: "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk"
+            - name: APPLICATIONINSIGHTS_CONFIGURATION_FILE
+              value: "applicationinsights.dev.json"
+            - name: FEATURE_EVENT_DELETEALL
+              value: "true"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS-PHONE_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-ADDRESS_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-EMAIL_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-EMAIL_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-EMAIL_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-PHONE_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-PHONE_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-PHONE_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-TYPES_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-WEB_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-WEB_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION-WEB_UPDATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED
+              value: "false"
+            - name: FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED
+              value: "false"
+            - name: REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE
+              value: "10"
+            - name: REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE
+              value: "5"
+            - name: REPORTS_CONTACT-PERSON_PROFILE-DETAILS_RECONCILIATION_PAGE-SIZE
+              value: "1000"
+            - name: REPORTS_CONTACT-PERSON_PROFILE-DETAILS_RECONCILIATION_PARALLEL-JOBS
+              value: "6"
+            - name: SERVER_PORT
+              value: "8080"
+            - name: SPRING_PROFILES_ACTIVE
+              value: "logstash"  
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - hmpps-prisoner-to-nomis-update
+                - key: release
+                  operator: In
+                  values:
+                  - hmpps-prisoner-to-nomis-update
+              topologyKey: kubernetes.io/hostname
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/authenticating-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: report-allocations-test
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+spec:
+  schedule: "6 8 * * * "
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-allocations-test
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: hmpps-auth-tokens
+                  mountPath: /bin/hmpps-auth-tokens.sh
+                  readOnly: true
+                  subPath: hmpps-auth-tokens.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/hmpps-auth-tokens.sh
+
+                                    AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+                  
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+                  
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/allocations/reports/reconciliation" "$TOKEN"
+                  echo "Allocation reconciliation report submitted successfully"
+                  
+              securityContext:
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: hmpps-auth-tokens
+              configMap:
+                name: hmpps-auth-token-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/activities-purge-dlq-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-activities-purge-dlq
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "9-59/10 * * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: activities-purge-dlq
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+                  QUEUE_NAME="syscon-devs-dev-hmpps_prisoner_to_nomis_activity_dlq"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api PUT "http://hmpps-prisoner-to-nomis-update/queue-admin/purge-queue/$QUEUE_NAME" "$TOKEN"
+                  echo "Queue $QUEUE_NAME purge completed successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/activities-tidy-mappings-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-activities-mappings
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "15 7 * * 1-5"
+  suspend: true
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: activities-tidy-mappings
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "DELETE" "http://hmpps-prisoner-to-nomis-update/activities/mappings/unknown-mappings" "$TOKEN"
+                  echo "Delete unknown mappings completed successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/housekeeping-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-queue-housekeeping
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "*/10 * * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: housekeeping
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/queue-admin/retry-all-dlqs
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-adjudications-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-adjudications
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 2 * * 1"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-incentives
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/adjudications/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-alerts-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-alerts
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "45 4 * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-alerts
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/alerts/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-allocations-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-allocations
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "5 7 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-allocations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/allocations/reports/reconciliation" "$TOKEN"
+                  echo "Allocation reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-attendances-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-attendances
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "5 1 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-attendances
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/attendances/reports/reconciliation?date=$(date -d "yesterday" "+%Y-%m-%d")" "$TOKEN"
+                  echo "Attendance reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-casenotes-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-cn-active
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 19 * * SUN,MON,TUE,WED,THU"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-casenotes
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/casenotes/reports/reconciliation?activeOnly=true
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-casenotes-full-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-cn-full
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 19 * * FRI"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-casenotes
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/casenotes/reports/reconciliation?activeOnly=false
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-contactperson-personcontact-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-con-person
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "50 1 * * 6"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-contactperson-prisonercontact
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/contact-person/person-contact/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-contactperson-prisonercontact-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-con-prisoner
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "50 3 * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-contactperson-prisonercontact
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/contact-person/prisoner-contact/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-contactperson-prisonerrestriction-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-restriction
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "55 7 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-contactperson-prisonerrestriction
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/contact-person/prisoner-restriction/reports/reconciliation" "$TOKEN"
+                  echo "Prisoner restrictions reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-contactperson-profiledetails-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-con-profile
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 7 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-contactperson-profiledetails
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "PUT" "http://hmpps-prisoner-to-nomis-update/contact-person/profile-details/reports/reconciliation" "$TOKEN"
+                  echo "Contact person profile details reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-court-sentencing-prisoner-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-court-case
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "10 3 * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-courtcase-prisoner
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/court-sentencing/court-cases/prisoner/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-csip-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-csip
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "5 0 * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-csip
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/csip/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-incentives-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-incentives
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "10 4 * * 1"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-incentives
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/incentives/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-incidents-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-incidents
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "15 2 * * *"
+  suspend: true
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-incidents
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/incidents/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-locations-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-locations
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 2 * * 3"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-locations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/locations/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                    - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-non-associations-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-non-assoc
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 2 * * 2"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-non-associations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/non-associations/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-organisations-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-organisations
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "30 4 * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-organisations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/organisations/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-sentencing-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-sentencing
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "50 1 * * *"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-incentives
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/sentencing/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-suspended-allocations-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-susp-alloc
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "35 7 * * *"
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-suspended-allocations
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              volumeMounts:
+                - name: cronjob-api-helpers
+                  mountPath: /bin/cronjob-api-helpers.sh
+                  readOnly: true
+                  subPath: cronjob-api-helpers.sh
+              args:
+                - /bin/sh
+                - -c
+                - |
+                  #!/bin/bash
+                  set -eu
+
+                  . /bin/cronjob-api-helpers.sh
+
+                  AUTH_BASE_URL="https://sign-in-dev.hmpps.service.justice.gov.uk/auth"
+
+                  # Main execution
+                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
+                  echo "Access token retrieved from HMPPS Auth"
+
+                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/suspended-allocations/reports/reconciliation" "$TOKEN"
+                  echo "Suspended allocation reconciliation report submitted successfully"
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+              envFrom:
+                - secretRef:
+                    name: hmpps-prisoner-to-nomis-update
+          restartPolicy: Never
+          volumes:
+            - name: cronjob-api-helpers
+              configMap:
+                name: cronjob-api-helpers-script
+                defaultMode: 0755
+---
+# Source: hmpps-prisoner-to-nomis-update/templates/report-visitbalance-cronjob.yaml
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hmpps-prisoner-to-nomis-update-report-visit-bal
+  labels:
+    helm.sh/chart: hmpps-prisoner-to-nomis-update-0.2.0
+    app.kubernetes.io/version: "1.0"
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+spec:
+  schedule: "0 18 * * 1-5"
+  suspend: false
+  concurrencyPolicy: Forbid
+  failedJobsHistoryLimit: 5
+  startingDeadlineSeconds: 600
+  successfulJobsHistoryLimit: 5
+  jobTemplate:
+    spec:
+      # Tidy up all jobs after 4 days
+      ttlSecondsAfterFinished: 345600
+      template:
+        spec:
+          containers:
+            - name: report-visitbalance
+              image: ghcr.io/ministryofjustice/hmpps-devops-tools
+              args:
+                - /bin/sh
+                - -c
+                - curl --retry 2 -XPUT http://hmpps-prisoner-to-nomis-update/visit-balance/reports/reconciliation
+              securityContext:
+                capabilities:
+                  drop:
+                  - ALL
+                runAsNonRoot: true
+                allowPrivilegeEscalation: false
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-service/templates/ingress.yaml
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hmpps-prisoner-to-nomis-update-v1-2
+  labels:
+    helm.sh/chart: generic-service-3.12.0
+    app: hmpps-prisoner-to-nomis-update
+    release: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "app_version"
+    app.kubernetes.io/managed-by: Helm
+    hmpps.justice.gov.uk/product-id: DPS060
+  annotations:
+    nginx.ingress.kubernetes.io/custom-http-errors: "418"
+    nginx.ingress.kubernetes.io/server-snippet: |
+      server_tokens off;
+      location /queue-admin/retry-all-dlqs {
+        deny all;
+        return 401;
+      }
+      location /incentives/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /non-associations/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /locations/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /sentencing/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /adjudications/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /alerts/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /casenotes/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /csip/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /organisations/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /contact-person/prisoner-contact/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /contact-person/person-contact/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /incidents/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /visit-balance/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+      location /court-sentencing/court-cases/prisoner/reports/reconciliation {
+        deny all;
+        return 401;
+      }
+    nginx.ingress.kubernetes.io/whitelist-source-range: ""
+    external-dns.alpha.kubernetes.io/set-identifier: hmpps-prisoner-to-nomis-update-v1-2-hmpps-prisoner-to-nomis-update-dev-green
+    external-dns.alpha.kubernetes.io/aws-weight: "100"
+spec:
+  ingressClassName: "default"
+  tls:
+  - hosts:
+      - prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
+    secretName: prisoner-to-nomis-cert
+  rules:
+    - host: prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk
+      http:
+        paths:
+          - path: /
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hmpps-prisoner-to-nomis-update
+                port:
+                  number: 80
+          - path: /health
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: hmpps-prisoner-to-nomis-update
+                port:
+                  number: 80
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-prometheus-alerts/templates/application-alerts.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hmpps-prisoner-to-nomis-update-app
+  labels:
+    prometheus: cloud-platform
+    helm.sh/chart: generic-prometheus-alerts-1.13.0
+    app.kubernetes.io/name: generic-prometheus-alerts
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: hmpps-prisoner-to-nomis-update-app
+      rules:
+        - alert: KubePodCrashLooping
+          annotations:
+            summary: Pod is crash looping.
+            message: Pod {{ $labels.namespace }}/{{ $labels.pod }} ({{ $labels.container }}) is restarting {{ printf "%.2f" $value }} times every 5 minutes.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-pod-crashlooping
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |
+            rate(kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})"}[10m]) * 60 * 5 > 0
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubePodNotReady
+          annotations:
+            summary: Pod in a non-ready state.
+            message: Pod {{ $labels.namespace }}/{{ $labels.pod }} has been in a non-ready state for longer than 15 minutes.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-pod-notready
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            sum by (namespace, pod) (kube_pod_status_phase{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})", phase=~"Pending|Unknown"}) > 0
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeDeploymentGenerationMismatch
+          annotations:
+            summary: Deployment generation mismatch.
+            message: Deployment generation for {{ $labels.namespace }}/{{ $labels.deployment }} does not match, this indicates that the Deployment has failed but has not been rolled back.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-deployment-generation-mismatch
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            (kube_deployment_status_observed_generation{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", deployment=~"hmpps-prisoner-to-nomis-update"}
+              !=
+            kube_deployment_metadata_generation{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", deployment=~"hmpps-prisoner-to-nomis-update"})
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeDeploymentReplicasMismatch
+          annotations:
+            summary: Deployment has not matched the expected number of replicas.
+            message: Deployment {{ $labels.namespace }}/{{ $labels.deployment }} has not matched the expected number of replicas for longer 15 minutes.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-deployment-replicas-mismatch
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            (kube_deployment_spec_replicas{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", deployment=~"hmpps-prisoner-to-nomis-update"}
+              !=
+            kube_deployment_status_replicas_available{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", deployment=~"hmpps-prisoner-to-nomis-update"})
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeContainerWaiting
+          annotations:
+            summary: Pod container waiting.
+            message: Pod {{ $labels.namespace }}/{{ $labels.pod }} container {{ $labels.container }} has been in waiting state for longer than 1 hour.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-container-waiting
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |
+            sum by (namespace, pod, container) (kube_pod_container_status_waiting_reason{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})"}) > 0
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 1h
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - record: job:kube_job_status_start_time_hmpps_prisoner_to_nomis_update_dev:max
+          expr: |
+            label_replace(
+              label_replace(
+                max(
+                  kube_job_status_start_time{namespace=~"hmpps-prisoner-to-nomis-update-dev"}
+                  * ON(job_name,namespace) GROUP_RIGHT()
+                  kube_job_owner{owner_name!="", namespace=~"hmpps-prisoner-to-nomis-update-dev"}
+                )
+                BY (job_name, owner_name, namespace)
+                == ON(owner_name) GROUP_LEFT()
+                max(
+                  kube_job_status_start_time{namespace=~"hmpps-prisoner-to-nomis-update-dev"}
+                  * ON(job_name,namespace) GROUP_RIGHT()
+                  kube_job_owner{owner_name!="", namespace=~"hmpps-prisoner-to-nomis-update-dev"}
+                )
+                BY (owner_name),
+              "job", "$1", "job_name", "(.+)"),
+            "cronjob", "$1", "owner_name", "(.+)")
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+        - record: job:kube_job_status_failed_hmpps_prisoner_to_nomis_update_dev:sum
+          expr: |
+            clamp_max(job:kube_job_status_start_time_hmpps_prisoner_to_nomis_update_dev:max,1)
+              * ON(job) GROUP_LEFT()
+              label_replace(
+                label_replace(
+                  (kube_job_status_failed{namespace=~"hmpps-prisoner-to-nomis-update-dev"} != 0),
+                  "job", "$1", "job_name", "(.+)"),
+                "cronjob", "$1", "owner_name", "(.+)")
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+        
+        - alert: CronJobStatusFailed
+          annotations:
+            summary: CronJob is failing.
+            message: CronJob {{ $labels.namespace }}/{{ $labels.cronjob }} is failing.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-cronjob-failed
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |
+            (count_over_time(job:kube_job_status_failed_hmpps_prisoner_to_nomis_update_dev:sum[5m])
+            * ON(cronjob,namespace) GROUP_LEFT()
+            (kube_cronjob_spec_suspend == 0))
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+        
+
+        - alert: KubeHpaReplicasMismatch
+          annotations:
+            summary: HPA has not matched desired number of replicas.
+            message: HPA {{ $labels.namespace }}/{{ $labels.hpa }} has not matched the desired number of replicas for longer than 15 minutes.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-hpa-replicas-mismatch
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |
+            ((kube_hpa_status_desired_replicas{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", hpa=~"hmpps-prisoner-to-nomis-update"}
+              !=
+            kube_hpa_status_current_replicas{job="kube-state-metrics"})
+              and
+            (kube_hpa_status_current_replicas{job="kube-state-metrics"}
+              >
+            kube_hpa_spec_min_replicas{job="kube-state-metrics"})
+              and
+            (kube_hpa_status_current_replicas{job="kube-state-metrics"}
+              <
+            kube_hpa_spec_max_replicas{job="kube-state-metrics"})
+              and
+            changes(kube_hpa_status_current_replicas{job="kube-state-metrics"}[15m]) == 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeHpaMaxedOut
+          annotations:
+            summary: HPA is running at max replicas
+            message: HPA {{ $labels.namespace }}/{{ $labels.hpa }} has been running at max replicas for longer than 15 minutes.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-hpa-maxed-out
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |
+            (kube_hpa_status_current_replicas{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", hpa=~"hmpps-prisoner-to-nomis-update"}
+              ==
+            kube_hpa_spec_max_replicas{job="kube-state-metrics"})
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeQuotaExceeded
+          annotations:
+            summary: Namespace quota has exceeded the limits.
+            message: Namespace {{ $labels.namespace }} is using {{ printf "%0.0f" $value }}% of its {{ $labels.resource }} quota.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-quota-exceeded
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            (100 * kube_resourcequota{namespace=~"hmpps-prisoner-to-nomis-update-dev", job="kube-state-metrics", type="used"}
+              / ignoring(instance, job, type)
+            (kube_resourcequota{namespace=~"hmpps-prisoner-to-nomis-update-dev", job="kube-state-metrics", type="hard"} > 0)
+              > 90)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 15m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: KubeContainerOOMKilled
+          annotations:
+            summary: Kubernetes container OOM killed.
+            message: "Container {{ $labels.container }} in pod {{ $labels.namespace }}/{{ $labels.pod }} has been OOM Killed (out of memory) {{ $value }} times in the last 10 minutes."
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#application-container-oom-killed
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            ((kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})"}
+             - kube_pod_container_status_restarts_total{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})"} offset 10m >= 1)
+              and ignoring (reason) min_over_time(kube_pod_container_status_last_terminated_reason{job="kube-state-metrics", namespace=~"hmpps-prisoner-to-nomis-update-dev", pod=~"hmpps-prisoner-to-nomis-update(-[a-z0-9]{4,10}-[a-z0-9]{5})", reason="OOMKilled"}[10m]) == 1)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 0m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-prometheus-alerts/templates/aws-sqs-alerts.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hmpps-prisoner-to-nomis-update-sqs
+  labels:
+    prometheus: cloud-platform
+    helm.sh/chart: generic-prometheus-alerts-1.13.0
+    app.kubernetes.io/name: generic-prometheus-alerts
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: hmpps-prisoner-to-nomis-update-sqs
+      rules:
+
+
+
+        - alert: SQS-number-of-messages-activities
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_activity_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_activity_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-adjudications
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_adjudication_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_adjudication_dead_letter_queue"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-alerts
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_alerts_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-appointments
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_appointment_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_appointment_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-casenotes
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_casenotes_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_casenotes_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-csip
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_csip_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_csip_dead_letter_queue"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-incentives
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_incentive_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_incentive_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-incidents
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_incidents_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_incidents_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-locations
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_location_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_location_dead_letter_queue"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-nonassociations
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_nonassociation_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_nonassociation_dead_letter_queue"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-organisations
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_organisations_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-personalrelationships
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_personalrelationships_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_personalrelationships_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-sentencing
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_sentencing_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_sentencing_dlq|syscon-devs-dev-hmpps_prisoner_to_nomis_court_sentencing_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_court_sentencing_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-visitbalance
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: SQS-number-of-messages-visits
+          annotations:
+            summary: SQS number of messages alert.
+            message: SQS - {{ $labels.queue_name }} - number of messages={{ $value }} (exceeds 0), check consumers are healthy.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#sqs-number-of-messages
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/AWSSQS000/aws-sqs?orgId=1&var-datasource=Cloudwatch&var-region=default&var-queue={{ $labels.queue_name }}&from=now-6h&to=now
+          expr: |-
+            (sum(aws_sqs_approximate_number_of_messages_visible_maximum{queue_name=~"syscon-devs-dev-hmpps_prisoner_to_nomis_visit_queue|syscon-devs-dev-hmpps_prisoner_to_nomis_visit_dlq"} offset 5m) by (queue_name) > 0)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 10m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-prometheus-alerts/templates/ingress-alerts.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hmpps-prisoner-to-nomis-update-ingress
+  labels:
+    prometheus: cloud-platform
+    helm.sh/chart: generic-prometheus-alerts-1.13.0
+    app.kubernetes.io/name: generic-prometheus-alerts
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: hmpps-prisoner-to-nomis-update-ingress
+      rules:
+        - alert: 5xxErrorResponses
+          annotations:
+            summary: Ingress serving 5xx responses.
+            message: Ingress {{ $labels.exported_namespace }}/{{ $labels.ingress }} is serving 5xx responses.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#ingress-5xx-error-responses
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            avg(rate(nginx_ingress_controller_requests{exported_namespace=~"hmpps-prisoner-to-nomis-update-dev", ingress=~"hmpps-prisoner-to-nomis-update(-v1-2)", path="/", status=~"5.*"}[1m]) > 0) by (ingress, exported_namespace)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 1m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+        - alert: 5xxErrorResponsesOnHealthEndpoint
+          annotations:
+            summary: High rate of 5xx errors on /health.
+            message: High rate of 5xx errors detected on /health path in Ingress {{ $labels.exported_namespace }}/{{ $labels.ingress }}.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#ingress-5xx-error-responses
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            avg(rate(nginx_ingress_controller_requests{exported_namespace=~"hmpps-prisoner-to-nomis-update-dev", ingress=~"hmpps-prisoner-to-nomis-update(-v1-2)", path="/health", status=~"5.*"}[5m]) > 0.004) by (ingress, exported_namespace)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 5m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: RatelimitBlocking
+          annotations:
+            summary: Ingress is being rate limited.
+            message: Rate limit is being applied on ingress {{ $labels.exported_namespace }}/{{ $labels.ingress }}.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#ingress-rate-limiting
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            avg(rate(nginx_ingress_controller_requests{exported_namespace=~"hmpps-prisoner-to-nomis-update-dev", ingress=~"hmpps-prisoner-to-nomis-update(-v1-2)", status="429"}[1m]) > 0) by (ingress, exported_namespace)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 1m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+
+        - alert: ModSecurityBlocking
+          annotations:
+            summary: Mod_Security blocking ingress.
+            message: Mod_Security is blocking ingress {{ $labels.exported_namespace }}/{{ $labels.ingress }}. Blocking http requests at rate of {{ printf "%.2f" $value }} per second.
+            runbook_url: https://github.com/ministryofjustice/hmpps-helm-charts/blob/main/charts/generic-prometheus-alerts/RUNBOOK.md#ingress-modsecurity-blocking
+            dashboard_url: https://grafana.live.cloud-platform.service.justice.gov.uk/d/golden-signals/golden-signals?orgId=1&var-namespace=hmpps-prisoner-to-nomis-update-dev&var-service=hmpps-prisoner-to-nomis-update
+          expr: |-
+            avg(rate(nginx_ingress_controller_requests{exported_namespace=~"hmpps-prisoner-to-nomis-update-dev", ingress=~"hmpps-prisoner-to-nomis-update(-v1-2)", status="406"}[1m]) > 0.33) by (ingress, exported_namespace)
+            and ON() hmpps_prisoner_to_nomis_update:business_hours
+          for: 1m
+          labels:
+            severity: syscon-nonprod
+            application: hmpps-prisoner-to-nomis-update
+            businessUnit: hmpps
+            environment: none
+            productId: none
+---
+# Source: hmpps-prisoner-to-nomis-update/charts/generic-prometheus-alerts/templates/rules.yaml
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hmpps-prisoner-to-nomis-update-rules
+  labels:
+    prometheus: cloud-platform
+    helm.sh/chart: generic-prometheus-alerts-1.13.0
+    app.kubernetes.io/name: generic-prometheus-alerts
+    app.kubernetes.io/instance: hmpps-prisoner-to-nomis-update
+    app.kubernetes.io/version: "1.0.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  groups:
+    - name: hmpps-prisoner-to-nomis-update-rules
+      rules:
+        - record: hmpps_prisoner_to_nomis_update:summer_time_offset
+          expr: |
+            (vector(1) and (month() > 3 and month() < 10))
+            or
+            (vector(1) and (month() == 3 and (day_of_month() - day_of_week()) >= 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+            or
+            (vector(1) and (month() == 10 and (day_of_month() - day_of_week()) < 25) and absent((day_of_month() >= 25) and (day_of_week() == 0)))
+            or
+            (vector(1) and ((month() == 10 and hour() < 1) or (month() == 3 and hour() > 0)) and ((day_of_month() >= 25) and (day_of_week() == 0)))
+            or
+            vector(0)
+        - record: hmpps_prisoner_to_nomis_update:british_time
+          expr: time() + 3600 * hmpps_prisoner_to_nomis_update:summer_time_offset
+        - record: hmpps_prisoner_to_nomis_update:business_day
+          expr: 0 < day_of_week(hmpps_prisoner_to_nomis_update:british_time) < 6
+        - record: hmpps_prisoner_to_nomis_update:business_hour
+          expr: 8 <= hour(hmpps_prisoner_to_nomis_update:british_time) < 18
+        - record: hmpps_prisoner_to_nomis_update:business_hours
+          expr: hmpps_prisoner_to_nomis_update:business_hour and hmpps_prisoner_to_nomis_update:business_day
+
