@@ -52,7 +52,7 @@ class CourtSentencingDomainEventListener(
       "sentence.inserted" ->
         courtSentencingService.createSentence(message.fromJson())
       "sentence.fix-single-charge.inserted" ->
-        courtSentencingService.createSentence(message.fromJson(), requiresSentenceResync = true)
+        courtSentencingService.createSentence(message.fromJson())
       "sentence.updated" ->
         courtSentencingService.updateSentence(message.fromJson())
       "sentence.deleted" ->
