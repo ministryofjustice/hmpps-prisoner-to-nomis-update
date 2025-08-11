@@ -571,7 +571,7 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun createSentence(createEvent: SentenceCreatedEvent, requiresSentenceResync: Boolean = false) {
+  suspend fun createSentence(createEvent: SentenceCreatedEvent) {
     val courtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
     val dpsSentenceId = createEvent.additionalInformation.sentenceId
@@ -581,7 +581,6 @@ class CourtSentencingService(
       "dpsCourtCaseId" to courtCaseId,
       "dpsSentenceId" to dpsSentenceId,
       "dpsCourtAppearanceId" to dpsAppearanceId,
-      "requiresSentenceResync" to requiresSentenceResync.toString(),
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {
@@ -621,21 +620,19 @@ class CourtSentencingService(
                           ),
                           caseId = courtCaseMapping.nomisCourtCaseId,
                         )
-                      if (requiresSentenceResync) {
-                        queueService.sendMessageTrackOnFailure(
-                          queueId = "fromnomiscourtsentencing",
-                          eventType = "courtsentencing.resync.sentence",
-                          message = OffenderSentenceResynchronisationEvent(
-                            offenderNo = offenderNo,
-                            dpsSentenceUuid = dpsSentence.lifetimeUuid.toString(),
-                            dpsAppearanceUuid = createEvent.additionalInformation.courtAppearanceId,
-                            dpsConsecutiveSentenceUuid = dpsSentence.consecutiveToLifetimeUuid?.toString(),
-                            bookingId = nomisSentenceResponse.bookingId,
-                            sentenceSeq = nomisSentenceResponse.sentenceSeq.toInt(),
-                            caseId = courtCaseMapping.nomisCourtCaseId,
-                          ),
-                        )
-                      }
+                      queueService.sendMessageTrackOnFailure(
+                        queueId = "fromnomiscourtsentencing",
+                        eventType = "courtsentencing.resync.sentence",
+                        message = OffenderSentenceResynchronisationEvent(
+                          offenderNo = offenderNo,
+                          dpsSentenceUuid = dpsSentence.lifetimeUuid.toString(),
+                          dpsAppearanceUuid = createEvent.additionalInformation.courtAppearanceId,
+                          dpsConsecutiveSentenceUuid = dpsSentence.consecutiveToLifetimeUuid?.toString(),
+                          bookingId = nomisSentenceResponse.bookingId,
+                          sentenceSeq = nomisSentenceResponse.sentenceSeq.toInt(),
+                          caseId = courtCaseMapping.nomisCourtCaseId,
+                        ),
+                      )
                       telemetryMap["nomisSentenceSeq"] = nomisSentenceResponse.sentenceSeq.toString()
                       telemetryMap["nomisbookingId"] = nomisSentenceResponse.bookingId.toString()
                       telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()

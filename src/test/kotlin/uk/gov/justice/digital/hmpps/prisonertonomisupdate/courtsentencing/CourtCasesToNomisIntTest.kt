@@ -1563,6 +1563,24 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
       }
+
+      @Test
+      fun `will send message to nomis migration to resync created sentence details back to DPS`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+        }
+        val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
+        val sqsMessage: SQSMessage = rawMessage.fromJson()
+
+        assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.sentence")
+        val request: OffenderSentenceResynchronisationEvent = sqsMessage.Message.fromJson()
+        assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+        assertThat(request.bookingId).isEqualTo(NOMIS_BOOKING_ID)
+        assertThat(request.caseId).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION)
+        assertThat(request.sentenceSeq).isEqualTo(NOMIS_SENTENCE_SEQ)
+        assertThat(request.dpsSentenceUuid).isEqualTo(DPS_SENTENCE_ID)
+        assertThat(request.dpsAppearanceUuid).isEqualTo(DPS_COURT_APPEARANCE_ID)
+      }
     }
 
     @Nested
@@ -1948,7 +1966,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["mappingType"]).isEqualTo(SentenceMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["nomisBookingId"]).isEqualTo(NOMIS_BOOKING_ID.toString())
             assertThat(it["nomisSentenceSeq"]).isEqualTo(NOMIS_SENTENCE_SEQ.toString())
-            assertThat(it["requiresSentenceResync"]).isEqualTo("true")
           },
           isNull(),
         )
