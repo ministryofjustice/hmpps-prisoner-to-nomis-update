@@ -32,7 +32,7 @@ services:
       - SPRING_PROFILES_ACTIVE=dev
 
   hmpps-nomis-prisoner-api:
-    image: quay.io/hmpps/hmpps-nomis-prisoner-api:latest
+    image: ghcr.io/ministryofjustice/hmpps-nomis-prisoner-api:latest
     networks:
       - hmpps
     container_name: hmpps-nomis-prisoner-api
@@ -49,7 +49,7 @@ services:
       - API_BASE_URL_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
 
   hmpps-nomis-mapping-api:
-    image: quay.io/hmpps/hmpps-nomis-mapping-service:latest
+    image: ghcr.io/ministryofjustice/hmpps-nomis-mapping-service:latest
     networks:
       - hmpps
     container_name: hmpps-nomis-mapping-api
