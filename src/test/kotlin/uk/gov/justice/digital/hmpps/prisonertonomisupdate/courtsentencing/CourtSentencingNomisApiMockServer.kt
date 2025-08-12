@@ -97,7 +97,6 @@ class CourtSentencingNomisApiMockServer {
       offenderCharges = emptyList(),
       createdDateTime = LocalDateTime.now(),
       createdByUsername = "Q1251T",
-      lidsCaseNumber = 1,
       primaryCaseInfoNumber = "caseRef1",
       caseInfoNumbers = caseIndentifiers,
       combinedCaseId = combinedCaseId,

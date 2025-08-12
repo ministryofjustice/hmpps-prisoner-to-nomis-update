@@ -855,7 +855,6 @@ fun nomisCaseResponse(
   legalCaseType = CodeDescription("CRT", "Court Appearance"),
   beginDate = beginDate,
   bookingId = 1,
-  lidsCaseNumber = 1,
   offenderCharges = emptyList(),
   caseSequence = 1,
   caseInfoNumbers = emptyList(),

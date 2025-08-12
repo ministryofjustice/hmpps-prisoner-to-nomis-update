@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-11.383.c3df20f"
+    "version" : "2025-08-12.391.cedb0b0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -23487,10 +23487,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "lidsCaseNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "createdDateTime" : {
             "type" : "string",
             "format" : "date-time"
@@ -23523,7 +23519,7 @@
             }
           }
         },
-        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "lidsCaseNumber", "offenderCharges", "offenderNo", "sentences", "sourceCombinedCaseIds" ]
+        "required" : [ "bookingId", "caseInfoNumbers", "caseSequence", "caseStatus", "courtEvents", "courtId", "createdByUsername", "createdDateTime", "id", "legalCaseType", "offenderCharges", "offenderNo", "sentences", "sourceCombinedCaseIds" ]
       },
       "CourtEventChargeResponse" : {
         "type" : "object",
