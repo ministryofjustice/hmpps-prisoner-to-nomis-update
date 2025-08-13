@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-12.91.c9c75f9"
+    "version" : "2025-08-13.108.9341858"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -426,6 +426,50 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-cases/replace" : {
+      "put" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Replaces all court case hierarchical mappings maintaining the DPS id",
+        "description" : "Replaces all the mappings between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Where a mapping does not exist for the DPS id it will create one. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "replaceOrCreateMappingByDpsId",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtCaseBatchMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mapping created or replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1583,6 +1627,60 @@
         "responses" : {
           "201" : {
             "description" : "Mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/migrate" : {
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Creates all mappings for prisoner temporary absences which are all migrated at the same time",
+        "description" : "Creates mappings for prisoner temporary absences including movement applications, outside movements, scheduled movements and movements. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createMappings_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CorporateMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
             "content" : { }
           },
           "401" : {
@@ -2802,7 +2900,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/CourtCaseMigrationMappingDto"
+                "$ref" : "#/components/schemas/CourtCaseBatchMappingDto"
               }
             }
           },
@@ -3294,7 +3392,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Creates a tree of corporate mappings typically for a migration",
         "description" : "Creates a tree of corporate mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "createMappings_2",
+        "operationId" : "createMappings_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3510,7 +3608,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Creates a tree of core person mappings typically for a migration",
         "description" : "Creates a tree of core person mappings typically for a migration between NOMIS ids and cpr ids. Requires ROLE_NOMIS_CORE_PERSON",
-        "operationId" : "createMappings_3",
+        "operationId" : "createMappings_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4082,7 +4180,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Creates a tree of contact person mappings typically for a migration",
         "description" : "Creates a tree of contact person mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "createMappings_4",
+        "operationId" : "createMappings_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4519,7 +4617,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a batch of new casenote mappings",
         "description" : "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId" : "createMappings_5",
+        "operationId" : "createMappings_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4759,7 +4857,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a batch of new alert mappings",
         "description" : "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "createMappings_6",
+        "operationId" : "createMappings_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -16662,6 +16760,230 @@
         },
         "required" : [ "nomisCourtChargeId" ]
       },
+      "CourtAppearanceMappingDto" : {
+        "type" : "object",
+        "description" : "Court appearance mapping",
+        "properties" : {
+          "nomisCourtAppearanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS court appearance id",
+            "example" : 123456
+          },
+          "dpsCourtAppearanceId" : {
+            "type" : "string",
+            "description" : "DPS court appearance id",
+            "example" : 123456
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
+      },
+      "CourtCaseBatchMappingDto" : {
+        "type" : "object",
+        "description" : "Court cases mapping including child entity mapping",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtCaseMappingDto"
+            }
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "description" : "Court Appearance mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceMappingDto"
+            }
+          },
+          "courtCharges" : {
+            "type" : "array",
+            "description" : "Court Charge mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtChargeMappingDto"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceMappingDto"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "description" : "Sentence term mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceTermMappingDto"
+            }
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "courtAppearances", "courtCases", "courtCharges", "mappingType", "sentenceTerms", "sentences" ]
+      },
+      "CourtCaseMappingDto" : {
+        "type" : "object",
+        "description" : "Court case mapping",
+        "properties" : {
+          "nomisCourtCaseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS court case id",
+            "example" : 123456
+          },
+          "dpsCourtCaseId" : {
+            "type" : "string",
+            "description" : "DPS court case id",
+            "example" : 123456
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "NOMIS offender no/nomisId",
+            "example" : "AA12345"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
+      },
+      "SentenceMappingDto" : {
+        "type" : "object",
+        "description" : "Sentence mapping",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 123456
+          },
+          "nomisSentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sentence sequence",
+            "example" : 4
+          },
+          "dpsSentenceId" : {
+            "type" : "string",
+            "description" : "DPS sentence id",
+            "example" : 123456
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
+      },
+      "SentenceTermMappingDto" : {
+        "type" : "object",
+        "description" : "Sentence term mapping",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id",
+            "example" : 123456
+          },
+          "nomisSentenceSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sentence sequence",
+            "example" : 4
+          },
+          "nomisTermSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS term sequence",
+            "example" : 4
+          },
+          "dpsTermId" : {
+            "type" : "string",
+            "description" : "DPS sentence id",
+            "example" : 123456
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "DPS_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsTermId", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
+      },
       "ContactPersonProfileDetailsMigrationMappingDto" : {
         "type" : "object",
         "description" : "Mappings for a Contact Person Profile Details Migration",
@@ -17077,6 +17399,83 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisVisitBalanceId" ]
+      },
+      "CorporateMappingIdDto" : {
+        "type" : "object",
+        "description" : "NOMIS to DPS simple mapping IDs",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          }
+        },
+        "required" : [ "dpsId", "nomisId" ]
+      },
+      "CorporateMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a Corporate and there associated child entities",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "corporateMapping" : {
+            "$ref" : "#/components/schemas/CorporateMappingIdDto",
+            "description" : "Corporate mapping"
+          },
+          "corporateAddressMapping" : {
+            "type" : "array",
+            "description" : "Corporate address mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateAddressPhoneMapping" : {
+            "type" : "array",
+            "description" : "Corporate address phone mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporatePhoneMapping" : {
+            "type" : "array",
+            "description" : "Corporate phone mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateEmailMapping" : {
+            "type" : "array",
+            "description" : "Corporate email mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateWebMapping" : {
+            "type" : "array",
+            "description" : "Corporate web mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          }
+        },
+        "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",
@@ -17690,48 +18089,6 @@
         },
         "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
       },
-      "SentenceMappingDto" : {
-        "type" : "object",
-        "description" : "Sentence mapping",
-        "properties" : {
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id",
-            "example" : 123456
-          },
-          "nomisSentenceSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "NOMIS sentence sequence",
-            "example" : 4
-          },
-          "dpsSentenceId" : {
-            "type" : "string",
-            "description" : "DPS sentence id",
-            "example" : 123456
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
-      },
       "NomisSentenceId" : {
         "type" : "object",
         "description" : "NOMIS Sentence ID",
@@ -17789,54 +18146,6 @@
         },
         "required" : [ "dpsSentenceId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence" ]
       },
-      "SentenceTermMappingDto" : {
-        "type" : "object",
-        "description" : "Sentence term mapping",
-        "properties" : {
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS booking id",
-            "example" : 123456
-          },
-          "nomisSentenceSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "NOMIS sentence sequence",
-            "example" : 4
-          },
-          "nomisTermSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "NOMIS term sequence",
-            "example" : 4
-          },
-          "dpsTermId" : {
-            "type" : "string",
-            "description" : "DPS sentence id",
-            "example" : 123456
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsTermId", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
-      },
       "SentenceTermMapping" : {
         "type" : "object",
         "properties" : {
@@ -17878,140 +18187,6 @@
           }
         },
         "required" : [ "dpsTermId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
-      },
-      "CourtAppearanceMappingDto" : {
-        "type" : "object",
-        "description" : "Court appearance mapping",
-        "properties" : {
-          "nomisCourtAppearanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS court appearance id",
-            "example" : 123456
-          },
-          "dpsCourtAppearanceId" : {
-            "type" : "string",
-            "description" : "DPS court appearance id",
-            "example" : 123456
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
-      },
-      "CourtCaseMappingDto" : {
-        "type" : "object",
-        "description" : "Court case mapping",
-        "properties" : {
-          "nomisCourtCaseId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS court case id",
-            "example" : 123456
-          },
-          "dpsCourtCaseId" : {
-            "type" : "string",
-            "description" : "DPS court case id",
-            "example" : 123456
-          },
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "NOMIS offender no/nomisId",
-            "example" : "AA12345"
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
-      },
-      "CourtCaseMigrationMappingDto" : {
-        "type" : "object",
-        "description" : "Court cases mapping including child entity mapping",
-        "properties" : {
-          "courtCases" : {
-            "type" : "array",
-            "description" : "Mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtCaseMappingDto"
-            }
-          },
-          "courtAppearances" : {
-            "type" : "array",
-            "description" : "Court Appearance mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtAppearanceMappingDto"
-            }
-          },
-          "courtCharges" : {
-            "type" : "array",
-            "description" : "Court Charge mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtChargeMappingDto"
-            }
-          },
-          "sentences" : {
-            "type" : "array",
-            "description" : "Sentence mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceMappingDto"
-            }
-          },
-          "sentenceTerms" : {
-            "type" : "array",
-            "description" : "Sentence term mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/SentenceTermMappingDto"
-            }
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "courtAppearances", "courtCases", "courtCharges", "mappingType", "sentenceTerms", "sentences" ]
       },
       "CourtChargeMapping" : {
         "type" : "object",
@@ -18202,83 +18377,6 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
-      },
-      "CorporateMappingIdDto" : {
-        "type" : "object",
-        "description" : "NOMIS to DPS simple mapping IDs",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          }
-        },
-        "required" : [ "dpsId", "nomisId" ]
-      },
-      "CorporateMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a Corporate and there associated child entities",
-        "properties" : {
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "corporateMapping" : {
-            "$ref" : "#/components/schemas/CorporateMappingIdDto",
-            "description" : "Corporate mapping"
-          },
-          "corporateAddressMapping" : {
-            "type" : "array",
-            "description" : "Corporate address mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateAddressPhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate address phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporatePhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateEmailMapping" : {
-            "type" : "array",
-            "description" : "Corporate email mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateWebMapping" : {
-            "type" : "array",
-            "description" : "Corporate web mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          }
-        },
-        "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
       "CorePersonMappingIdDto" : {
         "type" : "object",

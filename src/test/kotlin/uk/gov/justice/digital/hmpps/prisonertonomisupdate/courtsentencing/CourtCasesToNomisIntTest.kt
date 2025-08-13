@@ -295,7 +295,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
         courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(COURT_CASE_ID_FOR_CREATION, 404)
-        courtSentencingMappingApi.stubCreateCourtCaseWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubCreateCourtCaseWithErrorFollowedBySuccess()
         publishCreateCourtCaseDomainEvent()
 
         await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-case/$COURT_CASE_ID_FOR_CREATION") } matches { it == 1 }
@@ -480,7 +480,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtAppearance()
+        courtSentencingMappingApi.stubReplaceOrCreateMappings()
         // stub two mappings for charges out of the 4 - which makes 2 creates and 2 updates
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
@@ -572,16 +572,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           courtSentencingMappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
+            putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/replace"))
               .withRequestBody(
                 matchingJsonPath(
-                  "dpsCourtAppearanceId",
+                  "courtAppearances[0].dpsCourtAppearanceId",
                   equalTo(DPS_COURT_APPEARANCE_ID),
                 ),
               )
               .withRequestBody(
                 matchingJsonPath(
-                  "nomisCourtAppearanceId",
+                  "courtAppearances[0].nomisCourtAppearanceId",
                   equalTo(
                     NOMIS_COURT_APPEARANCE_ID.toString(),
                   ),
@@ -649,7 +649,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtAppearanceWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubReplaceOrCreateMappingsWithErrorFollowedBySuccess()
 
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
@@ -690,16 +690,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           courtSentencingMappingApi.verify(
             2,
-            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances"))
+            putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/replace"))
               .withRequestBody(
                 matchingJsonPath(
-                  "dpsCourtAppearanceId",
+                  "courtAppearances[0].dpsCourtAppearanceId",
                   equalTo(DPS_COURT_APPEARANCE_ID),
                 ),
               )
               .withRequestBody(
                 matchingJsonPath(
-                  "nomisCourtAppearanceId",
+                  "courtAppearances[0].nomisCourtAppearanceId",
                   equalTo(
                     NOMIS_COURT_APPEARANCE_ID.toString(),
                   ),
@@ -737,10 +737,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtAppearance()
+        courtSentencingMappingApi.stubReplaceOrCreateMappings()
 
         // a parent entity has initially not been created but then is available on retry
-        courtSentencingMappingApi.stubGetCourtChargeNotFoundFollowedBySlowSuccess(
+        courtSentencingMappingApi.stubGetCourtChargeNotFoundFollowedBySuccess(
           DPS_COURT_CHARGE_ID,
           NOMIS_COURT_CHARGE_ID,
         )
@@ -821,7 +821,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_APPEARANCE_ID,
           NOMIS_COURT_APPEARANCE_ID,
         )
-        courtSentencingMappingApi.stubCreateCourtAppearance()
+        courtSentencingMappingApi.stubReplaceOrCreateMappings()
         // mappings found for all 4 charges
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
@@ -1199,7 +1199,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
         )
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
-        courtSentencingMappingApi.stubCreateCourtChargeWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubCreateCourtChargeWithErrorFollowedBySuccess()
         publishCreateCourtChargeDomainEvent()
 
         await untilCallTo { courtSentencingApi.getCountFor("/legacy/charge/$DPS_COURT_CHARGE_ID") } matches { it == 1 }
@@ -1387,7 +1387,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not update an court case in NOMIS`() {
-        waitForAnyProcessingToComplete()
+        waitForAnyProcessingToComplete(3)
 
         courtSentencingNomisApi.verify(
           0,
@@ -1762,7 +1762,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
-        courtSentencingMappingApi.stubCreateSentenceWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubCreateSentenceWithErrorFollowedBySuccess()
 
         publishCreateSentenceDomainEvent()
 
@@ -1852,7 +1852,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubCreateSentence()
 
         // a parent entity has initially not been created but then is available on retry
-        courtSentencingMappingApi.stubGetCourtChargeNotFoundFollowedBySlowSuccess(
+        courtSentencingMappingApi.stubGetCourtChargeNotFoundFollowedBySuccess(
           DPS_COURT_CHARGE_ID,
           NOMIS_COURT_CHARGE_ID,
         )
@@ -2035,7 +2035,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(DPS_SENTENCE_ID, 404)
-        courtSentencingMappingApi.stubCreateSentenceWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubCreateSentenceWithErrorFollowedBySuccess()
 
         publishCreateSentenceRequiringResyncDomainEvent()
 
@@ -2261,7 +2261,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will create failed telemetry`() {
-        waitForAnyProcessingToComplete()
+        waitForAnyProcessingToComplete(3)
 
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
@@ -2601,7 +2601,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           nomisBookingId = NOMIS_BOOKING_ID,
         )
 
-        courtSentencingMappingApi.stubCreateSentenceTermWithErrorFollowedBySlowSuccess()
+        courtSentencingMappingApi.stubCreateSentenceTermWithErrorFollowedBySuccess()
 
         publishCreatePeriodLengthDomainEvent()
 
@@ -3168,7 +3168,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       inner class HappyPathWhenMappingFailsOnce {
         @BeforeEach
         fun setUp() {
-          courtSentencingMappingApi.stubCreateWithErrorFollowedBySlowSuccess(
+          courtSentencingMappingApi.stubCreateWithErrorFollowedBySuccess(
             url = "/mapping/court-sentencing/court-appearances/recall",
             name = "Recall Appearance",
           )
