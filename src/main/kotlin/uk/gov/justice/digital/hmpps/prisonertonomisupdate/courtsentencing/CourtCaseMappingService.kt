@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -48,14 +49,6 @@ class CourtCaseMappingService(
       )
       .retrieve()
       .awaitBodilessEntity()
-  }
-
-  suspend fun createAppearanceMapping(request: CourtAppearanceMappingDto) {
-    webClient.post()
-      .uri("/mapping/court-sentencing/court-appearances")
-      .bodyValue(request)
-      .retrieve()
-      .awaitBodilessEntityOrThrowOnConflict()
   }
 
   suspend fun createAppearanceRecallMappings(request: CourtAppearanceRecallMappingsDto) {
@@ -193,5 +186,13 @@ class CourtCaseMappingService(
       )
       .retrieve()
       .awaitBodilessEntity()
+  }
+
+  suspend fun replaceOrCreateMappings(request: CourtCaseBatchMappingDto) {
+    webClient.put()
+      .uri("/mapping/court-sentencing/court-cases/replace")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntityOrThrowOnConflict()
   }
 }

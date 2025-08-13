@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
@@ -154,6 +155,9 @@ class CourtSentencingService(
 
         transform {
           val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
+            ?.also {
+              telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
+            }
             ?: let {
               telemetryMap["reason"] = "Parent entity not found"
               throw ParentEntityNotFoundRetry(
@@ -183,16 +187,24 @@ class CourtSentencingService(
                 courtEventCharges = courtEventChargesToUpdate.map { it }
                   .also { telemetryMap["courtEventCharges"] = it.toString() },
               ),
-            )
-
-          CourtAppearanceMappingDto(
-            dpsCourtAppearanceId = courtAppearanceId,
-            nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-          ).also {
-            telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
-          }
+            ).also {
+              telemetryMap["nomisCourtAppearanceId"] = it.id.toString()
+            }
+          CourtCaseBatchMappingDto(
+            courtCases = emptyList(),
+            courtAppearances = listOf(
+              CourtAppearanceMappingDto(
+                dpsCourtAppearanceId = courtAppearanceId,
+                nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
+              ),
+            ),
+            courtCharges = emptyList(),
+            sentences = emptyList(),
+            sentenceTerms = emptyList(),
+            mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+          )
         }
-        saveMapping { courtCaseMappingService.createAppearanceMapping(it) }
+        saveMapping { courtCaseMappingService.replaceOrCreateMappings(it) }
       }
     } else {
       telemetryMap["reason"] = "Court appearance created in NOMIS"
@@ -518,7 +530,7 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceMappingDto>) = courtCaseMappingService.createAppearanceMapping(message.mapping).also {
+  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtCaseBatchMappingDto>) = courtCaseMappingService.replaceOrCreateMappings(message.mapping).also {
     telemetryClient.trackEvent(
       "court-appearance-create-mapping-retry-success",
       message.telemetryAttributes,
@@ -1259,7 +1271,6 @@ class CourtSentencingService(
   }
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
-  private fun Any.toJson(): String = objectMapper.writeValueAsString(this)
 
   suspend fun refreshCaseReferences(createEvent: CaseReferencesUpdatedEvent) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId

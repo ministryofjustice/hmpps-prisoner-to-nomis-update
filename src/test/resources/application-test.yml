@@ -184,6 +184,7 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     fromnomiscourtsentencing:
       queueName: "court-sentencing-from-nomis-${random.uuid}"
     alerts:

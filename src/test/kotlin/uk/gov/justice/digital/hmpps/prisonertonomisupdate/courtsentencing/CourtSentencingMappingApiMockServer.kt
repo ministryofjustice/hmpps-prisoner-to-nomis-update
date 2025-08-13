@@ -36,8 +36,8 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubDelete("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id")
   }
 
-  fun stubCreateCourtCaseWithErrorFollowedBySlowSuccess() {
-    stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/court-cases", "Court case")
+  fun stubCreateCourtCaseWithErrorFollowedBySuccess() {
+    stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases", "Court case")
   }
 
   fun stubGetCourtCaseMappingGivenDpsId(id: String, nomisCourtCaseId: Long = 54321) {
@@ -95,10 +95,6 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubGetWithError("/mapping/court-sentencing/court-appearances/dps-court-appearance-id/$id", status)
   }
 
-  fun stubCreateCourtAppearance() {
-    stubCreate("/mapping/court-sentencing/court-appearances")
-  }
-
   fun stubCourtChargeBatchUpdate() {
     mappingServer.stubFor(
       put("/mapping/court-sentencing/court-charges").willReturn(
@@ -120,19 +116,15 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
-  fun stubCreateCourtAppearanceWithErrorFollowedBySlowSuccess() {
-    stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/court-appearances", "Court appearance")
-  }
-
   fun stubGetCourtChargeMappingGivenDpsIdWithError(id: String, status: Int = 500) {
     stubGetWithError("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id", status)
   }
 
-  fun stubCreateCourtChargeWithErrorFollowedBySlowSuccess() {
-    stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/court-charges", "Court charge")
+  fun stubCreateCourtChargeWithErrorFollowedBySuccess() {
+    stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-charges", "Court charge")
   }
 
-  fun stubGetCourtChargeNotFoundFollowedBySlowSuccess(id: String, nomisCourtChargeId: Long = 54321) {
+  fun stubGetCourtChargeNotFoundFollowedBySuccess(id: String, nomisCourtChargeId: Long = 54321) {
     mappingServer.stubFor(
       get("/mapping/court-sentencing/court-charges/dps-court-charge-id/$id")
         .inScenario("Retry Mapping Court Charge Scenario")
@@ -217,8 +209,8 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubDelete("/mapping/court-sentencing/sentences/dps-sentence-id/$id")
   }
 
-  fun stubCreateSentenceWithErrorFollowedBySlowSuccess() {
-    stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/sentences", "Sentence")
+  fun stubCreateSentenceWithErrorFollowedBySuccess() {
+    stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentences", "Sentence")
   }
 
   fun stubGetSentenceTermMappingGivenDpsId(
@@ -251,8 +243,8 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubDelete("/mapping/court-sentencing/sentence-terms/dps-term-id/$id")
   }
 
-  fun stubCreateSentenceTermWithErrorFollowedBySlowSuccess() {
-    stubCreateWithErrorFollowedBySlowSuccess(url = "/mapping/court-sentencing/sentence-terms", "Sentence term")
+  fun stubCreateSentenceTermWithErrorFollowedBySuccess() {
+    stubCreateWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/sentence-terms", "Sentence term")
   }
 
   fun stubCreateAppearanceRecallMapping() {
@@ -272,6 +264,14 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
+  fun stubReplaceOrCreateMappings() {
+    stubPut("/mapping/court-sentencing/court-cases/replace")
+  }
+
+  fun stubReplaceOrCreateMappingsWithErrorFollowedBySuccess() {
+    stubPutWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases/replace", "Replace or create mappings")
+  }
+
   // helper methods
 
   fun stubCreate(url: String) {
@@ -280,6 +280,16 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubPut(url: String) {
+    mappingServer.stubFor(
+      put(url).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
       ),
     )
   }
@@ -320,7 +330,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
-  fun stubCreateWithErrorFollowedBySlowSuccess(url: String, name: String) {
+  fun stubCreateWithErrorFollowedBySuccess(url: String, name: String) {
     mappingServer.stubFor(
       post(url)
         .inScenario("Retry $name")
@@ -340,8 +350,32 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withStatus(201)
-            .withFixedDelay(1500),
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+  fun stubPutWithErrorFollowedBySuccess(url: String, name: String) {
+    mappingServer.stubFor(
+      put(url)
+        .inScenario("Retry $name")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Create $name Success"),
+    )
+
+    mappingServer.stubFor(
+      put(url)
+        .inScenario("Retry $name")
+        .whenScenarioStateIs("Create $name Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200),
 
         ).willSetStateTo(Scenario.STARTED),
     )
