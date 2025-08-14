@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-13.397.c0d7c73"
+    "version" : "2025-08-13.401.61ccd14"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12689,6 +12689,173 @@
         }
       }
     },
+    "/transactions/{date}/first" : {
+      "get" : {
+        "tags" : [ "transactions-resource" ],
+        "summary" : "get the first transaction on the given date",
+        "description" : "Intended to be used to start retrieval of transactions from this date. Requires NOMIS_TRANSACTIONS",
+        "operationId" : "getFirstTransactionOn",
+        "parameters" : [ {
+          "name" : "date",
+          "in" : "path",
+          "description" : "Starting date",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Starting date",
+            "example" : "2025-08-11"
+          },
+          "example" : "2025-08-11"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_TRANSACTIONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/transactions/from/{transactionId}/{transactionEntrySequence}/{generalLedgerEntrySequence}" : {
+      "get" : {
+        "tags" : [ "transactions-resource" ],
+        "summary" : "get a transaction by id and sequence number",
+        "description" : "Retrieves a prisoner transaction. Requires NOMIS_TRANSACTIONS",
+        "operationId" : "findNonOffenderTransactionsFromId",
+        "parameters" : [ {
+          "name" : "transactionId",
+          "in" : "path",
+          "description" : "Id of last transaction before intended start",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Id of last transaction before intended start",
+            "example" : 123456789
+          },
+          "example" : 123456789
+        }, {
+          "name" : "transactionEntrySequence",
+          "in" : "path",
+          "description" : "Sequence of last transaction before intended start",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence of last transaction before intended start",
+            "example" : 3
+          },
+          "example" : 3
+        }, {
+          "name" : "generalLedgerEntrySequence",
+          "in" : "path",
+          "description" : "GL Sequence of last transaction before intended start",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "GL Sequence of last transaction before intended start",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of GL transaction records to get. The first record returned will be the first one *after*\n        the given id/seq/glseq combination.\n        \n        Note that slightly fewer records than requested will usually \n        be returned as there are several records per transaction id (potentially over 2000), so the records of the \n        last id will be trimmed.\n        The assumption is that they are an incomplete or truncated set for that transaction id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100,
+            "description" : "Number of GL transaction records to get. The first record returned will be the first one *after*\n        the given id/seq/glseq combination.\n        \n        Note that slightly fewer records than requested will usually \n        be returned as there are several records per transaction id (potentially over 2000), so the records of the \n        last id will be trimmed.\n        The assumption is that they are an incomplete or truncated set for that transaction id",
+            "example" : 500
+          },
+          "example" : 500
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GeneralLedgerTransactionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_TRANSACTIONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/splash-screens/{moduleName}" : {
       "get" : {
         "tags" : [ "splash-screen-resource" ],
@@ -22311,6 +22478,20 @@
         },
         "required" : [ "courtId", "legalCaseType", "startDate", "status" ]
       },
+      "BookingCourtCaseCloneResponse" : {
+        "type" : "object",
+        "description" : "Response for Court Cases bookig clone operations",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Court Cases created",
+            "items" : {
+              "$ref" : "#/components/schemas/ClonedCourtCaseResponse"
+            }
+          }
+        },
+        "required" : [ "courtCases" ]
+      },
       "CaseIdentifierResponse" : {
         "type" : "object",
         "description" : "Case related reference",
@@ -22662,7 +22843,7 @@
             }
           },
           "clonedCourtCases" : {
-            "$ref" : "#/components/schemas/ClonedCourtCaseResponse",
+            "$ref" : "#/components/schemas/BookingCourtCaseCloneResponse",
             "description" : "Result of a clone court case operation when the appearance is added to a previous booking. Else null"
           }
         },
@@ -24108,20 +24289,6 @@
           }
         },
         "required" : [ "active", "bookingId", "location", "offenderNo" ]
-      },
-      "BookingCourtCaseCloneResponse" : {
-        "type" : "object",
-        "description" : "Response for Court Cases bookig clone operations",
-        "properties" : {
-          "courtCases" : {
-            "type" : "array",
-            "description" : "Court Cases created",
-            "items" : {
-              "$ref" : "#/components/schemas/ClonedCourtCaseResponse"
-            }
-          }
-        },
-        "required" : [ "courtCases" ]
       },
       "CreateSentenceAdjustmentRequest" : {
         "type" : "object",
