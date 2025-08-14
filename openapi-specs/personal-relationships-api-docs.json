@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-07.2423.1bdfd3d"
+    "version" : "2025-08-12.2453.04db5af"
   },
   "servers" : [ {
     "url" : "/",
@@ -7545,6 +7545,67 @@
         }
       }
     },
+    "/prisoner-contact/{prisonerContactId}/plan-delete" : {
+      "get" : {
+        "tags" : [ "Prisoner relationships" ],
+        "summary" : "Plan to delete prisoner contact relationship",
+        "description" : "Plan to delete the relationship between the contact and a prisoner. Returns side effects of the deletion.",
+        "operationId" : "planDeleteContactRelationship",
+        "parameters" : [ {
+          "name" : "prisonerContactId",
+          "in" : "path",
+          "description" : "The id of the prisoner contact",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Planned the deletion of the prisoner contact relationship",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RelationshipDeletePlan"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find the prisoner contact that this relationship relates to",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/{contactId}/name" : {
       "get" : {
         "tags" : [ "Contacts" ],
@@ -14979,6 +15040,18 @@
           }
         },
         "required" : [ "contactGlobalRestrictions", "prisonerContactRestrictions" ]
+      },
+      "RelationshipDeletePlan" : {
+        "type" : "object",
+        "properties" : {
+          "willAlsoDeleteContactDob" : {
+            "type" : "boolean"
+          },
+          "hasRestrictions" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "hasRestrictions", "willAlsoDeleteContactDob" ]
       },
       "ContactNameDetails" : {
         "type" : "object",
