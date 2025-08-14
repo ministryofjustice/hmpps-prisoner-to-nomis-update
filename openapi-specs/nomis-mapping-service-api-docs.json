@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-13.108.9341858"
+    "version" : "2025-08-13.112.66aa2dd"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -123,6 +123,50 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/migrate" : {
+      "put" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Creates all mappings for prisoner temporary absences which are all migrated at the same time",
+        "description" : "Creates mappings for prisoner temporary absences including movement applications, outside movements, scheduled movements and movements. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemporaryAbsencesPrisonerMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -482,7 +526,7 @@
         "tags" : [ "contact-person-profile-details-migration-resource" ],
         "summary" : "Creates or updates a contact person profile details migration mapping for a migration",
         "description" : "Creates updates a contact person profile details migration mapping for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "createMappings",
+        "operationId" : "createMappings_1",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1556,7 +1600,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Creates a batch of new transaction mappings",
         "description" : "Creates a mapping between a batch of nomis transaction ids and dps transaction ids. Requires ROLE_NOMIS_TRANSACTIONS",
-        "operationId" : "createMappings_1",
+        "operationId" : "createMappings_2",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1627,60 +1671,6 @@
         "responses" : {
           "201" : {
             "description" : "Mapping created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/temporary-absence/migrate" : {
-      "post" : {
-        "tags" : [ "temporary-absence-resource" ],
-        "summary" : "Creates all mappings for prisoner temporary absences which are all migrated at the same time",
-        "description" : "Creates mappings for prisoner temporary absences including movement applications, outside movements, scheduled movements and movements. Requires ROLE_NOMIS_MOVEMENTS",
-        "operationId" : "createMappings_2",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CorporateMappingsDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Mappings created",
             "content" : { }
           },
           "401" : {
@@ -16607,6 +16597,151 @@
         },
         "required" : [ "dpsTransactionId", "mappingType", "nomisBookingId", "nomisTransactionId", "offenderNo" ]
       },
+      "ExternalMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single external movement",
+        "properties" : {
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS external movement id"
+          },
+          "dpsExternalMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS external movement id"
+          }
+        },
+        "required" : [ "dpsExternalMovementId", "nomisMovementSeq" ]
+      },
+      "ScheduledMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single scheduled movement",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS scheduled movement id"
+          },
+          "dpsScheduledMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS scheduled movement id"
+          }
+        },
+        "required" : [ "dpsScheduledMovementId", "nomisEventId" ]
+      },
+      "TemporaryAbsenceApplicationMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single temporary absence application",
+        "properties" : {
+          "nomisMovementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS temporary absence application id"
+          },
+          "dpsMovementApplicationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS temporary absence application id"
+          },
+          "outsideMovements" : {
+            "type" : "array",
+            "description" : "Mappings for each outside movement recorded against the application",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsencesOutsideMovementMappingDto"
+            }
+          },
+          "schedules" : {
+            "type" : "array",
+            "description" : "All scheduled movement mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduledMovementMappingDto"
+            }
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "All actual external movement mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ExternalMovementMappingDto"
+            }
+          }
+        },
+        "required" : [ "dpsMovementApplicationId", "movements", "nomisMovementApplicationId", "outsideMovements", "schedules" ]
+      },
+      "TemporaryAbsenceBookingMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's entire temporary absence history",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "Mappings for a single temporary absence application",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationMappingDto"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "description" : "Mappings for unscheduled external movements, e.g. no application",
+            "items" : {
+              "$ref" : "#/components/schemas/ExternalMovementMappingDto"
+            }
+          }
+        },
+        "required" : [ "applications", "bookingId", "unscheduledMovements" ]
+      },
+      "TemporaryAbsencesOutsideMovementMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for all outside movements against a single temporary absence application",
+        "properties" : {
+          "nomisMovementApplicationMultiId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS outside movement id"
+          },
+          "dpsOutsideMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS outside movement id"
+          }
+        },
+        "required" : [ "dpsOutsideMovementId", "nomisMovementApplicationMultiId" ]
+      },
+      "TemporaryAbsencesPrisonerMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookings" : {
+            "type" : "array",
+            "description" : "The mappings for each booking",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceBookingMappingDto"
+            }
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "The migration unique identifier",
+            "example" : "2025-08-11T15:34:43"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "The created time of the mappings",
+            "example" : "2025-08-11T15:34:43"
+          }
+        },
+        "required" : [ "bookings", "migrationId", "prisonerNumber" ]
+      },
       "AdjudicationPunishmentBatchUpdateMappingDto" : {
         "type" : "object",
         "description" : "Batch of Adjudication punishment (aka award) mappings to create and delete",
@@ -17399,83 +17534,6 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisVisitBalanceId" ]
-      },
-      "CorporateMappingIdDto" : {
-        "type" : "object",
-        "description" : "NOMIS to DPS simple mapping IDs",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          }
-        },
-        "required" : [ "dpsId", "nomisId" ]
-      },
-      "CorporateMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a Corporate and there associated child entities",
-        "properties" : {
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "corporateMapping" : {
-            "$ref" : "#/components/schemas/CorporateMappingIdDto",
-            "description" : "Corporate mapping"
-          },
-          "corporateAddressMapping" : {
-            "type" : "array",
-            "description" : "Corporate address mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateAddressPhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate address phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporatePhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateEmailMapping" : {
-            "type" : "array",
-            "description" : "Corporate email mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateWebMapping" : {
-            "type" : "array",
-            "description" : "Corporate web mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          }
-        },
-        "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",
@@ -18377,6 +18435,83 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
+      "CorporateMappingIdDto" : {
+        "type" : "object",
+        "description" : "NOMIS to DPS simple mapping IDs",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          }
+        },
+        "required" : [ "dpsId", "nomisId" ]
+      },
+      "CorporateMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a Corporate and there associated child entities",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "corporateMapping" : {
+            "$ref" : "#/components/schemas/CorporateMappingIdDto",
+            "description" : "Corporate mapping"
+          },
+          "corporateAddressMapping" : {
+            "type" : "array",
+            "description" : "Corporate address mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateAddressPhoneMapping" : {
+            "type" : "array",
+            "description" : "Corporate address phone mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporatePhoneMapping" : {
+            "type" : "array",
+            "description" : "Corporate phone mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateEmailMapping" : {
+            "type" : "array",
+            "description" : "Corporate email mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          },
+          "corporateWebMapping" : {
+            "type" : "array",
+            "description" : "Corporate web mapping",
+            "items" : {
+              "$ref" : "#/components/schemas/CorporateMappingIdDto"
+            }
+          }
+        },
+        "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
       "CorePersonMappingIdDto" : {
         "type" : "object",
@@ -19304,12 +19439,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19326,6 +19455,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19430,12 +19565,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19452,6 +19581,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19555,12 +19690,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19577,6 +19706,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19665,12 +19800,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19687,6 +19816,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19771,12 +19906,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19793,6 +19922,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19817,12 +19952,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19839,6 +19968,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19863,12 +19998,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19885,6 +20014,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -19937,12 +20072,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -19959,6 +20088,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -20005,12 +20140,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -20027,6 +20156,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
