@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -188,9 +188,9 @@ class CourtCaseMappingService(
       .awaitBodilessEntity()
   }
 
-  suspend fun replaceOrCreateMappings(request: CourtCaseBatchMappingDto) {
+  suspend fun updateAndCreateMappings(request: CourtCaseBatchUpdateAndCreateMappingDto) {
     webClient.put()
-      .uri("/mapping/court-sentencing/court-cases/replace")
+      .uri("/mapping/court-sentencing/court-cases/update-create")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()

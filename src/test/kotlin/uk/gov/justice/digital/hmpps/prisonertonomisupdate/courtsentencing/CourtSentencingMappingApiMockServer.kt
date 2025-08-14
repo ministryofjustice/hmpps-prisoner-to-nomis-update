@@ -19,10 +19,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @Component
 class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper) {
+  companion object {
+    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, objectMapper = objectMapper)
+  }
 
   fun stubCreateCourtCase() {
     stubCreate("/mapping/court-sentencing/court-cases")
@@ -264,12 +269,12 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
-  fun stubReplaceOrCreateMappings() {
-    stubPut("/mapping/court-sentencing/court-cases/replace")
+  fun stubUpdateAndCreateMappings() {
+    stubPut("/mapping/court-sentencing/court-cases/update-create")
   }
 
-  fun stubReplaceOrCreateMappingsWithErrorFollowedBySuccess() {
-    stubPutWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases/replace", "Replace or create mappings")
+  fun stubUpdateAndCreateMappingsWithErrorFollowedBySuccess() {
+    stubPutWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases/update-create", "Update and create mappings")
   }
 
   // helper methods

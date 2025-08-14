@@ -20,15 +20,22 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeNomisIdDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteRecallRequest
@@ -133,13 +140,13 @@ class CourtSentencingService(
 
   // also includes adding any charges that are associated with the appearance
   suspend fun createCourtAppearance(createEvent: CourtAppearanceCreatedEvent) {
-    val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
     val source = createEvent.additionalInformation.source
-    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
+    val dpsCourtAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
-      "dpsCourtCaseId" to courtCaseId,
-      "dpsCourtAppearanceId" to courtAppearanceId,
+      "dpsCourtCaseId" to dpsCourtCaseId,
+      "dpsCourtAppearanceId" to dpsCourtAppearanceId,
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {
@@ -150,22 +157,22 @@ class CourtSentencingService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(courtAppearanceId)
+          courtCaseMappingService.getMappingGivenCourtAppearanceIdOrNull(dpsCourtAppearanceId)
         }
 
         transform {
-          val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
+          val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
             ?.also {
               telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
             }
             ?: let {
               telemetryMap["reason"] = "Parent entity not found"
               throw ParentEntityNotFoundRetry(
-                "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $courtCaseId not found for DPS court appearance $courtAppearanceId",
+                "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $dpsCourtCaseId not found for DPS court appearance $dpsCourtAppearanceId",
               )
             }
 
-          val courtAppearance = courtSentencingApiService.getCourtAppearance(courtAppearanceId)
+          val courtAppearance = courtSentencingApiService.getCourtAppearance(dpsCourtAppearanceId)
 
           val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
           courtAppearance.charges.forEach { charge ->
@@ -174,37 +181,37 @@ class CourtSentencingService(
             } ?: let {
               telemetryMap["reason"] = "Parent entity not found"
               throw ParentEntityNotFoundRetry(
-                "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $courtAppearanceId",
+                "Attempt to associate a charge without a nomis charge mapping. Dps charge id: ${charge.lifetimeUuid} not found for DPS court appearance $dpsCourtAppearanceId",
               )
             }
           }
 
-          val nomisCourtAppearanceResponse =
-            nomisApiService.createCourtAppearance(
-              offenderNo,
-              courtCaseMapping.nomisCourtCaseId,
-              courtAppearance.toNomisCourtAppearance(
-                courtEventCharges = courtEventChargesToUpdate.map { it }
-                  .also { telemetryMap["courtEventCharges"] = it.toString() },
-              ),
-            ).also {
-              telemetryMap["nomisCourtAppearanceId"] = it.id.toString()
-            }
-          CourtCaseBatchMappingDto(
-            courtCases = emptyList(),
-            courtAppearances = listOf(
-              CourtAppearanceMappingDto(
-                dpsCourtAppearanceId = courtAppearanceId,
-                nomisCourtAppearanceId = nomisCourtAppearanceResponse.id,
-              ),
+          nomisApiService.createCourtAppearance(
+            offenderNo,
+            courtCaseMapping.nomisCourtCaseId,
+            courtAppearance.toNomisCourtAppearance(
+              courtEventCharges = courtEventChargesToUpdate.map { it }
+                .also { telemetryMap["courtEventCharges"] = it.toString() },
             ),
-            courtCharges = emptyList(),
-            sentences = emptyList(),
-            sentenceTerms = emptyList(),
-            mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
-          )
+          ).also { response ->
+            response.clonedCourtCases?.also { response ->
+              // the source cases on the old bookings will now be resynchronised back to DPS
+              queueService.sendMessageTrackOnFailure(
+                queueId = "fromnomiscourtsentencing",
+                eventType = "courtsentencing.resync.case.booking",
+                message = OffenderCaseBookingResynchronisationEvent(
+                  offenderNo = offenderNo,
+                  caseIds = response.courtCases.map { it.sourceCourtCase.id },
+                ),
+              )
+            }
+            telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
+          }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId)
         }
-        saveMapping { courtCaseMappingService.replaceOrCreateMappings(it) }
+        saveMapping {
+          // the newly created cases (if any) on the latest bookings will now be mapped to the exissing DPS Ids
+          courtCaseMappingService.updateAndCreateMappings(it)
+        }
       }
     } else {
       telemetryMap["reason"] = "Court appearance created in NOMIS"
@@ -214,6 +221,106 @@ class CourtSentencingService(
         null,
       )
     }
+  }
+
+  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(dpsCourtAppearanceId: String): CourtCaseBatchUpdateAndCreateMappingDto = CourtCaseBatchUpdateAndCreateMappingDto(
+    mappingsToCreate = CourtCaseBatchMappingDto(
+      courtAppearances = listOf(
+        CourtAppearanceMappingDto(
+          dpsCourtAppearanceId = dpsCourtAppearanceId,
+          nomisCourtAppearanceId = this.id,
+        ),
+      ),
+      courtCases = emptyList(),
+      courtCharges = emptyList(),
+      sentences = emptyList(),
+      sentenceTerms = emptyList(),
+      mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+    ),
+    mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
+      courtCases = toCourtCases(),
+      courtAppearances = toCourtAppearances(),
+      courtCharges = toCourtCharges(),
+      sentences = toSentences(),
+      sentenceTerms = toSentenceTerms(),
+    ),
+  )
+
+  private suspend fun CreateCourtAppearanceResponse.toCourtCases(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtCases = this.clonedCourtCases?.courtCases?.map { it.sourceCourtCase }
+    val clonedCourtCases = this.clonedCourtCases?.courtCases?.map { it.courtCase }
+
+    return sourceCourtCases?.zip(clonedCourtCases!!)?.map { (source, cloned) ->
+      SimpleCourtSentencingIdPair(
+        fromNomisId = source.id,
+        toNomisId = cloned.id,
+      )
+    } ?: emptyList()
+  }
+  private suspend fun CreateCourtAppearanceResponse.toCourtCharges(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtCharges = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.offenderCharges }
+    val clonedCourtCharges = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.offenderCharges }
+
+    return sourceCourtCharges?.zip(clonedCourtCharges!!)?.map { (source, cloned) ->
+      SimpleCourtSentencingIdPair(
+        fromNomisId = source.id,
+        toNomisId = cloned.id,
+      )
+    } ?: emptyList()
+  }
+  private suspend fun CreateCourtAppearanceResponse.toCourtAppearances(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtAppearances = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.courtEvents }
+    val clonedCourtAppearances = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.courtEvents }
+
+    return sourceCourtAppearances?.zip(clonedCourtAppearances!!)?.map { (source, cloned) ->
+      SimpleCourtSentencingIdPair(
+        fromNomisId = source.id,
+        toNomisId = cloned.id,
+      )
+    } ?: emptyList()
+  }
+
+  private suspend fun CreateCourtAppearanceResponse.toSentences(): List<CourtSentenceIdPair> {
+    val sourceSentences = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+    val clonedSentences = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.sentences }
+
+    return sourceSentences?.zip(clonedSentences!!)?.map { (source, cloned) ->
+      CourtSentenceIdPair(
+        fromNomisId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+          nomisBookingId = source.bookingId,
+          nomisSequence = source.sentenceSeq.toInt(),
+        ),
+        toNomisId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+          nomisBookingId = cloned.bookingId,
+          nomisSequence = cloned.sentenceSeq.toInt(),
+        ),
+      )
+    } ?: emptyList()
+  }
+  private suspend fun CreateCourtAppearanceResponse.toSentenceTerms(): List<CourtSentenceTermIdPair> {
+    val sourceSentences = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+    val clonedSentences = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.sentences }
+
+    return sourceSentences?.zip(clonedSentences!!)?.flatMap { (source, cloned) ->
+      source.sentenceTerms.zip(cloned.sentenceTerms).map { (sourceTerm, clonedTerm) ->
+        CourtSentenceTermIdPair(
+          fromNomisId = SentenceTermId(
+            nomisSequence = sourceTerm.termSequence.toInt(),
+            nomisSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+              nomisBookingId = source.bookingId,
+              nomisSequence = source.sentenceSeq.toInt(),
+            ),
+          ),
+          toNomisId = SentenceTermId(
+            nomisSequence = clonedTerm.termSequence.toInt(),
+            nomisSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+              nomisBookingId = cloned.bookingId,
+              nomisSequence = cloned.sentenceSeq.toInt(),
+            ),
+          ),
+        )
+      }
+    } ?: emptyList()
   }
 
   suspend fun deleteCourtCase(caseEvent: CourtCaseCreatedEvent) {
@@ -530,7 +637,7 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtCaseBatchMappingDto>) = courtCaseMappingService.replaceOrCreateMappings(message.mapping).also {
+  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingDto>) = courtCaseMappingService.updateAndCreateMappings(message.mapping).also {
     telemetryClient.trackEvent(
       "court-appearance-create-mapping-retry-success",
       message.telemetryAttributes,
@@ -1500,6 +1607,11 @@ data class OffenderSentenceResynchronisationEvent(
   val caseId: Long,
   val dpsAppearanceUuid: String,
   val dpsConsecutiveSentenceUuid: String?,
+)
+
+data class OffenderCaseBookingResynchronisationEvent(
+  val offenderNo: String,
+  val caseIds: List<Long>,
 )
 
 data class OffenderCaseResynchronisationEvent(
