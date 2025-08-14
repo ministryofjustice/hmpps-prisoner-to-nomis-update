@@ -5,6 +5,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestExcep
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest.UserType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalResponse
@@ -123,7 +124,7 @@ private fun ReportWithDetails.toNomisUpsertRequest(): UpsertIncidentRequest {
     reportedDateTime = this.reportedAt,
     reportedBy = this.reportedBy,
     incidentDateTime = this.incidentDateAndTime,
-    requirements = this.correctionRequests.map { it.toNomisUpsertIncidentRequirementRequest() },
+    requirements = this.correctionRequests.map { it.toNomisUpsertIncidentRequirementRequest(this.location) },
     offenderParties = this.prisonersInvolved.map { it.toNomisUpsertOffenderPartyRequest() },
     // only interested in staff that are actually in NOMIS
     staffParties = this.staffInvolved.filter { it.staffUsername != null }.map { it.toNomisUpsertStaffPartyRequest() },
@@ -142,12 +143,19 @@ private fun DescriptionAddendum.toNomisUpsertDescriptionAmendmentRequest(): Upse
   text = this.text,
 )
 
-private fun CorrectionRequest.toNomisUpsertIncidentRequirementRequest(): UpsertIncidentRequirementRequest = UpsertIncidentRequirementRequest(
+private fun CorrectionRequest.toNomisUpsertIncidentRequirementRequest(reportLocation: String): UpsertIncidentRequirementRequest = UpsertIncidentRequirementRequest(
   date = this.correctionRequestedAt,
   username = this.correctionRequestedBy,
-  location = this.location!!,
+  location = this.setLocation(reportLocation),
   comment = this.descriptionOfChange,
 )
+
+private fun CorrectionRequest.setLocation(reportLocation: String): String = location
+  ?: if (userType == UserType.DATA_WARDEN) {
+    "NOU"
+  } else {
+    reportLocation
+  }
 
 private fun PrisonerInvolvement.toNomisUpsertOffenderPartyRequest(): UpsertOffenderPartyRequest = UpsertOffenderPartyRequest(
   comment = this.comment,
