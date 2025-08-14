@@ -20,10 +20,12 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDateTime
 import java.util.UUID
 
 class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
@@ -105,7 +107,32 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
             dpsApi.stubGetIncident(
               dpsIncident().copy(
                 id = dpsId,
+
+                correctionRequests = listOf(
+                  CorrectionRequest(
+                    sequence = 0,
+                    descriptionOfChange = "There was a change",
+                    correctionRequestedBy = "Fred Black",
+                    correctionRequestedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+                    location = "MDI",
+                  ),
+                  CorrectionRequest(
+                    sequence = 1,
+                    descriptionOfChange = "Data warden request",
+                    correctionRequestedBy = "Jim Blue",
+                    correctionRequestedAt = LocalDateTime.parse("2021-07-08T10:35:17"),
+                    userType = CorrectionRequest.UserType.DATA_WARDEN,
+                  ),
+                  CorrectionRequest(
+                    sequence = 2,
+                    descriptionOfChange = "Reporting Officer request",
+                    correctionRequestedBy = "Bob Green",
+                    correctionRequestedAt = LocalDateTime.parse("2021-07-12T10:35:17"),
+                    userType = CorrectionRequest.UserType.REPORTING_OFFICER,
+                  ),
+                ),
               ),
+
             )
             incidentsNomisApi.stubUpsertIncident(nomisId)
             nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
@@ -171,14 +198,36 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
           }
 
           @Test
-          fun `the created incident will contain details of the DPS correction request`() {
+          fun `the created incident will contain details of the DPS correction requests`() {
             incidentsNomisApi.verify(
               putRequestedFor(anyUrl())
                 .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
                 .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
                 .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
                 .withRequestBodyJsonPath("requirements[0].location", "MDI")
-                .withRequestBodyJsonPath("requirements.length()", "1"),
+                .withRequestBodyJsonPath("requirements.length()", "3"),
+            )
+          }
+
+          @Test
+          fun `the created incident will contain the correct location for DPS correction request with userType DATA_WARDEN`() {
+            incidentsNomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("requirements[1].comment", "Data warden request")
+                .withRequestBodyJsonPath("requirements[1].username", "Jim Blue")
+                .withRequestBodyJsonPath("requirements[1].date", "2021-07-08T10:35:17")
+                .withRequestBodyJsonPath("requirements[1].location", "ASI"),
+            )
+          }
+
+          @Test
+          fun `the created incident will contain the correct location for DPS correction request with userType REPORTING_OFFICER`() {
+            incidentsNomisApi.verify(
+              putRequestedFor(anyUrl())
+                .withRequestBodyJsonPath("requirements[2].comment", "Reporting Officer request")
+                .withRequestBodyJsonPath("requirements[2].username", "Bob Green")
+                .withRequestBodyJsonPath("requirements[2].date", "2021-07-12T10:35:17")
+                .withRequestBodyJsonPath("requirements[2].location", "NOU"),
             )
           }
 
