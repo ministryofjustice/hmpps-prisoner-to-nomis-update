@@ -57,6 +57,8 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
 
+typealias MappingSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
+
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
@@ -209,7 +211,7 @@ class CourtSentencingService(
           }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId)
         }
         saveMapping {
-          // the newly created cases (if any) on the latest bookings will now be mapped to the exissing DPS Ids
+          // the newly created cases (if any) on the latest bookings will now be mapped to the existing DPS Ids
           courtCaseMappingService.updateAndCreateMappings(it)
         }
       }
@@ -286,11 +288,11 @@ class CourtSentencingService(
 
     return sourceSentences?.zip(clonedSentences!!)?.map { (source, cloned) ->
       CourtSentenceIdPair(
-        fromNomisId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+        fromNomisId = MappingSentenceId(
           nomisBookingId = source.bookingId,
           nomisSequence = source.sentenceSeq.toInt(),
         ),
-        toNomisId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+        toNomisId = MappingSentenceId(
           nomisBookingId = cloned.bookingId,
           nomisSequence = cloned.sentenceSeq.toInt(),
         ),
@@ -306,14 +308,14 @@ class CourtSentencingService(
         CourtSentenceTermIdPair(
           fromNomisId = SentenceTermId(
             nomisSequence = sourceTerm.termSequence.toInt(),
-            nomisSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+            nomisSentenceId = MappingSentenceId(
               nomisBookingId = source.bookingId,
               nomisSequence = source.sentenceSeq.toInt(),
             ),
           ),
           toNomisId = SentenceTermId(
             nomisSequence = clonedTerm.termSequence.toInt(),
-            nomisSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId(
+            nomisSentenceId = MappingSentenceId(
               nomisBookingId = cloned.bookingId,
               nomisSequence = cloned.sentenceSeq.toInt(),
             ),

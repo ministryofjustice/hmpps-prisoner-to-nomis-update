@@ -40,8 +40,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ClonedCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
@@ -49,6 +55,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.BOOKING_ID
 import java.time.LocalDate
@@ -585,6 +592,127 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           assertThat(request.mappingsToUpdate.courtCharges).isEmpty()
           assertThat(request.mappingsToUpdate.sentences).isEmpty()
           assertThat(request.mappingsToUpdate.sentenceTerms).isEmpty()
+        }
+      }
+
+      @Nested
+      inner class WhenAppearanceOnOldBooking {
+        @BeforeEach
+        fun setUp() {
+          courtSentencingNomisApi.stubCourtAppearanceCreate(
+            OFFENDER_NO,
+            NOMIS_COURT_CASE_ID_FOR_CREATION,
+            nomisCourtAppearanceCreateResponse().copy(
+              clonedCourtCases = BookingCourtCaseCloneResponse(
+                courtCases = listOf(
+                  ClonedCourtCaseResponse(
+                    sourceCourtCase = nomisCaseResponse(
+                      id = 101L,
+                      events = listOf(nomisAppearanceResponse(id = 1001), nomisAppearanceResponse(id = 1002)),
+                      sentences = listOf(
+                        nomisSentenceResponse().copy(
+                          bookingId = 1,
+                          sentenceSeq = 10,
+                          sentenceTerms = listOf(
+                            nomisSentenceTermResponse().copy(termSequence = 1),
+                            nomisSentenceTermResponse().copy(termSequence = 2),
+                          ),
+                        ),
+                      ),
+                    ).copy(offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 1003), nomisOffenderChargeResponse(offenderChargeId = 1004))),
+                    courtCase = nomisCaseResponse(
+                      id = 201L,
+                      events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
+                      sentences = listOf(
+                        nomisSentenceResponse().copy(
+                          bookingId = 2,
+                          sentenceSeq = 20,
+                          sentenceTerms = listOf(
+                            nomisSentenceTermResponse().copy(termSequence = 21),
+                            nomisSentenceTermResponse().copy(termSequence = 22),
+                          ),
+                        ),
+                      ),
+                    ).copy(offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 2003), nomisOffenderChargeResponse(offenderChargeId = 2004))),
+                  ),
+                ),
+              ),
+            ),
+          )
+
+          publishCreateCourtAppearanceDomainEvent().also {
+            waitForAnyProcessingToComplete()
+          }
+        }
+
+        @Test
+        fun `will callback back to court sentencing service to get more details`() {
+          courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-appearance-create-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call nomis api to create the Court Appearance`() {
+          courtSentencingNomisApi.verify(
+            postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),
+          )
+        }
+
+        @Test
+        fun `will creat a mapping between the two court appearances and send updates for clones cases`() {
+          val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+          assertThat(request.mappingsToCreate.courtCases).isEmpty()
+          assertThat(request.mappingsToCreate.courtAppearances).hasSize(1)
+          assertThat(request.mappingsToCreate.courtCharges).isEmpty()
+          assertThat(request.mappingsToCreate.sentences).isEmpty()
+          assertThat(request.mappingsToCreate.sentenceTerms).isEmpty()
+
+          assertThat(request.mappingsToUpdate.courtCases).containsExactly(SimpleCourtSentencingIdPair(fromNomisId = 101, toNomisId = 201))
+          assertThat(request.mappingsToUpdate.courtAppearances).containsExactlyInAnyOrder(
+            SimpleCourtSentencingIdPair(fromNomisId = 1001, toNomisId = 2001),
+            SimpleCourtSentencingIdPair(fromNomisId = 1002, toNomisId = 2002),
+          )
+          assertThat(request.mappingsToUpdate.courtCharges).containsExactlyInAnyOrder(
+            SimpleCourtSentencingIdPair(fromNomisId = 1003, toNomisId = 2003),
+            SimpleCourtSentencingIdPair(fromNomisId = 1004, toNomisId = 2004),
+          )
+          assertThat(request.mappingsToUpdate.sentences).containsExactlyInAnyOrder(
+            CourtSentenceIdPair(
+              fromNomisId = MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+              toNomisId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+            ),
+          )
+
+          assertThat(request.mappingsToUpdate.sentenceTerms).containsExactlyInAnyOrder(
+            CourtSentenceTermIdPair(
+              fromNomisId = SentenceTermId(
+                MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+                nomisSequence = 1,
+              ),
+              SentenceTermId(
+                nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+                nomisSequence = 21,
+              ),
+            ),
+            CourtSentenceTermIdPair(
+              fromNomisId = SentenceTermId(
+                MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+                nomisSequence = 2,
+              ),
+              SentenceTermId(
+                nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+                nomisSequence = 22,
+              ),
+            ),
+          )
         }
       }
     }
@@ -3047,7 +3175,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           response = ConvertToRecallResponse(
             courtEventIds = listOf(101, 102),
             sentenceAdjustmentsActivated = listOf(
-              uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds(
+              SentenceIdAndAdjustmentIds(
                 sentenceId = SentenceId(offenderBookingId = BOOKING_ID, sentenceSequence = 2),
                 adjustmentIds = listOf(1, 2),
               ),
