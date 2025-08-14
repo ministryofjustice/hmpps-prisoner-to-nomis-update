@@ -216,7 +216,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("requirements[1].comment", "Data warden request")
                 .withRequestBodyJsonPath("requirements[1].username", "Jim Blue")
                 .withRequestBodyJsonPath("requirements[1].date", "2021-07-08T10:35:17")
-                .withRequestBodyJsonPath("requirements[1].location", "ASI"),
+                .withRequestBodyJsonPath("requirements[1].location", "NOU"),
             )
           }
 
@@ -227,7 +227,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("requirements[2].comment", "Reporting Officer request")
                 .withRequestBodyJsonPath("requirements[2].username", "Bob Green")
                 .withRequestBodyJsonPath("requirements[2].date", "2021-07-12T10:35:17")
-                .withRequestBodyJsonPath("requirements[2].location", "NOU"),
+                .withRequestBodyJsonPath("requirements[2].location", "ASI"),
             )
           }
 

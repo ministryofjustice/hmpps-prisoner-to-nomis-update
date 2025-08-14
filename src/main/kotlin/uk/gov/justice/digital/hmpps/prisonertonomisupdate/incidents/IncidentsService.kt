@@ -151,10 +151,10 @@ private fun CorrectionRequest.toNomisUpsertIncidentRequirementRequest(reportLoca
 )
 
 private fun CorrectionRequest.setLocation(reportLocation: String): String = location
-  ?: when (userType) {
-    UserType.REPORTING_OFFICER -> "NOU"
-    UserType.DATA_WARDEN -> reportLocation
-    else -> reportLocation
+  ?: if (userType == UserType.DATA_WARDEN) {
+    "NOU"
+  } else {
+    reportLocation
   }
 
 private fun PrisonerInvolvement.toNomisUpsertOffenderPartyRequest(): UpsertOffenderPartyRequest = UpsertOffenderPartyRequest(
