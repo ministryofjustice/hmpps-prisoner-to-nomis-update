@@ -641,7 +641,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           )
 
           publishCreateCourtAppearanceDomainEvent().also {
-            waitForAnyProcessingToComplete()
+            waitForAnyProcessingToComplete("court-appearance-create-cases-cloned")
           }
         }
 
@@ -657,6 +657,32 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             any(),
             isNull(),
           )
+        }
+
+        @Test
+        fun `will create cloned telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-appearance-create-cases-cloned"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will send message to nomis migration to sync court cases cloned`() {
+          await untilAsserted {
+            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+          }
+          val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
+          val sqsMessage: SQSMessage = rawMessage.fromJson()
+
+          assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
+          val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+          assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(request.caseIds).containsExactly(101L)
         }
 
         @Test
