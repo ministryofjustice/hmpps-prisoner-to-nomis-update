@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-13.112.66aa2dd"
+    "version" : "2025-08-14.117.5211253"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -470,6 +470,50 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/court-sentencing/court-cases/update-create" : {
+      "put" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Updates all court case hierarchical mappings maintaining the DPS id and creates additional mappings",
+        "description" : "Updates all the mappings between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. New ones that have been requested to be created will also be created. Requires ROLE_NOMIS_COURT_SENTENCING",
+        "operationId" : "updateAndCreateMappingByNomisId",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtCaseBatchUpdateAndCreateMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Mapping created or replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -16988,6 +17032,63 @@
         },
         "required" : [ "courtAppearances", "courtCases", "courtCharges", "mappingType", "sentenceTerms", "sentences" ]
       },
+      "CourtCaseBatchUpdateAndCreateMappingDto" : {
+        "type" : "object",
+        "description" : "Court cases mapping including child entity mapping for both updating and creating",
+        "properties" : {
+          "mappingsToCreate" : {
+            "$ref" : "#/components/schemas/CourtCaseBatchMappingDto",
+            "description" : "Mappings that need creating"
+          },
+          "mappingsToUpdate" : {
+            "$ref" : "#/components/schemas/CourtCaseBatchUpdateMappingDto",
+            "description" : "Mappings that need creating"
+          }
+        },
+        "required" : [ "mappingsToCreate", "mappingsToUpdate" ]
+      },
+      "CourtCaseBatchUpdateMappingDto" : {
+        "type" : "object",
+        "description" : "Court cases mapping including child entity mapping for both updating the NOMIS ID",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdPair"
+            }
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "description" : "Court Appearance mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdPair"
+            }
+          },
+          "courtCharges" : {
+            "type" : "array",
+            "description" : "Court Charge mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/SimpleCourtSentencingIdPair"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSentenceIdPair"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "description" : "Sentence term mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtSentenceTermIdPair"
+            }
+          }
+        },
+        "required" : [ "courtAppearances", "courtCases", "courtCharges", "sentenceTerms", "sentences" ]
+      },
       "CourtCaseMappingDto" : {
         "type" : "object",
         "description" : "Court case mapping",
@@ -17028,6 +17129,44 @@
           }
         },
         "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
+      },
+      "CourtSentenceIdPair" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          },
+          "toNomisId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          }
+        },
+        "required" : [ "fromNomisId", "toNomisId" ]
+      },
+      "CourtSentenceTermIdPair" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "$ref" : "#/components/schemas/SentenceTermId"
+          },
+          "toNomisId" : {
+            "$ref" : "#/components/schemas/SentenceTermId"
+          }
+        },
+        "required" : [ "fromNomisId", "toNomisId" ]
+      },
+      "SentenceId" : {
+        "type" : "object",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "nomisBookingId", "nomisSequence" ]
       },
       "SentenceMappingDto" : {
         "type" : "object",
@@ -17070,6 +17209,19 @@
           }
         },
         "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
+      },
+      "SentenceTermId" : {
+        "type" : "object",
+        "properties" : {
+          "nomisSentenceId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "nomisSentenceId", "nomisSequence" ]
       },
       "SentenceTermMappingDto" : {
         "type" : "object",
@@ -17118,6 +17270,20 @@
           }
         },
         "required" : [ "dpsTermId", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
+      },
+      "SimpleCourtSentencingIdPair" : {
+        "type" : "object",
+        "properties" : {
+          "fromNomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "toNomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "fromNomisId", "toNomisId" ]
       },
       "ContactPersonProfileDetailsMigrationMappingDto" : {
         "type" : "object",
