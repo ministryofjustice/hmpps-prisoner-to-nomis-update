@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDateTime
 import java.time.LocalTime
 import java.util.UUID
+import kotlin.collections.plus
 
 typealias MappingSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
 
@@ -196,24 +197,10 @@ class CourtSentencingService(
                 .also { telemetryMap["courtEventCharges"] = it.toString() },
             ),
           ).also { response ->
-            response.clonedCourtCases?.also { response ->
-              // the source cases on the old bookings will now be resynchronised back to DPS
-              queueService.sendMessageTrackOnFailure(
-                queueId = "fromnomiscourtsentencing",
-                eventType = "courtsentencing.resync.case.booking",
-                message = OffenderCaseBookingResynchronisationEvent(
-                  offenderNo = offenderNo,
-                  caseIds = response.courtCases.map { it.sourceCourtCase.id },
-                ),
-              )
-            }
             telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
-          }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId)
+          }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId = dpsCourtAppearanceId, offenderNo = offenderNo)
         }
-        saveMapping {
-          // the newly created cases (if any) on the latest bookings will now be mapped to the existing DPS Ids
-          courtCaseMappingService.updateAndCreateMappings(it)
-        }
+        saveMapping { createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper = it, offenderNo = offenderNo, telemetry = telemetryMap) }
       }
     } else {
       telemetryMap["reason"] = "Court appearance created in NOMIS"
@@ -225,27 +212,32 @@ class CourtSentencingService(
     }
   }
 
-  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(dpsCourtAppearanceId: String): CourtCaseBatchUpdateAndCreateMappingDto = CourtCaseBatchUpdateAndCreateMappingDto(
-    mappingsToCreate = CourtCaseBatchMappingDto(
-      courtAppearances = listOf(
-        CourtAppearanceMappingDto(
-          dpsCourtAppearanceId = dpsCourtAppearanceId,
-          nomisCourtAppearanceId = this.id,
+  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(dpsCourtAppearanceId: String, offenderNo: String): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
+    mappings =
+    CourtCaseBatchUpdateAndCreateMappingDto(
+      mappingsToCreate = CourtCaseBatchMappingDto(
+        courtAppearances = listOf(
+          CourtAppearanceMappingDto(
+            dpsCourtAppearanceId = dpsCourtAppearanceId,
+            nomisCourtAppearanceId = this.id,
+          ),
         ),
+        courtCases = emptyList(),
+        courtCharges = emptyList(),
+        sentences = emptyList(),
+        sentenceTerms = emptyList(),
+        mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
       ),
-      courtCases = emptyList(),
-      courtCharges = emptyList(),
-      sentences = emptyList(),
-      sentenceTerms = emptyList(),
-      mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+      mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
+        courtCases = toCourtCases(),
+        courtAppearances = toCourtAppearances(),
+        courtCharges = toCourtCharges(),
+        sentences = toSentences(),
+        sentenceTerms = toSentenceTerms(),
+      ),
     ),
-    mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
-      courtCases = toCourtCases(),
-      courtAppearances = toCourtAppearances(),
-      courtCharges = toCourtCharges(),
-      sentences = toSentences(),
-      sentenceTerms = toSentenceTerms(),
-    ),
+    offenderNo = offenderNo,
+    clonedCourtCaseIds = clonedCourtCases?.courtCases?.map { it.sourceCourtCase.id },
   )
 
   private suspend fun CreateCourtAppearanceResponse.toCourtCases(): List<SimpleCourtSentencingIdPair> {
@@ -639,12 +631,37 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createAppearanceRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingDto>) = courtCaseMappingService.updateAndCreateMappings(message.mapping).also {
-    telemetryClient.trackEvent(
-      "court-appearance-create-mapping-retry-success",
-      message.telemetryAttributes,
-      null,
-    )
+  suspend fun createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
+    courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
+    mappingsWrapper.clonedCourtCaseIds?.also { courtCaseIds ->
+      queueService.sendMessageTrackOnFailure(
+        queueId = "fromnomiscourtsentencing",
+        eventType = "courtsentencing.resync.case.booking",
+        message = OffenderCaseBookingResynchronisationEvent(
+          offenderNo = offenderNo,
+          caseIds = courtCaseIds,
+        ),
+      )
+      telemetryClient.trackEvent(
+        "court-appearance-create-cases-cloned",
+        telemetry + ("nomisCourtCaseIds" to courtCaseIds.joinToString()),
+        null,
+      )
+    }
+  }
+
+  suspend fun createAppearanceMappingsRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
+    createAppearanceMappingsAndNotifyClonedCases(
+      mappingsWrapper = mapping,
+      offenderNo = mapping.offenderNo,
+      telemetry = telemetryAttributes,
+    ).also {
+      telemetryClient.trackEvent(
+        "court-appearance-create-mapping-retry-success",
+        telemetryAttributes,
+        null,
+      )
+    }
   }
 
   suspend fun createRecallAppearanceRetry(message: CreateMappingRetryMessage<CourtAppearanceRecallMappingsDto>) = courtCaseMappingService.createAppearanceRecallMappings(message.mapping).also {
@@ -683,7 +700,7 @@ class CourtSentencingService(
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
-      EntityType.COURT_APPEARANCE.displayName -> createAppearanceRetry(message.fromJson())
+      EntityType.COURT_APPEARANCE.displayName -> createAppearanceMappingsRetry(message.fromJson())
       EntityType.COURT_APPEARANCE_RECALL.displayName -> createRecallAppearanceRetry(message.fromJson())
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
@@ -1620,4 +1637,10 @@ data class OffenderCaseResynchronisationEvent(
   val dpsCaseUuid: String,
   val offenderNo: String,
   val caseId: Long,
+)
+
+data class CourtCaseBatchUpdateAndCreateMappingsWrapper(
+  val mappings: CourtCaseBatchUpdateAndCreateMappingDto,
+  val offenderNo: String,
+  val clonedCourtCaseIds: List<Long>?,
 )
