@@ -70,6 +70,7 @@ hmpps.sqs:
         "activities.prisoner.attendance-deleted"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     appointment:
       queueName: "appointment-${random.uuid}"
       dlqName: "appointment-dlq-${random.uuid}"
