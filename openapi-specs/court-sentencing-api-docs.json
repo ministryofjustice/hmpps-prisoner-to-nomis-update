@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-15.378.32f5aba"
+    "version" : "2025-08-15.383.c16eff4"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4727,7 +4727,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -4777,6 +4777,9 @@
           },
           "outcomeConvictionFlag" : {
             "type" : "boolean"
+          },
+          "offenceDescription" : {
+            "type" : "string"
           }
         }
       },
@@ -4999,7 +5002,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "courtCode" : {
             "type" : "string"
@@ -6326,7 +6329,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "courtCode" : {
             "type" : "string"
@@ -6730,7 +6733,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "charges" : {
             "type" : "array",
@@ -6753,7 +6756,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "courtId" : {
             "type" : "string"
@@ -6844,7 +6847,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6900,7 +6903,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "courtId" : {
             "type" : "string"
@@ -7504,7 +7507,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "04:42:45.06450172"
+            "example" : "05:03:27.821649215"
           },
           "courtCode" : {
             "type" : "string"
