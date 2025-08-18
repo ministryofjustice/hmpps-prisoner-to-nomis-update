@@ -259,6 +259,37 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will reorder appearances correctly for comparison when charge offence end date is the only difference`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(nomisChargeResponse().copy(offenceEndDate = null)),
+            ),
+            nomisAppearanceResponse(id = NOMIS_COURT_APPEARANCE_2_ID),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse(
+              appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_2_ID),
+              charges = listOf(dpsChargeResponse(sentenceResponse = null)),
+            ),
+            dpsAppearanceResponse().copy(
+              charges = listOf(dpsChargeResponse().copy(offenceEndDate = null)),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        ),
+      ).isNull()
+    }
+
+    @Test
     fun `will report an appearance outcome difference`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
@@ -797,13 +828,35 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
-    fun `will ignore a nomis "LIC" sentenceTermCode - temporary hack until DPS fix`() = runTest {
+    fun `will ignore a nomis "LIC" sentenceTermCode - temporary hack DPS have arranged a data fix to remove them`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
           sentences = listOf(
             nomisSentenceResponse().copy(
               sentenceTerms = listOf(
                 nomisSentenceTermResponse(termType = "LIC"),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse(),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isNull()
+    }
+
+    @Test
+    fun `will ignore a nomis "DET" sentenceTermCode - temporary hack until DPS fix`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              sentenceTerms = listOf(
+                nomisSentenceTermResponse(termType = "DET"),
               ),
             ),
           ),

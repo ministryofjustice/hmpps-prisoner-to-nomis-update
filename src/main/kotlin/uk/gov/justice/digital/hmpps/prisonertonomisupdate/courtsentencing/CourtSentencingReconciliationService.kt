@@ -255,8 +255,10 @@ class CourtSentencingReconciliationService(
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
     )
 
-    // TODO remove SUP/LIC->IMP hack once DPS fix their side
-    val differenceList = compareObjects(dpsFields, nomisFields).filterNot { it -> (it.nomis == "SUP" && it.dps == "IMP") }.filterNot { it -> (it.nomis == "LIC" && it.dps == "IMP") }
+    // TODO remove SUP/LIC/DET->IMP hack once DPS fix their side
+    val differenceList = compareObjects(dpsFields, nomisFields).filterNot { it -> (it.nomis == "SUP" && it.dps == "IMP") }
+      .filterNot { it -> (it.nomis == "LIC" && it.dps == "IMP") }
+      .filterNot { it -> (it.nomis == "DET" && it.dps == "IMP") }
 
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
@@ -587,7 +589,7 @@ data class ChargeFields(
       outcome == other.outcome
   }
 
-  fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode')"
+  fun toSortString(): String = "ChargeFields(outcome=$outcome, offenceDate=$offenceDate, offenceCode='$offenceCode', offenceEndDate=$offenceEndDate,)"
 }
 
 data class SentenceFields(
