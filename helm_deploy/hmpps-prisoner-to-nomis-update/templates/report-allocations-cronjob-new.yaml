@@ -19,11 +19,6 @@ spec:
         spec:
           containers:
           - name: {{ include "generic-service.name" . }}
-            env:
-            - name: BATCH_ENABLED
-              value: "true"
-            - name: BATCH_TYPE
-              value: ALLOCATION_RECON
             securityContext:
             {{- toYaml .Values.securityContext | nindent 14 }}
             image: "{{ index .Values "generic-service" "image" "repository" }}:{{ index .Values "generic-service" "image" "tag" | default .Chart.AppVersion }}"
@@ -32,20 +27,9 @@ spec:
               - name: http
                 containerPort: {{ index .Values "generic-service" "image" "port" }}
                 protocol: TCP
-              {{- if not (eq (toString (index .Values "generic-service" "custommetrics" "metricsPort")) "http") }}
-              - name: metrics
-                containerPort: {{ .Values.custommetrics.metricsPort }}
-                protocol: TCP
-              {{- end }}
-            resources:
-            {{- toYaml .Values.resources | nindent 14 }}
-            {{- include "deployment.envs" .Values | nindent 10 }}
+            {{- include "deployment.envs" (index .Values "generic-service") | nindent 12 }}
             {{- with .Values.envFrom }}
             envFrom:
-            {{- toYaml . | nindent 12 }}
-            {{- end }}
-            {{- with .Values.volumeMounts }}
-            volumeMounts:
-            {{- toYaml . | nindent 12 }}
+              {{- toYaml . | nindent 12 }}
             {{- end }}
           restartPolicy: Never
