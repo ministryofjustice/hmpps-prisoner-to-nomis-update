@@ -5,11 +5,13 @@ import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
+@ConditionalOnProperty(name = ["batch.enabled"], havingValue = "false", matchIfMissing = true)
 @Service
 class IncentivesDomainEventListener(
   private val incentivesService: IncentivesService,

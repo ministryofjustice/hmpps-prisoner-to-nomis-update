@@ -234,3 +234,6 @@ cron:
   visitBalanceReportSchedule: "45 4 * * *"
   report_incidents:
     suspend: false
+  allocationsnew:
+    suspend: true
+

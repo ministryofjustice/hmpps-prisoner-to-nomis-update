@@ -109,3 +109,5 @@ cron:
   activitiesPurgeDlqQueueName: "syscon-devs-dev-hmpps_prisoner_to_nomis_activity_dlq"
   report_incidents:
     suspend: true
+  allocationsnew:
+    suspend: false
