@@ -19,13 +19,13 @@ spec:
         spec:
           containers:
           - name: {{ include "generic-service.name" . }}
-          - env:
+            env:
             - name: BATCH_ENABLED
               value: "true"
             - name: BATCH_TYPE
               value: ALLOCATION_RECON
             securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+            {{- toYaml .Values.securityContext | nindent 14 }}
             image: "{{ index .Values "generic-service" "image" "repository" }}:{{ index .Values "generic-service" "image" "tag" | default .Chart.AppVersion }}"
             imagePullPolicy: {{ index .Values "generic-service" "image" "pullPolicy" }}
             ports:
@@ -38,7 +38,7 @@ spec:
                 protocol: TCP
               {{- end }}
             resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+            {{- toYaml .Values.resources | nindent 14 }}
             {{- include "deployment.envs" .Values | nindent 10 }}
             {{- with .Values.envFrom }}
             envFrom:
