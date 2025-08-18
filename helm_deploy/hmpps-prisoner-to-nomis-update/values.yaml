@@ -224,6 +224,7 @@ generic-prometheus-alerts:
 
 cron:
   allocationReconReportSchedule: "5 7 * * *"
+  allocationReconReportScheduleNew: "15 7 * * *"
   suspendedAllocationReconReportSchedule: "35 7 * * *"
   attendanceReconReportSchedule: "5 1 * * *"
   activitiesTidyMappingsSuspend: true

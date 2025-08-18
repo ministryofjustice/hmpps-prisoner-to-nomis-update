@@ -5,7 +5,7 @@ metadata:
   labels:
     {{- include "app.labels" . | nindent 4 }}
 spec:
-  schedule: "{{ .Values.cron.allocationReconReportSchedule }}"
+  schedule: "{{ .Values.cron.allocationReconReportScheduleNew }}"
   suspend: {{ .Values.cron.allocationsnew.suspend }}
   concurrencyPolicy: Forbid
   failedJobsHistoryLimit: 5
