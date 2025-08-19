@@ -24,16 +24,15 @@ spec:
             {{- toYaml .Values.securityContext | nindent 14 }}
             image: "{{ index .Values "generic-service" "image" "repository" }}:{{ index .Values "generic-service" "image" "tag" | default .Chart.AppVersion }}"
             imagePullPolicy: {{ index .Values "generic-service" "image" "pullPolicy" }}
-            env:
-              - name: BATCH_ENABLED
-                value: "true"
-              - name: BATCH_TYPE
-                value: "ALLOCATION_RECON"
             ports:
               - name: http
                 containerPort: {{ index .Values "generic-service" "image" "port" }}
                 protocol: TCP
             {{- include "deployment.envs" (index .Values "generic-service") | nindent 12 }}
+              - name: BATCH_ENABLED
+                value: "true"
+              - name: BATCH_TYPE
+                value: "ALLOCATION_RECON"
             {{- with .Values.envFrom }}
             envFrom:
               {{- toYaml . | nindent 12 }}
