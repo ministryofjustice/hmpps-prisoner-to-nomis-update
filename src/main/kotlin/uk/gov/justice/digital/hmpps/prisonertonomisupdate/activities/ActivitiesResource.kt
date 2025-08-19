@@ -148,11 +148,6 @@ class ActivitiesResource(
   }
 
   @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
-  @PostMapping("/allocations/reports/reconciliation")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  suspend fun allocationsReconciliation() = activitiesReconService.allocationReconciliationReport()
-
-  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
   @PostMapping("/suspended-allocations/reports/reconciliation")
   @ResponseStatus(HttpStatus.ACCEPTED)
   suspend fun suspendedAllocationsReconciliation() = activitiesReconService.suspendedAllocationReconciliationReport()
