@@ -1,61 +1,38 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension.Companion.activitiesApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import kotlin.collections.joinToString
 
-class ActivitiesReconIntTest : IntegrationTestBase() {
+class ActivitiesReconIntTest(
+  @Autowired private val activitiesReconService: ActivitiesReconService,
+) : IntegrationTestBase() {
 
   @Nested
   inner class AllocationReconciliationReport {
     @Nested
-    inner class Security {
-      @Test
-      fun `access forbidden when no authority`() {
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .exchange()
-          .expectStatus().isUnauthorized
-      }
-
-      @Test
-      fun `access forbidden when no role`() {
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf()))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-    }
-
-    @Nested
     inner class ReportRunsOk {
       @Test
-      fun `should publish success telemetry if no differences`() {
+      fun `should publish success telemetry if no differences`() = runTest {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -74,14 +51,11 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish failed telemetry if there are differences between NOMIS and DPS`() {
+      fun `should publish failed telemetry if there are differences between NOMIS and DPS`() = runTest {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 2))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -103,14 +77,11 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish failed telemetry for differences even if in different prison`() {
+      fun `should publish failed telemetry for differences even if in different prison`() = runTest {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -132,15 +103,12 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish telemetry for multiple prisons`() {
+      fun `should publish telemetry for multiple prisons`() = runTest {
         stubGetPrisons("BXI", "MDI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 2))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -179,13 +147,12 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
     @Nested
     inner class ReportFailsDueToError {
       @Test
-      fun `should publish error telemetry if fails to get prisons from NOMIS`() {
+      fun `should publish error telemetry if fails to get prisons from NOMIS`() = runTest {
         nomisApi.stubGetServiceAgenciesWithError("ACTIVITY", 404)
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().is5xxServerError
+        assertThrows<WebClientResponseException.NotFound> {
+          activitiesReconService.allocationReconciliationReport()
+        }
 
         await untilAsserted {
           verify(telemetryClient).trackEvent("activity-allocation-reconciliation-report-error", mapOf(), null)
@@ -193,15 +160,12 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish error telemetry if fails to get recon data from NOMIS`() {
+      fun `should publish error telemetry if fails to get recon data from NOMIS`() = runTest {
         stubGetPrisons("BXI")
         nomisApi.stubAllocationReconciliationWithError("BXI", 500)
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = null, dpsCount = 1))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -220,15 +184,12 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should publish error telemetry if fails to get recon data from DPS`() {
+      fun `should publish error telemetry if fails to get recon data from DPS`() = runTest {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = null))
         activitiesApi.stubAllocationReconciliationWithError("BXI", 400)
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
@@ -247,16 +208,13 @@ class ActivitiesReconIntTest : IntegrationTestBase() {
       }
 
       @Test
-      fun `should continue to report on other prisons if one fails`() {
+      fun `should continue to report on other prisons if one fails`() = runTest {
         stubGetPrisons("BXI", "MDI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = null))
         activitiesApi.stubAllocationReconciliationWithError("BXI", 400)
         stubBookingCounts("MDI", BookingDetailsStub(bookingId = 2345678, offenderNo = "A1234BB", location = "MDI", nomisCount = 1, dpsCount = 1))
 
-        webTestClient.post().uri("/allocations/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-          .exchange()
-          .expectStatus().isAccepted
+        activitiesReconService.allocationReconciliationReport()
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(

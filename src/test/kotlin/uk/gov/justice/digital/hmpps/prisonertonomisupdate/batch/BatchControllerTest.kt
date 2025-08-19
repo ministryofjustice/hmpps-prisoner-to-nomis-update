@@ -16,7 +16,7 @@ class BatchControllerTest {
   @Nested
   inner class AllocationReconciliationReport {
     private val activitiesReconService = mock<ActivitiesReconService>()
-    private val batchManager = BatchController("ALLOCATION_RECON", activitiesReconService)
+    private val batchManager = BatchManager("ALLOCATION_RECON", activitiesReconService)
     private val event = mock<ContextRefreshedEvent>()
     private val context = mock<ConfigurableApplicationContext>()
 
