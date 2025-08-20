@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-08-01.119.14224b3"
+    "version" : "2025-08-20.172.2f3b491"
   },
   "servers" : [ {
     "url" : "/",
@@ -717,7 +717,7 @@
             "default" : null,
             "items" : {
               "type" : "string",
-              "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
+              "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
             }
           },
           "example" : "[CLOSED,DUPLICATE]"
@@ -6128,7 +6128,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
           },
           "createdAt" : {
             "type" : "string",
@@ -6257,7 +6257,7 @@
           "status" : {
             "type" : "string",
             "description" : "Previous status of an incident report",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
           },
           "changedAt" : {
             "type" : "string",
@@ -6701,7 +6701,7 @@
           "status" : {
             "type" : "string",
             "description" : "The current status of this report",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
             "example" : "DRAFT"
           },
           "createdAt" : {
@@ -6756,7 +6756,7 @@
           "newStatus" : {
             "type" : "string",
             "description" : "The new status",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "POST_INCIDENT_UPDATE", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
             "example" : "CLOSED"
           }
         },

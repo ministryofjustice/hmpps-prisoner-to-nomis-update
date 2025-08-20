@@ -116,7 +116,6 @@ internal fun Status.mapDps(): String = when (this) {
   Status.NEEDS_UPDATING -> "INREQ"
   Status.UPDATED -> "INAME"
   Status.CLOSED -> "CLOSE"
-  Status.POST_INCIDENT_UPDATE -> "PIU"
   Status.DUPLICATE, Status.NOT_REPORTABLE -> "DUP"
   Status.REOPENED, Status.WAS_CLOSED -> throw IncidentStatusIgnoredException(this)
 }
