@@ -255,10 +255,7 @@ class CourtSentencingReconciliationService(
       caseReferences = nomisResponse.caseInfoNumbers.map { it.reference },
     )
 
-    // TODO remove SUP/LIC/DET->IMP hack once DPS fix their side
-    val differenceList = compareObjects(dpsFields, nomisFields).filterNot { it -> (it.nomis == "SUP" && it.dps == "IMP") }
-      .filterNot { it -> (it.nomis == "LIC" && it.dps == "IMP") }
-      .filterNot { it -> (it.nomis == "DET" && it.dps == "IMP") }
+    val differenceList = compareObjects(dpsFields, nomisFields)
 
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
