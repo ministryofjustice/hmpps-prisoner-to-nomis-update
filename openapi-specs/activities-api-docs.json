@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-07-30.29911.ff46164"
+    "version" : "2025-08-20.30615.070a178"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -1224,31 +1224,6 @@
         }
       }
     },
-    "/utility/create-pay-history" : {
-      "post" : {
-        "tags" : [ "utility-controller" ],
-        "summary" : "Create pay rate history for all the existing activities",
-        "description" : "Can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
-        "operationId" : "createActivityPayHistory",
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PayHistoryMigrateResponse"
-                }
-              },
-              "text/plain" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PayHistoryMigrateResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/schedules/{scheduleId}/allocations" : {
       "get" : {
         "tags" : [ "activity-schedule-controller" ],
@@ -2450,6 +2425,14 @@
           "name" : "withDeallocateExpiring",
           "in" : "query",
           "description" : "If true will run the deallocate allocations that are expiring process. Defaults to false.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "withFixAutoSuspended",
+          "in" : "query",
+          "description" : "If true will attempt to unsuspend auto suspended prisoners who should have been received back into the prison already.",
           "required" : false,
           "schema" : {
             "type" : "boolean"
@@ -7708,7 +7691,7 @@
       "get" : {
         "tags" : [ "appointment-instance-controller" ],
         "summary" : "Get an appointment instance by its id",
-        "description" : "Returns an appointment instance and its details by its unique identifier.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES",
+        "description" : "Returns an appointment instance and its details by its unique identifier.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN\n* NOMIS_ACTIVITIES\n* ACTIVITIES_MANAGEMENT__RO",
         "operationId" : "getAppointmentInstanceById",
         "parameters" : [ {
           "name" : "appointmentInstanceId",
@@ -9383,23 +9366,6 @@
           }
         },
         "required" : [ "identifiers", "outboundEvent" ]
-      },
-      "PayHistoryMigrateResponse" : {
-        "type" : "object",
-        "properties" : {
-          "payRateDataSize" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "payHistoryDataSize" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "message" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "message", "payHistoryDataSize", "payRateDataSize" ]
       },
       "PrisonerAllocationRequest" : {
         "type" : "object",
@@ -11361,6 +11327,7 @@
           "internalLocationId" : {
             "type" : "integer",
             "format" : "int64",
+            "deprecated" : true,
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
           },
