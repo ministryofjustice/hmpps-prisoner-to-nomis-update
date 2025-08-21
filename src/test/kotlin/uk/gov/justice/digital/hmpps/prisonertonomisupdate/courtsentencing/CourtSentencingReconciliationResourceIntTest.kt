@@ -14,6 +14,8 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.MediaType
+import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffen
 private const val DPS_CASE_ID = "11111111-1111-1111-1111-111111111111"
 
 private const val OFFENDER_NO = "A0001TZ"
+private const val OFFENDER_NO_2 = "A7701TZ"
 
 private const val DPS_CASE_2_ID = "21111111-1111-1111-1111-111111111111"
 
@@ -190,13 +193,96 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
             .expectStatus().isOk
             .expectBody()
             // for the purposes of DPS - status of case is either active or inactive. Other values exist in nomis
-            .jsonPath("$[0].mismatch.differences.size()").isEqualTo(NOMIS_CASE_ID)
+            .jsonPath("$[0].mismatch.differences.size()").isEqualTo("1")
+            .jsonPath("$[0].offenderNo").isEqualTo(OFFENDER_NO)
             // outcome on first appearance is different
             .jsonPath("$[0]mismatch.differences[0].property").isEqualTo("case.appearances")
             .jsonPath("$[0]mismatch.differences[0].dps").isEqualTo(1)
             .jsonPath("$[0].mismatch.differences[0].nomis").isEqualTo(2)
             .jsonPath("$[0].mismatch.nomisCase.id").isEqualTo(NOMIS_CASE_ID.toString())
             .jsonPath("$[0].mismatch.dpsCase.id").isEqualTo(DPS_CASE_ID)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ManualCaseReconciliationByOffenderIdList {
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisoners/court-sentencing/court-cases/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .body(BodyInserters.fromValue(listOf(OFFENDER_NO, OFFENDER_NO_2)))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisoners/court-sentencing/court-cases/reconciliation")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .body(BodyInserters.fromValue(listOf(OFFENDER_NO, OFFENDER_NO_2)))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisoners/court-sentencing/court-cases/reconciliation")
+          .body(BodyInserters.fromValue(listOf(OFFENDER_NO, OFFENDER_NO_2)))
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        stubCases(
+          OFFENDER_NO,
+          listOf(
+            nomisCaseResponse().copy(id = NOMIS_CASE_ID, offenderNo = OFFENDER_NO, courtEvents = listOf(nomisAppearanceResponse(), nomisAppearanceResponse())),
+            nomisCaseResponse().copy(id = NOMIS_CASE_2_ID, offenderNo = OFFENDER_NO_2),
+          ),
+          listOf(
+            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_ID),
+            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_2_ID),
+          ),
+        )
+        stubCases(
+          OFFENDER_NO_2,
+          listOf(
+            nomisCaseResponse().copy(id = NOMIS_CASE_ID, courtEvents = listOf(nomisAppearanceResponse(), nomisAppearanceResponse())),
+            nomisCaseResponse().copy(id = NOMIS_CASE_2_ID),
+          ),
+          listOf(
+            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_ID),
+            dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_2_ID),
+          ),
+        )
+      }
+
+      @Nested
+      inner class MismatchFound {
+        @Test
+        fun `will return a mismatch when sentence number is different`() {
+          webTestClient.post().uri("prisoners/court-sentencing/court-cases/reconciliation")
+            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .contentType(MediaType.APPLICATION_JSON)
+            .body(BodyInserters.fromValue(listOf(OFFENDER_NO, OFFENDER_NO_2)))
+            .exchange()
+            .expectStatus().isOk
+            .expectBody()
+            // for the purposes of DPS - status of case is either active or inactive. Other values exist in nomis
+            .jsonPath("$[0][0].mismatch.differences.size()").isEqualTo("1")
+            .jsonPath("$[1][0].mismatch.differences.size()").isEqualTo("1")
+            .jsonPath("$[0][0].offenderNo").isEqualTo(OFFENDER_NO)
+            .jsonPath("$[1][0].offenderNo").isEqualTo(OFFENDER_NO_2)
         }
       }
     }

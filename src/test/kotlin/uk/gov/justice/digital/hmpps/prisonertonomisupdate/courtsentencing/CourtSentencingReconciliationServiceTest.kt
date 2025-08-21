@@ -853,9 +853,10 @@ fun nomisCaseResponse(
   beginDate: LocalDate = LocalDate.of(2024, 1, 1),
   events: List<CourtEventResponse> = listOf(nomisAppearanceResponse()),
   sentences: List<SentenceResponse> = listOf(nomisSentenceResponse()),
+  offenderNo: String = OFFENDER_NO,
 ) = CourtCaseResponse(
   id = id,
-  offenderNo = OFFENDER_NO,
+  offenderNo = offenderNo,
   courtEvents = events,
   courtId = PRISON_LEI,
   createdDateTime = LocalDateTime.now(),
