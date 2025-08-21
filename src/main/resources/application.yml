@@ -5,8 +5,9 @@ info.app:
 spring:
   application:
     name: hmpps-prisoner-to-nomis-update
-  codec:
-    max-in-memory-size: 10MB
+  http:
+    codecs:
+      max-in-memory-size: 10MB
 
   security:
     oauth2:
@@ -162,6 +163,9 @@ reports:
     reconciliation:
       migration-date: 2024-01-28
       page-size: 20
+  appointments:
+    reconciliation:
+      page-size: 100
   sentencing:
     reconciliation:
       page-size: 20

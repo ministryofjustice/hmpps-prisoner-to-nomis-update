@@ -774,7 +774,7 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it["appointmentInstanceId"]).isEqualTo(APPOINTMENT_INSTANCE_ID.toString())
               assertThat(it["nomisEventId"]).isEqualTo(EVENT_ID.toString())
-              assertThat(it["nomis-error"]).isEqualTo("'404 Not found in Nomis: ignored")
+              assertThat(it["nomis-error"]).isEqualTo("404 Not found in Nomis: event ignored")
             },
             isNull(),
           )

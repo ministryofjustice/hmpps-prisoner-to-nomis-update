@@ -138,6 +138,7 @@ fun Any.asMap(): Map<String, String> = this::class.memberProperties
 suspend fun <A, B> Pair<Deferred<A>, Deferred<B>>.awaitBoth(): Pair<A, B> = this.first.await() to this.second.await()
 
 fun Long.asPages(pageSize: Long): Array<Pair<Long, Long>> = (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
+fun Int.asPages(pageSize: Int): Array<Pair<Int, Int>> = (0..(this / pageSize)).map { it to pageSize }.toTypedArray()
 
 enum class CreatingSystem {
   NOMIS,

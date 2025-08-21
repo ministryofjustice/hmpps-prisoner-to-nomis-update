@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -112,7 +113,10 @@ class AppointmentsService(
       }
       if (!nomisApiService.cancelAppointmentIgnoreIfNotFound(nomisEventId)) {
         // Ignore event if appointment does not exist in Nomis
-        telemetryMap["nomis-error"] = "'404 Not found in Nomis: ignored"
+        // This can happen if a deletion and cancellation event arrive simultaneously, and the
+        // cancellation process gets the mapping before it is deleted by the deletion processing, but then
+        // finds that the deletion has deleted it in Nomis already.
+        telemetryMap["nomis-error"] = "404 Not found in Nomis: event ignored"
       }
     }.onSuccess {
       telemetryClient.trackEvent("appointment-cancel-success", telemetryMap, null)

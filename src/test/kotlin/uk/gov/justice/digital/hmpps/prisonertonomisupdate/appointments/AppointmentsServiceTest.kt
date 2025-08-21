@@ -17,6 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_EVENT_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateAppointmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateAppointmentRequest
@@ -25,7 +26,7 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 @OptIn(ExperimentalCoroutinesApi::class)
-internal class AppointmentsServiceTest {
+class AppointmentsServiceTest {
 
   private val appointmentsApiService: AppointmentsApiService = mock()
   private val nomisApiService: NomisApiService = mock()

@@ -336,6 +336,9 @@ reports:
   alerts:
     reconciliation:
       page-size: 10
+  appointments:
+    reconciliation:
+      page-size: 5
   casenotes:
     reconciliation:
       page-size: 5
