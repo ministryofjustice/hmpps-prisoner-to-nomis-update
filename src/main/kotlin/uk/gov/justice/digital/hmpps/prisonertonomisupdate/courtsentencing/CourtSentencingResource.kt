@@ -28,29 +28,38 @@ class CourtSentencingResource(
   }
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
-  @GetMapping("/court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
+  @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   suspend fun getCaseReconciliationByDpsCaseId(
     @PathVariable dpsCaseId: String,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseDps(dpsCaseId = dpsCaseId)
+    @PathVariable offenderNo: String,
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseDps(offenderNo = offenderNo, dpsCaseId = dpsCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
-  @GetMapping("/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
+  @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
   suspend fun getCaseReconciliationByNomisCaseId(
     @PathVariable nomisCaseId: Long,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(nomisCaseId = nomisCaseId)
+    @PathVariable offenderNo: String,
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(offenderNo = offenderNo, nomisCaseId = nomisCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
-  @GetMapping("/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/dps-case-id/{dpsCaseId}/reconciliation")
+  @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/dps-case-id/{dpsCaseId}/reconciliation")
   suspend fun getCaseReconciliationByCaseId(
+    @PathVariable offenderNo: String,
     @PathVariable nomisCaseId: Long,
     @PathVariable dpsCaseId: String,
-  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId)
+  ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(offenderNo = offenderNo, nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,
   ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo)
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
+  @PostMapping("/prisoners/court-sentencing/court-cases/reconciliation")
+  suspend fun getCaseReconciliationByOffenderNoList(
+    @RequestBody offenderNoList: List<String>,
+  ): List<List<MismatchCaseResponse>> = courtSentencingReconciliationService.manualCheckCaseOffenderNoList(offenderNoList = offenderNoList)
 
   @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
   @PostMapping("/court-sentencing/court-charges/repair")
