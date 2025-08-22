@@ -22,8 +22,8 @@ generic-service:
     API_BASE_URL_FINANCE: https://prisoner-finance-poc-api.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
     API_BASE_URL_INCIDENTS: https://incident-reporting-api.hmpps.service.justice.gov.uk
-    API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api.hmpps.service.justice.gov.uk
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api.hmpps.service.justice.gov.uk
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
