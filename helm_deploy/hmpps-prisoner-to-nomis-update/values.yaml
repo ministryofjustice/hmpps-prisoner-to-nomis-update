@@ -72,6 +72,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /transactions/reports/reconciliation {
+          deny all;
+          return 401;
+        }
         location /incidents/reports/reconciliation {
           deny all;
           return 401;

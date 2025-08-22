@@ -30,9 +30,7 @@ dependencies {
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  // Leaving at 2.9.0 to match the version used in App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L16
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.18.1")
-  // Leaving at 1.43.0 to match the version used in App Insights https://github.com/microsoft/ApplicationInsights-Java/blob/3.6.2/dependencyManagement/build.gradle.kts#L14
   implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.52.0")
   implementation("com.google.guava:guava:33.4.8-jre")
 
@@ -110,6 +108,12 @@ val models = listOf(
     packageName = "csip",
     url = "https://csip-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "Attendee,ContributoryFactor,CsipRecord,DecisionAndActions,IdentifiedNeed,Interview,Investigation,Plan,ReferenceData,Referral,Review,SaferCustodyScreeningOutcome",
+  ),
+  ModelConfiguration(
+    name = "finance",
+    packageName = "finance",
+    url = "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    // TODO Add in Models required
   ),
   ModelConfiguration(
     name = "incidents",

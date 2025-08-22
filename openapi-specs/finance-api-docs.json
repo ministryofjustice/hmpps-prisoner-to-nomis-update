@@ -1,0 +1,1018 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "HMPPS Prisoner Finance API - ALPHA",
+    "description" : "API for retrieving and managing transactions and balance information related to prisoner finance.\n\n## Authentication\nThis API uses **OAuth2 with JWTs**. Pass your JWT in the `Authorization` header using the `Bearer` scheme.\n**Important:** This service is designed for client tokens only; user tokens should not be used.\n\n## Authorization\nAccess to API endpoints is controlled by roles. The required roles are documented with each endpoint.\nIntegrations should request one of the following roles based on their needs:\n\n* `ROLE_PRISONER_FINANCE__RO`: Grants **read-only access** (e.g., retrieving transactions, balances).\n* `ROLE_PRISONER_FINANCE__RW`: Grants **read/write access** (e.g., creating transactions, adding amendments).\n* `ROLE_PRISONER_FINANCE_SYNC__RW`: Grants **read/write access** to the NOMIS sync endpoints.",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2025-08-21.53.531cea2"
+  },
+  "servers" : [ {
+    "url" : "http://localhost:8080",
+    "description" : "Local development environment"
+  }, {
+    "url" : "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/",
+    "description" : "Development environment"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ ]
+  } ],
+  "tags" : [ {
+    "name" : "NOMIS Sync",
+    "description" : "Endpoints exclusively for NOMIS synchronization. Do not use for other client integrations."
+  } ],
+  "paths" : {
+    "/sync/offender-transactions" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Retrieve offender transactions by date range",
+        "description" : "Fetches a list of offender transactions within a specified start and end date.",
+        "operationId" : "getOffenderTransactionsByDate",
+        "parameters" : [ {
+          "name" : "startDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "endDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transactions successfully retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOffenderTransactionListResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid date format or range.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Synchronize offender transactions",
+        "description" : "\n      Transactions that have not been posted before will be created.\n      Those that have already been posted and can be identified will be updated with metadata only.\n      If the core details of a transaction have changed, the ledger will need to reverse the original transaction and post a new one.\n    ",
+        "operationId" : "postOffenderTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncOffenderTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Offender transaction successfully created.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransactionReceipt"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Offender transaction metadata successfully updated or processed with no new creations.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransactionReceipt"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/general-ledger-transactions" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Retrieve general ledger transactions by date range",
+        "description" : "Fetches a list of general ledger transactions within a specified start and end date.",
+        "operationId" : "getGeneralLedgerTransactionsByDate",
+        "parameters" : [ {
+          "name" : "startDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "endDate",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "General ledger transactions successfully retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionListResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid date format or range.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      },
+      "post" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Synchronize general ledger transactions",
+        "description" : "\n      General ledger transactions that have not been posted before will be created.\n      Those that have already been posted and can be identified will be updated with metadata only.\n      If the core details of a transaction have changed, the ledger will need to reverse the original transaction and post a new one.\n    ",
+        "operationId" : "postGeneralLedgerTransaction",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "General ledger transaction successfully posted.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransactionReceipt"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "General ledger transaction metadata successfully updated or processed with no new creations.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTransactionReceipt"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/offender-transactions/{id}" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Retrieve an offender transaction by its ID",
+        "description" : "Fetches a single offender transaction by its ID.",
+        "operationId" : "getOffenderTransactionById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender transaction successfully retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - The specified transaction ID was not found.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/sync/general-ledger-transactions/{id}" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Retrieve a single general ledger transaction",
+        "description" : "Fetches a single general ledger transaction by its ID.",
+        "operationId" : "getGeneralLedgerTransactionById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "General ledger transaction successfully retrieved.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - The specified transaction was not found.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "GeneralLedgerEntry" : {
+        "type" : "object",
+        "description" : "Represents a general ledger entry.",
+        "properties" : {
+          "entrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number for this specific general ledger entry.",
+            "example" : 1
+          },
+          "code" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The general ledger account code.",
+            "example" : 2101
+          },
+          "postingType" : {
+            "type" : "string",
+            "description" : "Indicates whether the entry is a Debit (DR) or Credit (CR).",
+            "enum" : [ "DR", "CR" ],
+            "example" : "DR"
+          },
+          "amount" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "The monetary amount of the general ledger entry.",
+            "example" : 162.0
+          }
+        },
+        "required" : [ "amount", "code", "entrySequence", "postingType" ]
+      },
+      "OffenderTransaction" : {
+        "type" : "object",
+        "description" : "Represents a single offender transaction entry, including related general ledger entries.",
+        "properties" : {
+          "entrySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number for this specific offender transaction entry.",
+            "example" : 1
+          },
+          "offenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal ID of the offender.",
+            "example" : 1015388
+          },
+          "offenderDisplayId" : {
+            "type" : "string",
+            "description" : "The display ID for the offender.",
+            "example" : "AA001AA"
+          },
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking ID of the offender transaction.",
+            "example" : 455987
+          },
+          "subAccountType" : {
+            "type" : "string",
+            "description" : "The sub-account type (e.g., REG, SPND, SAV).",
+            "example" : "REG"
+          },
+          "postingType" : {
+            "type" : "string",
+            "description" : "The type of posting (DR/CR).",
+            "enum" : [ "DR", "CR" ],
+            "example" : "DR"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "The type of transaction (e.g., OT, DISCP).",
+            "example" : "OT"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the transaction entry.",
+            "example" : "Sub-Account Transfer"
+          },
+          "amount" : {
+            "type" : "number",
+            "format" : "double",
+            "description" : "The monetary amount of the transaction entry.",
+            "example" : 162.0
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "An optional reference number for the transaction."
+          },
+          "generalLedgerEntries" : {
+            "type" : "array",
+            "description" : "A list of general ledger entries associated with this offender transaction.",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerEntry"
+            }
+          }
+        },
+        "required" : [ "amount", "description", "entrySequence", "generalLedgerEntries", "offenderDisplayId", "offenderId", "postingType", "subAccountType", "type" ]
+      },
+      "SyncOffenderTransactionRequest" : {
+        "type" : "object",
+        "description" : "Request body for synchronizing an offender financial transaction.",
+        "properties" : {
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique ID of the transaction in NOMIS.",
+            "example" : 19228028
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "A unique identifier for this synchronization request. This can be used for idempotency or tracing.",
+            "example" : "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The ID of the caseload associated with this transaction.",
+            "example" : "GMI"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp when this transaction occurred (ISO 8601 format).",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was created.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user id of the person who created the transaction.",
+            "example" : "JD12345",
+            "maxLength" : 32,
+            "minLength" : 1
+          },
+          "createdByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of the person who created the transaction.",
+            "example" : "J Doe",
+            "maxLength" : 255,
+            "minLength" : 1
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation.",
+            "example" : "2022-07-15T23:03:01.123456"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The user id of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "AB11DZ",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string",
+            "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "U Dated",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "offenderTransactions" : {
+            "type" : "array",
+            "description" : "A list of individual entries that comprise this offender transaction.",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTransaction"
+            }
+          }
+        },
+        "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "offenderTransactions", "requestId", "transactionId", "transactionTimestamp" ]
+      },
+      "SyncTransactionReceipt" : {
+        "type" : "object",
+        "description" : "Receipt details for a synchronized transaction, indicating the outcome of the operation.",
+        "properties" : {
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique identifier of the **current synchronization request**. This Id was provided by the client as the idempotency key.",
+            "example" : "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique UUID generated by the **finance system** for the synchronized transaction. This is the internal identifier for the created or updated record.",
+            "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
+          },
+          "action" : {
+            "type" : "string",
+            "description" : "The action taken on the transaction by the finance system during synchronization.",
+            "enum" : [ "CREATED", "UPDATED", "PROCESSED" ],
+            "example" : "CREATED"
+          }
+        },
+        "required" : [ "action", "requestId", "synchronizedTransactionId" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "SyncGeneralLedgerTransactionRequest" : {
+        "type" : "object",
+        "description" : "Request body for synchronizing general ledger transactions. Please note these are for non-offender accounts only.",
+        "properties" : {
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the general ledger transaction.",
+            "example" : 19228028
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "A unique identifier for this synchronization request. This can be used for idempotency or tracing.",
+            "example" : "a1b2c3d4-e5f6-7890-1234-567890abcdef"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the general ledger transaction.",
+            "example" : "General Ledger Account Transfer"
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "An optional reference number for the transaction.",
+            "example" : "REF12345"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The ID of the caseload associated with the transaction.",
+            "example" : "GMI"
+          },
+          "transactionType" : {
+            "type" : "string",
+            "description" : "The transaction type",
+            "example" : "GJ"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The full timestamp of the transaction (ISO 8601).",
+            "example" : "2011-09-30T09:08:08.671682"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was created.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user ID of the person who created the transaction in the source system.",
+            "example" : "JD12345",
+            "maxLength" : 32,
+            "minLength" : 1
+          },
+          "createdByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of the person who created the transaction.",
+            "example" : "J Doe",
+            "maxLength" : 255,
+            "minLength" : 1
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation. (ISO 8601 format with offset)",
+            "example" : "2022-07-15T23:03:01.123456"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The user ID of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "AB11DZ",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string",
+            "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "U Dated",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "generalLedgerEntries" : {
+            "type" : "array",
+            "description" : "A list of general ledger entries associated with this general ledger transaction.",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerEntry"
+            }
+          }
+        },
+        "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "requestId", "transactionId", "transactionTimestamp", "transactionType" ]
+      },
+      "SyncOffenderTransactionListResponse" : {
+        "type" : "object",
+        "description" : "A response containing a list of offender transactions.",
+        "properties" : {
+          "offenderTransactions" : {
+            "type" : "array",
+            "description" : "The list of transactions found for the specified offender and date range.",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
+            }
+          }
+        },
+        "required" : [ "offenderTransactions" ]
+      },
+      "SyncOffenderTransactionResponse" : {
+        "type" : "object",
+        "description" : "A response containing a list of offender transactions",
+        "properties" : {
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique UUID generated by the **finance system** for the synchronized transaction. This is the internal identifier for the created or updated record.",
+            "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy ID of the transaction from the source system. This is only present if the transaction was originally generated by the legacy system.",
+            "example" : 123456
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The ID of the caseload associated with this transaction.",
+            "example" : "GMI"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp when this transaction occurred (ISO 8601 format).",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was created.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user id of the person who created the transaction.",
+            "example" : "JD12345",
+            "maxLength" : 32,
+            "minLength" : 1
+          },
+          "createdByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of the person who created the transaction.",
+            "example" : "J Doe",
+            "maxLength" : 255,
+            "minLength" : 1
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation.",
+            "example" : "2022-07-15T23:03:01.123456"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The user id of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "AB11DZ",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string",
+            "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "U Dated",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "transactions" : {
+            "type" : "array",
+            "description" : "The list of transactions found for the specified offender and date range.",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTransaction"
+            }
+          }
+        },
+        "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "synchronizedTransactionId", "transactionTimestamp", "transactions" ]
+      },
+      "SyncGeneralLedgerTransactionResponse" : {
+        "type" : "object",
+        "description" : "A response containing a general ledger transaction",
+        "properties" : {
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The unique UUID generated by the **finance system** for the synchronized transaction. This is the internal identifier for the created or updated record.",
+            "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The legacy ID of the transaction from the source system. This is only present if the transaction was originally generated by the legacy system.",
+            "example" : 123456
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the general ledger transaction.",
+            "example" : "General Ledger Account Transfer"
+          },
+          "reference" : {
+            "type" : "string",
+            "description" : "An optional reference number for the transaction.",
+            "example" : "REF12345"
+          },
+          "caseloadId" : {
+            "type" : "string",
+            "description" : "The ID of the caseload associated with the transaction.",
+            "example" : "GMI"
+          },
+          "transactionType" : {
+            "type" : "string",
+            "description" : "The transaction type",
+            "example" : "GJ"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The full timestamp of the transaction (ISO 8601).",
+            "example" : "2011-09-30T09:08:08.671682"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was created.",
+            "example" : "2024-06-18T14:30:00.123456"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user ID of the person who created the transaction in the source system.",
+            "example" : "JD12345",
+            "maxLength" : 32,
+            "minLength" : 1
+          },
+          "createdByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of the person who created the transaction.",
+            "example" : "J Doe",
+            "maxLength" : 255,
+            "minLength" : 1
+          },
+          "lastModifiedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation. (ISO 8601 format with offset)",
+            "example" : "2022-07-15T23:03:01.123456"
+          },
+          "lastModifiedBy" : {
+            "type" : "string",
+            "description" : "The user ID of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "AB11DZ",
+            "maxLength" : 32,
+            "minLength" : 0
+          },
+          "lastModifiedByDisplayName" : {
+            "type" : "string",
+            "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
+            "example" : "U Dated",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "generalLedgerEntries" : {
+            "type" : "array",
+            "description" : "A list of general ledger entries associated with this general ledger transaction.",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerEntry"
+            }
+          }
+        },
+        "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "synchronizedTransactionId", "transactionTimestamp", "transactionType" ]
+      },
+      "SyncGeneralLedgerTransactionListResponse" : {
+        "type" : "object",
+        "description" : "A response containing a list of general ledger transactions.",
+        "properties" : {
+          "transactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
+            }
+          }
+        },
+        "required" : [ "transactions" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}
