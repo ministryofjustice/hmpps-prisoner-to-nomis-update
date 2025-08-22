@@ -72,6 +72,10 @@ generic-service:
           deny all;
           return 401;
         }
+        location /transactions/reports/reconciliation {
+          deny all;
+          return 401;
+        }
         location /incidents/reports/reconciliation {
           deny all;
           return 401;
@@ -123,6 +127,8 @@ generic-service:
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
       CSIP_CLIENT_SECRET: "CSIP_CLIENT_SECRET"
+      FINANCE_CLIENT_ID: "FINANCE_CLIENT_ID"
+      FINANCE_CLIENT_SECRET: "FINANCE_CLIENT_SECRET"
       INCENTIVES_CLIENT_ID: "INCENTIVES_CLIENT_ID"
       INCENTIVES_CLIENT_SECRET: "INCENTIVES_CLIENT_SECRET"
       INCIDENTS_CLIENT_ID: "INCIDENTS_CLIENT_ID"
