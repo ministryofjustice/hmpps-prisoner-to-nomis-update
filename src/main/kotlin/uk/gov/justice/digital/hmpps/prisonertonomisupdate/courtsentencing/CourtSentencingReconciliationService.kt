@@ -107,7 +107,7 @@ class CourtSentencingReconciliationService(
   suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo))
 
   suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
-    checkCasesNomis(offenderNo = it, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(it))
+    checkCasesNomis(offenderNo = it, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(it)).filter { caseResponse -> caseResponse.mismatch != null }
   }.also {
     log.info(it.toString())
   }
