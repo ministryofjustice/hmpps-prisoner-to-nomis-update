@@ -52,7 +52,7 @@ spec:
                   type: RuntimeDefault
               envFrom:
                 - secretRef:
-                    name: hmpps-prisoner-to-nomis-update
+                    name: hmpps-prisoner-to-nomis-update-client-creds
           restartPolicy: Never
           volumes:
             - name: cronjob-api-helpers
