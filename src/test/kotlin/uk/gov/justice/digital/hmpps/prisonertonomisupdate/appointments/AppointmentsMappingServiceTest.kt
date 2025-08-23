@@ -19,6 +19,7 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 
 @SpringAPIServiceTest

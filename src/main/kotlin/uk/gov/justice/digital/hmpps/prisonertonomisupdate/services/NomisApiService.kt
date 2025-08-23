@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingRequest
@@ -163,6 +165,36 @@ class NomisApiService(
     .uri("/appointments/{nomisEventId}", nomisEventId)
     .retrieve()
     .awaitBodilessEntity()
+
+  suspend fun getAppointmentIds(
+    prisonIds: List<String>,
+    fromDate: LocalDate?,
+    toDate: LocalDate?,
+    pageNumber: Int,
+    pageSize: Int,
+  ): PageImpl<AppointmentIdResponse> = webClient
+    .get()
+    .uri {
+      it.path("/appointments/ids")
+        .queryParam("prisonIds", prisonIds)
+        .queryParam("fromDate", fromDate)
+        .queryParam("toDate", toDate)
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<AppointmentIdResponse>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/ids", "prisons", prisonIds.toString())))
+    .awaitSingle()
+
+  suspend fun getAppointment(nomisEventId: Long): AppointmentResponse = webClient
+    .get()
+    .uri("/appointments/{nomisEventId}", nomisEventId)
+    .retrieve()
+    .bodyToMono(AppointmentResponse::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
+    .awaitSingle()
 
   // //////////////////// SENTENCES ////////////////////////
 

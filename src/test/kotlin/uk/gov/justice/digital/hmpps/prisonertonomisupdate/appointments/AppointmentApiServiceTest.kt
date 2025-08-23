@@ -15,10 +15,11 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.AppointmentsApiExtension
 
 @SpringAPIServiceTest
-@Import(AppointmentsApiService::class, AppointmentsConfiguration::class)
+@Import(AppointmentsApiService::class, AppointmentsConfiguration::class, RetryApiService::class)
 internal class AppointmentApiServiceTest {
 
   @Autowired

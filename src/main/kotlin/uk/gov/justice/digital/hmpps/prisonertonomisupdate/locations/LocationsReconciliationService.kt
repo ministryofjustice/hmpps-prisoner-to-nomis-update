@@ -128,7 +128,9 @@ class LocationsReconciliationService(
     }
   }
 
-  internal suspend fun getNomisLocationsForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getLocations(page.first, page.second).content }
+  internal suspend fun getNomisLocationsForPage(page: Pair<Long, Long>) = runCatching {
+    nomisApiService.getLocations(page.first, page.second).content
+  }
     .onFailure {
       telemetryClient.trackEvent(
         "locations-reports-reconciliation-mismatch-page-error",
@@ -139,7 +141,9 @@ class LocationsReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("Nomis Page requested: $page, with ${it.size} locations") }
 
-  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> = runCatching { locationsApiService.getLocations(page.first, page.second).content }
+  internal suspend fun getDpsLocationsForPage(page: Pair<Long, Long>): List<LegacyLocation> = runCatching {
+    locationsApiService.getLocations(page.first, page.second).content
+  }
     .onFailure {
       telemetryClient.trackEvent(
         "locations-reports-reconciliation-mismatch-page-error",
