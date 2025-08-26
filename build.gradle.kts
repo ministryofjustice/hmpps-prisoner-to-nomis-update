@@ -209,16 +209,26 @@ models.forEach {
       Files.write(Paths.get(it.input), formattedJson.toByteArray())
     }
   }
-  tasks.register(it.toReadProductionVersionTaskName()) {
-    group = "Read current production version"
-    description = "Read current production version for ${it.name}"
-    doLast {
-      val productionUrl = it.url.replace("-dev".toRegex(), "")
-        .replace("dev.".toRegex(), "")
-        .replace("/v3/api-docs".toRegex(), "/info")
-      val json = URI.create(productionUrl).toURL().readText()
-      val version = ObjectMapper().readTree(json).at("/build/version").asText()
-      println(version)
+  if (it.name != "finance") {
+    tasks.register(it.toReadProductionVersionTaskName()) {
+      group = "Read current production version"
+      description = "Read current production version for ${it.name}"
+      doLast {
+        val productionUrl = it.url.replace("-dev".toRegex(), "")
+          .replace("dev.".toRegex(), "")
+          .replace("/v3/api-docs".toRegex(), "/info")
+        val json = URI.create(productionUrl).toURL().readText()
+        val version = ObjectMapper().readTree(json).at("/build/version").asText()
+        println(version)
+      }
+    }
+  } else {
+    tasks.register(it.toReadProductionVersionTaskName()) {
+      group = "Read current production version"
+      description = "Read current production version for ${it.name}"
+      doLast {
+        println("no production version")
+      }
     }
   }
   if (it.testPackageName != null) {
