@@ -206,3 +206,13 @@ fun HmppsQueue.readRawMessages(): List<String> {
     .map { it.body() }
     .toList()
 }
+fun HmppsQueue.readAtMost10RawMessages(): List<String> {
+  val messageResult = this.sqsClient.receiveMessage(
+    ReceiveMessageRequest.builder().queueUrl(this.queueUrl).maxNumberOfMessages(10).build(),
+  ).get()
+  return messageResult
+    .messages()
+    .stream()
+    .map { it.body() }
+    .toList()
+}

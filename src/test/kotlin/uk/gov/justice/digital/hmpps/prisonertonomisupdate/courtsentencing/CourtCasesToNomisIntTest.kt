@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost10RawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
@@ -56,6 +57,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.BOOKING_ID
 import java.time.LocalDate
@@ -619,7 +621,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                           ),
                         ),
                       ),
-                    ).copy(bookingId = 1000, offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 1003), nomisOffenderChargeResponse(offenderChargeId = 1004))),
+                    ).copy(
+                      bookingId = 1,
+                      offenderCharges = listOf(
+                        nomisOffenderChargeResponse(offenderChargeId = 1003),
+                        nomisOffenderChargeResponse(offenderChargeId = 1004),
+                      ),
+                    ),
                     courtCase = nomisCaseResponse(
                       id = 201L,
                       events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
@@ -633,7 +641,22 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                           ),
                         ),
                       ),
-                    ).copy(bookingId = 2000, offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 2003), nomisOffenderChargeResponse(offenderChargeId = 2004))),
+                    ).copy(
+                      bookingId = 2,
+                      offenderCharges = listOf(
+                        nomisOffenderChargeResponse(offenderChargeId = 2003),
+                        nomisOffenderChargeResponse(offenderChargeId = 2004),
+                      ),
+                    ),
+                  ),
+                ),
+                sentenceAdjustments = listOf(
+                  SentenceIdAndAdjustmentsCreated(
+                    sentenceId = SentenceId(
+                      offenderBookingId = 2,
+                      sentenceSequence = 20,
+                    ),
+                    adjustmentIds = listOf(20001, 20002),
                   ),
                 ),
               ),
@@ -674,11 +697,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will send message to nomis migration to sync court cases cloned`() {
           await untilAsserted {
-            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(1)
+            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
           }
-          val rawMessage = fromNomisCourtSentencingQueue.readRawMessages().first()
-          val sqsMessage: SQSMessage = rawMessage.fromJson()
-
+          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+          val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+          val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
           assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
           val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
           assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
@@ -687,8 +710,40 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           assertThat(request.casesMoved[0].caseId).isEqualTo(201L)
           assertThat(request.casesMoved[0].sentences).hasSize(1)
           assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
-          assertThat(request.fromBookingId).isEqualTo(1000L)
-          assertThat(request.toBookingId).isEqualTo(2000L)
+          assertThat(request.fromBookingId).isEqualTo(1L)
+          assertThat(request.toBookingId).isEqualTo(2L)
+        }
+
+        @Test
+        fun `will send message to nomis migration to sync sentence adjustments cloned`() {
+          await untilAsserted {
+            assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+          }
+          val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+          val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+          val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
+
+          assertThat(adjustmentMessages).hasSize(2)
+
+          val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
+
+          with(requests[0]) {
+            assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+            assertThat(sentences).hasSize(1)
+            assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+            assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+            assertThat(sentences[0].adjustmentIds).hasSize(1)
+            // either of the adjustments will be present
+            assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+          }
+          with(requests[1]) {
+            assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+            assertThat(sentences).hasSize(1)
+            assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+            assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+            assertThat(sentences[0].adjustmentIds).hasSize(1)
+            assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+          }
         }
 
         @Test

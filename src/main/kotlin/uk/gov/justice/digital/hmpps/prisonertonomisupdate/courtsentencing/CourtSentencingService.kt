@@ -243,8 +243,12 @@ class CourtSentencingService(
         // there must always be at least once case cloned else we would never have a clone operation
         fromBookingId = cloneResponse.courtCases.first().sourceCourtCase.bookingId,
         toBookingId = cloneResponse.courtCases.first().courtCase.bookingId,
-        // TODO - once the API also clones the adjustments
-        sentenceAdjustments = emptyList(),
+        sentenceAdjustments = cloneResponse.sentenceAdjustments.map {
+          SentenceIdAndAdjustmentType(
+            sentenceId = it.sentenceId,
+            adjustmentIds = it.adjustmentIds,
+          )
+        },
         casesMoved = cloneResponse.courtCases.map {
           CaseBookingChanged(
             caseId = it.courtCase.id,
@@ -666,21 +670,23 @@ class CourtSentencingService(
       )
 
       details.sentenceAdjustments.forEach { adjustment ->
-        // since these are new adjustments send these individually given creating
-        // a batch of adjustments is not idempotent if there are failures
-        queueService.sendMessageTrackOnFailure(
-          queueId = "fromnomiscourtsentencing",
-          eventType = "courtsentencing.resync.sentence-adjustments",
-          message = SyncSentenceAdjustment(
-            offenderNo = offenderNo,
-            sentences = listOf(
-              SentenceIdAndAdjustmentIds(
-                sentenceId = adjustment.sentenceId,
-                adjustmentIds = adjustment.adjustmentIds,
+        adjustment.adjustmentIds.forEach { adjustmentId ->
+          // since these are new adjustments send these individually given creating
+          // a batch of adjustments is not idempotent if there are failures
+          queueService.sendMessageTrackOnFailure(
+            queueId = "fromnomiscourtsentencing",
+            eventType = "courtsentencing.resync.sentence-adjustments",
+            message = SyncSentenceAdjustment(
+              offenderNo = offenderNo,
+              sentences = listOf(
+                SentenceIdAndAdjustmentIds(
+                  sentenceId = adjustment.sentenceId,
+                  adjustmentIds = listOf(adjustmentId),
+                ),
               ),
             ),
-          ),
-        )
+          )
+        }
       }
       telemetryClient.trackEvent(
         "court-appearance-create-cases-cloned",
