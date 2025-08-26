@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-21.462.6c0ea6a"
+    "version" : "2025-08-22.470.118d744"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -15695,6 +15695,178 @@
         }
       }
     },
+    "/movements/{offenderNo}/temporary-absences/temporary-absence/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Get a specific temporary absence for an offender",
+        "description" : "Get a specific temporary absence for an offender by booking ID and movement sequence. Requires role NOMIS_MOVEMENTS",
+        "operationId" : "getTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender temporary absence returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or temporary absence not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/temporary-absence-return/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Get a specific temporary absence return for an offender",
+        "description" : "Get a specific temporary absence return for an offender by booking ID and movement sequence. Requires role NOMIS_MOVEMENTS",
+        "operationId" : "getTemporaryAbsenceReturn",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 123
+          },
+          "example" : 123
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "description" : "Movement Sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement Sequence",
+            "example" : 1
+          },
+          "example" : 1
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender temporary absence return returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceReturnResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or temporary absence return not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence/{eventId}" : {
       "get" : {
         "tags" : [ "movements-resource" ],
@@ -25988,12 +26160,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -29505,6 +29677,158 @@
           }
         },
         "required" : [ "audit", "movementDate", "movementReason", "movementTime", "sequence" ]
+      },
+      "TemporaryAbsenceResponse" : {
+        "type" : "object",
+        "description" : "Temporary absence response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID. Empty for unscheduled movements."
+          },
+          "scheduledTemporaryAbsenceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence event ID. Empty for unscheduled movements."
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "arrestAgency" : {
+            "type" : "string",
+            "description" : "Arresting Agency"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "escortText" : {
+            "type" : "string",
+            "description" : "Escort text"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toAgency" : {
+            "type" : "string",
+            "description" : "To agency"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          },
+          "toAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "To address owner class"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence" ]
+      },
+      "TemporaryAbsenceReturnResponse" : {
+        "type" : "object",
+        "description" : "Temporary absence return response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID. Empty for unscheduled movements."
+          },
+          "scheduledTemporaryAbsenceReturnId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence return event ID. Empty for unscheduled movements."
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "escortText" : {
+            "type" : "string",
+            "description" : "Escort text"
+          },
+          "fromAgency" : {
+            "type" : "string",
+            "description" : "From agency"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "fromAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "From address ID"
+          },
+          "fromAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "From address owner class"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit data associated with the records"
+          }
+        },
+        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence" ]
       },
       "ScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
