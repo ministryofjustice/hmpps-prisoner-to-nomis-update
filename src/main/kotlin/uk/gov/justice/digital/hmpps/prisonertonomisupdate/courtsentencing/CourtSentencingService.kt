@@ -237,7 +237,26 @@ class CourtSentencingService(
       ),
     ),
     offenderNo = offenderNo,
-    clonedCourtCaseIds = clonedCourtCases?.courtCases?.map { it.sourceCourtCase.id },
+    clonedClonedCourtCaseDetails = clonedCourtCases?.let { cloneResponse ->
+      ClonedCourtCaseDetails(
+        clonedCourtCaseIds = cloneResponse.courtCases.map { it.sourceCourtCase.id },
+        // there must always be at least once case cloned else we would never have a clone operation
+        fromBookingId = cloneResponse.courtCases.first().sourceCourtCase.bookingId,
+        toBookingId = cloneResponse.courtCases.first().courtCase.bookingId,
+        // TODO - once the API also clones the adjustments
+        sentenceAdjustments = emptyList(),
+        casesMoved = cloneResponse.courtCases.map {
+          CaseBookingChanged(
+            caseId = it.courtCase.id,
+            sentences = it.courtCase.sentences.map { sentence ->
+              SentenceBookingChanged(
+                sentenceSequence = sentence.sentenceSeq.toInt(),
+              )
+            },
+          )
+        },
+      )
+    },
   )
 
   private suspend fun CreateCourtAppearanceResponse.toCourtCases(): List<SimpleCourtSentencingIdPair> {
@@ -633,18 +652,39 @@ class CourtSentencingService(
 
   suspend fun createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
     courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
-    mappingsWrapper.clonedCourtCaseIds?.also { courtCaseIds ->
+    mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
       queueService.sendMessageTrackOnFailure(
         queueId = "fromnomiscourtsentencing",
         eventType = "courtsentencing.resync.case.booking",
         message = OffenderCaseBookingResynchronisationEvent(
           offenderNo = offenderNo,
-          caseIds = courtCaseIds,
+          caseIds = details.clonedCourtCaseIds,
+          fromBookingId = details.fromBookingId,
+          toBookingId = details.toBookingId,
+          casesMoved = details.casesMoved,
         ),
       )
+
+      details.sentenceAdjustments.forEach { adjustment ->
+        // since these are new adjustments send these individually given creating
+        // a batch of adjustments is not idempotent if there are failures
+        queueService.sendMessageTrackOnFailure(
+          queueId = "fromnomiscourtsentencing",
+          eventType = "courtsentencing.resync.sentence-adjustments",
+          message = SyncSentenceAdjustment(
+            offenderNo = offenderNo,
+            sentences = listOf(
+              SentenceIdAndAdjustmentIds(
+                sentenceId = adjustment.sentenceId,
+                adjustmentIds = adjustment.adjustmentIds,
+              ),
+            ),
+          ),
+        )
+      }
       telemetryClient.trackEvent(
         "court-appearance-create-cases-cloned",
-        telemetry + ("nomisCourtCaseIds" to courtCaseIds.joinToString()),
+        telemetry + ("nomisCourtCaseIds" to details.clonedCourtCaseIds.joinToString()),
         null,
       )
     }
@@ -1630,7 +1670,19 @@ data class OffenderSentenceResynchronisationEvent(
 
 data class OffenderCaseBookingResynchronisationEvent(
   val offenderNo: String,
+  val fromBookingId: Long,
+  val toBookingId: Long,
   val caseIds: List<Long>,
+  val casesMoved: List<CaseBookingChanged>,
+)
+
+data class CaseBookingChanged(
+  val caseId: Long,
+  val sentences: List<SentenceBookingChanged>,
+)
+
+data class SentenceBookingChanged(
+  val sentenceSequence: Int,
 )
 
 data class OffenderCaseResynchronisationEvent(
@@ -1642,5 +1694,18 @@ data class OffenderCaseResynchronisationEvent(
 data class CourtCaseBatchUpdateAndCreateMappingsWrapper(
   val mappings: CourtCaseBatchUpdateAndCreateMappingDto,
   val offenderNo: String,
-  val clonedCourtCaseIds: List<Long>?,
+  val clonedClonedCourtCaseDetails: ClonedCourtCaseDetails?,
+)
+
+data class ClonedCourtCaseDetails(
+  val clonedCourtCaseIds: List<Long>,
+  val fromBookingId: Long,
+  val toBookingId: Long,
+  val sentenceAdjustments: List<SentenceIdAndAdjustmentType>,
+  val casesMoved: List<CaseBookingChanged>,
+)
+
+data class SentenceIdAndAdjustmentType(
+  val sentenceId: SentenceId,
+  val adjustmentIds: List<Long>,
 )

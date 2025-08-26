@@ -619,7 +619,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                           ),
                         ),
                       ),
-                    ).copy(offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 1003), nomisOffenderChargeResponse(offenderChargeId = 1004))),
+                    ).copy(bookingId = 1000, offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 1003), nomisOffenderChargeResponse(offenderChargeId = 1004))),
                     courtCase = nomisCaseResponse(
                       id = 201L,
                       events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
@@ -633,7 +633,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                           ),
                         ),
                       ),
-                    ).copy(offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 2003), nomisOffenderChargeResponse(offenderChargeId = 2004))),
+                    ).copy(bookingId = 2000, offenderCharges = listOf(nomisOffenderChargeResponse(offenderChargeId = 2003), nomisOffenderChargeResponse(offenderChargeId = 2004))),
                   ),
                 ),
               ),
@@ -683,6 +683,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
           assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
           assertThat(request.caseIds).containsExactly(101L)
+          assertThat(request.casesMoved).hasSize(1)
+          assertThat(request.casesMoved[0].caseId).isEqualTo(201L)
+          assertThat(request.casesMoved[0].sentences).hasSize(1)
+          assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
+          assertThat(request.fromBookingId).isEqualTo(1000L)
+          assertThat(request.toBookingId).isEqualTo(2000L)
         }
 
         @Test
