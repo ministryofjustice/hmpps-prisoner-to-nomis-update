@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-22.470.118d744"
+    "version" : "2025-08-26.475.438c3dc"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22948,7 +22948,7 @@
       },
       "BookingCourtCaseCloneResponse" : {
         "type" : "object",
-        "description" : "Response for Court Cases bookig clone operations",
+        "description" : "Response for Court Cases booking clone operations",
         "properties" : {
           "courtCases" : {
             "type" : "array",
@@ -22956,9 +22956,16 @@
             "items" : {
               "$ref" : "#/components/schemas/ClonedCourtCaseResponse"
             }
+          },
+          "sentenceAdjustments" : {
+            "type" : "array",
+            "description" : "Sentence adjustments created",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceIdAndAdjustmentsCreated"
+            }
           }
         },
-        "required" : [ "courtCases" ]
+        "required" : [ "courtCases", "sentenceAdjustments" ]
       },
       "CaseIdentifierResponse" : {
         "type" : "object",
@@ -23470,6 +23477,22 @@
           }
         },
         "required" : [ "recallLength", "returnToCustodyDate" ]
+      },
+      "SentenceIdAndAdjustmentsCreated" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceId" : {
+            "$ref" : "#/components/schemas/SentenceId"
+          },
+          "adjustmentIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "adjustmentIds", "sentenceId" ]
       },
       "SentencePurposeResponse" : {
         "type" : "object",
