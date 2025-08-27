@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-21.53.531cea2"
+    "version" : "2025-08-22.56.bc24c23"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",
@@ -45,6 +45,24 @@
           "schema" : {
             "type" : "string",
             "format" : "date"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
           }
         } ],
         "responses" : {
@@ -206,6 +224,24 @@
           "schema" : {
             "type" : "string",
             "format" : "date"
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
           }
         } ],
         "responses" : {
@@ -808,20 +844,6 @@
         },
         "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "requestId", "transactionId", "transactionTimestamp", "transactionType" ]
       },
-      "SyncOffenderTransactionListResponse" : {
-        "type" : "object",
-        "description" : "A response containing a list of offender transactions.",
-        "properties" : {
-          "offenderTransactions" : {
-            "type" : "array",
-            "description" : "The list of transactions found for the specified offender and date range.",
-            "items" : {
-              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
-            }
-          }
-        },
-        "required" : [ "offenderTransactions" ]
-      },
       "SyncOffenderTransactionResponse" : {
         "type" : "object",
         "description" : "A response containing a list of offender transactions",
@@ -898,6 +920,37 @@
           }
         },
         "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "synchronizedTransactionId", "transactionTimestamp", "transactions" ]
+      },
+      "SyncOffenderTransactionListResponse" : {
+        "type" : "object",
+        "properties" : {
+          "offenderTransactions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
+            }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current page number (0-indexed)."
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The total number of elements across all pages."
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The total number of pages."
+          },
+          "last" : {
+            "type" : "boolean",
+            "description" : "Indicates if this is the last page."
+          }
+        },
+        "required" : [ "last", "offenderTransactions", "page", "totalElements", "totalPages" ]
       },
       "SyncGeneralLedgerTransactionResponse" : {
         "type" : "object",
@@ -1000,9 +1053,28 @@
             "items" : {
               "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
             }
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current page number (0-indexed)."
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The total number of elements across all pages."
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The total number of pages."
+          },
+          "last" : {
+            "type" : "boolean",
+            "description" : "Indicates if this is the last page."
           }
         },
-        "required" : [ "transactions" ]
+        "required" : [ "last", "page", "totalElements", "totalPages", "transactions" ]
       }
     },
     "securitySchemes" : {
