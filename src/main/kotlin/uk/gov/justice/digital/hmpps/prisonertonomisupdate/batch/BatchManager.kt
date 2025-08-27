@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
+import java.time.LocalDate
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
 @Service
@@ -26,6 +27,8 @@ class BatchManager(
 
     when (batchType) {
       "ALLOCATION_RECON" -> activitiesReconService.allocationReconciliationReport()
+      "ATTENDANCE_RECON" -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
+      "SUSPENDED_ALLOCATION_RECON" -> activitiesReconService.suspendedAllocationReconciliationReport()
       else -> log.error("Batch type $batchType not supported")
     }
   }.also { event.closeApplication() }
