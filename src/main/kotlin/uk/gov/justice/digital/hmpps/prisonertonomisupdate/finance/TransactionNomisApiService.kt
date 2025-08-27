@@ -19,7 +19,18 @@ class TransactionNomisApiService(
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "TransactionNomisApiService"),
   )
+  suspend fun getFirstTransactionIdFrom(fromDate: LocalDate): Long = webClient
+    .get()
+    .uri("/transactions/{date}/first", fromDate)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
 
+  suspend fun getTransactions(lastTransactionId: Long = 0, transactionEntrySequence: Int = 1, pageSize: Int = 20): List<OffenderTransactionDto> = webClient.get()
+    .uri("/transactions/from/{transactionId}/{transactionEntrySequence}?pageSize={pageSize}", lastTransactionId, transactionEntrySequence, pageSize)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  // Not sure which we need for the ones below (ones above, at least, will be needed for reconciliation)
   suspend fun getTransactions(transactionId: Long): List<OffenderTransactionDto> = webClient
     .get()
     .uri("/transactions/{transactionId}", transactionId)
@@ -35,12 +46,6 @@ class TransactionNomisApiService(
   suspend fun getGLTransactionsForPrisoner(offenderNo: String): PrisonerTransactionLists = webClient
     .get()
     .uri("/transactions/prisoners/{offenderNo}", offenderNo)
-    .retrieve()
-    .awaitBodyWithRetry(retrySpec = backoffSpec)
-
-  suspend fun getFirstTransactionOn(date: LocalDate): Long = webClient
-    .get()
-    .uri("/transactions/{date}/first", date)
     .retrieve()
     .awaitBodyWithRetry(retrySpec = backoffSpec)
 
