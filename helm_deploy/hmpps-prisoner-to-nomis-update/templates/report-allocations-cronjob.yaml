@@ -7,7 +7,7 @@ metadata:
 spec:
   schedule: "{{ .Values.cron.allocationReconReportSchedule }}"
   suspend: false
-  concurrencyPolicy: Forbid
+  concurrencyPolicy: Replace
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
   successfulJobsHistoryLimit: 5

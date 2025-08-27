@@ -12,13 +12,11 @@ import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
-import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
-import java.time.LocalDate
 
 @RestController
 class ActivitiesResource(
@@ -26,7 +24,6 @@ class ActivitiesResource(
   private val allocationService: AllocationService,
   private val attendanceService: AttendanceService,
   private val schedulesService: SchedulesService,
-  private val activitiesReconService: ActivitiesReconService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -146,16 +143,6 @@ class ActivitiesResource(
     telemetryClient.trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to attendanceId.toString()))
     attendanceService.upsertAttendance(attendanceId)
   }
-
-  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
-  @PostMapping("/suspended-allocations/reports/reconciliation")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  suspend fun suspendedAllocationsReconciliation() = activitiesReconService.suspendedAllocationReconciliationReport()
-
-  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__RECONCILIATION__R')")
-  @PostMapping("/attendances/reports/reconciliation")
-  @ResponseStatus(HttpStatus.ACCEPTED)
-  suspend fun attendanceReconciliation(@Schema(description = "Date") @RequestParam date: LocalDate) = activitiesReconService.attendanceReconciliationReport(date)
 
   /*
    * There is a problem in preprod where the activity mappings are refreshed from prod later than NOMIS is refreshed.

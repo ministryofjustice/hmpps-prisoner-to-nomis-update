@@ -6,7 +6,8 @@ metadata:
     {{- include "app.labels" . | nindent 4 }}
 spec:
   schedule: "{{ .Values.cron.attendanceReconReportSchedule }}"
-  concurrencyPolicy: Forbid
+  suspend: false
+  concurrencyPolicy: Replace
   failedJobsHistoryLimit: 5
   startingDeadlineSeconds: 600
   successfulJobsHistoryLimit: 5
@@ -16,45 +17,24 @@ spec:
       ttlSecondsAfterFinished: 345600
       template:
         spec:
+          serviceAccountName: {{ index .Values "generic-service" "serviceAccountName" }}
           containers:
-            - name: report-attendances
-              image: ghcr.io/ministryofjustice/hmpps-devops-tools
-              volumeMounts:
-                - name: cronjob-api-helpers
-                  mountPath: /bin/cronjob-api-helpers.sh
-                  readOnly: true
-                  subPath: cronjob-api-helpers.sh
-              args:
-                - /bin/sh
-                - -c
-                - |
-                  #!/bin/bash
-                  set -eu
-
-                  . /bin/cronjob-api-helpers.sh
-
-                  AUTH_BASE_URL="{{ index .Values "generic-service" "env" "API_BASE_URL_HMPPS_AUTH" }}"
-
-                  # Main execution
-                  TOKEN=$(get_auth_token "$AUTH_BASE_URL" "$CRONJOB_CLIENT_ID" "$CRONJOB_CLIENT_SECRET")
-                  echo "Access token retrieved from HMPPS Auth"
-
-                  call_api "POST" "http://hmpps-prisoner-to-nomis-update/attendances/reports/reconciliation?date=$(date -d "yesterday" "+%Y-%m-%d")" "$TOKEN"
-                  echo "Attendance reconciliation report submitted successfully"
-              securityContext:
-                capabilities:
-                  drop:
-                  - ALL
-                runAsNonRoot: true
-                allowPrivilegeEscalation: false
-                seccompProfile:
-                  type: RuntimeDefault
-              envFrom:
-                - secretRef:
-                    name: hmpps-prisoner-to-nomis-update-client-creds
+          - name: {{ include "generic-service.name" . }}
+            securityContext:
+            {{- toYaml .Values.securityContext | nindent 14 }}
+            image: "{{ index .Values "generic-service" "image" "repository" }}:{{ index .Values "generic-service" "image" "tag" | default .Chart.AppVersion }}"
+            imagePullPolicy: {{ index .Values "generic-service" "image" "pullPolicy" }}
+            ports:
+              - name: http
+                containerPort: {{ index .Values "generic-service" "image" "port" }}
+                protocol: TCP
+            {{- include "deployment.envs" (index .Values "generic-service") | nindent 12 }}
+              - name: BATCH_ENABLED
+                value: "true"
+              - name: BATCH_TYPE
+                value: "ATTENDANCE_RECON"
+            {{- with .Values.envFrom }}
+            envFrom:
+              {{- toYaml . | nindent 12 }}
+            {{- end }}
           restartPolicy: Never
-          volumes:
-            - name: cronjob-api-helpers
-              configMap:
-                name: cronjob-api-helpers-script
-                defaultMode: 0755
