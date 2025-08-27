@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.Mockito.mock
+import org.mockito.kotlin.any
 import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
@@ -56,6 +57,26 @@ class BatchManagerTest {
     batchManager.onApplicationEvent(event)
 
     verify(activitiesReconService).allocationReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the attendance reconciliation service`() = runTest {
+    val batchManager = BatchManager("ATTENDANCE_RECON", beanDestroyer, activitiesReconService)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(activitiesReconService).attendanceReconciliationReport(any())
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the suspended allocation reconciliation service`() = runTest {
+    val batchManager = BatchManager("SUSPENDED_ALLOCATION_RECON", beanDestroyer, activitiesReconService)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(activitiesReconService).suspendedAllocationReconciliationReport()
     verify(context).close()
   }
 }
