@@ -13,23 +13,31 @@ import org.springframework.context.event.ContextRefreshedEvent
 import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.time.LocalDate
+
+enum class BatchType {
+  ALLOCATION_RECON,
+  ATTENDANCE_RECON,
+  SUSPENDED_ALLOCATION_RECON,
+}
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
 @Service
 class BatchManager(
-  @Value($$"${batch.type}") private val batchType: String,
+  @Value($$"${batch.type}") private val batchType: BatchType,
   private val activitiesReconService: ActivitiesReconService,
 ) {
 
   @EventListener
   fun onApplicationEvent(event: ContextRefreshedEvent) = runBlocking {
     when (batchType) {
-      "ALLOCATION_RECON" -> activitiesReconService.allocationReconciliationReport()
-      "ATTENDANCE_RECON" -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
-      "SUSPENDED_ALLOCATION_RECON" -> activitiesReconService.suspendedAllocationReconciliationReport()
-      else -> log.error("Batch type $batchType not supported")
+      ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
+      ATTENDANCE_RECON -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
+      SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
     }
   }.also { event.closeApplication() }
 
