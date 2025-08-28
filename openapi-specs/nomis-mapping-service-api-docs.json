@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-27.132.b00ce0d"
+    "version" : "2025-08-27.140.a30a283"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1833,6 +1833,66 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TemporaryAbsenceAppMultiMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/external-movement" : {
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Creates a mapping for a single temporary absence external movement",
+        "description" : "Creates a mapping for a single temporary absence external movement. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createExternalMovementSyncMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "External movement mapping created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceMovementMapping"
                 }
               }
             }
@@ -6708,6 +6768,56 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Deletes a mapping for a single scheduled movement by NOMIS event ID",
+        "description" : "Deletes a mapping for a single scheduled movement by NOMIS event ID. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "deleteScheduledMovementSyncMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisEventId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Scheduled movement mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/temporary-absence/outside-movement/nomis-application-multi-id/{nomisApplicationMultiId}" : {
@@ -6776,6 +6886,190 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Deletes a mapping for a single temporary absence outside movement by NOMIS ID",
+        "description" : "Deletes a mapping for a single temporary absence outside movement by NOMIS ID. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "deleteOutsideMovementSyncMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisApplicationMultiId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemporaryAbsenceOutsideMovementSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Outside movement mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/external-movement/nomis-movement-id/{bookingId}/{movementSeq}" : {
+      "get" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Gets a mapping for a single temporary absence external movement by NOMIS booking ID and movement sequence",
+        "description" : "Gets a mapping for a single temporary absence external movement by NOMIS booking ID and movement sequence. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "getExternalMovementSyncMappingByNomisId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "200" : {
+            "description" : "External movement mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Deletes a mapping for a single temporary absence external movement by NOMIS booking ID and movement sequence",
+        "description" : "Deletes a mapping for a single temporary absence external movement by NOMIS booking ID and movement sequence. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "deleteExternalMovementSyncMappingByNomisId",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "movementSeq",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "External movement mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/temporary-absence/application/nomis-application-id/{nomisApplicationId}" : {
@@ -6835,6 +7129,56 @@
           },
           "404" : {
             "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Deletes a mapping for a single temporary absence application by NOMIS ID",
+        "description" : "Deletes a mapping for a single temporary absence application by NOMIS ID. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "deleteApplicationSyncMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisApplicationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemporaryAbsenceApplicationSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Application does not exist",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -18238,6 +18582,83 @@
           }
         },
         "required" : [ "bookingId", "dpsAppMultiId", "id", "isNew", "mappingType", "new", "nomisAppMultiId", "offenderNo" ]
+      },
+      "ExternalMovementSyncMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single external movement",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence number"
+          },
+          "dpsExternalMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS external movement id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "bookingId", "dpsExternalMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
+      },
+      "TemporaryAbsenceMovementMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "dpsMovementId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisMovementSeq", "offenderNo" ]
       },
       "TemporaryAbsenceApplicationSyncMappingDto" : {
         "type" : "object",
