@@ -31,9 +31,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifier
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
@@ -229,43 +231,36 @@ class CourtSentencingService(
         mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
       ),
       mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
-        courtCases = toCourtCases(),
-        courtAppearances = toCourtAppearances(),
-        courtCharges = toCourtCharges(),
-        sentences = toSentences(),
-        sentenceTerms = toSentenceTerms(),
+        courtCases = clonedCourtCases.toCourtCases(),
+        courtAppearances = clonedCourtCases.toCourtAppearances(),
+        courtCharges = clonedCourtCases.toCourtCharges(),
+        sentences = clonedCourtCases.toSentences(),
+        sentenceTerms = clonedCourtCases.toSentenceTerms(),
       ),
     ),
     offenderNo = offenderNo,
-    clonedClonedCourtCaseDetails = clonedCourtCases?.let { cloneResponse ->
-      ClonedCourtCaseDetails(
-        clonedCourtCaseIds = cloneResponse.courtCases.map { it.sourceCourtCase.id },
-        // there must always be at least once case cloned else we would never have a clone operation
-        fromBookingId = cloneResponse.courtCases.first().sourceCourtCase.bookingId,
-        toBookingId = cloneResponse.courtCases.first().courtCase.bookingId,
-        sentenceAdjustments = cloneResponse.sentenceAdjustments.map {
-          SentenceIdAndAdjustmentType(
-            sentenceId = it.sentenceId,
-            adjustmentIds = it.adjustmentIds,
-          )
-        },
-        casesMoved = cloneResponse.courtCases.map {
-          CaseBookingChanged(
-            caseId = it.courtCase.id,
-            sentences = it.courtCase.sentences.map { sentence ->
-              SentenceBookingChanged(
-                sentenceSequence = sentence.sentenceSeq.toInt(),
-              )
-            },
-          )
-        },
-      )
-    },
+    clonedClonedCourtCaseDetails = clonedCourtCases?.toClonedCourtCaseDetails(),
+  )
+  private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(dpsRecallId: String, offenderNo: String): RecallAppearanceAndCreateMappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
+    mappings = CourtAppearanceRecallMappingsDto(
+      nomisCourtAppearanceIds = this.courtEventIds,
+      dpsRecallId = dpsRecallId,
+      mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
+        courtCases = clonedCourtCases.toCourtCases(),
+        courtAppearances = clonedCourtCases.toCourtAppearances(),
+        courtCharges = clonedCourtCases.toCourtCharges(),
+        sentences = clonedCourtCases.toSentences(),
+        sentenceTerms = clonedCourtCases.toSentenceTerms(),
+      ),
+    ),
+    sentenceAdjustmentsActivated = this.sentenceAdjustmentsActivated,
+    offenderNo = offenderNo,
+    clonedClonedCourtCaseDetails = this.clonedCourtCases?.toClonedCourtCaseDetails(),
   )
 
-  private suspend fun CreateCourtAppearanceResponse.toCourtCases(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtCases = this.clonedCourtCases?.courtCases?.map { it.sourceCourtCase }
-    val clonedCourtCases = this.clonedCourtCases?.courtCases?.map { it.courtCase }
+  private suspend fun BookingCourtCaseCloneResponse?.toCourtCases(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtCases = this?.courtCases?.map { it.sourceCourtCase }
+    val clonedCourtCases = this?.courtCases?.map { it.courtCase }
 
     return sourceCourtCases?.zip(clonedCourtCases!!)?.map { (source, cloned) ->
       SimpleCourtSentencingIdPair(
@@ -274,9 +269,9 @@ class CourtSentencingService(
       )
     } ?: emptyList()
   }
-  private suspend fun CreateCourtAppearanceResponse.toCourtCharges(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtCharges = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.offenderCharges }
-    val clonedCourtCharges = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.offenderCharges }
+  private suspend fun BookingCourtCaseCloneResponse?.toCourtCharges(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtCharges = this?.courtCases?.flatMap { it.sourceCourtCase.offenderCharges }
+    val clonedCourtCharges = this?.courtCases?.flatMap { it.courtCase.offenderCharges }
 
     return sourceCourtCharges?.zip(clonedCourtCharges!!)?.map { (source, cloned) ->
       SimpleCourtSentencingIdPair(
@@ -285,9 +280,9 @@ class CourtSentencingService(
       )
     } ?: emptyList()
   }
-  private suspend fun CreateCourtAppearanceResponse.toCourtAppearances(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtAppearances = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.courtEvents }
-    val clonedCourtAppearances = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.courtEvents }
+  private suspend fun BookingCourtCaseCloneResponse?.toCourtAppearances(): List<SimpleCourtSentencingIdPair> {
+    val sourceCourtAppearances = this?.courtCases?.flatMap { it.sourceCourtCase.courtEvents }
+    val clonedCourtAppearances = this?.courtCases?.flatMap { it.courtCase.courtEvents }
 
     return sourceCourtAppearances?.zip(clonedCourtAppearances!!)?.map { (source, cloned) ->
       SimpleCourtSentencingIdPair(
@@ -297,9 +292,9 @@ class CourtSentencingService(
     } ?: emptyList()
   }
 
-  private suspend fun CreateCourtAppearanceResponse.toSentences(): List<CourtSentenceIdPair> {
-    val sourceSentences = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.sentences }
-    val clonedSentences = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.sentences }
+  private suspend fun BookingCourtCaseCloneResponse?.toSentences(): List<CourtSentenceIdPair> {
+    val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+    val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
 
     return sourceSentences?.zip(clonedSentences!!)?.map { (source, cloned) ->
       CourtSentenceIdPair(
@@ -314,9 +309,9 @@ class CourtSentencingService(
       )
     } ?: emptyList()
   }
-  private suspend fun CreateCourtAppearanceResponse.toSentenceTerms(): List<CourtSentenceTermIdPair> {
-    val sourceSentences = this.clonedCourtCases?.courtCases?.flatMap { it.sourceCourtCase.sentences }
-    val clonedSentences = this.clonedCourtCases?.courtCases?.flatMap { it.courtCase.sentences }
+  private suspend fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentenceTermIdPair> {
+    val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+    val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
 
     return sourceSentences?.zip(clonedSentences!!)?.flatMap { (source, cloned) ->
       source.sentenceTerms.zip(cloned.sentenceTerms).map { (sourceTerm, clonedTerm) ->
@@ -340,6 +335,28 @@ class CourtSentencingService(
     } ?: emptyList()
   }
 
+  fun BookingCourtCaseCloneResponse.toClonedCourtCaseDetails() = ClonedCourtCaseDetails(
+    clonedCourtCaseIds = courtCases.map { it.sourceCourtCase.id },
+    // there must always be at least once case cloned else we would never have a clone operation
+    fromBookingId = courtCases.first().sourceCourtCase.bookingId,
+    toBookingId = courtCases.first().courtCase.bookingId,
+    sentenceAdjustments = sentenceAdjustments.map {
+      SentenceIdAndAdjustmentType(
+        sentenceId = it.sentenceId,
+        adjustmentIds = it.adjustmentIds,
+      )
+    },
+    casesMoved = courtCases.map {
+      CaseBookingChanged(
+        caseId = it.courtCase.id,
+        sentences = it.courtCase.sentences.map { sentence ->
+          SentenceBookingChanged(
+            sentenceSequence = sentence.sentenceSeq.toInt(),
+          )
+        },
+      )
+    },
+  )
   suspend fun deleteCourtCase(caseEvent: CourtCaseCreatedEvent) {
     val dpsCaseId = caseEvent.additionalInformation.courtCaseId
     val offenderNo = caseEvent.personReference.identifiers.first { it.type == "NOMS" }.value
@@ -730,16 +747,16 @@ class CourtSentencingService(
     courtCaseMappingService.createAppearanceRecallMappings(mappingsWrapper.mappings)
 
     // we might get adjustments that just need updating since the cases have not been cloned
-    // or we might get cases that have been created and the adjustments have been created
+    // or we might get cases that have been created and the adjustments have been created, in which case they will appear in both lists
     // or we might get both - so just create one set
     val sentenceAdjustmentsRequiringResync = (mappingsWrapper.clonedClonedCourtCaseDetails?.sentenceAdjustments ?: emptyList()) + mappingsWrapper.sentenceAdjustmentsActivated.map {
       SentenceIdAndAdjustmentType(
         sentenceId = it.sentenceId,
         adjustmentIds = it.adjustmentIds.sorted(),
       )
-    }.toSet()
+    }
 
-    sentenceAdjustmentsRequiringResync.forEach { adjustment ->
+    sentenceAdjustmentsRequiringResync.toSet().forEach { adjustment ->
       adjustment.adjustmentIds.forEach { adjustmentId ->
         // since these are new adjustments send these individually given creating
         // a batch of adjustments is not idempotent if there are failures
@@ -1143,20 +1160,7 @@ class CourtSentencingService(
           ),
         )
 
-        tryCreateAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCases(
-          mappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
-            sentenceAdjustmentsActivated = response.sentenceAdjustmentsActivated,
-            mappings = CourtAppearanceRecallMappingsDto(
-              nomisCourtAppearanceIds = response.courtEventIds,
-              dpsRecallId = recallId,
-            ),
-            offenderNo = offenderNo,
-            // TODO
-            clonedClonedCourtCaseDetails = null,
-          ),
-          offenderNo = offenderNo,
-          telemetry = telemetryMap,
-        )
+        tryCreateAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCases(response.toCourtCaseBatchMappingDto(dpsRecallId = recallId, offenderNo = offenderNo), offenderNo = offenderNo, telemetry = telemetryMap)
 
         telemetryClient.trackEvent(
           "recall-inserted-success",

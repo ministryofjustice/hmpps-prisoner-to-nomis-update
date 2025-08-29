@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-27.140.a30a283"
+    "version" : "2025-08-29.142.6405cfd"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -19570,9 +19570,13 @@
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "mappingsToUpdate" : {
+            "$ref" : "#/components/schemas/CourtCaseBatchUpdateMappingDto",
+            "description" : "Mappings that need updating"
           }
         },
-        "required" : [ "dpsRecallId", "nomisCourtAppearanceIds" ]
+        "required" : [ "dpsRecallId", "mappingsToUpdate", "nomisCourtAppearanceIds" ]
       },
       "CourtAppearanceMapping" : {
         "type" : "object",
@@ -20690,12 +20694,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
