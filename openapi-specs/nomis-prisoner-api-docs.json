@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-27.483.b49951c"
+    "version" : "2025-08-29.485.1090266"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24005,6 +24005,10 @@
             "items" : {
               "$ref" : "#/components/schemas/SentenceIdAndAdjustmentIds"
             }
+          },
+          "clonedCourtCases" : {
+            "$ref" : "#/components/schemas/BookingCourtCaseCloneResponse",
+            "description" : "Result of a clone court case operation when the recall sentences is added to a previous booking. Else null"
           }
         },
         "required" : [ "courtEventIds", "sentenceAdjustmentsActivated" ]
