@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-27.443.7505da1"
+    "version" : "2025-08-28.451.eb20407"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2012,6 +2012,43 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/legacy/court-case/merge/person/{retainedPrisonerNumber}" : {
+      "post" : {
+        "tags" : [ "booking-controller" ],
+        "summary" : "Merge prisoner",
+        "description" : "Merges all records between two prisoner numbers",
+        "operationId" : "process",
+        "parameters" : [ {
+          "name" : "retainedPrisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MergePerson"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "court case created"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
           }
         }
       }
@@ -4840,7 +4877,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5115,7 +5152,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "courtCode" : {
             "type" : "string"
@@ -5764,6 +5801,230 @@
           }
         },
         "required" : [ "sentenceNOMISId", "sentenceUuid" ]
+      },
+      "DeactivatedCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "dpsCourtCaseUuid" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "dpsCourtCaseUuid" ]
+      },
+      "DeactivatedSentence" : {
+        "type" : "object",
+        "properties" : {
+          "dpsSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "dpsSentenceUuid" ]
+      },
+      "MergeCreateCharge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeNOMISId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          },
+          "sentence" : {
+            "$ref" : "#/components/schemas/MergeCreateSentence"
+          },
+          "mergedFromCaseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "mergedFromDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "chargeNOMISId", "legacyData", "offenceCode" ]
+      },
+      "MergeCreateCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCharge"
+            }
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceTypeUuid", "charges", "courtCode", "eventId", "legacyData" ]
+      },
+      "MergeCreateCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "courtCaseLegacyData" : {
+            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtAppearance"
+            }
+          },
+          "merged" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "appearances", "caseId", "courtCaseLegacyData" ]
+      },
+      "MergeCreateFine" : {
+        "type" : "object",
+        "properties" : {
+          "fineAmount" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "fineAmount" ]
+      },
+      "MergeCreatePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthId" : {
+            "$ref" : "#/components/schemas/NomisPeriodLengthId"
+          },
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          }
+        },
+        "required" : [ "legacyData", "periodLengthId" ]
+      },
+      "MergeCreateSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceId" : {
+            "$ref" : "#/components/schemas/MergeSentenceId"
+          },
+          "fine" : {
+            "$ref" : "#/components/schemas/MergeCreateFine"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "consecutiveToSentenceId" : {
+            "$ref" : "#/components/schemas/MergeSentenceId"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreatePeriodLength"
+            }
+          },
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "active", "legacyData", "periodLengths", "sentenceId" ]
+      },
+      "MergePerson" : {
+        "type" : "object",
+        "properties" : {
+          "removedPrisonerNumber" : {
+            "type" : "string"
+          },
+          "casesCreated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtCase"
+            }
+          },
+          "casesDeactivated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DeactivatedCourtCase"
+            }
+          },
+          "sentencesDeactivated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DeactivatedSentence"
+            }
+          }
+        },
+        "required" : [ "casesCreated", "casesDeactivated", "removedPrisonerNumber", "sentencesDeactivated" ]
+      },
+      "MergeSentenceId" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "offenderBookingId", "sequence" ]
       },
       "BookingCreateCharge" : {
         "type" : "object",
@@ -6785,7 +7046,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "courtCode" : {
             "type" : "string"
@@ -7189,7 +7450,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "charges" : {
             "type" : "array",
@@ -7212,7 +7473,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "courtId" : {
             "type" : "string"
@@ -7303,7 +7564,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7359,7 +7620,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "courtId" : {
             "type" : "string"
@@ -7963,7 +8224,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "10:01:55.148588038"
+            "example" : "16:32:18.970290431"
           },
           "courtCode" : {
             "type" : "string"
