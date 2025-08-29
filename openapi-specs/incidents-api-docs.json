@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-08-20.172.2f3b491"
+    "version" : "2025-08-29.195.90d5d4a"
   },
   "servers" : [ {
     "url" : "/",
@@ -6855,17 +6855,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
@@ -7437,6 +7437,11 @@
             "description" : "Human-readable description of this value",
             "example" : "On hold"
           },
+          "ignoreDownstream" : {
+            "type" : "boolean",
+            "description" : "Whether reports with this status should be ignored downstream for most statistical purposes",
+            "example" : false
+          },
           "nomisCode" : {
             "type" : "string",
             "deprecated" : true,
@@ -7445,7 +7450,7 @@
           }
         },
         "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "required" : [ "code", "description", "ignoreDownstream" ]
       },
       "StaffRoleConstantDescription" : {
         "type" : "object",
