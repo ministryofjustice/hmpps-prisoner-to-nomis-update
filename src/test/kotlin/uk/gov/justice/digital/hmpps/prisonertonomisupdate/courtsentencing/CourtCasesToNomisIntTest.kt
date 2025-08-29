@@ -38,6 +38,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readRawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
@@ -3218,55 +3219,58 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
     @Nested
     inner class WhenRecallHasBeenInsertedInDPS {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetRecall(
+          "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+          LegacyRecall(
+            recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
+            recallType = LegacyRecall.RecallType.FTR_14,
+            recallBy = "T.SMITH",
+            returnToCustodyDate = LocalDate.parse("2025-04-23"),
+            revocationDate = LocalDate.parse("2025-04-01"),
+            prisonerId = OFFENDER_NO,
+            sentenceIds = listOf(
+              UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            ),
+          ),
+        )
+        courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
+          listOf(
+            SentenceMappingDto(
+              dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+              nomisBookingId = BOOKING_ID,
+              nomisSentenceSequence = 1,
+            ),
+            SentenceMappingDto(
+              dpsSentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
+              nomisBookingId = BOOKING_ID,
+              nomisSentenceSequence = 2,
+            ),
+          ),
+        )
+
+        courtSentencingApi.stubGetSentences(
+          sentences = listOf(
+            legacySentence(
+              sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+              sentenceCalcType = "FTR_14",
+              sentenceCategory = "2020",
+            ),
+            legacySentence(
+              sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
+              sentenceCalcType = "FTR_14",
+              sentenceCategory = "2013",
+            ),
+          ),
+        )
+      }
+
       @Nested
       inner class WhenRecallOnLatestBooking {
         @BeforeEach
         fun setUp() {
-          courtSentencingApi.stubGetRecall(
-            "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
-            LegacyRecall(
-              recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
-              recallType = LegacyRecall.RecallType.FTR_14,
-              recallBy = "T.SMITH",
-              returnToCustodyDate = LocalDate.parse("2025-04-23"),
-              revocationDate = LocalDate.parse("2025-04-01"),
-              prisonerId = OFFENDER_NO,
-              sentenceIds = listOf(
-                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
-                UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
-              ),
-            ),
-          )
-          courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
-            listOf(
-              SentenceMappingDto(
-                dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
-                nomisBookingId = BOOKING_ID,
-                nomisSentenceSequence = 1,
-              ),
-              SentenceMappingDto(
-                dpsSentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
-                nomisBookingId = BOOKING_ID,
-                nomisSentenceSequence = 2,
-              ),
-            ),
-          )
-
-          courtSentencingApi.stubGetSentences(
-            sentences = listOf(
-              legacySentence(
-                sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
-                sentenceCalcType = "FTR_14",
-                sentenceCategory = "2020",
-              ),
-              legacySentence(
-                sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
-                sentenceCalcType = "FTR_14",
-                sentenceCategory = "2013",
-              ),
-            ),
-          )
-
           courtSentencingNomisApi.stubRecallSentences(
             OFFENDER_NO,
             response = ConvertToRecallResponse(
@@ -3470,6 +3474,325 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               },
               isNull(),
             )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenRecallOnOldBooking {
+        @BeforeEach
+        fun setUp() {
+          courtSentencingNomisApi.stubRecallSentences(
+            OFFENDER_NO,
+            response = ConvertToRecallResponse(
+              courtEventIds = listOf(2003),
+              sentenceAdjustmentsActivated = listOf(
+                SentenceIdAndAdjustmentIds(
+                  sentenceId = SentenceId(offenderBookingId = 2, sentenceSequence = 20),
+                  adjustmentIds = listOf(20001, 20002),
+                ),
+              ),
+              clonedCourtCases = BookingCourtCaseCloneResponse(
+                courtCases = listOf(
+                  ClonedCourtCaseResponse(
+                    sourceCourtCase = nomisCaseResponse(
+                      id = 101L,
+                      events = listOf(nomisAppearanceResponse(id = 1001), nomisAppearanceResponse(id = 1002)),
+                      sentences = listOf(
+                        nomisSentenceResponse().copy(
+                          bookingId = 1,
+                          sentenceSeq = 10,
+                          sentenceTerms = listOf(
+                            nomisSentenceTermResponse().copy(termSequence = 1),
+                            nomisSentenceTermResponse().copy(termSequence = 2),
+                          ),
+                        ),
+                      ),
+                    ).copy(
+                      bookingId = 1,
+                      offenderCharges = listOf(
+                        nomisOffenderChargeResponse(offenderChargeId = 1003),
+                        nomisOffenderChargeResponse(offenderChargeId = 1004),
+                      ),
+                    ),
+                    courtCase = nomisCaseResponse(
+                      id = 201L,
+                      events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
+                      sentences = listOf(
+                        nomisSentenceResponse().copy(
+                          bookingId = 2,
+                          sentenceSeq = 20,
+                          sentenceTerms = listOf(
+                            nomisSentenceTermResponse().copy(termSequence = 21),
+                            nomisSentenceTermResponse().copy(termSequence = 22),
+                          ),
+                        ),
+                      ),
+                    ).copy(
+                      bookingId = 2,
+                      offenderCharges = listOf(
+                        nomisOffenderChargeResponse(offenderChargeId = 2003),
+                        nomisOffenderChargeResponse(offenderChargeId = 2004),
+                      ),
+                    ),
+                  ),
+                ),
+                sentenceAdjustments = listOf(
+                  SentenceIdAndAdjustmentsCreated(
+                    sentenceId = SentenceId(
+                      offenderBookingId = 2,
+                      sentenceSequence = 20,
+                    ),
+                    adjustmentIds = listOf(20001, 20002),
+                  ),
+                ),
+              ),
+            ),
+          )
+        }
+
+        @Nested
+        inner class HappyPath {
+          @BeforeEach
+          fun setUp() {
+            courtSentencingMappingApi.stubCreateAppearanceRecallMapping()
+
+            publishRecallInsertedDomainEvent(
+              source = "DPS",
+              recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+              sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            ).also {
+              waitForAnyProcessingToComplete("recall-create-cases-cloned-success")
+            }
+          }
+
+          @Test
+          fun `will update NOMIS sentence information`() {
+            courtSentencingNomisApi.verify(
+              postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+                .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
+                .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
+                .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+                .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
+                .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
+                .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
+            )
+          }
+
+          @Test
+          fun `will create mapping for each breach appearance created for recall and update the court case clone`() {
+            val request: CourtAppearanceRecallMappingsDto = CourtSentencingMappingApiMockServer.getRequestBody(postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/recall")))
+
+            assertThat(request.dpsRecallId).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
+            assertThat(request.nomisCourtAppearanceIds[0]).isEqualTo(2003L)
+            assertThat(request.mappingsToUpdate.courtCases).containsExactly(SimpleCourtSentencingIdPair(fromNomisId = 101, toNomisId = 201))
+            assertThat(request.mappingsToUpdate.courtAppearances).containsExactlyInAnyOrder(
+              SimpleCourtSentencingIdPair(fromNomisId = 1001, toNomisId = 2001),
+              SimpleCourtSentencingIdPair(fromNomisId = 1002, toNomisId = 2002),
+            )
+            assertThat(request.mappingsToUpdate.courtCharges).containsExactlyInAnyOrder(
+              SimpleCourtSentencingIdPair(fromNomisId = 1003, toNomisId = 2003),
+              SimpleCourtSentencingIdPair(fromNomisId = 1004, toNomisId = 2004),
+            )
+            assertThat(request.mappingsToUpdate.sentences).containsExactlyInAnyOrder(
+              CourtSentenceIdPair(
+                fromNomisId = MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+                toNomisId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+              ),
+            )
+
+            assertThat(request.mappingsToUpdate.sentenceTerms).containsExactlyInAnyOrder(
+              CourtSentenceTermIdPair(
+                fromNomisId = SentenceTermId(
+                  MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+                  nomisSequence = 1,
+                ),
+                SentenceTermId(
+                  nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+                  nomisSequence = 21,
+                ),
+              ),
+              CourtSentenceTermIdPair(
+                fromNomisId = SentenceTermId(
+                  MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+                  nomisSequence = 2,
+                ),
+                SentenceTermId(
+                  nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+                  nomisSequence = 22,
+                ),
+              ),
+            )
+          }
+
+          @Test
+          fun `will send message to nomis migration to sync court cases cloned`() {
+            await untilAsserted {
+              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+            }
+            val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+            val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+            val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
+            assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
+            val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+            assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+            assertThat(request.caseIds).containsExactly(101L)
+            assertThat(request.casesMoved).hasSize(1)
+            assertThat(request.casesMoved[0].caseId).isEqualTo(201L)
+            assertThat(request.casesMoved[0].sentences).hasSize(1)
+            assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
+            assertThat(request.fromBookingId).isEqualTo(1L)
+            assertThat(request.toBookingId).isEqualTo(2L)
+          }
+
+          @Test
+          fun `will send message to nomis migration for each sync sentence adjustments that have been created`() {
+            await untilAsserted {
+              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+            }
+            val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+            val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+            val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
+
+            assertThat(adjustmentMessages).hasSize(2)
+
+            val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
+
+            val adjustmentMessage1 = requests[0]
+            val adjustmentMessage2 = requests[1]
+
+            with(adjustmentMessage1) {
+              assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+              assertThat(sentences).hasSize(1)
+              assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+              assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+              assertThat(sentences[0].adjustmentIds).hasSize(1)
+            }
+            with(adjustmentMessage2) {
+              assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+              assertThat(sentences).hasSize(1)
+              assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+              assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+              assertThat(sentences[0].adjustmentIds).hasSize(1)
+            }
+            val firstAdjustmentId =
+              adjustmentMessage1.sentences[0].adjustmentIds[0]
+            val secondAdjustmentId =
+              adjustmentMessage2.sentences[0].adjustmentIds[0]
+
+            // slightly awkward; each message will be identical except one
+            // will have adjustment Id of 20001L and the other 20002L but we don't order
+            assertThat(firstAdjustmentId).isIn(20001L, 20002L)
+            assertThat(secondAdjustmentId).isIn(20001L, 20002L)
+            assertThat(firstAdjustmentId).isNotEqualTo(secondAdjustmentId)
+          }
+
+          @Test
+          fun `will create success telemetry`() {
+            verify(telemetryClient).trackEvent(
+              eq("recall-inserted-success"),
+              check {
+                assertThat(it["recallType"]).isEqualTo("FTR_14")
+                assertThat(it["dpsRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
+                assertThat(it["nomisSentenceSeq"]).isEqualTo("1, 2")
+                assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will create cloned telemetry`() {
+            verify(telemetryClient).trackEvent(
+              eq("recall-create-cases-cloned-success"),
+              check {
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
+              },
+              isNull(),
+            )
+          }
+        }
+
+        @Nested
+        inner class HappyPathWhenMappingFailsOnce {
+          @BeforeEach
+          fun setUp() {
+            courtSentencingMappingApi.stubCreateWithErrorFollowedBySuccess(
+              url = "/mapping/court-sentencing/court-appearances/recall",
+              name = "Recall Appearance",
+            )
+
+            publishRecallInsertedDomainEvent(
+              source = "DPS",
+              recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+              sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            ).also {
+              waitForAnyProcessingToComplete("court-appearance-recall-create-mapping-retry-success")
+            }
+          }
+
+          @Test
+          fun `will update NOMIS sentence information once`() {
+            courtSentencingNomisApi.verify(
+              1,
+              postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
+                .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+                .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
+                .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
+                .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
+                .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
+                .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
+                .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
+                .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH"))),
+            )
+          }
+
+          @Test
+          fun `will try create mapping for each breach appearance created for recall`() {
+            courtSentencingMappingApi.verify(
+              2,
+              postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-appearances/recall")),
+            )
+          }
+
+          @Test
+          fun `will create success telemetry`() {
+            verify(telemetryClient).trackEvent(
+              eq("recall-inserted-success"),
+              check {
+                assertThat(it["recallType"]).isEqualTo("FTR_14")
+                assertThat(it["dpsRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+                assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
+                assertThat(it["nomisSentenceSeq"]).isEqualTo("1, 2")
+                assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
+              },
+              isNull(),
+            )
+          }
+
+          @Test
+          fun `will send message to nomis migration for each sync sentence adjustments and the case clone`() {
+            await untilAsserted {
+              assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+            }
           }
         }
       }
