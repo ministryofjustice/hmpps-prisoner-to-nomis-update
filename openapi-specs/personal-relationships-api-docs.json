@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-12.2453.04db5af"
+    "version" : "2025-08-29.2660.bfd5c93"
   },
   "servers" : [ {
     "url" : "/",
@@ -6954,6 +6954,16 @@
             "type" : "integer",
             "format" : "int64"
           }
+        }, {
+          "name" : "currentTermOnly",
+          "in" : "query",
+          "description" : "filter results by current terms",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          },
+          "example" : true
         } ],
         "responses" : {
           "200" : {
@@ -7548,9 +7558,9 @@
     "/prisoner-contact/{prisonerContactId}/plan-delete" : {
       "get" : {
         "tags" : [ "Prisoner relationships" ],
-        "summary" : "Plan to delete prisoner contact relationship",
-        "description" : "Plan to delete the relationship between the contact and a prisoner. Returns side effects of the deletion.",
-        "operationId" : "planDeleteContactRelationship",
+        "summary" : "Assess if a prisoner contact relationship can be deleted",
+        "description" : "Assess if a prisoner contact relationship can be deleted, considering any attached restrictions or if deletion will also remove the contact's date of birth.",
+        "operationId" : "assessIfRelationshipCanBeDeleted",
         "parameters" : [ {
           "name" : "prisonerContactId",
           "in" : "path",
@@ -7564,7 +7574,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Planned the deletion of the prisoner contact relationship",
+            "description" : "Assess if a prisoner contact relationship can be deleted",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -15043,12 +15053,15 @@
       },
       "RelationshipDeletePlan" : {
         "type" : "object",
+        "description" : "Assess if a prisoner contact relationship can be deleted, has restrictions or can DOB be deleted",
         "properties" : {
           "willAlsoDeleteContactDob" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Indicates if deleting the relationship will also delete the contact's date of birth"
           },
           "hasRestrictions" : {
-            "type" : "boolean"
+            "type" : "boolean",
+            "description" : "Indicates if the relationship has restrictions"
           }
         },
         "required" : [ "hasRestrictions", "willAlsoDeleteContactDob" ]
