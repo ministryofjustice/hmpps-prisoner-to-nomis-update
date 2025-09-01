@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-08-29.195.90d5d4a"
+    "version" : "2025-08-29.200.279cfa4"
   },
   "servers" : [ {
     "url" : "/",
@@ -3832,6 +3832,16 @@
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
+        }, {
+          "name" : "includeHistory",
+          "in" : "query",
+          "description" : "Include history",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include history"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -4016,6 +4026,16 @@
             "example" : "11124143"
           },
           "example" : "11124143"
+        }, {
+          "name" : "includeHistory",
+          "in" : "query",
+          "description" : "Include history",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include history"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -6855,17 +6875,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
