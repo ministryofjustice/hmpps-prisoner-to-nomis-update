@@ -43,24 +43,27 @@ class CourtSentencingReconciliationService(
     nextPage = ::getNextBookingsForPage,
   )
 
-  suspend fun manualCheckCaseDps(dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
+  suspend fun manualCheckCaseDps(offenderNo: String, dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
     MismatchCaseResponse(
+      offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
       dpsCaseId = dpsCaseId,
       mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
     )
   }
 
-  suspend fun manualCheckCaseNomis(nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
+  suspend fun manualCheckCaseNomis(offenderNo: String, nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
     MismatchCaseResponse(
+      offenderNo = offenderNo,
       nomisCaseId = nomisCaseId,
       dpsCaseId = it.dpsCourtCaseId,
       mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
     )
   }
 
-  suspend fun checkCasesNomis(nomisCaseIds: List<Long>): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
+  suspend fun checkCasesNomis(offenderNo: String, nomisCaseIds: List<Long>): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
     MismatchCaseResponse(
+      offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
       dpsCaseId = it.dpsCourtCaseId,
       mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
@@ -101,7 +104,13 @@ class CourtSentencingReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = checkCasesNomis(nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo))
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo))
+
+  suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
+    checkCasesNomis(offenderNo = it, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(it)).filter { caseResponse -> caseResponse.mismatch != null }
+  }.also {
+    log.info(it.toString())
+  }
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
@@ -127,7 +136,8 @@ class CourtSentencingReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
 
-  suspend fun manualCheckCase(nomisCaseId: Long, dpsCaseId: String): MismatchCaseResponse = MismatchCaseResponse(
+  suspend fun manualCheckCase(offenderNo: String, nomisCaseId: Long, dpsCaseId: String): MismatchCaseResponse = MismatchCaseResponse(
+    offenderNo = offenderNo,
     nomisCaseId = nomisCaseId,
     dpsCaseId = dpsCaseId,
     mismatch = checkCase(dpsCaseId = dpsCaseId, nomisCaseId = nomisCaseId),
@@ -172,7 +182,7 @@ class CourtSentencingReconciliationService(
         offenceCodes = offenceCodeString,
         terms = terms,
         // this can't have the id in it for sorting
-        termsAsString = sortTerms(terms).map { it.toSortString() }.toString(),
+        termsAsString = sortTerms(terms).map { term -> term.toSortString() }.toString(),
       )
     }.distinctBy { it.id }
 
@@ -257,15 +267,15 @@ class CourtSentencingReconciliationService(
 
     val differenceList = compareObjects(dpsFields, nomisFields)
 
-    if (differenceList.isNotEmpty()) {
+    return if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
-      return MismatchCase(
+      MismatchCase(
         nomisCase = nomisFields,
         dpsCase = dpsFields,
         differences = differenceList,
       )
     } else {
-      return null
+      null
     }
   }.onFailure {
     log.error("Unable to match case with ids: dps:$dpsCaseId and nomis:$nomisCaseId", it)
@@ -522,7 +532,7 @@ class CourtSentencingReconciliationService(
 }
 
 data class MismatchCaseResponse(
-  val offenderNo: String = "TODO",
+  val offenderNo: String,
   val dpsCaseId: String,
   val nomisCaseId: Long,
   val mismatch: MismatchCase?,

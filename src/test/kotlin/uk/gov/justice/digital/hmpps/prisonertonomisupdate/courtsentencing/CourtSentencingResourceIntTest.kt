@@ -90,7 +90,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -98,7 +98,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -106,7 +106,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -153,7 +153,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          webTestClient.get().uri("/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
+          webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
             .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
             .exchange()
             .expectStatus().isOk
@@ -168,7 +168,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @DisplayName("GET /court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
+  @DisplayName("GET /prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
   @Nested
   inner class ManualCaseReconciliationByNomisCaseId {
 
@@ -176,7 +176,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -184,7 +184,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -192,7 +192,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
+        webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -292,7 +292,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          webTestClient.get().uri("/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
+          webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
             .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
             .exchange()
             .expectStatus().isOk

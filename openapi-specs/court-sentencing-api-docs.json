@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-18.388.28b2a21"
+    "version" : "2025-09-01.466.7bc46aa"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -23,6 +23,9 @@
     "description" : "Local"
   } ],
   "tags" : [ {
+    "name" : "prisoner-merge-controller",
+    "description" : "Create operation for bookings in NOMIS. This is used when court cases are cloned onto different bookings"
+  }, {
     "name" : "legacy-court-appearance-controller",
     "description" : "CRUD operations for syncing court appearance data from NOMIS Court Events into remand and sentencing api database."
   }, {
@@ -49,6 +52,9 @@
   }, {
     "name" : "legacy-recall-controller",
     "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
+  }, {
+    "name" : "booking-controller",
+    "description" : "Create operation for bookings in NOMIS. This is used when court cases are cloned onto different bookings"
   }, {
     "name" : "recall-controller",
     "description" : "Recall"
@@ -1625,6 +1631,66 @@
         }
       }
     },
+    "/sentence/consecutive-chain/has-a-loop" : {
+      "post" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Check whether a target sentence is already in a consecutive chain from a source sentence",
+        "description" : "Returns true if the target sentence already appears in any consecutive chain (i.e. a would cause a loop)",
+        "operationId" : "hasLoopInChain",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ConsecutiveChainValidationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns true or false",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid input",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recall" : {
       "post" : {
         "tags" : [ "recall-controller" ],
@@ -1897,7 +1963,7 @@
     "/legacy/court-case/migration" : {
       "post" : {
         "tags" : [ "migration-controller" ],
-        "summary" : "Creates a court case",
+        "summary" : "Migrates court cases",
         "description" : "Migrates a court case, court appearance and charge from NOMIS into remand and sentencing API.",
         "operationId" : "create_4",
         "parameters" : [ {
@@ -1953,12 +2019,120 @@
         }
       }
     },
+    "/legacy/court-case/merge/person/{retainedPrisonerNumber}" : {
+      "post" : {
+        "tags" : [ "prisoner-merge-controller" ],
+        "summary" : "Merge prisoner",
+        "description" : "Merges all records between two prisoner numbers",
+        "operationId" : "process",
+        "parameters" : [ {
+          "name" : "retainedPrisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MergePerson"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "court case created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MergeCreateCourtCasesResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MergeCreateCourtCasesResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MergeCreateCourtCasesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/legacy/court-case/booking" : {
+      "post" : {
+        "tags" : [ "booking-controller" ],
+        "summary" : "Creates court cases for specific booking",
+        "description" : "Creates all entities for specific bookings. This is when something is created on an old booking and the record is copied over to the latest booking so duplicate records need creating.",
+        "operationId" : "create_5",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BookingCreateCourtCases"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "court case created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCreateCourtCasesResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCreateCourtCasesResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCreateCourtCasesResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/court-appearance" : {
       "post" : {
         "tags" : [ "legacy-court-appearance-controller" ],
         "summary" : "Create a court appearance",
         "description" : "Synchronise a creation of court appearance from NOMIS court events into remand and sentencing API.",
-        "operationId" : "create_5",
+        "operationId" : "create_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2008,7 +2182,7 @@
         "tags" : [ "legacy-charge-controller" ],
         "summary" : "Create a charge",
         "description" : "Synchronise a creation of charge from NOMIS Offender charges into remand and sentencing API.",
-        "operationId" : "create_6",
+        "operationId" : "create_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2058,7 +2232,7 @@
         "tags" : [ "draft-court-case-controller" ],
         "summary" : "Create a draft court case",
         "description" : "Creates a draft court case for when a user wants to pause inputting a warrant and come back later",
-        "operationId" : "create_7",
+        "operationId" : "create_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4727,7 +4901,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5002,7 +5176,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "courtCode" : {
             "type" : "string"
@@ -5174,6 +5348,50 @@
           }
         },
         "required" : [ "documents" ]
+      },
+      "ConsecutiveChainValidationRequest" : {
+        "type" : "object",
+        "description" : "This contains the details used to validate loops in consecutive chains",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sourceSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "targetSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "The UI sentences for the appearance in the UI session",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceDetailsForConsecValidation"
+            }
+          }
+        },
+        "required" : [ "appearanceUuid", "prisonerId", "sentences", "sourceSentenceUuid", "targetSentenceUuid" ]
+      },
+      "SentenceDetailsForConsecValidation" : {
+        "type" : "object",
+        "description" : "Shows consec relationship of a sentence",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "sentenceUuid" ]
       },
       "LegacySentenceCreatedResponse" : {
         "type" : "object",
@@ -5604,6 +5822,623 @@
           },
           "sentenceNOMISId" : {
             "$ref" : "#/components/schemas/MigrationSentenceId"
+          }
+        },
+        "required" : [ "sentenceNOMISId", "sentenceUuid" ]
+      },
+      "DeactivatedCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "dpsCourtCaseUuid" : {
+            "type" : "string"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "dpsCourtCaseUuid" ]
+      },
+      "DeactivatedSentence" : {
+        "type" : "object",
+        "properties" : {
+          "dpsSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "active" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "dpsSentenceUuid" ]
+      },
+      "MergeCreateCharge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeNOMISId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          },
+          "sentence" : {
+            "$ref" : "#/components/schemas/MergeCreateSentence"
+          },
+          "mergedFromCaseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "mergedFromDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "chargeNOMISId", "legacyData", "offenceCode" ]
+      },
+      "MergeCreateCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCharge"
+            }
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceTypeUuid", "charges", "courtCode", "eventId", "legacyData" ]
+      },
+      "MergeCreateCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "courtCaseLegacyData" : {
+            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtAppearance"
+            }
+          },
+          "merged" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "appearances", "caseId", "courtCaseLegacyData" ]
+      },
+      "MergeCreateFine" : {
+        "type" : "object",
+        "properties" : {
+          "fineAmount" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "fineAmount" ]
+      },
+      "MergeCreatePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthId" : {
+            "$ref" : "#/components/schemas/NomisPeriodLengthId"
+          },
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          }
+        },
+        "required" : [ "legacyData", "periodLengthId" ]
+      },
+      "MergeCreateSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceId" : {
+            "$ref" : "#/components/schemas/MergeSentenceId"
+          },
+          "fine" : {
+            "$ref" : "#/components/schemas/MergeCreateFine"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "consecutiveToSentenceId" : {
+            "$ref" : "#/components/schemas/MergeSentenceId"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreatePeriodLength"
+            }
+          },
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "active", "legacyData", "periodLengths", "sentenceId" ]
+      },
+      "MergePerson" : {
+        "type" : "object",
+        "properties" : {
+          "removedPrisonerNumber" : {
+            "type" : "string"
+          },
+          "casesCreated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtCase"
+            }
+          },
+          "casesDeactivated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DeactivatedCourtCase"
+            }
+          },
+          "sentencesDeactivated" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DeactivatedSentence"
+            }
+          }
+        },
+        "required" : [ "casesCreated", "casesDeactivated", "removedPrisonerNumber", "sentencesDeactivated" ]
+      },
+      "MergeSentenceId" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "offenderBookingId", "sequence" ]
+      },
+      "MergeCreateChargeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNOMISId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "chargeNOMISId", "chargeUuid" ]
+      },
+      "MergeCreateCourtAppearanceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "appearanceUuid", "eventId" ]
+      },
+      "MergeCreateCourtCaseResponse" : {
+        "type" : "object",
+        "properties" : {
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "caseId", "courtCaseUuid" ]
+      },
+      "MergeCreateCourtCasesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtCaseResponse"
+            }
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateCourtAppearanceResponse"
+            }
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateChargeResponse"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreateSentenceResponse"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MergeCreatePeriodLengthResponse"
+            }
+          }
+        },
+        "required" : [ "appearances", "charges", "courtCases", "sentenceTerms", "sentences" ]
+      },
+      "MergeCreatePeriodLengthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceTermNOMISId" : {
+            "$ref" : "#/components/schemas/NomisPeriodLengthId"
+          }
+        },
+        "required" : [ "periodLengthUuid", "sentenceTermNOMISId" ]
+      },
+      "MergeCreateSentenceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceNOMISId" : {
+            "$ref" : "#/components/schemas/MergeSentenceId"
+          }
+        },
+        "required" : [ "sentenceNOMISId", "sentenceUuid" ]
+      },
+      "BookingCreateCharge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeNOMISId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          },
+          "sentence" : {
+            "$ref" : "#/components/schemas/BookingCreateSentence"
+          },
+          "mergedFromCaseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "mergedFromDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "chargeNOMISId", "legacyData", "offenceCode" ]
+      },
+      "BookingCreateCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateCharge"
+            }
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceTypeUuid", "charges", "courtCode", "eventId", "legacyData" ]
+      },
+      "BookingCreateCourtCase" : {
+        "type" : "object",
+        "properties" : {
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "courtCaseLegacyData" : {
+            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateCourtAppearance"
+            }
+          },
+          "merged" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "active", "appearances", "caseId", "courtCaseLegacyData" ]
+      },
+      "BookingCreateCourtCases" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtCases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateCourtCase"
+            }
+          }
+        },
+        "required" : [ "courtCases", "prisonerId" ]
+      },
+      "BookingCreateFine" : {
+        "type" : "object",
+        "properties" : {
+          "fineAmount" : {
+            "type" : "number"
+          }
+        },
+        "required" : [ "fineAmount" ]
+      },
+      "BookingCreatePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthId" : {
+            "$ref" : "#/components/schemas/NomisPeriodLengthId"
+          },
+          "periodYears" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodMonths" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodWeeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodDays" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          }
+        },
+        "required" : [ "legacyData", "periodLengthId" ]
+      },
+      "BookingCreateSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceId" : {
+            "$ref" : "#/components/schemas/BookingSentenceId"
+          },
+          "fine" : {
+            "$ref" : "#/components/schemas/BookingCreateFine"
+          },
+          "active" : {
+            "type" : "boolean"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "consecutiveToSentenceId" : {
+            "$ref" : "#/components/schemas/BookingSentenceId"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreatePeriodLength"
+            }
+          },
+          "returnToCustodyDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "active", "legacyData", "periodLengths", "sentenceId" ]
+      },
+      "BookingSentenceId" : {
+        "type" : "object",
+        "properties" : {
+          "offenderBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "offenderBookingId", "sequence" ]
+      },
+      "BookingCreateChargeResponse" : {
+        "type" : "object",
+        "properties" : {
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNOMISId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "chargeNOMISId", "chargeUuid" ]
+      },
+      "BookingCreateCourtAppearanceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "appearanceUuid", "eventId" ]
+      },
+      "BookingCreateCourtCaseResponse" : {
+        "type" : "object",
+        "properties" : {
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "caseId", "courtCaseUuid" ]
+      },
+      "BookingCreateCourtCasesResponse" : {
+        "type" : "object",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateCourtCaseResponse"
+            }
+          },
+          "appearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateCourtAppearanceResponse"
+            }
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateChargeResponse"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreateSentenceResponse"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/BookingCreatePeriodLengthResponse"
+            }
+          }
+        },
+        "required" : [ "appearances", "charges", "courtCases", "sentenceTerms", "sentences" ]
+      },
+      "BookingCreatePeriodLengthResponse" : {
+        "type" : "object",
+        "properties" : {
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceTermNOMISId" : {
+            "$ref" : "#/components/schemas/NomisPeriodLengthId"
+          }
+        },
+        "required" : [ "periodLengthUuid", "sentenceTermNOMISId" ]
+      },
+      "BookingCreateSentenceResponse" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "sentenceNOMISId" : {
+            "$ref" : "#/components/schemas/BookingSentenceId"
           }
         },
         "required" : [ "sentenceNOMISId", "sentenceUuid" ]
@@ -6258,7 +7093,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX", "DUPLICATE" ]
           },
           "latestAppearance" : {
             "$ref" : "#/components/schemas/CourtAppearance"
@@ -6338,7 +7173,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "courtCode" : {
             "type" : "string"
@@ -6742,7 +7577,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "charges" : {
             "type" : "array",
@@ -6765,7 +7600,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "courtId" : {
             "type" : "string"
@@ -6856,7 +7691,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -6912,7 +7747,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "courtId" : {
             "type" : "string"
@@ -7021,7 +7856,7 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX", "DUPLICATE" ]
           },
           "isSentenced" : {
             "type" : "boolean"
@@ -7230,15 +8065,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -7388,7 +8223,7 @@
           },
           "courtCaseStatus" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX" ]
+            "enum" : [ "ACTIVE", "INACTIVE", "EDITED", "DELETED", "DRAFT", "FUTURE", "MERGED", "MANY_CHARGES_DATA_FIX", "DUPLICATE" ]
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
@@ -7516,7 +8351,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:30:43.6664446"
+            "example" : "22:06:00.170242102"
           },
           "courtCode" : {
             "type" : "string"

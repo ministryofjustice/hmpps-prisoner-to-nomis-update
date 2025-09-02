@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-08-20.172.2f3b491"
+    "version" : "2025-08-29.200.279cfa4"
   },
   "servers" : [ {
     "url" : "/",
@@ -3832,6 +3832,16 @@
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
+        }, {
+          "name" : "includeHistory",
+          "in" : "query",
+          "description" : "Include history",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include history"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -4016,6 +4026,16 @@
             "example" : "11124143"
           },
           "example" : "11124143"
+        }, {
+          "name" : "includeHistory",
+          "in" : "query",
+          "description" : "Include history",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include history"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -7437,6 +7457,11 @@
             "description" : "Human-readable description of this value",
             "example" : "On hold"
           },
+          "ignoreDownstream" : {
+            "type" : "boolean",
+            "description" : "Whether reports with this status should be ignored downstream for most statistical purposes",
+            "example" : false
+          },
           "nomisCode" : {
             "type" : "string",
             "deprecated" : true,
@@ -7445,7 +7470,7 @@
           }
         },
         "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "required" : [ "code", "description", "ignoreDownstream" ]
       },
       "StaffRoleConstantDescription" : {
         "type" : "object",

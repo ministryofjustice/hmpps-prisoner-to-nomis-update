@@ -20,6 +20,7 @@ api.base.url:
   court.sentencing: http://localhost:8094
   alerts: http://localhost:8095
   casenotes: http://localhost:8096
+  finance: http://localhost:8097
   csip: http://localhost:8098
   incidents: http://localhost:8091
   personal.relationships: http://localhost:8099
