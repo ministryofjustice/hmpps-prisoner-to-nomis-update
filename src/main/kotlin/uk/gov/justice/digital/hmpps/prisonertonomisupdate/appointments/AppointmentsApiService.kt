@@ -43,10 +43,10 @@ class AppointmentsApiService(
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", "/rollout")))
     .awaitSingle()
 
-  suspend fun searchAppointments(prisonId: String, startDate: LocalDate): List<AppointmentSearchResult> = webClient
+  suspend fun searchAppointments(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<AppointmentSearchResult> = webClient
     .post()
     .uri("/appointments/{prisonId}/search", prisonId)
-    .bodyValue(AppointmentSearchRequest(startDate))
+    .bodyValue(AppointmentSearchRequest(startDate = startDate, endDate = endDate))
     .retrieve()
     .bodyToMono(typeReference<List<AppointmentSearchResult>>())
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", "/appointments/$prisonId/search")))
