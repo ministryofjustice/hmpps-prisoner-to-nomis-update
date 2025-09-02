@@ -28,6 +28,7 @@ import java.time.LocalDateTime
 private const val APPOINTMENT_ATTENDEE_ID = 123456789L
 private const val NOMIS_EVENT_ID = 4567890L
 private const val START_DATE = "2025-08-04"
+private const val END_DATE = "2025-08-09"
 private const val PRISON_CODE = "MDI"
 private const val OFFENDER_NO = "A1234SS"
 
@@ -106,7 +107,7 @@ class AppointmentsReconciliationServiceTest {
         .thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
       // Total of 2 => no missing dps records
-      whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE))).thenReturn(
+      whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE))).thenReturn(
         listOf(
           AppointmentSearchResult(
             appointmentSeriesId = 123,
@@ -142,7 +143,7 @@ class AppointmentsReconciliationServiceTest {
         ),
       )
 
-      val results = appointmentsReconciliationService.generateReconciliationReportForPrison(PRISON_CODE, LocalDate.parse(START_DATE), 2)
+      val results = appointmentsReconciliationService.generateReconciliationReportForPrison(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 2)
       assertThat(results).hasSize(1)
 
       verify(telemetryClient, times(1)).trackEvent(

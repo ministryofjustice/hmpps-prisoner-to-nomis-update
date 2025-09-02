@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
-import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -10,8 +9,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Appoi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentSearchRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentSearchResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.RolloutPrisonPlan
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
 import java.time.LocalDate
 
 @Service
@@ -27,9 +26,7 @@ class AppointmentsApiService(
     .get()
     .uri("/appointment-instances/{id}", id)
     .retrieve()
-    .bodyToMono(AppointmentInstance::class.java)
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", "/appointment-instances/$id")))
-    .awaitSingle()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/appointment-instances/$id")))
 
   suspend fun getRolloutPrisons(): List<RolloutPrisonPlan> = webClient
     .get()
@@ -39,16 +36,12 @@ class AppointmentsApiService(
         .build()
     }
     .retrieve()
-    .bodyToMono(typeReference<List<RolloutPrisonPlan>>())
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", "/rollout")))
-    .awaitSingle()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/rollout")))
 
   suspend fun searchAppointments(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<AppointmentSearchResult> = webClient
     .post()
     .uri("/appointments/{prisonId}/search", prisonId)
     .bodyValue(AppointmentSearchRequest(startDate = startDate, endDate = endDate))
     .retrieve()
-    .bodyToMono(typeReference<List<AppointmentSearchResult>>())
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "casenotes-nomis-api", "url", "/appointments/$prisonId/search")))
-    .awaitSingle()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/appointments/$prisonId/search")))
 }
