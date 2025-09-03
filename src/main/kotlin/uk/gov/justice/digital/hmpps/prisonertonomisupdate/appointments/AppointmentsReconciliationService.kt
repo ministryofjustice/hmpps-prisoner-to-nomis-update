@@ -225,13 +225,14 @@ class AppointmentsReconciliationService(
     dps: AppointmentInstance,
   ): String? {
     val nstart = nomis.startDateTime
-    if (nomis.offenderNo != dps.prisonerNumber) return "Offender mismatch"
+    if (nomis.offenderNo != dps.prisonerNumber) return "offender mismatch"
     if (nomis.bookingId != dps.bookingId) return "bookingId mismatch"
     if (nomis.subtype != dps.categoryCode) return "subtype/code mismatch"
     if (nstart?.toLocalDate() != dps.appointmentDate) return "date mismatch"
     if (nstart.toLocalTime() != parseOrNull(dps.startTime)) return "start time mismatch: ${nstart.toLocalTime()} vs ${dps.startTime}"
     if (endTimeDoesNotMatch(nomis, dps)) return "end time mismatch: ${nomis.endDateTime?.toLocalTime()} vs ${dps.endTime}"
     if (!dps.inCell && nomis.internalLocation != dps.internalLocationId) return "location mismatch"
+    if (dps.prisonCode != nomis.prisonId) return "prison mismatch"
     return null
   }
 
