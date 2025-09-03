@@ -492,6 +492,65 @@ If your investigation points to a problem caused by duplicate activity updates b
 
 NOTE: You should still investigate the error in case of other scenarios not foreseen above. If any are found then please document them here.
 
+## Court sentencing
+
+### Case cloning on to the latest booking
+
+Case cloning is where one or more court cases are copied to the latest booking due to a change made in DPS. Given DPS Remand & Sentencing is booking agnostic, this ensures major updates to court cases are visible in NOMIS on the latest booking.
+
+The current user triggered events supported that trigger a clone are:
+* Adding a court appearance to a court case associated with a previous booking (defined as bookingSequence != 1)
+* Adding a recall in DPS with a sentence on a previous booking
+
+More details about the justification for this complication can be found in the [DPS Case Cloning](https://dsdmoj.atlassian.net/wiki/spaces/SOM/pages/5831721530/Agreed+solution+to+the+RAS+booking+agnostic+problem) document.
+
+#### Case clone overview
+
+* Case cloning starts for one or more root cases—for a court appearance add, this will be a single case where as for recalls, this can be many depending on how many sentences are involved in the recall.
+* For each of these root cases all related cases are also marked as needing cloning. These related cases are defined as cases linked via the NOMIS combined case linking (both source and target) and cases containing sentences that are consecutive to cases containing the related sentences (as parent or child) on the root cases.
+* For each cases cloned the case, case identifiers, offender charges, court appearances (court events), court orders, sentences, sentence terms and any sentence related adjustments (e.g. Remand) are copied to the latest booking
+* This differs to how NOMIS handles a prisoner merge in the following is not cloned; case status updates, sentence status updates, booking level sentence adjustments, fines, licences (and conditions)  the history of imprisonment statuses (though the latest imprisonment status is recalculated) and case associated tables.
+* Court cases, sentences and adjustments are all made active when they are copied
+* The hmpps-prisoner-to-update service issues a call to the mapping service so all the cases cloned mappings are updated to point at the new cloned cases. This ensures DPS cases remain visible but now linked to the latest version of those cases in NOMIS
+* Since the cases and sentences have a new bookingId these new cases are synchronised back to DPS via a SQS message to the hmpps-prisoner-from-nomis-migration service
+* Also the old source cases that have now orphaned with no associated mappings are synchronised back to DPS via a SQS message to the hmpps-prisoner-from-nomis-migration service which uses a special endpoint that knows to mark these cases as DUPLICATE
+* DUPLICATE cases in DPS are not visible in the UI but synchronisation between them and their NOMIS counterparts is still possible. Though there is no reason in NOMIS why they should be updated given they are on a previous booking and no longer are the latest versions.
+* Sentence adjustments that are cloned are also synchronised back to DPS Adjustments via a SQS message to the hmpps-prisoner-from-nomis-migration service
+
+
+#### Common question and answers
+
+* Q: When is a case identified to be cloned?
+* A: This is done by hmpps-nomis-prisoner-api when the POST/PUT request is made to either the create appearance or create recall endpoints. Only NOMIS API knows if the operation is about to be made on a previous booking, so it needs to initiate the clone.
+
+* Q: Is create appearance and create recall operations applied to both the original and cloned cases?
+* A: No. Just the cloned cases are amended. This makes the cloning complicated since hmpps-prisoner-to-nomis-update will request an update to a specific case Id or sentence Id but the operation is carried out on a different entity. hmpps-nomis-prisoner-api has to therefore not only clone case but mutate the request so the Ids of entities are switched to the cloned equivalents.
+
+* Q: How does the hmpps-prisoner-to-update service know a clone has taken place?
+* A: The hmpps-nomis-prisoner-api service will return an additional field in the response for both `CreateCourtAppearanceResponse` and `ConvertToRecallResponse` called `clonedCourtCases` which contains the Ids of the cloned cases.
+
+* Q: What messages are sent to the hmpps-prisoner-from-nomis-migration service?
+* A: To update the cloned cases bookingId and create the orphaned cases in DPS it is the message called `courtsentencing.resync.case.booking`. To create the sentence adjustments `courtsentencing.resync.sentence-adjustments`
+
+* Q: Why are these messages sent after the mappings are updated?
+* A: There is a potential race condition if the mappings are updated at the same time as the messages are sent. It could potentially try to create mappings for the orphaned cases before their mappings have been switched to cloned cases. This would fail with a unique key exception
+
+* Q: For sentence adjustments, why do we not use a single SQS message for all adjustments which might perform better?
+* A: The created adjustments also require their own mapping that itself might fail, so creating adjustments are not idempotent. So a single message for each adjustment is guaranteed to succeed eventually and only ever created one adjustment.
+
+#### Technical failure points
+
+* The call to update the mapping fails for some reason. If the mapping service rejects the update no other part of the operation for cloning will complete. This means the new cases have been created but DPS has no reference to them. So any further updates to DPS (e.g another court appearance) would be synchronised to the previous booking. Therefore any manual fixes to get the mappings in the correct state would need to be done in a timely fashion. The only way to view the new mappings is via the SQS message itself and any updated to the mappings database would have to be done manually to resolved the issue. Any manual updates or deletes made must also allow the message `RETRY_CREATE_MAPPING` to eventually succeed so the rest of the synchronisation of cloning can completed
+* A failure to send either the `courtsentencing.resync.case.booking` or `courtsentencing.resync.sentence-adjustments`. Though this is unlikely since the send of these messages is wrapped so they are retried several times they could still fail. When they fail a `send-message-$eventType-failed` AppInsights custom event is tracked. Where `$eventType` is replaced by the message name e.g. `send-message-courtsentencing.resync.case.booking-failed`  which will trigger an ApplicationInsights Slack alert `to-nomis-sync-send-message-failure-prod`. The custom event will contain the actual message being sent so for now a manual SQS send with the exact same message will need to be crafted until such point a "repair" endpoint is avaialble.
+
+#### Business failure points
+
+* The prison could switch back to the previous booking. In this scenario the view of the case in NOMIS no longer matches that in DPS. NOMIS is a stale version of this view and any updates made in NOMIS will silently update the DUPLICATE hidden records. Worse is if a new court appearance is added to DPS this will trigger a new clone onto a booking where the case may already exist. DPS has accepted these as risks worth taking.
+#### TODO
+
+* Repair endpoints are required if either of the SQS message fail to send. This is preferable to trying to craft SQS messages manually.
+* Consider a better way to repair if the mapping service fails to update the mappings and DPS is still pointing at the old cases. It would require taking a clone response and somehow fixing the mappings and triggering all the other SQS messages.
+
 ## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)
