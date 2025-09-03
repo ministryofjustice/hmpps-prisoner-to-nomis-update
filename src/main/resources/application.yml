@@ -198,6 +198,8 @@ hmpps.sqs:
       errorVisibilityTimeout: 5
     courtsentencing:
       errorVisibilityTimeout: 1
+    sentencing:
+      errorVisibilityTimeout: 1
     personalrelationships:
       errorVisibilityTimeout: 5
     activity:
