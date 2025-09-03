@@ -7,7 +7,7 @@ spring:
     name: hmpps-prisoner-to-nomis-update
   http:
     codecs:
-      max-in-memory-size: 10MB
+      max-in-memory-size: 15MB
 
   security:
     oauth2:
@@ -170,7 +170,7 @@ reports:
       page-size: 20
   appointments:
     reconciliation:
-      page-size: 100
+      page-size: 50
   sentencing:
     reconciliation:
       page-size: 20
@@ -200,6 +200,8 @@ hmpps.sqs:
     adjudication:
       errorVisibilityTimeout: 5
     courtsentencing:
+      errorVisibilityTimeout: 1
+    sentencing:
       errorVisibilityTimeout: 1
     personalrelationships:
       errorVisibilityTimeout: 5
