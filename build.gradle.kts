@@ -75,7 +75,7 @@ val models = listOf(
     name = "activities",
     packageName = "activities",
     url = "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs",
-    models = "Activity,ActivityCategory,ActivityEligibility,ActivityLite,ActivityMinimumEducationLevel,ActivityPay,ActivityPayHistory,ActivitySchedule,ActivityScheduleInstance,ActivityScheduleLite,ActivityScheduleSlot,AdvanceAttendance,AdvanceAttendanceHistory,Allocation,AllocationReconciliationResponse,AppointmentInstance,Attendance,AttendanceHistory,AttendanceReason,AttendanceReconciliationResponse,AttendanceSync,BookingCount,DeallocationReason,EarliestReleaseDate,EligibilityRule,EventOrganiser,EventTier,InternalLocation,PlannedDeallocation,PlannedSuspension,PrisonPayBand,ScheduledInstance,Slot,Suspension",
+    models = "Activity,ActivityCategory,ActivityEligibility,ActivityLite,ActivityMinimumEducationLevel,ActivityPay,ActivityPayHistory,ActivitySchedule,ActivityScheduleInstance,ActivityScheduleLite,ActivityScheduleSlot,AdvanceAttendance,AdvanceAttendanceHistory,Allocation,AllocationReconciliationResponse,AppointmentAttendeeSearchResult,AppointmentCategorySummary,AppointmentInstance,AppointmentLocationSummary,AppointmentSearchRequest,AppointmentSearchResult,Attendance,AttendanceHistory,AttendanceReason,AttendanceReconciliationResponse,AttendanceSync,BookingCount,DeallocationReason,EarliestReleaseDate,EligibilityRule,EventOrganiser,EventTier,InternalLocation,PlannedDeallocation,PlannedSuspension,PrisonPayBand,RolloutPrisonPlan,ScheduledInstance,Slot,Suspension",
   ),
   ModelConfiguration(
     name = "adjudications",

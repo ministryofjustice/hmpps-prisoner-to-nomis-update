@@ -168,6 +168,9 @@ reports:
     reconciliation:
       migration-date: 2024-01-28
       page-size: 20
+  appointments:
+    reconciliation:
+      page-size: 50
   sentencing:
     reconciliation:
       page-size: 20

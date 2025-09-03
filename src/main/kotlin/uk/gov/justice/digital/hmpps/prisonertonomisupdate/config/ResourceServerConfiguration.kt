@@ -13,6 +13,7 @@ class ResourceServerConfiguration {
         "/queue-admin/retry-all-dlqs",
         "/adjudications/reports/reconciliation",
         "/alerts/reports/reconciliation",
+        "/appointments/reports/reconciliation",
         "/casenotes/reports/reconciliation",
         "/contact-person/prisoner-contact/reports/reconciliation",
         "/contact-person/person-contact/reports/reconciliation",
