@@ -5,12 +5,14 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyMap
+import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Appoi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentCategorySummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentSearchResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.RolloutPrisonPlan
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentResponse
@@ -48,6 +51,43 @@ class AppointmentsReconciliationServiceTest {
   )
 
   @Test
+  fun `will iterate over rolled out prisons`() = runTest {
+    whenever(appointmentsApiService.getRolloutPrisons()).thenReturn(
+      listOf(
+        RolloutPrisonPlan(
+          prisonCode = PRISON_CODE,
+          activitiesRolledOut = true,
+          appointmentsRolledOut = true,
+          maxDaysToExpiry = 45,
+          prisonLive = true,
+        ),
+        RolloutPrisonPlan(
+          prisonCode = "SWI",
+          activitiesRolledOut = true,
+          appointmentsRolledOut = false,
+          maxDaysToExpiry = 45,
+          prisonLive = true,
+        ),
+      ),
+    )
+    whenever(nomisApiService.getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(1)))
+      .thenReturn(
+        PageImpl(
+          emptyList(),
+          Pageable.ofSize(5),
+          0,
+        ),
+      )
+    whenever(appointmentsApiService.searchAppointments(eq(PRISON_CODE), any(), any()))
+      .thenReturn(emptyList())
+
+    appointmentsReconciliationService.generateReconciliationReport()
+
+    verify(nomisApiService, times(1)).getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(1))
+    verifyNoMoreInteractions(nomisApiService)
+  }
+
+  @Test
   fun `will not report mismatch where details match`() = runTest {
     whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID)).thenReturn(nomisResponse())
     whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
@@ -70,25 +110,7 @@ class AppointmentsReconciliationServiceTest {
   @Test
   fun `will continue after a GET mapping error`() {
     runTest {
-//      whenever(appointmentsApiService.getRolloutPrisons()).thenReturn(
-//        listOf(
-//          RolloutPrisonPlan(
-//            prisonCode = PRISON_CODE,
-//            activitiesRolledOut = true,
-//            appointmentsRolledOut = true,
-//            maxDaysToExpiry = 45,
-//            prisonLive = true,
-//          ),
-//          RolloutPrisonPlan(
-//            prisonCode = "SWI",
-//            activitiesRolledOut = true,
-//            appointmentsRolledOut = false,
-//            maxDaysToExpiry = 45,
-//            prisonLive = true,
-//          ),
-//        ),
-//      )
-      whenever(nomisApiService.getAppointmentIds(listOf(PRISON_CODE), LocalDate.parse(START_DATE), null, 0, 5))
+      whenever(nomisApiService.getAppointmentIds(listOf(PRISON_CODE), LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 0, 5))
         .thenReturn(
           PageImpl(
             listOf(AppointmentIdResponse(999), AppointmentIdResponse(NOMIS_EVENT_ID)),
@@ -144,7 +166,7 @@ class AppointmentsReconciliationServiceTest {
       )
 
       val results = appointmentsReconciliationService.generateReconciliationReportForPrison(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 2)
-      assertThat(results).hasSize(1)
+      assertThat(results).hasSize(2)
 
       verify(telemetryClient, times(1)).trackEvent(
         eq("appointments-reports-reconciliation-retrieval-error"),
@@ -155,6 +177,11 @@ class AppointmentsReconciliationServiceTest {
       )
       verify(telemetryClient, times(1)).trackEvent(
         eq("appointments-reports-reconciliation-mismatch"),
+        anyMap(),
+        isNull(),
+      )
+      verify(telemetryClient, times(1)).trackEvent(
+        eq("appointments-reports-reconciliation-dps-only"),
         anyMap(),
         isNull(),
       )

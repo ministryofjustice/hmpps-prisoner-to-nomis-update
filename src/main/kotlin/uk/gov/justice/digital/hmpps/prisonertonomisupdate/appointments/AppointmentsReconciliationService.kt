@@ -29,35 +29,35 @@ class AppointmentsReconciliationService(
   @Value("\${reports.appointments.reconciliation.page-size}") private val pageSize: Int,
 ) {
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
-
-  // Just reconcile appointments from yesterday for the next week
 
   suspend fun generateReconciliationReport(): List<MismatchAppointment> {
     val yesterday = LocalDate.now().minusDays(1)
     val nextWeek = LocalDate.now().plusDays(7)
-//    return dpsApiService.getRolloutPrisons()
-//      .filter { it.appointmentsRolledOut }
-//      .shuffled()
-//      .flatMap {
-//        val currentPrisonId = it.prisonCode
-//        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
-//        log.info("--------- Scanning prison {} with appointmentsCount = {}", currentPrisonId, appointmentsCount)
-//        generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
-//      }
-    val currentPrisonId = "ISI"
-    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
-    return  generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
+    return dpsApiService.getRolloutPrisons()
+      .filter { it.appointmentsRolledOut }
+      .flatMap {
+        val currentPrisonId = it.prisonCode
+        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
+        log.info("--------- Scanning prison {} with appointmentsCount = {}", currentPrisonId, appointmentsCount)
+        generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
+      }
+//    val currentPrisonId = "ISI"
+//    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
+//    return  generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
   }
 
   // -------------------------------------------- Locations-style :
 
   suspend fun generateReconciliationReportForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate, nomisTotal: Int): List<MismatchAppointment> {
     val allDpsIdsInNomisPrison = HashSet<Long>(nomisTotal)
+    if (nomisTotal == 0) {
+      return checkForMissingDpsRecords(allDpsIdsInNomisPrison, prisonId, startDate, endDate, nomisTotal)
+    }
     val results = nomisTotal.asPages(pageSize).flatMap { page ->
       val appointmentMappings = if (page.first > -1) {
-        getNomisAppointmentsForPage(prisonId, startDate, page)
+        getNomisAppointmentsForPage(prisonId, startDate, endDate, page)
       } else {
         emptyList() // HACK - add items here
       }
@@ -94,8 +94,8 @@ class AppointmentsReconciliationService(
     return results + checkForMissingDpsRecords(allDpsIdsInNomisPrison, prisonId, startDate, endDate, nomisTotal)
   }
 
-  internal suspend fun getNomisAppointmentsForPage(prisonId: String, startDate: LocalDate, page: Pair<Int, Int>) = runCatching {
-    nomisApiService.getAppointmentIds(listOf(prisonId), startDate, null, page.first, page.second).content
+  internal suspend fun getNomisAppointmentsForPage(prisonId: String, startDate: LocalDate, endDate: LocalDate, page: Pair<Int, Int>) = runCatching {
+    nomisApiService.getAppointmentIds(listOf(prisonId), startDate, endDate, page.first, page.second).content
   }
     .onFailure {
       telemetryClient.trackEvent(
@@ -204,7 +204,7 @@ class AppointmentsReconciliationService(
       )
       mismatch
     } else {
-      log.info("Appointment matches: nomis ${mapping.nomisEventId} = dps ${mapping.appointmentInstanceId}")
+      // log.info("Appointment matches: nomis ${mapping.nomisEventId} = dps ${mapping.appointmentInstanceId}")
       null
     }
   }.onSuccess {
