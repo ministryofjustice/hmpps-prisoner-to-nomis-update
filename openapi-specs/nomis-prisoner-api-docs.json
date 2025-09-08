@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-29.485.1090266"
+    "version" : "2025-09-05.498.d20f7c8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -20334,6 +20334,39 @@
         },
         "required" : [ "eventId", "offenderChargeIds", "sentenceCalcType", "sentenceCategory", "sentenceLevel", "startDate", "status" ]
       },
+      "SentenceTermRequest" : {
+        "type" : "object",
+        "description" : "Sentence term request",
+        "properties" : {
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "hours" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sentenceTermType" : {
+            "type" : "string"
+          },
+          "lifeSentenceFlag" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "lifeSentenceFlag", "sentenceTermType" ]
+      },
       "AlertResponse" : {
         "type" : "object",
         "description" : "The data held in NOMIS about an alert associated with a prisoner",
@@ -22922,7 +22955,7 @@
       },
       "MoveActivityEndDateRequest" : {
         "type" : "object",
-        "description" : "Move activity end date request",
+        "description" : "Move activity end date",
         "properties" : {
           "courseActivityIds" : {
             "type" : "array",
@@ -24088,39 +24121,6 @@
           }
         },
         "required" : [ "bookingId", "sentenceSeq" ]
-      },
-      "SentenceTermRequest" : {
-        "type" : "object",
-        "description" : "Sentence term request",
-        "properties" : {
-          "years" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "months" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "weeks" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "days" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "hours" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "sentenceTermType" : {
-            "type" : "string"
-          },
-          "lifeSentenceFlag" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "lifeSentenceFlag", "sentenceTermType" ]
       },
       "CreateSentenceTermResponse" : {
         "type" : "object",
