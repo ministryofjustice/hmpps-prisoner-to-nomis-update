@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-29.142.6405cfd"
+    "version" : "2025-09-04.144.4b78172"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18015,7 +18015,7 @@
       },
       "ContactPersonProfileDetailsMigrationMappingDto" : {
         "type" : "object",
-        "description" : "Mappings for a Contact Person Profile Details Migration",
+        "description" : "Migration request details",
         "properties" : {
           "prisonerNumber" : {
             "type" : "string",
@@ -18991,6 +18991,44 @@
           }
         },
         "required" : [ "adjudicationNumber", "chargeNumber", "chargeSequence" ]
+      },
+      "AdjudicationHearingMappingDto" : {
+        "type" : "object",
+        "description" : "Adjudication hearing mapping",
+        "properties" : {
+          "nomisHearingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS hearing id",
+            "example" : 123456
+          },
+          "dpsHearingId" : {
+            "type" : "string",
+            "description" : "DPS hearing id",
+            "example" : 123456
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "default" : "ADJUDICATION_CREATED",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsHearingId", "nomisHearingId" ]
       },
       "CSIPChildMappingDto" : {
         "type" : "object",
@@ -20484,44 +20522,6 @@
         },
         "required" : [ "adjudicationId", "hearings", "label", "punishments" ]
       },
-      "AdjudicationHearingMappingDto" : {
-        "type" : "object",
-        "description" : "Adjudication hearing mapping",
-        "properties" : {
-          "nomisHearingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS hearing id",
-            "example" : 123456
-          },
-          "dpsHearingId" : {
-            "type" : "string",
-            "description" : "DPS hearing id",
-            "example" : 123456
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "ADJUDICATION_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsHearingId", "nomisHearingId" ]
-      },
       "ActivityMigrationMappingDto" : {
         "type" : "object",
         "description" : "NOMIS to Activity schedule mapping",
@@ -20694,12 +20694,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
