@@ -9,7 +9,7 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.1"
   kotlin("plugin.spring") version "2.2.10"
   id("org.openapi.generator") version "7.15.0"
 }
@@ -26,7 +26,7 @@ dependencies {
   implementation("org.springframework.data:spring-data-commons:3.5.3")
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.4.10")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.12")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
@@ -43,7 +43,7 @@ dependencies {
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.21.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.789")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.791")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
