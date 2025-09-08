@@ -224,17 +224,6 @@ generic-service:
     groups:
       - internal
 
-  batchjobs:
-    - name: reconciliation-report-allocations-new
-      schedule: "7 15 * * *"
-      type: ALLOCATION_RECON
-    - name: reconciliation-report-suspended-allocations-new
-      schedule: "1 15 * * *"
-      type: SUSPENDED_ALLOCATION_RECON
-    - name: reconciliation-report-attendances-new
-      schedule: "7 45 * * *"
-      type: ATTENDANCE_RECON
-
 # CloudPlatform AlertManager receiver to route prometheus alerts to slack
 # See https://user-guide.cloud-platform.service.justice.gov.uk/documentation/monitoring-an-app/how-to-create-alarms.html#creating-your-own-custom-alerts
 generic-prometheus-alerts:
