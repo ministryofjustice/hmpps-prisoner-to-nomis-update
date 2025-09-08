@@ -551,6 +551,92 @@ More details about the justification for this complication can be found in the [
 * Repair endpoints are required if either of the SQS message fail to send. This is preferable to trying to craft SQS messages manually.
 * Consider a better way to repair if the mapping service fails to update the mappings and DPS is still pointing at the old cases. It would require taking a clone response and somehow fixing the mappings and triggering all the other SQS messages.
 
+### Prisoner Alerts
+
+#### Duplicate handling
+
+Occasionally DPS allows the same alert to be created twice (e.g. due to a double submit). This will result in a message on the DLQ. The hmpps-nomis-prisoner-api service will return a 409 Conflict error with the message `Conflict http error: Alert code <code>> is already active on booking <bookingId>`and a custom event of `aler-create-failed` will be tracked.
+
+To show the exception and check it is a duplicate
+```ksql
+let ops = AppEvents
+| where Name == "alert-create-failed"
+| where AppRoleName == "hmpps-prisoner-to-nomis-update"
+| project OperationId;
+AppExceptions
+| where OperationId in (ops)
+| where AppRoleName == "hmpps-prisoner-to-nomis-update"
+```
+
+To show the exception and confirm the bookingId and alert code
+```ksql
+let ops = AppEvents
+| where Name == "alert-create-failed"
+| where AppRoleName == "hmpps-prisoner-to-nomis-update"
+| project OperationId;
+AppTraces
+| where OperationId in (ops)
+| where AppRoleName == "hmpps-nomis-prisoner-api"
+```
+
+When this happens you can check that DPS did fire two `person.alert.created` events with different DPS Ids but same prisoner and same code.
+
+Action to take is:
+* Clear the message from the DLQ - it will never succeed
+* Inform DPS on `#collab-connect-dps-syscon` to delete the duplicate alert; i.e. the one that was failing to sync with no mapping record.
+
+## Contacts a.k.a Personal Relationships
+
+DPS has different terminology for the 2 key entities to NOMIS:
+---
+* NOMIS: Person
+* DPS: Contact
+
+---
+* NOMIS: Contact
+* DPS: Prisoner Contact
+---
+#### Duplicate handling
+
+Since a prisoner contact can not exist twice in either NOMIS or DPS; i.e. a prisoner and a civilian can not be related twice with the same type a network failure can result in an attempted duplicate.
+
+These would result in a `contact-create-failed` custom event 
+```ksql
+let ops = AppEvents
+| where Name == "contact-create-failed"
+| where AppRoleName == "hmpps-prisoner-to-nomis-update"
+| project OperationId;
+AppExceptions
+| where OperationId in (ops)
+| where AppRoleName == "hmpps-prisoner-to-nomis-update"
+```
+
+The scenario this happens is where the POST to `hmpps-nomis-prisoner-api` to create the contact succeeded but `hmpps-prisoner-to-nomis-update` received no response the retry will then fail with a 409 Conflict error.
+
+This can be resolved by creating the missing mapping.
+* dpsId is in the properties of the `contact-create-failed` custom event
+* nomisId can be found by viewing contacts for the person in NOMIS via:
+
+```
+GET https://nomis-prisoner-api{{prefix}}.prison.service.justice.gov.uk/persons/{{contactOrPersonId}}
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("hmpps-auth")}}
+```
+then create the mapping
+
+```
+POST https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk/mapping/contact-person/contact
+Content-Type: application/json
+Authorization: Bearer {{$auth.token("hmpps-auth")}}
+
+{
+  "dpsId": "<dpsId>",
+  "nomisId": <existing nomisId>,
+  "mappingType": "DPS_CREATED"
+}
+```
+
+
 ## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)
