@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-06.5252.1cc8048"
+    "version" : "2025-09-08.85.f56a761"
   },
   "servers" : [ {
     "url" : "/",
@@ -253,7 +253,7 @@
       "put" : {
         "tags" : [ "Prison Configuration" ],
         "summary" : "Update the status of the service service for a prison",
-        "description" : "Requires role LOCATION_ADMIN",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
         "operationId" : "updateResiLocationServiceActiveStatus",
         "parameters" : [ {
           "name" : "prisonId",
@@ -350,7 +350,7 @@
       "put" : {
         "tags" : [ "Prison Configuration" ],
         "summary" : "Update the certification approval process for a prison",
-        "description" : "Requires role LOCATION_ADMIN",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
         "operationId" : "updateCertificationApprovalProcessForPrison",
         "parameters" : [ {
           "name" : "prisonId",
@@ -1948,6 +1948,96 @@
                       "$ref" : "#/components/schemas/CapacityChanges"
                     }
                   }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/certification/prison/signed-op-cap-change" : {
+      "put" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Requests approval for a signed operation capacity change",
+        "description" : "Requires role LOCATION_CERTIFICATION",
+        "operationId" : "requestSignedOpCapApproval",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SignedOpCapApprovalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns the approval request status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
                 }
               }
             }
@@ -3787,8 +3877,7 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "type" : "boolean"
           }
         }, {
           "name" : "filters",
@@ -3921,8 +4010,7 @@
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "boolean",
-            "default" : false
+            "type" : "boolean"
           }
         }, {
           "name" : "filters",
@@ -4690,7 +4778,7 @@
       "get" : {
         "tags" : [ "Prison Configuration" ],
         "summary" : "Get prison configuration",
-        "description" : "Requires role LOCATION_ADMIN",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
         "operationId" : "getPrisonConfiguration",
         "parameters" : [ {
           "name" : "prisonId",
@@ -5607,6 +5695,153 @@
           },
           "200" : {
             "description" : "Returns hierarchy for this prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonHierarchyDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/prison/{prisonId}/residential-hierarchy/{parentPathHierarchy}" : {
+      "get" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Return the hierarchy below the parent path specified for this prison",
+        "description" : "Requires role VIEW_LOCATIONS",
+        "operationId" : "getPrisonHierarchyBelowLocation",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "parentPathHierarchy",
+          "in" : "path",
+          "description" : "Parent path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Parent path",
+            "example" : "A-1",
+            "maxLength" : 2147483647,
+            "minLength" : 1
+          },
+          "example" : "A-1"
+        }, {
+          "name" : "maxLevel",
+          "in" : "query",
+          "description" : "The maximum level to return, default is all if not defined.  Most APIs will just need the first level so maxLevel=1",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The maximum level to return, default is all if not defined.  Most APIs will just need the first level so maxLevel=1",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "includeVirtualLocations",
+          "in" : "query",
+          "description" : "Include virtual locations such as CSWAP and RECP",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include virtual locations such as CSWAP and RECP",
+            "example" : false
+          },
+          "example" : false
+        }, {
+          "name" : "includeInactive",
+          "in" : "query",
+          "description" : "Include temporarily inactive locations",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Include temporarily inactive locations",
+            "example" : false
+          },
+          "example" : false
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns hierarchy for this prison below the path specified for this prison",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7786,7 +8021,7 @@
         "tags" : [ "Constants" ],
         "summary" : "Get deactivated reason reference data",
         "description" : "Requires the READ_LOCATION_REFERENCE_DATA role.",
-        "operationId" : "deactivedReasonsConstants",
+        "operationId" : "deactivatedReasonsConstants",
         "responses" : {
           "403" : {
             "description" : "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
@@ -8591,19 +8826,19 @@
             "type" : "string",
             "description" : "Indicates that the residential service is active",
             "enum" : [ "ACTIVE", "INACTIVE" ],
-            "example" : true
+            "example" : "ACTIVE"
           },
           "includeSegregationInRollCount" : {
             "type" : "string",
             "description" : "Indicates that roll count should include segregation in its calculations for net vacancies",
             "enum" : [ "ACTIVE", "INACTIVE" ],
-            "example" : false
+            "example" : "INACTIVE"
           },
           "certificationApprovalRequired" : {
             "type" : "string",
             "description" : "Indicates that this prison must go through the certification process to create or change cells",
             "enum" : [ "ACTIVE", "INACTIVE" ],
-            "example" : false
+            "example" : "INACTIVE"
           }
         },
         "required" : [ "certificationApprovalRequired", "includeSegregationInRollCount", "prisonId", "resiLocationServiceActive" ]
@@ -8751,7 +8986,7 @@
             "description" : "The structure of the wing",
             "items" : {
               "type" : "string",
-              "enum" : [ "WING", "SPUR", "LANDING", "CELL" ]
+              "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
             }
           },
           "comments" : {
@@ -8773,9 +9008,9 @@
             "$ref" : "#/components/schemas/Capacity",
             "description" : "Capacity details of the location"
           },
-          "pendingCapacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "Pending capacity details of draft or pending approval locations"
+          "pendingChanges" : {
+            "$ref" : "#/components/schemas/PendingChangeDto",
+            "description" : "Pending changes of draft or pending approval location"
           },
           "oldWorkingCapacity" : {
             "type" : "integer",
@@ -8792,6 +9027,10 @@
             "items" : {
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             }
+          },
+          "internalMovementAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location can used for internal movements"
           },
           "accommodationTypes" : {
             "type" : "array",
@@ -8974,7 +9213,7 @@
                   "description" : "The structure of the wing",
                   "items" : {
                     "type" : "string",
-                    "enum" : [ "WING", "SPUR", "LANDING", "CELL" ]
+                    "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
                   }
                 },
                 "comments" : {
@@ -8996,9 +9235,9 @@
                   "$ref" : "#/components/schemas/Capacity",
                   "description" : "Capacity details of the location"
                 },
-                "pendingCapacity" : {
-                  "$ref" : "#/components/schemas/Capacity",
-                  "description" : "Pending capacity details of draft or pending approval locations"
+                "pendingChanges" : {
+                  "$ref" : "#/components/schemas/PendingChangeDto",
+                  "description" : "Pending changes of draft or pending approval location"
                 },
                 "oldWorkingCapacity" : {
                   "type" : "integer",
@@ -9015,6 +9254,10 @@
                   "items" : {
                     "$ref" : "#/components/schemas/NonResidentialUsageDto"
                   }
+                },
+                "internalMovementAllowed" : {
+                  "type" : "boolean",
+                  "description" : "Indicates that this location can used for internal movements"
                 },
                 "accommodationTypes" : {
                   "type" : "array",
@@ -9248,6 +9491,30 @@
         },
         "required" : [ "sequence", "usageType" ]
       },
+      "PendingChangeDto" : {
+        "type" : "object",
+        "description" : "Pending changes",
+        "properties" : {
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending max capacity",
+            "example" : 2
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending working capacity",
+            "example" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending CNA",
+            "example" : 2
+          }
+        }
+      },
       "TransactionDetail" : {
         "type" : "object",
         "description" : "Transaction Detail",
@@ -9266,7 +9533,7 @@
           "attributeCode" : {
             "type" : "string",
             "description" : "Attribute Code",
-            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "CERTIFIED_CAPACITY", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
+            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "CERTIFIED_CAPACITY", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
           },
           "attribute" : {
             "type" : "string",
@@ -9565,6 +9832,13 @@
                 "deactivationReason" : "DAMAGED"
               }
             }
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username of the user requesting to deactivate the locations, if not provided the token username or client id will be used",
+            "example" : "TESTUSER",
+            "maxLength" : 80,
+            "minLength" : 0
           }
         },
         "required" : [ "locations" ]
@@ -9616,9 +9890,21 @@
             "description" : "Indicates the capacity of the certified location (cell)",
             "example" : 1,
             "maximum" : 99
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Working capacity of the location",
+            "example" : "A1-03",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Indicate that the cell as in-cell sanitation",
+            "example" : true
           }
         },
-        "required" : [ "maxCapacity", "workingCapacity" ]
+        "required" : [ "inCellSanitation", "maxCapacity", "workingCapacity" ]
       },
       "UpdateCapacityRequest" : {
         "type" : "object",
@@ -9680,22 +9966,23 @@
         },
         "required" : [ "key", "message" ]
       },
-      "WithdrawCertificationRequestDto" : {
+      "SignedOpCapApprovalRequest" : {
         "type" : "object",
-        "description" : "Request to withdraw a certification request",
+        "description" : "Request to approve a location or set of locations and cells below it",
         "properties" : {
-          "approvalRequestReference" : {
+          "prisonId" : {
             "type" : "string",
-            "format" : "uuid",
-            "description" : "Approval request reference",
-            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+            "description" : "The prison where the signed op cap is to be approved",
+            "example" : "MDI"
           },
-          "comments" : {
-            "type" : "string",
-            "description" : "Comments about the withdrawal"
+          "signedOperationalCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The new value of the signed operational capacity",
+            "example" : 456
           }
         },
-        "required" : [ "approvalRequestReference", "comments" ]
+        "required" : [ "prisonId", "signedOperationalCapacity" ]
       },
       "CertificationApprovalRequestDto" : {
         "type" : "object",
@@ -9712,6 +9999,17 @@
             "format" : "uuid",
             "description" : "Location Id",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "approvalType" : {
+            "type" : "string",
+            "description" : "Type of approval",
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "REACTIVATION", "CAPACITY_CHANGE" ],
+            "example" : "SIGNED_OP_CAP"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
           },
           "locationKey" : {
             "type" : "string",
@@ -9766,6 +10064,12 @@
             "description" : "Change in maximum capacity",
             "example" : 1
           },
+          "signedOperationCapacityChange" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Change signed operational capacity",
+            "example" : 1
+          },
           "locations" : {
             "type" : "array",
             "description" : "Locations affected by the approval",
@@ -9774,7 +10078,7 @@
             }
           }
         },
-        "required" : [ "certifiedNormalAccommodationChange", "id", "locationId", "locationKey", "maxCapacityChange", "requestedBy", "requestedDate", "status", "workingCapacityChange" ]
+        "required" : [ "approvalType", "certifiedNormalAccommodationChange", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
       },
       "CertificationApprovalRequestLocationDto" : {
         "type" : "object",
@@ -9863,6 +10167,23 @@
         },
         "required" : [ "id", "level", "locationCode", "locationType", "pathHierarchy" ]
       },
+      "WithdrawCertificationRequestDto" : {
+        "type" : "object",
+        "description" : "Request to withdraw a certification request",
+        "properties" : {
+          "approvalRequestReference" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Approval request reference",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "comments" : {
+            "type" : "string",
+            "description" : "Comments about the withdrawal"
+          }
+        },
+        "required" : [ "approvalRequestReference", "comments" ]
+      },
       "LocationApprovalRequest" : {
         "type" : "object",
         "description" : "Request to approve a location or set of locations and cells below it",
@@ -9872,9 +10193,15 @@
             "format" : "uuid",
             "description" : "Location Id of location requiring approval for being certified",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "approvalType" : {
+            "type" : "string",
+            "description" : "Type of approval request",
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "REACTIVATION", "CAPACITY_CHANGE" ],
+            "example" : "DRAFT"
           }
         },
-        "required" : [ "locationId" ]
+        "required" : [ "approvalType", "locationId" ]
       },
       "RejectCertificationRequestDto" : {
         "type" : "object",
@@ -10020,6 +10347,10 @@
             },
             "uniqueItems" : true
           },
+          "internalMovementAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location can used for internal movements"
+          },
           "createDate" : {
             "type" : "string",
             "format" : "date-time",
@@ -10114,6 +10445,10 @@
             "items" : {
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             }
+          },
+          "internalMovementAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location can used for internal movements"
           },
           "orderWithinParentLocation" : {
             "type" : "integer",
@@ -10321,11 +10656,12 @@
             },
             "uniqueItems" : true
           },
-          "capacityNormalAccommodation" : {
+          "certifiedNormalAccommodation" : {
             "type" : "integer",
             "format" : "int32",
             "default" : 0,
-            "description" : "CNA value"
+            "description" : "CNA value",
+            "maximum" : 99
           },
           "inCellSanitation" : {
             "type" : "boolean",
@@ -10382,6 +10718,10 @@
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             },
             "uniqueItems" : true
+          },
+          "internalMovementAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location can used for internal movements"
           }
         },
         "required" : [ "code", "locationType", "prisonId" ]
@@ -10417,7 +10757,7 @@
             "description" : "The structure of the wing",
             "items" : {
               "type" : "string",
-              "enum" : [ "WING", "SPUR", "LANDING", "CELL" ]
+              "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
             }
           }
         },
@@ -10469,7 +10809,7 @@
             "uniqueItems" : true
           }
         },
-        "required" : [ "cells", "prisonId" ]
+        "required" : [ "prisonId" ]
       },
       "LevelAboveCells" : {
         "type" : "object",
@@ -10492,7 +10832,7 @@
             "type" : "string",
             "default" : "LANDING",
             "description" : "Parent location type",
-            "enum" : [ "WING", "SPUR", "LANDING", "CELL" ],
+            "enum" : [ "CELL", "LANDING", "SPUR", "WING" ],
             "example" : "LANDING"
           }
         },
@@ -10550,9 +10890,12 @@
             "type" : "boolean",
             "default" : true,
             "description" : "In-cell sanitation for cell"
+          },
+          "isCapacityValid" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "code" ]
+        "required" : [ "code", "isCapacityValid" ]
       },
       "PatchResidentialLocationRequest" : {
         "type" : "object",
@@ -10658,6 +11001,10 @@
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             },
             "uniqueItems" : true
+          },
+          "internalMovementAllowed" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location can used for internal movements"
           },
           "localName" : {
             "type" : "string",
@@ -11073,6 +11420,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -11089,12 +11442,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -11122,15 +11469,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -11213,6 +11560,14 @@
             "description" : "The description of the type of sub locations most common",
             "examples" : [ "Wings", "Landings", "Spurs", "Cells" ]
           },
+          "wingStructure" : {
+            "type" : "array",
+            "description" : "The structure of the wing",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
+            }
+          },
           "locationHierarchy" : {
             "type" : "array",
             "description" : "Parent locations, top to bottom",
@@ -11273,7 +11628,7 @@
                   "description" : "The structure of the wing",
                   "items" : {
                     "type" : "string",
-                    "enum" : [ "WING", "SPUR", "LANDING", "CELL" ]
+                    "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
                   }
                 },
                 "comments" : {
@@ -11295,9 +11650,9 @@
                   "$ref" : "#/components/schemas/Capacity",
                   "description" : "Capacity details of the location"
                 },
-                "pendingCapacity" : {
-                  "$ref" : "#/components/schemas/Capacity",
-                  "description" : "Pending capacity details of draft or pending approval locations"
+                "pendingChanges" : {
+                  "$ref" : "#/components/schemas/PendingChangeDto",
+                  "description" : "Pending changes of draft or pending approval location"
                 },
                 "oldWorkingCapacity" : {
                   "type" : "integer",
@@ -11314,6 +11669,10 @@
                   "items" : {
                     "$ref" : "#/components/schemas/NonResidentialUsageDto"
                   }
+                },
+                "internalMovementAllowed" : {
+                  "type" : "boolean",
+                  "description" : "Indicates that this location can used for internal movements"
                 },
                 "accommodationTypes" : {
                   "type" : "array",
@@ -11703,6 +12062,10 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "loadType" : {
+            "type" : "string",
+            "enum" : [ "sync", "async" ]
           }
         },
         "required" : [ "id", "name" ]
@@ -11748,9 +12111,16 @@
           },
           "description" : {
             "type" : "string"
+          },
+          "isMissing" : {
+            "type" : "boolean"
+          },
+          "loadType" : {
+            "type" : "string",
+            "enum" : [ "sync", "async" ]
           }
         },
-        "required" : [ "id", "name" ]
+        "required" : [ "id", "isMissing", "name" ]
       },
       "ChildVariantDefinition" : {
         "type" : "object",
@@ -11806,6 +12176,10 @@
           },
           "defaultsort" : {
             "type" : "boolean"
+          },
+          "sortDirection" : {
+            "type" : "string",
+            "enum" : [ "asc", "desc" ]
           },
           "type" : {
             "type" : "string",
@@ -12155,6 +12529,10 @@
             "description" : "Description of reference code",
             "example" : "Accessible cell"
           },
+          "attributes" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
           "additionalInformation" : {
             "type" : "string",
             "description" : "Additional information about this reference code",
@@ -12242,6 +12620,10 @@
             "description" : "Whether this is the current certificate",
             "example" : true
           },
+          "approvedRequest" : {
+            "$ref" : "#/components/schemas/CertificationApprovalRequestDto",
+            "description" : "The approval request that created the certificate"
+          },
           "locations" : {
             "type" : "array",
             "description" : "Locations in the certificate",
@@ -12250,7 +12632,7 @@
             }
           }
         },
-        "required" : [ "approvedBy", "approvedDate", "certificationApprovalRequestId", "current", "id", "locations", "prisonId", "totalCertifiedNormalAccommodation", "totalMaxCapacity", "totalWorkingCapacity" ]
+        "required" : [ "approvedBy", "approvedDate", "approvedRequest", "certificationApprovalRequestId", "current", "id", "locations", "prisonId", "totalCertifiedNormalAccommodation", "totalMaxCapacity", "totalWorkingCapacity" ]
       },
       "CellCertificateLocationDto" : {
         "type" : "object",
@@ -12308,6 +12690,11 @@
             "type" : "string",
             "description" : "Local name for the location, not used in cells",
             "example" : "Houseblock A"
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark",
+            "example" : "T-01"
           },
           "level" : {
             "type" : "integer",
