@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-08-29.200.279cfa4"
+    "version" : "2025-09-08.219.7c4e386"
   },
   "servers" : [ {
     "url" : "/",
@@ -559,7 +559,6 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "type" : "string",
                 "oneOf" : [ {
                   "$ref" : "#/components/schemas/NomisSyncRequest"
                 }, {
@@ -6064,6 +6063,29 @@
         "readOnly" : true,
         "required" : [ "changedAt", "changedBy", "questions", "type" ]
       },
+      "IncidentTypeHistory" : {
+        "type" : "object",
+        "description" : "Previous incident type of an incident report",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "Previous incident report type",
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "CLOSE_DOWN_SEARCH_1", "CONCERTED_INDISCIPLINE_1", "DAMAGE_1", "DEATH_PRISONER_1", "DEATH_OTHER_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_PRISON_1", "ESCAPE_FROM_ESCORT_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
+          },
+          "changedAt" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "When the report type was changed",
+            "example" : "2024-04-29T12:34:56.789012"
+          },
+          "changedBy" : {
+            "type" : "string",
+            "description" : "The member of staff who changed the report type"
+          }
+        },
+        "readOnly" : true,
+        "required" : [ "changedAt", "changedBy", "type" ]
+      },
       "PrisonerInvolvement" : {
         "type" : "object",
         "description" : "Prisoner involved in an incident",
@@ -6192,6 +6214,13 @@
               "$ref" : "#/components/schemas/StatusHistory"
             }
           },
+          "incidentTypeHistory" : {
+            "type" : "array",
+            "description" : "Previous incident types",
+            "items" : {
+              "$ref" : "#/components/schemas/IncidentTypeHistory"
+            }
+          },
           "staffInvolved" : {
             "type" : "array",
             "description" : "Which members of staff were involved?",
@@ -6233,7 +6262,7 @@
           }
         },
         "readOnly" : true,
-        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
+        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "incidentTypeHistory", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
       },
       "StaffInvolvement" : {
         "type" : "object",

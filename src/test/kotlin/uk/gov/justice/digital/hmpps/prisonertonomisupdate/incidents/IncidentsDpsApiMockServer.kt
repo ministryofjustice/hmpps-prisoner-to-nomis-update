@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Descri
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalQuestion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.HistoricalResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.History
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.IncidentTypeHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.PrisonerInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Question
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportBasic
@@ -350,6 +351,13 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       lastName = "Jones",
       createdBy = "DJONES",
       text = "There was an amendment",
+    ),
+  ),
+  incidentTypeHistory = listOf(
+    IncidentTypeHistory(
+      type = IncidentTypeHistory.Type.BARRICADE_1,
+      changedAt = LocalDateTime.parse("2021-07-05T11:35:17"),
+      changedBy = "JSMITH",
     ),
   ),
 )
