@@ -20,6 +20,7 @@ import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityAsTrueNotFoundAsFalse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
@@ -184,17 +185,13 @@ class NomisApiService(
         .build()
     }
     .retrieve()
-    .bodyToMono(typeReference<RestResponsePage<AppointmentIdResponse>>())
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/ids", "prisons", prisonIds.toString())))
-    .awaitSingle()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/ids", "prisons", prisonIds.toString())))
 
   suspend fun getAppointment(nomisEventId: Long): AppointmentResponse = webClient
     .get()
     .uri("/appointments/{nomisEventId}", nomisEventId)
     .retrieve()
-    .bodyToMono(AppointmentResponse::class.java)
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
-    .awaitSingle()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
 
   // //////////////////// SENTENCES ////////////////////////
 
