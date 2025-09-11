@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-05.498.d20f7c8"
+    "version" : "2025-09-10.515.a0ea971"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -10744,6 +10744,334 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_NON_ASSOCIATIONS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a scheduled temporary absence for an offender",
+        "description" : "Creates a scheduled temporary absence on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createScheduledTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateScheduledTemporaryAbsenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Scheduled temporary absence created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateScheduledTemporaryAbsenceResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence-return" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a scheduled temporary absence return for an offender",
+        "description" : "Creates a scheduled temporary absence return on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createScheduledTemporaryAbsenceReturn",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateScheduledTemporaryAbsenceReturnRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Scheduled temporary absence created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateScheduledTemporaryAbsenceReturnResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/outside-movement" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a temporary absence outside movement for an offender",
+        "description" : "Creates a temporary absence outside movement on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createTemporaryAbsenceOutsideMovement",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTemporaryAbsenceOutsideMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Temporary absence outside movement created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceOutsideMovementResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/application" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a temporary absence application for an offender",
+        "description" : "Creates a temporary absence application on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createTemporaryAbsenceApplication",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTemporaryAbsenceApplicationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Temporary absence application created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceApplicationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25490,6 +25818,357 @@
           }
         },
         "required" : [ "typeSequence" ]
+      },
+      "CreateScheduledTemporaryAbsenceRequest" : {
+        "type" : "object",
+        "description" : "Create scheduled temporary absence request",
+        "properties" : {
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Event date"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison"
+          },
+          "toAgency" : {
+            "type" : "string",
+            "description" : "To agency"
+          },
+          "transportType" : {
+            "type" : "string",
+            "description" : "Transport type"
+          },
+          "returnDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Return date"
+          },
+          "returnTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Return time"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          },
+          "applicationDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Application date"
+          },
+          "applicationTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Application time"
+          }
+        },
+        "required" : [ "applicationDate", "escort", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime" ]
+      },
+      "CreateScheduledTemporaryAbsenceResponse" : {
+        "type" : "object",
+        "description" : "Create scheduled temporary absence response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          }
+        },
+        "required" : [ "bookingId", "eventId", "movementApplicationId" ]
+      },
+      "CreateScheduledTemporaryAbsenceReturnRequest" : {
+        "type" : "object",
+        "description" : "Create scheduled temporary absence return request",
+        "properties" : {
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "scheduledTemporaryAbsenceEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence ID"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Event date"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "fromAgency" : {
+            "type" : "string",
+            "description" : "From agency"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          }
+        },
+        "required" : [ "escort", "eventStatus", "eventSubType", "movementApplicationId", "scheduledTemporaryAbsenceEventId" ]
+      },
+      "CreateScheduledTemporaryAbsenceReturnResponse" : {
+        "type" : "object",
+        "description" : "Create scheduled temporary absence response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          }
+        },
+        "required" : [ "bookingId", "eventId", "movementApplicationId" ]
+      },
+      "CreateTemporaryAbsenceOutsideMovementRequest" : {
+        "type" : "object",
+        "description" : "Create temporary absence outside movement request",
+        "properties" : {
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "From date"
+          },
+          "releaseTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Release time"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "To date"
+          },
+          "returnTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Return time"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "toAgencyId" : {
+            "type" : "string",
+            "description" : "To agency ID"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          },
+          "contactPersonName" : {
+            "type" : "string",
+            "description" : "Contact person name"
+          },
+          "temporaryAbsenceType" : {
+            "type" : "string",
+            "description" : "Temporary absence type"
+          },
+          "temporaryAbsenceSubType" : {
+            "type" : "string",
+            "description" : "Temporary absence sub type"
+          }
+        },
+        "required" : [ "eventSubType", "fromDate", "movementApplicationId", "releaseTime", "returnTime", "toDate" ]
+      },
+      "CreateTemporaryAbsenceOutsideMovementResponse" : {
+        "type" : "object",
+        "description" : "Create temporary absence outside movement response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          },
+          "outsideMovementId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Outside movement ID"
+          }
+        },
+        "required" : [ "bookingId", "movementApplicationId", "outsideMovementId" ]
+      },
+      "CreateTemporaryAbsenceApplicationRequest" : {
+        "type" : "object",
+        "description" : "Create temporary absence application request",
+        "properties" : {
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "applicationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Application date"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "From date"
+          },
+          "releaseTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Release time"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "To date"
+          },
+          "returnTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Return time"
+          },
+          "applicationStatus" : {
+            "type" : "string",
+            "description" : "Application status"
+          },
+          "escortCode" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "transportType" : {
+            "type" : "string",
+            "description" : "Transport type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID"
+          },
+          "toAgencyId" : {
+            "type" : "string",
+            "description" : "To agency ID"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          },
+          "contactPersonName" : {
+            "type" : "string",
+            "description" : "Contact person name"
+          },
+          "applicationType" : {
+            "type" : "string",
+            "description" : "Application type"
+          },
+          "temporaryAbsenceType" : {
+            "type" : "string",
+            "description" : "Temporary absence type"
+          },
+          "temporaryAbsenceSubType" : {
+            "type" : "string",
+            "description" : "Temporary absence sub type"
+          }
+        },
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "releaseTime", "returnTime", "toDate" ]
+      },
+      "CreateTemporaryAbsenceApplicationResponse" : {
+        "type" : "object",
+        "description" : "Create temporary absence application response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          }
+        },
+        "required" : [ "bookingId", "movementApplicationId" ]
       },
       "CreateLocationRequest" : {
         "type" : "object",
