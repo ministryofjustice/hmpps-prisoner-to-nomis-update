@@ -49,6 +49,13 @@ class SchedulesService(
     }
   }
 
+  /*
+   * There is a problem in preprod where the activity mappings are refreshed from prod later than NOMIS is refreshed.
+   * This results in mappings existing for course schedules that don't actually exist in NOMIS preprod.
+   * New course schedules are then prevented from being synchronised to NOMIS because the mapping already exists.
+   *
+   * When run after a preprod refresh of the mappings DB, this endpoint will remove any mappings that don't exist in NOMIS.
+   */
   suspend fun deleteUnknownMappings() = activitiesNomisApiService.getMaxCourseScheduleId().apply {
     mappingService.deleteMappingsGreaterThan(this)
   }

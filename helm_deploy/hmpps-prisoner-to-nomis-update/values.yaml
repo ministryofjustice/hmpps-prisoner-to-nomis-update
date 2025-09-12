@@ -233,14 +233,6 @@ generic-prometheus-alerts:
   sqsAlertsTotalMessagesThreshold: "0"
 
 cron:
-  allocationReconReportSchedule: "5 7 * * *"
-  allocationReconReportScheduleNew: "15 7 * * *"
-  suspendedAllocationReconReportSchedule: "35 7 * * *"
-  attendanceReconReportSchedule: "5 1 * * *"
-  activitiesTidyMappingsSuspend: true
-  activitiesPurgeDlqSuspend: true
-  activitiesTidyMappingsSchedule: "15 7 * * 1-5"
-  contactPersonProfileDetailsReportSchedule: "30 3 * * *"
   contactPersonRestrictionsReportSchedule: "10 4 * * *"
   visitBalanceReportSchedule: "45 4 * * *"
   report_incidents:

@@ -23,7 +23,6 @@ class ActivitiesResource(
   private val activitiesService: ActivitiesService,
   private val allocationService: AllocationService,
   private val attendanceService: AttendanceService,
-  private val schedulesService: SchedulesService,
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
@@ -143,17 +142,6 @@ class ActivitiesResource(
     telemetryClient.trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to attendanceId.toString()))
     attendanceService.upsertAttendance(attendanceId)
   }
-
-  /*
-   * There is a problem in preprod where the activity mappings are refreshed from prod later than NOMIS is refreshed.
-   * This results in mappings existing for course schedules that don't actually exist in NOMIS preprod.
-   * New course schedules are then prevented from being synchronised to NOMIS because the mapping already exists.
-   *
-   * When run after a preprod refresh of the mappings DB, this endpoint will remove any mappings that don't exist in NOMIS.
-   */
-  @PreAuthorize("hasRole('ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW')")
-  @DeleteMapping("/activities/mappings/unknown-mappings")
-  suspend fun deleteUnknownActivityMappings() = schedulesService.deleteUnknownMappings()
 
   /**
    * For dev environment only - delete all activities and courses, for when activities environment is reset
