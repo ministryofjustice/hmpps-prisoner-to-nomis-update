@@ -217,6 +217,7 @@ class LocationsReconciliationServiceTest {
     createUsername = "TJONES_ADM",
     createDatetime = LocalDateTime.parse("2023-09-25T11:12:45"),
     active = true,
+    tracking = false,
     profiles = listOf(
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "C"),
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "D"),

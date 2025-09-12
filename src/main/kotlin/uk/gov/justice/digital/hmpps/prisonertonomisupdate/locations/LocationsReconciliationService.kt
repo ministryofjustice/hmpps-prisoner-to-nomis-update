@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+private val TRACKING_MISMATCH = "Tracking mismatch"
 
 @Service
 class LocationsReconciliationService(
@@ -166,6 +167,9 @@ class LocationsReconciliationService(
 
     val verdict = doesNotMatch(nomisRecord, dpsRecord, parentMapped)
     return if (verdict != null) {
+      if (verdict == TRACKING_MISMATCH) {
+        locationsApiService.upsertLocation(nomisRecord.toSync())
+      }
       val mismatch =
         MismatchLocation(
           nomisRecord.locationId,
@@ -244,6 +248,9 @@ class LocationsReconciliationService(
     }
     if (nomis.locationCode != dps.code) return "Location code mismatch"
     if (nomis.prisonId != dps.prisonId) return "Prison id mismatch"
+    if (nomis.tracking != dps.internalMovementAllowed) {
+      return TRACKING_MISMATCH
+    }
     if (nomis.listSequence != dps.orderWithinParentLocation) return "order mismatch nomis=${nomis.listSequence} dps=${dps.orderWithinParentLocation}"
     if ((nomis.unitType == null) != (dps.residentialHousingType == null)) return "Housing type mismatch"
     if (nomis.userDescription != dps.localName) return "Local Name mismatch"

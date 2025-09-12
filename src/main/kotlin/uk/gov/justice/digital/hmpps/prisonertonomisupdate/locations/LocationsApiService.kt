@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NomisSyncLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
@@ -55,4 +56,10 @@ class LocationsApiService(
       .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
       .awaitSingle()
   }
+
+  suspend fun upsertLocation(upsertRequest: NomisSyncLocationRequest): LegacyLocation = webClient.post()
+    .uri("/sync/upsert")
+    .bodyValue(upsertRequest)
+    .retrieve()
+    .awaitBodyOrLogAndRethrowBadRequest()
 }
