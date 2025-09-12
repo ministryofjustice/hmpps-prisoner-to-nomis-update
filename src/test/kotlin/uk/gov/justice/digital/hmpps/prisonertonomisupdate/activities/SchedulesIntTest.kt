@@ -1,25 +1,30 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.scheduledInstanceMessagePayload
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.ActivitiesApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-class SchedulesIntTest : SqsIntegrationTestBase() {
+class SchedulesIntTest(@Autowired private val schedulesService: SchedulesService) : SqsIntegrationTestBase() {
 
   @Nested
   inner class UpdateScheduledInstance {
@@ -68,6 +73,25 @@ class SchedulesIntTest : SqsIntegrationTestBase() {
             .stringValue("activities.scheduled-instance.amended").build(),
         ),
       ).build()
+  }
+
+  @Nested
+  inner class DeleteUnknownMappings {
+
+    @Test
+    fun `should delete unknown mappings`() = runTest {
+      nomisApi.stubGetMaxCourseScheduleId(100)
+      mappingServer.stubDeleteMappingsGreaterThan(100)
+
+      schedulesService.deleteUnknownMappings()
+
+      nomisApi.verify(
+        getRequestedFor(urlEqualTo("/schedules/max-id")),
+      )
+      mappingServer.verify(
+        deleteRequestedFor(urlEqualTo("/mapping/schedules/max-nomis-schedule-id/100")),
+      )
+    }
   }
 }
 

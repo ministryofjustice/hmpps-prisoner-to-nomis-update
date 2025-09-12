@@ -273,32 +273,6 @@ class ContactPersonProfileDetailsReconciliationIntTest(
     }
 
     @Nested
-    inner class Security {
-      @Test
-      fun `access forbidden when no authority`() {
-        webTestClient.put().uri("/contact-person/profile-details/reports/reconciliation")
-          .exchange()
-          .expectStatus().isUnauthorized
-      }
-
-      @Test
-      fun `access forbidden when no role`() {
-        webTestClient.put().uri("/contact-person/profile-details/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf()))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-
-      @Test
-      fun `access forbidden with wrong role`() {
-        webTestClient.put().uri("/contact-person/profile-details/reports/reconciliation")
-          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
-          .exchange()
-          .expectStatus().isForbidden
-      }
-    }
-
-    @Nested
     inner class HappyPath {
       private fun setUp(count: Long) {
         noActivePrisoners = count
@@ -365,14 +339,9 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       }
     }
 
-    private fun runReconciliation(expectSuccess: Boolean = true) {
-      webTestClient.put().uri("/contact-person/profile-details/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
-        .also {
-          awaitReportFinished(expectSuccess)
-        }
+    private fun runReconciliation(expectSuccess: Boolean = true) = runTest {
+      service.reconciliationReport()
+        .also { awaitReportFinished(expectSuccess) }
     }
 
     private fun awaitReportFinished(expectSuccess: Boolean = true) {

@@ -49,10 +49,37 @@ class ContactPersonProfileDetailsReconciliationService(
   @Value("\${feature.recon.contact-person.profile-details:true}") private val reconciliationTurnedOn: Boolean = true,
   @Autowired private val telemetryClient: TelemetryClient,
   @Autowired(required = false) private val channelActivityDebugger: ContactPersonProfileDetailsChannelActivityDebugger? = null,
+  @Autowired private val reportScope: CoroutineScope,
 ) {
   companion object {
     const val TELEMETRY_PREFIX = "contact-person-profile-details-reconciliation"
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+  suspend fun reconciliationReport() {
+    val activePrisonersCount = nomisIdsApi.getActivePrisoners(0, 1).totalElements
+
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PREFIX-report-requested",
+      mapOf("active-prisoners" to activePrisonersCount.toString()),
+    )
+
+    reportScope.launch {
+      runCatching { generateReconciliationReport(activePrisonersCount) }
+        .onSuccess {
+          telemetryClient.trackEvent(
+            "$TELEMETRY_PREFIX-report-${if (it.isEmpty()) "success" else "failed"}",
+            mapOf(
+              "active-prisoners" to activePrisonersCount.toString(),
+              "mismatch-count" to it.size.toString(),
+              "mismatch-prisoners" to it.toString(),
+            ),
+          )
+        }
+        .onFailure { e ->
+          telemetryClient.trackEvent("$TELEMETRY_PREFIX-report-error", mapOf("error" to "${e.message}"))
+          log.error("Failed to generate contact person profile details reconciliation report", e)
+        }
+    }
   }
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): Mismatches = if (reconciliationTurnedOn) {

@@ -54,6 +54,16 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 30
 
+  # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
+  # The type must exist in enum BatchType
+  batchjobs:
+    - name: activity-purge-dlq
+      type: PURGE_ACTIVITY_DLQ
+      schedule: "9-59/10 * * * *"
+    - name: activity-mappings
+      type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
+      schedule: "15 7 * * 1-5"
+
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
@@ -107,11 +117,7 @@ generic-prometheus-alerts:
        - "syscon-devs-preprod-hmpps_prisoner_to_nomis_visitbalance_dlq"
 
 cron:
-  activitiesTidyMappingsSuspend: false
-  activitiesPurgeDlqSuspend: false
-  contactPersonProfileDetailsReportSchedule: "30 7 * * *"
   contactPersonRestrictionsReportSchedule: "55 7 * * *"
   visitBalanceReportSchedule: "0 18 * * 1-5"
-  activitiesPurgeDlqQueueName: "syscon-devs-preprod-hmpps_prisoner_to_nomis_activity_dlq"
   report_incidents:
     suspend: true

@@ -52,17 +52,6 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 5
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 10
 
-  batchjobs:
-    - name: allocations-recon
-      schedule: "15 7 * * *"
-      type: ALLOCATION_RECON
-    - name: susp-alloc-recon
-      schedule: "15 1 * * *"
-      type: SUSPENDED_ALLOCATION_RECON
-    - name: attendances-recon
-      schedule: "45 7 * * *"
-      type: ATTENDANCE_RECON
-
 generic-prometheus-alerts:
   businessHoursOnly: true
   alertSeverity: syscon-nonprod
@@ -116,9 +105,7 @@ generic-prometheus-alerts:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_dlq"
 
 cron:
-  contactPersonProfileDetailsReportSchedule: "30 7 * * *"
   contactPersonRestrictionsReportSchedule: "55 7 * * *"
   visitBalanceReportSchedule: "0 18 * * 1-5"
-  activitiesPurgeDlqQueueName: "syscon-devs-dev-hmpps_prisoner_to_nomis_activity_dlq"
   report_incidents:
     suspend: true
