@@ -35,7 +35,7 @@ enum class BatchType {
 @Service
 class BatchManager(
   @Value($$"${batch.type}") private val batchType: BatchType,
-  @Value($$"${hmpps.sqs.queues.activity.dlqName}") private val activitiesDlqName: String,
+  @Value($$"${hmpps.sqs.queues.activity.dlq.name}") private val activitiesDlqName: String,
   private val activitiesReconService: ActivitiesReconService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
