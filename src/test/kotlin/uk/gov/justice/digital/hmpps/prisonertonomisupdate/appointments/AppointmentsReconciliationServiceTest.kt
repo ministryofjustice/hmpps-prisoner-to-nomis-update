@@ -43,7 +43,7 @@ class AppointmentsReconciliationServiceTest {
   private val telemetryClient: TelemetryClient = mock()
 
   private val appointmentsReconciliationService =
-    AppointmentsReconciliationService(telemetryClient, nomisApiService, appointmentsMappingService, appointmentsApiService, 5)
+    AppointmentsReconciliationService(telemetryClient, nomisApiService, appointmentsMappingService, appointmentsApiService, 5, 14)
 
   private val appointmentMappingDto = AppointmentMappingDto(
     appointmentInstanceId = APPOINTMENT_ATTENDEE_ID,

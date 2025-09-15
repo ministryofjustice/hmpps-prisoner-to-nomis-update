@@ -27,6 +27,7 @@ class AppointmentsReconciliationService(
   private val mappingService: AppointmentMappingService,
   private val dpsApiService: AppointmentsApiService,
   @Value("\${reports.appointments.reconciliation.page-size}") private val pageSize: Int,
+  @Value("\${reports.appointments.reconciliation.lookahead-days}") private val lookaheadDays: Long,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +35,7 @@ class AppointmentsReconciliationService(
 
   suspend fun generateReconciliationReport(): List<MismatchAppointment> {
     val yesterday = LocalDate.now().minusDays(1)
-    val nextWeek = LocalDate.now().plusDays(7)
+    val nextWeek = LocalDate.now().plusDays(lookaheadDays)
     return dpsApiService.getRolloutPrisons()
       .filter { it.appointmentsRolledOut }
       .flatMap {
@@ -109,7 +110,7 @@ class AppointmentsReconciliationService(
 
   internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<Long> = runCatching {
     dpsApiService.searchAppointments(prisonId, startDate, endDate)
-      .filter { app -> app.x }
+      // TODO need to filter out 'soft deleted' appointments .filter { app -> app.x }
       .flatMap { app ->
         app.attendees.map { attendee ->
           attendee.appointmentAttendeeId
