@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
 import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
@@ -9,14 +10,21 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.UUID
 
 @Service
 class AppointmentMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
+  @Value("\${hmpps.web-client.appointments-mapping.max-retries:#{null}}") private val maxRetryAttempts: Long?,
+  @Value("\${hmpps.web-client.appointments-mapping.backoff-millis:#{null}}") private val backoffMillis: Long?,
+  retryApiService: RetryApiService,
 ) {
+  private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
   suspend fun createMapping(request: AppointmentMappingDto) {
-    webClient.post()
+    webClient
+      .post()
       .uri("/mapping/appointments")
       .bodyValue(request)
       .retrieve()
@@ -40,7 +48,7 @@ class AppointmentMappingService(
     .get()
     .uri("/mapping/appointments/nomis-event-id/{id}", id)
     .retrieve()
-    .awaitBodyOrNullForNotFound()
+    .awaitBodyOrNullForNotFound(backoffSpec)
 
   suspend fun deleteMapping(appointmentInstanceId: Long) {
     webClient

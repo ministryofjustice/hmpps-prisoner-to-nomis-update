@@ -27,6 +27,7 @@ class AppointmentsReconciliationService(
   private val mappingService: AppointmentMappingService,
   private val dpsApiService: AppointmentsApiService,
   @Value("\${reports.appointments.reconciliation.page-size}") private val pageSize: Int,
+  @Value("\${reports.appointments.reconciliation.lookahead-days}") private val lookaheadDays: Long,
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -34,7 +35,7 @@ class AppointmentsReconciliationService(
 
   suspend fun generateReconciliationReport(): List<MismatchAppointment> {
     val yesterday = LocalDate.now().minusDays(1)
-    val nextWeek = LocalDate.now().plusDays(7)
+    val nextWeek = LocalDate.now().plusDays(lookaheadDays)
     return dpsApiService.getRolloutPrisons()
       .filter { it.appointmentsRolledOut }
       .flatMap {
@@ -81,7 +82,7 @@ class AppointmentsReconciliationService(
           }.onFailure {
             telemetryClient.trackEvent(
               "appointments-reports-reconciliation-retrieval-error",
-              mapOf("nomis-appointment-id" to nomisId.toString()),
+              mapOf("nomis-appointment-id" to nomisId.toString(), "error" to (it.message ?: "")),
             )
             log.error("Unexpected error from api getting nomis appointment $nomisId", it)
           }.getOrNull()
@@ -100,7 +101,7 @@ class AppointmentsReconciliationService(
     .onFailure {
       telemetryClient.trackEvent(
         "appointments-reports-reconciliation-mismatch-page-error",
-        mapOf("page" to page.first.toString()),
+        mapOf("page" to page.first.toString(), "error" to (it.message ?: "")),
       )
       log.error("Unable to match entire Nomis page of prisoners: $page", it)
     }
@@ -109,6 +110,7 @@ class AppointmentsReconciliationService(
 
   internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<Long> = runCatching {
     dpsApiService.searchAppointments(prisonId, startDate, endDate)
+      // TODO need to filter out 'soft deleted' appointments .filter { app -> app.x }
       .flatMap { app ->
         app.attendees.map { attendee ->
           attendee.appointmentAttendeeId
@@ -117,8 +119,8 @@ class AppointmentsReconciliationService(
   }
     .onFailure {
       telemetryClient.trackEvent(
-        "appointments-reports-reconciliation-mismatch-page-error",
-        mapOf("prisonId" to prisonId),
+        "appointments-reports-reconciliation-mismatch-dps-error",
+        mapOf("prisonId" to prisonId, "error" to (it.message ?: "")),
       )
       log.error("Unable to match entire DPS prison of prisoners: $prisonId", it)
     }
@@ -149,10 +151,7 @@ class AppointmentsReconciliationService(
       log.info("Appointment Mismatch found extra DPS appointment $appointmentAttendeeId")
       telemetryClient.trackEvent(
         "appointments-reports-reconciliation-dps-only",
-        mapOf(
-          "dpsId" to appointmentAttendeeId,
-          "dps" to mismatch.dpsAppointment.toString(),
-        ),
+        mapOf("dpsId" to appointmentAttendeeId),
       )
       mismatch
     }
@@ -216,6 +215,7 @@ class AppointmentsReconciliationService(
       mapOf(
         "nomisId" to mapping.nomisEventId.toString(),
         "dpsId" to mapping.appointmentInstanceId.toString(),
+        "error" to (it.message ?: ""),
       ),
     )
   }.getOrNull()

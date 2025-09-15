@@ -341,6 +341,7 @@ reports:
   appointments:
     reconciliation:
       page-size: 5
+      lookahead-days: 14
   casenotes:
     reconciliation:
       page-size: 5
