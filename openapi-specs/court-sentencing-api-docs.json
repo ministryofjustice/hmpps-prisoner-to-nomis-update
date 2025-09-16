@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-12.519.c2a8340"
+    "version" : "2025-09-12.526.cc0035c"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -252,6 +252,79 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DeleteRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
                 }
               }
             }
@@ -3071,6 +3144,41 @@
         }
       }
     },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -4635,6 +4743,26 @@
         },
         "required" : [ "recallUuid" ]
       },
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
       "LegacyCreateFine" : {
         "type" : "object",
         "properties" : {
@@ -4901,7 +5029,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5176,7 +5304,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "courtCode" : {
             "type" : "string"
@@ -6821,6 +6949,39 @@
         },
         "required" : [ "createdAt", "createdByUsername", "prisonerId", "recallType", "recallUuid", "source" ]
       },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
       "PersonDetails" : {
         "type" : "object",
         "properties" : {
@@ -7167,7 +7328,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "courtCode" : {
             "type" : "string"
@@ -7571,7 +7732,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "charges" : {
             "type" : "array",
@@ -7594,7 +7755,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "courtId" : {
             "type" : "string"
@@ -7685,7 +7846,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7741,7 +7902,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "courtId" : {
             "type" : "string"
@@ -8022,12 +8183,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8045,12 +8200,18 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "empty" : {
             "type" : "boolean"
@@ -8108,12 +8269,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8131,12 +8286,18 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "empty" : {
             "type" : "boolean"
@@ -8357,7 +8518,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "08:10:22.557553047"
+            "example" : "16:20:06.484920855"
           },
           "courtCode" : {
             "type" : "string"
