@@ -91,6 +91,7 @@ class LocationsReconciliationServiceTest {
             attributes = 2,
             usages = 1,
             history = 1,
+            internalMovementAllowed = false,
           ),
           dpsLocation = LocationReportDetail(
             code = "3",
@@ -106,9 +107,45 @@ class LocationsReconciliationServiceTest {
             attributes = 2,
             usages = 1,
             history = 1,
+            internalMovementAllowed = false,
           ),
         ),
       )
+  }
+
+  @Test
+  fun `will report mismatch and correct data where locations have a different tracking flag`() = runTest {
+    whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID))
+      .thenReturn(
+        nomisResponse(tracking = true).copy(unitType = null),
+      )
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID, false))
+      .thenReturn(
+        dpsResponse(DPS_LOCATION_ID).copy(
+          residentialHousingType = null,
+          locationType = LegacyLocation.LocationType.TRAINING_AREA,
+          internalMovementAllowed = false,
+        ),
+      )
+    whenever(locationsMappingService.getMappingGivenNomisIdOrNull(PARENT_NOMIS_LOCATION_ID))
+      .thenReturn(
+        LocationMappingDto(
+          dpsLocationId = PARENT_DPS_LOCATION_ID,
+          nomisLocationId = PARENT_NOMIS_LOCATION_ID,
+          mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+        ),
+      )
+
+    val result = locationsReconciliationService.checkMatch(locationMappingDto)
+    assertThat(result?.nomisLocation?.internalMovementAllowed).isTrue()
+    assertThat(result?.dpsLocation?.internalMovementAllowed).isFalse()
+
+    verify(locationsApiService).patchNonResidentialLocation(
+      eq(DPS_LOCATION_ID),
+      check {
+        assertThat(it.internalMovementAllowed).isTrue()
+      },
+    )
   }
 
   @Test
@@ -198,7 +235,7 @@ class LocationsReconciliationServiceTest {
     )
   }
 
-  private fun nomisResponse(listSequence: Int? = 4, comment: String? = null) = LocationResponse(
+  private fun nomisResponse(listSequence: Int? = 4, comment: String? = null, tracking: Boolean = false) = LocationResponse(
     locationId = NOMIS_LOCATION_ID,
     comment = comment,
     locationType = "LAND",
@@ -217,7 +254,7 @@ class LocationsReconciliationServiceTest {
     createUsername = "TJONES_ADM",
     createDatetime = LocalDateTime.parse("2023-09-25T11:12:45"),
     active = true,
-    tracking = false,
+    tracking = tracking,
     profiles = listOf(
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "C"),
       ProfileRequest(ProfileRequest.ProfileType.SUP_LVL_TYPE, "D"),
@@ -265,6 +302,7 @@ class LocationsReconciliationServiceTest {
     residentialHousingType = LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION,
     localName = "Wing C, landing 3",
     comments = comment,
+    internalMovementAllowed = false,
     capacity = Capacity(
       workingCapacity = 12,
       maxCapacity = 14,
@@ -291,9 +329,6 @@ class LocationsReconciliationServiceTest {
         attribute = "Location Type",
       ),
     ),
-    //    deactivatedDate = ,
-    //    deactivatedReason = ,
-    //    reactivatedDate = ,
     parentId = UUID.fromString(PARENT_DPS_LOCATION_ID),
     lastModifiedBy = "me",
     lastModifiedDate = LocalDateTime.parse("2024-05-25T11:10:05"),

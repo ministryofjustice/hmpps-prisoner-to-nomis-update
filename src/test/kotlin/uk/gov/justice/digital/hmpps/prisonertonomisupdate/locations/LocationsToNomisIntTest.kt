@@ -169,6 +169,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
                   "capacity" : 2,
                   "listSequence" : 1,
                   "comment" : "Not to be used",
+                   "tracking" : null, // TODOOOOOOOO
                   "profiles" : [
                     { "profileType" : "SUP_LVL_TYPE", "profileCode" : "S" },
                     { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }

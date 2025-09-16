@@ -6,9 +6,11 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NomisSyncLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.PatchNonResidentialLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.typeReference
@@ -33,9 +35,7 @@ class LocationsApiService(
         url
       }
       .retrieve()
-      .bodyToMono(LegacyLocation::class.java)
-      .retryWhen(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
-      .awaitSingle()
+      .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
   }
 
   suspend fun getLocations(
@@ -57,9 +57,13 @@ class LocationsApiService(
       .awaitSingle()
   }
 
-  suspend fun upsertLocation(upsertRequest: NomisSyncLocationRequest): LegacyLocation = webClient.post()
-    .uri("/sync/upsert")
-    .bodyValue(upsertRequest)
-    .retrieve()
-    .awaitBodyOrLogAndRethrowBadRequest()
+  suspend fun patchNonResidentialLocation(id: String, request: PatchNonResidentialLocationRequest) {
+    webClient
+      .patch()
+      .uri("/locations/non-residential/{id}", id)
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+    // there is a body, the modified Location, but ignore it
+  }
 }
