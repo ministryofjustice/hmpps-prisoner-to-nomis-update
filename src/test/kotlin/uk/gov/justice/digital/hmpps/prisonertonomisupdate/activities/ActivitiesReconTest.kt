@@ -3,7 +3,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -36,9 +35,8 @@ class ActivitiesReconTest {
 
   private val telemetryClient: TelemetryClient = mock()
   private val nomisApiService: ActivitiesNomisApiService = mock()
-  private val reportScope: CoroutineScope = mock()
   private val activitiesApiService: ActivitiesApiService = mock()
-  private val activitiesReconService = ActivitiesReconService(telemetryClient, nomisApiService, reportScope, activitiesApiService)
+  private val activitiesReconService = ActivitiesReconService(telemetryClient, nomisApiService, activitiesApiService)
 
   @Nested
   inner class AllocationReconciliationReport {

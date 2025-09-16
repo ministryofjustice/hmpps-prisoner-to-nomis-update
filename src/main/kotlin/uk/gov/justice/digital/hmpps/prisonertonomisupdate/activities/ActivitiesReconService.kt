@@ -1,10 +1,8 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.launch
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
@@ -19,7 +17,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.At
 class ActivitiesReconService(
   private val telemetryClient: TelemetryClient,
   private val activitiesNomisApiService: ActivitiesNomisApiService,
-  private val reportScope: CoroutineScope,
   private val activitiesApiService: ActivitiesApiService,
 ) {
   private val log = LoggerFactory.getLogger(this::class.java)
@@ -38,7 +35,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { allocationsReconciliationReport(it.agencyId) } }
+    prisons.forEach { allocationsReconciliationReport(it.agencyId) }
   }
 
   suspend fun allocationsReconciliationReport(prisonId: String) = try {
@@ -68,7 +65,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { suspendedAllocationsReconciliationReport(it.agencyId) } }
+    prisons.forEach { suspendedAllocationsReconciliationReport(it.agencyId) }
   }
 
   suspend fun suspendedAllocationsReconciliationReport(prisonId: String) = try {
@@ -98,7 +95,7 @@ class ActivitiesReconService(
       throw e
     }
 
-    prisons.forEach { reportScope.launch { attendancesReconciliationReport(it.agencyId, date) } }
+    prisons.forEach { attendancesReconciliationReport(it.agencyId, date) }
   }
 
   suspend fun attendancesReconciliationReport(prisonId: String, date: LocalDate) = try {
