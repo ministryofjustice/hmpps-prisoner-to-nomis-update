@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-08-29.2660.bfd5c93"
+    "version" : "2025-09-15.2759.71817d2"
   },
   "servers" : [ {
     "url" : "/",
@@ -7408,6 +7408,16 @@
           "schema" : {
             "type" : "boolean",
             "default" : false
+          },
+          "example" : true
+        }, {
+          "name" : "paged",
+          "in" : "query",
+          "description" : "return paged results (default true); if false returns all records",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
           },
           "example" : true
         }, {
@@ -14943,8 +14953,13 @@
           },
           "restrictionType" : {
             "type" : "string",
-            "description" : "The restriction type",
-            "example" : "NO_VISIT"
+            "description" : "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example" : "BAN"
+          },
+          "restrictionTypeDescription" : {
+            "type" : "string",
+            "description" : "The description of restrictionType",
+            "example" : "Banned"
           },
           "effectiveDate" : {
             "type" : "string",
@@ -14967,6 +14982,11 @@
             "type" : "string",
             "description" : "Authorised staff user name",
             "example" : "JSMITH"
+          },
+          "authorisedByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of either the person who authorised the restriction.",
+            "example" : "John Smith"
           },
           "currentTerm" : {
             "type" : "boolean",
@@ -14994,7 +15014,7 @@
             "description" : "Timestamp when the record was last updated"
           }
         },
-        "required" : [ "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType" ]
+        "required" : [ "authorisedByDisplayName", "authorisedUsername", "createdBy", "createdTime", "currentTerm", "effectiveDate", "prisonerNumber", "prisonerRestrictionId", "restrictionType", "restrictionTypeDescription" ]
       },
       "Pageable" : {
         "type" : "object",
