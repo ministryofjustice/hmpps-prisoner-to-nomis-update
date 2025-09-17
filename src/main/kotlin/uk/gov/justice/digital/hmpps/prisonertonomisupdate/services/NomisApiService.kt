@@ -185,7 +185,9 @@ class NomisApiService(
         .build()
     }
     .retrieve()
-    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/ids", "prisons", prisonIds.toString())))
+    .bodyToMono(typeReference<RestResponsePage<AppointmentIdResponse>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/ids", "prisons", prisonIds.toString())))
+    .awaitSingle()
 
   suspend fun getAppointment(nomisEventId: Long): AppointmentResponse = webClient
     .get()

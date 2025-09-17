@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.havingExactly
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -21,10 +22,13 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.data.domain.PageImpl
+import org.springframework.data.domain.Pageable
 import org.springframework.web.reactive.function.client.WebClientResponseException.InternalServerError
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ChargeToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourseScheduleRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityRequest
@@ -419,6 +423,59 @@ internal class NomisApiServiceTest {
       assertThrows<InternalServerError> {
         nomisApiService.createAppointment(newAppointment())
       }
+    }
+  }
+
+  @Nested
+  inner class GetAppointmentIds {
+
+    @BeforeEach
+    internal fun setUp() {
+      nomisApi.stubGetAppointmentIds()
+    }
+
+    @Test
+    fun `should call nomis api with OAuth2 token`() = runTest {
+      nomisApiService.getAppointmentIds(
+        prisonIds = listOf("BMI", "SWI"),
+        fromDate = LocalDate.of(2025, 2, 3),
+        toDate = LocalDate.of(2025, 3, 4),
+        pageNumber = 4,
+        pageSize = 10,
+      )
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass parameters to API`() = runTest {
+      assertThat(
+        nomisApiService.getAppointmentIds(
+          prisonIds = listOf("BMI", "SWI"),
+          fromDate = LocalDate.of(2025, 2, 3),
+          toDate = LocalDate.of(2025, 3, 4),
+          pageNumber = 0,
+          pageSize = 10,
+        ),
+      ).isEqualTo(
+        PageImpl<AppointmentIdResponse>(
+          listOf(AppointmentIdResponse(123456789)),
+          Pageable.ofSize(10),
+          41,
+        ),
+      )
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/appointments/ids"))
+          .withQueryParam("prisonIds", havingExactly("BMI", "SWI"))
+          .withQueryParam("fromDate", equalTo("2025-02-03"))
+          .withQueryParam("toDate", equalTo("2025-03-04"))
+          .withQueryParam("page", equalTo("0"))
+          .withQueryParam("size", equalTo("10")),
+      )
     }
   }
 
@@ -1122,8 +1179,7 @@ internal class NomisApiServiceTest {
           ),
           awardsToUpdate = listOf(
             ExistingHearingResultAwardRequest(
-              award =
-              HearingResultAwardRequest(
+              award = HearingResultAwardRequest(
                 sanctionType = HearingResultAwardRequest.SanctionType.ADA,
                 sanctionStatus = HearingResultAwardRequest.SanctionStatus.IMMEDIATE,
                 sanctionDays = 28,
