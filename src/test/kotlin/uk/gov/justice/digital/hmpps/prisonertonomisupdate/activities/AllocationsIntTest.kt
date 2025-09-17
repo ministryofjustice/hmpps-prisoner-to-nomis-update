@@ -110,6 +110,47 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
           .withRequestBody(matchingJsonPath("programStatusCode", equalTo("END"))),
       )
     }
+
+    @Test
+    fun `will build deallocated message from planned deallocation if available`() {
+      ActivitiesApiExtension.activitiesApi.stubGetAllocation(
+        ALLOCATION_ID,
+        buildApiAllocationDeallocatedJsonResponse(
+          plannedDeallocation = """
+            "plannedDeallocation": {
+              "id": 1234,
+              "plannedDate": "2023-01-10",
+              "plannedBy": "Planned by user",
+              "plannedReason": {
+                "code": "PLR",
+                "description": "Planned reason description"
+              },
+              "plannedAt": "2023-01-10T12:34:56.789Z"
+            },
+          """.trimIndent(),
+        ),
+      )
+      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      NomisApiExtension.nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
+
+      awsSnsClient.publish(
+        PublishRequest.builder().topicArn(topicArn)
+          .message(allocationMessagePayload("activities.prisoner.allocation-amended", ACTIVITY_SCHEDULE_ID, ALLOCATION_ID))
+          .messageAttributes(
+            mapOf(
+              "eventType" to MessageAttributeValue.builder().dataType("String")
+                .stringValue("activities.prisoner.allocation-amended").build(),
+            ),
+          ).build(),
+      ).get()
+
+      await untilCallTo { ActivitiesApiExtension.activitiesApi.getCountFor("/allocations/id/$ALLOCATION_ID") } matches { it == 1 }
+      await untilCallTo { NomisApiExtension.nomisApi.putCountFor("/activities/$NOMIS_CRS_ACTY_ID/allocation") } matches { it == 1 }
+      NomisApiExtension.nomisApi.verify(
+        putRequestedFor(urlEqualTo("/activities/$NOMIS_CRS_ACTY_ID/allocation"))
+          .withRequestBody(matchingJsonPath("endComment", equalTo("Deallocated in DPS by Planned by user at 2023-01-10 12:34:56 for reason Planned reason description"))),
+      )
+    }
   }
 
   @Nested
@@ -213,7 +254,7 @@ fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String = 
   }
 """.trimIndent()
 
-fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String = """
+fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID, plannedDeallocation: String = ""): String = """
   {
     "id": $id,
     "prisonerNumber": "A1234AA",
@@ -237,6 +278,7 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID): String 
       "description": "Released from prison"
     },
     "deallocatedTime": "2023-01-13T18:49:04.837Z",
+    $plannedDeallocation
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
     "status": "ENDED",
