@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-10.515.a0ea971"
+    "version" : "2025-09-17.537.272e3ce"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -10755,6 +10755,170 @@
         }
       }
     },
+    "/movements/{offenderNo}/temporary-absences/temporary-absence" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a temporary absence for an offender",
+        "description" : "Creates a temporary absence on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTemporaryAbsenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Temporary absence created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/temporary-absence-return" : {
+      "post" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts a temporary absence return for an offender",
+        "description" : "Creates a temporary absence return on the prisoner's latest booking. Requires ROLE_NOMIS_MOVEMENTS",
+        "operationId" : "createTemporaryAbsenceReturn",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTemporaryAbsenceReturnRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Temporary absence return created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceReturnResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_MOVEMENTS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence" : {
       "post" : {
         "tags" : [ "movements-resource" ],
@@ -17406,6 +17570,121 @@
         }
       }
     },
+    "/finance/prison/{prisonId}/balance" : {
+      "get" : {
+        "tags" : [ "prison-balance-resource" ],
+        "summary" : "Gets the balances for the prison.",
+        "description" : "Retrieves all the balances for a prison. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW role.",
+        "operationId" : "getPrisonBalance",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "prisonId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonId",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Balance information returned.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prison/ids" : {
+      "get" : {
+        "tags" : [ "prison-balance-resource" ],
+        "summary" : "Gets all the caseloads (prisons) that have balance entries.",
+        "description" : "Retrieves a list of caseloads that have a balance.\n\n      This will include caseloads for prisons that have closed (e.g. Medway STC, Everthorpe) and also caseloads that \n      aren't prisons (e.g. Transfer, Ghost Holding Establishment).\n\n      Certain caseloads (e.g. CADM_I, NWEB and LIC) don't have a balance so aren't returned.\n\n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW role.",
+        "operationId" : "getPrisonIds",
+        "responses" : {
+          "200" : {
+            "description" : "Balance information returned.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/documents/{id}" : {
       "get" : {
         "tags" : [ "document-resource" ],
@@ -21255,6 +21534,10 @@
             "example" : "Some comment",
             "maxLength" : 240,
             "minLength" : 0
+          },
+          "tracking" : {
+            "type" : "boolean",
+            "description" : "Whether internal transfers are tracked"
           },
           "profiles" : {
             "type" : "array",
@@ -25819,6 +26102,154 @@
         },
         "required" : [ "typeSequence" ]
       },
+      "CreateTemporaryAbsenceRequest" : {
+        "type" : "object",
+        "description" : "Create temporary absence request",
+        "properties" : {
+          "scheduledTemporaryAbsenceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence event ID"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason code (ref domain MOVE_RSN)"
+          },
+          "arrestAgency" : {
+            "type" : "string",
+            "description" : "Arresting agency code"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "escortText" : {
+            "type" : "string",
+            "description" : "Escort text"
+          },
+          "fromPrison" : {
+            "type" : "string",
+            "description" : "From prison code"
+          },
+          "toAgency" : {
+            "type" : "string",
+            "description" : "To agency code"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "toCity" : {
+            "type" : "string",
+            "description" : "To city code (ref domain CITY)"
+          },
+          "toAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "To address ID"
+          }
+        },
+        "required" : [ "movementDate", "movementReason", "movementTime" ]
+      },
+      "CreateTemporaryAbsenceResponse" : {
+        "type" : "object",
+        "description" : "Create scheduled temporary absence response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          }
+        },
+        "required" : [ "bookingId", "movementSequence" ]
+      },
+      "CreateTemporaryAbsenceReturnRequest" : {
+        "type" : "object",
+        "description" : "Create temporary absence return request",
+        "properties" : {
+          "scheduledTemporaryAbsenceReturnId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence return event ID"
+          },
+          "movementDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Movement date"
+          },
+          "movementTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Movement time"
+          },
+          "movementReason" : {
+            "type" : "string",
+            "description" : "Movement reason"
+          },
+          "arrestAgency" : {
+            "type" : "string",
+            "description" : "Arresting agency code"
+          },
+          "escort" : {
+            "type" : "string",
+            "description" : "Escort"
+          },
+          "escortText" : {
+            "type" : "string",
+            "description" : "Escort text"
+          },
+          "fromAgency" : {
+            "type" : "string",
+            "description" : "From agency"
+          },
+          "toPrison" : {
+            "type" : "string",
+            "description" : "To prison"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "fromAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "From address ID"
+          }
+        },
+        "required" : [ "movementDate", "movementReason", "movementTime" ]
+      },
+      "CreateTemporaryAbsenceReturnResponse" : {
+        "type" : "object",
+        "description" : "Create temporary absence return response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          }
+        },
+        "required" : [ "bookingId", "movementSequence" ]
+      },
       "CreateScheduledTemporaryAbsenceRequest" : {
         "type" : "object",
         "description" : "Create scheduled temporary absence request",
@@ -26250,6 +26681,10 @@
             "example" : "Some comment",
             "maxLength" : 240,
             "minLength" : 0
+          },
+          "tracking" : {
+            "type" : "boolean",
+            "description" : "Whether internal transfers are tracked"
           },
           "profiles" : {
             "type" : "array",
@@ -27043,12 +27478,12 @@
           "paged" : {
             "type" : "boolean"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -31175,6 +31610,10 @@
             "description" : "The expected reactivation date if any",
             "example" : "2024-12-31"
           },
+          "tracking" : {
+            "type" : "boolean",
+            "description" : "Whether internal transfers are tracked"
+          },
           "profiles" : {
             "type" : "array",
             "description" : "Profiles",
@@ -31210,7 +31649,7 @@
             "description" : "Record modified by"
           }
         },
-        "required" : [ "active", "createDatetime", "createUsername", "description", "locationCode", "locationId", "locationType", "prisonId" ]
+        "required" : [ "active", "createDatetime", "createUsername", "description", "locationCode", "locationId", "locationType", "prisonId", "tracking" ]
       },
       "PageLocationIdResponse" : {
         "type" : "object",
@@ -31961,6 +32400,46 @@
           }
         },
         "required" : [ "auditModule", "bookingId", "currentIep", "iepDateTime", "iepLevel", "incentiveSequence", "offenderNo", "prisonId", "whenCreated" ]
+      },
+      "PrisonAccountBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The balance for this prison and account code",
+            "example" : 33.12
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the last transaction OR the date and time of the consolidation of the transactions"
+          }
+        },
+        "required" : [ "accountCode", "balance", "transactionDate" ]
+      },
+      "PrisonBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "accountBalances" : {
+            "type" : "array",
+            "description" : "The list of account balances for the prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAccountBalanceDto"
+            }
+          }
+        },
+        "required" : [ "accountBalances", "prisonId" ]
       },
       "CSIPIdResponse" : {
         "type" : "object",
