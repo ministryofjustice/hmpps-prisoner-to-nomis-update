@@ -250,6 +250,7 @@ class LocationsReconciliationServiceTest {
         amendedBy = "STEVE_ADM",
       ),
     ),
+    tracking = false,
   )
 
   private fun dpsResponse(id: String, comment: String? = null) = LegacyLocation(
