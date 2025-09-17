@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import java.time.LocalDate
+import kotlin.collections.map
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -688,6 +689,43 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withStatus(200)
             .withFixedDelay(1500),
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetAppointmentIds() {
+    stubFor(
+      get(
+        urlPathEqualTo("/appointments/ids"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              """
+          {
+              "content": [ { "eventId": 123456789 } ],
+              "pageable": {
+                  "sort": { "empty": false,  "sorted": true, "unsorted": false },
+                  "offset": 0,
+                  "pageSize": 10,
+                  "pageNumber": 0,
+                  "paged": true,
+                  "unpaged": false
+              },
+              "last": false,
+              "totalPages": 5,
+              "totalElements": 41,
+              "size": 10,
+              "number": 0,
+              "sort": { "empty": false,  "sorted": true, "unsorted": false },
+              "first": true,
+              "numberOfElements": 1,
+              "empty": false
+          }                
+              """.trimIndent(),
+            ),
+        ),
     )
   }
 
