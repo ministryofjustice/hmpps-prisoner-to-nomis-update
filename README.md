@@ -58,17 +58,20 @@ e.g.
 `MOCK_VISITS_PRISON_ID=WWI`
 `MOCK_VISITS_VISITORS=1838,273723`
 
-## Generating APi client models
+## Generating API client models
 
-For some of our external API calls we use `openapi-generator` to generate the models used in the API clients. The Open API specifications used can be found in directory `openapi-specs`.
+For some of our external API calls we use `openapi-generator` to generate the models used in the API clients. The Open
+API specifications used can be found in directory `openapi-specs`.
 
-In the build.gradle.kts there is a `ModelConfiguration` for each of the models.  This contains the URL to be used to
-obtain the JSON Open API specification and also the package name to be used for the generated models.  For each model
+In the build.gradle.kts there is a `ModelConfiguration` for each of the models. This contains the URL to be used to
+obtain the JSON Open API specification and also the package name to be used for the generated models. For each model
 configuration two tasks are created:
+
 1. `write<ModelName>Json` - this task will download the Open API specification and save it to `openapi-specs`.
 2. `build<ModelName>ApiModel` - this task will generate the models from the specification
 
 So, for example, running
+
 ```shell
 ./gradlew writeNonAssociationsJson compileKotlin compileTestKotlin
 ```
@@ -81,6 +84,18 @@ Running:
 ./gradlew tasks
 ```
 Will show all the build API and write JSON tasks available.
+
+### Generating the infrastructure client
+
+The generated APIs rely on a generated org.openapitools.client.infrastructure.ApiClient. Since we have lots of generated
+APIs we only want one version of the client, so we have copied the client to `src/main/kotlin`. Also, by default, the
+client is generated with `protected` functions, but we need these to be public in order to call the methods.  Running:
+```shell
+generate-infrastructure-client.bash
+```
+will generate the client and copy it into `src/main/kotlin`, removing `protected` from the functions.
+
+This will be necessary if the openapi generator is updated and the API clients that are generated no longer compile.
 
 ## Runbook
 

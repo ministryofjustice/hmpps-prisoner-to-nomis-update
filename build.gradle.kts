@@ -7,6 +7,9 @@ import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
+import kotlin.io.path.exists
+import kotlin.io.path.name
+import kotlin.io.path.Path as KotlinPath
 
 plugins {
   id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.0.1"
@@ -188,13 +191,16 @@ models.forEach {
     group = "Generate model from API JSON definition"
     description = "Generate model from API JSON definition for ${it.name}"
     generatorName.set("kotlin")
+    library.set("jvm-spring-webclient")
     skipValidateSpec.set(true)
     inputSpec.set(it.input)
     outputDir.set("$buildDirectory/generated/${it.output}")
     modelPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.model")
     apiPackage.set("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.packageName}.api")
     configOptions.set(configValues)
-    globalProperties.set(mapOf("models" to it.models))
+    KotlinPath("openapi-generator-ignore-${it.name}")
+      .takeIf { p -> p.exists() }?.apply { ignoreFileOverride.set(this.name) }
+      ?: globalProperties.set(mapOf("models" to it.models))
     generateModelTests.set(false)
     generateModelDocumentation.set(false)
   }
@@ -262,6 +268,7 @@ val configValues = mapOf(
   "dateLibrary" to "java8-localdatetime",
   "serializationLibrary" to "jackson",
   "enumPropertyNaming" to "original",
+  "useSpringBoot3" to "true",
 )
 
 kotlin {
