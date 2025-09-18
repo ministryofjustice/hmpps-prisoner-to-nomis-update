@@ -16,5 +16,6 @@ sed "s/protected fun/fun/" $INFRA_DIR/ApiClient.kt > temp && mv temp $INFRA_DIR/
 # add back in exclusion of client infrastructure generation
 echo "**/client/infrastructure/" >> $IGNORE_FILE
 
-# and format so that we can see easily what has changed
-./gradlew ktlintFormat
+# rebuild generated classes and format so that we can see easily what has changed
+# and so that we have all the generated classes too at the end of the process
+./gradlew clean classes ktlintFormat
