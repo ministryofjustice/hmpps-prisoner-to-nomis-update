@@ -11,7 +11,7 @@ grep -v '/client/infrastructure' $IGNORE_FILE > temp && mv temp $IGNORE_FILE
 mv build/generated/nomis-prisoner/$INFRA_DIR/*.kt $INFRA_DIR
 
 # and remove protected from the function
-sed -i "s/protected fun/fun/" $INFRA_DIR/ApiClient.kt
+sed "s/protected fun/fun/" $INFRA_DIR/ApiClient.kt > temp && mv temp $INFRA_DIR/ApiClient.kt
 
 # add back in exclusion of client infrastructure generation
 echo "**/client/infrastructure/" >> $IGNORE_FILE
