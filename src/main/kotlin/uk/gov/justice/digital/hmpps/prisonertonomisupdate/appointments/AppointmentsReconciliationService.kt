@@ -33,6 +33,25 @@ class AppointmentsReconciliationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun generateReconciliationReportBatch() {
+    telemetryClient.trackEvent("appointments-reports-reconciliation-requested")
+    log.info("Appointments reconciliation report requested")
+
+    runCatching { generateReconciliationReport() }
+      .onSuccess { fullResults ->
+        log.info("Appointments reconciliation report completed with ${fullResults.size} mismatches")
+        val results = fullResults.take(10) // Only log the first 10 to avoid an insights error with too much data
+        val map = mapOf("mismatch-count" to fullResults.size.toString()) +
+          results.associate { "${it.nomisId},${it.dpsId}" to "nomis=${it.nomisAppointment}, dps=${it.dpsAppointment}" }
+        telemetryClient.trackEvent("appointments-reports-reconciliation-success", map)
+        log.info("Appointments reconciliation report logged")
+      }
+      .onFailure {
+        telemetryClient.trackEvent("appointments-reports-reconciliation-failed")
+        log.error("Appointments reconciliation report failed", it)
+      }
+  }
+
   suspend fun generateReconciliationReport(): List<MismatchAppointment> {
     val yesterday = LocalDate.now().minusDays(1)
     val nextWeek = LocalDate.now().plusDays(lookaheadDays)

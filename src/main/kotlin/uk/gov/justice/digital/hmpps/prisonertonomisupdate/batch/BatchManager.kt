@@ -11,7 +11,13 @@ import org.springframework.context.event.EventListener
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.SchedulesService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments.AppointmentsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ADJUDICATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
@@ -23,7 +29,10 @@ import java.lang.IllegalArgumentException
 import java.time.LocalDate
 
 enum class BatchType {
+  ADJUDICATION_RECON,
+  ALERT_RECON,
   ALLOCATION_RECON,
+  APPOINTMENT_RECON,
   ATTENDANCE_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
   DELETE_UNKNOWN_ACTIVITY_MAPPINGS,
@@ -37,6 +46,9 @@ class BatchManager(
   @Value($$"${batch.type}") private val batchType: BatchType,
   @Value($$"${hmpps.sqs.queues.activity.dlq.name}") private val activitiesDlqName: String,
   private val activitiesReconService: ActivitiesReconService,
+  private val adjudicationsReconService: AdjudicationsReconciliationService,
+  private val alertsReconciliationService: AlertsReconciliationService,
+  private val appointmentsReconciliationService: AppointmentsReconciliationService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
   private val schedulesService: SchedulesService,
@@ -48,7 +60,10 @@ class BatchManager(
   @WithSpan
   fun runBatchJob(@SpanAttribute batchType: BatchType) = runBlocking {
     when (batchType) {
+      ADJUDICATION_RECON -> adjudicationsReconService.generateAdjudicationsReconciliationReport()
+      ALERT_RECON -> alertsReconciliationService.generateAlertsReconciliationReport()
       ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
+      APPOINTMENT_RECON -> appointmentsReconciliationService.generateReconciliationReportBatch()
       ATTENDANCE_RECON -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
       DELETE_UNKNOWN_ACTIVITY_MAPPINGS -> schedulesService.deleteUnknownMappings()
