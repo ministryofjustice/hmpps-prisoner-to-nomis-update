@@ -110,7 +110,7 @@ class LocationsReconciliationService(
               dpsRecord.capacity?.workingCapacity,
               dpsRecord.capacity?.maxCapacity,
               dpsRecord.certification?.certified,
-              dpsRecord.certification?.capacityOfCertifiedCell,
+              dpsRecord.certification?.certifiedNormalAccommodation,
               dpsRecord.active,
               dpsRecord.attributes?.size,
               dpsRecord.usage?.size,
@@ -173,11 +173,7 @@ class LocationsReconciliationService(
       if (verdict == TRACKING_MISMATCH && nomisRecord.active && dpsRecord.residentialHousingType == null) {
         locationsApiService.patchNonResidentialLocation(
           dpsRecord.id.toString(),
-          PatchNonResidentialLocationRequest(
-            code = dpsRecord.code,
-            locationType = PatchNonResidentialLocationRequest.LocationType.valueOf(dpsRecord.locationType.name),
-            internalMovementAllowed = nomisRecord.tracking,
-          ),
+          PatchNonResidentialLocationRequest(internalMovementAllowed = nomisRecord.tracking),
         )
       }
       val mismatch =
@@ -209,7 +205,7 @@ class LocationsReconciliationService(
             dpsRecord.capacity?.workingCapacity,
             dpsRecord.capacity?.maxCapacity,
             dpsRecord.certification?.certified,
-            dpsRecord.certification?.capacityOfCertifiedCell,
+            dpsRecord.certification?.certifiedNormalAccommodation,
             dpsRecord.active,
             dpsRecord.attributes?.size,
             dpsRecord.usage?.size,
@@ -273,7 +269,7 @@ class LocationsReconciliationService(
         if (c != null && c > 0 && c != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
         if (cc != null && cc > 0) {
           if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-          if (cc != dps.certification?.capacityOfCertifiedCell) return "Cell CNA capacity mismatch"
+          if (cc != dps.certification?.certifiedNormalAccommodation) return "Cell CNA capacity mismatch"
         }
       }
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-10.89.1a23f21"
+    "version" : "2025-09-18.116.cd7ac4c"
   },
   "servers" : [ {
     "url" : "/",
@@ -10969,8 +10969,7 @@
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           }
-        },
-        "required" : [ "code" ]
+        }
       },
       "PatchNonResidentialLocationRequest" : {
         "type" : "object",
@@ -11028,8 +11027,7 @@
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           }
-        },
-        "required" : [ "code", "locationType" ]
+        }
       },
       "Count" : {
         "type" : "object",

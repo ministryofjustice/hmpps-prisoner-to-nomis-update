@@ -137,7 +137,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     },
     "certification": {
       "certified": true,
-      "capacityOfCertifiedCell": 1
+      "certifiedNormalAccommodation": 1
     },
     "orderWithinParentLocation": 1,
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",

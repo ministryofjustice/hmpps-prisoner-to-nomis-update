@@ -309,6 +309,7 @@ class LocationsReconciliationServiceTest {
     ),
     certification = Certification(
       certified = true,
+      certifiedNormalAccommodation = 13,
       capacityOfCertifiedCell = 13,
     ),
     attributes = listOf(
