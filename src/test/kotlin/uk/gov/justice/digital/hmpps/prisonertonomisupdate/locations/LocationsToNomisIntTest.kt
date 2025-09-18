@@ -66,6 +66,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "key": "MDI-A-1-001",
       "status": "ACTIVE",
       "isResidential": true,
+      "internalMovementAllowed": false,
       "lastModifiedBy": "me",
       "lastModifiedDate": "2024-05-25T01:02:03"
     }
@@ -169,7 +170,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
                   "capacity" : 2,
                   "listSequence" : 1,
                   "comment" : "Not to be used",
-                   "tracking" : null, // TODOOOOOOOO
+                  "tracking" : false,
                   "profiles" : [
                     { "profileType" : "SUP_LVL_TYPE", "profileCode" : "S" },
                     { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-15.526.10d2df5"
+    "version" : "2025-09-17.546.f441bd6"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17570,6 +17570,232 @@
         }
       }
     },
+    "/finance/prisoners/{prisonerId}/balance" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Get a prisoner's finance details by their root offender id",
+        "description" : "Retrieves a prisoner's trust account details for all caseloads with a balance. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerAccountDetails",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "description" : "prisonerId",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "prisonerId",
+            "example" : 123456
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction Information Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerAccountsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prisoners/ids" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets the identifiers for all prisoners with a non-negative trust account balance",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerIdentifiers_1",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "paged list of prisoner ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageLong"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prison/{prisonId}/balance" : {
+      "get" : {
+        "tags" : [ "prison-balance-resource" ],
+        "summary" : "Gets the balances for the prison.",
+        "description" : "Retrieves all the balances for a prison. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW role.",
+        "operationId" : "getPrisonBalance",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "prisonId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonId",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Balance information returned.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/finance/prison/ids" : {
+      "get" : {
+        "tags" : [ "prison-balance-resource" ],
+        "summary" : "Gets all the caseloads (prisons) that have balance entries.",
+        "description" : "Retrieves a list of caseloads that have a balance.\n\n      This will include caseloads for prisons that have closed (e.g. Medway STC, Everthorpe) and also caseloads that \n      aren't prisons (e.g. Transfer, Ghost Holding Establishment).\n\n      Certain caseloads (e.g. CADM_I, NWEB and LIC) don't have a balance so aren't returned.\n\n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW role.",
+        "operationId" : "getPrisonIds",
+        "responses" : {
+          "200" : {
+            "description" : "Balance information returned.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prison does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/documents/{id}" : {
       "get" : {
         "tags" : [ "document-resource" ],
@@ -27311,12 +27537,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27333,6 +27553,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -27504,12 +27730,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -27526,6 +27746,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -28100,12 +28326,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -28122,6 +28342,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29397,12 +29623,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29419,6 +29639,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29471,12 +29697,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29493,6 +29713,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -29535,12 +29761,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -29557,6 +29777,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -30182,12 +30408,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -30204,6 +30424,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -30338,12 +30564,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -30360,6 +30580,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -31547,12 +31773,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -31569,6 +31789,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -32080,12 +32306,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -32102,6 +32322,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -32190,12 +32416,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -32212,6 +32432,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -32286,6 +32512,145 @@
         },
         "required" : [ "auditModule", "bookingId", "currentIep", "iepDateTime", "iepLevel", "incentiveSequence", "offenderNo", "prisonId", "whenCreated" ]
       },
+      "PrisonerAccountDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The id of the prison",
+            "example" : "MDI"
+          },
+          "lastTransactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the last transaction associated with the balance",
+            "example" : 123
+          },
+          "subAccountType" : {
+            "type" : "string",
+            "description" : "The account type",
+            "enum" : [ "CASH", "SPEND", "SAVINGS" ]
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The account balance",
+            "example" : 12.5
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "description" : "The amount on hold",
+            "example" : 12.5
+          }
+        },
+        "required" : [ "balance", "lastTransactionId", "prisonId", "subAccountType" ]
+      },
+      "PrisonerAccountsDto" : {
+        "type" : "object",
+        "description" : "Finance details for a prisoner",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender Id",
+            "example" : 12345
+          },
+          "accounts" : {
+            "type" : "array",
+            "description" : "The accounts associated with the prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAccountDto"
+            }
+          }
+        },
+        "required" : [ "accounts", "prisonerId" ]
+      },
+      "PageLong" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "PrisonAccountBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The balance for this prison and account code",
+            "example" : 33.12
+          },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the last transaction OR the date and time of the consolidation of the transactions"
+          }
+        },
+        "required" : [ "accountCode", "balance", "transactionDate" ]
+      },
+      "PrisonBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "accountBalances" : {
+            "type" : "array",
+            "description" : "The list of account balances for the prison",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAccountBalanceDto"
+            }
+          }
+        },
+        "required" : [ "accountBalances", "prisonId" ]
+      },
       "CSIPIdResponse" : {
         "type" : "object",
         "description" : "CSIP id",
@@ -32321,12 +32686,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -32343,6 +32702,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -32627,12 +32992,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -32649,6 +33008,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33388,12 +33753,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -33410,6 +33769,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33685,12 +34050,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -33707,6 +34066,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33764,12 +34129,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -33786,6 +34145,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -33831,12 +34196,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -33853,6 +34212,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -34129,12 +34494,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -34151,6 +34510,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",

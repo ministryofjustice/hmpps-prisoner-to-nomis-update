@@ -63,7 +63,7 @@ class AllocationService(
     startDate = allocation.startDate,
     endDate = allocation.endDate,
     endReason = getEndReason(allocation.status),
-    endComment = getEndComment(allocation.status, allocation.deallocatedBy, allocation.deallocatedTime, allocation.deallocatedReason?.description),
+    endComment = getEndComment(allocation),
     suspended = isSuspended(allocation.status),
     suspendedComment = getSuspendedComment(allocation.status, allocation.suspendedBy, allocation.suspendedTime, allocation.suspendedReason),
     programStatusCode = getProgramStatus(allocation.status),
@@ -72,10 +72,15 @@ class AllocationService(
 
   private fun getEndReason(status: Allocation.Status) = if (status == ENDED) "OTH" else null
 
-  private fun getEndComment(status: Allocation.Status, by: String?, time: LocalDateTime?, reason: String?) = if (status == ENDED) {
-    "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
-  } else {
-    null
+  private fun getEndComment(allocation: Allocation) = with(allocation) {
+    if (status == ENDED) {
+      val by = plannedDeallocation?.plannedBy ?: deallocatedBy
+      val time = plannedDeallocation?.plannedAt ?: deallocatedTime
+      val reason = plannedDeallocation?.plannedReason?.description ?: deallocatedReason?.description
+      "Deallocated in DPS by $by at ${time?.format(humanTimeFormat)} for reason $reason"
+    } else {
+      null
+    }
   }
 
   private fun isSuspended(status: Allocation.Status) = status in listOf(SUSPENDED, AUTO_SUSPENDED, SUSPENDED_WITH_PAY)

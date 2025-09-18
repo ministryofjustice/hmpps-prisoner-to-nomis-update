@@ -5,7 +5,7 @@ import org.springframework.beans.factory.config.ConfigurableListableBeanFactory
 import org.springframework.beans.factory.support.DefaultListableBeanFactory
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
 
 /**
  * This bean is used in batch mode to remove all event listeners, otherwise they will read messages from queues
@@ -17,7 +17,7 @@ class DomainEventListenerSuppressor : BeanFactoryPostProcessor {
 
   override fun postProcessBeanFactory(beanFactory: ConfigurableListableBeanFactory) {
     (beanFactory as DefaultListableBeanFactory).beanDefinitionNames
-      .filter { name -> beanFactory.isBeanAssignableFrom<DomainEventListener>(name) }
+      .filter { name -> beanFactory.isBeanAssignableFrom<DomainEventListenerNoMapping>(name) }
       .forEach { beanFactory.removeBeanDefinition(it) }
   }
 
