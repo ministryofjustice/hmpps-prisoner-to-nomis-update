@@ -14,7 +14,13 @@ import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.event.ContextRefreshedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.ActivitiesReconService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.SchedulesService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments.AppointmentsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ADJUDICATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
@@ -27,6 +33,9 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 class BatchManagerTest {
 
   private val activitiesReconService = mock<ActivitiesReconService>()
+  private val adjudicationsReconService = mock<AdjudicationsReconciliationService>()
+  private val alertsReconService = mock<AlertsReconciliationService>()
+  private val appointmentsReconService = mock<AppointmentsReconciliationService>()
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val schedulesService = mock<SchedulesService>()
@@ -40,12 +49,42 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the adjudications reconciliation service`() = runTest {
+    val batchManager = batchManager(ADJUDICATION_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(adjudicationsReconService).generateAdjudicationsReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the alerts reconciliation service`() = runTest {
+    val batchManager = batchManager(ALERT_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(alertsReconService).generateAlertsReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the allocation reconciliation service`() = runTest {
     val batchManager = batchManager(ALLOCATION_RECON)
 
     batchManager.onApplicationEvent(event)
 
     verify(activitiesReconService).allocationReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the appointments reconciliation service`() = runTest {
+    val batchManager = batchManager(APPOINTMENT_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(appointmentsReconService).generateReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -106,6 +145,9 @@ class BatchManagerTest {
     batchType,
     activityDlqName,
     activitiesReconService,
+    adjudicationsReconService,
+    alertsReconService,
+    appointmentsReconService,
     contactPersonProfileDetailsReconService,
     hmppsQueueService,
     schedulesService,
