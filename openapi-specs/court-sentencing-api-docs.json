@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-12.526.cc0035c"
+    "version" : "2025-09-17.532.b59e1fd"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2656,19 +2656,22 @@
         }
       }
     },
-    "/sentence/{sentenceUuid}/sentences-after-on-other-court-appearance-details" : {
+    "/sentence/sentences-after-on-other-court-appearance-details" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
         "summary" : "Sentences after on other court appearance details",
         "description" : "This endpoint will return details of the court appearances of sentences after this sentence",
         "operationId" : "sentencesAfterOnOtherCourtAppearanceDetails",
         "parameters" : [ {
-          "name" : "sentenceUuid",
-          "in" : "path",
+          "name" : "sentenceUuids",
+          "in" : "query",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
           }
         } ],
         "responses" : {
@@ -2705,19 +2708,22 @@
         }
       }
     },
-    "/sentence/{sentenceUuid}/has-sentences-after-on-other-court-appearance" : {
+    "/sentence/has-sentences-after-on-other-court-appearance" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
         "summary" : "Any sentences after on another appearance",
         "description" : "This endpoint will return true if any other sentence has a consecutive to link to the sentence at sentenceUuid that is on a different court appearance",
         "operationId" : "hasSentencesAfterOnOtherCase",
         "parameters" : [ {
-          "name" : "sentenceUuid",
-          "in" : "path",
+          "name" : "sentenceUuids",
+          "in" : "query",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "format" : "uuid"
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
           }
         } ],
         "responses" : {
@@ -5029,7 +5035,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5304,7 +5310,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "courtCode" : {
             "type" : "string"
@@ -7328,7 +7334,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "courtCode" : {
             "type" : "string"
@@ -7732,7 +7738,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "charges" : {
             "type" : "array",
@@ -7755,7 +7761,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "courtId" : {
             "type" : "string"
@@ -7846,7 +7852,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7902,7 +7908,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "courtId" : {
             "type" : "string"
@@ -8183,6 +8189,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8200,18 +8212,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -8269,6 +8275,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8286,18 +8298,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -8518,7 +8524,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "16:20:06.484920855"
+            "example" : "17:22:07.7731976"
           },
           "courtCode" : {
             "type" : "string"
