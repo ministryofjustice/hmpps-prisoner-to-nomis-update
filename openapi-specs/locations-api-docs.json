@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-08.85.f56a761"
+    "version" : "2025-09-18.116.cd7ac4c"
   },
   "servers" : [ {
     "url" : "/",
@@ -9980,9 +9980,14 @@
             "format" : "int32",
             "description" : "The new value of the signed operational capacity",
             "example" : 456
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "Explanation of why the signed op cap is changing",
+            "example" : "The size of the prison has changed"
           }
         },
-        "required" : [ "prisonId", "signedOperationalCapacity" ]
+        "required" : [ "prisonId", "reasonForChange", "signedOperationalCapacity" ]
       },
       "CertificationApprovalRequestDto" : {
         "type" : "object",
@@ -10069,6 +10074,11 @@
             "format" : "int32",
             "description" : "Change signed operational capacity",
             "example" : 1
+          },
+          "reasonForSignedOpChange" : {
+            "type" : "string",
+            "description" : "The reason why the signed op cap was changed",
+            "example" : "Change in number of cells"
           },
           "locations" : {
             "type" : "array",
@@ -10959,8 +10969,7 @@
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           }
-        },
-        "required" : [ "code" ]
+        }
       },
       "PatchNonResidentialLocationRequest" : {
         "type" : "object",
@@ -11018,8 +11027,7 @@
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           }
-        },
-        "required" : [ "code", "locationType" ]
+        }
       },
       "Count" : {
         "type" : "object",

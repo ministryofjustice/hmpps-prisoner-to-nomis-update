@@ -215,6 +215,7 @@ internal class LocationsServiceTest {
     ),
     certification = Certification(
       certified = true,
+      certifiedNormalAccommodation = 13,
       capacityOfCertifiedCell = 13,
     ),
     attributes = listOf(

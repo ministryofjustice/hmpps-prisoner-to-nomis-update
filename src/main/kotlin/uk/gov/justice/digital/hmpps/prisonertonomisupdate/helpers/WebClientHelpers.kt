@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
+import org.springframework.core.ParameterizedTypeReference
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -24,6 +25,9 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyWithRetry(r
   Unit::class -> awaitBodilessEntity().let { Unit as T }
   else -> bodyToMono<T>().retryWhen(retrySpec).awaitSingle()
 }
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyWithRetry(typeReference: ParameterizedTypeReference<T>, retrySpec: Retry): T = bodyToMono(typeReference)
+  .retryWhen(retrySpec).awaitSingle()
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForStatus(vararg status: HttpStatus): T? = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException::class.java) {

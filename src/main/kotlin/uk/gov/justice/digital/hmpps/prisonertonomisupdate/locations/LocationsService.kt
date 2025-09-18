@@ -79,7 +79,7 @@ class LocationsService(
       )
       nomisApiService.updateLocationCertification(
         nomisLocationId,
-        UpdateCertificationRequest(location.certification?.capacityOfCertifiedCell ?: 0, location.certification?.certified ?: false),
+        UpdateCertificationRequest(location.certification?.certifiedNormalAccommodation ?: 0, location.certification?.certified ?: false),
       )
     }
   }
@@ -145,7 +145,7 @@ class LocationsService(
   private suspend fun toCreateLocationRequest(instance: LegacyLocation) = CreateLocationRequest(
     locationCode = instance.code,
     certified = instance.certification?.certified ?: false,
-    cnaCapacity = instance.certification?.capacityOfCertifiedCell,
+    cnaCapacity = instance.certification?.certifiedNormalAccommodation,
     locationType = CreateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     comment = instance.comments,
     parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
@@ -156,6 +156,7 @@ class LocationsService(
     capacity = instance.capacity?.maxCapacity,
     listSequence = instance.orderWithinParentLocation,
     unitType = instance.residentialHousingType?.let { CreateLocationRequest.UnitType.valueOf(toUnitType(it)) },
+    tracking = instance.internalMovementAllowed,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )
@@ -302,6 +303,7 @@ class LocationsService(
     unitType = instance.residentialHousingType?.let { UpdateLocationRequest.UnitType.valueOf(toUnitType(it)) },
     listSequence = instance.orderWithinParentLocation,
     comment = instance.comments,
+    tracking = instance.internalMovementAllowed,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )

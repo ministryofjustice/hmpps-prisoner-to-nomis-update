@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.jsonResponse
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
+import com.github.tomakehurst.wiremock.client.WireMock.patch
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.stubbing.Scenario
@@ -14,6 +15,7 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import java.util.UUID
 
 class LocationsApiExtension :
   BeforeAllCallback,
@@ -140,6 +142,20 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get(urlPathEqualTo("/locations"))
         .withQueryParam("page", equalTo(pageNumber.toString()))
         .withQueryParam("size", equalTo(pageSize.toString()))
+        .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
+    )
+  }
+
+  fun stubPatchNonResidentialLocation(id: UUID) {
+    stubFor(
+      patch(urlPathEqualTo("/locations/non-residential/$id"))
+        .willReturn(okJson("""{ "dummy": "value" }""")),
+    )
+  }
+
+  fun stubPatchNonResidentialLocationWithError(id: UUID, status: Int = 500) {
+    stubFor(
+      patch(urlPathEqualTo("/locations/non-residential/$id"))
         .willReturn(jsonResponse("""{ "error": "some error" }""", status)),
     )
   }

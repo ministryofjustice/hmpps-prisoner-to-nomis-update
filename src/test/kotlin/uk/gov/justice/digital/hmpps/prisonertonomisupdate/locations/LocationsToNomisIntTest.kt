@@ -51,7 +51,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       },
       "certification": {
         "certified": true,
-        "capacityOfCertifiedCell": 1
+        "certifiedNormalAccommodation": 1
       },
       "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
       "usage": [
@@ -66,6 +66,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "key": "MDI-A-1-001",
       "status": "ACTIVE",
       "isResidential": true,
+      "internalMovementAllowed": false,
       "lastModifiedBy": "me",
       "lastModifiedDate": "2024-05-25T01:02:03"
     }
@@ -169,7 +170,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
                   "capacity" : 2,
                   "listSequence" : 1,
                   "comment" : "Not to be used",
-                  "tracking": null,
+                  "tracking" : false,
                   "profiles" : [
                     { "profileType" : "SUP_LVL_TYPE", "profileCode" : "S" },
                     { "profileType" : "HOU_UNIT_ATT", "profileCode" : "NSMC" }
