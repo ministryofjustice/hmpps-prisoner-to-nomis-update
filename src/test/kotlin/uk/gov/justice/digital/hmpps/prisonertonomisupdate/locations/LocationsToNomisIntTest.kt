@@ -452,7 +452,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
           locationsApi.stubGetLocation(id = DPS_ID, false, response = locationApiResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
           mappingServer.stubGetMappingGivenDpsLocationId(PARENT_ID, parentMappingResponse)
-          nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID", 503)
+          nomisApi.stubLocationUpdateWithError("/locations/$NOMIS_ID", 400)
           publishLocationDomainEvent("location.inside.prison.amended")
         }
 
