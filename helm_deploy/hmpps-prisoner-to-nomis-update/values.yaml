@@ -44,18 +44,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /adjudications/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /alerts/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /appointments/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /casenotes/reports/reconciliation {
           deny all;
           return 401;
