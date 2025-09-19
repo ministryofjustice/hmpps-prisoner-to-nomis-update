@@ -63,6 +63,19 @@ generic-service:
     - name: activity-mappings
       type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
       schedule: "15 7 * * 1-5"
+      # trying out new cronjob template in preprod - needs switching to prod (and schedule changing to match the existing schedule)
+    - name: casenote-active-recon
+      type: CASE_NOTES_ACTIVE_RECON
+      schedule: "0 21 * * SUN,MON,TUE,WED,THU"
+      # trying out new cronjob template in preprod - needs switching to prod (and schedule changing to match the existing schedule)
+    - name: casenote-full-recon
+      type: CASE_NOTES_FULL_RECON
+      schedule: "30 13 * * SAT"
+      # trying out new cronjob template in preprod - needs switching to prod (and schedule changing to match the existing schedule)
+    - name: person-contact-recon
+      type: PERSON_CONTACT_RECON
+      schedule: "50 5 * * 6"
+
 
 generic-prometheus-alerts:
   businessHoursOnly: true

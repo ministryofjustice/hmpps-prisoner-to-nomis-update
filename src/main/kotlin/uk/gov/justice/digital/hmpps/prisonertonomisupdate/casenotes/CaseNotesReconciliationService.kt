@@ -38,6 +38,33 @@ class CaseNotesReconciliationService(
     internal val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun generateReconciliationReport(activeOnly: Boolean) {
+    val prisonersCount = if (activeOnly) {
+      nomisApiService.getActivePrisoners(0, 1).totalElements
+    } else {
+      nomisApiService.getAllPrisonersPaged(0, 1).totalElements
+    }
+
+    telemetryClient.trackEvent(
+      "casenotes-reports-reconciliation-requested",
+      mapOf("casenotes-nomis-total" to prisonersCount.toString(), "activeOnly" to activeOnly.toString()),
+    )
+    log.info("casenotes reconciliation report requested for $prisonersCount prisoners")
+
+    runCatching { generateReconciliationReport(prisonersCount, activeOnly) }
+      .onSuccess {
+        log.info("Casenotes reconciliation report completed with ${it.size} mismatches")
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-report",
+          mapOf("mismatch-count" to it.size.toString(), "success" to "true"),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("casenotes-reports-reconciliation-report", mapOf("success" to "false", "error" to (it.message ?: "")))
+        log.error("Casenotes reconciliation report failed", it)
+      }
+  }
+
   suspend fun generateReconciliationReport(prisonerCount: Long, activeOnly: Boolean): List<MismatchCaseNote> {
     if (activeOnly) {
       return prisonerCount.asPages(pageSize).flatMap { page ->

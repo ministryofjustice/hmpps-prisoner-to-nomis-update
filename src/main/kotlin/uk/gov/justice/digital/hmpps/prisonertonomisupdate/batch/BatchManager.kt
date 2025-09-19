@@ -19,10 +19,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 import java.lang.IllegalArgumentException
@@ -34,8 +39,11 @@ enum class BatchType {
   ALLOCATION_RECON,
   APPOINTMENT_RECON,
   ATTENDANCE_RECON,
+  CASE_NOTES_ACTIVE_RECON,
+  CASE_NOTES_FULL_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
   DELETE_UNKNOWN_ACTIVITY_MAPPINGS,
+  PERSON_CONTACT_RECON,
   PURGE_ACTIVITY_DLQ,
   SUSPENDED_ALLOCATION_RECON,
 }
@@ -49,7 +57,9 @@ class BatchManager(
   private val adjudicationsReconService: AdjudicationsReconciliationService,
   private val alertsReconciliationService: AlertsReconciliationService,
   private val appointmentsReconciliationService: AppointmentsReconciliationService,
+  private val caseNotesReconciliationService: CaseNotesReconciliationService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
+  private val contactPersonReconciliationService: ContactPersonReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
   private val schedulesService: SchedulesService,
 ) {
@@ -65,8 +75,11 @@ class BatchManager(
       ALLOCATION_RECON -> activitiesReconService.allocationReconciliationReport()
       APPOINTMENT_RECON -> appointmentsReconciliationService.generateReconciliationReportBatch()
       ATTENDANCE_RECON -> activitiesReconService.attendanceReconciliationReport(LocalDate.now().minusDays(1))
+      CASE_NOTES_ACTIVE_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
+      CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
       DELETE_UNKNOWN_ACTIVITY_MAPPINGS -> schedulesService.deleteUnknownMappings()
+      PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
       PURGE_ACTIVITY_DLQ -> purgeQueue(activitiesDlqName)
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
     }
