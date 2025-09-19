@@ -47,6 +47,33 @@ class ContactPersonReconciliationService(
     nextPage = ::getNextBookingsForPage,
   )
 
+  suspend fun generatePersonContactReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PERSON_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generatePersonContactReconciliationReport() }
+      .onSuccess {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PERSON_PREFIX-report",
+          mapOf(
+            "contacts-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) + it.mismatches.asPersonMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_PERSON_PREFIX-report", mapOf("success" to "false"))
+        log.error("Prisoner contacts reconciliation report failed", it)
+      }
+  }
+
+  // just take the first 10 personIds that fail else telemetry will not be written at all if attribute is too large
+  private fun List<MismatchPersonContacts>.asPersonMap(): Pair<String, String> = "personIds" to this.map { it.personId }.take(10).joinToString()
+
   suspend fun generatePersonContactReconciliationReport(): ReconciliationResult<MismatchPersonContacts> {
     checkTotalsMatch()
 

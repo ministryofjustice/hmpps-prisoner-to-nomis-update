@@ -22,10 +22,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALERT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.APPOINTMENT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTENDANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
@@ -36,7 +41,9 @@ class BatchManagerTest {
   private val adjudicationsReconService = mock<AdjudicationsReconciliationService>()
   private val alertsReconService = mock<AlertsReconciliationService>()
   private val appointmentsReconService = mock<AppointmentsReconciliationService>()
+  private val caseNotesReconciliationService = mock<CaseNotesReconciliationService>()
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
+  private val contactPersonReconService = mock<ContactPersonReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
   private val schedulesService = mock<SchedulesService>()
   private val activityDlqName = "activity-dlq-name"
@@ -99,6 +106,26 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the active only case notes reconciliation service`() = runTest {
+    val batchManager = batchManager(CASE_NOTES_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(caseNotesReconciliationService).generateReconciliationReport(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the full case notes reconciliation service`() = runTest {
+    val batchManager = batchManager(CASE_NOTES_FULL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(caseNotesReconciliationService).generateReconciliationReport(false)
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the contact person profile details reconciliation service`() = runTest {
     val batchManager = batchManager(CONTACT_PERSON_PROFILE_DETAILS_RECON)
 
@@ -115,6 +142,16 @@ class BatchManagerTest {
     batchManager.onApplicationEvent(event)
 
     verify(schedulesService).deleteUnknownMappings()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the person contact reconciliation service`() = runTest {
+    val batchManager = batchManager(PERSON_CONTACT_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(contactPersonReconService).generatePersonContactReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -148,7 +185,9 @@ class BatchManagerTest {
     adjudicationsReconService,
     alertsReconService,
     appointmentsReconService,
+    caseNotesReconciliationService,
     contactPersonProfileDetailsReconService,
+    contactPersonReconService,
     hmppsQueueService,
     schedulesService,
   )
