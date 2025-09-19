@@ -161,6 +161,7 @@ class AppointmentsReconciliationServiceTest {
             isCancelled = false,
             isExpired = false,
             createdTime = LocalDateTime.now(),
+            isDeleted = false,
           ),
         ),
       )

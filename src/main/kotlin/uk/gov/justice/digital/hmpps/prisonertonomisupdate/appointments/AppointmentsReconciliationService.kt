@@ -129,7 +129,7 @@ class AppointmentsReconciliationService(
 
   internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<Long> = runCatching {
     dpsApiService.searchAppointments(prisonId, startDate, endDate)
-      // TODO need to filter out 'soft deleted' appointments .filter { app -> app.x }
+      .filterNot { app -> app.isDeleted }
       .flatMap { app ->
         app.attendees.map { attendee ->
           attendee.appointmentAttendeeId
