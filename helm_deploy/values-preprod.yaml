@@ -63,18 +63,6 @@ generic-service:
     - name: activity-mappings
       type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
       schedule: "15 7 * * 1-5"
-      # TODO Running in preprod as a test before replacing production cronjob (note schedule will need changing to match existing cronjob)
-    - name: adjudication-recon
-      type: ADJUDICATION_RECON
-      schedule: "30 2 * * *"
-      # TODO Running in preprod as a test before replacing production cronjob (note schedule will need changing to match existing cronjob)
-    - name: alert-recon
-      type: ALERT_RECON
-      schedule: "45 5 * * *"
-      # TODO Running in preprod as a test before replacing production cronjob (note schedule will need changing to match existing cronjob)
-    - name: appointment-recon
-      type: APPOINTMENT_RECON
-      schedule: "5 1 * * *"
 
 generic-prometheus-alerts:
   businessHoursOnly: true

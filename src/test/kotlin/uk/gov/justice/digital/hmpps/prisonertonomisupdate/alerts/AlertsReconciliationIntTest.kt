@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -25,8 +27,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.lang.RuntimeException
 
-class AlertsResourceIntTest : IntegrationTestBase() {
+class AlertsReconciliationIntTest(
+  @Autowired private val alertsReconciliationService: AlertsReconciliationService,
+) : IntegrationTestBase() {
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
@@ -34,7 +39,7 @@ class AlertsResourceIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var alertsNomisApi: AlertsNomisApiMockServer
 
-  @DisplayName("PUT /alerts/reports/reconciliation")
+  @DisplayName("Alerts reconciliation report")
   @Nested
   inner class GenerateAlertsReconciliationReport {
     @BeforeEach
@@ -105,10 +110,8 @@ class AlertsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      alertsReconciliationService.generateAlertsReconciliationReport()
 
       verify(telemetryClient).trackEvent(eq("alerts-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
 
@@ -116,10 +119,8 @@ class AlertsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should execute batches of prisoners`() = runTest {
+      alertsReconciliationService.generateAlertsReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -135,10 +136,8 @@ class AlertsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      alertsReconciliationService.generateAlertsReconciliationReport()
 
       awaitReportFinished()
 
@@ -180,12 +179,10 @@ class AlertsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       alertsDpsApi.stubGetActiveAlertsForPrisoner("A0002TZ", HttpStatus.INTERNAL_SERVER_ERROR)
 
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      alertsReconciliationService.generateAlertsReconciliationReport()
 
       awaitReportFinished()
 
@@ -206,21 +203,19 @@ class AlertsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
+    fun `when initial prison count fails the whole report fails`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
+      assertThrows<RuntimeException> {
+        alertsReconciliationService.generateAlertsReconciliationReport()
+      }
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
-      webTestClient.put().uri("/alerts/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      alertsReconciliationService.generateAlertsReconciliationReport()
 
       awaitReportFinished()
 

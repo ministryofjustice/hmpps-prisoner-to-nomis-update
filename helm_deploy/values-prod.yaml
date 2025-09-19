@@ -80,9 +80,18 @@ generic-service:
   # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
   # The type must exist in enum BatchType
   batchjobs:
+    - name: adjudication-recon
+      type: ADJUDICATION_RECON
+      schedule: "30 2 * * 1"
+    - name: alert-recon
+      type: ALERT_RECON
+      schedule: "45 4 * * *"
     - name: allocations-recon
       type: ALLOCATION_RECON
       schedule: "5 7 * * *"
+    - name: appointment-recon
+      type: APPOINTMENT_RECON
+      schedule: "5 0 * * *"
     - name: attendances-recon
       type: ATTENDANCE_RECON
       schedule: "5 1 * * *"
