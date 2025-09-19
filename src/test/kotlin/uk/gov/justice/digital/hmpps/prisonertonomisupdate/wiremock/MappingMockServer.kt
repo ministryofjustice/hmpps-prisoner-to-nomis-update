@@ -2,15 +2,20 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.created
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.ok
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import com.github.tomakehurst.wiremock.matching.UrlPattern
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -1384,6 +1389,28 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(204),
       ),
+    )
+  }
+
+  fun stubMappingCreateFailureFollowedBySuccess(url: String, method: (UrlPattern) -> MappingBuilder = WireMock::post) {
+    stubFor(
+      method(urlPathMatching(url))
+        .inScenario("Retry create Scenario")
+        .whenScenarioStateIs(STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(500) // request unsuccessful with status code 500
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Cause create Success"),
+    )
+
+    stubFor(
+      method(urlPathMatching(url))
+        .inScenario("Retry create Scenario")
+        .whenScenarioStateIs("Cause create Success")
+        .willReturn(created())
+        .willSetStateTo(STARTED),
     )
   }
 }
