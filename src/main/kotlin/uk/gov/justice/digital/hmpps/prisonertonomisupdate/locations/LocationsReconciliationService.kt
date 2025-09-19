@@ -170,7 +170,7 @@ class LocationsReconciliationService(
 
     val verdict = doesNotMatch(nomisRecord, dpsRecord, parentMapped)
     return if (verdict != null) {
-      if (verdict == TRACKING_MISMATCH && nomisRecord.active && dpsRecord.residentialHousingType == null) {
+      if (verdict == TRACKING_MISMATCH && nomisRecord.active) {
         locationsApiService.patchNonResidentialLocation(
           dpsRecord.id.toString(),
           PatchNonResidentialLocationRequest(internalMovementAllowed = nomisRecord.tracking),
@@ -277,7 +277,7 @@ class LocationsReconciliationService(
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
     // There are 100s of key mismatches not counting BOX and POSI, general position is that we dont care.
     // we also dont care about comment mismatches or location history mismatches
-    if (nomis.tracking != dps.internalMovementAllowed) {
+    if (dps.residentialHousingType == null && nomis.tracking != dps.internalMovementAllowed) {
       return TRACKING_MISMATCH
     }
     return null

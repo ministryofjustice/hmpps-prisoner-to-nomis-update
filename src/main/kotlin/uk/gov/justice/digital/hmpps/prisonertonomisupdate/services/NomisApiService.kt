@@ -19,6 +19,8 @@ import org.springframework.web.reactive.function.client.awaitBody
 import reactor.core.publisher.Mono
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityAsTrueNotFoundAsFalse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrLogAndRethrowBadRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
@@ -639,26 +641,26 @@ class NomisApiService(
     .uri("/locations")
     .bodyValue(request)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest): ResponseEntity<Void> = webClient.put()
+  suspend fun updateLocation(locationId: Long, request: UpdateLocationRequest) = webClient.put()
     .uri("/locations/{id}", locationId)
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 
-  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest): ResponseEntity<Void> = webClient.put()
+  suspend fun deactivateLocation(locationId: Long, request: DeactivateRequest) = webClient.put()
     .uri("/locations/{id}/deactivate", locationId)
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 
-  suspend fun reactivateLocation(locationId: Long): ResponseEntity<Void> = webClient.put()
+  suspend fun reactivateLocation(locationId: Long) = webClient.put()
     .uri("/locations/{id}/reactivate", locationId)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 
-  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean): ResponseEntity<Void> = webClient.put()
+  suspend fun updateLocationCapacity(locationId: Long, request: UpdateCapacityRequest, ignoreOperationalCapacity: Boolean) = webClient.put()
     .uri {
       it.path("/locations/{id}/capacity")
         .queryParam("ignoreOperationalCapacity", ignoreOperationalCapacity)
@@ -666,13 +668,13 @@ class NomisApiService(
     }
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 
-  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest): ResponseEntity<Void> = webClient.put()
+  suspend fun updateLocationCertification(locationId: Long, request: UpdateCertificationRequest) = webClient.put()
     .uri("/locations/{id}/certification", locationId)
     .bodyValue(request)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 
   suspend fun getLocations(pageNumber: Long, pageSize: Long): PageImpl<LocationIdResponse> = webClient
     .get()

@@ -11,6 +11,7 @@ import org.springframework.web.reactive.function.client.bodyToMono
 import reactor.core.publisher.Mono
 import reactor.util.retry.Retry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.log
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
   .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
@@ -46,6 +47,20 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrUpsertAtt
     UpsertAttendanceError.entries.find { error -> error.errorCode == errorResponse.errorCode }
       ?.let { err -> Mono.error(err.exception(errorResponse)) }
       ?: Mono.error(it)
+  }
+  .awaitSingle()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrLogAndRethrowBadRequest(): T = this
+  .bodyToMono<T>()
+  .doOnError(WebClientResponseException.BadRequest::class.java) {
+    log.error("Received Bad Request (400) with body {}", it.responseBodyAsString)
+  }
+  .awaitSingle()
+
+suspend inline fun WebClient.ResponseSpec.awaitBodilessEntityOrLogAndRethrowBadRequest() = this
+  .toBodilessEntity()
+  .doOnError(WebClientResponseException.BadRequest::class.java) {
+    log.error("Received Bad Request (400) with body {}", it.responseBodyAsString)
   }
   .awaitSingle()
 
