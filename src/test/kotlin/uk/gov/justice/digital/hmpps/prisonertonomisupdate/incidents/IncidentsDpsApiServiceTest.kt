@@ -131,7 +131,6 @@ class IncidentsDpsApiServiceTest {
           .withQueryParam("status", equalTo("AWAITING_REVIEW"))
           .withQueryParam("status", equalTo("NEEDS_UPDATING"))
           .withQueryParam("status", equalTo("ON_HOLD"))
-          .withQueryParam("status", equalTo("POST_INCIDENT_UPDATE"))
           .withQueryParam("status", equalTo("UPDATED"))
           .withQueryParam("size", equalTo("1")),
       )
