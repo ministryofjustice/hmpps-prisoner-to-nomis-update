@@ -3,9 +3,11 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.not
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -14,6 +16,7 @@ import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
+import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -118,6 +121,61 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
+  inner class GetApplicationMappings {
+    private val dpsId = UUID.randomUUID()
+
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId)
+
+      apiService.getApplicationMapping(dpsId)
+
+      mappingApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `should pass dpsId`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId)
+
+      apiService.getApplicationMapping(dpsId)
+
+      mappingApi.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")),
+      )
+    }
+
+    @Test
+    internal fun `should parse returned mapping`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId)
+
+      with(apiService.getApplicationMapping(dpsId)!!) {
+        assertThat(prisonerNumber).isEqualTo("A1234BC")
+        assertThat(nomisMovementApplicationId).isEqualTo(1L)
+        assertThat(dpsMovementApplicationId).isEqualTo(dpsId)
+      }
+    }
+
+    @Test
+    fun `should return null if not found`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+
+      apiService.getApplicationMapping(dpsId)
+        .also { assertThat(it).isNull() }
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getApplicationMapping(dpsId)
+      }
+    }
+  }
+
+  @Nested
   inner class CreateOutsideMovementMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
@@ -195,6 +253,39 @@ class ExternalMovementsMappingApiServiceTest {
         apiService.createOutsideMovementMapping(
           temporaryAbsenceOutsideMovementMapping(),
         )
+      }
+    }
+  }
+
+  @Nested
+  inner class GetOutsideMovementMappings {
+    private val dpsId = UUID.randomUUID()
+
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId)
+
+      apiService.getOutsideMovementMapping(dpsId)
+
+      mappingApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should return null if not found`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+
+      apiService.getOutsideMovementMapping(dpsId)
+        .also { assertThat(it).isNull() }
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getOutsideMovementMapping(dpsId)
       }
     }
   }
@@ -282,6 +373,39 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
+  inner class GetScheduledMovementMappings {
+    private val dpsId = UUID.randomUUID()
+
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId)
+
+      apiService.getScheduledMovementMapping(dpsId)
+
+      mappingApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should return null if not found`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+
+      apiService.getScheduledMovementMapping(dpsId)
+        .also { assertThat(it).isNull() }
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getScheduledMovementMapping(dpsId)
+      }
+    }
+  }
+
+  @Nested
   inner class CreateExternalMovementMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
@@ -351,6 +475,39 @@ class ExternalMovementsMappingApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createExternalMovementMapping(temporaryAbsenceExternalMovementMapping())
+      }
+    }
+  }
+
+  @Nested
+  inner class GetExternalMovementMappings {
+    private val dpsId = UUID.randomUUID()
+
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId)
+
+      apiService.getExternalMovementMapping(dpsId)
+
+      mappingApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should return null if not found`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+
+      apiService.getExternalMovementMapping(dpsId)
+        .also { assertThat(it).isNull() }
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getExternalMovementMapping(dpsId)
       }
     }
   }

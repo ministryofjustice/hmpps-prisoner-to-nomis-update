@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -59,6 +62,28 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/application")
 
+  fun stubGetTemporaryAbsenceApplicationMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/application/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200)
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(prisonerNumber = prisonerNumber, dpsApplicationId = dpsId))),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceApplicationMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
   fun stubCreateOutsideMovementMapping() {
     mappingServer.stubFor(
       post("/mapping/temporary-absence/outside-movement")
@@ -93,6 +118,27 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
   }
 
   fun stubCreateOutsideMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/outside-movement")
+
+  fun stubGetTemporaryAbsenceOutsideMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/outside-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceOutsideMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceOutsideMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/outside-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
 
   fun stubCreateScheduledMovementMapping() {
     mappingServer.stubFor(
@@ -129,6 +175,27 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement")
 
+  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceScheduledMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
   fun stubCreateExternalMovementMapping() {
     mappingServer.stubFor(
       post("/mapping/temporary-absence/external-movement")
@@ -164,6 +231,27 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateExternalMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/external-movement")
 
+  fun stubGetTemporaryAbsenceExternalMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceExternalMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
@@ -181,26 +269,26 @@ fun temporaryAbsenceApplicationMapping(
   mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.MIGRATED,
 )
 
-fun temporaryAbsenceOutsideMovementMapping(nomisApplicationMultiId: Long = 1L, prisonerNumber: String = "A1234BC") = TemporaryAbsenceOutsideMovementSyncMappingDto(
+fun temporaryAbsenceOutsideMovementMapping(nomisApplicationMultiId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = TemporaryAbsenceOutsideMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
   nomisMovementApplicationMultiId = nomisApplicationMultiId,
-  dpsOutsideMovementId = UUID.randomUUID(),
+  dpsOutsideMovementId = dpsId,
   mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.MIGRATED,
 )
 
-fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNumber: String = "A1234BC") = ScheduledMovementSyncMappingDto(
+fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ScheduledMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
   nomisEventId = nomisEventId,
-  dpsScheduledMovementId = UUID.randomUUID(),
+  dpsScheduledMovementId = dpsId,
   mappingType = ScheduledMovementSyncMappingDto.MappingType.MIGRATED,
 )
 
-fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC") = ExternalMovementSyncMappingDto(
+fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ExternalMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = bookingId,
   nomisMovementSeq = movementSeq,
-  dpsExternalMovementId = UUID.randomUUID(),
+  dpsExternalMovementId = dpsId,
   mappingType = ExternalMovementSyncMappingDto.MappingType.MIGRATED,
 )
