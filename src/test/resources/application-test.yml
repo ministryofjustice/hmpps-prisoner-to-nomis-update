@@ -324,7 +324,7 @@ hmpps.sqs:
         dlqName: "visitbalance-dlq-${random.uuid}"
         dlqMaxReceiveCount: 2
         visibilityTimeout: 120
-    movements:
+    externalmovements:
       queueName: "movements-${random.uuid}"
       dlqName: "movements-dlq-${random.uuid}"
       subscribeTopicId: domainevents

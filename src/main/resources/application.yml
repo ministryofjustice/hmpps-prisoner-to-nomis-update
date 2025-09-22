@@ -208,4 +208,6 @@ hmpps.sqs:
       errorVisibilityTimeout: 5
     activity:
       errorVisibilityTimeout: 5
+    externalmovements:
+      errorVisibilityTimeout: 5
   queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW

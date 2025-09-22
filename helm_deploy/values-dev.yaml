@@ -103,6 +103,9 @@ generic-prometheus-alerts:
     visitbalance:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_visitbalance_dlq"
+    externalmovements:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_dlq"
 
 cron:
   contactPersonRestrictionsReportSchedule: "55 7 * * *"

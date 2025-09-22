@@ -207,6 +207,10 @@ generic-service:
       HMPPS_SQS_QUEUES_VISITBALANCE_DLQ_NAME: "sqs_queue_name"
     prisoner-from-nomis-courtsentencing-queue:
       HMPPS_SQS_QUEUES_FROMNOMISCOURTSENTENCING_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-externalmovements:
+      HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-externalmovements-dlq:
+      HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
