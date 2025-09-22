@@ -12,7 +12,7 @@ class ExternalMovementsRetryQueueService(
   telemetryClient: TelemetryClient,
   queueService: QueueService,
 ) : RetryQueueService(
-  queueId = "movements",
+  queueId = "externalmovements",
   hmppsQueueService = hmppsQueueService,
   telemetryClient = telemetryClient,
   queueService = queueService,
