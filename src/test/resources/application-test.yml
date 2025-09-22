@@ -324,6 +324,16 @@ hmpps.sqs:
         dlqName: "visitbalance-dlq-${random.uuid}"
         dlqMaxReceiveCount: 2
         visibilityTimeout: 120
+    movements:
+      queueName: "movements-${random.uuid}"
+      dlqName: "movements-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "external-movements-api.temporary-absence-application.created"
+        ]}
+      dlqMaxReceiveCount: 3
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

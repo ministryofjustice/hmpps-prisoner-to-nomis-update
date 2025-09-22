@@ -49,7 +49,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       temporaryAbsenceSubType = "RDR",
     )
 
-    fun createTemporaryAbsenceApplicationResponse() = CreateTemporaryAbsenceApplicationResponse(12435, 56789)
+    fun createTemporaryAbsenceApplicationResponse() = CreateTemporaryAbsenceApplicationResponse(12345, 56789)
 
     fun createTemporaryAbsenceOutsideMovementRequest() = CreateTemporaryAbsenceOutsideMovementRequest(
       movementApplicationId = 56789,
