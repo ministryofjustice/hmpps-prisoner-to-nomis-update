@@ -50,7 +50,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var caseNotesMappingApi: CaseNotesMappingApiMockServer
 
-  @DisplayName("PUT /casenotes/reports/reconciliation")
+  @DisplayName("Reconciliation batch job")
   @Nested
   inner class GenerateReconciliationReport {
     @BeforeEach
@@ -60,7 +60,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report success telemetry`() {
+    fun `will output report success telemetry`() = runTest {
       nomisApi.stubGetAllPrisonersInitialCount(8, 1)
       nomisApi.stubGetAllPrisonersPage1()
       nomisApi.stubGetAllPrisonersPage2()
@@ -81,9 +81,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0007BB", "[]")
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0008BB", "[]")
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
-        .exchange()
-        .expectStatus().isAccepted
+      caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
 
       awaitReportFinished()
 
@@ -111,9 +109,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       nomisApi.stubGetAllPrisonersInitialCount(1, 1)
       doThrow(RuntimeException("test")).whenever(caseNotesReconciliationService).generateReconciliationReport(1, false)
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
-        .exchange()
-        .expectStatus().isAccepted
+      caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
 
       awaitReportFinished()
 
@@ -141,9 +137,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       nomisApi.stubGetAllPrisonersPage1()
       doThrow(RuntimeException("test")).whenever(caseNotesReconciliationService).checkMatch(any())
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=false")
-        .exchange()
-        .expectStatus().isAccepted
+      caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
 
       awaitReportFinished()
 
@@ -166,7 +160,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `active only`() {
+    fun `active only`() = runTest {
       nomisApi.stubGetActivePrisonersInitialCount(8)
       nomisApi.stubGetActivePrisonersPage(8, 0, 5, 5)
       nomisApi.stubGetActivePrisonersPage(8, 1, 3, 5)
@@ -187,9 +181,7 @@ class CaseNotesResourceIntTest : IntegrationTestBase() {
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0007TZ", "[]")
       caseNotesDpsApi.stubGetCaseNotesForPrisoner("A0008TZ", "[]")
 
-      webTestClient.put().uri("/casenotes/reports/reconciliation?activeOnly=true")
-        .exchange()
-        .expectStatus().isAccepted
+      caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
 
       awaitReportFinished()
 

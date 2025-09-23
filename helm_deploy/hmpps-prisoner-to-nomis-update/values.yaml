@@ -44,10 +44,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /casenotes/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /csip/reports/reconciliation {
           deny all;
           return 401;
@@ -57,10 +53,6 @@ generic-service:
           return 401;
         }
         location /contact-person/prisoner-contact/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /contact-person/person-contact/reports/reconciliation {
           deny all;
           return 401;
         }

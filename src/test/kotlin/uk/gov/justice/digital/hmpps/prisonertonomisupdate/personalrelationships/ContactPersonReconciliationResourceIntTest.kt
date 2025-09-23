@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -30,9 +31,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.util.Collections.singletonList
 
-class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var nomisApi: ContactPersonNomisApiMockServer
+class ContactPersonReconciliationResourceIntTest(
+  @Autowired private val reconciliationService: ContactPersonReconciliationService,
+  @Autowired private val nomisApi: ContactPersonNomisApiMockServer,
+) : IntegrationTestBase() {
 
   private val dpsApi = ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
   private val nomisPrisonerApi = NomisApiExtension.Companion.nomisApi
@@ -167,7 +169,7 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     }
   }
 
-  @DisplayName("PUT /contact-person/person-contact/reports/reconciliation")
+  @DisplayName("Person contact reconciliation batch job")
   @Nested
   inner class GeneratePersonContactReconciliationReport {
     @BeforeEach
@@ -210,10 +212,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      reconciliationService.generatePersonContactReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
         eq("contact-person-reconciliation-requested"),
@@ -225,10 +225,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output mismatch report`() {
-      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output mismatch report`() = runTest {
+      reconciliationService.generatePersonContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -243,10 +241,8 @@ class ContactPersonReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output totals mismatch telemetry`() {
-      webTestClient.put().uri("/contact-person/person-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output totals mismatch telemetry`() = runTest {
+      reconciliationService.generatePersonContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
