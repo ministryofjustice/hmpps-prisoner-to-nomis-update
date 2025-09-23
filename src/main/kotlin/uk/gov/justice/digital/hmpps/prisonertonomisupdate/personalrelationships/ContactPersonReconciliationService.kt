@@ -40,6 +40,32 @@ class ContactPersonReconciliationService(
     const val TELEMETRY_PRISONER_PREFIX = "contact-person-prisoner-contact-reconciliation"
     const val TELEMETRY_PERSON_PREFIX = "contact-person-reconciliation"
   }
+  suspend fun generatePrisonerContactReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generatePrisonerContactReconciliationReport() }
+      .onSuccess {
+        log.info("Prisoner contacts reconciliation report completed with ${it.mismatches.size} mismatches")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-report",
+          mapOf(
+            "prisoners-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) + it.mismatches.asPrisonerMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-report", mapOf("success" to "false"))
+        log.error("Prisoner contacts reconciliation report failed", it)
+      }
+  }
+
+  private fun List<MismatchPrisonerContacts>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "dpsCount=${it.dpsContactCount},nomisCount=${it.nomisContactCount}" }
 
   suspend fun generatePrisonerContactReconciliationReport(): ReconciliationResult<MismatchPrisonerContacts> = generateReconciliationReport(
     threadCount = prisonerContactPageSize,

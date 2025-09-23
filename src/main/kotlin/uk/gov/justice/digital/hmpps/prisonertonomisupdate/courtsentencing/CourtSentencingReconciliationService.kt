@@ -36,6 +36,33 @@ class CourtSentencingReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_COURT_CASE_PRISONER_PREFIX = "court-case-prisoner-reconciliation"
   }
+  suspend fun generateCourtCasePrisonerReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generatePrisonerCourtCasesReconciliationReport() }
+      .onSuccess {
+        log.info("Prisoner court cases reconciliation report completed with ${it.mismatches.size} mismatches")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-report",
+          mapOf(
+            "prisoners-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) +
+            it.mismatches.take(5).asPrisonerMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_COURT_CASE_PRISONER_PREFIX-report", mapOf("success" to "false", "error" to (it.message ?: "unknown")))
+        log.error("Prisoner court case reconciliation report failed", it)
+      }
+  }
+
+  private fun List<MismatchPrisonerCasesResponse>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "cases=${it.mismatches.size}" }
 
   suspend fun generatePrisonerCourtCasesReconciliationReport(): ReconciliationResult<MismatchPrisonerCasesResponse> = generateReconciliationReport(
     threadCount = prisonerPageSize,
