@@ -151,3 +151,6 @@ generic-prometheus-alerts:
     visitbalance:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_visitbalance_dlq"
+    externalmovements:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_dlq"

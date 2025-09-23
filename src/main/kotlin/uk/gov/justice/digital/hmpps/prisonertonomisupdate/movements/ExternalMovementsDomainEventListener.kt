@@ -29,7 +29,7 @@ class ExternalMovementsDomainEventListener(
   }
 
   @Suppress("LoggingSimilarMessage")
-  @SqsListener("movements", factory = "hmppsQueueContainerFactoryProxy")
+  @SqsListener("externalmovements", factory = "hmppsQueueContainerFactoryProxy")
   fun onMessage(
     rawMessage: String,
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
