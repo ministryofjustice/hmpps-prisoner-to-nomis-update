@@ -29,6 +29,32 @@ class PrisonerRestrictionsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_PRISONER_PREFIX = "contact-person-prisoner-restriction-reconciliation"
   }
+  suspend fun generatePrisonerRestrictionsReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generatePrisonerRestrictionsReconciliationReport() }
+      .onSuccess {
+        log.info("Prisoner restrictions reconciliation report completed with ${it.mismatches.size} mismatches")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_PRISONER_PREFIX-report",
+          mapOf(
+            "restrictions-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) + it.mismatches.asMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-report", mapOf("success" to "false"))
+        log.error("Prisoner contacts reconciliation report failed", it)
+      }
+  }
+
+  private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this.sortedBy { it.restrictionId }.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }
 
   suspend fun generatePrisonerRestrictionsReconciliationReport(): ReconciliationResult<MismatchPrisonerRestriction> {
     checkTotalsMatch()

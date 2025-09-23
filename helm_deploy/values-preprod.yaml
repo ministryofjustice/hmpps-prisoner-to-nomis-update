@@ -63,6 +63,22 @@ generic-service:
     - name: activity-mappings
       type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
       schedule: "15 7 * * 1-5"
+    # All of the batchjobs below exist only for testing the work with the new cronjob template in preprod. Once OK these need moving to values-prod.yaml with schedule matching the current Cronjob.
+    - name: crt-case-prsner-recon
+      type: COURT_CASE_PRISONER_RECON
+      schedule: "10 3 * * *"
+    - name: csip-recon
+      type: CSIP_RECON
+      schedule: "5 1 * * *"
+    - name: incentives-recon
+      type: INCENTIVES_RECON
+      schedule: "10 4 * * *"
+    - name: prisner-contact-recon
+      type: PRISONER_CONTACT_RECON
+      schedule: "40 0 * * *"
+    - name: priner-restrict-recon
+      type: PRISONER_RESTRICTION_RECON
+      schedule: "0 5 * * *"
 
 
 generic-prometheus-alerts:

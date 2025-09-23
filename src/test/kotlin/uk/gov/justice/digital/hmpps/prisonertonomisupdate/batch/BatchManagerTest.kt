@@ -25,12 +25,21 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTEND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_PRISONER_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCENTIVES_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsReconciliationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
@@ -44,7 +53,11 @@ class BatchManagerTest {
   private val caseNotesReconciliationService = mock<CaseNotesReconciliationService>()
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val contactPersonReconService = mock<ContactPersonReconciliationService>()
+  private val courtSentencingReconciliationService = mock<CourtSentencingReconciliationService>()
+  private val csipReconciliationService = mock<CSIPReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
+  private val incentivesReconciliationService = mock<IncentivesReconciliationService>()
+  private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
@@ -136,6 +149,26 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the prisoner court cases reconciliation service`() = runTest {
+    val batchManager = batchManager(COURT_CASE_PRISONER_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(courtSentencingReconciliationService).generateCourtCasePrisonerReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the csip reconciliation service`() = runTest {
+    val batchManager = batchManager(CSIP_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(csipReconciliationService).generateCSIPReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the delete unknown activity mappings service`() = runTest {
     val batchManager = batchManager(DELETE_UNKNOWN_ACTIVITY_MAPPINGS)
 
@@ -146,12 +179,42 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the incentives reconciliation service`() = runTest {
+    val batchManager = batchManager(INCENTIVES_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(incentivesReconciliationService).generateIncentiveReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the person contact reconciliation service`() = runTest {
     val batchManager = batchManager(PERSON_CONTACT_RECON)
 
     batchManager.onApplicationEvent(event)
 
     verify(contactPersonReconService).generatePersonContactReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the prisoner contact reconciliation service`() = runTest {
+    val batchManager = batchManager(PRISONER_CONTACT_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(contactPersonReconService).generatePrisonerContactReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the prisoner restrictions reconciliation service`() = runTest {
+    val batchManager = batchManager(PRISONER_RESTRICTION_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonerRestrictionsReconciliationService).generatePrisonerRestrictionsReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -188,7 +251,11 @@ class BatchManagerTest {
     caseNotesReconciliationService,
     contactPersonProfileDetailsReconService,
     contactPersonReconService,
+    courtSentencingReconciliationService,
+    csipReconciliationService,
     hmppsQueueService,
+    incentivesReconciliationService,
+    prisonerRestrictionsReconciliationService,
     schedulesService,
   )
 }
