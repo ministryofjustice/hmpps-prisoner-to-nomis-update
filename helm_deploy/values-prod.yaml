@@ -95,9 +95,18 @@ generic-service:
     - name: attendances-recon
       type: ATTENDANCE_RECON
       schedule: "5 1 * * *"
+    - name: casenote-active-recon
+      type: CASE_NOTES_ACTIVE_RECON
+      schedule: "30 19 * * SUN,MON,TUE,WED,THU"
+    - name: casenote-full-recon
+      type: CASE_NOTES_FULL_RECON
+      schedule: "30 19 * * FRI"
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"
+    - name: person-contact-recon
+      type: PERSON_CONTACT_RECON
+      schedule: "50 1 * * 6"
     - name: suspended-alloc-recon
       type: SUSPENDED_ALLOCATION_RECON
       schedule: "35 7 * * *"
