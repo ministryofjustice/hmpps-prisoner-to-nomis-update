@@ -36,6 +36,7 @@ class ExternalMovementsDomainEventListener(
     log.info("Received message: {}", eventType)
     when (eventType) {
       "external-movements-api.temporary-absence-application.created" -> externalMovementsService.applicationCreated(message.fromJson())
+      "external-movements-api.temporary-absence-outside-movement.created" -> externalMovementsService.outsideMovementCreated(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
@@ -50,6 +51,19 @@ data class TemporaryAbsenceApplicationEvent(
 )
 
 data class ApplicationAdditionalInformation(
+  val applicationId: UUID,
+  val source: String,
+)
+
+data class TemporaryAbsenceOutsideMovementEvent(
+  val description: String?,
+  val eventType: String,
+  val personReference: PersonReference,
+  val additionalInformation: OutsideMovementAdditionalInformation,
+)
+
+data class OutsideMovementAdditionalInformation(
+  val outsideMovementId: UUID,
   val applicationId: UUID,
   val source: String,
 )

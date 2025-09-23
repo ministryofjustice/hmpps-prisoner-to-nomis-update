@@ -68,7 +68,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(prisonerNumber = prisonerNumber, dpsApplicationId = dpsId))),
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(prisonerNumber = prisonerNumber, dpsMovementApplicationId = dpsId))),
       ),
     )
   }
@@ -258,21 +258,21 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 }
 
 fun temporaryAbsenceApplicationMapping(
-  nomisApplicationId: Long = 1L,
-  dpsApplicationId: UUID = UUID.randomUUID(),
+  nomisMovementApplicationId: Long = 1L,
+  dpsMovementApplicationId: UUID = UUID.randomUUID(),
   prisonerNumber: String = "A1234BC",
 ) = TemporaryAbsenceApplicationSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
-  nomisMovementApplicationId = nomisApplicationId,
-  dpsMovementApplicationId = dpsApplicationId,
+  nomisMovementApplicationId = nomisMovementApplicationId,
+  dpsMovementApplicationId = dpsMovementApplicationId,
   mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.MIGRATED,
 )
 
-fun temporaryAbsenceOutsideMovementMapping(nomisApplicationMultiId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = TemporaryAbsenceOutsideMovementSyncMappingDto(
+fun temporaryAbsenceOutsideMovementMapping(nomisMovementApplicationMultiId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = TemporaryAbsenceOutsideMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
-  nomisMovementApplicationMultiId = nomisApplicationMultiId,
+  nomisMovementApplicationMultiId = nomisMovementApplicationMultiId,
   dpsOutsideMovementId = dpsId,
   mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.MIGRATED,
 )
