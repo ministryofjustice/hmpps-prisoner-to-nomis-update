@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-22.166.2797934"
+    "version" : "2025-09-22.173.b141a2b"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2124,7 +2124,7 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Creates a prisoner account balance mapping",
         "description" : "Creates a prisoner account balance mapping. Requires ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "createMapping_6",
+        "operationId" : "createPrisonerMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2176,7 +2176,93 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Deletes all prisoner balance mappings",
         "description" : "Deletes all prisoner balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "deleteAllMappings_2",
+        "operationId" : "deleteAllPrisonerMappings",
+        "responses" : {
+          "204" : {
+            "description" : "All mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prison-balance" : {
+      "post" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Creates a prison account balance mapping",
+        "description" : "Creates a prison account balance mapping. Requires ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "createPrisonMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonBalanceMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Deletes all prison balance mappings",
+        "description" : "Deletes all prison balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "deleteAllPrisonMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -2210,7 +2296,7 @@
         "tags" : [ "non-associations-mapping-resource" ],
         "summary" : "Creates a new Non-association mapping",
         "description" : "Creates a mapping between a Nomis non-association and non-association instance id. Requires role NOMIS_NON_ASSOCIATIONS",
-        "operationId" : "createMapping_7",
+        "operationId" : "createMapping_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2293,7 +2379,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "Creates a new Location mapping",
         "description" : "Creates a mapping between a Nomis location id and a DPS location id. Requires role NOMIS_LOCATIONS",
-        "operationId" : "createMapping_8",
+        "operationId" : "createMapping_7",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2376,7 +2462,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "Creates a new Incident Report mapping",
         "description" : "Creates a mapping between a Nomis incident report id and DPS Incident report id. Requires role NOMIS_INCIDENTS",
-        "operationId" : "createMapping_9",
+        "operationId" : "createMapping_8",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2459,7 +2545,7 @@
         "tags" : [ "incentive-mapping-resource" ],
         "summary" : "Creates a new incentive mapping",
         "description" : "Creates a mapping between nomis Incentive ids and Incentive service id. Requires ROLE_NOMIS_INCENTIVES",
-        "operationId" : "createMapping_10",
+        "operationId" : "createMapping_9",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2552,7 +2638,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "Creates a new hearing mapping",
         "description" : "Creates a record of a DPS hearing Id and a NOMIS hearing Id . Requires NOMIS_ADJUDICATIONS",
-        "operationId" : "createMapping_11",
+        "operationId" : "createMapping_10",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2932,7 +3018,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Deletes CSIP mappings.",
         "description" : "Deletes all rows from the csip mapping table. Requires role NOMIS_CSIP",
-        "operationId" : "deleteAllMappings_3",
+        "operationId" : "deleteAllMappings_2",
         "parameters" : [ {
           "name" : "onlyMigrated",
           "in" : "query",
@@ -2973,7 +3059,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Creates a new CSIP Report mapping",
         "description" : "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_CSIP",
-        "operationId" : "createMapping_12",
+        "operationId" : "createMapping_11",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3376,7 +3462,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Creates a new court case hierarchical mapping",
         "description" : "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId" : "createMapping_13",
+        "operationId" : "createMapping_12",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5034,7 +5120,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a new casenote mapping",
         "description" : "Creates a mapping between nomis casenote id and dps casenote id. Requires ROLE_NOMIS_CASENOTES",
-        "operationId" : "createMapping_14",
+        "operationId" : "createMapping_13",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5119,7 +5205,7 @@
         "tags" : [ "appointment-mapping-resource" ],
         "summary" : "Creates a new appointment mapping",
         "description" : "Creates a mapping between nomis id and Appointment instance id. Requires NOMIS_APPOINTMENTS",
-        "operationId" : "createMapping_15",
+        "operationId" : "createMapping_14",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5173,7 +5259,7 @@
         "tags" : [ "allocation-migration-resource" ],
         "summary" : "Creates a new allocation migration mapping",
         "description" : "Creates a mapping between nomis allocation id and Actvities allocation id. Requires NOMIS_ACTIVITIES",
-        "operationId" : "createMapping_16",
+        "operationId" : "createMapping_15",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5320,7 +5406,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a new alert mapping",
         "description" : "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "createMapping_17",
+        "operationId" : "createMapping_16",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5372,7 +5458,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes all alert mappings",
         "description" : "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_ALERTS",
-        "operationId" : "deleteAllMappings_4",
+        "operationId" : "deleteAllMappings_3",
         "responses" : {
           "204" : {
             "description" : "Mappings deleted",
@@ -5515,7 +5601,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "Creates a new adjudication mapping",
         "description" : "Creates a record of a adjudication number. Requires NOMIS_ADJUDICATIONS",
-        "operationId" : "createMapping_18",
+        "operationId" : "createMapping_17",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5559,7 +5645,7 @@
         "tags" : [ "activity-migration-resource" ],
         "summary" : "Creates a new activity migration mapping",
         "description" : "Creates a mapping between nomis id and up to 2 Activity service ids. Requires NOMIS_ACTIVITIES",
-        "operationId" : "createMapping_19",
+        "operationId" : "createMapping_18",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7892,7 +7978,7 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get prisoner balance mapping by Nomis rootOffenderId",
         "description" : "Retrieves the prisoner balance mapping by Nomis rootOffenderId. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "getMappingByNomisId_4",
+        "operationId" : "getPrisonerMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisRootOffenderId",
           "in" : "path",
@@ -7955,7 +8041,7 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get paged Prisoner balance mappings by migration id",
         "description" : "Retrieve all Prisoner balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "getMappingByMigrationId_1",
+        "operationId" : "getPrisonerMappingByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -8014,7 +8100,7 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get prisoner balance mapping by DPS id",
         "description" : "Retrieves the prisoner balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "getMappingByDpsId_2",
+        "operationId" : "getPrisonerMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -8074,7 +8160,7 @@
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Deletes a Prisoner balance mapping",
         "description" : "Deletes a Prisoner balance mapping by DPS id. Requires role NOMIS_MAPPINGS_SYNCHRONISATION_RW",
-        "operationId" : "deleteMappingByDpsId_3",
+        "operationId" : "deletePrisonerMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -8086,6 +8172,233 @@
             "example" : "A1234BC"
           },
           "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping Deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prison-balance/nomis-id/{nomisId}" : {
+      "get" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Get prison balance mapping by Nomis ID (Prison ID)",
+        "description" : "Retrieves the prison balance mapping by Nomis ID. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "getPrisonMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS id",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prison balance mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonBalanceMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prison-balance/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Get paged Prison balance mappings by migration id",
+        "description" : "Retrieve all Prison balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "getPrisonMappingByMigrationId",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prison balance mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelPrisonBalanceMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/prison-balance/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Get prison balance mapping by DPS id",
+        "description" : "Retrieves the prison balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "getPrisonMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prison balance mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonBalanceMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "prison-balance-mapping-resource" ],
+        "summary" : "Deletes a Prison balance mapping",
+        "description" : "Deletes a Prison balance mapping by DPS id. Requires role NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "operationId" : "deletePrisonMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
         } ],
         "responses" : {
           "204" : {
@@ -8566,7 +8879,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisIncidentId. Requires role NOMIS_INCIDENTS",
-        "operationId" : "getMappingByNomisId_5",
+        "operationId" : "getMappingByNomisId_4",
         "parameters" : [ {
           "name" : "nomisIncidentId",
           "in" : "path",
@@ -9217,7 +9530,7 @@
         "tags" : [ "csip-review-mapping-resource" ],
         "summary" : "get CSIP Review mapping",
         "description" : "Retrieves a CSIP Review mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_6",
+        "operationId" : "getMappingByNomisId_5",
         "parameters" : [ {
           "name" : "nomisCSIPReviewId",
           "in" : "path",
@@ -9366,7 +9679,7 @@
         "tags" : [ "csip-plan-mapping-resource" ],
         "summary" : "get CSIP Plan mapping",
         "description" : "Retrieves a CSIP Plan mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_7",
+        "operationId" : "getMappingByNomisId_6",
         "parameters" : [ {
           "name" : "nomisCSIPPlanId",
           "in" : "path",
@@ -9515,7 +9828,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisCSIPId. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_8",
+        "operationId" : "getMappingByNomisId_7",
         "parameters" : [ {
           "name" : "nomisCSIPId",
           "in" : "path",
@@ -9699,7 +10012,7 @@
         "tags" : [ "csip-interview-mapping-resource" ],
         "summary" : "get CSIP Interview mapping",
         "description" : "Retrieves a CSIP Interview mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_9",
+        "operationId" : "getMappingByNomisId_8",
         "parameters" : [ {
           "name" : "nomisCSIPInterviewId",
           "in" : "path",
@@ -9848,7 +10161,7 @@
         "tags" : [ "csip-factor-mapping-resource" ],
         "summary" : "get CSIP Factor mapping",
         "description" : "Retrieves a CSIP Factor mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_10",
+        "operationId" : "getMappingByNomisId_9",
         "parameters" : [ {
           "name" : "nomisCSIPFactorId",
           "in" : "path",
@@ -10101,7 +10414,7 @@
         "tags" : [ "csip-attendee-mapping-resource" ],
         "summary" : "get CSIP Attendee mapping",
         "description" : "Retrieves a CSIP Attendee mapping by NOMIS id. Requires role NOMIS_CSIP",
-        "operationId" : "getMappingByNomisId_11",
+        "operationId" : "getMappingByNomisId_10",
         "parameters" : [ {
           "name" : "nomisCSIPAttendeeId",
           "in" : "path",
@@ -10892,7 +11205,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId" : "getMappingByNomisId_12",
+        "operationId" : "getMappingByNomisId_11",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -10945,7 +11258,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId" : "getMappingByDpsId_3",
+        "operationId" : "getMappingByDpsId_2",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -15250,7 +15563,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_CASENOTES",
-        "operationId" : "getMappingByNomisId_13",
+        "operationId" : "getMappingByNomisId_12",
         "parameters" : [ {
           "name" : "caseNoteId",
           "in" : "path",
@@ -15956,7 +16269,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId" : "getMappingByDpsId_4",
+        "operationId" : "getMappingByDpsId_3",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -16006,7 +16319,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by DPS id. Requires role NOMIS_ALERTS",
-        "operationId" : "deleteMappingByDpsId_4",
+        "operationId" : "deleteMappingByDpsId_3",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -17333,7 +17646,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Deletes court case mapping",
         "description" : "Deletes a court case mapping by DPS id. Requires role NOMIS_COURT_SENTENCING",
-        "operationId" : "deleteMappingByDpsId_5",
+        "operationId" : "deleteMappingByDpsId_4",
         "parameters" : [ {
           "name" : "dpsCourtCaseId",
           "in" : "path",
@@ -17472,7 +17785,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "delete all mappings",
         "description" : "Deletes all mappings, typically used before repeating a migration. Requires ROLE_NOMIS_COURT_SENTENCING",
-        "operationId" : "deleteAllMappings_5",
+        "operationId" : "deleteAllMappings_4",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -17552,7 +17865,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Deletes all corporate mappings",
         "description" : "Deletes all corporate mappings regardless of source. This includes corporate, phone, address, address phone, email, web. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "deleteAllMappings_6",
+        "operationId" : "deleteAllMappings_5",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -17586,7 +17899,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Deletes all core person mappings",
         "description" : "Deletes all core person mappings regardless of source. This includes person and address. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CORE_PERSON",
-        "operationId" : "deleteAllMappings_7",
+        "operationId" : "deleteAllMappings_6",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -17620,7 +17933,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Deletes all contact person mappings",
         "description" : "Deletes all contact person mappings regardless of source. This includes person, phone, address, email, employment, identifiers, restrictions, contacts and contact restrictions. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_CONTACTPERSONS",
-        "operationId" : "deleteAllMappings_8",
+        "operationId" : "deleteAllMappings_7",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -19338,6 +19651,40 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisRootOffenderId" ]
+      },
+      "PrisonBalanceMappingDto" : {
+        "type" : "object",
+        "description" : "Prison Balance mapping",
+        "properties" : {
+          "nomisId" : {
+            "type" : "string",
+            "description" : "NOMIS Prison ID",
+            "example" : "MDI"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS representation of the Prison",
+            "example" : "MDI"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)",
+            "maxLength" : 20,
+            "minLength" : 0
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
       "NonAssociationMappingDto" : {
         "type" : "object",
@@ -21193,6 +21540,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21209,12 +21562,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21317,6 +21664,20 @@
           }
         }
       },
+      "PagedModelPrisonBalanceMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonBalanceMappingDto"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
       "CourtSentencingMigrationSummary" : {
         "type" : "object",
         "description" : "Record of Offender Court case migration",
@@ -21354,6 +21715,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21370,12 +21737,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21479,6 +21840,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21495,12 +21862,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21589,6 +21950,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21605,12 +21972,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21695,6 +22056,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21711,12 +22078,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21741,6 +22102,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21757,12 +22124,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21787,6 +22148,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21803,12 +22170,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21861,6 +22222,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21877,12 +22244,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21929,6 +22290,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21945,12 +22312,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
