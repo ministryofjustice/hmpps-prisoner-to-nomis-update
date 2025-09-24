@@ -77,10 +77,6 @@ generic-service:
       type: NON_ASSOCIATIONS_RECON
       schedule: "* * 31 2 *"
       suspend: true
-    - name: non-assoc-recon
-      type: NON_ASSOCIATIONS_RECON
-      schedule: "* * 31 2 *"
-      suspend: true
     - name: organisations-recon
       type: ORGANISATIONS_RECON
       schedule: "* * 31 2 *"
