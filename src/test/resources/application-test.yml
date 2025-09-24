@@ -332,7 +332,8 @@ hmpps.sqs:
         { "eventType":[
           "external-movements-api.temporary-absence-application.created",
           "external-movements-api.temporary-absence-outside-movement.created",
-          "external-movements-api.temporary-absence-scheduled-movement-out.created"
+          "external-movements-api.temporary-absence-scheduled-movement-out.created",
+          "external-movements-api.temporary-absence-scheduled-movement-in.created"
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
