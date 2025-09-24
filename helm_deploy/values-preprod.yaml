@@ -63,6 +63,36 @@ generic-service:
     - name: activity-mappings
       type: DELETE_UNKNOWN_ACTIVITY_MAPPINGS
       schedule: "15 7 * * 1-5"
+    # All of the batchjobs below exist only for testing the work with the new cronjob template in preprod. Once OK these need moving to values-prod.yaml with schedule matching the current Cronjob.
+    # Note the cronjobs are all suspended so we can test by manually triggering each
+    - name: incidents-recon
+      type: INCIDENTS_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: locations-recon
+      type: LOCATIONS_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: non-assoc-recon
+      type: NON_ASSOCIATIONS_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: non-assoc-recon
+      type: NON_ASSOCIATIONS_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: organisations-recon
+      type: ORGANISATIONS_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: sentencing-recon
+      type: SENTENCING_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
+    - name: visit-balance-recon
+      type: VISIT_BALANCE_RECON
+      schedule: "* * 31 2 *"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true

@@ -27,6 +27,34 @@ class OrganisationsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun generateOrganisationsReconciliationReport() {
+    val counts = getOrganisationsCounts()
+
+    telemetryClient.trackEvent("organisations-reports-reconciliation-requested", mapOf("organisations" to counts.nomisCount.toString()))
+
+    if (counts.nomisCount != counts.dpsCount) {
+      telemetryClient.trackEvent(
+        "organisations-reports-reconciliation-mismatch",
+        mapOf(
+          "dpsCount" to "${counts.dpsCount}",
+          "nomisCount" to "${counts.nomisCount}",
+        ),
+      )
+    }
+
+    runCatching { generateReconciliationReport(counts.nomisCount) }
+      .onSuccess {
+        log.info("Organisations reconciliation report completed with ${it.size} mismatches")
+        telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asTelemetry())
+      }
+      .onFailure {
+        telemetryClient.trackEvent("organisations-reports-reconciliation-report", mapOf("success" to "false"))
+        log.error("Organisations reconciliation report failed", it)
+      }
+  }
+
+  private fun List<MismatchOrganisation>.asTelemetry(): Pair<String, String> = "organisationIds" to (this.map { it.organisationId }.toString())
+
   suspend fun getOrganisationsCounts(): OrganisationCounts = OrganisationCounts(
     dpsCount = dpsApiService.getOrganisationIds(0, 1).page?.totalElements!!,
     nomisCount = nomisApiService.getCorporateOrganisationIds(0, 1).totalElements,

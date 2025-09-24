@@ -24,12 +24,30 @@ class SentencingReconciliationService(
   private val adjustmentsApiService: SentencingAdjustmentsApiService,
   @Value("\${reports.sentencing.reconciliation.page-size}")
   private val pageSize: Long = 20,
+  @Value("\${reports.sentencing.reconciliation.all-prisoners:false}")
+  private val allPrisoners: Boolean,
+
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     val taggedBailAdjustmentTypes = listOf("S240A", "RST")
     val remandAdjustmentTypes = listOf("RSR", "RX")
   }
+  suspend fun generateSentencingReconciliationReport() {
+    telemetryClient.trackEvent("sentencing-reports-reconciliation-requested", mapOf())
+
+    runCatching { generateReconciliationReport(allPrisoners) }
+      .onSuccess {
+        log.info("Sentencing Adjustments reconciliation report completed with ${it.size} mismatches")
+        telemetryClient.trackEvent("sentencing-reports-reconciliation-report", mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap())
+      }
+      .onFailure {
+        telemetryClient.trackEvent("sentencing-reports-reconciliation-report", mapOf("success" to "false"))
+        log.error("Sentencing Adjustments reconciliation report failed", it)
+      }
+  }
+
+  private fun List<MismatchSentencingAdjustments>.asMap(): Map<String, String> = this.associate { it.prisonerId.offenderNo to ("${it.nomisCounts.total()}:${it.dpsCounts.total()}") }
 
   suspend fun generateReconciliationReport(allPrisoners: Boolean): List<MismatchSentencingAdjustments> {
     val mismatches: MutableList<MismatchSentencingAdjustments> = mutableListOf()
