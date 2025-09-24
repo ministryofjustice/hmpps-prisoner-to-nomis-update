@@ -28,10 +28,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /incentives/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /non-associations/reports/reconciliation {
           deny all;
           return 401;
@@ -44,15 +40,7 @@ generic-service:
           deny all;
           return 401;
         }
-        location /csip/reports/reconciliation {
-          deny all;
-          return 401;
-        }
         location /organisations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /contact-person/prisoner-contact/reports/reconciliation {
           deny all;
           return 401;
         }
@@ -65,10 +53,6 @@ generic-service:
           return 401;
         }
         location /visit-balance/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /court-sentencing/court-cases/prisoner/reports/reconciliation {
           deny all;
           return 401;
         }
@@ -217,7 +201,6 @@ generic-prometheus-alerts:
   sqsAlertsTotalMessagesThreshold: "0"
 
 cron:
-  contactPersonRestrictionsReportSchedule: "10 4 * * *"
   visitBalanceReportSchedule: "45 4 * * *"
   report_incidents:
     suspend: false

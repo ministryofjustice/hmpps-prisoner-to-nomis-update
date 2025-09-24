@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -35,17 +36,16 @@ private const val DPS_CASE_2_ID = "21111111-1111-1111-1111-111111111111"
 private const val NOMIS_CASE_ID = 1L
 private const val NOMIS_CASE_2_ID = 2L
 
-class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var nomisApi: CourtSentencingNomisApiMockServer
-
-  @Autowired
-  private lateinit var courtSentencingMappingApi: CourtSentencingMappingApiMockServer
+class CourtSentencingReconciliationResourceIntTest(
+  @Autowired private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
+  @Autowired private val nomisApi: CourtSentencingNomisApiMockServer,
+  @Autowired private val courtSentencingMappingApi: CourtSentencingMappingApiMockServer,
+) : IntegrationTestBase() {
 
   private val dpsApi = CourtSentencingApiExtension.courtSentencingApi
   private val nomisPrisonerApi = NomisApiExtension.Companion.nomisApi
 
-  @DisplayName("PUT /court-sentencing/court-cases/prisoner/reports/reconciliation")
+  @DisplayName("Court cases prisoner reconciliation report")
   @Nested
   inner class GenerateCourtCasePrisonerReconciliationReport {
     @BeforeEach
@@ -74,10 +74,8 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/court-sentencing/court-cases/prisoner/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
         eq("court-case-prisoner-reconciliation-requested"),
@@ -89,10 +87,8 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output mismatch report`() {
-      webTestClient.put().uri("/court-sentencing/court-cases/prisoner/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output mismatch report`() = runTest {
+      courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -105,10 +101,8 @@ class CourtSentencingReconciliationResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output a mismatch when there is a difference in the  DPS record`() {
-      webTestClient.put().uri("/court-sentencing/court-cases/prisoner/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a difference in the  DPS record`() = runTest {
+      courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(

@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -24,16 +25,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import java.time.LocalDate
 
-class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var mappingApi: ContactPersonMappingApiMockServer
-
-  @Autowired
-  private lateinit var nomisApi: ContactPersonNomisApiMockServer
+class PrisonerRestrictionsReconciliationResourceIntTest(
+  @Autowired private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
+  @Autowired private val mappingApi: ContactPersonMappingApiMockServer,
+  @Autowired private val nomisApi: ContactPersonNomisApiMockServer,
+) : IntegrationTestBase() {
 
   private val dpsApi = ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
 
-  @DisplayName("PUT /contact-person/prisoner-restriction/reports/reconciliation")
+  @DisplayName("Prisoner restrictions reconciliation report")
   @Nested
   inner class GeneratePrisonerRestrictionsReconciliationReport {
     @BeforeEach
@@ -98,11 +98,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     )
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-restriction-reconciliation-requested"),
@@ -114,11 +111,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     }
 
     @Test
-    fun `will output mismatch report`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output mismatch report`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -134,11 +128,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     }
 
     @Test
-    fun `will output a mismatch when there is a missing mapping record`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a missing mapping record`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -155,11 +146,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     }
 
     @Test
-    fun `will output a mismatch when there is a missing DPS record`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a missing DPS record`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -177,11 +165,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     }
 
     @Test
-    fun `will output a mismatch of totals`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch of totals`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -197,11 +182,8 @@ class PrisonerRestrictionsReconciliationResourceIntTest : IntegrationTestBase() 
     }
 
     @Test
-    fun `will output a mismatch when there is a difference`() {
-      webTestClient.post().uri("/contact-person/prisoner-restriction/reports/reconciliation")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_UPDATE__RECONCILIATION__R")))
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a difference`() = runTest {
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
