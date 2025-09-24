@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Sc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -131,10 +132,10 @@ class ExternalMovementsService(
     }
   }
 
-  suspend fun scheduledMovementOutCreated(event: TemporaryAbsenceScheduledMovementEvent) {
+  suspend fun scheduledMovementOutCreated(event: TemporaryAbsenceScheduledMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsMovementApplicationId = event.additionalInformation.applicationId
-    val dpsScheduledMovementId = event.additionalInformation.scheduledMovementId
+    val dpsScheduledMovementId = event.additionalInformation.scheduledMovementOutId
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
       "dpsMovementApplicationId" to dpsMovementApplicationId.toString(),
@@ -168,6 +169,59 @@ class ExternalMovementsService(
             bookingId = bookingId,
             nomisEventId = nomis.eventId,
             dpsScheduledMovementId = dpsScheduledMovementId,
+            mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
+          )
+        }
+        saveMapping { mappingApiService.createScheduledMovementMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("${SCHEDULED_MOVEMENT.entityName}-create-ignored", telemetryMap)
+    }
+  }
+
+  suspend fun scheduledMovementInCreated(event: TemporaryAbsenceScheduledMovementInEvent) {
+    val prisonerNumber = event.personReference.prisonerNumber()
+    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsScheduledMovementOutId = event.additionalInformation.scheduledMovementOutId
+    val dpsScheduledMovementInId = event.additionalInformation.scheduledMovementInId
+    val telemetryMap = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "dpsMovementApplicationId" to dpsMovementApplicationId.toString(),
+      "dpsScheduledMovementOutId" to dpsScheduledMovementOutId.toString(),
+      "dpsScheduledMovementInId" to dpsScheduledMovementInId.toString(),
+      "direction" to "IN",
+    )
+
+    if (event.additionalInformation.source == "DPS") {
+      synchronise {
+        name = SCHEDULED_MOVEMENT.entityName
+        telemetryClient = this@ExternalMovementsService.telemetryClient
+        retryQueueService = this@ExternalMovementsService.retryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getScheduledMovementMapping(dpsScheduledMovementInId)
+        }
+
+        transform {
+          val nomisApplicationId = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
+            ?.nomisMovementApplicationId
+            ?.also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
+            ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
+          val nomisScheduledMovementOutId = mappingApiService.getScheduledMovementMapping(dpsScheduledMovementOutId)
+            ?.nomisEventId
+            ?.also { telemetryMap["nomisScheduledMovementOutId"] = it.toString() }
+            ?: throw ParentEntityNotFoundRetry("Cannot find scheduled movement mapping for $dpsScheduledMovementOutId")
+// TODO         val dps = dpsApiService.getTapOut(dpsId)
+          val dps = ScheduledMovementIn.createData(dpsMovementApplicationId, dpsScheduledMovementOutId)
+          val nomis = nomisApiService.createScheduledTemporaryAbsenceReturn(prisonerNumber, dps.toNomisCreateRequest(nomisApplicationId, nomisScheduledMovementOutId))
+          val bookingId = nomis.bookingId
+            .also { telemetryMap["bookingId"] = it.toString() }
+          ScheduledMovementSyncMappingDto(
+            prisonerNumber = prisonerNumber,
+            bookingId = bookingId,
+            nomisEventId = nomis.eventId,
+            dpsScheduledMovementId = dpsScheduledMovementInId,
             mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
           )
         }
@@ -387,5 +441,49 @@ data class ScheduledMovementOut(
     toAgency = toAgencyId,
     toAddressId = toAddressId,
     transportType = transportType,
+  )
+}
+
+// TODO drop this class and replace with DPS API model when the DPS API is available
+data class ScheduledMovementIn(
+  val id: UUID,
+  val applicationId: UUID,
+  val scheduledMovementOutId: UUID,
+  val eventSubType: String,
+  val eventStatus: String,
+  val escortCode: String,
+  val toPrison: String,
+  val eventDate: LocalDate,
+  val startTime: LocalDateTime,
+  val comment: String? = null,
+  val fromAgencyId: String? = null,
+) {
+  companion object {
+    fun createData(applicationId: UUID, scheduledMovementOutId: UUID) = ScheduledMovementIn(
+      id = UUID.randomUUID(),
+      applicationId = applicationId,
+      scheduledMovementOutId = scheduledMovementOutId,
+      eventSubType = "C5",
+      eventStatus = "SCH",
+      escortCode = "U",
+      toPrison = "LEI",
+      eventDate = LocalDate.now(),
+      startTime = LocalDateTime.now(),
+      comment = "Scheduled temporary absence comment",
+      fromAgencyId = "HAZLWD",
+    )
+  }
+
+  fun toNomisCreateRequest(nomisApplicationId: Long, nomisScheduledMovementOutId: Long) = CreateScheduledTemporaryAbsenceReturnRequest(
+    movementApplicationId = nomisApplicationId,
+    scheduledTemporaryAbsenceEventId = nomisScheduledMovementOutId,
+    eventSubType = eventSubType,
+    eventStatus = eventStatus,
+    escort = escortCode,
+    toPrison = toPrison,
+    eventDate = eventDate,
+    startTime = startTime,
+    comment = comment,
+    fromAgency = fromAgencyId,
   )
 }

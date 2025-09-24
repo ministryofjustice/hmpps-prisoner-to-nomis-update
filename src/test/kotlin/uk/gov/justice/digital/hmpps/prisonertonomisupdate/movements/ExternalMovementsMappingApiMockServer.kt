@@ -62,13 +62,13 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/application")
 
-  fun stubGetTemporaryAbsenceApplicationMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+  fun stubGetTemporaryAbsenceApplicationMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisMovementApplicationId: Long = 1L) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/temporary-absence/application/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(prisonerNumber = prisonerNumber, dpsMovementApplicationId = dpsId))),
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(nomisMovementApplicationId, dpsId, prisonerNumber))),
       ),
     )
   }
@@ -175,12 +175,12 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement")
 
-  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisEventId: Long = 1) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+          .withBody(objectMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId))),
       ),
     )
   }

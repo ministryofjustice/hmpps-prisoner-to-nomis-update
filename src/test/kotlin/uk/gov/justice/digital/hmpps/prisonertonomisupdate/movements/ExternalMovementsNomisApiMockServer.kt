@@ -87,9 +87,9 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
 
     fun createScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = CreateScheduledTemporaryAbsenceResponse(12345, 56789, eventId)
 
-    fun createScheduledTemporaryAbsenceReturnRequest() = CreateScheduledTemporaryAbsenceReturnRequest(
+    fun createScheduledTemporaryAbsenceReturnRequest(scheduledTemporaryAbsenceEventId: Long = 131415) = CreateScheduledTemporaryAbsenceReturnRequest(
       movementApplicationId = 56789,
-      scheduledTemporaryAbsenceEventId = 131415,
+      scheduledTemporaryAbsenceEventId = scheduledTemporaryAbsenceEventId,
       eventSubType = "C5",
       eventStatus = "SCH",
       eventDate = today.toLocalDate(),
@@ -100,7 +100,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       toPrison = "LEI",
     )
 
-    fun createScheduledTemporaryAbsenceReturnResponse() = CreateScheduledTemporaryAbsenceReturnResponse(12345, 56789, 161718)
+    fun createScheduledTemporaryAbsenceReturnResponse(eventId: Long = 161718) = CreateScheduledTemporaryAbsenceReturnResponse(12345, 56789, eventId)
 
     fun createTemporaryAbsenceRequest() = CreateTemporaryAbsenceRequest(
       movementDate = today.toLocalDate(),
