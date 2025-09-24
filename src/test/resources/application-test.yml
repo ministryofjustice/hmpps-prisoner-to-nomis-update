@@ -331,9 +331,10 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
           "external-movements-api.temporary-absence-application.created",
-          "external-movements-api.temporary-absence-outside-movement.created"
+          "external-movements-api.temporary-absence-outside-movement.created",
+          "external-movements-api.temporary-absence-scheduled-movement-out.created"
         ]}
-      dlqMaxReceiveCount: 3
+      dlqMaxReceiveCount: 1
       visibilityTimeout: 120
   topics:
     domainevents:

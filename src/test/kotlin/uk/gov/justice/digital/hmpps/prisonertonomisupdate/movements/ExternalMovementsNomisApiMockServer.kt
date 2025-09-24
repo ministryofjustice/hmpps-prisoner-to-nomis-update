@@ -85,7 +85,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       toAddressId = 3456,
     )
 
-    fun createScheduledTemporaryAbsenceResponse() = CreateScheduledTemporaryAbsenceResponse(12345, 56789, 131415)
+    fun createScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = CreateScheduledTemporaryAbsenceResponse(12345, 56789, eventId)
 
     fun createScheduledTemporaryAbsenceReturnRequest() = CreateScheduledTemporaryAbsenceReturnRequest(
       movementApplicationId = 56789,
