@@ -32,6 +32,34 @@ class IncidentsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun incidentsReconciliation() {
+    nomisIncidentsApiService.getAgenciesWithIncidents()
+      .also { agencyIds ->
+        telemetryClient.trackEvent(
+          "incidents-reports-reconciliation-requested",
+          mapOf("prisonCount" to agencyIds.size),
+        )
+
+        runCatching { generateReconciliationReport(agencyIds) }
+          .onSuccess {
+            log.info("Incidents reconciliation report completed with ${it.size} mismatches")
+            telemetryClient.trackEvent(
+              "incidents-reports-reconciliation-report",
+              mapOf("mismatch-count" to it.size.toString(), "success" to "true") + it.asMap(),
+            )
+          }
+          .onFailure {
+            telemetryClient.trackEvent("incidents-reports-reconciliation-report", mapOf("success" to "false"))
+            log.error("Incidents reconciliation report failed", it)
+          }
+      }
+  }
+
+  private fun List<MismatchIncidents>.asMap(): Map<String, String> = this.associate {
+    it.agencyId to
+      ("open-dps=${it.dpsOpenIncidents}:open-nomis=${it.nomisOpenIncidents}; closed-dps=${it.dpsClosedIncidents}:closed-nomis=${it.nomisClosedIncidents}")
+  }
+
   suspend fun generateReconciliationReport(agencies: List<IncidentAgencyId>): List<MismatchIncidents> = agencies.chunked(pageSize.toInt()).flatMap { pagedAgencies ->
     withContext(Dispatchers.Unconfined) {
       pagedAgencies.map { async { checkIncidentsMatch(it.agencyId) } }

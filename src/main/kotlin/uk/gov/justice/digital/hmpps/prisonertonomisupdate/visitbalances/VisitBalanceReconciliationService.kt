@@ -30,6 +30,28 @@ class VisitBalanceReconciliationService(
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+  suspend fun generateReconciliationReport() {
+    val activePrisonersCount = nomisApiService.getActivePrisoners(0, 1).totalElements
+
+    telemetryClient.trackEvent(
+      "visitbalance-reports-reconciliation-requested",
+      mapOf("active-prisoners" to activePrisonersCount.toString()),
+    )
+    log.info("Visit Balance reconciliation report requested for $activePrisonersCount active prisoners")
+
+    runCatching { generateReconciliationReport(activePrisonersCount) }
+      .onSuccess {
+        log.info("Visit balance reconciliation report completed with ${it.size} mismatches")
+        telemetryClient.trackEvent(
+          "visitbalance-reports-reconciliation-report",
+          mapOf("mismatch-count" to it.size.toString(), "success" to "true"),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("visitbalance-reports-reconciliation-report", mapOf("success" to "false"))
+        log.error("Visit balance reconciliation report failed", it)
+      }
+  }
 
   suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchVisitBalance> = activePrisonersCount.asPages(pageSize).flatMap { page ->
     val activePrisoners = getActivePrisonersForPage(page)

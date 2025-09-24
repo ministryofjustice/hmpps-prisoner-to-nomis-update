@@ -30,6 +30,27 @@ class NonAssociationsReconciliationService(
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+  suspend fun generateReconciliationReport() {
+    val nonAssociationsCount = nomisApiService.getNonAssociations(0, 1).totalElements
+
+    telemetryClient.trackEvent("non-associations-reports-reconciliation-requested", mapOf("non-associations-nomis-total" to nonAssociationsCount.toString()))
+    log.info("Non-associations reconciliation report requested for $nonAssociationsCount non-associations")
+
+    runCatching { generateReconciliationReport(nonAssociationsCount) }
+      .onSuccess { listOfLists ->
+        val fullResults = listOfLists.flatten()
+        log.info("Non-associations reconciliation report completed with ${fullResults.size} mismatches")
+        val results = fullResults.take(10) // Only log the first 10 to avoid an insights error with too much data
+        val map = mapOf("mismatch-count" to fullResults.size.toString()) +
+          results.associate { "${it.id}" to "nomis=${it.nomisNonAssociation}, dps=${it.dpsNonAssociation}" }
+        telemetryClient.trackEvent("non-associations-reports-reconciliation-success", map)
+        log.info("Non-associations reconciliation report logged")
+      }
+      .onFailure {
+        telemetryClient.trackEvent("non-associations-reports-reconciliation-failed")
+        log.error("Non-associations reconciliation report failed", it)
+      }
+  }
 
   suspend fun generateReconciliationReport(nonAssociationsCount: Long): List<List<MismatchNonAssociation>> {
     val allNomisIds = mutableSetOf<NonAssociationIdResponse>()

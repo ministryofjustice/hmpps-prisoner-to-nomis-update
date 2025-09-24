@@ -38,6 +38,26 @@ class LocationsReconciliationService(
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+  suspend fun generateReconciliationReport() {
+    val locationsCount = nomisApiService.getLocations(0, 1).totalElements
+
+    telemetryClient.trackEvent("locations-reports-reconciliation-requested", mapOf("locations-nomis-total" to locationsCount.toString()))
+    log.info("Locations reconciliation report requested for $locationsCount locations")
+
+    runCatching { generateReconciliationReport(locationsCount) }
+      .onSuccess { fullResults ->
+        log.info("Locations reconciliation report completed with ${fullResults.size} mismatches")
+        val results = fullResults.take(10) // Only log the first 10 to avoid an insights error with too much data
+        val map = mapOf("mismatch-count" to fullResults.size.toString()) +
+          results.associate { "${it.nomisId},${it.dpsId}" to "nomis=${it.nomisLocation}, dps=${it.dpsLocation}" }
+        telemetryClient.trackEvent("locations-reports-reconciliation-success", map)
+        log.info("Locations reconciliation report logged")
+      }
+      .onFailure {
+        telemetryClient.trackEvent("locations-reports-reconciliation-failed")
+        log.error("Locations reconciliation report failed", it)
+      }
+  }
 
   suspend fun generateReconciliationReport(locationsCount: Long): List<MismatchLocation> {
     val allDpsIdsInNomis = mutableSetOf<String>()
