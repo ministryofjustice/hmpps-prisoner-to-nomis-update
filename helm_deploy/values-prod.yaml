@@ -104,9 +104,25 @@ generic-service:
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"
+    - name: crt-case-prsner-recon
+      type: COURT_CASE_PRISONER_RECON
+      schedule: "10 3 * * *"
+      suspend: true
+    - name: csip-recon
+      type: CSIP_RECON
+      schedule: "5 0 * * *"
+    - name: incentives-recon
+      type: INCENTIVES_RECON
+      schedule: "10 4 * * 1"
     - name: person-contact-recon
       type: PERSON_CONTACT_RECON
       schedule: "50 1 * * 6"
+    - name: prisner-contact-recon
+      type: PRISONER_CONTACT_RECON
+      schedule: "50 3 * * *"
+    - name: priner-restrict-recon
+      type: PRISONER_RESTRICTION_RECON
+      schedule: "10 4 * * *"
     - name: suspended-alloc-recon
       type: SUSPENDED_ALLOCATION_RECON
       schedule: "35 7 * * *"

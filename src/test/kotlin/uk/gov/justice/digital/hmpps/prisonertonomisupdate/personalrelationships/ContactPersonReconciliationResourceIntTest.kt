@@ -39,7 +39,7 @@ class ContactPersonReconciliationResourceIntTest(
   private val dpsApi = ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
   private val nomisPrisonerApi = NomisApiExtension.Companion.nomisApi
 
-  @DisplayName("PUT /contact-person/prisoner-contact/reports/reconciliation")
+  @DisplayName("Prisoner contact reconciliation report")
   @Nested
   inner class GeneratePrisonerContactReconciliationReport {
     @BeforeEach
@@ -63,10 +63,8 @@ class ContactPersonReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
 
       verify(telemetryClient).trackEvent(
         eq("contact-person-prisoner-contact-reconciliation-requested"),
@@ -78,10 +76,8 @@ class ContactPersonReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output mismatch report`() {
-      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output mismatch report`() = runTest {
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -94,10 +90,8 @@ class ContactPersonReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output a mismatch when there is a missing DPS record`() {
-      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a missing DPS record`() = runTest {
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -117,10 +111,8 @@ class ContactPersonReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output a mismatch when there are different people`() {
-      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there are different people`() = runTest {
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -140,10 +132,8 @@ class ContactPersonReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output a mismatch when there are different restrictions for a contact`() {
-      webTestClient.put().uri("/contact-person/prisoner-contact/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there are different restrictions for a contact`() = runTest {
+      reconciliationService.generatePrisonerContactReconciliationReportBatch()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(

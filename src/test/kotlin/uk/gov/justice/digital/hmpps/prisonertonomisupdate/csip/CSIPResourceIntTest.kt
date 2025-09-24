@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -30,15 +32,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-class CSIPResourceIntTest : IntegrationTestBase() {
+class CSIPResourceIntTest(
+  @Autowired private val csipReconciliationService: CSIPReconciliationService,
+  @Autowired private val csipNomisApi: CSIPNomisApiMockServer,
+) : IntegrationTestBase() {
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
 
-  @Autowired
-  private lateinit var csipNomisApi: CSIPNomisApiMockServer
-
-  @DisplayName("PUT /csip/reports/reconciliation")
+  @DisplayName("CSIP reconciliation report")
   @Nested
   inner class GenerateCSIPReconciliationReport {
     @BeforeEach
@@ -116,10 +118,8 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      csipReconciliationService.generateCSIPReconciliationReport()
 
       verify(telemetryClient).trackEvent(
         eq("csip-reports-reconciliation-requested"),
@@ -131,10 +131,8 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should execute batches of prisoners`() = runTest {
+      csipReconciliationService.generateCSIPReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -150,10 +148,8 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      csipReconciliationService.generateCSIPReconciliationReport()
 
       awaitReportFinished()
 
@@ -208,12 +204,10 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       csipDpsApi.stubGetCSIPsForPrisoner("A0002TZ", HttpStatus.INTERNAL_SERVER_ERROR)
 
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      csipReconciliationService.generateCSIPReconciliationReport()
 
       awaitReportFinished()
 
@@ -235,22 +229,19 @@ class CSIPResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
+    fun `when initial prison count fails the whole report fails`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
+      assertThrows<RuntimeException> {
+        csipReconciliationService.generateCSIPReconciliationReport()
+      }
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
-      webTestClient.put().uri("/csip/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
-
+      csipReconciliationService.generateCSIPReconciliationReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
