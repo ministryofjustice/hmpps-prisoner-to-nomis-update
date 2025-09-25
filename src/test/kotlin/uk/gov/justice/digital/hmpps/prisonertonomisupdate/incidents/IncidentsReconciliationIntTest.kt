@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -21,11 +22,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import java.time.LocalDateTime
 import kotlin.jvm.java
 
-class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
-  @Autowired
-  private lateinit var incidentsNomisApi: IncidentsNomisApiMockServer
+class IncidentsReconciliationIntTest(
+  @Autowired private val incidentsReconciliationService: IncidentsReconciliationService,
+  @Autowired private val incidentsNomisApi: IncidentsNomisApiMockServer,
+) : SqsIntegrationTestBase() {
 
-  @DisplayName("PUT /incidents/reports/reconciliation")
+  @DisplayName("Incidents reconciliation report")
   @Nested
   inner class GenerateIncidentsReconciliationReport {
 
@@ -54,10 +56,8 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will successfully finish report with no errors`() {
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+      fun `will successfully finish report with no errors`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
 
         verify(telemetryClient).trackEvent(
           eq("incidents-reports-reconciliation-requested"),
@@ -77,10 +77,8 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will output report requested telemetry`() {
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+      fun `will output report requested telemetry`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
         awaitReportFinished()
         verify(telemetryClient).trackEvent(
           eq("incidents-reports-reconciliation-requested"),
@@ -90,10 +88,8 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call incidents api for open and closed counts for each agency`() {
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+      fun `will call incidents api for open and closed counts for each agency`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
         await untilAsserted {
@@ -102,10 +98,8 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will call incidents api for each open incident details - 3 per agency`() {
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+      fun `will call incidents api for each open incident details - 3 per agency`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
 
         waitForAnyProcessingToComplete("incidents-reports-reconciliation-report")
         await untilAsserted {
@@ -114,12 +108,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not invoke mismatch telemetry`() {
+      fun `will not invoke mismatch telemetry`() = runTest {
         incidentsDpsApi.stubGetIncidentsWithError(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -156,12 +148,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show mismatch counts in report`() {
+      fun `will show mismatch counts in report`() = runTest {
         incidentsDpsApi.stubGetIncidentCounts()
         incidentsDpsApi.stubGetASIClosedIncidentCounts()
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -211,12 +201,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will complete a report even if some of the checks fail`() {
+      fun `will complete a report even if some of the checks fail`() = runTest {
         incidentsDpsApi.stubGetIncidentsWithError(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -241,10 +229,8 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show mismatch counts in report`() {
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+      fun `will show mismatch counts in report`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -268,12 +254,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show mismatch differences in report`() {
+      fun `will show mismatch differences in report`() = runTest {
         incidentsNomisApi.stubGetIncident(33, offenderParty = "Z4321YX", status = "INREQ", type = "ABSCOND", reportedDateTime = LocalDateTime.parse("2021-07-08T10:35:18"))
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -315,12 +299,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show mismatch reportedDateTime in report`() {
+      fun `will show mismatch reportedDateTime in report`() = runTest {
         incidentsNomisApi.stubGetIncident(33, reportedDateTime = LocalDateTime.parse("2021-07-08T10:35:18"))
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -362,12 +344,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show status mismatch differences in report`() {
+      fun `will show status mismatch differences in report`() = runTest {
         incidentsNomisApi.stubGetMismatchIncident()
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -409,12 +389,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show response mismatch differences in report`() {
+      fun `will show response mismatch differences in report`() = runTest {
         incidentsNomisApi.stubGetMismatchResponsesForIncident()
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -456,12 +434,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will show response mismatch reported date in report`() {
+      fun `will show response mismatch reported date in report`() = runTest {
         incidentsNomisApi.stubGetMismatchResponsesForIncident()
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 
@@ -503,12 +479,10 @@ class IncidentsReconciliationIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will complete a report even if some of the checks fail`() {
+      fun `will complete a report even if some of the checks fail`() = runTest {
         incidentsDpsApi.stubGetIncidentsWithError(HttpStatus.INTERNAL_SERVER_ERROR)
 
-        webTestClient.put().uri("/incidents/reports/reconciliation")
-          .exchange()
-          .expectStatus().isAccepted
+        incidentsReconciliationService.incidentsReconciliation()
 
         awaitReportFinished()
 

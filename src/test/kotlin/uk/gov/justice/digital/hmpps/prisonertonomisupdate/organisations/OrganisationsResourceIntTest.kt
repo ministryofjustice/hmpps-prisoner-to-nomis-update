@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations
 
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -20,13 +21,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
 
-class OrganisationsResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var nomisApi: OrganisationsNomisApiMockServer
+class OrganisationsResourceIntTest(
+  @Autowired private val organisationsReconciliationService: OrganisationsReconciliationService,
+  @Autowired private val nomisApi: OrganisationsNomisApiMockServer,
+) : IntegrationTestBase() {
 
   private val dpsApi = OrganisationsDpsApiExtension.Companion.dpsOrganisationsServer
 
-  @DisplayName("PUT /organisations/reports/reconciliation")
+  @DisplayName("Organisations reconciliation report")
   @Nested
   inner class GenerateOrganisationsReconciliationReport {
     @BeforeEach
@@ -56,10 +58,8 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/organisations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      organisationsReconciliationService.generateOrganisationsReconciliationReport()
 
       verify(telemetryClient).trackEvent(
         eq("organisations-reports-reconciliation-requested"),
@@ -71,10 +71,8 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output mismatch report`() {
-      webTestClient.put().uri("/organisations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output mismatch report`() = runTest {
+      organisationsReconciliationService.generateOrganisationsReconciliationReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(
@@ -88,10 +86,8 @@ class OrganisationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output a mismatch when there is a missing DPS record`() {
-      webTestClient.put().uri("/organisations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output a mismatch when there is a missing DPS record`() = runTest {
+      organisationsReconciliationService.generateOrganisationsReconciliationReport()
       awaitReportFinished()
 
       verify(telemetryClient).trackEvent(

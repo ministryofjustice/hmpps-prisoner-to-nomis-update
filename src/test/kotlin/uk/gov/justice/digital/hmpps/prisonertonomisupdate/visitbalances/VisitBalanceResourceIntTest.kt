@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -26,9 +28,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-class VisitBalanceResourceIntTest : IntegrationTestBase() {
-  @Autowired
-  private lateinit var visitBalanceNomisApi: VisitBalanceNomisApiMockServer
+class VisitBalanceResourceIntTest(
+  @Autowired private val visitBalanceReconciliationService: VisitBalanceReconciliationService,
+  @Autowired private val visitBalanceNomisApi: VisitBalanceNomisApiMockServer,
+) : IntegrationTestBase() {
 
   private val visitBalanceDpsApi = VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
 
@@ -67,10 +70,8 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       verify(telemetryClient).trackEvent(eq("visitbalance-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
 
@@ -78,10 +79,8 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should execute batches of prisoners`() = runTest {
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -97,10 +96,8 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -145,12 +142,10 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.INTERNAL_SERVER_ERROR)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -170,12 +165,10 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will complete a report even if a visit balance from Nomis does not exist`() {
+    fun `will complete a report even if a visit balance from Nomis does not exist`() = runTest {
       visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -195,12 +188,10 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will complete a report even if a visit balance from dps does not exist`() {
+    fun `will complete a report even if a visit balance from dps does not exist`() = runTest {
       visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -220,13 +211,11 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will complete a report even if a visit balance from both nomis and dps do not exist`() {
+    fun `will complete a report even if a visit balance from both nomis and dps do not exist`() = runTest {
       visitBalanceNomisApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
       visitBalanceDpsApi.stubGetVisitBalance("A0002TZ", HttpStatus.NOT_FOUND)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -246,21 +235,19 @@ class VisitBalanceResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
+    fun `when initial prison count fails the whole report fails`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
+      assertThrows<RuntimeException> {
+        visitBalanceReconciliationService.generateReconciliationReport()
+      }
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
       nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
 
-      webTestClient.put().uri("/visit-balance/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      visitBalanceReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 

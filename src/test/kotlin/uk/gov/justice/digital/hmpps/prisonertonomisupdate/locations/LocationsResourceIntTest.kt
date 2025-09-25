@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -18,12 +20,15 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
-class LocationsResourceIntTest : IntegrationTestBase() {
+class LocationsResourceIntTest(
+  @Autowired private val locationsReconciliationService: LocationsReconciliationService,
+) : IntegrationTestBase() {
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
@@ -150,7 +155,7 @@ class LocationsResourceIntTest : IntegrationTestBase() {
   }
   """.trimIndent()
 
-  @DisplayName("PUT /locations/reports/reconciliation")
+  @DisplayName("Locations reconciliation report")
   @Nested
   inner class GenerateLocationReconciliationReport {
     @BeforeEach
@@ -188,10 +193,8 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      locationsReconciliationService.generateReconciliationReport()
 
       verify(telemetryClient).trackEvent(
         eq("locations-reports-reconciliation-requested"),
@@ -205,12 +208,10 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
+    fun `should execute batches of prisoners`() = runTest {
       // given "reports.locations.reconciliation.page-size=10"
 
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      locationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -226,10 +227,8 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      locationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -339,13 +338,11 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       nomisApi.stubGetLocationWithError(2, 500)
       locationsApi.stubGetLocationWithError(generateUUID(20), false, 500)
 
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      locationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -375,22 +372,20 @@ class LocationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
+    fun `when initial prison count fails the whole report fails`() = runTest {
       nomisApi.stubGetLocationsPageWithError(0, 500)
 
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
+      assertThrows<RuntimeException> {
+        locationsReconciliationService.generateReconciliationReport()
+      }
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the Nomis and DPS checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the Nomis and DPS checks fail`() = runTest {
       nomisApi.stubGetLocationsPageWithError(2, 500)
       locationsApi.stubGetLocationsPageWithError(2, 10)
 
-      webTestClient.put().uri("/locations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      locationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 

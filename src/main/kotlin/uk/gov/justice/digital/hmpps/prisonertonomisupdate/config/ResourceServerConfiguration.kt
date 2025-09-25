@@ -11,13 +11,6 @@ class ResourceServerConfiguration {
     unauthorizedRequestPaths {
       addPaths = setOf(
         "/queue-admin/retry-all-dlqs",
-        "/incidents/reports/reconciliation",
-        "/locations/reports/reconciliation",
-        "/non-associations/reports/reconciliation",
-        "/organisations/reports/reconciliation",
-        "/sentencing/reports/reconciliation",
-        "/transactions/reports/reconciliation",
-        "/visit-balance/reports/reconciliation",
       )
     }
   }
