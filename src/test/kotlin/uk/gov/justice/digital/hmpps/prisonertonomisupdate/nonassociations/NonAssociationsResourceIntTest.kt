@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations
 
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -9,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -19,13 +21,16 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
+import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NonAssociationsApiExtension.Companion.nonAssociationsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-class NonAssociationsResourceIntTest : IntegrationTestBase() {
+class NonAssociationsResourceIntTest(
+  @Autowired private val nonAssociationsReconciliationService: NonAssociationsReconciliationService,
+) : IntegrationTestBase() {
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
@@ -150,7 +155,7 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
   }
   """.trimIndent()
 
-  @DisplayName("PUT /non-associations/reports/reconciliation")
+  @DisplayName("Non-associations reconciliation report")
   @Nested
   inner class GenerateNonAssociationReconciliationReport {
     @BeforeEach
@@ -209,10 +214,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      nonAssociationsReconciliationService.generateReconciliationReport()
 
       verify(telemetryClient).trackEvent(
         eq("non-associations-reports-reconciliation-requested"),
@@ -226,12 +229,10 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
+    fun `should execute batches of prisoners`() = runTest {
       // given "reports.non-associations.reconciliation.page-size=10"
 
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      nonAssociationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -247,10 +248,8 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      nonAssociationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -368,13 +367,11 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       nomisApi.stubGetNonAssociationsAllWithError("A0002TY", "B0002TZ", 500)
       nonAssociationsApiServer.stubGetNonAssociationsBetweenWithError("A0020TY", "B0020TZ", 500)
 
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      nonAssociationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 
@@ -404,22 +401,20 @@ class NonAssociationsResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() {
+    fun `when initial prison count fails the whole report fails`() = runTest {
       nomisApi.stubGetNonAssociationsPageWithError(0, 500)
 
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().is5xxServerError
+      assertThrows<RuntimeException> {
+        nonAssociationsReconciliationService.generateReconciliationReport()
+      }
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the Nomis and DPS checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the Nomis and DPS checks fail`() = runTest {
       nomisApi.stubGetNonAssociationsPageWithError(2, 500)
       nonAssociationsApiServer.stubGetNonAssociationsPageWithError(2, 10)
 
-      webTestClient.put().uri("/non-associations/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      nonAssociationsReconciliationService.generateReconciliationReport()
 
       awaitReportFinished()
 

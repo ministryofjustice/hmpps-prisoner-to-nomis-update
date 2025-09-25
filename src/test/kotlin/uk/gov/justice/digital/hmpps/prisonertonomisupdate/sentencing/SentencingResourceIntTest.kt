@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
@@ -19,6 +20,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
@@ -29,12 +31,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 
-class SentencingResourceIntTest : IntegrationTestBase() {
+class SentencingResourceIntTest(
+  @Autowired private val sentencingReconciliationService: SentencingReconciliationService,
+) : IntegrationTestBase() {
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
 
-  @DisplayName("PUT /sentencing/reports/reconciliation")
+  @DisplayName("Sentencing reconciliation report")
   @Nested
   inner class GenerateSentencingReconciliationReport {
     @BeforeEach
@@ -85,10 +89,8 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will output report requested telemetry`() {
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `will output report requested telemetry`() = runTest {
+      sentencingReconciliationService.generateSentencingReconciliationReport()
 
       verify(telemetryClient).trackEvent(eq("sentencing-reports-reconciliation-requested"), any(), isNull())
 
@@ -96,10 +98,8 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should execute batches of prisoners`() {
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should execute batches of prisoners`() = runTest {
+      sentencingReconciliationService.generateSentencingReconciliationReport()
 
       awaitReportFinished()
       nomisApi.verify(
@@ -112,10 +112,8 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `should emit a mismatched custom event for each mismatch along with a summary`() {
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+    fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+      sentencingReconciliationService.generateSentencingReconciliationReport()
 
       awaitReportFinished()
 
@@ -152,12 +150,10 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if some of the checks fail`() {
+    fun `will attempt to complete a report even if some of the checks fail`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentsGetWithError("A0001TZ", 500)
 
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      sentencingReconciliationService.generateSentencingReconciliationReport()
 
       awaitReportFinished()
 
@@ -178,15 +174,13 @@ class SentencingResourceIntTest : IntegrationTestBase() {
     }
 
     @Test
-    fun `will attempt to complete a report even if whole pages of the checks fail`() {
+    fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
       nomisApi.stuGetAllLatestBookings(
         bookingId = 10,
         errorStatus = HttpStatus.INTERNAL_SERVER_ERROR,
       )
 
-      webTestClient.put().uri("/sentencing/reports/reconciliation")
-        .exchange()
-        .expectStatus().isAccepted
+      sentencingReconciliationService.generateSentencingReconciliationReport()
 
       awaitReportFinished()
 

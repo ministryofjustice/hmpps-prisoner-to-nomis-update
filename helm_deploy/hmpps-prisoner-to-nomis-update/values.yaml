@@ -28,34 +28,6 @@ generic-service:
           deny all;
           return 401;
         }
-        location /non-associations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /locations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /sentencing/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /organisations/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /transactions/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /incidents/reports/reconciliation {
-          deny all;
-          return 401;
-        }
-        location /visit-balance/reports/reconciliation {
-          deny all;
-          return 401;
-        }
     host: app-hostname.local # override per environment
     tlsSecretName: prisoner-to-nomis-cert
 
@@ -202,6 +174,3 @@ generic-prometheus-alerts:
 
 cron:
   visitBalanceReportSchedule: "45 4 * * *"
-  report_incidents:
-    suspend: false
-

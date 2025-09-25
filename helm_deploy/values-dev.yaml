@@ -106,8 +106,3 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_dlq"
-
-cron:
-  visitBalanceReportSchedule: "0 18 * * 1-5"
-  report_incidents:
-    suspend: true
