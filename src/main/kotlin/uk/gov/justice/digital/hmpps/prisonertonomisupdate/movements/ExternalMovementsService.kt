@@ -7,8 +7,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.APPLICATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.EXTERNAL_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.OUTSIDE_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
@@ -16,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -36,6 +39,7 @@ class ExternalMovementsService(
       APPLICATION("temporary-absence-application"),
       OUTSIDE_MOVEMENT("temporary-absence-outside-movement"),
       SCHEDULED_MOVEMENT("temporary-absence-scheduled-movement"),
+      EXTERNAL_MOVEMENT("temporary-absence-external-movement"),
       ;
 
       companion object {
@@ -108,11 +112,9 @@ class ExternalMovementsService(
         }
 
         transform {
-          val nomisApplicationId = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
-            ?.nomisMovementApplicationId
-            ?.also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
-            ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
-// TODO         val dps = dpsApiService.getTapApplication(dpsId)
+          val nomisApplicationId = findParentApplicationIdOrThrow(dpsMovementApplicationId)
+            .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
+          // TODO         val dps = dpsApiService.getTapApplication(dpsId)
           val dps = OutsideMovement.createData(dpsMovementApplicationId)
           val nomis = nomisApiService.createTemporaryAbsenceOutsideMovement(prisonerNumber, dps.toNomisCreateRequest(nomisApplicationId))
           val bookingId = nomis.bookingId
@@ -131,6 +133,12 @@ class ExternalMovementsService(
       telemetryClient.trackEvent("${OUTSIDE_MOVEMENT.entityName}-create-ignored", telemetryMap)
     }
   }
+
+  private suspend fun findParentApplicationIdOrThrow(
+    dpsMovementApplicationId: UUID,
+  ): Long = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
+    ?.nomisMovementApplicationId
+    ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
 
   suspend fun scheduledMovementOutCreated(event: TemporaryAbsenceScheduledMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
@@ -155,10 +163,8 @@ class ExternalMovementsService(
         }
 
         transform {
-          val nomisApplicationId = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
-            ?.nomisMovementApplicationId
-            ?.also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
-            ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
+          val nomisApplicationId = findParentApplicationIdOrThrow(dpsMovementApplicationId)
+            .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
 // TODO         val dps = dpsApiService.getTapOut(dpsId)
           val dps = ScheduledMovementOut.createData(dpsMovementApplicationId)
           val nomis = nomisApiService.createScheduledTemporaryAbsence(prisonerNumber, dps.toNomisCreateRequest(nomisApplicationId))
@@ -204,15 +210,11 @@ class ExternalMovementsService(
         }
 
         transform {
-          val nomisApplicationId = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
-            ?.nomisMovementApplicationId
-            ?.also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
-            ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
-          val nomisScheduledMovementOutId = mappingApiService.getScheduledMovementMapping(dpsScheduledMovementOutId)
-            ?.nomisEventId
-            ?.also { telemetryMap["nomisScheduledMovementOutId"] = it.toString() }
-            ?: throw ParentEntityNotFoundRetry("Cannot find scheduled movement mapping for $dpsScheduledMovementOutId")
-// TODO         val dps = dpsApiService.getTapOut(dpsId)
+          val nomisApplicationId = findParentApplicationIdOrThrow(dpsMovementApplicationId)
+            .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
+          val nomisScheduledMovementOutId = findParentScheduleOrThrow(dpsScheduledMovementOutId)
+            .also { telemetryMap["nomisScheduledMovementOutId"] = it.toString() }
+          // TODO         val dps = dpsApiService.getTapOut(dpsId)
           val dps = ScheduledMovementIn.createData(dpsMovementApplicationId, dpsScheduledMovementOutId)
           val nomis = nomisApiService.createScheduledTemporaryAbsenceReturn(prisonerNumber, dps.toNomisCreateRequest(nomisApplicationId, nomisScheduledMovementOutId))
           val bookingId = nomis.bookingId
@@ -232,12 +234,73 @@ class ExternalMovementsService(
     }
   }
 
+  suspend fun externalMovementOutCreated(event: TemporaryAbsenceExternalMovementOutEvent) {
+    val prisonerNumber = event.personReference.prisonerNumber()
+    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsScheduledMovementOutId = event.additionalInformation.scheduledMovementOutId
+    val dpsExternalMovementId = event.additionalInformation.externalMovementOutId
+    val telemetryMap = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "dpsExternalMovementId" to dpsExternalMovementId.toString(),
+      "direction" to "OUT",
+    ).apply {
+      dpsMovementApplicationId?.also { this["dpsMovementApplicationId"] = it.toString() }
+      dpsScheduledMovementOutId?.also { this["dpsScheduledMovementOutId"] = it.toString() }
+    }
+
+    if (event.additionalInformation.source == "DPS") {
+      synchronise {
+        name = EXTERNAL_MOVEMENT.entityName
+        telemetryClient = this@ExternalMovementsService.telemetryClient
+        retryQueueService = this@ExternalMovementsService.retryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getExternalMovementMapping(dpsExternalMovementId)
+        }
+
+        transform {
+          dpsMovementApplicationId?.let {
+            findParentApplicationIdOrThrow(dpsMovementApplicationId)
+              .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
+          }
+          val nomisEventId = dpsScheduledMovementOutId?.let {
+            findParentScheduleOrThrow(dpsScheduledMovementOutId)
+              .also { telemetryMap["nomisEventId"] = it.toString() }
+          }
+// TODO         val dps = dpsApiService.getTapOut(dpsId)
+          val dps = ExternalMovementOut.createData(dpsMovementApplicationId, dpsScheduledMovementOutId)
+          val nomis = nomisApiService.createTemporaryAbsence(prisonerNumber, dps.toNomisCreateRequest(nomisEventId))
+          val bookingId = nomis.bookingId
+            .also { telemetryMap["bookingId"] = it.toString() }
+          ExternalMovementSyncMappingDto(
+            prisonerNumber = prisonerNumber,
+            bookingId = bookingId,
+            nomisMovementSeq = nomis.movementSequence,
+            dpsExternalMovementId = dpsExternalMovementId,
+            mappingType = ExternalMovementSyncMappingDto.MappingType.DPS_CREATED,
+          )
+        }
+        saveMapping { mappingApiService.createExternalMovementMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("${EXTERNAL_MOVEMENT.entityName}-create-ignored", telemetryMap)
+    }
+  }
+
+  private suspend fun findParentScheduleOrThrow(
+    dpsScheduledMovementOutId: UUID,
+  ): Long = mappingApiService.getScheduledMovementMapping(dpsScheduledMovementOutId)
+    ?.nomisEventId
+    ?: throw ParentEntityNotFoundRetry("Cannot find scheduled movement mapping for $dpsScheduledMovementOutId")
+
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
       APPLICATION -> createApplicationMapping(message.fromJson())
       OUTSIDE_MOVEMENT -> createOutsideMovementMapping(message.fromJson())
       SCHEDULED_MOVEMENT -> createScheduledMovementMapping(message.fromJson())
+      EXTERNAL_MOVEMENT -> createExternalMovementMapping(message.fromJson())
     }
   }
 
@@ -263,6 +326,15 @@ class ExternalMovementsService(
     mappingApiService.createScheduledMovementMapping(message.mapping).also {
       telemetryClient.trackEvent(
         "${SCHEDULED_MOVEMENT.entityName}-create-success",
+        message.telemetryAttributes,
+      )
+    }
+  }
+
+  suspend fun createExternalMovementMapping(message: CreateMappingRetryMessage<ExternalMovementSyncMappingDto>) {
+    mappingApiService.createExternalMovementMapping(message.mapping).also {
+      telemetryClient.trackEvent(
+        "${EXTERNAL_MOVEMENT.entityName}-create-success",
         message.telemetryAttributes,
       )
     }
@@ -485,5 +557,57 @@ data class ScheduledMovementIn(
     startTime = startTime,
     comment = comment,
     fromAgency = fromAgencyId,
+  )
+}
+
+// TODO drop this class and replace with DPS API model when the DPS API is available
+data class ExternalMovementOut(
+  val id: UUID,
+  val applicationId: UUID?,
+  val scheduledMovementOutId: UUID?,
+  val movementDate: LocalDate,
+  val movementTime: LocalDateTime,
+  val movementReason: String,
+  val arrestAgency: String?,
+  val escort: String?,
+  val escortText: String?,
+  val fromPrison: String?,
+  val toAgency: String?,
+  val commentText: String?,
+  val toCity: String?,
+  val toAddressId: Long?,
+) {
+  companion object {
+    fun createData(applicationId: UUID? = null, scheduledMovementOutId: UUID? = null) = ExternalMovementOut(
+      id = UUID.randomUUID(),
+      applicationId = applicationId,
+      scheduledMovementOutId = scheduledMovementOutId,
+      movementDate = LocalDate.now(),
+      movementTime = LocalDateTime.now(),
+      movementReason = "C5",
+      arrestAgency = "POL",
+      escort = "U",
+      escortText = "Temporary absence escort text",
+      fromPrison = "LEI",
+      toAgency = "HAZLWD",
+      commentText = "Temporary absence comment",
+      toCity = "765",
+      toAddressId = 76543L,
+    )
+  }
+
+  fun toNomisCreateRequest(nomisEventId: Long? = null) = CreateTemporaryAbsenceRequest(
+    scheduledTemporaryAbsenceId = nomisEventId,
+    movementDate = movementDate,
+    movementTime = movementTime,
+    movementReason = movementReason,
+    arrestAgency = arrestAgency,
+    escort = escort,
+    escortText = escortText,
+    fromPrison = fromPrison,
+    toAgency = toAgency,
+    commentText = commentText,
+    toCity = toCity,
+    toAddressId = toAddressId,
   )
 }
