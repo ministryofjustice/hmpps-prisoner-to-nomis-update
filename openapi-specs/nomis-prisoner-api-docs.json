@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-23.592.0b3a004"
+    "version" : "2025-09-26.612.01c565e"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17595,7 +17595,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerAccountsDto"
+                  "$ref" : "#/components/schemas/PrisonerBalanceDto"
                 }
               }
             }
@@ -26443,7 +26443,7 @@
             "description" : "Application time"
           }
         },
-        "required" : [ "applicationDate", "escort", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime" ]
+        "required" : [ "applicationDate", "escort", "eventDate", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime", "startTime" ]
       },
       "CreateScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
@@ -26516,7 +26516,7 @@
             "description" : "To prison"
           }
         },
-        "required" : [ "escort", "eventStatus", "eventSubType", "movementApplicationId", "scheduledTemporaryAbsenceEventId" ]
+        "required" : [ "escort", "eventDate", "eventStatus", "eventSubType", "movementApplicationId", "scheduledTemporaryAbsenceEventId", "startTime" ]
       },
       "CreateScheduledTemporaryAbsenceReturnResponse" : {
         "type" : "object",
@@ -30758,7 +30758,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "audit", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime" ]
+        "required" : [ "applicationDate", "audit", "eventDate", "eventId", "eventStatus", "eventSubType", "returnDate", "returnTime", "startTime" ]
       },
       "ScheduledTemporaryAbsenceReturn" : {
         "type" : "object",
@@ -30808,7 +30808,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "eventId", "eventStatus", "eventSubType" ]
+        "required" : [ "audit", "eventDate", "eventId", "eventStatus", "eventSubType", "startTime" ]
       },
       "TemporaryAbsence" : {
         "type" : "object",
@@ -31347,12 +31347,16 @@
             "format" : "date-time",
             "description" : "Application time"
           },
+          "contactPersonName" : {
+            "type" : "string",
+            "description" : "Contact person name"
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "audit", "bookingId", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "returnDate", "returnTime" ]
+        "required" : [ "applicationDate", "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "returnDate", "returnTime", "startTime" ]
       },
       "ScheduledTemporaryAbsenceReturnResponse" : {
         "type" : "object",
@@ -31412,7 +31416,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "eventId", "eventStatus", "eventSubType", "movementApplicationId" ]
+        "required" : [ "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "startTime" ]
       },
       "TemporaryAbsenceApplicationOutsideMovementResponse" : {
         "type" : "object",
@@ -32535,10 +32539,11 @@
             "description" : "The id of the last transaction associated with the balance",
             "example" : 123
           },
-          "subAccountType" : {
-            "type" : "string",
-            "description" : "The account type",
-            "enum" : [ "CASH", "SPEND", "SAVINGS" ]
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The account code for the balance entry",
+            "example" : 2101
           },
           "balance" : {
             "type" : "number",
@@ -32551,9 +32556,9 @@
             "example" : 12.5
           }
         },
-        "required" : [ "balance", "lastTransactionId", "prisonId", "subAccountType" ]
+        "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId" ]
       },
-      "PrisonerAccountsDto" : {
+      "PrisonerBalanceDto" : {
         "type" : "object",
         "description" : "Finance details for a prisoner",
         "properties" : {
