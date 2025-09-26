@@ -15,6 +15,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerRestriction
@@ -25,7 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import java.time.LocalDate
 
-class PrisonerRestrictionsReconciliationResourceIntTest(
+class PrisonerRestrictionsReconciliationIntTest(
   @Autowired private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   @Autowired private val mappingApi: ContactPersonMappingApiMockServer,
   @Autowired private val nomisApi: ContactPersonNomisApiMockServer,
@@ -123,6 +124,34 @@ class PrisonerRestrictionsReconciliationResourceIntTest(
           assertThat(it).containsEntry("restrictions-count", "4")
           assertThat(it).containsEntry("restrictionIds", "2, 3, 4")
         },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output mismatch report even if one requested keeps failing`() = runTest {
+      nomisApi.stubGetPrisonerRestrictionById(4, HttpStatus.SERVICE_UNAVAILABLE)
+      prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-restriction-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "2")
+          assertThat(it).containsEntry("pages-count", "1")
+          assertThat(it).containsEntry("restrictions-count", "4")
+          assertThat(it).containsEntry("restrictionIds", "2, 3")
+        },
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("contact-person-prisoner-restriction-reconciliation-mismatch-error"),
+        eq(
+          mapOf(
+            "nomisRestrictionId" to "4",
+          ),
+        ),
         isNull(),
       )
     }
