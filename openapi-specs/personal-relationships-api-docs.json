@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-15.2759.71817d2"
+    "version" : "2025-09-25.2850.8384f48"
   },
   "servers" : [ {
     "url" : "/",
@@ -57,6 +57,48 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/UpdateInternalOfficialDobResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/utility/approve-contacts" : {
+      "put" : {
+        "tags" : [ "Utility Controller" ],
+        "summary" : "Endpoint to trigger the approval of a specific set of contact relationships",
+        "operationId" : "approveContacts",
+        "parameters" : [ {
+          "name" : "createdBy",
+          "in" : "query",
+          "description" : "Provides usernames of people who created relationships (multiple values treated as a list)",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "XYZ"
+        }, {
+          "name" : "daysAgo",
+          "in" : "query",
+          "description" : "Provides how many days to look back from today",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 4
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RelationshipsApprovedResponse"
                 }
               }
             }
@@ -7814,6 +7856,15 @@
           },
           "example" : "30/12/2010"
         }, {
+          "name" : "soundsLike",
+          "in" : "query",
+          "description" : "If true, use sounds-like search (trigram similarity)",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          },
+          "example" : false
+        }, {
           "name" : "includeAnyExistingRelationshipsToPrisoner",
           "in" : "query",
           "description" : "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
@@ -7909,6 +7960,38 @@
           }
         },
         "required" : [ "contactsUpdated" ]
+      },
+      "RelationshipsApproved" : {
+        "type" : "object",
+        "properties" : {
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "approvedToVisit" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "approvedToVisit", "contactId", "prisonerContactId", "prisonerNumber" ]
+      },
+      "RelationshipsApprovedResponse" : {
+        "type" : "object",
+        "properties" : {
+          "relationships" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RelationshipsApproved"
+            }
+          }
+        },
+        "required" : [ "relationships" ]
       },
       "SyncUpdatePrisonerNumberOfChildrenRequest" : {
         "type" : "object",
