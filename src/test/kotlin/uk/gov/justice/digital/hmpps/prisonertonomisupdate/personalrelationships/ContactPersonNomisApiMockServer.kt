@@ -767,6 +767,17 @@ class ContactPersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubGetPrisonerRestrictionById(restrictionId: Long, status: HttpStatus) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/prisoners/restrictions/$restrictionId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString("{}")),
+      ),
+    )
+  }
+
   fun stubCreatePrisonerRestriction(
     offenderNo: String = "A1234KT",
     response: CreatePrisonerRestrictionResponse = createPrisonerRestrictionResponse(),

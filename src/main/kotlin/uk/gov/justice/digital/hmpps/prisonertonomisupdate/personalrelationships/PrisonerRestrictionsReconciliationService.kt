@@ -109,7 +109,7 @@ class PrisonerRestrictionsReconciliationService(
   class NoMapping : DpsRestrictionResult
   data class NoRestriction(val restrictionId: String) : DpsRestrictionResult
 
-  suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? {
+  suspend fun checkPrisonerRestrictionsMatch(restrictionId: Long): MismatchPrisonerRestriction? = runCatching {
     val (nomisRestriction, dpsRestrictionResult: DpsRestrictionResult) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getPrisonerRestrictionById(restrictionId) } to
         async {
@@ -170,7 +170,14 @@ class PrisonerRestrictionsReconciliationService(
         }
       }
     }
-  }
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_PRISONER_PREFIX-mismatch-error",
+      mapOf(
+        "nomisRestrictionId" to "$restrictionId",
+      ),
+    )
+  }.getOrNull()
 }
 
 private fun PrisonerRestriction.asSummary() = PrisonerRestrictionSummary(
