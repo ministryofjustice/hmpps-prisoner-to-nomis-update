@@ -133,7 +133,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       fromAddressId = 76543,
     )
 
-    fun createTemporaryAbsenceReturnResponse() = CreateTemporaryAbsenceReturnResponse(12345, 3)
+    fun createTemporaryAbsenceReturnResponse(bookingId: Long = 12345, movementSequence: Int = 3) = CreateTemporaryAbsenceReturnResponse(bookingId, movementSequence)
   }
 
   fun stubCreateTemporaryAbsenceApplication(

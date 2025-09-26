@@ -40,6 +40,7 @@ class ExternalMovementsDomainEventListener(
       "external-movements-api.temporary-absence-scheduled-movement-out.created" -> externalMovementsService.scheduledMovementOutCreated(message.fromJson())
       "external-movements-api.temporary-absence-scheduled-movement-in.created" -> externalMovementsService.scheduledMovementInCreated(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-out.created" -> externalMovementsService.externalMovementOutCreated(message.fromJson())
+      "external-movements-api.temporary-absence-external-movement-in.created" -> externalMovementsService.externalMovementInCreated(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
@@ -108,6 +109,20 @@ data class TemporaryAbsenceExternalMovementOutEvent(
 data class ExternalMovementOutAdditionalInformation(
   val externalMovementOutId: UUID,
   val scheduledMovementOutId: UUID? = null,
+  val applicationId: UUID? = null,
+  val source: String,
+)
+
+data class TemporaryAbsenceExternalMovementInEvent(
+  val description: String?,
+  val eventType: String,
+  val personReference: PersonReference,
+  val additionalInformation: ExternalMovementInAdditionalInformation,
+)
+
+data class ExternalMovementInAdditionalInformation(
+  val externalMovementInId: UUID,
+  val scheduledMovementInId: UUID? = null,
   val applicationId: UUID? = null,
   val source: String,
 )
