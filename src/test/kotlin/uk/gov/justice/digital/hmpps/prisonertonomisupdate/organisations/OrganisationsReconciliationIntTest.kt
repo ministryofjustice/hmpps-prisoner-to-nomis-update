@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiMockServer.Companion.organisationDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.model.SyncOrganisationId
 
-class OrganisationsResourceIntTest(
+class OrganisationsReconciliationIntTest(
   @Autowired private val organisationsReconciliationService: OrganisationsReconciliationService,
   @Autowired private val nomisApi: OrganisationsNomisApiMockServer,
 ) : IntegrationTestBase() {
@@ -80,6 +80,32 @@ class OrganisationsResourceIntTest(
         check {
           assertThat(it).containsEntry("mismatch-count", "2")
           assertThat(it).containsEntry("organisationIds", "[2, 3]")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will finish report even if one request keeps failing`() = runTest {
+      dpsApi.stubGetOrganisation(3, HttpStatus.SERVICE_UNAVAILABLE)
+
+      organisationsReconciliationService.generateOrganisationsReconciliationReport()
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("organisations-reports-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("mismatch-count", "1")
+          assertThat(it).containsEntry("organisationIds", "[2]")
+        },
+        isNull(),
+      )
+
+      verify(telemetryClient).trackEvent(
+        eq("organisations-reports-reconciliation-mismatch-error"),
+        check {
+          assertThat(it).containsEntry("organisationId", "3")
         },
         isNull(),
       )

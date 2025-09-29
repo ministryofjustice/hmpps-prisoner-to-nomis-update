@@ -81,7 +81,7 @@ class OrganisationsReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("Page requested: $page, with ${it.size} organisations") }
 
-  suspend fun checkOrganisationMatch(corporateAndOrganisationId: Long): MismatchOrganisation? {
+  suspend fun checkOrganisationMatch(corporateAndOrganisationId: Long): MismatchOrganisation? = runCatching {
     val dpsOrganisation = dpsApiService.getOrganisation(corporateAndOrganisationId)?.toOrganisation()
     val nomisOrganisation = nomisApiService.getCorporateOrganisation(corporateAndOrganisationId).toOrganisation()
     if (nomisOrganisation != dpsOrganisation) {
@@ -97,7 +97,14 @@ class OrganisationsReconciliationService(
       }
     }
     return null
-  }
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "organisations-reports-reconciliation-mismatch-error",
+      mapOf(
+        "organisationId" to "$corporateAndOrganisationId",
+      ),
+    )
+  }.getOrNull()
 }
 
 private fun OrganisationDetails.toOrganisation() = Organisation(
