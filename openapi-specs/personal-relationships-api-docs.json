@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-25.2850.8384f48"
+    "version" : "2025-09-26.2876.3a1c582"
   },
   "servers" : [ {
     "url" : "/",
@@ -69,29 +69,16 @@
         "tags" : [ "Utility Controller" ],
         "summary" : "Endpoint to trigger the approval of a specific set of contact relationships",
         "operationId" : "approveContacts",
-        "parameters" : [ {
-          "name" : "createdBy",
-          "in" : "query",
-          "description" : "Provides usernames of people who created relationships (multiple values treated as a list)",
-          "required" : true,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ApproveRelationshipsRequest"
+              }
             }
           },
-          "example" : "XYZ"
-        }, {
-          "name" : "daysAgo",
-          "in" : "query",
-          "description" : "Provides how many days to look back from today",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "example" : 4
-        } ],
+          "required" : true
+        },
         "responses" : {
           "200" : {
             "description" : "OK",
@@ -7960,6 +7947,25 @@
           }
         },
         "required" : [ "contactsUpdated" ]
+      },
+      "ApproveRelationshipsRequest" : {
+        "type" : "object",
+        "description" : "Request containing the usernames who created relationships",
+        "properties" : {
+          "createdBy" : {
+            "type" : "array",
+            "description" : "A list of usernames identifying who created the relationships",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "daysAgo" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "How many days to look back from today"
+          }
+        },
+        "required" : [ "createdBy", "daysAgo" ]
       },
       "RelationshipsApproved" : {
         "type" : "object",
