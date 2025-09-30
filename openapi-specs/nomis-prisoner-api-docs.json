@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-26.612.01c565e"
+    "version" : "2025-09-26.618.c4575a4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12756,11 +12756,36 @@
         "description" : "Retrieves a list of rooms with usage count for the (filtered) visits. Only future visits are included",
         "operationId" : "getVisitRoomCountsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "whenCreated,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonIds",
@@ -12850,11 +12875,36 @@
         "description" : "Retrieves a paged list of visits by filter",
         "operationId" : "getVisitsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "whenCreated,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonIds",
@@ -13058,11 +13108,36 @@
         "description" : "\n      Returns the visit balance ids (which are booking ids) for the latest booking for offenders with balance entries.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "findVisitBalanceIds",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "offenderBookingId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonId",
@@ -13784,11 +13859,35 @@
         "description" : "Retrieves a paged list of incident questionnaire ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getIdsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -15234,11 +15333,36 @@
         "description" : "Retrieves all restriction Ids - typically for a migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerRestrictionIds",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "restrictionId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -15367,11 +15491,36 @@
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getPrisonerIdentifiers",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "bookingId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "active",
@@ -15425,11 +15574,36 @@
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAllPrisoners",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "rootOffenderId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -15538,11 +15712,36 @@
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getActivePrisonerIdentifiers",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "bookingId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -15916,11 +16115,36 @@
         "description" : "Retrieves all person Ids - typically for a migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getPersonIds",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "personId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -16200,11 +16424,36 @@
         "description" : "Retrieves a paged list of composite ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getNonAssociationsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "id.offenderId,ASC", "id.nsOffenderId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -16953,11 +17202,36 @@
         "description" : "Retrieves a paged list of composite ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getLocationsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "locationId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         } ],
         "responses" : {
@@ -17076,11 +17350,35 @@
         "description" : "Retrieves paged ids for open incidents for an agency.",
         "operationId" : "getOpenIncidentIdsForReconciliation",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "agencyId",
@@ -17240,11 +17538,35 @@
         "description" : "Retrieves a paged list of incident ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getIdsByFilter_1",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -17382,11 +17704,36 @@
         "description" : "Retrieves a paged list of incentive composite ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getIncentivesByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "whenCreated,ASC", "id.offenderBooking,ASC", "id.sequence,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -17638,13 +17985,38 @@
         "tags" : [ "prisoner-balance-resource" ],
         "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getPrisonerIdentifiers_1",
+        "operationId" : "getPrisonerBalanceIdentifiers",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "offenderId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonId",
@@ -18331,11 +18703,35 @@
         "description" : "Retrieves a paged list of court case ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getCourtCaseIdsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -18399,11 +18795,36 @@
         "description" : "Retrieves all corporate Ids - typically for a migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getCorporateIds",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "corporateId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -18792,11 +19213,36 @@
         "description" : "Retrieves a paged list of appointment ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAppointmentsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "eventId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonIds",
@@ -19339,11 +19785,36 @@
         "description" : "Searches for active course allocations. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "findActiveAllocations",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "offenderProgramReferenceId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonId",
@@ -19574,11 +20045,35 @@
         "description" : "Retrieves a paged list of adjustment ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAdjustmentsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -19780,11 +20275,35 @@
         "description" : "Retrieves a paged list of adjudication charge ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getAdjudicationChargeIdsByFilter",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 20,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "fromDate",
@@ -20142,11 +20661,36 @@
         "description" : "Searches for active course activities with allocated prisoners. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "findActiveActivities",
         "parameters" : [ {
-          "name" : "pageRequest",
+          "name" : "page",
           "in" : "query",
-          "required" : true,
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
           "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "courseActivityId,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
           }
         }, {
           "name" : "prisonId",
@@ -27493,27 +28037,6 @@
           }
         },
         "required" : [ "leadVisitor", "personId" ]
-      },
-      "Pageable" : {
-        "type" : "object",
-        "properties" : {
-          "page" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 0
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
-          },
-          "sort" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }
       },
       "VisitRoomCountResponse" : {
         "type" : "object",
