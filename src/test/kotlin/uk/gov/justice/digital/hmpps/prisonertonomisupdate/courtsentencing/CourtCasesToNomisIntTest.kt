@@ -3185,6 +3185,37 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
       }
     }
+
+    @Nested
+    inner class WhenCourtCaseDoesNotExistInDPS {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGetError(
+          COURT_CASE_ID_FOR_CREATION,
+        )
+        publishCaseReferencesUpdatedDomainEvent()
+      }
+
+      @Test
+      fun `will ignore the event if case does not exist in dps`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("case-references-refreshed-ignored"),
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
   }
 
   @Nested
