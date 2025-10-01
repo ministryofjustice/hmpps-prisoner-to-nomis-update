@@ -3159,7 +3159,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+        courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(
           COURT_CASE_ID_FOR_CREATION,
           404,
         )
@@ -3171,7 +3171,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not update an court appearance in NOMIS`() {
+      fun `will not update the references in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("case-references-refreshed-failure"),
