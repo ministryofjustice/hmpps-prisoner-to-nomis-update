@@ -3160,8 +3160,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
-          DPS_COURT_APPEARANCE_ID,
+          COURT_CASE_ID_FOR_CREATION,
           404,
+        )
+        courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          legacyCourtCaseResponse(),
         )
         publishCaseReferencesUpdatedDomainEvent()
       }
