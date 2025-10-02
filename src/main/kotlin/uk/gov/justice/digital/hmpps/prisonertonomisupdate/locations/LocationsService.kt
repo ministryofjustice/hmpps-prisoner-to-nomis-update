@@ -163,7 +163,7 @@ class LocationsService(
 
   private fun toAttribute(attribute: LegacyLocation.Attributes): ProfileRequest {
     val fullAttribute = ResidentialAttributeValue.valueOf(attribute.name)
-    var code: String? = null
+    var code: String?
     val type: ProfileRequest.ProfileType = when (fullAttribute.type) {
       ResidentialAttributeType.SANITATION_FITTINGS -> {
         code = when (attribute) {

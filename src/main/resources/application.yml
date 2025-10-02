@@ -171,7 +171,7 @@ reports:
   appointments:
     reconciliation:
       page-size: 50
-      lookahead-days: 14
+      lookahead-days: 30
   sentencing:
     reconciliation:
       page-size: 20
