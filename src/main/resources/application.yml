@@ -195,19 +195,8 @@ reports:
       page-size: 40
 
 hmpps.sqs:
+  defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queues:
-    location:
-      errorVisibilityTimeout: 30
-    adjudication:
-      errorVisibilityTimeout: 5
     courtsentencing:
-      errorVisibilityTimeout: 1
-    sentencing:
-      errorVisibilityTimeout: 1
-    personalrelationships:
-      errorVisibilityTimeout: 5
-    activity:
-      errorVisibilityTimeout: 5
-    externalmovements:
-      errorVisibilityTimeout: 5
+      errorVisibilityTimeout: 1, 1, 1, 10, 60
   queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW
