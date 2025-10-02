@@ -28,6 +28,7 @@ api.base.url:
   visit.balance: http://localhost:8101
 
 hmpps.sqs:
+  defaultErrorVisibilityTimeout: 0
   provider: localstack
   queues:
     visit:
@@ -71,7 +72,6 @@ hmpps.sqs:
         "activities.prisoner.attendance-deleted"]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
-      errorVisibilityTimeout: 0
     appointment:
       queueName: "appointment-${random.uuid}"
       dlqName: "appointment-dlq-${random.uuid}"
@@ -112,7 +112,6 @@ hmpps.sqs:
           "location.inside.prison.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-      errorVisibilityTimeout: 0
     sentencing:
       queueName: "sentencing-${random.uuid}"
       dlqName: "sentencing-dlq-${random.uuid}"
@@ -124,7 +123,6 @@ hmpps.sqs:
         "release-date-adjustments.adjustment.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-      errorVisibilityTimeout: 0
     adjudication:
       queueName: "adjudication-${random.uuid}"
       dlqName: "adjudication-dlq-${random.uuid}"
@@ -159,7 +157,6 @@ hmpps.sqs:
           "adjudication.outcome.unquashed"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-      errorVisibilityTimeout: 0
     courtsentencing:
       queueName: "court-sentencing-${random.uuid}"
       dlqName: "court-sentencing-dlq-${random.uuid}"
@@ -187,7 +184,6 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
-      errorVisibilityTimeout: 0
     fromnomiscourtsentencing:
       queueName: "court-sentencing-from-nomis-${random.uuid}"
     alerts:
@@ -290,7 +286,6 @@ hmpps.sqs:
           "personal-relationships-api.prisoner-restriction.deleted"
         ]}
       dlqMaxReceiveCount: 1
-      errorVisibilityTimeout: 0
     organisations:
       queueName: "organisations-${random.uuid}"
       dlqName: "organisations-dlq-${random.uuid}"
