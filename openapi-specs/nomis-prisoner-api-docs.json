@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-26.618.c4575a4"
+    "version" : "2025-10-01.622.1c0093a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8738,6 +8738,90 @@
         }
       }
     },
+    "/prisoners/{offenderNo}/sentencing/court-cases/clone/{caseId}" : {
+      "post" : {
+        "tags" : [ "sentencing-resource" ],
+        "summary" : "Clones court cases from the cases' booking to the current booking",
+        "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW. The court cases along with dependent cases and all child elements including adjustments are copied to the current booking",
+        "operationId" : "cloneCourtCasesToLatestBooking",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        }, {
+          "name" : "caseId",
+          "in" : "path",
+          "description" : "Case id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Case id",
+            "example" : 1233
+          },
+          "example" : 1233
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Created Court cases",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/BookingCourtCaseCloneResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Case id supplied is already the latest booking or doesn't belong to the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Case does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/{offenderNo}/restriction" : {
       "post" : {
         "tags" : [ "contact-person-resource" ],
@@ -9473,79 +9557,6 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/prisoners/booking-id/{bookingId}/sentencing/court-cases/clone" : {
-      "post" : {
-        "tags" : [ "sentencing-resource" ],
-        "summary" : "Clones court cases from the supplied booking to the current booking",
-        "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Court cases and all child elements including adjustments are copied to the current booking",
-        "operationId" : "cloneCourtCasesFromBooking",
-        "parameters" : [ {
-          "name" : "bookingId",
-          "in" : "path",
-          "description" : "Booking id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking id",
-            "example" : 1233
-          },
-          "example" : 1233
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Created Court cases",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/BookingCourtCaseCloneResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Booking id supplied is already the latest booking",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Booking does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -28118,15 +28129,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
