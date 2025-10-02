@@ -3159,18 +3159,53 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
-          DPS_COURT_APPEARANCE_ID,
+        courtSentencingMappingApi.stubGetCaseMappingGivenDpsIdWithError(
+          COURT_CASE_ID_FOR_CREATION,
           404,
+        )
+        courtSentencingApi.stubCourtCaseGet(
+          COURT_CASE_ID_FOR_CREATION,
+          legacyCourtCaseResponse(),
         )
         publishCaseReferencesUpdatedDomainEvent()
       }
 
       @Test
-      fun `will not update an court appearance in NOMIS`() {
+      fun `will not update the references in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
             eq("case-references-refreshed-failure"),
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtCaseDoesNotExistInDPS {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtCaseGetError(
+          COURT_CASE_ID_FOR_CREATION,
+        )
+        publishCaseReferencesUpdatedDomainEvent()
+      }
+
+      @Test
+      fun `will ignore the event if case does not exist in dps`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("case-references-refreshed-ignored"),
             check {
               assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)

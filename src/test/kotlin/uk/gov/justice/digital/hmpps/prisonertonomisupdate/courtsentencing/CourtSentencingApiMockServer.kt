@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -103,6 +105,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(200),
       ),
     )
+  }
+
+  fun stubCourtCaseGetError(courtCaseId: String, status: Int = 404) {
+    stubGetWithError("/legacy/court-case/$courtCaseId", status)
   }
 
   fun getCharge(courtCaseId: String, courtAppearanceId: String, courtChargeId: String, offenderNo: String) = LegacyCharge(
@@ -358,4 +364,19 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
+
+  private fun stubGetWithError(url: String, status: Int = 500) = stubFor(
+    get(url).willReturn(
+      aResponse()
+        .withHeader("Content-Type", "application/json")
+        .withBody(
+          """
+              {
+                "error": "some error"
+              }
+          """.trimIndent(),
+        )
+        .withStatus(status),
+    ),
+  )
 }
