@@ -66,6 +66,9 @@ generic-service:
     - name: visit-balance-recon
       type: VISIT_BALANCE_RECON
       schedule: "0 18 * * 1-5"
+    - name: court-case-recon
+      type: COURT_CASE_PRISONER_RECON
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
