@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-09-11.224.d34a8d2"
+    "version" : "2025-10-01.250.7034e34"
   },
   "servers" : [ {
     "url" : "/",
@@ -828,6 +828,20 @@
             "minLength" : 7
           },
           "example" : "A1234AA"
+        }, {
+          "name" : "userAction",
+          "in" : "query",
+          "description" : "Filter by last user actions derived from the most recent correction request on the report",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : null,
+            "items" : {
+              "type" : "string",
+              "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+            }
+          },
+          "example" : "[SEND_TO_MANAGER,RETURN_TO_REPORTER]"
         }, {
           "name" : "page",
           "in" : "query",
@@ -1710,7 +1724,7 @@
       },
       "post" : {
         "tags" : [ "Objects related to incident reports" ],
-        "summary" : "Adds a correction request to this incident report",
+        "summary" : "Adds a correction request to this incident report, NOTE: DO NOT USED - Generally should use the status update to add a correction request",
         "description" : "Requires role MAINTAIN_INCIDENT_REPORTS and write scope. Authentication token must provide a username which is recorded as the correction requester and report modifier.",
         "operationId" : "addObject_3",
         "parameters" : [ {
@@ -5811,15 +5825,15 @@
         "type" : "object",
         "description" : "Incident report created in NOMIS",
         "properties" : {
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
-          },
           "initialMigration" : {
             "type" : "boolean",
             "default" : false,
             "description" : "Set to true for initial migration",
             "example" : true
+          },
+          "incidentReport" : {
+            "$ref" : "#/components/schemas/NomisReport",
+            "description" : "Complete incident report payload"
           }
         },
         "required" : [ "incidentReport" ],
@@ -5829,6 +5843,11 @@
         "type" : "object",
         "description" : "Incident report updated in NOMIS",
         "properties" : {
+          "initialMigration" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Omit or set to false for updates"
+          },
           "id" : {
             "type" : "string",
             "format" : "uuid",
@@ -5838,11 +5857,6 @@
           "incidentReport" : {
             "$ref" : "#/components/schemas/NomisReport",
             "description" : "Complete incident report payload"
-          },
-          "initialMigration" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Omit or set to false for updates"
           }
         },
         "required" : [ "id", "incidentReport" ],
@@ -6249,6 +6263,11 @@
           "prisonerInvolvementDone" : {
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
+          },
+          "latestUserAction" : {
+            "type" : "string",
+            "description" : "Latest user action from the most recent correction request",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
           "nomisStatus" : {
             "type" : "string",
@@ -6807,6 +6826,11 @@
             "description" : "The new status",
             "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
             "example" : "CLOSED"
+          },
+          "correctionRequest" : {
+            "$ref" : "#/components/schemas/AddCorrectionRequest",
+            "description" : "The associated correction request associated with the status change",
+            "writeOnly" : true
           }
         },
         "required" : [ "newStatus" ],
@@ -6904,17 +6928,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
