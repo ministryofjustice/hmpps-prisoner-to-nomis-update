@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-24.79.f41e1f3"
+    "version" : "2025-10-01.120.44ca973"
   },
   "servers" : [ {
     "url" : "http://localhost:8080",
@@ -385,8 +385,8 @@
     "/migrate/prisoner-balances/{prisonNumber}" : {
       "post" : {
         "tags" : [ "NOMIS Migration" ],
-        "summary" : "Migrate initial balances for a single prisoner",
-        "description" : "Initializes or updates a prisoner's sub-accounts (e.g., Spends, Private Cash) with a starting balance. This endpoint is idempotent and can be re-run. The prison must already exist.",
+        "summary" : "Migrate a prisoners balances",
+        "description" : "Migrate a prisoners sub-accounts (e.g., Spends, Private Cash) to a given balance from a legacy system.",
         "operationId" : "migratePrisonerBalances",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -400,7 +400,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/InitialPrisonerBalancesRequest"
+                "$ref" : "#/components/schemas/PrisonerBalancesSyncRequest"
               }
             }
           },
@@ -408,7 +408,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Initial prisoner balances successfully migrated."
+            "description" : "Prisoner balances successfully migrated."
           },
           "400" : {
             "description" : "Bad request - invalid input data.",
@@ -459,8 +459,8 @@
     "/migrate/general-ledger-balances/{prisonId}" : {
       "post" : {
         "tags" : [ "NOMIS Migration" ],
-        "summary" : "Migrate initial general ledger balances for a single prison",
-        "description" : "Initializes or updates general ledger accounts for a specific prison with a starting balance. This endpoint is idempotent and can be re-run.",
+        "summary" : "Migrate general ledger balances for a single prison",
+        "description" : "Migrate general ledger account balances for a specific prison.",
         "operationId" : "migrateGeneralLedgerBalances",
         "parameters" : [ {
           "name" : "prisonId",
@@ -474,7 +474,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/InitialGeneralLedgerBalancesRequest"
+                "$ref" : "#/components/schemas/GeneralLedgerBalancesSyncRequest"
               }
             }
           },
@@ -482,7 +482,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Initial general ledger balances successfully migrated."
+            "description" : "General ledger balances successfully migrated."
           },
           "400" : {
             "description" : "Bad request - invalid input data.",
@@ -1412,51 +1412,77 @@
         },
         "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "requestId", "transactionId", "transactionTimestamp", "transactionType" ]
       },
-      "InitialPrisonerBalance" : {
+      "PrisonerAccountPointInTimeBalance" : {
         "type" : "object",
-        "description" : "Represents an initial prisoner balance for migration.",
+        "description" : "Represents a prisoner balance at a specific point in time for synchronization from a legacy system.",
         "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison code (e.g., 'MDI') where this specific account balance is held.",
+            "minLength" : 1
+          },
           "accountCode" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The account code for the general ledger account."
+            "description" : "The account code for the prisoner account."
           },
           "balance" : {
             "type" : "number",
-            "description" : "The initial balance for the general ledger account.",
+            "description" : "The account balance at the specified time.",
             "example" : 123.45
           },
           "holdBalance" : {
             "type" : "number",
-            "description" : "The initial amount on hold for the sub-account.",
+            "description" : "The amount on hold for the sub-account.",
             "example" : 10.0
+          },
+          "transactionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The transaction ID that resulted in the last update to the prisoner balance."
+          },
+          "asOfTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The local date and time from the legacy system when this balance was valid.",
+            "example" : "2025-09-24T10:00:00"
           }
         },
-        "required" : [ "accountCode", "balance", "holdBalance" ]
+        "required" : [ "accountCode", "asOfTimestamp", "balance", "holdBalance", "prisonId", "transactionId" ]
       },
-      "InitialPrisonerBalancesRequest" : {
+      "PrisonerBalancesSyncRequest" : {
         "type" : "object",
-        "description" : "A request to migrate initial balances for a single prisoner across their sub-accounts.",
+        "description" : "A request to synchronize all balances for a single prisoner across their sub-accounts.",
         "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prison code (e.g., 'MDI') where the prisoner is located.",
-            "minLength" : 1
-          },
-          "initialBalances" : {
+          "accountBalances" : {
             "type" : "array",
-            "description" : "A list of sub-account balances to be initialized for the prisoner.",
+            "description" : "A list of sub-account balances to be synchronized for the prisoner.",
             "items" : {
-              "$ref" : "#/components/schemas/InitialPrisonerBalance"
+              "$ref" : "#/components/schemas/PrisonerAccountPointInTimeBalance"
             },
             "minItems" : 1
           }
         },
-        "required" : [ "initialBalances", "prisonId" ]
+        "required" : [ "accountBalances" ]
       },
-      "InitialGeneralLedgerBalance" : {
+      "GeneralLedgerBalancesSyncRequest" : {
         "type" : "object",
-        "description" : "Represents a single general ledger account and its initial balance for migration.",
+        "description" : "A request to synchronize general ledger balances for a single prison.",
+        "properties" : {
+          "accountBalances" : {
+            "type" : "array",
+            "description" : "A list of general ledger account balances to be synchronized.",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerPointInTimeBalance"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "accountBalances" ]
+      },
+      "GeneralLedgerPointInTimeBalance" : {
+        "type" : "object",
+        "description" : "Represents a single general ledger account and its balance at a specific point in time.",
         "properties" : {
           "accountCode" : {
             "type" : "integer",
@@ -1465,26 +1491,17 @@
           },
           "balance" : {
             "type" : "number",
-            "description" : "The initial balance for the general ledger account.",
+            "description" : "The account balance at the specified time.",
             "example" : 123.45
+          },
+          "asOfTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The local date and time from the legacy system when this balance was valid.",
+            "example" : "2025-09-24T10:00:00"
           }
         },
-        "required" : [ "accountCode", "balance" ]
-      },
-      "InitialGeneralLedgerBalancesRequest" : {
-        "type" : "object",
-        "description" : "A request to migrate initial general ledger balances for a single prison.",
-        "properties" : {
-          "initialBalances" : {
-            "type" : "array",
-            "description" : "A list of general ledger account balances to be initialized.",
-            "items" : {
-              "$ref" : "#/components/schemas/InitialGeneralLedgerBalance"
-            },
-            "minItems" : 1
-          }
-        },
-        "required" : [ "initialBalances" ]
+        "required" : [ "accountCode", "asOfTimestamp", "balance" ]
       },
       "SyncOffenderTransactionResponse" : {
         "type" : "object",
@@ -1934,7 +1951,7 @@
       },
       "PrisonerSubAccountDetails" : {
         "type" : "object",
-        "description" : "Summary of a prisoner's sub account",
+        "description" : "Summary of a prisoner sub account",
         "properties" : {
           "code" : {
             "type" : "integer",
