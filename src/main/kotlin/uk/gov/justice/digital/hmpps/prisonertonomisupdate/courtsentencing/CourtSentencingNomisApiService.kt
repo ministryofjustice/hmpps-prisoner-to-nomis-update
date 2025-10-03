@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.http.HttpEntity
 import org.springframework.http.ResponseEntity
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -8,6 +9,7 @@ import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
@@ -77,11 +79,6 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .retrieve()
     .awaitBodilessEntity()
 
-  suspend fun getCourtCaseForMigration(courtCaseId: Long): CourtCaseResponse = webClient.get()
-    .uri("/court-cases/{courtCaseId}", courtCaseId)
-    .retrieve()
-    .awaitBody()
-
   suspend fun getCourtCaseForReconciliation(courtCaseId: Long): CourtCaseResponse = webClient.get()
     .uri("/court-cases/{courtCaseId}", courtCaseId)
     .retrieve()
@@ -90,11 +87,6 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "CourtSentencingNomisApiService"),
   )
-
-  suspend fun getCourtCasesByOffender(offenderNo: String): List<CourtCaseResponse> = webClient.get()
-    .uri("/prisoners/{offenderNo}/sentencing/court-cases", offenderNo)
-    .retrieve()
-    .awaitBody()
 
   suspend fun getCourtCaseIdsByOffender(offenderNo: String): List<Long> = webClient.get()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases/ids", offenderNo)
@@ -116,7 +108,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     sentenceSeq: Int,
     caseId: Long,
     request: CreateSentenceRequest,
-  ) = webClient.put()
+  ): HttpEntity<Void> = webClient.put()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
     .bodyValue(request)
     .retrieve()
@@ -126,7 +118,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     offenderNo: String,
     sentenceSeq: Int,
     caseId: Long,
-  ) = webClient.delete()
+  ): HttpEntity<Void> = webClient.delete()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}", offenderNo, caseId, sentenceSeq)
     .retrieve()
     .awaitBodilessEntity()
@@ -148,7 +140,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     termSeq: Int,
     caseId: Long,
     request: SentenceTermRequest,
-  ) = webClient.put()
+  ): HttpEntity<Void> = webClient.put()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms/{termSequence}", offenderNo, caseId, sentenceSeq, termSeq)
     .bodyValue(request)
     .retrieve()
@@ -159,7 +151,7 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     sentenceSeq: Int,
     termSeq: Int,
     caseId: Long,
-  ) = webClient.delete()
+  ): HttpEntity<Void> = webClient.delete()
     .uri("/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSeq}/sentence-terms/{termSequence}", offenderNo, caseId, sentenceSeq, termSeq)
     .retrieve()
     .awaitBodilessEntity()
@@ -182,6 +174,15 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .retrieve()
     .awaitBodilessEntity()
 
+  suspend fun deleteRecallSentences(
+    offenderNo: String,
+    request: DeleteRecallRequest,
+  ): ResponseEntity<Void> = webClient.put()
+    .uri("/prisoners/{offenderNo}/sentences/recall/restore-original", offenderNo)
+    .bodyValue(request)
+    .retrieve()
+    .awaitBodilessEntity()
+
   suspend fun revertRecallSentences(
     offenderNo: String,
     request: RevertRecallRequest,
@@ -191,12 +192,11 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     .retrieve()
     .awaitBodilessEntity()
 
-  suspend fun deleteRecallSentences(
+  suspend fun cloneCourtCase(
     offenderNo: String,
-    request: DeleteRecallRequest,
-  ): ResponseEntity<Void> = webClient.put()
-    .uri("/prisoners/{offenderNo}/sentences/recall/restore-original", offenderNo)
-    .bodyValue(request)
+    courtCaseId: Long,
+  ): BookingCourtCaseCloneResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/clone/{caseId}", offenderNo, courtCaseId)
     .retrieve()
-    .awaitBodilessEntity()
+    .awaitBody()
 }

@@ -74,6 +74,24 @@ class CourtSentencingResource(
   ) {
     courtSentencingRepairService.chargeInsertedRepair(request = request)
   }
+
+  @PreAuthorize("hasRole('ROLE_NOMIS_SENTENCING')")
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/booking-clone/repair/{dpsCourtCaseId}")
+  @Operation(
+    summary = "Clones a case to latest booking",
+    description = "Used when cases need cloning to latest booking which failed previously, so emergency use only. Requires ROLE_MIGRATE_SENTENCING",
+  )
+  suspend fun clonedCourtCaseToLatestBooking(
+    @PathVariable
+    offenderNo: String,
+    @PathVariable
+    dpsCourtCaseId: String,
+  ) {
+    courtSentencingRepairService.cloneCaseToLatestBooking(
+      offenderNo = offenderNo,
+      dpsCourtCaseId = dpsCourtCaseId,
+    )
+  }
 }
 
 @Schema(description = "Court Charge Request")
