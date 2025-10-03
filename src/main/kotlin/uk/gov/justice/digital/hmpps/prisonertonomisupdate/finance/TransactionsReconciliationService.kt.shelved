@@ -1,0 +1,219 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
+
+import com.microsoft.applicationinsights.TelemetryClient
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withContext
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CaseFields
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService.Companion.TELEMETRY_COURT_CASE_PRISONER_PREFIX
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.Difference
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.MismatchCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.util.UUID
+
+class TransactionsReconciliationService(
+  private val telemetryClient: TelemetryClient,
+  private val nomisApiService: TransactionNomisApiService,
+  private val nomisPrisonerApiService: NomisApiService,
+  private val dpsApiService: FinanceApiService,
+  @Value("\${reports.transaction.reconciliation.page-size:10}") private val pageSize: Int = 10,
+) {
+  private companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
+
+
+  suspend fun checkPrisonerTransactionsFromNomis() {
+    generatePrisonerTransactionReconciliationReport()
+  }
+
+  /**
+   * For non-prisoner GL transactions use paged list of all from DPS, along with getting a specific transaction. So I could:
+   *
+   * iterate over transactions from DPS, checking them against Nomis, then
+   *
+   * get all from Nomis and ensuring these all exist in DPS.
+   */
+  suspend fun checkNonPrisonerFromNomis() {
+
+  }
+
+  /**
+   * iterate over DPS transactions (both prisoner and non-prisoner)
+   */
+  suspend fun checkAllFromDPS() {
+
+  }
+
+  // ----------------------------------------
+
+  suspend fun generatePrisonerTransactionReconciliationReport()
+    : ReconciliationResult<MismatchPrisonerTransactionsResponse> = generateReconciliationReport(
+    threadCount = pageSize,
+    checkMatch = ::checkPrisonerTransactionsMatch,
+    nextPage = ::getPrisonerIdsForPage,
+  )
+
+  data class MismatchPrisonerTransactions(
+    val offenderNo: String,
+    val dpsCount: Int,
+    val nomisCount: Int,
+  )
+
+  suspend fun checkTransaction(dpsTransactionId: String, nomisTransactionId: Long): MismatchTransaction? = runCatching {
+    val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getCourtCaseForReconciliation(nomisTransactionId) } to
+        async { dpsApiService.getCourtCaseForReconciliation(dpsTransactionId) }
+    }.awaitBoth()
+    val nomisFields : TransactionFields = TransactionFields()
+    val dpsFields  : TransactionFields = TransactionFields()
+    val differenceList = compareObjects(dpsFields, nomisFields)
+
+    if (differenceList.isNotEmpty()) {
+      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      return MismatchCase(
+        nomisCase = nomisFields,
+        dpsCase = dpsFields,
+        differences = differenceList,
+      )
+    } else {
+      return null
+    }
+  }.onFailure {
+    log.error("Unable to match case with ids: dps:$dpsTransactionId and nomis:$nomisTransactionId", it)
+  }.getOrNull()
+
+  suspend fun checkTransactions(
+    nomisLists: PrisonerTransactionLists,
+    dpsLists: List<DpsTransaction>,
+  ): List<MismatchTransactionResponse> =
+    nomisLists.offenderTransactions
+    .map {
+      val dpsId = dpsLists.find {  }
+
+      MismatchTransactionResponse(
+        offenderNo = "xxx",
+      nomisTransactionId = it.transactionId,
+      dpsTransactionId = dpsId,
+      mismatch = checkTransaction(dpsTransactionId = dpsId, nomisTransactionId = it.transactionId),
+    )
+  } +
+      nomisLists.orphanGlTransactions
+        .map {
+          val dpsId: UUID = dpsLists.find { }
+
+          MismatchTransactionResponse(
+            offenderNo = "xxx",
+            nomisTransactionId = it.transactionId,
+            dpsTransactionId = dpsId,
+            mismatch = checkTransaction(dpsTransactionId = dpsId, nomisTransactionId = it.transactionId),
+          )
+        }
+
+
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchTransactionResponse> = checkTransactions(
+    nomisLists = nomisApiService.getGLTransactionsForPrisoner(offenderNo),
+    dpsLists = dpsApiService.getPrisonerTransactions(offenderNo),
+  )
+
+  suspend fun checkPrisonerTransactionsMatch(prisonerId: PrisonerIds): MismatchPrisonerTransactionsResponse? = runCatching {
+    manualCheckCaseOffenderNo(prisonerId.offenderNo)
+      .filter { it.mismatch != null }
+      .takeIf { it.isNotEmpty() }?.let {
+        MismatchPrisonerTransactionsResponse(
+          offenderNo = prisonerId.offenderNo,
+          mismatches = it,
+        )
+      }?.also {
+        it.mismatches.forEach { mismatch ->
+          telemetryClient.trackEvent(
+            "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
+            mapOf(
+              "offenderNo" to it.offenderNo,
+              "dpsTransactionId" to mismatch.dpsTransactionId.toString(),
+              "nomisTransactionId" to mismatch.nomisTransactionId.toString(),
+              "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
+            ),
+            null,
+          )
+        }
+      }
+  }.onFailure {
+    log.error("Unable to match prisoner: ${id.offenderNo}", it)
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-error",
+      mapOf(
+        "offenderNo" to id.offenderNo,
+        "reason" to (it.message ?: "unknown"),
+      ),
+      null,
+    )
+  }.getOrNull()
+
+  private suspend fun getPrisonerIdsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
+    nomisPrisonerApiService.getAllLatestBookings(
+      lastBookingId = lastBookingId,
+      activeOnly = false,
+      pageSize = pageSize,
+    )
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch-page-error",
+      mapOf(
+        "booking" to lastBookingId.toString(),
+      ),
+    )
+    log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
+  }
+    .map {
+      ReconciliationSuccessPageResult(
+        ids = it.prisonerIds,
+        last = it.lastBookingId,
+      )
+    }
+    .getOrElse { ReconciliationErrorPageResult(it) }
+    .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
+}
+
+data class MismatchPrisonerTransactionsResponse(
+  val offenderNo: String,
+  val mismatches: List<MismatchTransactionResponse>,
+)
+
+data class MismatchTransactionResponse(
+  val offenderNo: String = "TODO",
+  val dpsTransactionId: UUID,
+  val nomisTransactionId: Long,
+  val mismatch: MismatchTransaction?,
+)
+
+data class MismatchTransaction(
+        val nomis: TransactionFields,
+        val dps: TransactionFields,
+        val differences: List<Difference> = emptyList(),
+)
+
+data class TransactionFields(
+  val active: Boolean,
+  val id: String,
+  val glReferences: List<String> = emptyList(),
+) {
+  override fun equals(other: Any?): Boolean {
+    if (this === other) return true
+    other as CaseFields
+    return active == other.active
+  }
+}
+
+data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
