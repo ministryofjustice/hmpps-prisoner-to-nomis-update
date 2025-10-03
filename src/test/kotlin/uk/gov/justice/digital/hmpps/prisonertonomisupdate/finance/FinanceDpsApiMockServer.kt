@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
@@ -11,8 +12,11 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.generalLedgerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
@@ -122,24 +126,42 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetOffenderTransaction(transactionId: String, response: SyncOffenderTransactionResponse = offenderTransaction()) {
     stubFor(
       get("/sync/offender-transactions/$transactionId")
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
-        ),
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
     )
   }
 
   fun stubGetGeneralLedgerTransaction(transactionId: String, response: SyncGeneralLedgerTransactionResponse = generalLedgerTransaction()) {
     stubFor(
       get("/sync/general-ledger-transactions/$transactionId")
-        .willReturn(
-          aResponse()
-            .withStatus(200)
-            .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
-        ),
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubListPrisonerAccounts(prisonerNo: String, response: AccountDetailsList) {
+    stubFor(
+      get("/prisoners/$prisonerNo/accounts")
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonerSubAccountDetails(prisonerNo: String, accountCode: Int, response: PrisonerSubAccountDetails) {
+    stubFor(
+      get("/prisoners/$prisonerNo/accounts/$accountCode")
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubListPrisonAccounts(prisonId: String, response: AccountDetailsList) {
+    stubFor(
+      get("/prisons/$prisonId/accounts")
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonAccountDetails(prisonId: String, accountCode: Int, response: PrisonAccountDetails) {
+    stubFor(
+      get("/prisons/$prisonId/accounts/$accountCode")
+        .willReturn(okJson(objectMapper.writeValueAsString(response))),
     )
   }
 }

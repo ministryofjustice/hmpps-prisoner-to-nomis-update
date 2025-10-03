@@ -1,11 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.TransactionsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -19,6 +20,7 @@ class TransactionNomisApiService(
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "TransactionNomisApiService"),
   )
+
   suspend fun getFirstTransactionIdFrom(fromDate: LocalDate): Long = webClient
     .get()
     .uri("/transactions/{date}/first", fromDate)
@@ -30,18 +32,15 @@ class TransactionNomisApiService(
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
-  // Not sure which we need for the ones below (ones above, at least, will be needed for reconciliation)
-  suspend fun getTransactions(transactionId: Long): List<OffenderTransactionDto> = webClient
-    .get()
-    .uri("/transactions/{transactionId}", transactionId)
-    .retrieve()
-    .awaitBody()
+  private val transactionsApi = TransactionsResourceApi(webClient)
 
-  suspend fun getGLTransactions(transactionId: Long): List<GeneralLedgerTransactionDto> = webClient
-    .get()
-    .uri("/transactions/{transactionId}/general-ledger", transactionId)
-    .retrieve()
-    .awaitBody()
+  suspend fun getTransactions(transactionId: Long): List<OffenderTransactionDto> = transactionsApi
+    .getTransaction(transactionId)
+    .awaitSingle()
+
+  suspend fun getGLTransactions(transactionId: Long): List<GeneralLedgerTransactionDto> = transactionsApi
+    .getGLTransaction(transactionId)
+    .awaitSingle()
 
   suspend fun getGLTransactionsForPrisoner(offenderNo: String): PrisonerTransactionLists = webClient
     .get()
