@@ -10,7 +10,9 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
@@ -83,7 +85,7 @@ class CourtSentencingNomisApiMockServer {
     courtEvents: List<CourtEventResponse> = emptyList(),
     sentences: List<SentenceResponse> = emptyList(),
     combinedCaseId: Long? = null,
-    caseStatus: uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Active"),
+    caseStatus: CodeDescription = CodeDescription("A", "Active"),
     beginDate: LocalDate = LocalDate.now(),
     response: CourtCaseResponse = CourtCaseResponse(
       bookingId = bookingId,
@@ -91,7 +93,7 @@ class CourtSentencingNomisApiMockServer {
       offenderNo = offenderNo,
       caseSequence = 22,
       caseStatus = caseStatus,
-      legalCaseType = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription("A", "Adult"),
+      legalCaseType = CodeDescription("A", "Adult"),
       courtId = "MDI",
       courtEvents = courtEvents,
       offenderCharges = emptyList(),
@@ -222,6 +224,17 @@ class CourtSentencingNomisApiMockServer {
           .withStatus(204),
       ),
     )
+  }
+
+  fun stubCloneCourtCase(
+    offenderNo: String,
+    courtCaseId: Long,
+    response: BookingCourtCaseCloneResponse = BookingCourtCaseCloneResponse(
+      courtCases = emptyList(),
+      sentenceAdjustments = emptyList(),
+    ),
+  ) {
+    stubPost("/prisoners/$offenderNo/sentencing/court-cases/clone/$courtCaseId", response = response)
   }
 
   // helper methods

@@ -84,6 +84,7 @@ class CourtSentencingService(
     COURT_CHARGE("charge"),
     SENTENCE("sentence"),
     SENTENCE_TERM("sentence-term"),
+    COURT_CASE_CLONE("court-case-clone"),
   }
 
   suspend fun createCourtCase(createEvent: CourtCaseCreatedEvent) {
@@ -166,17 +167,16 @@ class CourtSentencingService(
         }
 
         transform {
-          val courtCaseMapping =
-            courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
-              ?.also {
-                telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
-              }
-              ?: let {
-                telemetryMap["reason"] = "Parent entity not found"
-                throw ParentEntityNotFoundRetry(
-                  "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $dpsCourtCaseId not found for DPS court appearance $dpsCourtAppearanceId",
-                )
-              }
+          val courtCaseMapping = courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
+            ?.also {
+              telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
+            }
+            ?: let {
+              telemetryMap["reason"] = "Parent entity not found"
+              throw ParentEntityNotFoundRetry(
+                "Attempt to create a court appearance on a dps court case without a nomis mapping. Dps court case id: $dpsCourtCaseId not found for DPS court appearance $dpsCourtAppearanceId",
+              )
+            }
 
           val courtAppearance = courtSentencingApiService.getCourtAppearance(dpsCourtAppearanceId)
 
@@ -203,13 +203,7 @@ class CourtSentencingService(
             telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
           }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId = dpsCourtAppearanceId, offenderNo = offenderNo)
         }
-        saveMapping {
-          createAppearanceMappingsAndNotifyClonedCases(
-            mappingsWrapper = it,
-            offenderNo = offenderNo,
-            telemetry = telemetryMap,
-          )
-        }
+        saveMapping { createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper = it, offenderNo = offenderNo, telemetry = telemetryMap) }
       }
     } else {
       telemetryMap["reason"] = "Court appearance created in NOMIS"
@@ -221,10 +215,7 @@ class CourtSentencingService(
     }
   }
 
-  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(
-    dpsCourtAppearanceId: String,
-    offenderNo: String,
-  ): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
+  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(dpsCourtAppearanceId: String, offenderNo: String): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
     mappings =
     CourtCaseBatchUpdateAndCreateMappingDto(
       mappingsToCreate = CourtCaseBatchMappingDto(
@@ -251,11 +242,7 @@ class CourtSentencingService(
     offenderNo = offenderNo,
     clonedClonedCourtCaseDetails = clonedCourtCases?.toClonedCourtCaseDetails(),
   )
-
-  private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(
-    dpsRecallId: String,
-    offenderNo: String,
-  ): RecallAppearanceAndCreateMappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
+  private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(dpsRecallId: String, offenderNo: String): RecallAppearanceAndCreateMappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
     mappings = CourtAppearanceRecallMappingsDto(
       nomisCourtAppearanceIds = this.courtEventIds,
       dpsRecallId = dpsRecallId,
@@ -270,109 +257,6 @@ class CourtSentencingService(
     sentenceAdjustmentsActivated = this.sentenceAdjustmentsActivated,
     offenderNo = offenderNo,
     clonedClonedCourtCaseDetails = this.clonedCourtCases?.toClonedCourtCaseDetails(),
-  )
-
-  private suspend fun BookingCourtCaseCloneResponse?.toCourtCases(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtCases = this?.courtCases?.map { it.sourceCourtCase }
-    val clonedCourtCases = this?.courtCases?.map { it.courtCase }
-
-    return sourceCourtCases?.zip(clonedCourtCases!!)?.map { (source, cloned) ->
-      SimpleCourtSentencingIdPair(
-        fromNomisId = source.id,
-        toNomisId = cloned.id,
-      )
-    } ?: emptyList()
-  }
-
-  private suspend fun BookingCourtCaseCloneResponse?.toCourtCharges(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtCharges = this?.courtCases?.flatMap { it.sourceCourtCase.offenderCharges }
-    val clonedCourtCharges = this?.courtCases?.flatMap { it.courtCase.offenderCharges }
-
-    return sourceCourtCharges?.zip(clonedCourtCharges!!)?.map { (source, cloned) ->
-      SimpleCourtSentencingIdPair(
-        fromNomisId = source.id,
-        toNomisId = cloned.id,
-      )
-    } ?: emptyList()
-  }
-
-  private suspend fun BookingCourtCaseCloneResponse?.toCourtAppearances(): List<SimpleCourtSentencingIdPair> {
-    val sourceCourtAppearances = this?.courtCases?.flatMap { it.sourceCourtCase.courtEvents }
-    val clonedCourtAppearances = this?.courtCases?.flatMap { it.courtCase.courtEvents }
-
-    return sourceCourtAppearances?.zip(clonedCourtAppearances!!)?.map { (source, cloned) ->
-      SimpleCourtSentencingIdPair(
-        fromNomisId = source.id,
-        toNomisId = cloned.id,
-      )
-    } ?: emptyList()
-  }
-
-  private suspend fun BookingCourtCaseCloneResponse?.toSentences(): List<CourtSentenceIdPair> {
-    val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
-    val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
-
-    return sourceSentences?.zip(clonedSentences!!)?.map { (source, cloned) ->
-      CourtSentenceIdPair(
-        fromNomisId = MappingSentenceId(
-          nomisBookingId = source.bookingId,
-          nomisSequence = source.sentenceSeq.toInt(),
-        ),
-        toNomisId = MappingSentenceId(
-          nomisBookingId = cloned.bookingId,
-          nomisSequence = cloned.sentenceSeq.toInt(),
-        ),
-      )
-    } ?: emptyList()
-  }
-
-  private suspend fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentenceTermIdPair> {
-    val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
-    val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
-
-    return sourceSentences?.zip(clonedSentences!!)?.flatMap { (source, cloned) ->
-      source.sentenceTerms.zip(cloned.sentenceTerms).map { (sourceTerm, clonedTerm) ->
-        CourtSentenceTermIdPair(
-          fromNomisId = SentenceTermId(
-            nomisSequence = sourceTerm.termSequence.toInt(),
-            nomisSentenceId = MappingSentenceId(
-              nomisBookingId = source.bookingId,
-              nomisSequence = source.sentenceSeq.toInt(),
-            ),
-          ),
-          toNomisId = SentenceTermId(
-            nomisSequence = clonedTerm.termSequence.toInt(),
-            nomisSentenceId = MappingSentenceId(
-              nomisBookingId = cloned.bookingId,
-              nomisSequence = cloned.sentenceSeq.toInt(),
-            ),
-          ),
-        )
-      }
-    } ?: emptyList()
-  }
-
-  fun BookingCourtCaseCloneResponse.toClonedCourtCaseDetails() = ClonedCourtCaseDetails(
-    clonedCourtCaseIds = courtCases.map { it.sourceCourtCase.id },
-    // there must always be at least once case cloned else we would never have a clone operation
-    fromBookingId = courtCases.first().sourceCourtCase.bookingId,
-    toBookingId = courtCases.first().courtCase.bookingId,
-    sentenceAdjustments = sentenceAdjustments.map {
-      SentenceIdAndAdjustmentType(
-        sentenceId = it.sentenceId,
-        adjustmentIds = it.adjustmentIds,
-      )
-    },
-    casesMoved = courtCases.map {
-      CaseBookingChanged(
-        caseId = it.courtCase.id,
-        sentences = it.courtCase.sentences.map { sentence ->
-          SentenceBookingChanged(
-            sentenceSequence = sentence.sentenceSeq.toInt(),
-          )
-        },
-      )
-    },
   )
 
   suspend fun deleteCourtCase(caseEvent: CourtCaseCreatedEvent) {
@@ -444,7 +328,6 @@ class CourtSentencingService(
     telemetryClient.trackEvent("court-case-mapping-deleted-failed", mapOf("dpsCourtCaseId" to dpsCaseId))
     log.warn("Unable to delete mapping for Court Case $dpsCaseId. Please delete manually", e)
   }
-
   private suspend fun tryToDeleteRecallMapping(dpsRecallId: String) = runCatching {
     courtCaseMappingService.deleteAppearanceRecallMappings(dpsRecallId)
   }.onFailure { e ->
@@ -693,12 +576,12 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createAppearanceMappingsAndNotifyClonedCases(
-    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
-    offenderNo: String,
-    telemetry: Map<String, String>,
-  ) {
-    courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
+  suspend fun createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
+    createAndUpdateMappingsAndNotifyClonedCases(
+      mappingsWrapper = mappingsWrapper,
+      offenderNo = offenderNo,
+    )
+
     mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
       queueService.sendMessageTrackOnFailure(
         queueId = "fromnomiscourtsentencing",
@@ -839,6 +722,85 @@ class CourtSentencingService(
     }
   }
 
+  suspend fun tryUpdateCaseMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: MutableMap<String, String>) {
+    try {
+      telemetry["nomisCourtCaseIds"] = mappingsWrapper.clonedClonedCourtCaseDetails!!.clonedCourtCaseIds.joinToString()
+      updateCaseMappingsAndNotifyClonedCases(
+        mappingsWrapper = mappingsWrapper,
+        offenderNo = offenderNo,
+        telemetry = telemetry,
+      )
+    } catch (e: Exception) {
+      telemetryClient.trackEvent("court-case-cloned-repair-failed", telemetry + ("reason" to (e.message ?: "unknown")), null)
+      courtSentencingRetryQueueService.sendMessage(
+        mapping = mappingsWrapper,
+        telemetryAttributes = telemetry,
+        entityName = EntityType.COURT_CASE_CLONE.displayName,
+      )
+    }
+  }
+
+  suspend fun updateCaseMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
+    createAndUpdateMappingsAndNotifyClonedCases(
+      mappingsWrapper = mappingsWrapper,
+      offenderNo = offenderNo,
+    )
+    telemetryClient.trackEvent(
+      "court-case-cloned-repair",
+      telemetry,
+      null,
+    )
+  }
+  suspend fun createAndUpdateMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String) {
+    courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
+    mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
+      queueService.sendMessageTrackOnFailure(
+        queueId = "fromnomiscourtsentencing",
+        eventType = "courtsentencing.resync.case.booking",
+        message = OffenderCaseBookingResynchronisationEvent(
+          offenderNo = offenderNo,
+          caseIds = details.clonedCourtCaseIds,
+          fromBookingId = details.fromBookingId,
+          toBookingId = details.toBookingId,
+          casesMoved = details.casesMoved,
+        ),
+      )
+
+      details.sentenceAdjustments.forEach { adjustment ->
+        adjustment.adjustmentIds.forEach { adjustmentId ->
+          // since these are new adjustments send these individually given creating
+          // a batch of adjustments is not idempotent if there are failures
+          queueService.sendMessageTrackOnFailure(
+            queueId = "fromnomiscourtsentencing",
+            eventType = "courtsentencing.resync.sentence-adjustments",
+            message = SyncSentenceAdjustment(
+              offenderNo = offenderNo,
+              sentences = listOf(
+                SentenceIdAndAdjustmentIds(
+                  sentenceId = adjustment.sentenceId,
+                  adjustmentIds = listOf(adjustmentId),
+                ),
+              ),
+            ),
+          )
+        }
+      }
+    }
+  }
+
+  suspend fun createMappingsAndNotifyClonedCasesRetry(message: CreateMappingRetryMessage<CourtCaseBatchUpdateAndCreateMappingsWrapper>) = with(message) {
+    createAndUpdateMappingsAndNotifyClonedCases(
+      mappingsWrapper = mapping,
+      offenderNo = mapping.offenderNo,
+    ).also {
+      telemetryClient.trackEvent(
+        "court-case-cloned-repair",
+        telemetryAttributes,
+        null,
+      )
+    }
+  }
+
   suspend fun createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(message: CreateMappingRetryMessage<RecallAppearanceAndCreateMappingsWrapper>) = with(message) {
     createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCases(
       mappingsWrapper = mapping,
@@ -882,13 +844,11 @@ class CourtSentencingService(
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceMappingsRetry(message.fromJson())
-      EntityType.COURT_APPEARANCE_RECALL.displayName -> createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(
-        message.fromJson(),
-      )
-
+      EntityType.COURT_APPEARANCE_RECALL.displayName -> createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(message.fromJson())
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
       EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
+      EntityType.COURT_CASE_CLONE.displayName -> createMappingsAndNotifyClonedCasesRetry(message.fromJson())
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
@@ -1856,3 +1816,126 @@ data class SentenceIdAndAdjustmentType(
   val sentenceId: SentenceId,
   val adjustmentIds: List<Long>,
 )
+
+fun BookingCourtCaseCloneResponse.toClonedCourtCaseDetails() = ClonedCourtCaseDetails(
+  clonedCourtCaseIds = courtCases.map { it.sourceCourtCase.id },
+  // there must always be at least once case cloned else we would never have a clone operation
+  fromBookingId = courtCases.first().sourceCourtCase.bookingId,
+  toBookingId = courtCases.first().courtCase.bookingId,
+  sentenceAdjustments = sentenceAdjustments.map {
+    SentenceIdAndAdjustmentType(
+      sentenceId = it.sentenceId,
+      adjustmentIds = it.adjustmentIds,
+    )
+  },
+  casesMoved = courtCases.map {
+    CaseBookingChanged(
+      caseId = it.courtCase.id,
+      sentences = it.courtCase.sentences.map { sentence ->
+        SentenceBookingChanged(
+          sentenceSequence = sentence.sentenceSeq.toInt(),
+        )
+      },
+    )
+  },
+)
+
+fun BookingCourtCaseCloneResponse.toCourtCaseBatchMappingDto(offenderNo: String): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
+  mappings =
+  CourtCaseBatchUpdateAndCreateMappingDto(
+    mappingsToCreate = CourtCaseBatchMappingDto(
+      courtAppearances = emptyList(),
+      courtCases = emptyList(),
+      courtCharges = emptyList(),
+      sentences = emptyList(),
+      sentenceTerms = emptyList(),
+      mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+    ),
+    mappingsToUpdate = CourtCaseBatchUpdateMappingDto(
+      courtCases = this.toCourtCases(),
+      courtAppearances = this.toCourtAppearances(),
+      courtCharges = this.toCourtCharges(),
+      sentences = this.toSentences(),
+      sentenceTerms = this.toSentenceTerms(),
+    ),
+  ),
+  offenderNo = offenderNo,
+  clonedClonedCourtCaseDetails = this.toClonedCourtCaseDetails(),
+)
+
+private fun BookingCourtCaseCloneResponse?.toCourtCases(): List<SimpleCourtSentencingIdPair> {
+  val sourceCourtCases = this?.courtCases?.map { it.sourceCourtCase }
+  val clonedCourtCases = this?.courtCases?.map { it.courtCase }
+
+  return sourceCourtCases?.zip(clonedCourtCases!!)?.map { (source, cloned) ->
+    SimpleCourtSentencingIdPair(
+      fromNomisId = source.id,
+      toNomisId = cloned.id,
+    )
+  } ?: emptyList()
+}
+private fun BookingCourtCaseCloneResponse?.toCourtCharges(): List<SimpleCourtSentencingIdPair> {
+  val sourceCourtCharges = this?.courtCases?.flatMap { it.sourceCourtCase.offenderCharges }
+  val clonedCourtCharges = this?.courtCases?.flatMap { it.courtCase.offenderCharges }
+
+  return sourceCourtCharges?.zip(clonedCourtCharges!!)?.map { (source, cloned) ->
+    SimpleCourtSentencingIdPair(
+      fromNomisId = source.id,
+      toNomisId = cloned.id,
+    )
+  } ?: emptyList()
+}
+private fun BookingCourtCaseCloneResponse?.toCourtAppearances(): List<SimpleCourtSentencingIdPair> {
+  val sourceCourtAppearances = this?.courtCases?.flatMap { it.sourceCourtCase.courtEvents }
+  val clonedCourtAppearances = this?.courtCases?.flatMap { it.courtCase.courtEvents }
+
+  return sourceCourtAppearances?.zip(clonedCourtAppearances!!)?.map { (source, cloned) ->
+    SimpleCourtSentencingIdPair(
+      fromNomisId = source.id,
+      toNomisId = cloned.id,
+    )
+  } ?: emptyList()
+}
+
+private fun BookingCourtCaseCloneResponse?.toSentences(): List<CourtSentenceIdPair> {
+  val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+  val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
+
+  return sourceSentences?.zip(clonedSentences!!)?.map { (source, cloned) ->
+    CourtSentenceIdPair(
+      fromNomisId = MappingSentenceId(
+        nomisBookingId = source.bookingId,
+        nomisSequence = source.sentenceSeq.toInt(),
+      ),
+      toNomisId = MappingSentenceId(
+        nomisBookingId = cloned.bookingId,
+        nomisSequence = cloned.sentenceSeq.toInt(),
+      ),
+    )
+  } ?: emptyList()
+}
+private fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentenceTermIdPair> {
+  val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
+  val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
+
+  return sourceSentences?.zip(clonedSentences!!)?.flatMap { (source, cloned) ->
+    source.sentenceTerms.zip(cloned.sentenceTerms).map { (sourceTerm, clonedTerm) ->
+      CourtSentenceTermIdPair(
+        fromNomisId = SentenceTermId(
+          nomisSequence = sourceTerm.termSequence.toInt(),
+          nomisSentenceId = MappingSentenceId(
+            nomisBookingId = source.bookingId,
+            nomisSequence = source.sentenceSeq.toInt(),
+          ),
+        ),
+        toNomisId = SentenceTermId(
+          nomisSequence = clonedTerm.termSequence.toInt(),
+          nomisSentenceId = MappingSentenceId(
+            nomisBookingId = cloned.bookingId,
+            nomisSequence = cloned.sentenceSeq.toInt(),
+          ),
+        ),
+      )
+    }
+  } ?: emptyList()
+}
