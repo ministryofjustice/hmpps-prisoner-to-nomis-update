@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-01.622.1c0093a"
+    "version" : "2025-10-02.625.5f59686"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -28129,15 +28129,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -33073,6 +33073,11 @@
             "description" : "The id of the last transaction associated with the balance",
             "example" : 123
           },
+          "transactionDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time of the last transaction"
+          },
           "accountCode" : {
             "type" : "integer",
             "format" : "int64",
@@ -33090,7 +33095,7 @@
             "example" : 12.5
           }
         },
-        "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId" ]
+        "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId", "transactionDate" ]
       },
       "PrisonerBalanceDto" : {
         "type" : "object",
