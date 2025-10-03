@@ -583,37 +583,6 @@ class CourtSentencingService(
     )
 
     mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
-      queueService.sendMessageTrackOnFailure(
-        queueId = "fromnomiscourtsentencing",
-        eventType = "courtsentencing.resync.case.booking",
-        message = OffenderCaseBookingResynchronisationEvent(
-          offenderNo = offenderNo,
-          caseIds = details.clonedCourtCaseIds,
-          fromBookingId = details.fromBookingId,
-          toBookingId = details.toBookingId,
-          casesMoved = details.casesMoved,
-        ),
-      )
-
-      details.sentenceAdjustments.forEach { adjustment ->
-        adjustment.adjustmentIds.forEach { adjustmentId ->
-          // since these are new adjustments send these individually given creating
-          // a batch of adjustments is not idempotent if there are failures
-          queueService.sendMessageTrackOnFailure(
-            queueId = "fromnomiscourtsentencing",
-            eventType = "courtsentencing.resync.sentence-adjustments",
-            message = SyncSentenceAdjustment(
-              offenderNo = offenderNo,
-              sentences = listOf(
-                SentenceIdAndAdjustmentIds(
-                  sentenceId = adjustment.sentenceId,
-                  adjustmentIds = listOf(adjustmentId),
-                ),
-              ),
-            ),
-          )
-        }
-      }
       telemetryClient.trackEvent(
         "court-appearance-create-cases-cloned",
         telemetry + ("nomisCourtCaseIds" to details.clonedCourtCaseIds.joinToString()),
