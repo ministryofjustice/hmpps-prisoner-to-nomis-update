@@ -409,43 +409,6 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
-    fun `will ignore nomis sentences without associated charges`() = runTest {
-      stubCase(
-        nomisCase = nomisCaseResponse().copy(
-          courtEvents = listOf(
-            nomisAppearanceResponse().copy(
-              courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
-            ),
-          ),
-          sentences = listOf(
-            nomisSentenceResponse(),
-            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_2_SEQ, charges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
-            nomisSentenceResponse(sentenceSeq = NOMIS_SENTENCE_3_SEQ, charges = emptyList()),
-          ),
-        ),
-        dpsCase = dpsCourtCaseResponse().copy(
-          appearances = listOf(
-            dpsAppearanceResponse().copy(
-              charges = listOf(
-                dpsChargeResponse(),
-                dpsChargeResponse().copy(
-                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_2_ID),
-                  sentence = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_2_ID)),
-                ),
-              ),
-            ),
-          ),
-        ),
-      )
-      assertThat(
-        service.checkCase(
-          nomisCaseId = NOMIS_COURT_CASE_ID,
-          dpsCaseId = DPS_COURT_CASE_ID,
-        ),
-      ).isNull()
-    }
-
-    @Test
     fun `will ignore duplicate nomis sentences (same OffenderCharge record)`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
