@@ -2,12 +2,12 @@
   "openapi" : "3.1.0",
   "info" : {
     "title" : "HMPPS Visit Allocation API",
-    "description" : "API for managing a prisoner visit order balance on DPS.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices looking to integrate with the API should request a new role be created with the following syntax:\n ROLE_VISIT_ALLOCATION_API__<SERVICE_NAME>\n \nPre-existing roles:\n 1. ROLE_VISIT_ALLOCATION_API__NOMIS_API - [NOMIS use only] - Grants NOMIS read/write access to the API (syncing / retrieving balances).\n",
+    "description" : "API for managing a prisoner visit order balance on DPS.\n\n## Authentication\n\nThis API uses OAuth2 with JWTs. You will need to pass the JWT in the `Authorization` header using the `Bearer` scheme.\n\n## Authorisation\n\nThe API uses roles to control access to the endpoints. The roles required for each endpoint are documented in the endpoint descriptions.\nServices looking to integrate with the API should request a new role be created with the following syntax:\n ROLE_VISIT_ALLOCATION_API__<SERVICE_NAME>\n \nPre-existing roles:\n 1. ROLE_VISIT_ALLOCATION_API__NOMIS_API - [NOMIS use only] - Grants NOMIS read/write access to the API (syncing / retrieving balances).\n 2. ROLE_VISIT_ALLOCATION_API__ADMIN     - [Admin use only] - Grants ability to action special requests via the admin controller.\n\n",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-06-02.417.4261afb"
+    "version" : "2025-10-03.678.059b424"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -26,7 +26,7 @@
     "description" : "Local"
   } ],
   "security" : [ {
-    "visit-allocation-api-nomis-role" : [ "read", "write" ]
+    "bearer-jwt" : [ ]
   } ],
   "paths" : {
     "/queue-admin/retry-dlq/{dlqName}" : {
@@ -151,7 +151,7 @@
       "post" : {
         "tags" : [ "nomis-controller" ],
         "summary" : "Endpoint to migrate prisoner VO / PVO balances from NOMIS to DPS.",
-        "description" : "Takes a prisoner and 'onboards' them onto DPS, syncing their balance with NOMIS.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
+        "description" : "Takes a prisoner and 'onboards' them onto DPS, syncing their balance with NOMIS. Also used by NOMIS for Initial IEP Entitlement syncs, not just initial migration\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__NOMIS_API",
         "operationId" : "migratePrisonerVisitOrders",
         "requestBody" : {
           "content" : {
@@ -219,6 +219,51 @@
           },
           "403" : {
             "description" : "Incorrect permissions to trigger adding active prisons for VO allocation to queue",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/prison/{prisonCode}/reset" : {
+      "post" : {
+        "tags" : [ "admin-controller" ],
+        "summary" : "Endpoint to allow an admin to reset all prisoners negative balance to zero in a given prison.",
+        "description" : "Takes a prison id and repays all of their prisoners negative balance, leaving positive balance uneffected.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__ADMIN",
+        "operationId" : "resetPrisonersNegativeBalance",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prison code",
+            "example" : "HEI"
+          },
+          "example" : "HEI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoners negative balances reset."
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to reset prisoners balances.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -610,7 +655,7 @@
           "changeLogType" : {
             "type" : "string",
             "description" : "type of change applied",
-            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS", "ALLOCATION_USED_BY_VISIT", "ALLOCATION_REFUNDED_BY_VISIT_CANCELLED", "ALLOCATION_ADDED_AFTER_PRISONER_MERGE", "PRISONER_BALANCE_RESET" ],
+            "enum" : [ "MIGRATION", "SYNC", "PRISONER_REMOVED", "BATCH_PROCESS", "ALLOCATION_USED_BY_VISIT", "ALLOCATION_REFUNDED_BY_VISIT_CANCELLED", "ALLOCATION_ADDED_AFTER_PRISONER_MERGE", "PRISONER_BALANCE_RESET", "ADMIN_RESET_NEGATIVE_BALANCE" ],
             "example" : "SYNC"
           },
           "userId" : {
@@ -672,11 +717,8 @@
       }
     },
     "securitySchemes" : {
-      "visit-allocation-api-nomis-role" : {
+      "bearer-jwt" : {
         "type" : "http",
-        "description" : "A HMPPS Auth access token with the `ROLE_VISIT_ALLOCATION_API__NOMIS_API` role.",
-        "name" : "Authorization",
-        "in" : "header",
         "scheme" : "bearer",
         "bearerFormat" : "JWT"
       }
