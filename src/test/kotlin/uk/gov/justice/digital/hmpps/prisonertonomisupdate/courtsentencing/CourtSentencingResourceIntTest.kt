@@ -601,27 +601,27 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
           .exchange()
           .expectStatus().isOk
+
+        waitForAnyProcessingToComplete("court-case-cloned-repair")
       }
 
       @Test
       fun `will create cloned telemetry`() {
-        await untilAsserted {
-          verify(telemetryClient).trackEvent(
-            eq("court-case-cloned-repair-failed"),
-            check {
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            },
-            isNull(),
-          )
-          verify(telemetryClient).trackEvent(
-            eq("court-case-cloned-repair"),
-            check {
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
-            },
-            isNull(),
-          )
-        }
+        verify(telemetryClient).trackEvent(
+          eq("court-case-cloned-repair-failed"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("court-case-cloned-repair"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
+          },
+          isNull(),
+        )
       }
 
       @Test
