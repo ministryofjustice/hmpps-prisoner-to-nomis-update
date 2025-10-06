@@ -16,8 +16,8 @@ import java.time.Duration
 class SentencingConfiguration(
   @Value("\${api.base.url.sentence.adjustments}") val sentenceAdjustmentsUrl: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.timeout:90s}") val timeout: Duration,
 ) {
+  val timeout: Duration = Duration.ofSeconds(30)
 
   @Bean
   fun sentenceAdjustmentsApiHealthWebClient(builder: WebClient.Builder): WebClient = builder.reactiveHealthWebClient(sentenceAdjustmentsUrl, healthTimeout)
