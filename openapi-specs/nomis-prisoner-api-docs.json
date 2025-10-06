@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-02.625.5f59686"
+    "version" : "2025-10-06.627.9437132"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -18073,6 +18073,71 @@
         }
       }
     },
+    "/finance/prisoners/ids/all-from-id" : {
+      "get" : {
+        "tags" : [ "prisoner-balance-resource" ],
+        "summary" : "Gets the rootOffenderIds for all prisoners with a non-negative trust account balance",
+        "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getPrisonerBalanceIdentifiersFromId",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "query",
+          "description" : "If supplied get offenders starting after this id",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 0,
+            "description" : "If supplied get offenders starting after this id",
+            "example" : 1555999
+          },
+          "example" : 1555999
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "description" : "Number of offenders to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 10,
+            "description" : "Number of offenders to get"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "paged list of prisoner ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RootOffenderIdsWithLast"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/finance/prison/{prisonId}/balance" : {
       "get" : {
         "tags" : [ "prison-balance-resource" ],
@@ -33157,6 +33222,23 @@
             "$ref" : "#/components/schemas/PageMetadata"
           }
         }
+      },
+      "RootOffenderIdsWithLast" : {
+        "type" : "object",
+        "properties" : {
+          "rootOffenderIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "lastOffenderId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "lastOffenderId", "rootOffenderIds" ]
       },
       "PrisonAccountBalanceDto" : {
         "type" : "object",

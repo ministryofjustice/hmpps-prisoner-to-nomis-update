@@ -7,9 +7,9 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerBalanceResourceApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelLong
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -24,8 +24,8 @@ class FinanceNomisApiService(
   private val prisonerApi = PrisonerBalanceResourceApi(webClient)
   private val prisonApi = PrisonBalanceResourceApi(webClient)
 
-  suspend fun getPrisonerIds(): PagedModelLong = prisonerApi
-    .getPrisonerBalanceIdentifiers()
+  suspend fun getPrisonerBalanceIdentifiersFromId(rootOffenderId: Long?, pageSize: Int?): RootOffenderIdsWithLast = prisonerApi
+    .getPrisonerBalanceIdentifiersFromId(rootOffenderId, pageSize)
     .retryWhen(backoffSpec)
     .awaitSingle()
 

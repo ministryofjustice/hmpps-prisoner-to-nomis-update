@@ -11,9 +11,9 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelLong
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -30,13 +30,11 @@ class FinanceNomisApiServiceTest {
   @Nested
   inner class GetPrisonersIds {
 
-    val fromDate = "2025-08-10"
+    val rootOffenderIdsWithLast = RootOffenderIdsWithLast(listOf(87654321L), 12345678L)
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetPrisonersIds(response = PagedModelLong())
-
-      apiService.getPrisonerIds()
+      apiService.getPrisonerBalanceIdentifiersFromId(null, null)
 
       mockServer.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -45,20 +43,24 @@ class FinanceNomisApiServiceTest {
 
     @Test
     fun `will call the get endpoint`() = runTest {
-      mockServer.stubGetPrisonersIds(response = PagedModelLong())
+      mockServer.stubGetPrisonerBalanceIdentifiersFromId(12345678L, rootOffenderIdsWithLast)
 
-      apiService.getPrisonerIds()
+      apiService.getPrisonerBalanceIdentifiersFromId(12345678L, 5)
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/finance/prisoners/ids")),
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
+          .withQueryParam("rootOffenderId", equalTo("12345678"))
+          .withQueryParam("pageSize", equalTo("5")),
       )
     }
 
     @Test
-    fun `will return a long`() = runTest {
-      mockServer.stubGetPrisonersIds(response = PagedModelLong(content = listOf(35L)))
+    fun `will return a long`() {
+      runTest {
+        mockServer.stubGetPrisonerBalanceIdentifiersFromId(12345678L, rootOffenderIdsWithLast)
 
-      assertThat(apiService.getPrisonerIds()).isEqualTo(PagedModelLong(content = listOf(35L)))
+        assertThat(apiService.getPrisonerBalanceIdentifiersFromId(12345678L, null)).isEqualTo(rootOffenderIdsWithLast)
+      }
     }
   }
 
@@ -82,8 +84,6 @@ class FinanceNomisApiServiceTest {
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetPrisonerAccountDetails(35L, sampleDto)
-
       apiService.getPrisonerAccountDetails(35L)
 
       mockServer.verify(

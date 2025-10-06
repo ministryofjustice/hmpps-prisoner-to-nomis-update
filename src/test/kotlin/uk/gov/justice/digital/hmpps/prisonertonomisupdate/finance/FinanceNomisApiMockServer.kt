@@ -6,16 +6,16 @@ import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelLong
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 @Component
 class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
-  fun stubGetPrisonersIds(lastTransactionId: Long? = null, response: PagedModelLong) {
+  fun stubGetPrisonerBalanceIdentifiersFromId(lastTransactionId: Long? = null, response: RootOffenderIdsWithLast) {
     nomisApi.stubFor(
-      get(urlPathEqualTo("/finance/prisoners/ids"))
+      get(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
         .willReturn(okJson(objectMapper.writeValueAsString(response))),
     )
   }
