@@ -262,7 +262,8 @@ class CourtSentencingReconciliationService(
       },
       // TODO remove this temp fix for nomis sentences without any charges (bad data)
       // TODO this includes a second work around for duplicate sentences (same offenderCharge record)
-      sentences = nomisResponse.sentences.filter { it.offenderCharges.isNotEmpty() }.distinctBy { it.offenderCharges.first().id }.map { sentenceResponse ->
+      // sentences = nomisResponse.sentences.filter { it.offenderCharges.isNotEmpty() }.distinctBy { it.offenderCharges.first().id }.map { sentenceResponse ->
+      sentences = nomisResponse.sentences.map { sentenceResponse ->
         val offenderCodeString =
           sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted()
             .joinToString(",")

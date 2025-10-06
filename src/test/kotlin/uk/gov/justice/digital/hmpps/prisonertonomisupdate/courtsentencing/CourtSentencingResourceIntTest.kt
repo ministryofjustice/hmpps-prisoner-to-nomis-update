@@ -1,15 +1,21 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock
-import org.assertj.core.api.Assertions
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.ArgumentMatchers
+import org.mockito.ArgumentMatchers.eq
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
@@ -25,8 +31,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost10RawMessages
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ClonedCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeResponse
@@ -36,13 +52,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenceResultCodeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceIdAndAdjustmentsCreated
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 private const val NOMIS_COURT_CASE_ID = 7L
 private const val NOMIS_COURT_CASE_2_ID = 8L
@@ -81,6 +99,11 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
   @Autowired
   private lateinit var courtSentencingMappingApi: CourtSentencingMappingApiMockServer
+
+  @Autowired
+  private lateinit var objectMapper: ObjectMapper
+
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 
   @DisplayName("GET /court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   @Nested
@@ -423,14 +446,14 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         waitForAnyProcessingToComplete()
 
         verify(telemetryClient).trackEvent(
-          ArgumentMatchers.eq("charge-create-success"),
-          org.mockito.kotlin.check {
-            Assertions.assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
-            Assertions.assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
-            Assertions.assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-            Assertions.assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
-            Assertions.assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
-            Assertions.assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+          eq("charge-create-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
           },
           isNull(),
         )
@@ -466,6 +489,455 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           )
         }
         await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/court-case/booking-clone/repair/{dpsCourtCaseId}")
+  inner class CloneCourtCaseRepair {
+    val dpsCourtCaseId = UUID.randomUUID().toString()
+    val nomisCourtCaseId = 12345L
+    val offenderNo = OFFENDER_NO
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPathWithTransientFailure {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = dpsCourtCaseId,
+          nomisCourtCaseId = nomisCourtCaseId,
+        )
+        courtSentencingNomisApi.stubCloneCourtCase(
+          offenderNo,
+          nomisCourtCaseId,
+          response = BookingCourtCaseCloneResponse(
+            courtCases = listOf(
+              ClonedCourtCaseResponse(
+                sourceCourtCase = uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.nomisCaseResponse(
+                  id = 101L,
+                  events = listOf(nomisAppearanceResponse(id = 1001), nomisAppearanceResponse(id = 1002)),
+                  sentences = listOf(
+                    nomisSentenceResponse().copy(
+                      bookingId = 1,
+                      sentenceSeq = 10,
+                      sentenceTerms = listOf(
+                        nomisSentenceTermResponse().copy(termSequence = 1),
+                        nomisSentenceTermResponse().copy(termSequence = 2),
+                      ),
+                    ),
+                  ),
+                ).copy(
+                  bookingId = 1,
+                  offenderCharges = listOf(
+                    nomisOffenderChargeResponse(offenderChargeId = 1003),
+                    nomisOffenderChargeResponse(offenderChargeId = 1004),
+                  ),
+                ),
+                courtCase = nomisCaseResponse(
+                  id = 201L,
+                  events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
+                  sentences = listOf(
+                    nomisSentenceResponse().copy(
+                      bookingId = 2,
+                      sentenceSeq = 20,
+                      sentenceTerms = listOf(
+                        nomisSentenceTermResponse().copy(termSequence = 21),
+                        nomisSentenceTermResponse().copy(termSequence = 22),
+                      ),
+                    ),
+                  ),
+                ).copy(
+                  bookingId = 2,
+                  offenderCharges = listOf(
+                    nomisOffenderChargeResponse(offenderChargeId = 2003),
+                    nomisOffenderChargeResponse(offenderChargeId = 2004),
+                  ),
+                ),
+              ),
+            ),
+            sentenceAdjustments = listOf(
+              SentenceIdAndAdjustmentsCreated(
+                sentenceId = SentenceId(
+                  offenderBookingId = 2,
+                  sentenceSequence = 20,
+                ),
+                adjustmentIds = listOf(20001, 20002),
+              ),
+            ),
+          ),
+        )
+
+        courtSentencingMappingApi.stubUpdateAndCreateMappingsWithErrorFollowedBySuccess()
+
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .exchange()
+          .expectStatus().isOk
+
+        waitForAnyProcessingToComplete("court-case-cloned-repair")
+      }
+
+      @Test
+      fun `will create cloned telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-case-cloned-repair-failed"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("court-case-cloned-repair"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will send message to nomis migration to sync court cases cloned`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+        }
+        val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+        val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+        val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
+        assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
+        val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+        assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+        assertThat(request.caseIds).containsExactly(101L)
+        assertThat(request.casesMoved).hasSize(1)
+        assertThat(request.casesMoved[0].caseId).isEqualTo(201L)
+        assertThat(request.casesMoved[0].sentences).hasSize(1)
+        assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
+        assertThat(request.fromBookingId).isEqualTo(1L)
+        assertThat(request.toBookingId).isEqualTo(2L)
+      }
+
+      @Test
+      fun `will send message to nomis migration to sync sentence adjustments cloned`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+        }
+        val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+        val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+        val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
+
+        assertThat(adjustmentMessages).hasSize(2)
+
+        val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
+
+        with(requests[0]) {
+          assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(sentences).hasSize(1)
+          assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+          assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+          assertThat(sentences[0].adjustmentIds).hasSize(1)
+          // either of the adjustments will be present
+          assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+        }
+        with(requests[1]) {
+          assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(sentences).hasSize(1)
+          assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+          assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+          assertThat(sentences[0].adjustmentIds).hasSize(1)
+          assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+        }
+      }
+
+      @Test
+      fun `will call nomis api to clone case`() {
+        courtSentencingNomisApi.verify(
+          postRequestedFor(urlEqualTo("/prisoners/$offenderNo/sentencing/court-cases/clone/$nomisCourtCaseId")),
+        )
+      }
+
+      @Test
+      fun `will update for clones cases`() {
+        val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+        assertThat(request.mappingsToCreate.courtCases).isEmpty()
+        assertThat(request.mappingsToCreate.courtAppearances).isEmpty()
+        assertThat(request.mappingsToCreate.courtCharges).isEmpty()
+        assertThat(request.mappingsToCreate.sentences).isEmpty()
+        assertThat(request.mappingsToCreate.sentenceTerms).isEmpty()
+
+        assertThat(request.mappingsToUpdate.courtCases).containsExactly(
+          SimpleCourtSentencingIdPair(
+            fromNomisId = 101,
+            toNomisId = 201,
+          ),
+        )
+        assertThat(request.mappingsToUpdate.courtAppearances).containsExactlyInAnyOrder(
+          SimpleCourtSentencingIdPair(fromNomisId = 1001, toNomisId = 2001),
+          SimpleCourtSentencingIdPair(fromNomisId = 1002, toNomisId = 2002),
+        )
+        assertThat(request.mappingsToUpdate.courtCharges).containsExactlyInAnyOrder(
+          SimpleCourtSentencingIdPair(fromNomisId = 1003, toNomisId = 2003),
+          SimpleCourtSentencingIdPair(fromNomisId = 1004, toNomisId = 2004),
+        )
+        assertThat(request.mappingsToUpdate.sentences).containsExactlyInAnyOrder(
+          CourtSentenceIdPair(
+            fromNomisId = MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+            toNomisId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+          ),
+        )
+
+        assertThat(request.mappingsToUpdate.sentenceTerms).containsExactlyInAnyOrder(
+          CourtSentenceTermIdPair(
+            fromNomisId = SentenceTermId(
+              MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+              nomisSequence = 1,
+            ),
+            SentenceTermId(
+              nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+              nomisSequence = 21,
+            ),
+          ),
+          CourtSentenceTermIdPair(
+            fromNomisId = SentenceTermId(
+              MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+              nomisSequence = 2,
+            ),
+            SentenceTermId(
+              nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+              nomisSequence = 22,
+            ),
+          ),
+        )
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = dpsCourtCaseId,
+          nomisCourtCaseId = nomisCourtCaseId,
+        )
+        courtSentencingNomisApi.stubCloneCourtCase(
+          offenderNo,
+          nomisCourtCaseId,
+          response = BookingCourtCaseCloneResponse(
+            courtCases = listOf(
+              ClonedCourtCaseResponse(
+                sourceCourtCase = uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.nomisCaseResponse(
+                  id = 101L,
+                  events = listOf(nomisAppearanceResponse(id = 1001), nomisAppearanceResponse(id = 1002)),
+                  sentences = listOf(
+                    nomisSentenceResponse().copy(
+                      bookingId = 1,
+                      sentenceSeq = 10,
+                      sentenceTerms = listOf(
+                        nomisSentenceTermResponse().copy(termSequence = 1),
+                        nomisSentenceTermResponse().copy(termSequence = 2),
+                      ),
+                    ),
+                  ),
+                ).copy(
+                  bookingId = 1,
+                  offenderCharges = listOf(
+                    nomisOffenderChargeResponse(offenderChargeId = 1003),
+                    nomisOffenderChargeResponse(offenderChargeId = 1004),
+                  ),
+                ),
+                courtCase = nomisCaseResponse(
+                  id = 201L,
+                  events = listOf(nomisAppearanceResponse(id = 2001), nomisAppearanceResponse(id = 2002)),
+                  sentences = listOf(
+                    nomisSentenceResponse().copy(
+                      bookingId = 2,
+                      sentenceSeq = 20,
+                      sentenceTerms = listOf(
+                        nomisSentenceTermResponse().copy(termSequence = 21),
+                        nomisSentenceTermResponse().copy(termSequence = 22),
+                      ),
+                    ),
+                  ),
+                ).copy(
+                  bookingId = 2,
+                  offenderCharges = listOf(
+                    nomisOffenderChargeResponse(offenderChargeId = 2003),
+                    nomisOffenderChargeResponse(offenderChargeId = 2004),
+                  ),
+                ),
+              ),
+            ),
+            sentenceAdjustments = listOf(
+              SentenceIdAndAdjustmentsCreated(
+                sentenceId = SentenceId(
+                  offenderBookingId = 2,
+                  sentenceSequence = 20,
+                ),
+                adjustmentIds = listOf(20001, 20002),
+              ),
+            ),
+          ),
+        )
+
+        courtSentencingMappingApi.stubUpdateAndCreateMappings()
+
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will create cloned telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-case-cloned-repair"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["nomisCourtCaseIds"]).isEqualTo("101")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will send message to nomis migration to sync court cases cloned`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+        }
+        val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+        val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+        val sqsMessage = sqsMessages.first { it.Type == "courtsentencing.resync.case.booking" }
+        assertThat(sqsMessage.Type).isEqualTo("courtsentencing.resync.case.booking")
+        val request: OffenderCaseBookingResynchronisationEvent = sqsMessage.Message.fromJson()
+        assertThat(request.offenderNo).isEqualTo(OFFENDER_NO)
+        assertThat(request.caseIds).containsExactly(101L)
+        assertThat(request.casesMoved).hasSize(1)
+        assertThat(request.casesMoved[0].caseId).isEqualTo(201L)
+        assertThat(request.casesMoved[0].sentences).hasSize(1)
+        assertThat(request.casesMoved[0].sentences[0].sentenceSequence).isEqualTo(20)
+        assertThat(request.fromBookingId).isEqualTo(1L)
+        assertThat(request.toBookingId).isEqualTo(2L)
+      }
+
+      @Test
+      fun `will send message to nomis migration to sync sentence adjustments cloned`() {
+        await untilAsserted {
+          assertThat(fromNomisCourtSentencingQueue.countAllMessagesOnQueue()).isEqualTo(3)
+        }
+        val rawMessages = fromNomisCourtSentencingQueue.readAtMost10RawMessages()
+        val sqsMessages: List<SQSMessage> = rawMessages.map { it.fromJson() }
+        val adjustmentMessages = sqsMessages.filter { it.Type == "courtsentencing.resync.sentence-adjustments" }
+
+        assertThat(adjustmentMessages).hasSize(2)
+
+        val requests: List<SyncSentenceAdjustment> = adjustmentMessages.map { it.Message.fromJson() }
+
+        with(requests[0]) {
+          assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(sentences).hasSize(1)
+          assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+          assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+          assertThat(sentences[0].adjustmentIds).hasSize(1)
+          // either of the adjustments will be present
+          assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+        }
+        with(requests[1]) {
+          assertThat(offenderNo).isEqualTo(OFFENDER_NO)
+          assertThat(sentences).hasSize(1)
+          assertThat(sentences[0].sentenceId.offenderBookingId).isEqualTo(2L)
+          assertThat(sentences[0].sentenceId.sentenceSequence).isEqualTo(20)
+          assertThat(sentences[0].adjustmentIds).hasSize(1)
+          assertThat(sentences[0].adjustmentIds[0] in listOf(20001L, 20002L)).isTrue
+        }
+      }
+
+      @Test
+      fun `will call nomis api to clone case`() {
+        courtSentencingNomisApi.verify(
+          postRequestedFor(urlEqualTo("/prisoners/$offenderNo/sentencing/court-cases/clone/$nomisCourtCaseId")),
+        )
+      }
+
+      @Test
+      fun `will update for clones cases`() {
+        val request: CourtCaseBatchUpdateAndCreateMappingDto = CourtSentencingMappingApiMockServer.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/update-create")))
+        assertThat(request.mappingsToCreate.courtCases).isEmpty()
+        assertThat(request.mappingsToCreate.courtAppearances).isEmpty()
+        assertThat(request.mappingsToCreate.courtCharges).isEmpty()
+        assertThat(request.mappingsToCreate.sentences).isEmpty()
+        assertThat(request.mappingsToCreate.sentenceTerms).isEmpty()
+
+        assertThat(request.mappingsToUpdate.courtCases).containsExactly(
+          SimpleCourtSentencingIdPair(
+            fromNomisId = 101,
+            toNomisId = 201,
+          ),
+        )
+        assertThat(request.mappingsToUpdate.courtAppearances).containsExactlyInAnyOrder(
+          SimpleCourtSentencingIdPair(fromNomisId = 1001, toNomisId = 2001),
+          SimpleCourtSentencingIdPair(fromNomisId = 1002, toNomisId = 2002),
+        )
+        assertThat(request.mappingsToUpdate.courtCharges).containsExactlyInAnyOrder(
+          SimpleCourtSentencingIdPair(fromNomisId = 1003, toNomisId = 2003),
+          SimpleCourtSentencingIdPair(fromNomisId = 1004, toNomisId = 2004),
+        )
+        assertThat(request.mappingsToUpdate.sentences).containsExactlyInAnyOrder(
+          CourtSentenceIdPair(
+            fromNomisId = MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+            toNomisId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+          ),
+        )
+
+        assertThat(request.mappingsToUpdate.sentenceTerms).containsExactlyInAnyOrder(
+          CourtSentenceTermIdPair(
+            fromNomisId = SentenceTermId(
+              MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+              nomisSequence = 1,
+            ),
+            SentenceTermId(
+              nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+              nomisSequence = 21,
+            ),
+          ),
+          CourtSentenceTermIdPair(
+            fromNomisId = SentenceTermId(
+              MappingSentenceId(nomisBookingId = 1, nomisSequence = 10),
+              nomisSequence = 2,
+            ),
+            SentenceTermId(
+              nomisSentenceId = MappingSentenceId(nomisBookingId = 2, nomisSequence = 20),
+              nomisSequence = 22,
+            ),
+          ),
+        )
       }
     }
   }

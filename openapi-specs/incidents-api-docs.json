@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-10-01.250.7034e34"
+    "version" : "2025-10-02.252.859fd30"
   },
   "servers" : [ {
     "url" : "/",
@@ -5825,15 +5825,15 @@
         "type" : "object",
         "description" : "Incident report created in NOMIS",
         "properties" : {
+          "incidentReport" : {
+            "$ref" : "#/components/schemas/NomisReport",
+            "description" : "Complete incident report payload"
+          },
           "initialMigration" : {
             "type" : "boolean",
             "default" : false,
             "description" : "Set to true for initial migration",
             "example" : true
-          },
-          "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
           }
         },
         "required" : [ "incidentReport" ],
@@ -5843,11 +5843,6 @@
         "type" : "object",
         "description" : "Incident report updated in NOMIS",
         "properties" : {
-          "initialMigration" : {
-            "type" : "boolean",
-            "default" : false,
-            "description" : "Omit or set to false for updates"
-          },
           "id" : {
             "type" : "string",
             "format" : "uuid",
@@ -5857,6 +5852,11 @@
           "incidentReport" : {
             "$ref" : "#/components/schemas/NomisReport",
             "description" : "Complete incident report payload"
+          },
+          "initialMigration" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Omit or set to false for updates"
           }
         },
         "required" : [ "id", "incidentReport" ],
@@ -6207,6 +6207,10 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "latestUserAction" : {
+            "type" : "string",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+          },
           "questions" : {
             "type" : "array",
             "description" : "The question-response pairs that make up this report",
@@ -6263,11 +6267,6 @@
           "prisonerInvolvementDone" : {
             "type" : "boolean",
             "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
-          },
-          "latestUserAction" : {
-            "type" : "string",
-            "description" : "Latest user action from the most recent correction request",
-            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
           "nomisStatus" : {
             "type" : "string",
@@ -6798,6 +6797,11 @@
             "type" : "string",
             "format" : "uuid",
             "description" : "ID of the original report of which this report is a duplicate of"
+          },
+          "latestUserAction" : {
+            "type" : "string",
+            "description" : "Latest user action from the most recent correction request",
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           }
         },
         "readOnly" : true,

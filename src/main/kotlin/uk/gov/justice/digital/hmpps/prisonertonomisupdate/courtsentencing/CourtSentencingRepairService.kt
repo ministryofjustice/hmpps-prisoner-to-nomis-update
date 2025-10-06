@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferen
 @Service
 class CourtSentencingRepairService(
   private val courtSentencingService: CourtSentencingService,
+  private val nomisApiService: CourtSentencingNomisApiService,
+  private val courtCaseMappingService: CourtCaseMappingService,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -32,5 +34,23 @@ class CourtSentencingRepairService(
       ),
     )
     courtSentencingService.createCharge(event)
+  }
+
+  suspend fun cloneCaseToLatestBooking(offenderNo: String, dpsCourtCaseId: String) {
+    val telemetryMap = mutableMapOf(
+      "dpsCourtCaseId" to dpsCourtCaseId,
+      "offenderNo" to offenderNo,
+    )
+    val response = nomisApiService.cloneCourtCase(
+      offenderNo = offenderNo,
+      courtCaseId = courtCaseMappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCourtCaseId).nomisCourtCaseId.also {
+        telemetryMap["nomisCourtCaseId"] = it.toString()
+      },
+    )
+    courtSentencingService.tryUpdateCaseMappingsAndNotifyClonedCases(
+      mappingsWrapper = response.toCourtCaseBatchMappingDto(offenderNo = offenderNo),
+      offenderNo = offenderNo,
+      telemetry = telemetryMap,
+    )
   }
 }
