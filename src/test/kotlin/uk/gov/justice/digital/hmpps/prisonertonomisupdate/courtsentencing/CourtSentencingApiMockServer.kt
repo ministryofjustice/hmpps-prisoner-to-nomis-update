@@ -78,7 +78,7 @@ class CourtSentencingApiExtension :
   }
 }
 
-private const val dpsAppearanceCRTUuid = "63e8fce0-033c-46ad-9edf-391b802d547a"
+private const val APPEARANCE_TYPE_CRT = "63e8fce0-033c-46ad-9edf-391b802d547a"
 
 class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
@@ -131,7 +131,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     courtCharge3Id: String,
     courtCharge4Id: String,
     offenderNo: String = "A6160DZ",
-    appearanceType: String = dpsAppearanceCRTUuid,
+    appearanceType: String = APPEARANCE_TYPE_CRT,
   ) {
     val courtAppearance = LegacyCourtAppearance(
       lifetimeUuid = UUID.fromString(courtAppearanceId),
@@ -217,7 +217,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
       ),
       nomisOutcomeCode = "4531",
-      appearanceTypeUuid = UUID.fromString(dpsAppearanceCRTUuid),
+      appearanceTypeUuid = UUID.fromString(APPEARANCE_TYPE_CRT),
     )
     stubFor(
       WireMock.get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
