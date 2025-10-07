@@ -91,7 +91,7 @@ private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val CASE_REFERENCE = "ABC4999"
 public const val APPEARANCE_CRT = "63e8fce0-033c-46ad-9edf-391b802d547a"
-private const val APPEARANCE_VL = "1da09b6e-55cb-4838-a157-ee6944f2094c "
+private const val APPEARANCE_VL = "1da09b6e-55cb-4838-a157-ee6944f2094c"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
