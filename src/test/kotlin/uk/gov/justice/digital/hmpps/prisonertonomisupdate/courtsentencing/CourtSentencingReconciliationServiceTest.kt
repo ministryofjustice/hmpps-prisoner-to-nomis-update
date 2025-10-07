@@ -382,6 +382,66 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will ignore bad offence date data`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(offenceDate = LocalDate.of(1900, 3, 3)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1900, 4, 3)),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isNull()
+    }
+
+    @Test
+    fun `will compare offence date data when in valid date range`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(offenceDate = LocalDate.of(1921, 3, 3)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1921, 4, 3)),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isNull()
+    }
+
+    @Test
     fun `will report an extra sentence in nomis`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(

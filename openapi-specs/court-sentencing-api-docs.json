@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-02.595.3ad2e77"
+    "version" : "2025-10-06.611.afbf956"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3516,64 +3516,6 @@
         }
       }
     },
-    "/legacy/court-case/{courtCaseUuid}/test" : {
-      "get" : {
-        "tags" : [ "legacy-court-case-controller" ],
-        "summary" : "Retrieve court case details for testing",
-        "description" : "This endpoint will retrieve court case details for testing",
-        "operationId" : "getTest",
-        "parameters" : [ {
-          "name" : "courtCaseUuid",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns court case details for testing",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TestCourtCase"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TestCourtCase"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TestCourtCase"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found if no court case at uuid",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TestCourtCase"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/legacy/court-case/{courtCaseUuid}/reconciliation" : {
       "get" : {
         "tags" : [ "legacy-court-case-controller" ],
@@ -4843,7 +4785,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5105,7 +5047,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "courtCode" : {
             "type" : "string"
@@ -7086,16 +7028,20 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "courtCode" : {
             "type" : "string"
           },
           "appearanceType" : {
             "$ref" : "#/components/schemas/AppearanceType"
+          },
+          "futureSkeletonAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
-        "required" : [ "appearanceDate", "appearanceType", "courtCode" ]
+        "required" : [ "appearanceDate", "appearanceType", "courtCode", "futureSkeletonAppearanceUuid" ]
       },
       "HasSentenceToChainToResponse" : {
         "type" : "object",
@@ -7117,12 +7063,9 @@
           },
           "caseReference" : {
             "type" : "string"
-          },
-          "isEmpty" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "isEmpty", "warrantTypeDocumentTypes" ]
+        "required" : [ "warrantTypeDocumentTypes" ]
       },
       "AppearanceDocument" : {
         "type" : "object",
@@ -7512,132 +7455,6 @@
         },
         "required" : [ "active", "caseReferences", "courtCaseUuid", "prisonerId" ]
       },
-      "LegacyCharge" : {
-        "type" : "object",
-        "properties" : {
-          "prisonerId" : {
-            "type" : "string"
-          },
-          "courtCaseUuid" : {
-            "type" : "string"
-          },
-          "lifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "nomisOutcomeCode" : {
-            "type" : "string"
-          },
-          "offenceCode" : {
-            "type" : "string"
-          },
-          "offenceStartDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "offenceEndDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
-          }
-        },
-        "required" : [ "courtCaseUuid", "lifetimeUuid", "offenceCode", "prisonerId" ]
-      },
-      "LegacyCourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "lifetimeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "courtCaseUuid" : {
-            "type" : "string"
-          },
-          "prisonerId" : {
-            "type" : "string"
-          },
-          "nomisOutcomeCode" : {
-            "type" : "string"
-          },
-          "courtCode" : {
-            "type" : "string"
-          },
-          "appearanceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "appearanceTime" : {
-            "type" : "string",
-            "example" : "07:23:15.851103571"
-          },
-          "charges" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LegacyCharge"
-            }
-          },
-          "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/LegacyNextCourtAppearance"
-          }
-        },
-        "required" : [ "appearanceDate", "appearanceTime", "charges", "courtCaseUuid", "courtCode", "lifetimeUuid", "prisonerId" ]
-      },
-      "LegacyNextCourtAppearance" : {
-        "type" : "object",
-        "properties" : {
-          "appearanceDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "appearanceTime" : {
-            "type" : "string",
-            "example" : "07:23:15.851103571"
-          },
-          "courtId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "appearanceDate", "courtId" ]
-      },
-      "TestCourtCase" : {
-        "type" : "object",
-        "properties" : {
-          "courtCaseUuid" : {
-            "type" : "string"
-          },
-          "prisonerId" : {
-            "type" : "string"
-          },
-          "active" : {
-            "type" : "boolean"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "courtId" : {
-            "type" : "string"
-          },
-          "caseReference" : {
-            "type" : "string"
-          },
-          "caseReferences" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CaseReferenceLegacyData"
-            }
-          },
-          "appearances" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/LegacyCourtAppearance"
-            }
-          }
-        },
-        "required" : [ "active", "appearances", "caseReferences", "courtCaseUuid", "prisonerId" ]
-      },
       "ReconciliationCharge" : {
         "type" : "object",
         "properties" : {
@@ -7684,7 +7501,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7740,7 +7557,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "courtId" : {
             "type" : "string"
@@ -7821,6 +7638,99 @@
           }
         },
         "required" : [ "active", "periodLengths", "sentenceStartDate", "sentenceUuid" ]
+      },
+      "LegacyCharge" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "lifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nomisOutcomeCode" : {
+            "type" : "string"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          }
+        },
+        "required" : [ "courtCaseUuid", "lifetimeUuid", "offenceCode", "prisonerId" ]
+      },
+      "LegacyCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "lifetimeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtCaseUuid" : {
+            "type" : "string"
+          },
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "nomisOutcomeCode" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTime" : {
+            "type" : "string",
+            "example" : "07:23:19.961000296"
+          },
+          "charges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/LegacyCharge"
+            }
+          },
+          "nextCourtAppearance" : {
+            "$ref" : "#/components/schemas/LegacyNextCourtAppearance"
+          },
+          "appearanceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceTime", "appearanceTypeUuid", "charges", "courtCaseUuid", "courtCode", "lifetimeUuid", "prisonerId" ]
+      },
+      "LegacyNextCourtAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "appearanceTime" : {
+            "type" : "string",
+            "example" : "07:23:19.961000296"
+          },
+          "courtId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "appearanceDate", "courtId" ]
       },
       "RecallableCourtCase" : {
         "type" : "object",
@@ -8008,6 +7918,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8025,18 +7941,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -8053,14 +7963,14 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageSize" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -8094,6 +8004,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8111,18 +8027,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -8343,16 +8253,20 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:15.851103571"
+            "example" : "07:23:19.961000296"
           },
           "courtCode" : {
             "type" : "string"
           },
           "appearanceTypeDescription" : {
             "type" : "string"
+          },
+          "futureSkeletonAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
-        "required" : [ "appearanceDate", "appearanceTypeDescription" ]
+        "required" : [ "appearanceDate", "appearanceTypeDescription", "futureSkeletonAppearanceUuid" ]
       },
       "PagedSentence" : {
         "type" : "object",
