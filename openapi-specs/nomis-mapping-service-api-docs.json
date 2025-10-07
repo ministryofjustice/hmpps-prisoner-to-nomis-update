@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-22.173.b141a2b"
+    "version" : "2025-10-06.188.87a8851"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -34,7 +34,7 @@
       "put" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
-        "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_TRANSACTIONS",
+        "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "updateMappingsByNomisId",
         "parameters" : [ {
           "name" : "oldOffenderNo",
@@ -81,7 +81,7 @@
       "put" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "For all transactions with the given booking id in the mapping table, sets the offender no to the given 'to' id",
-        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected transactions. Requires role ROLE_NOMIS_TRANSACTIONS",
+        "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected transactions. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "updateMappingsByBookingId",
         "parameters" : [ {
           "name" : "bookingId",
@@ -1584,7 +1584,7 @@
       "post" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "get mappings by Nomis id",
-        "description" : "Retrieves multiple mappings by NOMIS transaction id. Requires role NOMIS_TRANSACTIONS",
+        "description" : "Retrieves multiple mappings by NOMIS transaction id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getMappingsByNomisId",
         "requestBody" : {
           "content" : {
@@ -1643,7 +1643,7 @@
       "post" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Creates a batch of new transaction mappings",
-        "description" : "Creates a mapping between a batch of nomis transaction ids and dps transaction ids. Requires ROLE_NOMIS_TRANSACTIONS",
+        "description" : "Creates a mapping between a batch of nomis transaction ids and dps transaction ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createMappings_2",
         "requestBody" : {
           "content" : {
@@ -1700,7 +1700,7 @@
       "post" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Creates a new transaction mapping",
-        "description" : "Creates a mapping between nomis transaction id and dps transaction id. Requires ROLE_NOMIS_TRANSACTIONS",
+        "description" : "Creates a mapping between nomis transaction id and dps transaction id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createMapping_4",
         "requestBody" : {
           "content" : {
@@ -2123,7 +2123,7 @@
       "post" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Creates a prisoner account balance mapping",
-        "description" : "Creates a prisoner account balance mapping. Requires ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Creates a prisoner account balance mapping. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createPrisonerMapping",
         "requestBody" : {
           "content" : {
@@ -2175,7 +2175,7 @@
       "delete" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Deletes all prisoner balance mappings",
-        "description" : "Deletes all prisoner balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Deletes all prisoner balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteAllPrisonerMappings",
         "responses" : {
           "204" : {
@@ -2209,7 +2209,7 @@
       "post" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Creates a prison account balance mapping",
-        "description" : "Creates a prison account balance mapping. Requires ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Creates a prison account balance mapping. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createPrisonMapping",
         "requestBody" : {
           "content" : {
@@ -2261,7 +2261,7 @@
       "delete" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Deletes all prison balance mappings",
-        "description" : "Deletes all prison balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Deletes all prison balance mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteAllPrisonMappings",
         "responses" : {
           "204" : {
@@ -6578,7 +6578,7 @@
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Gets all transaction mappings for a prisoner",
-        "description" : "Gets all the mappings between nomis transaction ids and dps transaction ids related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_TRANSACTIONS",
+        "description" : "Gets all the mappings between nomis transaction ids and dps transaction ids related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getMappingsForPrisoner_1",
         "parameters" : [ {
           "name" : "offenderNo",
@@ -6630,7 +6630,7 @@
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "get mapping",
-        "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_TRANSACTIONS",
+        "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getMappingByNomisId_3",
         "parameters" : [ {
           "name" : "transactionId",
@@ -6742,7 +6742,7 @@
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "get the latest mapping for a migration",
-        "description" : "Requires role NOMIS_TRANSACTIONS",
+        "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getLatestMigratedTransactionMapping",
         "responses" : {
           "200" : {
@@ -6782,7 +6782,7 @@
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Retrieves mapping by DPS id",
-        "description" : "Requires role NOMIS_TRANSACTIONS",
+        "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getMappingByDpsId_1",
         "parameters" : [ {
           "name" : "dpsTransactionId",
@@ -6832,7 +6832,7 @@
       "delete" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Deletes mapping",
-        "description" : "Deletes mapping by DPS id. Requires role NOMIS_TRANSACTIONS",
+        "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteMappingByDpsId_1",
         "parameters" : [ {
           "name" : "dpsTransactionId",
@@ -7977,7 +7977,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get prisoner balance mapping by Nomis rootOffenderId",
-        "description" : "Retrieves the prisoner balance mapping by Nomis rootOffenderId. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieves the prisoner balance mapping by Nomis rootOffenderId. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisRootOffenderId",
@@ -8040,7 +8040,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get paged Prisoner balance mappings by migration id",
-        "description" : "Retrieve all Prisoner balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieve all Prisoner balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerMappingByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -8099,7 +8099,7 @@
       "get" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Get prisoner balance mapping by DPS id",
-        "description" : "Retrieves the prisoner balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieves the prisoner balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonerMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
@@ -8159,7 +8159,7 @@
       "delete" : {
         "tags" : [ "prisoner-balance-mapping-resource" ],
         "summary" : "Deletes a Prisoner balance mapping",
-        "description" : "Deletes a Prisoner balance mapping by DPS id. Requires role NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Deletes a Prisoner balance mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deletePrisonerMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
@@ -8205,7 +8205,7 @@
       "get" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Get prison balance mapping by Nomis ID (Prison ID)",
-        "description" : "Retrieves the prison balance mapping by Nomis ID. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieves the prison balance mapping by Nomis ID. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisId",
@@ -8267,7 +8267,7 @@
       "get" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Get paged Prison balance mappings by migration id",
-        "description" : "Retrieve all Prison balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieve all Prison balance mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonMappingByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
@@ -8326,7 +8326,7 @@
       "get" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Get prison balance mapping by DPS id",
-        "description" : "Retrieves the prison balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Retrieves the prison balance mapping by DPS id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "getPrisonMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
@@ -8386,7 +8386,7 @@
       "delete" : {
         "tags" : [ "prison-balance-mapping-resource" ],
         "summary" : "Deletes a Prison balance mapping",
-        "description" : "Deletes a Prison balance mapping by DPS id. Requires role NOMIS_MAPPINGS_SYNCHRONISATION_RW",
+        "description" : "Deletes a Prison balance mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deletePrisonMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
@@ -17226,7 +17226,7 @@
       "delete" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Deletes mapping",
-        "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_TRANSACTIONS",
+        "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "deleteMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisTransactionId",
@@ -21540,12 +21540,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21562,6 +21556,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21585,6 +21585,9 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
@@ -21595,9 +21598,6 @@
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -21715,12 +21715,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21737,6 +21731,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21840,12 +21840,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21862,6 +21856,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21950,12 +21950,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -21972,6 +21966,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22056,12 +22056,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22078,6 +22072,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22102,12 +22102,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22124,6 +22118,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22148,12 +22148,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22170,6 +22164,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22222,12 +22222,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22244,6 +22238,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22290,12 +22290,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -22312,6 +22306,12 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
