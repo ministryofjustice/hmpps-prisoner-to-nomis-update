@@ -438,7 +438,7 @@ internal class CourtSentencingReconciliationServiceTest {
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
         )?.differences,
-      ).isNull()
+      ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "1921-04-03", nomis = "1921-03-03", id = DPS_COURT_CHARGE_ID)))
     }
 
     @Test

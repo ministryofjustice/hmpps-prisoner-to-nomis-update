@@ -177,7 +177,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
       ),
       nomisOutcomeCode = "4531",
-      appearanceTypeUuid = UUID.fromString(dpsAppearanceCRTUuid),
+      appearanceTypeUuid = UUID.fromString(appearanceType),
     )
 
     stubFor(
