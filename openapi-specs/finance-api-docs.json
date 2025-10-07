@@ -7,14 +7,14 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-01.120.44ca973"
+    "version" : "2025-10-03.132.1b7837a"
   },
   "servers" : [ {
-    "url" : "http://localhost:8080",
-    "description" : "Local development environment"
-  }, {
     "url" : "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/",
-    "description" : "Development environment"
+    "description" : "Development"
+  }, {
+    "url" : "http://localhost:8080",
+    "description" : "Local"
   } ],
   "security" : [ {
     "bearer-jwt" : [ ]
@@ -741,7 +741,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AccountDetailsList"
+                  "$ref" : "#/components/schemas/PrisonAccountDetailsList"
                 }
               }
             }
@@ -932,7 +932,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AccountDetailsList"
+                  "$ref" : "#/components/schemas/PrisonerSubAccountDetailsList"
                 }
               }
             }
@@ -1788,37 +1788,9 @@
         },
         "required" : [ "postings" ]
       },
-      "AccountDetails" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "balance" : {
-            "type" : "number"
-          }
-        },
-        "required" : [ "balance", "code", "name" ]
-      },
-      "AccountDetailsList" : {
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/AccountDetails"
-            }
-          }
-        },
-        "required" : [ "items" ]
-      },
       "PrisonAccountDetails" : {
         "type" : "object",
-        "description" : "Summary of an prison general ledger account",
+        "description" : "Summary of a prison general ledger account",
         "properties" : {
           "code" : {
             "type" : "integer",
@@ -1855,6 +1827,19 @@
           }
         },
         "required" : [ "balance", "classification", "code", "name", "postingType", "prisonId" ]
+      },
+      "PrisonAccountDetailsList" : {
+        "type" : "object",
+        "description" : "A list of accounts for a specific prison",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonAccountDetails"
+            }
+          }
+        },
+        "required" : [ "items" ]
       },
       "TransactionAccountDetails" : {
         "type" : "object",
@@ -1981,6 +1966,19 @@
           }
         },
         "required" : [ "balance", "code", "holdBalance", "name", "prisonNumber" ]
+      },
+      "PrisonerSubAccountDetailsList" : {
+        "type" : "object",
+        "description" : "A list of prisoner sub-accounts (e.g., Cash, Spends, Savings)",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerSubAccountDetails"
+            }
+          }
+        },
+        "required" : [ "items" ]
       }
     },
     "securitySchemes" : {
