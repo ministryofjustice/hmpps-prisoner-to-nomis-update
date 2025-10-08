@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-03.678.059b424"
+    "version" : "2025-10-07.690.f2aa846"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -337,6 +337,68 @@
         }
       }
     },
+    "/visits/allocation/prisoner/{prisonerId}/balance/detailed" : {
+      "get" : {
+        "tags" : [ "balance-controller" ],
+        "summary" : "Endpoint to get a prisoners current balance, detailed version.",
+        "description" : "Takes a prisoner id and return their current visit order balance, detailed version.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__HMPPS_MANAGE_PRISON_VISITS_ORCHESTRATION",
+        "operationId" : "getPrisonerDetailedBalance",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "description" : "prisonerId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonerId",
+            "example" : "AA123456"
+          },
+          "example" : "AA123456"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner balance returned.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerDetailedBalanceDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get prisoner balance.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner balance not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/visits/allocation/prisoner/{prisonerId}/adjustments/{adjustmentId}" : {
       "get" : {
         "tags" : [ "nomis-controller" ],
@@ -619,6 +681,59 @@
           }
         },
         "required" : [ "prisonerId", "pvoBalance", "voBalance" ]
+      },
+      "PrisonerDetailedBalanceDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string",
+            "description" : "nomsNumber of the prisoner",
+            "example" : "AA123456"
+          },
+          "availableVos" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current available VO balance",
+            "example" : 5
+          },
+          "accumulatedVos" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current accumulated VO balance",
+            "example" : 5
+          },
+          "negativeVos" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current negative VO balance, denoted as a positive value",
+            "example" : 5
+          },
+          "availablePvos" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current available PVO balance",
+            "example" : 5
+          },
+          "negativePvos" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The current negative VO balance, denoted as a positive value",
+            "example" : 5
+          },
+          "lastVoAllocatedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date VOs were last allocated to the prisoner",
+            "example" : "2025-01-01"
+          },
+          "lastPvoAllocatedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date PVOs were last allocated to the prisoner",
+            "example" : "2025-01-01"
+          }
+        },
+        "required" : [ "accumulatedVos", "availablePvos", "availableVos", "lastVoAllocatedDate", "negativePvos", "negativeVos", "prisonerId" ]
       },
       "VisitAllocationPrisonerAdjustmentResponseDto" : {
         "type" : "object",
