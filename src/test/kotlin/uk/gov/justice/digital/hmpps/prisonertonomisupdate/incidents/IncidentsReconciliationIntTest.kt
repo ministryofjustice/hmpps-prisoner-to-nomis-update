@@ -543,7 +543,7 @@ class IncidentsReconciliationIntTest(
       fun `return 404 when incident not found`() {
         incidentsNomisApi.stubGetIncident(HttpStatus.NOT_FOUND)
         webTestClient.get().uri("/incidents/reconciliation/99999")
-          .headers(setAuthorisation(roles = listOf("NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isNotFound
           .expectBody()
@@ -563,7 +563,7 @@ class IncidentsReconciliationIntTest(
       @Test
       fun `will return no differences`() {
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
-          .headers(setAuthorisation(roles = listOf("NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -578,7 +578,7 @@ class IncidentsReconciliationIntTest(
         incidentsDpsApi.stubGetIncidentByNomisId(33)
 
         val mismatch = webTestClient.get().uri("/incidents/reconciliation/$mismatchNomisIncidentId")
-          .headers(setAuthorisation(roles = listOf("NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk

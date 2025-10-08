@@ -108,7 +108,7 @@ class CSIPDataRepairResourceIntTest : IntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           webTestClient.post().uri("/prisoners/$offenderNo/csip/$dpsCSIPReportId/repair")
-            .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CSIP")))
+            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
 
@@ -222,7 +222,7 @@ class CSIPDataRepairResourceIntTest : IntegrationTestBase() {
         fun setUp() {
           csipMappingApi.stubDeleteChildMappingsByDpsId(dpsCSIPReportId)
           webTestClient.post().uri("/prisoners/$offenderNo/csip/$dpsCSIPReportId/repair?clearChildMappings=true")
-            .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CSIP")))
+            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
 

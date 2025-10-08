@@ -302,7 +302,7 @@ class CSIPResourceIntTest(
           status = HttpStatus.NOT_FOUND,
         )
         webTestClient.get().uri("/csip/reconciliation/AB9999C")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isNotFound
       }
@@ -319,7 +319,7 @@ class CSIPResourceIntTest(
       @Test
       fun `will return no differences`() {
         webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -337,7 +337,7 @@ class CSIPResourceIntTest(
         )
 
         webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_CSIP")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk

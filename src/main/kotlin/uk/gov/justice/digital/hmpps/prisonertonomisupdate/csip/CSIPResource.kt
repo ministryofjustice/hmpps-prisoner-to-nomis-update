@@ -20,13 +20,13 @@ class CSIPResource(
   private val reconciliationService: CSIPReconciliationService,
 ) {
 
-  @PreAuthorize("hasRole('NOMIS_CSIP')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/csip/reconciliation/{prisonNumber}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Run csip reconciliation against this prisoner",
     description = """Retrieves the differences for csip reports against a specific prisoner. Empty response returned if no differences found.
-      Requires NOMIS_CSIP""",
+      Requires PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -44,7 +44,7 @@ class CSIPResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires NOMIS_CSIP",
+        description = "Forbidden to access this endpoint. Requires PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",

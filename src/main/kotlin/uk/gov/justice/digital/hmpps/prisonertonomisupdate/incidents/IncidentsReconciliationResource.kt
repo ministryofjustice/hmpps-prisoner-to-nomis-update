@@ -19,13 +19,13 @@ class IncidentsReconciliationResource(
   private val reconciliationService: IncidentsReconciliationService,
 ) {
 
-  @PreAuthorize("hasRole('NOMIS_INCIDENTS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/incidents/reconciliation/{nomisIncidentId}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Run reconciliation against this incident",
     description = """Retrieves the differences for the incident report. Empty response returned if no differences found.
-      Requires NOMIS_INCIDENTS""",
+      Requires PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -43,7 +43,7 @@ class IncidentsReconciliationResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires NOMIS_INCIDENTS",
+        description = "Forbidden to access this endpoint. Requires PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",

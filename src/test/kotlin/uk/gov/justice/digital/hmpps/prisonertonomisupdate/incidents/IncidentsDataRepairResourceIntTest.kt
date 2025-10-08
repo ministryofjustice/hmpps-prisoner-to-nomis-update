@@ -73,7 +73,7 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `repair incident NOMIS in charge of incident`() {
         nomisApi.stubCheckAgencySwitchForAgencyNotFound("INCIDENTS", "ASI")
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().isBadRequest
@@ -83,7 +83,7 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
       fun `draft incident doesn't get synced`() {
         nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().is5xxServerError
@@ -98,7 +98,7 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
         incidentsNomisApi.stubUpsertIncident(INCIDENT_ID)
 
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_INCIDENTS")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().isNoContent
