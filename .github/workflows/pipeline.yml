@@ -64,6 +64,7 @@ jobs:
       gradle-command: ./gradlew ${{ matrix.tests }}
       localstack-tag: "4"
       artifact-name: ${{ matrix.tests }}
+      java-version: "25"
     needs:
       - gradle-build
       - setup-test-matrix
