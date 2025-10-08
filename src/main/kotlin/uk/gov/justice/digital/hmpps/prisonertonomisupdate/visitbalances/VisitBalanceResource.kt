@@ -17,13 +17,13 @@ class VisitBalanceResource(
   private val reconciliationService: VisitBalanceReconciliationService,
 ) {
 
-  @PreAuthorize("hasRole('NOMIS_VISIT_BALANCE')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/visit-balance/reconciliation/{prisonNumber}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Run the reconciliation for this prison number",
     description = """Retrieves the differences for a prisoner. Empty response returned if no differences found. 
-      Requires NOMIS_VISIT_BALANCE""",
+      Requires PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -41,7 +41,7 @@ class VisitBalanceResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires NOMIS_VISIT_BALANCE",
+        description = "Forbidden to access this endpoint. Requires PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",

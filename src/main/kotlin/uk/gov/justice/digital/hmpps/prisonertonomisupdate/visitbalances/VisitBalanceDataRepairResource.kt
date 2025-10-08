@@ -8,14 +8,14 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
-@PreAuthorize("hasRole('ROLE_NOMIS_VISIT_BALANCE')")
+@PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 @RestController
 class VisitBalanceDataRepairResource(
   private val visitBalanceService: VisitBalanceService,
 ) {
   @Operation(
     summary = "Resynchronises a DPS visit balance to NOMIS",
-    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_NOMIS_VISIT_BALANCE",
+    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   @PostMapping("/prisoners/{prisonNumber}/visit-balance/repair")
   @ResponseStatus(HttpStatus.NO_CONTENT)

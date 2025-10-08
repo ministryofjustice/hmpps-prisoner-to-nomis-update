@@ -304,7 +304,7 @@ class VisitBalanceResourceIntTest(
       fun `return null when offender not found`() {
         visitBalanceNomisApi.stubGetVisitBalance("A9999BC", HttpStatus.NOT_FOUND)
         webTestClient.get().uri("/visit-balance/reconciliation/A9999BC")
-          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
           .expectBody().isEmpty
@@ -323,7 +323,7 @@ class VisitBalanceResourceIntTest(
       @Test
       fun `will return no differences`() {
         webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -337,7 +337,7 @@ class VisitBalanceResourceIntTest(
         visitBalanceNomisApi.stubGetVisitBalance(prisonNumber, visitBalance().copy(remainingVisitOrders = 4))
 
         webTestClient.get().uri("/visit-balance/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
