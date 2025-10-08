@@ -66,7 +66,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
         visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = prisonNumber)
 
         webTestClient.post().uri("/prisoners/$prisonNumber/visit-balance/repair")
-          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isNoContent
       }
@@ -112,7 +112,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
         nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = prisonNumber)
 
         webTestClient.post().uri("/prisoners/$prisonNumber/visit-balance/repair")
-          .headers(setAuthorisation(roles = listOf("NOMIS_VISIT_BALANCE")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isNoContent
       }

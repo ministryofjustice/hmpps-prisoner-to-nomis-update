@@ -418,7 +418,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
 
       webTestClient.delete()
         .uri("/activities")
-        .headers(setAuthorisation(roles = listOf("ROLE_QUEUE_ADMIN")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus()
         .isNoContent

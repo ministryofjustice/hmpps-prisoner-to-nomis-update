@@ -147,7 +147,7 @@ class ActivitiesResource(
    * For dev environment only - delete all activities and courses, for when activities environment is reset
    */
   @Hidden
-  @PreAuthorize("hasRole('ROLE_QUEUE_ADMIN')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @DeleteMapping("/activities")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   suspend fun deleteAllActivities() {
