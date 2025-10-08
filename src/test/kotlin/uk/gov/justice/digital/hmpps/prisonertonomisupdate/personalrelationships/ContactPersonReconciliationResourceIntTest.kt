@@ -300,7 +300,7 @@ class ContactPersonReconciliationResourceIntTest(
       @Test
       fun `will return mismatch`() {
         webTestClient.get().uri("/persons/1/person-contact/reconciliation")
-          .headers(setAuthorisation(roles = listOf("MIGRATE_CONTACTPERSON")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
           .expectBody()

@@ -72,7 +72,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isCreated
 
@@ -110,7 +110,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       nomisApi.stubActivityCreate(buildNomisActivityResponse())
 
       webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isCreated
 
@@ -126,7 +126,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
       webTestClient.post().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().is5xxServerError
 
@@ -174,7 +174,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       mappingServer.stubUpdateActivity()
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isOk
 
@@ -211,7 +211,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       mappingServer.stubGetMappingGivenDpsLocationId(ACTIVITIES_DPS_LOCATION_ID, activitiesLocationMappingResponse)
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isOk
 
@@ -226,7 +226,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetScheduleWithError(ACTIVITY_SCHEDULE_ID)
 
       webTestClient.put().uri("/activities/$ACTIVITY_SCHEDULE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().is5xxServerError
 
@@ -271,7 +271,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       nomisApi.stubAllocationUpsert(NOMIS_CRS_ACTY_ID)
 
       webTestClient.put().uri("/allocations/$ALLOCATION_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isOk
 
@@ -295,7 +295,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetAllocationWithError(ALLOCATION_ID)
 
       webTestClient.put().uri("/allocations/$ALLOCATION_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().is5xxServerError
 
@@ -340,7 +340,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       nomisApi.stubUpsertAttendance(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, """{ "eventId": $NOMIS_EVENT_ID, "courseScheduleId": $NOMIS_CRS_SCH_ID, "prisonId": "MDI" }""")
 
       webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().isOk
 
@@ -364,7 +364,7 @@ class ActivityResourceIntTest : IntegrationTestBase() {
       activitiesApi.stubGetAttendanceSyncWithError(ATTENDANCE_ID)
 
       webTestClient.put().uri("/attendances/$ATTENDANCE_ID")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_ACTIVITIES")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
         .exchange()
         .expectStatus().is5xxServerError
 

@@ -66,7 +66,7 @@ class CourtSentencingResource(
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Resynchronises a charge.inserted from DPS to NOMIS",
-    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_MIGRATE_SENTENCING",
+    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun chargeInserted(
     @RequestBody @Valid
@@ -79,7 +79,7 @@ class CourtSentencingResource(
   @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/booking-clone/repair/{dpsCourtCaseId}")
   @Operation(
     summary = "Clones a case to latest booking",
-    description = "Used when cases need cloning to latest booking which failed previously, so emergency use only. Requires ROLE_MIGRATE_SENTENCING",
+    description = "Used when cases need cloning to latest booking which failed previously, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun clonedCourtCaseToLatestBooking(
     @PathVariable

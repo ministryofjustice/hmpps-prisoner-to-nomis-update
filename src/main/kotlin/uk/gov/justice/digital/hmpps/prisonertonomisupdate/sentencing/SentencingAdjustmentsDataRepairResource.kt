@@ -18,10 +18,10 @@ class SentencingAdjustmentsDataRepairResource(
 ) {
   @PostMapping("/prisoners/{offenderNo}/sentencing-adjustments/{adjustmentId}/repair")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_MIGRATE_SENTENCING')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises an adjustments for the given prisoner from DPS back to NOMIS",
-    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_MIGRATE_SENTENCING",
+    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairAdjustments(
     @PathVariable offenderNo: String,

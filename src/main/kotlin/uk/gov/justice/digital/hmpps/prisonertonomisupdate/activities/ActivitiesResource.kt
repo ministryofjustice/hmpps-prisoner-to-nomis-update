@@ -26,12 +26,12 @@ class ActivitiesResource(
   private val eventFeatureSwitch: EventFeatureSwitch,
   private val telemetryClient: TelemetryClient,
 ) {
-  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/activities/{activityScheduleId}")
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(
     summary = "Synchronises a new DPS Activity",
-    description = "A manual method for synchronising a new DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    description = "A manual method for synchronising a new DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>PRISONER_TO_NOMIS__UPDATE__RW</b>",
     responses = [
       ApiResponse(
         responseCode = "201",
@@ -56,11 +56,11 @@ class ActivitiesResource(
     activitiesService.createActivity(activityScheduleId)
   }
 
-  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PutMapping("/activities/{activityScheduleId}")
   @Operation(
     summary = "Synchronises an existing DPS Activity",
-    description = "A manual method for synchronising an existing DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    description = "A manual method for synchronising an existing DPS Activity to Nomis. Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>PRISONER_TO_NOMIS__UPDATE__RW</b>",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -85,11 +85,11 @@ class ActivitiesResource(
     activitiesService.updateActivity(activityScheduleId)
   }
 
-  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PutMapping("/allocations/{allocationId}")
   @Operation(
     summary = "Synchronises a DPS Allocation",
-    description = "A manual method for synchronising a DPS Allocation to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    description = "A manual method for synchronising a DPS Allocation to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>PRISONER_TO_NOMIS__UPDATE__RW</b>",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -114,11 +114,11 @@ class ActivitiesResource(
     allocationService.upsertAllocation(allocationId)
   }
 
-  @PreAuthorize("hasRole('ROLE_NOMIS_ACTIVITIES')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PutMapping("/attendances/{attendanceId}")
   @Operation(
     summary = "Synchronises a DPS Attendance",
-    description = "A manual method for synchronising a DPS Attendance to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>NOMIS_ACTIVITIES</b>",
+    description = "A manual method for synchronising a DPS Attendance to Nomis (whether new or not - performs an upsert). Performs in the same way as the automated message based solution - intended for use as a workaround when things go wrong. Requires role <b>PRISONER_TO_NOMIS__UPDATE__RW</b>",
     responses = [
       ApiResponse(
         responseCode = "200",

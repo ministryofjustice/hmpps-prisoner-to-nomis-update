@@ -84,7 +84,7 @@ class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() 
         @BeforeEach
         fun setUp() {
           webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair")
-            .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
         }
@@ -121,7 +121,7 @@ class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() 
         @BeforeEach
         fun setUp() {
           webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair?force-status=true")
-            .headers(setAuthorisation(roles = listOf("MIGRATE_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
         }
