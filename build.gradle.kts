@@ -12,9 +12,9 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.2"
   kotlin("plugin.spring") version "2.2.20"
-  id("org.openapi.generator") version "7.15.0"
+  id("org.openapi.generator") version "7.16.0"
 }
 
 configurations {
@@ -41,12 +41,12 @@ dependencies {
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.34") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.37")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.38")
 
   testImplementation("org.wiremock:wiremock-standalone:3.13.1")
   testImplementation("org.mockito:mockito-inline:5.2.0")
   testImplementation("org.testcontainers:localstack:1.21.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.791")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.792")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }

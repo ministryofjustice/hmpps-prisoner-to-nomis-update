@@ -213,6 +213,7 @@ fun dpsAlertCode(code: String) = AlertCodeSummary(
   alertTypeDescription = "A",
   code = code,
   description = "Alert code description",
+  canBeAdministered = false,
 )
 
 fun dpsAlertCodeReferenceData(code: String = "ABC") = AlertCode(
@@ -227,6 +228,8 @@ fun dpsAlertCodeReferenceData(code: String = "ABC") = AlertCode(
   modifiedBy = "JANE.BEEK",
   deactivatedAt = LocalDateTime.parse("2022-02-28T13:56:10"),
   deactivatedBy = "JANE.BEEK",
+  isRestricted = false,
+  canBeAdministered = false,
 )
 
 fun dpsAlertTypeReferenceData(code: String = "ABC") = AlertType(

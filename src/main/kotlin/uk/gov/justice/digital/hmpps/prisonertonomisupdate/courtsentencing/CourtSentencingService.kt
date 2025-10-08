@@ -62,6 +62,8 @@ import kotlin.collections.plus
 
 typealias MappingSentenceId = uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceId
 
+private const val DPS_VIDEO_LINK = "1da09b6e-55cb-4838-a157-ee6944f2094c"
+
 @Service
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
@@ -1658,7 +1660,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
     this.appearanceDate,
     LocalTime.parse(this.appearanceTime),
   ),
-  courtEventType = "CRT",
+  courtEventType = if (this.appearanceTypeUuid.toString() == DPS_VIDEO_LINK) "VL" else "CRT",
   courtId = this.courtCode,
   outcomeReasonCode = this.nomisOutcomeCode,
   nextEventDateTime = this.nextCourtAppearance?.let { next ->

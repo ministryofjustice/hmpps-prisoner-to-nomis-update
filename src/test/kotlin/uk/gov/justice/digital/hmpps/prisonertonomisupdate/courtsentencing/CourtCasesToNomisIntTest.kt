@@ -90,6 +90,8 @@ private const val NOMIS_TERM_SEQ = 32L
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val CASE_REFERENCE = "ABC4999"
+public const val APPEARANCE_CRT = "63e8fce0-033c-46ad-9edf-391b802d547a"
+private const val APPEARANCE_VL = "1da09b6e-55cb-4838-a157-ee6944f2094c"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
@@ -550,6 +552,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 ),
               )
               .withRequestBody(matchingJsonPath("courtEventCharges.size()", equalTo("4")))
+              .withRequestBody(matchingJsonPath("courtEventType", equalTo("CRT")))
               .withRequestBody(
                 matchingJsonPath(
                   "courtEventCharges[0]",
@@ -1012,6 +1015,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingApi.stubCourtAppearanceGetWithFourCharges(
           COURT_CASE_ID_FOR_CREATION,
           offenderNo = OFFENDER_NO,
+          appearanceType = APPEARANCE_VL,
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           courtCharge1Id = DPS_COURT_CHARGE_ID,
           courtCharge2Id = DPS_COURT_CHARGE_2_ID,
@@ -1128,7 +1132,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to update the Court Appearance`() {
         waitForAnyProcessingToComplete()
-        courtSentencingNomisApi.verify(putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances/${NOMIS_COURT_APPEARANCE_ID}")))
+        courtSentencingNomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances/${NOMIS_COURT_APPEARANCE_ID}"))
+            .withRequestBody(matchingJsonPath("courtEventType", equalTo("VL"))),
+        )
       }
     }
 

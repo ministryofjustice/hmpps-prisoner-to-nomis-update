@@ -404,7 +404,7 @@ class CourtSentencingReconciliationService(
             ),
           )
         }
-        if (dpsObj.offenceDate != nomisObj.offenceDate) {
+        if (dpsObj.offenceDate?.asValidDate() != nomisObj.offenceDate?.asValidDate()) {
           differences.add(
             Difference(
               "$parentProperty.offenceDate",
@@ -415,7 +415,7 @@ class CourtSentencingReconciliationService(
           )
         }
 
-        if (dpsObj.offenceEndDate != nomisObj.offenceEndDate) {
+        if (dpsObj.offenceEndDate?.asValidDate() != nomisObj.offenceEndDate?.asValidDate()) {
           differences.add(
             Difference(
               "$parentProperty.offenceEndDate",
@@ -556,6 +556,11 @@ class CourtSentencingReconciliationService(
       }
     }
     return differences
+  }
+  private fun LocalDate.asValidDate(): LocalDate? = if (this.isAfter(LocalDate.parse("1920-01-01")).and(this.isBefore(LocalDate.now().plusDays(1)))) {
+    this
+  } else {
+    null
   }
 }
 

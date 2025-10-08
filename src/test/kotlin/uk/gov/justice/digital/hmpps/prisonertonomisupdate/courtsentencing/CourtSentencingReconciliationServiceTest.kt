@@ -382,6 +382,66 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will ignore bad offence date data`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(offenceDate = LocalDate.of(1900, 3, 3)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1900, 4, 3)),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isNull()
+    }
+
+    @Test
+    fun `will compare offence date data when in valid date range`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              courtEventCharges = listOf(
+                nomisChargeResponse().copy(offenceDate = LocalDate.of(1921, 3, 3)),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1921, 4, 3)),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+        )?.differences,
+      ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "1921-04-03", nomis = "1921-03-03", id = DPS_COURT_CHARGE_ID)))
+    }
+
+    @Test
     fun `will report an extra sentence in nomis`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(
