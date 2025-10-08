@@ -11,9 +11,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -89,7 +90,7 @@ class FinanceDpsApiServiceTest {
   @Nested
   inner class ListPrisonerAccounts {
     val prisonerNo = "A1234AA"
-    val sampleResponse = AccountDetailsList(items = emptyList())
+    val sampleResponse = PrisonerSubAccountDetailsList(items = emptyList())
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
@@ -171,7 +172,7 @@ class FinanceDpsApiServiceTest {
   @Nested
   inner class ListPrisonAccounts {
     val prisonId = "LEI"
-    val sampleResponse = AccountDetailsList(items = emptyList())
+    val sampleResponse = PrisonAccountDetailsList(items = emptyList())
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {

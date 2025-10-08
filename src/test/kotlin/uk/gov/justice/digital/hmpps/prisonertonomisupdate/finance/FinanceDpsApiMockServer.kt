@@ -12,11 +12,12 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.generalLedgerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.AccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
@@ -137,7 +138,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubListPrisonerAccounts(prisonerNo: String, response: AccountDetailsList) {
+  fun stubListPrisonerAccounts(prisonerNo: String, response: PrisonerSubAccountDetailsList) {
     stubFor(
       get("/prisoners/$prisonerNo/accounts")
         .willReturn(okJson(objectMapper.writeValueAsString(response))),
@@ -151,7 +152,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubListPrisonAccounts(prisonId: String, response: AccountDetailsList) {
+  fun stubListPrisonAccounts(prisonId: String, response: PrisonAccountDetailsList) {
     stubFor(
       get("/prisons/$prisonId/accounts")
         .willReturn(okJson(objectMapper.writeValueAsString(response))),
