@@ -5,12 +5,19 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.math.BigDecimal
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -18,6 +25,7 @@ import java.util.UUID
   FinanceDpsApiService::class,
   FinanceConfiguration::class,
   FinanceDpsApiMockServer::class,
+  RetryApiService::class,
 )
 class FinanceDpsApiServiceTest {
   @Autowired
@@ -28,7 +36,7 @@ class FinanceDpsApiServiceTest {
     val transactionId: UUID = UUID.randomUUID()
 
     @Test
-    internal fun `will pass oath2 token to organisation endpoint`() = runTest {
+    internal fun `will pass oath2 token to endpoint`() = runTest {
       dpsFinanceServer.stubGetOffenderTransaction(transactionId.toString())
 
       apiService.getOffenderTransaction(transactionId)
@@ -56,7 +64,7 @@ class FinanceDpsApiServiceTest {
     val transactionId: UUID = UUID.randomUUID()
 
     @Test
-    internal fun `will pass oath2 token to organisation endpoint`() = runTest {
+    internal fun `will pass oath2 token to endpoint`() = runTest {
       dpsFinanceServer.stubGetGeneralLedgerTransaction(transactionId.toString())
 
       apiService.getGeneralLedgerTransaction(transactionId)
@@ -76,6 +84,171 @@ class FinanceDpsApiServiceTest {
       dpsFinanceServer.verify(
         getRequestedFor(urlPathEqualTo("/sync/general-ledger-transactions/$transactionId")),
       )
+    }
+  }
+
+  @Nested
+  inner class ListPrisonerAccounts {
+    val prisonerNo = "A1234AA"
+    val sampleResponse = PrisonerSubAccountDetailsList(items = emptyList())
+
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+
+      apiService.listPrisonerAccounts(prisonerNo)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the GET endpoint`() = runTest {
+      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+
+      apiService.listPrisonerAccounts(prisonerNo)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/$prisonerNo/accounts")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
+
+      val data = apiService.listPrisonerAccounts(prisonerNo)
+
+      assertThat(data).isEqualTo(sampleResponse)
+    }
+  }
+
+  @Nested
+  inner class GetPrisonerSubAccountDetails {
+    val prisonerNo = "A1234AA"
+    val sampleResponse = PrisonerSubAccountDetails(
+      code = 1001,
+      name = "name",
+      prisonNumber = prisonerNo,
+      balance = BigDecimal.ONE,
+      holdBalance = BigDecimal.TWO,
+    )
+
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
+
+      apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the GET endpoint`() = runTest {
+      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
+
+      apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/$prisonerNo/accounts/1001")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
+
+      val data = apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
+
+      assertThat(data).isEqualTo(sampleResponse)
+    }
+  }
+
+  @Nested
+  inner class ListPrisonAccounts {
+    val prisonId = "LEI"
+    val sampleResponse = PrisonAccountDetailsList(items = emptyList())
+
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+
+      apiService.listPrisonAccounts(prisonId)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the GET endpoint`() = runTest {
+      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+
+      apiService.listPrisonAccounts(prisonId)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisons/$prisonId/accounts")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+
+      val data = apiService.listPrisonAccounts(prisonId)
+
+      assertThat(data).isEqualTo(sampleResponse)
+    }
+  }
+
+  @Nested
+  inner class GetPrisonAccountDetails {
+    val prisonId = "SWI"
+    val sampleResponse = PrisonAccountDetails(
+      code = 1001,
+      name = "name",
+      balance = BigDecimal.ONE,
+      prisonId = prisonId,
+      classification = PrisonAccountDetails.Classification.Disbursement,
+      postingType = PrisonAccountDetails.PostingType.CR,
+    )
+
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
+
+      apiService.getPrisonAccountDetails(prisonId, 1001)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the GET endpoint`() = runTest {
+      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
+
+      apiService.getPrisonAccountDetails(prisonId, 1001)
+
+      dpsFinanceServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisons/$prisonId/accounts/1001")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
+
+      val data = apiService.getPrisonAccountDetails(prisonId, 1001)
+
+      assertThat(data).isEqualTo(sampleResponse)
     }
   }
 }
