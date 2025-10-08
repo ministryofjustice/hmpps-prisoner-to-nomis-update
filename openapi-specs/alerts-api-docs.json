@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-04-23.4834.658ad2e"
+    "version" : "2025-10-07.5168.c1191a8"
   },
   "servers" : [ {
     "url" : "https://alerts-api-dev.hmpps.service.justice.gov.uk",
@@ -31,6 +31,9 @@
   }, {
     "name" : "Admin UI Only",
     "description" : "Endpoints for alerts admin ui only - Not to be used by any service other than the alert admin ui"
+  }, {
+    "name" : "Admin Only",
+    "description" : "Endpoints for alerts admins only - Not to be used by any service - for manual use by admin team members only"
   } ],
   "paths" : {
     "/alerts/{alertUuid}" : {
@@ -47,6 +50,17 @@
           "schema" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         } ],
         "responses" : {
@@ -271,6 +285,17 @@
           "schema" : {
             "type" : "boolean",
             "default" : false
+          }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
           }
         } ],
         "requestBody" : {
@@ -499,6 +524,17 @@
             "default" : [ "activeFrom,DESC" ],
             "items" : {
               "type" : "string"
+            }
+          }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
             }
           }
         } ],
@@ -798,6 +834,17 @@
           "schema" : {
             "type" : "boolean"
           }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -923,6 +970,17 @@
           "schema" : {
             "type" : "boolean"
           }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1030,6 +1088,134 @@
           },
           "409" : {
             "description" : "Conflict, the alert code already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alert-codes/{alertCode}/privileged-user/{username}" : {
+      "post" : {
+        "tags" : [ "Admin Only" ],
+        "summary" : "Add a privileged user for an alert code",
+        "description" : "Add a privileged user for an alert code. If the alert code is restricted this user will still be able to administer it\n\n",
+        "operationId" : "addPrivilegedUser",
+        "parameters" : [ {
+          "name" : "alertCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "username",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Privileged user added",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found, the alert code was is not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Admin Only" ],
+        "summary" : "Remove a privileged user for an alert code",
+        "description" : "Remove a privileged user for an alert code. This user will no longer be able to administer the alert code if it is restricted\n\n",
+        "operationId" : "removePrivilegedUser",
+        "parameters" : [ {
+          "name" : "alertCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "username",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Privileged user added",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found, the alert code was is not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1362,6 +1548,17 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1446,6 +1643,144 @@
         "responses" : {
           "200" : {
             "description" : "Alert code updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found, the alert code was is not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alert-codes/{alertCode}/restrict" : {
+      "patch" : {
+        "tags" : [ "Admin Only" ],
+        "summary" : "Restrict an alert code",
+        "description" : "Restrict an alert code to be administered only by named users\n\n",
+        "operationId" : "restrictAlertCode",
+        "parameters" : [ {
+          "name" : "alertCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Alert code restricted",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AlertCode"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found, the alert code was is not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/alert-codes/{alertCode}/remove-restriction" : {
+      "patch" : {
+        "tags" : [ "Admin Only" ],
+        "summary" : "Remove restriction on an alert code",
+        "description" : "Remove restriction an alert code to so that all users can administer it\n\n",
+        "operationId" : "removeAlertCodeRestriction",
+        "parameters" : [ {
+          "name" : "alertCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Alert code restriction removed",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1815,6 +2150,17 @@
           "schema" : {
             "type" : "string"
           }
+        }, {
+          "name" : "Username",
+          "in" : "header",
+          "description" : "The username of the user interacting with the client service. This can be used instead of the `user_name` or `username` token claim when the client service is acting on behalf of a user. The value passed in the username header will only be used if a `user_name` or `username` token claim is not present.",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
         } ],
         "responses" : {
           "200" : {
@@ -2039,9 +2385,14 @@
             "type" : "string",
             "description" : "The description of the alert code",
             "example" : "Alert code description"
+          },
+          "canBeAdministered" : {
+            "type" : "boolean",
+            "description" : "Indicates that the alert code can be administered by the user",
+            "example" : false
           }
         },
-        "required" : [ "alertTypeCode", "alertTypeDescription", "code", "description" ]
+        "required" : [ "alertTypeCode", "alertTypeDescription", "canBeAdministered", "code", "description" ]
       },
       "ErrorResponse" : {
         "type" : "object",
@@ -2297,6 +2648,16 @@
             "description" : "Indicates that the alert code is active and can be used. Inactive alert codes are not returned by default in the API",
             "example" : true
           },
+          "isRestricted" : {
+            "type" : "boolean",
+            "description" : "Indicates that the alert code can only be used to create new alerts by specific users",
+            "example" : false
+          },
+          "canBeAdministered" : {
+            "type" : "boolean",
+            "description" : "Indicates that the alert code can be administered by the user",
+            "example" : false
+          },
           "createdAt" : {
             "type" : "string",
             "format" : "date-time",
@@ -2331,7 +2692,7 @@
             "example" : "USER1234"
           }
         },
-        "required" : [ "alertTypeCode", "code", "createdAt", "createdBy", "description", "isActive", "listSequence" ]
+        "required" : [ "alertTypeCode", "canBeAdministered", "code", "createdAt", "createdBy", "description", "isActive", "isRestricted", "listSequence" ]
       },
       "AlertType" : {
         "type" : "object",
@@ -2426,6 +2787,12 @@
             "example" : "A",
             "maxLength" : 12,
             "minLength" : 1
+          },
+          "restricted" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Whether or not the alert code is restricted so that only specific users may create alerts with it",
+            "example" : false
           }
         },
         "required" : [ "code", "description", "parent" ]
