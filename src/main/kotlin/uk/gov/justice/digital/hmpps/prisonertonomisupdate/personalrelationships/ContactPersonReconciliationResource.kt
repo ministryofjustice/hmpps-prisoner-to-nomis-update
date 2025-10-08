@@ -14,7 +14,7 @@ class ContactPersonReconciliationResource(
   private val reconciliationService: ContactPersonReconciliationService,
 ) {
 
-  @PreAuthorize("hasAnyRole('MIGRATE_CONTACTPERSON', 'MIGRATE_NOMIS_SYSCON', 'NOMIS_CONTACTPERSONS')")
+  @PreAuthorize("hasAnyRole('PRISONER_TO_NOMIS__UPDATE__RW', 'NOMIS_CONTACTPERSONS')")
   @GetMapping("/persons/{personId}/person-contact/reconciliation")
   suspend fun getPersonContactReconciliationForPerson(@PathVariable personId: Long): MismatchPersonContacts? {
     telemetryClient.trackEvent(

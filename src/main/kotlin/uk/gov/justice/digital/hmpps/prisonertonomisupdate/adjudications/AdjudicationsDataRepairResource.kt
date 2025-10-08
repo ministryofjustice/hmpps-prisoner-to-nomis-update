@@ -17,10 +17,10 @@ class AdjudicationsDataRepairResource(
 ) {
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/repair")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises adjudication for the given charge from DPS back to NOMIS",
-    description = "Used when an adjudication in NOMIS has been deleted, so emergency use only. If any element fails run individual repair endpoints for hearings etc assuming adjudication create did succeed. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when an adjudication in NOMIS has been deleted, so emergency use only. If any element fails run individual repair endpoints for hearings etc assuming adjudication create did succeed. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairAdjudication(
     @PathVariable prisonId: String,
@@ -46,10 +46,10 @@ class AdjudicationsDataRepairResource(
 
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/punishments/repair")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises punishments for the given adjudication from DPS back to NOMIS",
-    description = "Used when a domain event adjudication.punishments.updated has gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when a domain event adjudication.punishments.updated has gone missing, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairPunishments(
     @PathVariable prisonId: String,
@@ -70,10 +70,10 @@ class AdjudicationsDataRepairResource(
 
   @DeleteMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}/result")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises a delete hearing result for the given adjudication from DPS back to NOMIS",
-    description = "Used when a domain event adjudication.hearingCompleted.deleted has gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when a domain event adjudication.hearingCompleted.deleted has gone missing, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairDeleteHearingResult(
     @PathVariable prisonId: String,
@@ -101,10 +101,10 @@ class AdjudicationsDataRepairResource(
 
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}/outcome")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises an outcome for the given adjudication from DPS back to NOMIS",
-    description = "Used when one of the numerous outcome upsert domain events, calling adjudicationsService.upsertOutcome(message.fromJson()) from the listener have gone missing, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when one of the numerous outcome upsert domain events, calling adjudicationsService.upsertOutcome(message.fromJson()) from the listener have gone missing, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairOutcome(
     @PathVariable prisonId: String,
@@ -127,10 +127,10 @@ class AdjudicationsDataRepairResource(
 
   @PostMapping("/prisons/{prisonId}/prisoners/{offenderNo}/adjudication/dps-charge-number/{chargeNumber}/hearing/dps-hearing-id/{hearingId}")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('NOMIS_ADJUDICATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises a hearing for the given adjudication from DPS back to NOMIS",
-    description = "Used when a hearing has been deleted in NOMIS due to linked charges, so emergency use only. Requires ROLE_NOMIS_ADJUDICATIONS",
+    description = "Used when a hearing has been deleted in NOMIS due to linked charges, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairHearing(
     @PathVariable prisonId: String,

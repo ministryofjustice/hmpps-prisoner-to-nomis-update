@@ -91,7 +91,7 @@ class AlertsDataRepairResourceIntTest : IntegrationTestBase() {
         alertsMappingApiMockServer.stubReplaceMappings(offenderNo)
 
         webTestClient.post().uri("/prisoners/$offenderNo/alerts/resynchronise")
-          .headers(setAuthorisation(roles = listOf("MIGRATE_ALERTS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
       }

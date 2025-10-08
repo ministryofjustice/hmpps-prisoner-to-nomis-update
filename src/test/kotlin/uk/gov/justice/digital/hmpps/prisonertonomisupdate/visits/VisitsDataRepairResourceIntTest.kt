@@ -72,7 +72,7 @@ class VisitsDataRepairResourceIntTest : IntegrationTestBase() {
         nomisApi.stubVisitCreate(prisonerId = offenderNo)
 
         webTestClient.post().uri("/prisoners/$offenderNo/visits/resynchronise/$visitId")
-          .headers(setAuthorisation(roles = listOf("MIGRATE_NOMIS_SYSCON")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isNoContent
       }

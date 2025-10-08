@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@PreAuthorize("hasAnyRole('ROLE_NOMIS_VISITS', 'ROLE_MIGRATE_NOMIS_SYSCON')")
+@PreAuthorize("hasAnyRole('ROLE_NOMIS_VISITS', 'ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class VisitsDataRepairResource(
   private val visitsService: VisitsService,
   private val telemetryClient: TelemetryClient,
@@ -19,7 +19,7 @@ class VisitsDataRepairResource(
   @ResponseStatus(HttpStatus.NO_CONTENT)
   @Operation(
     summary = "Resynchronises the DPS visit to NOMIS",
-    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS visit not being present, so emergency use only. Requires ROLE_MIGRATE_NOMIS_SYSCON or ROLE_NOMIS_VISITS",
+    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS visit not being present, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW or ROLE_NOMIS_VISITS",
   )
   suspend fun repairVisit(
     @PathVariable offenderNo: String,

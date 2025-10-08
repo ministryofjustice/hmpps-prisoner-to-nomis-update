@@ -16,10 +16,10 @@ class AlertsDataRepairResource(
 ) {
   @PostMapping("/prisoners/{offenderNo}/alerts/resynchronise")
   @ResponseStatus(HttpStatus.OK)
-  @PreAuthorize("hasRole('ROLE_MIGRATE_ALERTS')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises current alerts for the given prisoner from DPS back to current booking in NOMIS",
-    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_MIGRATE_ALERTS",
+    description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairAlerts(
     @PathVariable offenderNo: String,
