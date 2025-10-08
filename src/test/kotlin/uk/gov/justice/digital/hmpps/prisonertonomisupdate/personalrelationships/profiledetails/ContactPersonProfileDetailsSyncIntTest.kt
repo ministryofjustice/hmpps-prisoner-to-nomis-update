@@ -525,7 +525,7 @@ class ContactPersonProfileDetailsSyncIntTest(
       nomisApi.stubPutProfileDetails(created = false)
 
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
         .exchange()
         .expectStatus().isOk
 
@@ -543,7 +543,7 @@ class ContactPersonProfileDetailsSyncIntTest(
       dpsApi.stubGetDomesticStatus(prisonerNumber = "A1234BC", errorStatus = BAD_GATEWAY)
 
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
         .exchange()
         .expectStatus().isBadRequest
         .expectBody()
@@ -567,7 +567,7 @@ class ContactPersonProfileDetailsSyncIntTest(
       nomisApi.stubPutProfileDetails(errorStatus = BAD_REQUEST)
 
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/MARITAL")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
         .exchange()
         .expectStatus().isBadRequest
         .expectBody()
@@ -588,7 +588,7 @@ class ContactPersonProfileDetailsSyncIntTest(
     @Test
     fun `should handle invalid profile type`() {
       webTestClient.put().uri("/contactperson/sync/profile-details/A1234BC/BUILD")
-        .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_CONTACTPERSONS")))
+        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
         .exchange()
         .expectStatus().isBadRequest
 
