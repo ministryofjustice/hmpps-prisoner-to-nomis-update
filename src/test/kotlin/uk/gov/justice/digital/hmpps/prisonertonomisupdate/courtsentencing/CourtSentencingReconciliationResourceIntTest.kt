@@ -182,7 +182,7 @@ class CourtSentencingReconciliationResourceIntTest(
         @Test
         fun `will return a mismatch when sentence number is different`() {
           webTestClient.get().uri("prisoners/$OFFENDER_NO/court-sentencing/court-cases/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -266,7 +266,7 @@ class CourtSentencingReconciliationResourceIntTest(
         @Test
         fun `will return a mismatch when sentence number is different`() {
           webTestClient.post().uri("prisoners/court-sentencing/court-cases/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .contentType(MediaType.APPLICATION_JSON)
             .body(BodyInserters.fromValue(listOf(OFFENDER_NO, OFFENDER_NO_2)))
             .exchange()

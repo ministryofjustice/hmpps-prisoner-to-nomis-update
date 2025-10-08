@@ -17,12 +17,12 @@ class CSIPDataRepairResource(
   private val csipService: CSIPService,
   private val telemetryClient: TelemetryClient,
 ) {
-  @PreAuthorize("hasRole('ROLE_NOMIS_CSIP')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/prisoners/{prisonNumber}/csip/{dpsCsipReportId}/repair")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Resynchronises a csip report inserted from DPS to NOMIS",
-    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_NOMIS_CSIP",
+    description = "Used when DPS is in the correct state but NOMIS is wrong, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairCsipReport(
     @PathVariable prisonNumber: String,

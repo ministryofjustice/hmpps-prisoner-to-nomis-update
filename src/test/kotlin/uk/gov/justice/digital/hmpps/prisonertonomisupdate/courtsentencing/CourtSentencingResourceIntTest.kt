@@ -177,7 +177,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           )
 
           webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/dps-case-id/$DPS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -316,7 +316,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           )
 
           webTestClient.get().uri("/prisoners/$OFFENDER_NO/court-sentencing/court-cases/nomis-case-id/$NOMIS_COURT_CASE_ID/reconciliation")
-            .headers(setAuthorisation(roles = listOf("NOMIS_SENTENCING")))
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
             .exchange()
             .expectStatus().isOk
             .expectBody()
@@ -420,7 +420,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubCreateCourtCharge()
 
         webTestClient.post().uri("/court-sentencing/court-charges/repair")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .body(
             BodyInserters.fromValue(
@@ -598,7 +598,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubUpdateAndCreateMappingsWithErrorFollowedBySuccess()
 
         webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
 
@@ -810,7 +810,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
         webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_SENTENCING")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
       }

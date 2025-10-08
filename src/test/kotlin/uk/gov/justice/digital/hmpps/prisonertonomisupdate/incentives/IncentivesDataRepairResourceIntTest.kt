@@ -83,7 +83,7 @@ class IncentivesDataRepairResourceIntTest : IntegrationTestBase() {
       @Test
       fun `repair incentive`() {
         webTestClient.post().uri("/incentives/prisoner/booking-id/{bookingId}/repair", BOOKING_ID)
-          .headers(setAuthorisation(roles = listOf("ROLE_NOMIS_INCENTIVES")))
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().isOk

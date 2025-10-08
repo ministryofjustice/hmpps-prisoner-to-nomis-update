@@ -495,7 +495,7 @@ class NonAssociationsResourceIntTest(
           "[ ${nonAssociationDpsJson("LANDING", prisonNumber1, prisonNumber2, false)}, ${nonAssociationDpsJson("LANDING", prisonNumber1, prisonNumber2)} ]",
         )
         webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
-          .headers(setAuthorisation(roles = listOf("NOMIS_NON_ASSOCIATIONS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -510,7 +510,7 @@ class NonAssociationsResourceIntTest(
         nonAssociationsApiServer.stubGetNonAssociationsBetween(prisonNumber1, prisonNumber2, nonAssociationApiResponse("WING"))
 
         webTestClient.get().uri("/non-associations/reconciliation/$prisonNumber1/ns/$prisonNumber2")
-          .headers(setAuthorisation(roles = listOf("NOMIS_NON_ASSOCIATIONS")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk

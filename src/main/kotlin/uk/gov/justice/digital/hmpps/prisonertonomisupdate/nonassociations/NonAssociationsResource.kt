@@ -17,12 +17,12 @@ class NonAssociationsResource(
   private val nonAssociationsReconciliationService: NonAssociationsReconciliationService,
 ) {
 
-  @PreAuthorize("hasRole('NOMIS_NON_ASSOCIATIONS')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/non-associations/reconciliation/{prisonNumber1}/ns/{prisonNumber2}", produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Run the reconciliation for this prison number",
     description = """Retrieves the differences for a prisoner. Empty response returned if no differences found. 
-      Requires ROLE_NOMIS_NON_ASSOCIATIONS""",
+      Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -40,7 +40,7 @@ class NonAssociationsResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires ROLE_NOMIS_NON_ASSOCIATIONS",
+        description = "Forbidden to access this endpoint. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",

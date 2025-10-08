@@ -22,12 +22,12 @@ class CaseNotesResource(
   private val caseNotesService: CaseNotesService,
 ) {
 
-  @PreAuthorize("hasRole('NOMIS_CASENOTES')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/casenotes/reconciliation/{prisonNumber}", produces = [MediaType.APPLICATION_JSON_VALUE])
   @Operation(
     summary = "Run the reconciliation for this prison number",
     description = """Retrieves the differences for a prisoner. Empty response returned if no differences found. 
-      Requires ROLE_NOMIS_CASENOTES""",
+      Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -45,7 +45,7 @@ class CaseNotesResource(
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires ROLE_NOMIS_CASENOTES",
+        description = "Forbidden to access this endpoint. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",
@@ -74,10 +74,10 @@ class CaseNotesResource(
   }
 
   @PutMapping("/casenotes/{offenderNo}/{dpsId}/resynchronise")
-  @PreAuthorize("hasRole('NOMIS_CASENOTES')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @Operation(
     summary = "Resynchronises a case note for the given prisoner from DPS to NOMIS",
-    description = "Copies a case note from DPS to NOMIS. Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_NOMIS_CASENOTES",
+    description = "Copies a case note from DPS to NOMIS. Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
   )
   suspend fun repairCaseNote(
     @PathVariable offenderNo: String,

@@ -13,6 +13,6 @@ class IncidentsDataRepairResource(
 ) {
   @PostMapping("/incidents/{incidentId}/repair")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  @PreAuthorize("hasRole('ROLE_NOMIS_INCIDENTS')")
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   suspend fun repair(@PathVariable incidentId: Long) = incidentsService.repairIncident(incidentId)
 }
