@@ -5,7 +5,7 @@ on:
       java-version:
         type: string
         required: false
-        default: '21'
+        default: '25'
     outputs:
       matrix:
         value: ${{ jobs.create_matrix.outputs.task_output }}
