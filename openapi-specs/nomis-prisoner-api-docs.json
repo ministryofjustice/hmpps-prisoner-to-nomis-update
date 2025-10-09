@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-06.629.4c1027b"
+    "version" : "2025-10-08.639.c619c13"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -630,7 +630,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances/{eventId}" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Updates Court Appearance",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Updates a new Court Appearance for the offender and given Court Case",
         "operationId" : "updateCourtAppearance",
@@ -734,7 +734,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Deletes Court Appearance",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Deletes s Court Appearance for the offender.",
         "operationId" : "deleteCourtAppearance",
@@ -812,7 +812,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances/{courtEventId}/charges/{chargeId}" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Updates Charge",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Updates a Court Event Charge for the offender and given Appearance and Court Case (latest booking)",
         "operationId" : "updateCharge",
@@ -923,7 +923,7 @@
     },
     "/prisoners/{offenderNo}/sentences/recall" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Updates Recalls Sentences",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Recalls sentences for the offender",
         "operationId" : "updateRecallSentences",
@@ -996,7 +996,7 @@
         }
       },
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Recalls Sentences by convert the specified sentences to the requested recall sentence",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Recalls sentences for the offender",
         "operationId" : "convertToRecallSentences",
@@ -1078,7 +1078,7 @@
     },
     "/prisoners/{offenderNo}/sentences/recall/restore-previous" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Deletes Recalls Sentences and replaces with previous recall sentence",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW replaces recall sentences for the offender",
         "operationId" : "revertRecallSentences",
@@ -1153,7 +1153,7 @@
     },
     "/prisoners/{offenderNo}/sentences/recall/restore-original" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Deletes Recalls Sentences and replaces with original sentence",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW replaces recall sentences for the offender",
         "operationId" : "deleteRecallSentences",
@@ -1551,7 +1551,7 @@
     },
     "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sequence}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get sentences for an offender using the given case.booking id and sentence sequence",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
         "operationId" : "getOffenderSentence",
@@ -1635,7 +1635,7 @@
         }
       },
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Updates Sentence",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Updates a Sentence for the offender and case",
         "operationId" : "updateSentence",
@@ -1732,7 +1732,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "deletes a specific sentence",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Deletes a sentence by case.booking and sentence sequence",
         "operationId" : "deleteSentence",
@@ -1801,7 +1801,7 @@
     },
     "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSequence}/sentence-terms/{termSequence}" : {
       "put" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Updates Sentence Term",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Updates a Sentence Term for the offender",
         "operationId" : "updateSentenceTerm",
@@ -1910,7 +1910,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "deletes a specific sentence",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Deletes a sentence by case.booking, sentence sequence and term sequence",
         "operationId" : "deleteSentenceTerm",
@@ -8245,7 +8245,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get court cases for an offender",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
         "operationId" : "getCourtCasesByOffender",
@@ -8308,7 +8308,7 @@
         }
       },
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Creates a new Court Case",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Creates a new Court Case for the offender and latest booking",
         "operationId" : "createCourtCase",
@@ -8390,7 +8390,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/court-appearances" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Creates a new Court Appearance",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Creates a new Court Appearance for the offender and given Court Case",
         "operationId" : "createCourtAppearance",
@@ -8484,7 +8484,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/charges" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Creates a new Offender Charge",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Creates a new Offender Charge for the offender and latest booking. Will not associate with a Court Event",
         "operationId" : "createCourtCharge",
@@ -8574,7 +8574,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{caseId}/case-identifiers" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Refreshes the list of Case identifiers associated with the case",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Refreshes the list of Case identifiers associated with the case (identifier type CASE/INFO#)",
         "operationId" : "refreshCaseIdentifiers",
@@ -8740,7 +8740,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/clone/{caseId}" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Clones court cases from the cases' booking to the current booking",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW. The court cases along with dependent cases and all child elements including adjustments are copied to the current booking",
         "operationId" : "cloneCourtCasesToLatestBooking",
@@ -8906,7 +8906,7 @@
     },
     "/prisoners/{offenderNo}/court-cases/{caseId}/sentences" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Creates a new Sentence",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Creates a new Sentence for the offender booking associated with the court case",
         "operationId" : "createSentence",
@@ -9000,7 +9000,7 @@
     },
     "/prisoners/{offenderNo}/court-cases/{caseId}/sentences/{sentenceSequence}/sentence-terms" : {
       "post" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Creates a new Sentence term",
         "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Creates a new sentence term for the specified sentence",
         "operationId" : "createSentenceTerm",
@@ -14155,7 +14155,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/offender-charges/{offenderChargeId}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get an offender charge",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves offender charge details. Offender Charges are at the booking level.",
         "operationId" : "getOffenderCharge",
@@ -14229,7 +14229,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/{id}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get a court case",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
         "operationId" : "getCourtCase",
@@ -14301,7 +14301,7 @@
         }
       },
       "delete" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "delete a court case",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Deletes a court case by id",
         "operationId" : "deleteCourtCase",
@@ -14358,7 +14358,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/post-merge" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "Get court cases affected by the last prisoner merge of two prisoner records",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. The court cases returned - if any -  includes cases that may have been cloned onto the active booking and those deactivated",
         "operationId" : "getCourtCasesChangedByMergePrisoners",
@@ -14430,7 +14430,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-cases/ids" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get court case ids for an offender",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves all court case ids by offender",
         "operationId" : "getCourtCaseIdsByOffender",
@@ -14496,7 +14496,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-appearances/{id}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get a court appearance",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court appearance by id",
         "operationId" : "getCourtAppearance",
@@ -14570,7 +14570,7 @@
     },
     "/prisoners/{offenderNo}/sentencing/court-appearances/{eventId}/charges/{chargeId}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get the court event charge",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves the court event charge ",
         "operationId" : "getCourtEventCharge",
@@ -14656,7 +14656,7 @@
     },
     "/prisoners/{offenderNo}/sentence-terms/booking-id/{bookingId}/sentence-sequence/{sentenceSequence}/term-sequence/{termSequence}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get a sentence term by id (offender booking, sentence sequence and term sequence",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a sentence term by id",
         "operationId" : "getOffenderSentenceTerm",
@@ -15854,7 +15854,7 @@
     },
     "/prisoners/booking-id/{bookingId}/sentences/recall" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get all active recall sentences for a booking",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves all active recall sentences for a booking",
         "operationId" : "getActiveRecallSentences",
@@ -18711,7 +18711,7 @@
     },
     "/court-cases/{id}" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get a court case, without offenderNo validation",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
         "operationId" : "getCourtCaseForMigration",
@@ -18774,7 +18774,7 @@
     },
     "/court-cases/ids" : {
       "get" : {
-        "tags" : [ "sentencing-resource" ],
+        "tags" : [ "court-sentencing-resource" ],
         "summary" : "get court case IDs by filter",
         "description" : "Retrieves a paged list of court case ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
         "operationId" : "getCourtCaseIdsByFilter",
