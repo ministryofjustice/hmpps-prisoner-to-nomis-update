@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.http.MediaType
@@ -20,6 +21,7 @@ import kotlin.onFailure
 import kotlin.runCatching
 
 @RestController
+@Tag(name = "Contact Person Update Resource")
 @RequestMapping("/contactperson/sync/profile-details", produces = [MediaType.APPLICATION_JSON_VALUE])
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW')")
 class ContactPersonProfileDetailsResource(
