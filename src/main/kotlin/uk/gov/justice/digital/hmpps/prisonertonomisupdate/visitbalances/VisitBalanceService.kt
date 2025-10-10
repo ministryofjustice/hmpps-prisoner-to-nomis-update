@@ -6,9 +6,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitBalanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.BalanceResetDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.BookingMovedEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PrisonerReceiveDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto
 
@@ -76,9 +76,9 @@ class VisitBalanceService(
     }
   }
 
-  suspend fun synchronisePrisonerReceived(prisonerReceiveDomainEvent: PrisonerReceiveDomainEvent) {
-    with(prisonerReceiveDomainEvent.additionalInformation) {
-      synchronisePrisoner(nomsNumber, "reason" to reason, "prisoner-received")
+  suspend fun synchroniseBalanceReset(balanceResetDomainEvent: BalanceResetDomainEvent) {
+    with(balanceResetDomainEvent.additionalInformation) {
+      synchronisePrisoner(prisonNumber = prisonerId, eventTypeSuffix = "prisoner-received")
     }
   }
 

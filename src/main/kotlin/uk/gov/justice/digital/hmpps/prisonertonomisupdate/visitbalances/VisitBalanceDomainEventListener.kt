@@ -33,7 +33,7 @@ class VisitBalanceDomainEventListener(
     when (eventType) {
       "prison-visit-allocation.adjustment.created" -> service.visitBalanceAdjustmentCreated(message.fromJson())
       "prison-offender-events.prisoner.booking.moved" -> service.synchronisePrisonerBookingMoved(message.fromJson())
-      "prisoner-offender-search.prisoner.received" -> service.synchronisePrisonerReceived(message.fromJson())
+      "prison-visit-allocation.balance.reset" -> service.synchroniseBalanceReset(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }

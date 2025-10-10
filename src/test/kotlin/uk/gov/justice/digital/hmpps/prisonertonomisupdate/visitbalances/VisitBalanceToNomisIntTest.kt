@@ -24,7 +24,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sqs.model.SendMessageRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.bookingMovedDomainEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonerReceivedDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.VisitAllocationPrisonerAdjustmentResponseDto.ChangeLogSource
@@ -410,30 +409,30 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("prisoner-offender-search.prisoner.received")
+  @DisplayName("prison-visit-allocation.balance.reset")
   inner class PrisonerReceived {
-    private val nomsNumber = "A1234AA"
+    private val prisonerId = "A1234AA"
 
     @Nested
     inner class NomisInChargeOfAllocation {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = nomsNumber)
-        sendPrisonerReceivedEvent(nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = prisonerId)
+        sendBalanceResetEvent(prisonerId)
         waitForAnyProcessingToComplete(times = 1)
       }
 
       @Test
       fun `will not retrieve the balance from Dps`() {
-        visitBalanceDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+        visitBalanceDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonerId/balance")))
       }
 
       @Test
       fun `will not create the balance in Nomis`() {
         visitBalanceNomisApi.verify(
           0,
-          putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")),
+          putRequestedFor(urlPathEqualTo("/prisoners/$prisonerId/visit-balance")),
         )
       }
 
@@ -442,8 +441,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("visitbalance-synchronisation-prisoner-received-ignored"),
           check {
-            assertThat(it).containsEntry("reason", "READMISSION_SWITCH_BOOKING")
-            assertThat(it).containsEntry("prisonNumber", nomsNumber)
+            assertThat(it).containsEntry("prisonNumber", prisonerId)
           },
           isNull(),
         )
@@ -455,22 +453,22 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setup() {
-        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
-        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
-        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber)
-        sendPrisonerReceivedEvent(nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonerId)
+        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = prisonerId, voBalance = 2, pvoBalance = 3))
+        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = prisonerId)
+        sendBalanceResetEvent(prisonerId)
         waitForAnyProcessingToComplete(times = 1)
       }
 
       @Test
       fun `will retrieve the balance from Dps`() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonerId/balance")))
       }
 
       @Test
       fun `will create the balance in Nomis`() {
         visitBalanceNomisApi.verify(
-          putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance"))
+          putRequestedFor(urlPathEqualTo("/prisoners/$prisonerId/visit-balance"))
             .withRequestBodyJsonPath("remainingVisitOrders", "2")
             .withRequestBodyJsonPath("remainingPrivilegedVisitOrders", "3"),
         )
@@ -481,8 +479,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         verify(telemetryClient).trackEvent(
           eq("visitbalance-synchronisation-prisoner-received"),
           check {
-            assertThat(it).containsEntry("reason", "READMISSION_SWITCH_BOOKING")
-            assertThat(it).containsEntry("prisonNumber", nomsNumber)
+            assertThat(it).containsEntry("prisonNumber", prisonerId)
             assertThat(it).containsEntry("voBalance", "2")
             assertThat(it).containsEntry("pvoBalance", "3")
           },
@@ -496,10 +493,10 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
-        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = nomsNumber, voBalance = 2, pvoBalance = 3))
-        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
-        sendPrisonerReceivedEvent(nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonerId)
+        visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = prisonerId, voBalance = 2, pvoBalance = 3))
+        visitBalanceNomisApi.stubPutVisitBalance(prisonNumber = prisonerId, status = HttpStatus.INTERNAL_SERVER_ERROR)
+        sendBalanceResetEvent(prisonerId)
 
         await untilCallTo {
           visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
@@ -508,7 +505,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will attempt to retrieve the balance from Dps `() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonerId/balance")))
       }
 
       @Test
@@ -518,7 +515,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will attempt call to Nomis several times and keep failing`() {
-        visitBalanceNomisApi.verify(2, putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")))
+        visitBalanceNomisApi.verify(2, putRequestedFor(urlPathEqualTo("/prisoners/$prisonerId/visit-balance")))
       }
     }
 
@@ -528,9 +525,9 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = nomsNumber)
-        visitBalanceDpsApi.stubGetVisitBalance(nomsNumber, status = HttpStatus.INTERNAL_SERVER_ERROR)
-        sendPrisonerReceivedEvent(nomsNumber)
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonerId)
+        visitBalanceDpsApi.stubGetVisitBalance(prisonerId, status = HttpStatus.INTERNAL_SERVER_ERROR)
+        sendBalanceResetEvent(prisonerId)
         await untilCallTo {
           visitBalanceDlqClient!!.countAllMessagesOnQueue(visitBalanceDlqUrl!!).get()
         } matches { it == 1 }
@@ -538,7 +535,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will attempt to retrieve visit balance from Dps`() {
-        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$nomsNumber/balance")))
+        visitBalanceDpsApi.verify(getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonerId/balance")))
       }
 
       @Test
@@ -548,7 +545,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not attempt call to Nomis `() {
-        visitBalanceNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/$nomsNumber/visit-balance")))
+        visitBalanceNomisApi.verify(0, putRequestedFor(urlPathEqualTo("/prisoners/$prisonerId/visit-balance")))
       }
     }
   }
@@ -596,11 +593,28 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun sendPrisonerReceivedEvent(prisonNumber: String) {
+  private fun sendBalanceResetEvent(prisonNumber: String) {
     visitBalanceQueueClient.sendMessage(
       SendMessageRequest.builder().queueUrl(visitBalanceQueueUrl).messageBody(
-        prisonerReceivedDomainEvent(offenderNo = prisonNumber),
+        balanceResetDomainEvent(prisonerId = prisonNumber),
       ).build(),
     ).get()
   }
 }
+
+fun balanceResetDomainEvent(
+  eventType: String = "prison-visit-allocation.balance.reset",
+  prisonerId: String = "A1234KT",
+) = //language=JSON
+  """{
+    "MessageId": "ae06c49e-1f41-4b9f-b2f2-dcca610d02cd", "Type": "Notification", "Timestamp": "2019-10-21T14:01:18.500Z", 
+    "Message": "{\"eventType\":\"$eventType\", \"description\": \"some desc\", \"additionalInformation\": {\"prisonerId\":\"$prisonerId\"}}",
+    "TopicArn": "arn:aws:sns:eu-west-1:000000000000:offender_events", 
+    "MessageAttributes": {
+      "eventType": {"Type": "String", "Value": "$eventType"}, 
+      "id": {"Type": "String", "Value": "8b07cbd9-0820-0a0f-c32f-a9429b618e0b"}, 
+      "contentType": {"Type": "String", "Value": "text/plain;charset=UTF-8"}, 
+      "timestamp": {"Type": "Number.java.lang.Long", "Value": "1571666478344"}
+    }
+}
+  """.trimIndent()
