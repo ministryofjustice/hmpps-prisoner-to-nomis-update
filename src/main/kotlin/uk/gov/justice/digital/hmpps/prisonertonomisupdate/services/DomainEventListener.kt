@@ -111,14 +111,13 @@ data class BookingMovedAdditionalInformation(
   val bookingStartDateTime: String,
 )
 
-data class PrisonerReceiveDomainEvent(
+data class BalanceResetDomainEvent(
   val eventType: String,
-  val additionalInformation: ReceivePrisonerAdditionalInformationEvent,
+  val additionalInformation: BalanceReceivedAdditionalInformationEvent,
 )
 
-data class ReceivePrisonerAdditionalInformationEvent(
-  val nomsNumber: String,
-  val reason: String,
+data class BalanceReceivedAdditionalInformationEvent(
+  val prisonerId: String,
 )
 
 data class PersonReferenceList(
