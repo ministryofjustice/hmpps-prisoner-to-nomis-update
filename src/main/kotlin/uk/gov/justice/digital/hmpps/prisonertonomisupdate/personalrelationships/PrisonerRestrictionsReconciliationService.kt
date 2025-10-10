@@ -10,6 +10,11 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerRestriction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
@@ -60,9 +65,9 @@ class PrisonerRestrictionsReconciliationService(
     checkTotalsMatch()
 
     return generateReconciliationReport(
-      threadCount = pageSize,
-      checkMatch = ::checkPrisonerRestrictionsMatch,
-      nextPage = ::getNextRestrictionsForPage,
+        threadCount = pageSize,
+        checkMatch = ::checkPrisonerRestrictionsMatch,
+        nextPage = ::getNextRestrictionsForPage,
     )
   }
 
