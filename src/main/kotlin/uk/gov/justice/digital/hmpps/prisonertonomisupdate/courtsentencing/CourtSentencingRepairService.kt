@@ -53,4 +53,6 @@ class CourtSentencingRepairService(
       telemetry = telemetryMap,
     )
   }
+
+  fun resynchroniseCourtCaseInNomis(@Suppress("unused") offenderNo: String, @Suppress("unused") courtCaseId: String): CourtCaseRepairResponse = CourtCaseRepairResponse(nomisCaseId = 0)
 }
