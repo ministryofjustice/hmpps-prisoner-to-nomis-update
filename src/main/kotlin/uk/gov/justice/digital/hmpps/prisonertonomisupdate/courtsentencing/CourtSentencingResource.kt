@@ -3,7 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import com.fasterxml.jackson.annotation.JsonInclude
 import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 import jakarta.validation.Valid
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -76,7 +78,7 @@ class CourtSentencingResource(
   }
 
   @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
-  @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/booking-clone/repair/{dpsCourtCaseId}")
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/{dpsCourtCaseId}/booking-repair")
   @Operation(
     summary = "Clones a case to latest booking",
     description = "Used when cases need cloning to latest booking which failed previously, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
@@ -92,6 +94,51 @@ class CourtSentencingResource(
       dpsCourtCaseId = dpsCourtCaseId,
     )
   }
+
+  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/{courtCaseId}/repair")
+  @Operation(
+    summary = "Resynchronises a court case from DPS to NOMIS",
+    description = "Used when a single case needs resynchronising to NOMIS which failed previously, so emergency use only. Only cases without sentences are currently supported. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "Migration payload returned",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either no mapping found for case or case not found for prisoner",
+      ),
+      ApiResponse(
+        responseCode = "409",
+        description = "Unable to repair a case which is already sentenced",
+      ),
+    ],
+  )
+  suspend fun repairCourtCaseInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The ID of the court case to be re-synced to NOMIS. For convenience this can either be the DPS court case ID or the NOMIS court case ID.")
+    @PathVariable
+    courtCaseId: String,
+  ): CourtCaseRepairResponse = courtSentencingRepairService.resynchroniseCourtCaseInNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+  ).also { telemetryClient.trackEvent("court-sentencing-repair-court-case", mapOf("offenderNo" to offenderNo, "courtCaseId" to courtCaseId), null) }
 }
 
 @Schema(description = "Court Charge Request")
@@ -100,4 +147,11 @@ data class CourtChargeRequest(
   val offenderNo: String,
   val dpsChargeId: String,
   val dpsCaseId: String,
+)
+
+@Schema(description = "Court case repair response")
+@JsonInclude(JsonInclude.Include.NON_NULL)
+data class CourtCaseRepairResponse(
+  @Schema(description = "The new NOMIS court case ID")
+  val nomisCaseId: Long,
 )

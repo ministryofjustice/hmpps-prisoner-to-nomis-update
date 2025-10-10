@@ -63,9 +63,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 private const val NOMIS_COURT_CASE_ID = 7L
-private const val NOMIS_COURT_CASE_2_ID = 8L
 private const val DPS_COURT_CASE_ID = "4321"
-private const val DPS_COURT_CASE_2_ID = "4321"
 private const val DPS_COURT_APPEARANCE_ID = "9c591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_APPEARANCE_2_ID = "45591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val NOMIS_COURT_APPEARANCE_ID = 3L
@@ -438,7 +436,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(WireMock.urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        CourtSentencingApiExtension.courtSentencingApi.verify(WireMock.getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -462,7 +460,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will call nomis api to create the Charge`() {
         waitForAnyProcessingToComplete()
-        nomisApi.verify(WireMock.postRequestedFor(WireMock.urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID}/charges")))
+        nomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID}/charges")))
       }
 
       @Test
@@ -471,7 +469,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           courtSentencingMappingApi.verify(
-            WireMock.postRequestedFor(WireMock.urlEqualTo("/mapping/court-sentencing/court-charges"))
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
               .withRequestBody(
                 WireMock.matchingJsonPath(
                   "dpsCourtChargeId",
@@ -494,7 +492,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
-  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/court-case/booking-clone/repair/{dpsCourtCaseId}")
+  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/court-case/{dpsCourtCaseId}/booking-repair")
   inner class CloneCourtCaseRepair {
     val dpsCourtCaseId = UUID.randomUUID().toString()
     val nomisCourtCaseId = 12345L
@@ -504,7 +502,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/booking-repair")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -512,7 +510,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/booking-repair")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -520,7 +518,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/booking-repair")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -597,7 +595,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
         courtSentencingMappingApi.stubUpdateAndCreateMappingsWithErrorFollowedBySuccess()
 
-        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/booking-repair")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
@@ -809,7 +807,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
         courtSentencingMappingApi.stubUpdateAndCreateMappings()
 
-        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/booking-clone/repair/$dpsCourtCaseId")
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/booking-repair")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
@@ -938,6 +936,91 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             ),
           ),
         )
+      }
+    }
+  }
+
+  @Nested
+  @DisplayName("POST /prisoners/{offenderNo}/court-sentencing/court-case//{courtCaseId}/repair")
+  inner class RepairCourtCaseInNomis {
+    val dpsCourtCaseId = UUID.randomUUID().toString()
+    val nomisCourtCaseId = 12345L
+    val offenderNo = OFFENDER_NO
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @Nested
+      inner class UsingDPSCaseId {
+
+        @BeforeEach
+        fun setUp() {
+          webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isOk
+        }
+
+        @Test
+        fun `will track repair telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-sentencing-repair-court-case"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["courtCaseId"]).isEqualTo(dpsCourtCaseId)
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class UsingNOMISCaseId {
+
+        @BeforeEach
+        fun setUp() {
+          webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$nomisCourtCaseId/repair")
+            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isOk
+        }
+
+        @Test
+        fun `will track repair telemetry`() {
+          verify(telemetryClient).trackEvent(
+            eq("court-sentencing-repair-court-case"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["courtCaseId"]).isEqualTo(nomisCourtCaseId.toString())
+            },
+            isNull(),
+          )
+        }
       }
     }
   }
