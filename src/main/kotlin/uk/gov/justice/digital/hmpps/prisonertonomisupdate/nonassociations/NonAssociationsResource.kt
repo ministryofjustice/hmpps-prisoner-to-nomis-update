@@ -4,6 +4,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.MediaType
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.No
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 
 @RestController
+@Tag(name = "Non Associations Update Resource")
 class NonAssociationsResource(
   private val nonAssociationsReconciliationService: NonAssociationsReconciliationService,
 ) {
