@@ -10,6 +10,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
@@ -56,6 +57,13 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
+  fun stubGetCourtCaseMappingGivenDpsId(id: String, status: HttpStatus) {
+    stubGetWithError(
+      "/mapping/court-sentencing/court-cases/dps-court-case-id/$id",
+      status = status.value(),
+    )
+  }
+
   fun stubGetCourtCaseMappingGivenNomisId(id: Long, dpsCourtCaseId: String = "54321") {
     stubGet(
       "/mapping/court-sentencing/court-cases/nomis-court-case-id/$id",
@@ -64,6 +72,13 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         dpsCourtCaseId = dpsCourtCaseId,
         mappingType = CourtCaseMappingDto.MappingType.DPS_CREATED,
       ),
+    )
+  }
+
+  fun stubGetCourtCaseMappingGivenNomisId(id: Long, status: HttpStatus) {
+    stubGetWithError(
+      "/mapping/court-sentencing/court-cases/nomis-court-case-id/$id",
+      status = status.value(),
     )
   }
 

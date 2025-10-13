@@ -1,21 +1,18 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import org.slf4j.Logger
-import org.slf4j.LoggerFactory
+import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
 @Service
 class CourtSentencingRepairService(
+  private val telemetryClient: TelemetryClient,
   private val courtSentencingService: CourtSentencingService,
   private val nomisApiService: CourtSentencingNomisApiService,
   private val courtCaseMappingService: CourtSentencingMappingService,
 ) {
-  private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
-  }
-
   suspend fun chargeInsertedRepair(request: CourtChargeRequest) {
     val event: CourtSentencingService.CourtChargeCreatedEvent = CourtSentencingService.CourtChargeCreatedEvent(
       additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
@@ -54,5 +51,24 @@ class CourtSentencingRepairService(
     )
   }
 
-  fun resynchroniseCourtCaseInNomis(@Suppress("unused") offenderNo: String, @Suppress("unused") courtCaseId: String): CourtCaseRepairResponse = CourtCaseRepairResponse(nomisCaseId = 0)
+  suspend fun resynchroniseCourtCaseInNomis(offenderNo: String, courtCaseId: String): CourtCaseRepairResponse {
+    val (dpsCaseId, nomisCaseId) = getCaseIds(courtCaseId)
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-court-case",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "nomisCourtCaseId" to nomisCaseId.toString(),
+        "dpsCourtCaseId" to dpsCaseId,
+      ),
+      null,
+    )
+    return CourtCaseRepairResponse(nomisCaseId = 0)
+  }
+
+  private suspend fun getCaseIds(dpsOrNomisCaseId: String): Pair<String, Long> = dpsOrNomisCaseId.toLongOrNull()?.let {
+    (courtCaseMappingService.getMappingGivenNomisCourtCaseIdOrNull(it)?.dpsCourtCaseId ?: throw BadRequestException("No mapping found for $dpsOrNomisCaseId")) to it
+  } ?: let {
+    dpsOrNomisCaseId to (courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsOrNomisCaseId)?.nomisCourtCaseId ?: throw BadRequestException("No mapping found for $dpsOrNomisCaseId"))
+  }
 }
