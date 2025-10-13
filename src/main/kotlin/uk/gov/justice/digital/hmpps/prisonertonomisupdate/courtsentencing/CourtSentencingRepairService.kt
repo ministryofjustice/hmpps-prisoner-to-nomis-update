@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferen
 class CourtSentencingRepairService(
   private val courtSentencingService: CourtSentencingService,
   private val nomisApiService: CourtSentencingNomisApiService,
-  private val courtCaseMappingService: CourtCaseMappingService,
+  private val courtCaseMappingService: CourtSentencingMappingService,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)

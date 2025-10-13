@@ -277,6 +277,10 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubPutWithErrorFollowedBySuccess(url = "/mapping/court-sentencing/court-cases/update-create", "Update and create mappings")
   }
 
+  fun stubReplaceMappings() {
+    stubPut("/mapping/court-sentencing/court-cases/replace")
+  }
+
   // helper methods
 
   fun stubCreate(url: String) {

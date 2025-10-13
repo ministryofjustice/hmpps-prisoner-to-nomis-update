@@ -68,7 +68,7 @@ private const val DPS_VIDEO_LINK = "1da09b6e-55cb-4838-a157-ee6944f2094c"
 class CourtSentencingService(
   private val courtSentencingApiService: CourtSentencingApiService,
   private val nomisApiService: CourtSentencingNomisApiService,
-  private val courtCaseMappingService: CourtCaseMappingService,
+  private val courtCaseMappingService: CourtSentencingMappingService,
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
