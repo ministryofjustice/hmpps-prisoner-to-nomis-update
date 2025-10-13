@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
@@ -197,6 +198,16 @@ class CourtSentencingNomisApiService(@Qualifier("nomisApiWebClient") private val
     courtCaseId: Long,
   ): BookingCourtCaseCloneResponse = webClient.post()
     .uri("/prisoners/{offenderNo}/sentencing/court-cases/clone/{caseId}", offenderNo, courtCaseId)
+    .retrieve()
+    .awaitBody()
+
+  suspend fun repairCourtCase(
+    offenderNo: String,
+    courtCaseId: Long,
+    courtCase: CourtCaseRepairRequest,
+  ): CourtCaseRepairResponse = webClient.post()
+    .uri("/prisoners/{offenderNo}/sentencing/court-cases/{id}/repair", offenderNo, courtCaseId)
+    .bodyValue(courtCase)
     .retrieve()
     .awaitBody()
 }

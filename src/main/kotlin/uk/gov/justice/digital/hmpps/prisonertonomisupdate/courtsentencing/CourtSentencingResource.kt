@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.RestController
 
 @RestController
 @Tag(name = "Court Sentencing Update Resource")
+@PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class CourtSentencingResource(
   private val telemetryClient: TelemetryClient,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
@@ -31,21 +32,18 @@ class CourtSentencingResource(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   suspend fun getCaseReconciliationByDpsCaseId(
     @PathVariable dpsCaseId: String,
     @PathVariable offenderNo: String,
   ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseDps(offenderNo = offenderNo, dpsCaseId = dpsCaseId)
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/reconciliation")
   suspend fun getCaseReconciliationByNomisCaseId(
     @PathVariable nomisCaseId: Long,
     @PathVariable offenderNo: String,
   ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCaseNomis(offenderNo = offenderNo, nomisCaseId = nomisCaseId)
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/nomis-case-id/{nomisCaseId}/dps-case-id/{dpsCaseId}/reconciliation")
   suspend fun getCaseReconciliationByCaseId(
     @PathVariable offenderNo: String,
@@ -53,19 +51,16 @@ class CourtSentencingResource(
     @PathVariable dpsCaseId: String,
   ): MismatchCaseResponse = courtSentencingReconciliationService.manualCheckCase(offenderNo = offenderNo, nomisCaseId = nomisCaseId, dpsCaseId = dpsCaseId)
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/prisoners/{offenderNo}/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNo(
     @PathVariable offenderNo: String,
   ): List<MismatchCaseResponse> = courtSentencingReconciliationService.manualCheckCaseOffenderNo(offenderNo = offenderNo)
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/prisoners/court-sentencing/court-cases/reconciliation")
   suspend fun getCaseReconciliationByOffenderNoList(
     @RequestBody offenderNoList: List<String>,
   ): List<List<MismatchCaseResponse>> = courtSentencingReconciliationService.manualCheckCaseOffenderNoList(offenderNoList = offenderNoList)
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/court-sentencing/court-charges/repair")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
@@ -79,7 +74,6 @@ class CourtSentencingResource(
     courtSentencingRepairService.chargeInsertedRepair(request = request)
   }
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/{dpsCourtCaseId}/booking-repair")
   @Operation(
     summary = "Clones a case to latest booking",
@@ -97,7 +91,6 @@ class CourtSentencingResource(
     )
   }
 
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
   @PostMapping("/prisoners/{offenderNo}/court-sentencing/court-case/{courtCaseId}/repair")
   @Operation(
     summary = "Resynchronises a court case from DPS to NOMIS",

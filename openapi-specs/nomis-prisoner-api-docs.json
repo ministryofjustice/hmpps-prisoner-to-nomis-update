@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-09.641.49e8e74"
+    "version" : "2025-10-13.645.9803a1a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8381,6 +8381,110 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/sentencing/court-cases/{id}/repair" : {
+      "post" : {
+        "tags" : [ "court-sentencing-resource" ],
+        "summary" : "Creates a new Court Case",
+        "description" : "Required role NOMIS_PRISONER_API__SYNCHRONISATION__RW Replaces existing court case for the offender. ",
+        "operationId" : "repairCourtCase",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "case ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "case ID",
+            "example" : 1234
+          },
+          "example" : 1234
+        }, {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No",
+            "example" : "AK1234B"
+          },
+          "example" : "AK1234B"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CourtCaseRepairRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Repaired Court case",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseRepairResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Supplied data is invalid, for instance missing required fields or invalid values. See schema for details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseRepairResponse"
                 }
               }
             }
@@ -25351,6 +25455,144 @@
         },
         "required" : [ "caseIdentifiers" ]
       },
+      "CourtAppearanceRepairRequest" : {
+        "type" : "object",
+        "description" : "Court Event",
+        "properties" : {
+          "eventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "courtEventType" : {
+            "type" : "string"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "outcomeReasonCode" : {
+            "type" : "string"
+          },
+          "nextEventDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "courtEventCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtEventChargeRepairRequest"
+            }
+          },
+          "nextCourtId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "courtEventCharges", "courtEventType", "courtId", "eventDateTime" ]
+      },
+      "CourtCaseRepairRequest" : {
+        "type" : "object",
+        "description" : "Court case repair request",
+        "properties" : {
+          "startDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "legalCaseType" : {
+            "type" : "string"
+          },
+          "courtId" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string"
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CourtAppearanceRepairRequest"
+            }
+          },
+          "offenderCharges" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderChargeRepairRequest"
+            }
+          },
+          "caseReferences" : {
+            "$ref" : "#/components/schemas/CaseIdentifierRequest"
+          }
+        },
+        "required" : [ "courtAppearances", "courtId", "legalCaseType", "offenderCharges", "startDate", "status" ]
+      },
+      "CourtEventChargeRepairRequest" : {
+        "type" : "object",
+        "description" : "Court Charge",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "resultCode1" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id" ]
+      },
+      "OffenderChargeRepairRequest" : {
+        "type" : "object",
+        "description" : "Court Charge",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "resultCode1" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "offenceCode" ]
+      },
+      "CourtCaseRepairResponse" : {
+        "type" : "object",
+        "description" : "Court case repair response",
+        "properties" : {
+          "caseId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "courtAppearanceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "offenderChargeIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "caseId", "courtAppearanceIds", "offenderChargeIds" ]
+      },
       "ConvertToRecallRequest" : {
         "type" : "object",
         "description" : "Recall convert request",
@@ -28168,12 +28410,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -28194,12 +28436,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -28361,12 +28603,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -28957,12 +29199,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -30254,12 +30496,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -30328,12 +30570,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -30392,12 +30634,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -31039,12 +31281,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -31195,12 +31437,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -32408,12 +32650,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -32941,12 +33183,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -33051,12 +33293,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -33338,12 +33580,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -33644,12 +33886,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34405,12 +34647,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34702,12 +34944,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34781,12 +35023,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34848,12 +35090,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -35146,12 +35388,12 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
