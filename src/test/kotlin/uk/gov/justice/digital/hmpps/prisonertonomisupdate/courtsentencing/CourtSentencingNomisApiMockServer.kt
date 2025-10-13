@@ -14,13 +14,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRepairRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRepairRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderChargeRepairRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -29,6 +34,39 @@ import java.time.LocalDateTime
 
 @Component
 class CourtSentencingNomisApiMockServer {
+  companion object {
+    fun courtCaseRepairRequest(): CourtCaseRepairRequest {
+      val appearance = CourtAppearanceRepairRequest(
+        eventDateTime = LocalDateTime.now(),
+        courtEventType = "SENT",
+        courtId = "MDI",
+        courtEventCharges = listOf(
+          CourtEventChargeRepairRequest(
+            id = "1",
+          ),
+        ),
+      )
+      val charge = OffenderChargeRepairRequest(
+        id = "1",
+        offenceCode = "RS86000",
+      )
+      return CourtCaseRepairRequest(
+        startDate = LocalDate.now(),
+        legalCaseType = "A",
+        courtId = "MDI",
+        status = "A",
+        courtAppearances = listOf(appearance),
+        offenderCharges = listOf(charge),
+      )
+    }
+  }
+
+  fun courtCaseRepairResponse(): CourtCaseRepairResponse = CourtCaseRepairResponse(
+    caseId = 1234,
+    courtAppearanceIds = emptyList(),
+    offenderChargeIds = emptyList(),
+  )
+
   fun stubCourtCaseCreate(offenderNo: String, response: CreateCourtCaseResponse) {
     stubPost("/prisoners/$offenderNo/sentencing/court-cases", response = response)
   }
@@ -235,6 +273,14 @@ class CourtSentencingNomisApiMockServer {
     ),
   ) {
     stubPost("/prisoners/$offenderNo/sentencing/court-cases/clone/$courtCaseId", response = response)
+  }
+
+  fun stubRepairCourtCase(
+    offenderNo: String,
+    courtCaseId: Long,
+    response: CourtCaseRepairResponse = courtCaseRepairResponse(),
+  ) {
+    stubPost("/prisoners/$offenderNo/sentencing/court-cases/$courtCaseId/repair", response = response)
   }
 
   // helper methods
