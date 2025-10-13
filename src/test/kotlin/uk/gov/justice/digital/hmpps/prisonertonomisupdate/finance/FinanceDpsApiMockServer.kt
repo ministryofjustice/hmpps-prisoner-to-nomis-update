@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
@@ -9,18 +10,21 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.generalLedgerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
+import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
 
@@ -123,6 +127,10 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
+    this.withBody(FinanceDpsApiExtension.objectMapper.writeValueAsString(body))
+    return this
+  }
 
   fun stubGetOffenderTransaction(transactionId: String, response: SyncOffenderTransactionResponse = offenderTransaction()) {
     stubFor(
@@ -152,17 +160,28 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubListPrisonAccounts(prisonId: String, response: PrisonAccountDetailsList) {
+  fun stubGetPrisonBalance(prisonId: String = "MDI", response: GeneralLedgerBalanceDetailsList = prisonAccounts()) {
     stubFor(
-      get("/prisons/$prisonId/accounts")
+      get("/reconcile/general-ledger-balances/$prisonId")
         .willReturn(okJson(objectMapper.writeValueAsString(response))),
     )
   }
-
-  fun stubGetPrisonAccountDetails(prisonId: String, accountCode: Int, response: PrisonAccountDetails) {
+  fun stubGetPrisonBalance(prisonId: String = "MDI", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
-      get("/prisons/$prisonId/accounts/$accountCode")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+      get("/reconcile/general-ledger-balances/$prisonId")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(error),
+        ),
     )
   }
 }
+
+fun prisonAccounts(): GeneralLedgerBalanceDetailsList = GeneralLedgerBalanceDetailsList(items = listOf(prisonAccountDetails()))
+
+fun prisonAccountDetails() = GeneralLedgerBalanceDetails(
+  accountCode = 2101,
+  balance = BigDecimal.valueOf(23.45),
+)
