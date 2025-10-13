@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 
 @RestController
+@Tag(name = "Incentives Update Resource")
 class IncentivesDataRepairResource(
   private val incentivesApiService: IncentivesApiService,
   private val nomisApiService: NomisApiService,

@@ -6,6 +6,7 @@ import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
 import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 
 @RestController
+@Tag(name = "Activities Update Resource")
 class ActivitiesResource(
   private val activitiesService: ActivitiesService,
   private val allocationService: AllocationService,

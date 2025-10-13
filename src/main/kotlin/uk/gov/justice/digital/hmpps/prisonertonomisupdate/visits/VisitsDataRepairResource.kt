@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
@@ -10,6 +11,7 @@ import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
+@Tag(name = "Visits Update Resource")
 @PreAuthorize("hasAnyRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class VisitsDataRepairResource(
   private val visitsService: VisitsService,
