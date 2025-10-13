@@ -8,3 +8,6 @@
 **/.openapi-generator-ignore
 **/client/infrastructure/
 **/src/test/
+**/api/*
+!**/NOMISSyncApi.kt
+!**/PrisonerTrustAccountsApi.kt

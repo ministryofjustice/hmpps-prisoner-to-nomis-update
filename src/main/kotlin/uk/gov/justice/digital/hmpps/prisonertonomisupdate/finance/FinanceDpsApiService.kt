@@ -6,10 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.NOMISSyncApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.PrisonAccountsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.PrisonerTrustAccountsApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
@@ -28,7 +26,6 @@ class FinanceDpsApiService(
 
   private val syncApi = NOMISSyncApi(webClient)
   private val prisonerApi = PrisonerTrustAccountsApi(webClient)
-  private val prisonApi = PrisonAccountsApi(webClient)
 
   suspend fun getOffenderTransaction(id: UUID): SyncOffenderTransactionResponse = syncApi
     .getOffenderTransactionById(id)
@@ -48,13 +45,8 @@ class FinanceDpsApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun listPrisonAccounts(prisonId: String): PrisonAccountDetailsList = prisonApi
-    .listPrisonAccounts(prisonId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonAccountDetails(prisonId: String, account: Int): PrisonAccountDetails = prisonApi
-    .getPrisonAccountDetails(prisonId, account)
+  suspend fun getPrisonAccounts(prisonId: String): GeneralLedgerBalanceDetailsList = syncApi
+    .listGeneralLedgerBalances(prisonId)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }

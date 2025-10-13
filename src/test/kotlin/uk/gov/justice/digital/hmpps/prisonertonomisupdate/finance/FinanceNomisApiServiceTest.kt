@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -28,6 +29,7 @@ class FinanceNomisApiServiceTest {
   private lateinit var mockServer: FinanceNomisApiMockServer
 
   @Nested
+  @DisplayName("/finance/prisoners/ids/all-from-id")
   inner class GetPrisonersIds {
 
     val rootOffenderIdsWithLast = RootOffenderIdsWithLast(listOf(87654321L), 12345678L)
@@ -65,6 +67,7 @@ class FinanceNomisApiServiceTest {
   }
 
   @Nested
+  @DisplayName("GET /finance/prisoners/{rootOffenderId}/balance")
   inner class GetPrisonerAccountDetails {
 
     private val sampleDto = PrisonerBalanceDto(

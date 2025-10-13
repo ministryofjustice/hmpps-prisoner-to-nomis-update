@@ -6,13 +6,13 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonAccountDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -170,15 +170,16 @@ class FinanceDpsApiServiceTest {
   }
 
   @Nested
+  @DisplayName("/reconcile/general-ledger-balances/{prisonId}")
   inner class ListPrisonAccounts {
     val prisonId = "LEI"
-    val sampleResponse = PrisonAccountDetailsList(items = emptyList())
+    val sampleResponse = GeneralLedgerBalanceDetailsList(items = emptyList())
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
 
-      apiService.listPrisonAccounts(prisonId)
+      apiService.getPrisonAccounts(prisonId)
 
       dpsFinanceServer.verify(
         getRequestedFor(anyUrl())
@@ -188,65 +189,20 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
 
-      apiService.listPrisonAccounts(prisonId)
+      apiService.getPrisonAccounts(prisonId)
 
       dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisons/$prisonId/accounts")),
+        getRequestedFor(urlPathEqualTo("/reconcile/general-ledger-balances/$prisonId")),
       )
     }
 
     @Test
     fun `will return data`() = runTest {
-      dpsFinanceServer.stubListPrisonAccounts(prisonId, sampleResponse)
+      dpsFinanceServer.stubGetPrisonBalance(prisonId, sampleResponse)
 
-      val data = apiService.listPrisonAccounts(prisonId)
-
-      assertThat(data).isEqualTo(sampleResponse)
-    }
-  }
-
-  @Nested
-  inner class GetPrisonAccountDetails {
-    val prisonId = "SWI"
-    val sampleResponse = PrisonAccountDetails(
-      code = 1001,
-      name = "name",
-      balance = BigDecimal.ONE,
-      prisonId = prisonId,
-      classification = PrisonAccountDetails.Classification.Disbursement,
-      postingType = PrisonAccountDetails.PostingType.CR,
-    )
-
-    @Test
-    internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
-
-      apiService.getPrisonAccountDetails(prisonId, 1001)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(anyUrl())
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
-
-      apiService.getPrisonAccountDetails(prisonId, 1001)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisons/$prisonId/accounts/1001")),
-      )
-    }
-
-    @Test
-    fun `will return data`() = runTest {
-      dpsFinanceServer.stubGetPrisonAccountDetails(prisonId, 1001, sampleResponse)
-
-      val data = apiService.getPrisonAccountDetails(prisonId, 1001)
+      val data = apiService.getPrisonAccounts(prisonId)
 
       assertThat(data).isEqualTo(sampleResponse)
     }

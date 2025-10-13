@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-03.132.1b7837a"
+    "version" : "2025-10-13.142.3a7cc54"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/",
@@ -384,7 +384,7 @@
     },
     "/migrate/prisoner-balances/{prisonNumber}" : {
       "post" : {
-        "tags" : [ "NOMIS Migration" ],
+        "tags" : [ "NOMIS Sync" ],
         "summary" : "Migrate a prisoners balances",
         "description" : "Migrate a prisoners sub-accounts (e.g., Spends, Private Cash) to a given balance from a legacy system.",
         "operationId" : "migratePrisonerBalances",
@@ -458,7 +458,7 @@
     },
     "/migrate/general-ledger-balances/{prisonId}" : {
       "post" : {
-        "tags" : [ "NOMIS Migration" ],
+        "tags" : [ "NOMIS Sync" ],
         "summary" : "Migrate general ledger balances for a single prison",
         "description" : "Migrate general ledger account balances for a specific prison.",
         "operationId" : "migrateGeneralLedgerBalances",
@@ -664,6 +664,66 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/reconcile/prisoner-balances/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Get a list of all subaccount balances for a prisoner, grouped by establishment where transactions occurred",
+        "operationId" : "listPrisonerBalancesByEstablishment",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerEstablishmentBalanceDetailsList"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
+      }
+    },
+    "/reconcile/general-ledger-balances/{prisonId}" : {
+      "get" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Get a list of all general ledger balances accounts for a specific prison",
+        "operationId" : "listGeneralLedgerBalances",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GeneralLedgerBalanceDetailsList"
                 }
               }
             }
@@ -1734,6 +1794,78 @@
           }
         },
         "required" : [ "last", "page", "totalElements", "totalPages", "transactions" ]
+      },
+      "PrisonerEstablishmentBalanceDetails" : {
+        "type" : "object",
+        "description" : "Summary of a prisoner's sub account balance at a specific establishment.",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The establishment code where the transactions for this balance occurred.",
+            "example" : "LEI"
+          },
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The unique numeric code identifying the sub account.",
+            "example" : 2101
+          },
+          "totalBalance" : {
+            "type" : "number",
+            "description" : "The current monetary balance of the sub account at this establishment. This value can be positive or negative.",
+            "example" : 32.0
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "description" : "The total amount on hold for this sub account at this establishment.",
+            "example" : 8.0
+          }
+        },
+        "required" : [ "accountCode", "holdBalance", "prisonId", "totalBalance" ]
+      },
+      "PrisonerEstablishmentBalanceDetailsList" : {
+        "type" : "object",
+        "description" : "A list of a prisoner's sub account balances, broken down by establishment.",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerEstablishmentBalanceDetails"
+            }
+          }
+        },
+        "required" : [ "items" ]
+      },
+      "GeneralLedgerBalanceDetails" : {
+        "type" : "object",
+        "description" : "Balance of prison general ledger account",
+        "properties" : {
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The unique account code identifying the prison general ledger account.",
+            "example" : 1021
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The current monetary balance of the prison general ledger account. This value can be positive or negative.",
+            "example" : 1234.56
+          }
+        },
+        "required" : [ "accountCode", "balance" ]
+      },
+      "GeneralLedgerBalanceDetailsList" : {
+        "type" : "object",
+        "description" : "A list of general ledger account balances",
+        "properties" : {
+          "items" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/GeneralLedgerBalanceDetails"
+            }
+          }
+        },
+        "required" : [ "items" ]
       },
       "PostingReportEntry" : {
         "type" : "object",
