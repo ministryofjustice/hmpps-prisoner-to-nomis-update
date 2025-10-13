@@ -157,6 +157,7 @@ class LocationsService(
     listSequence = instance.orderWithinParentLocation,
     unitType = instance.residentialHousingType?.let { CreateLocationRequest.UnitType.valueOf(toUnitType(it)) },
     tracking = instance.internalMovementAllowed,
+    active = instance.active,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )
@@ -304,6 +305,7 @@ class LocationsService(
     listSequence = instance.orderWithinParentLocation,
     comment = instance.comments,
     tracking = instance.internalMovementAllowed,
+    active = instance.active,
     profiles = instance.attributes?.map { toAttribute(it) },
     usages = instance.usage?.map { toUsage(it) },
   )

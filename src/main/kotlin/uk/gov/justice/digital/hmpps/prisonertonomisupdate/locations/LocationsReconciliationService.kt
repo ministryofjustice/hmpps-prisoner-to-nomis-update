@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.PatchNonResidentialLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AmendmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationResponse
@@ -190,49 +189,42 @@ class LocationsReconciliationService(
 
     val verdict = doesNotMatch(nomisRecord, dpsRecord, parentMapped)
     return if (verdict != null) {
-      if (verdict == TRACKING_MISMATCH && nomisRecord.active) {
-        locationsApiService.patchNonResidentialLocation(
-          dpsRecord.id.toString(),
-          PatchNonResidentialLocationRequest(internalMovementAllowed = nomisRecord.tracking),
-        )
-      }
-      val mismatch =
-        MismatchLocation(
-          nomisRecord.locationId,
-          dpsRecord.id.toString(),
-          LocationReportDetail(
-            nomisRecord.locationCode,
-            nomisRecord.description,
-            nomisRecord.unitType?.name,
-            nomisRecord.userDescription,
-            nomisRecord.comment,
-            nomisRecord.operationalCapacity,
-            nomisRecord.capacity,
-            nomisRecord.certified,
-            nomisRecord.cnaCapacity,
-            nomisRecord.active,
-            expectedDpsAttributesSize(nomisRecord.profiles),
-            nomisRecord.usages?.size,
-            expectedDpsHistorySize(nomisRecord.amendments),
-            nomisRecord.tracking,
-          ),
-          LocationReportDetail(
-            dpsRecord.code,
-            "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
-            dpsRecord.residentialHousingType?.name,
-            dpsRecord.localName,
-            dpsRecord.comments,
-            dpsRecord.capacity?.workingCapacity,
-            dpsRecord.capacity?.maxCapacity,
-            dpsRecord.certification?.certified,
-            dpsRecord.certification?.certifiedNormalAccommodation,
-            dpsRecord.active,
-            dpsRecord.attributes?.size,
-            dpsRecord.usage?.size,
-            dpsRecord.changeHistory?.size,
-            dpsRecord.internalMovementAllowed,
-          ),
-        )
+      val mismatch = MismatchLocation(
+        nomisRecord.locationId,
+        dpsRecord.id.toString(),
+        LocationReportDetail(
+          nomisRecord.locationCode,
+          nomisRecord.description,
+          nomisRecord.unitType?.name,
+          nomisRecord.userDescription,
+          nomisRecord.comment,
+          nomisRecord.operationalCapacity,
+          nomisRecord.capacity,
+          nomisRecord.certified,
+          nomisRecord.cnaCapacity,
+          nomisRecord.active,
+          expectedDpsAttributesSize(nomisRecord.profiles),
+          nomisRecord.usages?.size,
+          expectedDpsHistorySize(nomisRecord.amendments),
+          nomisRecord.tracking,
+        ),
+        LocationReportDetail(
+          dpsRecord.code,
+          "${dpsRecord.prisonId}-${dpsRecord.pathHierarchy}",
+          dpsRecord.residentialHousingType?.name,
+          dpsRecord.localName,
+          dpsRecord.comments,
+          dpsRecord.capacity?.workingCapacity,
+          dpsRecord.capacity?.maxCapacity,
+          dpsRecord.certification?.certified,
+          dpsRecord.certification?.certifiedNormalAccommodation,
+          dpsRecord.active,
+          dpsRecord.attributes?.size,
+          dpsRecord.usage?.size,
+          dpsRecord.changeHistory?.size,
+          dpsRecord.internalMovementAllowed,
+        ),
+      )
       log.info("Location Mismatch found $verdict (type ${nomisRecord.locationType}) in:\n  $mismatch")
       telemetryClient.trackEvent(
         "locations-reports-reconciliation-mismatch",
@@ -297,7 +289,8 @@ class LocationsReconciliationService(
     if (dps.residentialHousingType == null && (nomis.usages?.size ?: 0) != (dps.usage?.size ?: 0)) return "Location usage mismatch"
     // There are 100s of key mismatches not counting BOX and POSI, general position is that we dont care.
     // we also dont care about comment mismatches or location history mismatches
-    if (dps.residentialHousingType == null && nomis.tracking != dps.internalMovementAllowed) {
+    if (dps.active != nomis.active) return "Active mismatch"
+    if (dps.residentialHousingType == null && nomis.tracking != dps.internalMovementAllowed && nomis.active) {
       return TRACKING_MISMATCH
     }
     return null
