@@ -117,6 +117,11 @@ class CourtSentencingMappingService(
     .retrieve()
     .awaitBody()
 
+  suspend fun getMappingGivenNomisCourtCaseIdOrNull(nomisCourtCaseId: Long): CourtCaseMappingDto? = webClient.get()
+    .uri("/mapping/court-sentencing/court-cases/nomis-court-case-id/{nomisCourtCaseId}", nomisCourtCaseId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds: List<Long>): List<CourtCaseMappingDto> = webClient.post()
     .uri("/mapping/court-sentencing/court-cases/nomis-case-ids/get-list")
     .bodyValue(nomisCourtCaseIds)

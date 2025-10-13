@@ -19,6 +19,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
@@ -974,52 +975,42 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class HappyPath {
+    inner class BadInputPath {
       @Nested
-      inner class UsingDPSCaseId {
+      inner class CaseReferenceNotFound {
 
-        @BeforeEach
-        fun setUp() {
-          webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
-            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
-            .exchange()
-            .expectStatus().isOk
+        @Nested
+        inner class UsingDPSCaseId {
+
+          @BeforeEach
+          fun setUp() {
+            courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(dpsCourtCaseId, HttpStatus.NOT_FOUND)
+          }
+
+          @Test
+          fun `will return 400 error`() {
+            webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+              .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+              .exchange()
+              .expectStatus().isBadRequest
+          }
         }
 
-        @Test
-        fun `will track repair telemetry`() {
-          verify(telemetryClient).trackEvent(
-            eq("court-sentencing-repair-court-case"),
-            check {
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["courtCaseId"]).isEqualTo(dpsCourtCaseId)
-            },
-            isNull(),
-          )
-        }
-      }
+        @Nested
+        inner class UsingNOMISCaseId {
 
-      @Nested
-      inner class UsingNOMISCaseId {
+          @BeforeEach
+          fun setUp() {
+            courtSentencingMappingApi.stubGetCourtCaseMappingGivenNomisId(nomisCourtCaseId, HttpStatus.NOT_FOUND)
+          }
 
-        @BeforeEach
-        fun setUp() {
-          webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$nomisCourtCaseId/repair")
-            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
-            .exchange()
-            .expectStatus().isOk
-        }
-
-        @Test
-        fun `will track repair telemetry`() {
-          verify(telemetryClient).trackEvent(
-            eq("court-sentencing-repair-court-case"),
-            check {
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["courtCaseId"]).isEqualTo(nomisCourtCaseId.toString())
-            },
-            isNull(),
-          )
+          @Test
+          fun `will return 400 error`() {
+            webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$nomisCourtCaseId/repair")
+              .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+              .exchange()
+              .expectStatus().isBadRequest
+          }
         }
       }
     }

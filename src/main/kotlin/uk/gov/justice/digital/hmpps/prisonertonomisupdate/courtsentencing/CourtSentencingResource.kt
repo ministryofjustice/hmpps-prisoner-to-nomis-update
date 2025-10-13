@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.microsoft.applicationinsights.TelemetryClient
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -23,7 +22,6 @@ import org.springframework.web.bind.annotation.RestController
 @Tag(name = "Court Sentencing Update Resource")
 @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class CourtSentencingResource(
-  private val telemetryClient: TelemetryClient,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
   private val courtSentencingRepairService: CourtSentencingRepairService,
 ) {
@@ -133,7 +131,7 @@ class CourtSentencingResource(
   ): CourtCaseRepairResponse = courtSentencingRepairService.resynchroniseCourtCaseInNomis(
     offenderNo = offenderNo,
     courtCaseId = courtCaseId,
-  ).also { telemetryClient.trackEvent("court-sentencing-repair-court-case", mapOf("offenderNo" to offenderNo, "courtCaseId" to courtCaseId), null) }
+  )
 }
 
 @Schema(description = "Court Charge Request")
