@@ -93,7 +93,7 @@ class VisitBalanceDataRepairResourceIntTest : IntegrationTestBase() {
       @Test
       fun `will track telemetry for the repair`() {
         verify(telemetryClient).trackEvent(
-          eq("visitbalance-synchronisation-repair"),
+          eq("visitbalance-synchronisation-repair-success"),
           check {
             assertThat(it["prisonNumber"]).isEqualTo(prisonNumber)
             assertThat(it["voBalance"]).isEqualTo("24")

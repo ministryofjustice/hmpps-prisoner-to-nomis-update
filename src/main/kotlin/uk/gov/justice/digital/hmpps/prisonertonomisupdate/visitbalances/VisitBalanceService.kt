@@ -70,7 +70,7 @@ class VisitBalanceService(
       )
       telemetry.put("voBalance", visitBalance?.voBalance.toString())
       telemetry.put("pvoBalance", visitBalance?.pvoBalance.toString())
-      telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix", telemetry)
+      telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix-success", telemetry)
     } else {
       telemetryClient.trackEvent("visitbalance-synchronisation-$eventTypeSuffix-ignored", telemetry)
     }
@@ -78,7 +78,7 @@ class VisitBalanceService(
 
   suspend fun synchroniseBalanceReset(balanceResetDomainEvent: BalanceResetDomainEvent) {
     with(balanceResetDomainEvent.additionalInformation) {
-      synchronisePrisoner(prisonNumber = prisonerId, eventTypeSuffix = "prisoner-received")
+      synchronisePrisoner(prisonNumber = prisonerId, eventTypeSuffix = "balance-reset")
     }
   }
 
