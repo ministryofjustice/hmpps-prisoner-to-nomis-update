@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseAllMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
@@ -19,7 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 
 @Service
-class CourtCaseMappingService(
+class CourtSentencingMappingService(
   @Qualifier("mappingWebClient") private val webClient: WebClient,
 ) {
 
@@ -194,5 +195,12 @@ class CourtCaseMappingService(
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
+  }
+  suspend fun replaceMappings(request: CourtCaseBatchMappingDto) {
+    webClient.put()
+      .uri("/mapping/court-sentencing/court-cases/replace")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
   }
 }

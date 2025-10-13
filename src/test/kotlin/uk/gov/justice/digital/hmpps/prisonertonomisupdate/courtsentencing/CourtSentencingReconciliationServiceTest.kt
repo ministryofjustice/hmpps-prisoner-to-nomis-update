@@ -93,7 +93,7 @@ private const val SENTENCE_TERM_TYPE = "IMP"
   CourtSentencingApiMockServer::class,
   RetryApiService::class,
   CourtSentencingConfiguration::class,
-  CourtCaseMappingService::class,
+  CourtSentencingMappingService::class,
 )
 internal class CourtSentencingReconciliationServiceTest {
   @MockitoBean

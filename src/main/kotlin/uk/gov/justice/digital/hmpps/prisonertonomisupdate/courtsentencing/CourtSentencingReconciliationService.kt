@@ -28,7 +28,7 @@ class CourtSentencingReconciliationService(
   private val dpsApiService: CourtSentencingApiService,
   private val nomisApiService: CourtSentencingNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
-  private val mappingService: CourtCaseMappingService,
+  private val mappingService: CourtSentencingMappingService,
   private val objectMapper: ObjectMapper,
   @Value("\${reports.court-case.prisoner.reconciliation.page-size:10}") private val prisonerPageSize: Int = 10,
 ) {
