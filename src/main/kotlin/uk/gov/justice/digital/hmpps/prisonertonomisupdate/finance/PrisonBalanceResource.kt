@@ -15,13 +15,13 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestController
 class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReconciliationService) {
 
-  @PreAuthorize("hasRole('NOMIS_UPDATE__RECONCILIATION__R')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS_UPDATE__RW')")
   @GetMapping("/prison-balance/reconciliation/{prisonId}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
     summary = "Run the prison balance reconciliation for this prison id",
     description = """Retrieves the account balance differences for a prison. Empty response returned if no differences found. 
-      Requires NOMIS_UPDATE__RECONCILIATION__R""",
+      Requires ROLE PRISONER_TO_NOMIS_UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -39,7 +39,7 @@ class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReco
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires NOMIS_UPDATE__RECONCILIATION__R",
+        description = "Forbidden to access this endpoint. Requires ROLE PRISONER_TO_NOMIS_UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",
