@@ -31,6 +31,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCharge
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationChargeWithoutSentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost10RawMessages
@@ -45,6 +50,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ClonedCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseRepairResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventResponse
@@ -58,6 +65,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Se
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentenceTermResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -93,6 +101,8 @@ private const val NOMIS_TERM_SEQ = 4L
 private const val SENTENCE_TERM_TYPE = "IMP"
 
 class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
+  private val courtSentencingDpsApi = CourtSentencingApiExtension.courtSentencingApi
+
   @Autowired
   private lateinit var courtSentencingNomisApi: CourtSentencingNomisApiMockServer
 
@@ -977,6 +987,26 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     @Nested
     inner class BadInputPath {
       @Nested
+      inner class CaseHasASentence {
+        @BeforeEach
+        fun setUp() {
+          courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(dpsCourtCaseId, nomisCourtCaseId)
+          courtSentencingDpsApi.stubGetCourtCaseForReconciliation(
+            courtCaseId = dpsCourtCaseId,
+            courtCaseResponse = reconciliationCourtCase(appearances = listOf(reconciliationCourtAppearance(charges = listOf(reconciliationCharge(sentenceResponse = reconciliationSentence()))))),
+          )
+        }
+
+        @Test
+        fun `will return conflict error when court case has a sentence`() {
+          webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+            .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isEqualTo(409)
+        }
+      }
+
+      @Nested
       inner class CaseReferenceNotFound {
 
         @Nested
@@ -1012,6 +1042,71 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
               .expectStatus().isBadRequest
           }
         }
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      val newNomisCaseId = 1234L
+      val dpsAppearanceId: UUID = UUID.randomUUID()
+      val dpsChargeId: UUID = UUID.randomUUID()
+      val nomisAppearanceId = 23456L
+      val nomisChargeId = 34567L
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(dpsCourtCaseId, nomisCourtCaseId)
+        courtSentencingDpsApi.stubGetCourtCaseForReconciliation(
+          courtCaseId = dpsCourtCaseId,
+          courtCaseResponse = reconciliationCourtCase(
+            caseReferences = listOf(
+              CaseReferenceLegacyData(
+                "ABC4999",
+                updatedDate = LocalDateTime.now(),
+              ),
+            ),
+            appearances = listOf(reconciliationCourtAppearance(appearanceUuid = dpsAppearanceId, charges = listOf(reconciliationChargeWithoutSentence().copy(chargeUuid = dpsChargeId))).copy(courtCode = "MDI")),
+          ),
+        )
+        courtSentencingNomisApi.stubRepairCourtCase(
+          offenderNo,
+          nomisCourtCaseId,
+          response = CourtCaseRepairResponse(
+            caseId = newNomisCaseId,
+            courtAppearanceIds = listOf(nomisAppearanceId),
+            offenderChargeIds = listOf(nomisChargeId),
+          ),
+        )
+
+        webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will call NOMIS API to repair the case`() {
+        val nomisRepairRequest: CourtCaseRepairRequest = nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId/repair")), objectMapper)
+
+        assertThat(nomisRepairRequest.courtId).isEqualTo("MDI")
+        assertThat(nomisRepairRequest.courtAppearances).hasSize(1)
+        assertThat(nomisRepairRequest.offenderCharges).hasSize(1)
+        assertThat(nomisRepairRequest.courtAppearances[0].courtEventCharges).hasSize(1)
+        assertThat(nomisRepairRequest.caseReferences?.caseIdentifiers).hasSize(1)
+      }
+
+      @Test
+      fun `will track telemetry for success`() {
+        verify(telemetryClient).trackEvent(
+          eq("court-sentencing-repair-court-case"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(dpsCourtCaseId)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(nomisCourtCaseId.toString())
+            assertThat(it["newNomisCourtCaseId"]).isEqualTo(newNomisCaseId.toString())
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+          },
+          isNull(),
+        )
       }
     }
   }
