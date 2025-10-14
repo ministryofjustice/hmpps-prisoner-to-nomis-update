@@ -11,17 +11,25 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCharge
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 
 const val COURT_CHARGE_1_OFFENCE_CODE = "PS90031"
@@ -62,6 +70,78 @@ class CourtSentencingApiExtension :
       active = active,
       appearanceUuid = UUID.randomUUID(),
     )
+
+    fun reconciliationCourtCase(
+      active: Boolean = true,
+      appearances: List<ReconciliationCourtAppearance> = listOf(reconciliationCourtAppearance()),
+      caseReferences: List<CaseReferenceLegacyData> = listOf(
+        CaseReferenceLegacyData(
+          "ABC4999",
+          updatedDate = LocalDateTime.now(),
+        ),
+      ),
+    ) = ReconciliationCourtCase(
+      courtCaseUuid = UUID.randomUUID().toString(),
+      prisonerId = "A1234KT",
+      active = active,
+      appearances = appearances,
+      courtCaseLegacyData = CourtCaseLegacyData(caseReferences),
+      merged = false,
+    )
+
+    fun reconciliationCourtAppearance(
+      appearanceUuid: UUID = UUID.randomUUID(),
+      outcome: String = "4001",
+      charges: List<ReconciliationCharge> = listOf(reconciliationChargeWithoutSentence()),
+      appearanceDate: LocalDate = LocalDate.parse("2024-01-01"),
+    ) = ReconciliationCourtAppearance(
+      appearanceUuid = appearanceUuid,
+      courtCode = "LEI",
+      appearanceDate = appearanceDate,
+      appearanceTime = "10:10",
+      nomisOutcomeCode = outcome,
+      charges = charges,
+      nextCourtAppearance = ReconciliationNextCourtAppearance(
+        appearanceDate = LocalDate.parse("2024-02-01"),
+        appearanceTime = "10:10",
+        courtId = "MDI",
+      ),
+    )
+
+    fun reconciliationCharge(
+      offenceCode: String = "TR11017",
+      offenceStartDate: LocalDate = LocalDate.parse("2021-01-01"),
+      sentenceResponse: ReconciliationSentence? = reconciliationSentence(),
+    ) = ReconciliationCharge(
+      chargeUuid = UUID.randomUUID(),
+      offenceCode = offenceCode,
+      offenceStartDate = offenceStartDate,
+      offenceEndDate = offenceStartDate.plusDays(1),
+      nomisOutcomeCode = "4001",
+      sentence = sentenceResponse,
+    )
+
+    fun reconciliationChargeWithoutSentence() = reconciliationCharge(sentenceResponse = null)
+
+    fun reconciliationSentence(periodLengths: List<ReconciliationPeriodLength> = listOf(reconciliationPeriodLength())) = ReconciliationSentence(
+      sentenceUuid = UUID.randomUUID(),
+      sentenceCategory = "2020",
+      sentenceCalcType = "ADIMP_ORA",
+      sentenceStartDate = LocalDate.of(2024, 1, 1),
+      active = true,
+      periodLengths = periodLengths,
+      fineAmount = BigDecimal.valueOf(750.00),
+    )
+
+    fun reconciliationPeriodLength() = ReconciliationPeriodLength(
+      periodYears = 6,
+      periodMonths = 5,
+      periodWeeks = 4,
+      periodDays = 3,
+      sentenceTermCode = "IMP",
+      lifeSentence = false,
+      periodLengthUuid = UUID.randomUUID(),
+    )
   }
 
   override fun beforeAll(context: ExtensionContext) {
@@ -87,8 +167,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubHealthPing(status: Int) {
     stubFor(
-      WireMock.get("/health/ping").willReturn(
-        WireMock.aResponse()
+      get("/health/ping").willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(if (status == 200) "pong" else "some error")
           .withStatus(status),
@@ -98,8 +178,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubCourtCaseGet(courtCaseId: String, courtCaseResponse: LegacyCourtCase) {
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCaseResponse),
@@ -181,8 +261,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
 
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtAppearance),
@@ -220,8 +300,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       appearanceTypeUuid = UUID.fromString(APPEARANCE_TYPE_CRT),
     )
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtAppearance),
@@ -242,8 +322,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
     )
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/charge/$courtChargeId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/charge/$courtChargeId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCase),
@@ -278,8 +358,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       appearanceUuid = UUID.randomUUID(),
     )
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/sentence/$sentenceId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentence),
@@ -294,7 +374,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   ) {
     stubFor(
       WireMock.post(WireMock.urlPathMatching("/legacy/sentence/search")).willReturn(
-        WireMock.aResponse()
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(sentences),
@@ -326,8 +406,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
   ) {
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/period-length/$periodLengthId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/period-length/$periodLengthId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(periodLength),
@@ -339,8 +419,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCourtCaseForReconciliation(courtCaseId: String, courtCaseResponse: ReconciliationCourtCase) {
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/reconciliation")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/court-case/$courtCaseId/reconciliation")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(courtCaseResponse),
@@ -352,8 +432,8 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetRecall(recallId: String, recall: LegacyRecall) {
     stubFor(
-      WireMock.get(WireMock.urlPathMatching("/legacy/recall/$recallId")).willReturn(
-        WireMock.aResponse()
+      get(WireMock.urlPathMatching("/legacy/recall/$recallId")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
             objectMapper().writeValueAsString(recall),

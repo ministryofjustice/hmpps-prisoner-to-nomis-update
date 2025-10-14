@@ -11,6 +11,7 @@ class CourtSentencingRepairService(
   private val telemetryClient: TelemetryClient,
   private val courtSentencingService: CourtSentencingService,
   private val nomisApiService: CourtSentencingNomisApiService,
+  private val dpsApiService: CourtSentencingApiService,
   private val courtCaseMappingService: CourtSentencingMappingService,
 ) {
   suspend fun chargeInsertedRepair(request: CourtChargeRequest) {
@@ -53,6 +54,7 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseCourtCaseInNomis(offenderNo: String, courtCaseId: String): CourtCaseRepairResponse {
     val (dpsCaseId, nomisCaseId) = getCaseIds(courtCaseId)
+    val nomisCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId).toCourtCaseRepairRequest()
 
     telemetryClient.trackEvent(
       "court-sentencing-repair-court-case",
