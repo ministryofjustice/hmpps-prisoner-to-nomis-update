@@ -15,7 +15,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 @RestController
 class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReconciliationService) {
 
-  @PreAuthorize("hasRole('PRISONER_TO_NOMIS_UPDATE__RW')")
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/prison-balance/reconciliation/{prisonId}")
   @ResponseStatus(HttpStatus.OK)
   @Operation(
