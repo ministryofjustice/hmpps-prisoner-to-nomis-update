@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ConflictException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
@@ -54,18 +56,20 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseCourtCaseInNomis(offenderNo: String, courtCaseId: String): CourtCaseRepairResponse {
     val (dpsCaseId, nomisCaseId) = getCaseIds(courtCaseId)
-    val nomisCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId).toCourtCaseRepairRequest()
+    val nomisCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId).requiresCaseHasNoSentence().toCourtCaseRepairRequest()
+    val nomisCaseResponse = nomisApiService.repairCourtCase(offenderNo, nomisCaseId, nomisCourtCase)
 
     telemetryClient.trackEvent(
       "court-sentencing-repair-court-case",
       mapOf(
         "offenderNo" to offenderNo,
         "nomisCourtCaseId" to nomisCaseId.toString(),
+        "newNomisCourtCaseId" to nomisCaseResponse.caseId.toString(),
         "dpsCourtCaseId" to dpsCaseId,
       ),
       null,
     )
-    return CourtCaseRepairResponse(nomisCaseId = 0)
+    return CourtCaseRepairResponse(nomisCaseId = nomisCaseResponse.caseId)
   }
 
   private suspend fun getCaseIds(dpsOrNomisCaseId: String): Pair<String, Long> = dpsOrNomisCaseId.toLongOrNull()?.let {
@@ -73,4 +77,12 @@ class CourtSentencingRepairService(
   } ?: let {
     dpsOrNomisCaseId to (courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsOrNomisCaseId)?.nomisCourtCaseId ?: throw BadRequestException("No mapping found for $dpsOrNomisCaseId"))
   }
+}
+
+private fun ReconciliationCourtCase.requiresCaseHasNoSentence(): ReconciliationCourtCase {
+  if (this.appearances.flatMap { it.charges }.any { it.sentence != null }) {
+    throw ConflictException("Court case ${this.courtCaseUuid} has a sentence, only case without a sentence can be repaired in NOMIS")
+  }
+
+  return this
 }

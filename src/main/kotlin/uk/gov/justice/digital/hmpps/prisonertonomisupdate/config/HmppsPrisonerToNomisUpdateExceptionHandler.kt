@@ -4,6 +4,7 @@ import jakarta.validation.ValidationException
 import org.slf4j.LoggerFactory
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_REQUEST
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.FORBIDDEN
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.ResponseEntity
@@ -103,6 +104,20 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
     )
   }
 
+  @ExceptionHandler(ConflictException::class)
+  fun handleConflictException(e: ConflictException): ResponseEntity<ErrorResponse> {
+    log.info("Conflict http error: {}", e.message)
+    return ResponseEntity
+      .status(CONFLICT)
+      .body(
+        ErrorResponse(
+          status = CONFLICT,
+          userMessage = e.message,
+          developerMessage = e.message,
+        ),
+      )
+  }
+
   @ExceptionHandler(ServerWebInputException::class)
   fun handleMethodArgumentTypeMismatchException(e: ServerWebInputException): Mono<ResponseEntity<ErrorResponse>> {
     log.info("Invalid argument exception: {}", e.message)
@@ -141,3 +156,4 @@ data class ErrorResponse(
 }
 
 class BadRequestException(message: String) : RuntimeException(message)
+class ConflictException(message: String) : RuntimeException(message)
