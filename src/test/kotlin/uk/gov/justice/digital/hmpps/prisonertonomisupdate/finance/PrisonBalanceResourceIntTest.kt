@@ -241,7 +241,7 @@ class PrisonBalanceResourceIntTest(
       @Test
       fun `will return no differences`() {
         webTestClient.get().uri("/prison-balance/reconciliation/$prisonId")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS_UPDATE__RW")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -261,7 +261,7 @@ class PrisonBalanceResourceIntTest(
         )
 
         webTestClient.get().uri("/prison-balance/reconciliation/$prisonId")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS_UPDATE__RW")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -294,7 +294,7 @@ class PrisonBalanceResourceIntTest(
         )
 
         webTestClient.get().uri("/prison-balance/reconciliation/$prisonId")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS_UPDATE__RW")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk
@@ -335,7 +335,7 @@ class PrisonBalanceResourceIntTest(
         )
 
         webTestClient.get().uri("/prison-balance/reconciliation/$prisonId")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS_UPDATE__RW")))
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
           .isOk

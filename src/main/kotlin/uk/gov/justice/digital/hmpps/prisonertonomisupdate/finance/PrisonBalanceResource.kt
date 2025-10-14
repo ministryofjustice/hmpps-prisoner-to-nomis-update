@@ -21,7 +21,7 @@ class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReco
   @Operation(
     summary = "Run the prison balance reconciliation for this prison id",
     description = """Retrieves the account balance differences for a prison. Empty response returned if no differences found. 
-      Requires ROLE PRISONER_TO_NOMIS_UPDATE__RW""",
+      Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [
       ApiResponse(
         responseCode = "200",
@@ -39,7 +39,7 @@ class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReco
       ),
       ApiResponse(
         responseCode = "403",
-        description = "Forbidden to access this endpoint. Requires ROLE PRISONER_TO_NOMIS_UPDATE__RW",
+        description = "Forbidden to access this endpoint. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
         content = [
           Content(
             mediaType = "application/json",
