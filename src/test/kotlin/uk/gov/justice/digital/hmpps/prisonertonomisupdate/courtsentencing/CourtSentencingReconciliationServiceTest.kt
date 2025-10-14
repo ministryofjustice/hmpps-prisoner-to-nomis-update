@@ -15,13 +15,16 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCharge
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtAppearance
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationPeriodLength
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtCaseResponse
@@ -78,8 +81,6 @@ private const val DPS_SENTENCE_4_ID = "9a591b18-642a-484a-a967-2d17b5c9c5a1"
 private const val SENTENCE_CATEGORY = "2020"
 private const val SENTENCE_CALC_TYPE = "ADIMP_ORA"
 private const val NOMIS_SENTENCE_SEQ = 3L
-private const val NOMIS_SENTENCE_2_SEQ = 4L
-private const val NOMIS_SENTENCE_3_SEQ = 5L
 private const val NOMIS_TERM_SEQ = 4L
 private const val SENTENCE_TERM_TYPE = "IMP"
 
@@ -358,7 +359,7 @@ internal class CourtSentencingReconciliationServiceTest {
           appearances = listOf(
             dpsAppearanceResponse().copy(
               charges = listOf(
-                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(2021, 3, 3)),
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(2021, 3, 3), chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID)),
               ),
             ),
           ),
@@ -427,7 +428,7 @@ internal class CourtSentencingReconciliationServiceTest {
           appearances = listOf(
             dpsAppearanceResponse().copy(
               charges = listOf(
-                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1921, 4, 3)),
+                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1921, 4, 3), chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID)),
               ),
             ),
           ),
@@ -497,9 +498,9 @@ internal class CourtSentencingReconciliationServiceTest {
             dpsAppearanceResponse().copy(
               // will create 3 sentences with the same id (the same sentence)
               charges = listOf(
-                dpsChargeResponse(),
-                dpsChargeResponse(offenceCode = OFFENCE_CODE_2),
-                dpsChargeResponse(),
+                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID))),
+                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID)), offenceCode = OFFENCE_CODE_2),
+                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID))),
               ),
             ),
           ),
@@ -768,6 +769,7 @@ internal class CourtSentencingReconciliationServiceTest {
                       dpsPeriodLengthResponse(),
                       dpsPeriodLengthResponse().copy(
                         periodYears = 20,
+                        periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_ID),
                       ),
                     ),
                   ),
@@ -805,13 +807,10 @@ fun dpsCourtCaseResponse(
       updatedDate = LocalDateTime.now(),
     ),
   ),
-) = ReconciliationCourtCase(
-  courtCaseUuid = DPS_COURT_CASE_ID,
-  prisonerId = OFFENDER_NO,
+) = reconciliationCourtCase(
   active = active,
   appearances = appearances,
-  courtCaseLegacyData = CourtCaseLegacyData(caseReferences),
-  merged = false,
+  caseReferences = caseReferences,
 )
 
 fun dpsAppearanceResponse(
@@ -819,20 +818,11 @@ fun dpsAppearanceResponse(
   outcome: String = OUTCOME_1,
   charges: List<ReconciliationCharge> = listOf(dpsChargeResponse()),
   appearanceDate: LocalDate = LocalDate.of(2024, 1, 1),
-) = ReconciliationCourtAppearance(
+) = reconciliationCourtAppearance(
   appearanceUuid = appearanceUuid,
-  // courtCaseUuid = DPS_COURT_CASE_ID,
-  courtCode = PRISON_LEI,
   appearanceDate = appearanceDate,
-  appearanceTime = "10:10",
-  nomisOutcomeCode = outcome,
+  outcome = outcome,
   charges = charges,
-  // prisonerId = OFFENDER_NO,
-  nextCourtAppearance = ReconciliationNextCourtAppearance(
-    appearanceDate = LocalDate.of(2024, 2, 1),
-    appearanceTime = "10:10",
-    courtId = PRISON_MDI,
-  ),
 )
 
 fun dpsAppearanceResponseWithoutCharges() = dpsAppearanceResponse(charges = emptyList())
@@ -1011,35 +1001,16 @@ fun dpsChargeResponse(
   offenceCode: String = OFFENCE_CODE_1,
   offenceStartDate: LocalDate = LocalDate.of(2023, 1, 1),
   sentenceResponse: ReconciliationSentence? = dpsSentenceResponse(),
-) = ReconciliationCharge(
-  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID),
+) = reconciliationCharge(
   offenceCode = offenceCode,
   offenceStartDate = offenceStartDate,
-  offenceEndDate = offenceStartDate.plusDays(1),
-  nomisOutcomeCode = OUTCOME_1,
-  sentence = sentenceResponse,
-  // = DPS_COURT_CASE_ID,
-  // prisonerId = OFFENDER_NO,
+  sentenceResponse = sentenceResponse,
 )
 
 fun dpsChargeResponseWithoutSentence() = dpsChargeResponse(sentenceResponse = null)
 
-fun dpsSentenceResponse(periodLengths: List<ReconciliationPeriodLength> = listOf(dpsPeriodLengthResponse())) = ReconciliationSentence(
-  sentenceUuid = UUID.fromString(DPS_SENTENCE_ID),
-  sentenceCategory = SENTENCE_CATEGORY,
-  sentenceCalcType = SENTENCE_CALC_TYPE,
-  sentenceStartDate = LocalDate.of(2024, 1, 1),
-  active = true,
+fun dpsSentenceResponse(periodLengths: List<ReconciliationPeriodLength> = listOf(dpsPeriodLengthResponse())) = reconciliationSentence(
   periodLengths = periodLengths,
-  fineAmount = BigDecimal.valueOf(750.00),
 )
 
-fun dpsPeriodLengthResponse() = ReconciliationPeriodLength(
-  periodYears = YEARS,
-  periodMonths = MONTHS,
-  periodWeeks = WEEKS,
-  periodDays = DAYS,
-  sentenceTermCode = SENTENCE_TERM_TYPE,
-  lifeSentence = false,
-  periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_ID),
-)
+fun dpsPeriodLengthResponse() = reconciliationPeriodLength()
