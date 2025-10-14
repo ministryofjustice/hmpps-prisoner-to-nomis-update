@@ -64,7 +64,7 @@ internal class LocationsServiceTest {
       ),
     )
 
-    callCreateService()
+    callCreateService(newLocation().copy(active = true))
     verify(nomisApiService).createLocation(
       check {
         assertThat(it.locationType).isEqualTo(CreateLocationRequest.LocationType.CELL)
@@ -80,6 +80,7 @@ internal class LocationsServiceTest {
         assertThat(it.cnaCapacity).isEqualTo(13)
         assertThat(it.capacity).isEqualTo(14)
         assertThat(it.operationalCapacity).isEqualTo(12)
+        assertThat(it.active).isTrue()
         assertThat(it.profiles).extracting("profileType", "profileCode").containsExactly(
           Tuple.tuple(ProfileRequest.ProfileType.HOU_UNIT_ATT, "GC"),
           Tuple.tuple(ProfileRequest.ProfileType.HOU_USED_FOR, "7"),
@@ -124,6 +125,7 @@ internal class LocationsServiceTest {
         assertThat(it.unitType).isEqualTo(UpdateLocationRequest.UnitType.NA)
         assertThat(it.listSequence).isEqualTo(4)
         assertThat(it.comment).isEqualTo("comments")
+        assertThat(it.active).isFalse()
         assertThat(it.profiles).extracting("profileType", "profileCode").containsExactly(
           Tuple.tuple(ProfileRequest.ProfileType.HOU_UNIT_ATT, "GC"),
           Tuple.tuple(ProfileRequest.ProfileType.HOU_USED_FOR, "7"),
@@ -171,10 +173,8 @@ internal class LocationsServiceTest {
     )
   }
 
-  private suspend fun callCreateService() {
-    whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(
-      newLocation(),
-    )
+  private suspend fun callCreateService(newLocation: LegacyLocation = newLocation()) {
+    whenever(locationsApiService.getLocation(DPS_LOCATION_ID)).thenReturn(newLocation)
     whenever(nomisApiService.createLocation(any())).thenReturn(LocationIdResponse(NOMIS_LOCATION_ID))
 
     val location = LocationDomainEvent(
@@ -204,7 +204,7 @@ internal class LocationsServiceTest {
     code = "003",
     pathHierarchy = "B-3-003",
     locationType = LegacyLocation.LocationType.CELL,
-    active = true,
+    active = false,
     key = DPS_KEY,
     residentialHousingType = LegacyLocation.ResidentialHousingType.NORMAL_ACCOMMODATION,
     localName = "description",

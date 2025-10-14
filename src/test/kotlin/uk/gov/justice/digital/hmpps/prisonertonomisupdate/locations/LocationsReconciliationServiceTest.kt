@@ -114,7 +114,7 @@ class LocationsReconciliationServiceTest {
   }
 
   @Test
-  fun `will report mismatch and correct data where locations have a different tracking flag`() = runTest {
+  fun `will report mismatch where locations have a different tracking flag`() = runTest {
     whenever(nomisApiService.getLocationDetails(NOMIS_LOCATION_ID))
       .thenReturn(
         nomisResponse(tracking = true).copy(unitType = null),
@@ -139,13 +139,6 @@ class LocationsReconciliationServiceTest {
     val result = locationsReconciliationService.checkMatch(locationMappingDto)
     assertThat(result?.nomisLocation?.internalMovementAllowed).isTrue()
     assertThat(result?.dpsLocation?.internalMovementAllowed).isFalse()
-
-    verify(locationsApiService).patchNonResidentialLocation(
-      eq(DPS_LOCATION_ID),
-      check {
-        assertThat(it.internalMovementAllowed).isTrue()
-      },
-    )
   }
 
   @Test

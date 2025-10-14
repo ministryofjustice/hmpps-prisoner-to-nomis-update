@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-19.129.fd39577"
+    "version" : "2025-10-09.150.83295b2"
   },
   "servers" : [ {
     "url" : "/",
@@ -11016,12 +11016,9 @@
             "type" : "boolean",
             "default" : true,
             "description" : "In-cell sanitation for cell"
-          },
-          "isCapacityValid" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "code", "isCapacityValid" ]
+        "required" : [ "code" ]
       },
       "PatchResidentialLocationRequest" : {
         "type" : "object",
@@ -11593,15 +11590,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
