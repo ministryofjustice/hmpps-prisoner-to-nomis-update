@@ -5,6 +5,10 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ConflictException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
@@ -56,8 +60,36 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseCourtCaseInNomis(offenderNo: String, courtCaseId: String): CourtCaseRepairResponse {
     val (dpsCaseId, nomisCaseId) = getCaseIds(courtCaseId)
-    val nomisCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId).requiresCaseHasNoSentence().toCourtCaseRepairRequest()
+    val dpsCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
+    val nomisCourtCase = dpsCourtCase.requiresCaseHasNoSentence().toCourtCaseRepairRequest()
     val nomisCaseResponse = nomisApiService.repairCourtCase(offenderNo, nomisCaseId, nomisCourtCase)
+    courtCaseMappingService.replaceMappings(
+      CourtCaseBatchMappingDto(
+        courtCases = listOf(
+          CourtCaseMappingDto(
+            nomisCourtCaseId = nomisCaseResponse.caseId,
+            dpsCourtCaseId = dpsCaseId,
+            offenderNo = offenderNo,
+          ),
+        ),
+        courtAppearances = dpsCourtCase.appearances.map { it.appearanceUuid }.zip(nomisCaseResponse.courtAppearanceIds).map { (dpsAppearanceId, nomisAppearanceId) ->
+          CourtAppearanceMappingDto(
+            nomisCourtAppearanceId = nomisAppearanceId,
+            dpsCourtAppearanceId = dpsAppearanceId.toString(),
+          )
+        },
+        // dps charge id is sent to NOMIS API so use what we send since it is in the same order as the response
+        courtCharges = nomisCourtCase.offenderCharges.map { it.id }.zip(nomisCaseResponse.offenderChargeIds).map { (dpsChargeId, nomisChargeId) ->
+          CourtChargeMappingDto(
+            nomisCourtChargeId = nomisChargeId,
+            dpsCourtChargeId = dpsChargeId,
+          )
+        },
+        sentences = emptyList(),
+        sentenceTerms = emptyList(),
+        mappingType = CourtCaseBatchMappingDto.MappingType.DPS_CREATED,
+      ),
+    )
 
     telemetryClient.trackEvent(
       "court-sentencing-repair-court-case",

@@ -40,6 +40,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.countAllMessagesOnQueue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.readAtMost10RawMessages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchUpdateAndCreateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
@@ -1077,6 +1078,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             offenderChargeIds = listOf(nomisChargeId),
           ),
         )
+        courtSentencingMappingApi.stubReplaceMappings()
 
         webTestClient.post().uri("/prisoners/$offenderNo/court-sentencing/court-case/$dpsCourtCaseId/repair")
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -1093,6 +1095,27 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         assertThat(nomisRepairRequest.offenderCharges).hasSize(1)
         assertThat(nomisRepairRequest.courtAppearances[0].courtEventCharges).hasSize(1)
         assertThat(nomisRepairRequest.caseReferences?.caseIdentifiers).hasSize(1)
+      }
+
+      @Test
+      fun `will call the mapping API to replace mappings`() {
+        val mappingReplaceRequest: CourtCaseBatchMappingDto = CourtSentencingMappingApiMockServer.Companion.getRequestBody(putRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/replace")))
+
+        assertThat(mappingReplaceRequest.courtCases).hasSize(1)
+        with(mappingReplaceRequest.courtCases[0]) {
+          assertThat(dpsCourtCaseId).isEqualTo(dpsCourtCaseId)
+          assertThat(nomisCourtCaseId).isEqualTo(newNomisCaseId)
+        }
+        assertThat(mappingReplaceRequest.courtAppearances).hasSize(1)
+        with(mappingReplaceRequest.courtAppearances[0]) {
+          assertThat(dpsCourtAppearanceId).isEqualTo(dpsAppearanceId.toString())
+          assertThat(nomisCourtAppearanceId).isEqualTo(nomisAppearanceId)
+        }
+        assertThat(mappingReplaceRequest.courtCharges).hasSize(1)
+        with(mappingReplaceRequest.courtCharges[0]) {
+          assertThat(dpsCourtChargeId).isEqualTo(dpsChargeId.toString())
+          assertThat(nomisCourtChargeId).isEqualTo(nomisChargeId)
+        }
       }
 
       @Test
