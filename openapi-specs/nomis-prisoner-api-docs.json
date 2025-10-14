@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-13.645.9803a1a"
+    "version" : "2025-10-13.651.8518727"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22383,6 +22383,10 @@
             "type" : "boolean",
             "description" : "Whether internal transfers are tracked"
           },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether location is activated"
+          },
           "profiles" : {
             "type" : "array",
             "description" : "Profiles",
@@ -27668,6 +27672,10 @@
             "type" : "boolean",
             "description" : "Whether internal transfers are tracked"
           },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Whether location is activated"
+          },
           "profiles" : {
             "type" : "array",
             "description" : "Profiles",
@@ -32021,6 +32029,38 @@
             "type" : "string",
             "description" : "To address owner class"
           },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "To address description"
+          },
+          "toAddressHouse" : {
+            "type" : "string",
+            "description" : "To address house"
+          },
+          "toAddressStreet" : {
+            "type" : "string",
+            "description" : "To address street"
+          },
+          "toAddressLocality" : {
+            "type" : "string",
+            "description" : "To address locality"
+          },
+          "toAddressCity" : {
+            "type" : "string",
+            "description" : "To address city"
+          },
+          "toAddressCounty" : {
+            "type" : "string",
+            "description" : "To address county"
+          },
+          "toAddressCountry" : {
+            "type" : "string",
+            "description" : "To address country"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "To address postcode"
+          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
@@ -32094,6 +32134,38 @@
           "fromAddressOwnerClass" : {
             "type" : "string",
             "description" : "From address owner class"
+          },
+          "fromAddressDescription" : {
+            "type" : "string",
+            "description" : "From address description"
+          },
+          "fromAddressHouse" : {
+            "type" : "string",
+            "description" : "From address house"
+          },
+          "fromAddressStreet" : {
+            "type" : "string",
+            "description" : "From address street"
+          },
+          "fromAddressLocality" : {
+            "type" : "string",
+            "description" : "From address locality"
+          },
+          "fromAddressCity" : {
+            "type" : "string",
+            "description" : "From address city"
+          },
+          "fromAddressCounty" : {
+            "type" : "string",
+            "description" : "From address county"
+          },
+          "fromAddressCountry" : {
+            "type" : "string",
+            "description" : "From address country"
+          },
+          "fromAddressPostcode" : {
+            "type" : "string",
+            "description" : "From address postcode"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
