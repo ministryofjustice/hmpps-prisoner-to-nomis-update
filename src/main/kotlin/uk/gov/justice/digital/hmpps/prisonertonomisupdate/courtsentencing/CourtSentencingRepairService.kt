@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DpsCourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReference
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferenceList
 
@@ -60,8 +61,17 @@ class CourtSentencingRepairService(
 
   suspend fun resynchroniseCourtCaseInNomis(offenderNo: String, courtCaseId: String): CourtCaseRepairResponse {
     val (dpsCaseId, nomisCaseId) = getCaseIds(courtCaseId)
-    val dpsCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId)
-    val nomisCourtCase = dpsCourtCase.requiresCaseHasNoSentence().toCourtCaseRepairRequest()
+    val dpsCourtCase = dpsApiService.getCourtCaseForReconciliation(dpsCaseId).requiresCaseHasNoSentence()
+    courtCaseMappingService.deleteMappingsByDpsIds(
+      DpsCourtCaseBatchMappingDto(
+        courtCases = listOf(dpsCaseId),
+        courtAppearances = dpsCourtCase.appearances.map { it.appearanceUuid.toString() },
+        courtCharges = dpsCourtCase.appearances.flatMap { it.charges }.map { it.chargeUuid.toString() }.distinct(),
+        sentences = emptyList(),
+        sentenceTerms = emptyList(),
+      ),
+    )
+    val nomisCourtCase = dpsCourtCase.toCourtCaseRepairRequest()
     val nomisCaseResponse = nomisApiService.repairCourtCase(offenderNo, nomisCaseId, nomisCourtCase)
     courtCaseMappingService.replaceMappings(
       CourtCaseBatchMappingDto(

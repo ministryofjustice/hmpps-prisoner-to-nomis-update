@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeBatchUpdateMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DpsCourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 
@@ -204,6 +205,14 @@ class CourtSentencingMappingService(
   suspend fun replaceMappings(request: CourtCaseBatchMappingDto) {
     webClient.put()
       .uri("/mapping/court-sentencing/court-cases/replace")
+      .bodyValue(request)
+      .retrieve()
+      .awaitBodilessEntity()
+  }
+
+  suspend fun deleteMappingsByDpsIds(request: DpsCourtCaseBatchMappingDto) {
+    webClient.post()
+      .uri("/mapping/court-sentencing/court-cases/delete-by-dps-ids")
       .bodyValue(request)
       .retrieve()
       .awaitBodilessEntity()

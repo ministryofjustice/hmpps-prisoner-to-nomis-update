@@ -45,6 +45,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtChargeMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtSentenceTermIdPair
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DpsCourtCaseBatchMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SimpleCourtSentencingIdPair
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
@@ -1069,6 +1070,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             appearances = listOf(reconciliationCourtAppearance(appearanceUuid = dpsAppearanceId, charges = listOf(reconciliationChargeWithoutSentence().copy(chargeUuid = dpsChargeId))).copy(courtCode = "MDI")),
           ),
         )
+        courtSentencingMappingApi.stubDeleteMappingsByDpsIds()
         courtSentencingNomisApi.stubRepairCourtCase(
           offenderNo,
           nomisCourtCaseId,
@@ -1117,6 +1119,15 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
           assertThat(dpsCourtChargeId).isEqualTo(dpsChargeId.toString())
           assertThat(nomisCourtChargeId).isEqualTo(nomisChargeId)
         }
+      }
+
+      @Test
+      fun `will call the mapping API to delete existing mappings`() {
+        val mappingDeleteRequest: DpsCourtCaseBatchMappingDto = CourtSentencingMappingApiMockServer.Companion.getRequestBody(postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-cases/delete-by-dps-ids")))
+
+        assertThat(mappingDeleteRequest.courtCases).containsExactly(dpsCourtCaseId)
+        assertThat(mappingDeleteRequest.courtAppearances).containsExactly(dpsAppearanceId.toString())
+        assertThat(mappingDeleteRequest.courtCharges).containsExactly(dpsChargeId.toString())
       }
 
       @Test

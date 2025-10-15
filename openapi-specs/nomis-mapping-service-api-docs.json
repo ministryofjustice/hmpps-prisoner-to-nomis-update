@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-14.206.7e34642"
+    "version" : "2025-10-15.208.db63478"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3457,6 +3457,50 @@
         }
       }
     },
+    "/mapping/court-sentencing/court-cases/delete-by-dps-ids" : {
+      "post" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "Deletes court case hierarchical mappings by DPS IDs",
+        "description" : "Deletes court case hierarchical mappings by DPS IDs. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteMappingByDpsId",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/DpsCourtCaseBatchMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Mapping created or replaced",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-cases" : {
       "post" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -6361,7 +6405,7 @@
         "tags" : [ "visit-balance-mapping-resource" ],
         "summary" : "Deletes Prisoner visit balance mapping",
         "description" : "Deletes Prisoner visit balance mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId",
+        "operationId" : "deleteMappingByDpsId_1",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -6833,7 +6877,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_1",
+        "operationId" : "deleteMappingByDpsId_2",
         "parameters" : [ {
           "name" : "dpsTransactionId",
           "in" : "path",
@@ -7867,7 +7911,7 @@
         "tags" : [ "punishments-mapping-resource" ],
         "summary" : "Delete mapping",
         "description" : "Deletes a mapping by DPS punishment id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_2",
+        "operationId" : "deleteMappingByDpsId_3",
         "parameters" : [ {
           "name" : "dpsPunishmentId",
           "in" : "path",
@@ -16319,7 +16363,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_3",
+        "operationId" : "deleteMappingByDpsId_4",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -17646,7 +17690,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Deletes court case mapping",
         "description" : "Deletes a court case mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_4",
+        "operationId" : "deleteMappingByDpsId_5",
         "parameters" : [ {
           "name" : "dpsCourtCaseId",
           "in" : "path",
@@ -20415,6 +20459,48 @@
         },
         "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
       },
+      "DpsCourtCaseBatchMappingDto" : {
+        "type" : "object",
+        "description" : "DPS Ids for Court cases mapping deletion",
+        "properties" : {
+          "courtCases" : {
+            "type" : "array",
+            "description" : "Court case Ids",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "courtAppearances" : {
+            "type" : "array",
+            "description" : "Court Appearance Ids",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "courtCharges" : {
+            "type" : "array",
+            "description" : "Court Charge Ids",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "sentences" : {
+            "type" : "array",
+            "description" : "Sentence Ids",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "sentenceTerms" : {
+            "type" : "array",
+            "description" : "Sentence term Ids",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        },
+        "required" : [ "courtAppearances", "courtCases", "courtCharges", "sentenceTerms", "sentences" ]
+      },
       "CourtCaseAllMappingDto" : {
         "type" : "object",
         "description" : "Court case mapping including child entity mapping",
@@ -21589,12 +21675,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
