@@ -181,7 +181,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
 fun prisonAccounts(): GeneralLedgerBalanceDetailsList = GeneralLedgerBalanceDetailsList(items = listOf(prisonAccountDetails()))
 
-fun prisonAccountDetails() = GeneralLedgerBalanceDetails(
-  accountCode = 2101,
+fun prisonAccountDetails(accountCode: Int = 2101) = GeneralLedgerBalanceDetails(
+  accountCode = accountCode,
   balance = BigDecimal.valueOf(23.45),
 )
