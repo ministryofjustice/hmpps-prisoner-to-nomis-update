@@ -34,6 +34,7 @@ class PrisonerRestrictionsReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_PRISONER_PREFIX = "contact-person-prisoner-restriction-reconciliation"
   }
+
   suspend fun generatePrisonerRestrictionsReconciliationReportBatch() {
     telemetryClient.trackEvent(
       "$TELEMETRY_PRISONER_PREFIX-requested",
@@ -59,15 +60,16 @@ class PrisonerRestrictionsReconciliationService(
       }
   }
 
-  private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this.sortedBy { it.restrictionId }.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }
+  private fun List<MismatchPrisonerRestriction>.asMap(): Pair<String, String> = this
+    .sortedBy { it.restrictionId }.take(10).let { mismatch -> "restrictionIds" to mismatch.map { it.restrictionId }.joinToString() }
 
   suspend fun generatePrisonerRestrictionsReconciliationReport(): ReconciliationResult<MismatchPrisonerRestriction> {
     checkTotalsMatch()
 
     return generateReconciliationReport(
-        threadCount = pageSize,
-        checkMatch = ::checkPrisonerRestrictionsMatch,
-        nextPage = ::getNextRestrictionsForPage,
+      threadCount = pageSize,
+      checkMatch = ::checkPrisonerRestrictionsMatch,
+      nextPage = ::getNextRestrictionsForPage,
     )
   }
 
@@ -95,7 +97,9 @@ class PrisonerRestrictionsReconciliationService(
     )
   }
 
-  private suspend fun getNextRestrictionsForPage(lastRestrictionId: Long): ReconciliationPageResult<Long> = runCatching { nomisApiService.getPrisonerRestrictionIds(lastRestrictionId = lastRestrictionId, pageSize = pageSize) }
+  private suspend fun getNextRestrictionsForPage(lastRestrictionId: Long): ReconciliationPageResult<Long> = runCatching {
+    nomisApiService.getPrisonerRestrictionIds(lastRestrictionId = lastRestrictionId, pageSize = pageSize)
+  }
     .onFailure {
       telemetryClient.trackEvent(
         "$TELEMETRY_PRISONER_PREFIX-mismatch-page-error",
@@ -144,6 +148,7 @@ class PrisonerRestrictionsReconciliationService(
         )
         MismatchPrisonerRestriction(restrictionId = restrictionId)
       }
+
       is NoRestriction -> {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
@@ -156,6 +161,7 @@ class PrisonerRestrictionsReconciliationService(
         )
         MismatchPrisonerRestriction(restrictionId = restrictionId)
       }
+
       is Restriction -> {
         val dpsRestriction = dpsRestrictionResult.restriction
         if (nomisRestriction.asSummary() != dpsRestriction.asSummary()) {
@@ -193,6 +199,7 @@ private fun PrisonerRestriction.asSummary() = PrisonerRestrictionSummary(
   expiryDate = this.expiryDate,
   comment = this.comment?.uppercase(),
 )
+
 private fun SyncPrisonerRestriction.asSummary() = PrisonerRestrictionSummary(
   prisonerNumber = this.prisonerNumber,
   currentTerm = this.currentTerm,

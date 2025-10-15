@@ -45,7 +45,7 @@ class FinanceNomisApiServiceTest {
 
     @Test
     fun `will call the get endpoint`() = runTest {
-      mockServer.stubGetPrisonerBalanceIdentifiersFromId(12345678L, rootOffenderIdsWithLast)
+      mockServer.stubGetPrisonerBalanceIdentifiersFromId(rootOffenderIdsWithLast)
 
       apiService.getPrisonerBalanceIdentifiersFromId(12345678L, 5)
 
@@ -59,7 +59,7 @@ class FinanceNomisApiServiceTest {
     @Test
     fun `will return a long`() {
       runTest {
-        mockServer.stubGetPrisonerBalanceIdentifiersFromId(12345678L, rootOffenderIdsWithLast)
+        mockServer.stubGetPrisonerBalanceIdentifiersFromId(rootOffenderIdsWithLast)
 
         assertThat(apiService.getPrisonerBalanceIdentifiersFromId(12345678L, null)).isEqualTo(rootOffenderIdsWithLast)
       }
