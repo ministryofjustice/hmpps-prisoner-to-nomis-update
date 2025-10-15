@@ -48,18 +48,6 @@ class ActivitiesMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun getAllMappings(): List<ActivityMappingDto> = webClient.get()
-    .uri("/mapping/activities")
-    .retrieve()
-    .awaitBody()
-
-  suspend fun deleteMapping(activityScheduleId: Long) {
-    webClient.delete()
-      .uri("/mapping/activities/activity-schedule-id/{activityScheduleId}", activityScheduleId)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
-
   suspend fun deleteMappingsGreaterThan(maxNomisCourseScheduleId: Long) {
     webClient.delete()
       .uri("/mapping/schedules/max-nomis-schedule-id/{maxCourseScheduleId}", maxNomisCourseScheduleId)

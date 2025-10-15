@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
 import com.microsoft.applicationinsights.TelemetryClient
-import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
 import io.swagger.v3.oas.annotations.media.Content
 import io.swagger.v3.oas.annotations.media.Schema
@@ -9,7 +8,6 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
-import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
@@ -143,20 +141,5 @@ class ActivitiesResource(
   ) {
     telemetryClient.trackEvent("activity-attendance-requested", mapOf("dpsAttendanceId" to attendanceId.toString()))
     attendanceService.upsertAttendance(attendanceId)
-  }
-
-  /**
-   * For dev environment only - delete all activities and courses, for when activities environment is reset
-   */
-  @Hidden
-  @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
-  @DeleteMapping("/activities")
-  @ResponseStatus(HttpStatus.NO_CONTENT)
-  suspend fun deleteAllActivities() {
-    if (eventFeatureSwitch.isEnabled("DELETEALL")) {
-      activitiesService.deleteAllActivities()
-    } else {
-      throw RuntimeException("Attempt to delete activities in wrong environment")
-    }
   }
 }
