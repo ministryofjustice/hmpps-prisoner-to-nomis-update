@@ -108,8 +108,8 @@ class PrisonBalanceReconciliationService(
         "prison-balance-reports-reconciliation-mismatch",
         telemetry + mapOf(
           "reason" to "different-prison-account-balance",
-          "nomisPrisonBalances" to nomisPrisonBalances,
-          "dpsPrisonBalances" to dpsPrisonBalances,
+          "nomisBalanceDifferences" to nomisPrisonBalances.filter { !dpsPrisonBalances.contains(it) },
+          "dpsBalanceDifferences" to dpsPrisonBalances.filter { !nomisPrisonBalances.contains(it) },
         ),
       )
       MismatchPrisonBalance(

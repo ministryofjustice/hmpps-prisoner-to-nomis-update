@@ -23,6 +23,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import java.math.BigDecimal
 
@@ -76,12 +77,18 @@ class PrisonBalanceResourceIntTest(
           prisonId = "MDI20",
           accountBalances = listOf(
             prisonAccountBalanceDto().copy(balance = BigDecimal.valueOf(63.4)),
+            prisonAccountBalanceDto().copy(accountCode = 2102),
           ),
         ),
       )
       dpsFinanceServer.stubGetPrisonBalance(
         prisonId = "MDI20",
-        response = prisonAccounts(),
+        response = GeneralLedgerBalanceDetailsList(
+          items = listOf(
+            prisonAccountDetails(),
+            prisonAccountDetails(accountCode = 2102),
+          ),
+        ),
       )
 
       // all others are ok
@@ -146,8 +153,8 @@ class PrisonBalanceResourceIntTest(
         assertThat(this).containsEntry("dpsAccountCount", "1")
         assertThat(this).containsEntry("nomisAccountCount", "1")
         assertThat(this).containsEntry("reason", "different-prison-account-balance")
-        assertThat(this).containsEntry("dpsPrisonBalances", "[AccountSummary(accountCode=2101, balance=23.45)]")
-        assertThat(this).containsEntry("nomisPrisonBalances", "[AccountSummary(accountCode=2101, balance=7)]")
+        assertThat(this).containsEntry("dpsBalanceDifferences", "[AccountSummary(accountCode=2101, balance=23.45)]")
+        assertThat(this).containsEntry("nomisBalanceDifferences", "[AccountSummary(accountCode=2101, balance=7)]")
       }
       with(telemetryCaptor.allValues.find { it["prisonId"] == "MDI2" }) {
         assertThat(this).containsEntry("dpsAccountCount", "1")
@@ -157,11 +164,11 @@ class PrisonBalanceResourceIntTest(
         assertThat(this).containsEntry("missingFromDps", "[2102]")
       }
       with(telemetryCaptor.allValues.find { it["prisonId"] == "MDI20" }) {
-        assertThat(this).containsEntry("dpsAccountCount", "1")
-        assertThat(this).containsEntry("nomisAccountCount", "1")
+        assertThat(this).containsEntry("dpsAccountCount", "2")
+        assertThat(this).containsEntry("nomisAccountCount", "2")
         assertThat(this).containsEntry("reason", "different-prison-account-balance")
-        assertThat(this).containsEntry("dpsPrisonBalances", "[AccountSummary(accountCode=2101, balance=23.45)]")
-        assertThat(this).containsEntry("nomisPrisonBalances", "[AccountSummary(accountCode=2101, balance=63.4)]")
+        assertThat(this).containsEntry("dpsBalanceDifferences", "[AccountSummary(accountCode=2101, balance=23.45)]")
+        assertThat(this).containsEntry("nomisBalanceDifferences", "[AccountSummary(accountCode=2101, balance=63.4)]")
       }
     }
 
