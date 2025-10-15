@@ -65,6 +65,7 @@ class CourtSentencingNomisApiMockServer {
     caseId = 1234,
     courtAppearanceIds = emptyList(),
     offenderChargeIds = emptyList(),
+    bookingId = 4321,
   )
 
   fun stubCourtCaseCreate(offenderNo: String, response: CreateCourtCaseResponse) {
