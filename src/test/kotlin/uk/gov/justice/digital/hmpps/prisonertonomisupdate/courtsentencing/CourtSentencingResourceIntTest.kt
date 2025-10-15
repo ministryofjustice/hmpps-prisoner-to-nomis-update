@@ -70,7 +70,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBod
 import java.math.BigDecimal
 import java.time.LocalDate
 import java.time.LocalDateTime
-import java.util.*
+import java.util.UUID
 
 private const val NOMIS_COURT_CASE_ID = 7L
 private const val DPS_COURT_CASE_ID = "4321"
@@ -1076,6 +1076,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
             caseId = newNomisCaseId,
             courtAppearanceIds = listOf(nomisAppearanceId),
             offenderChargeIds = listOf(nomisChargeId),
+            bookingId = 1234L,
           ),
         )
         courtSentencingMappingApi.stubReplaceMappings()
