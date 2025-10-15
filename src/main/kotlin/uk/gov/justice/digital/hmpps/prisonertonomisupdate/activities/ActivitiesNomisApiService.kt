@@ -36,13 +36,6 @@ class ActivitiesNomisApiService(@Qualifier("nomisApiWebClient") private val webC
     .retrieve()
     .awaitBody()
 
-  suspend fun deleteActivity(courseActivityId: Long) {
-    webClient.delete()
-      .uri("/activities/{courseActivityId}", courseActivityId)
-      .retrieve()
-      .awaitBodilessEntity()
-  }
-
   suspend fun updateScheduledInstance(
     courseActivityId: Long,
     request: CourseScheduleRequest,

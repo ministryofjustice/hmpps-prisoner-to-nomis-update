@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -12,8 +11,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.check
@@ -374,61 +371,6 @@ class ActivityResourceIntTest : IntegrationTestBase() {
         check { assertThat(it).containsEntry("dpsAttendanceId", ATTENDANCE_ID.toString()) },
         isNull(),
       )
-    }
-  }
-
-  @Nested
-  inner class DeleteAll {
-    @Test
-    fun `access forbidden when no authority`() {
-      webTestClient.delete().uri("/activities")
-        .exchange()
-        .expectStatus().isUnauthorized
-    }
-
-    @Test
-    fun `access forbidden when no role`() {
-      webTestClient.delete().uri("/activities")
-        .headers(setAuthorisation(roles = listOf()))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `create visit forbidden with wrong role`() {
-      webTestClient.delete().uri("/activities")
-        .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
-        .exchange()
-        .expectStatus().isForbidden
-    }
-
-    @Test
-    fun `should delete all activities`() {
-      mappingServer.stubGetAllActivityMappings(
-        """[
-           { "activityScheduleId": 101, "nomisCourseActivityId": 201, "mappingType": "ACTIVITY_CREATED", "whenCreated": "2020-01-01T00:00:00Z" },
-           { "activityScheduleId": 102, "nomisCourseActivityId": 202, "mappingType": "MIGRATED" }
-           ]
-        """.trimIndent(),
-      )
-      mappingServer.stubDeleteActivityMapping(101)
-      mappingServer.stubDeleteActivityMapping(102)
-      nomisApi.stubActivityDelete(201)
-      nomisApi.stubActivityDelete(202)
-
-      webTestClient.delete()
-        .uri("/activities")
-        .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
-        .exchange()
-        .expectStatus()
-        .isNoContent
-
-      await untilAsserted {
-        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/101")))
-        mappingServer.verify(deleteRequestedFor(urlEqualTo("/mapping/activities/activity-schedule-id/102")))
-        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/201")))
-        nomisApi.verify(deleteRequestedFor(urlEqualTo("/activities/202")))
-      }
     }
   }
 }
