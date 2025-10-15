@@ -310,6 +310,55 @@ class PrisonBalanceResourceIntTest(
             assertThat(it).containsEntry("nomisAccountCount", "1")
             assertThat(it).containsEntry("dpsAccountCount", "2")
             assertThat(it).containsEntry("reason", "different-number-of-accounts")
+            assertThat(it).containsEntry("missingFromNomis", "[2102]")
+            assertThat(it).containsEntry("missingFromDps", "[]")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will return missing accounts`() {
+        nomisApi.stubGetPrisonBalance(
+          prisonBalance = prisonBalanceDto().copy(
+            accountBalances = listOf(
+              prisonAccountBalanceDto(),
+              prisonAccountBalanceDto().copy(accountCode = 2102),
+              prisonAccountBalanceDto().copy(accountCode = 2103),
+              prisonAccountBalanceDto().copy(accountCode = 2104),
+            ),
+          ),
+        )
+        dpsFinanceServer.stubGetPrisonBalance(
+          response = prisonAccounts().copy(
+            items = listOf(
+              prisonAccountDetails(),
+              prisonAccountDetails().copy(accountCode = 2104),
+              prisonAccountDetails().copy(accountCode = 2107),
+              prisonAccountDetails().copy(accountCode = 2108),
+            ),
+          ),
+        )
+
+        webTestClient.get().uri("/prison-balance/reconciliation/$prisonId")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("prisonId").isEqualTo(prisonId)
+          .jsonPath("nomisAccountCount").isEqualTo(4)
+          .jsonPath("dpsAccountCount").isEqualTo(4)
+
+        verify(telemetryClient).trackEvent(
+          eq("prison-balance-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("prisonId", prisonId)
+            assertThat(it).containsEntry("nomisAccountCount", "4")
+            assertThat(it).containsEntry("dpsAccountCount", "4")
+            assertThat(it).containsEntry("reason", "different-account-codes")
+            assertThat(it).containsEntry("missingFromNomis", "[2107, 2108]")
+            assertThat(it).containsEntry("missingFromDps", "[2102, 2103]")
           },
           isNull(),
         )

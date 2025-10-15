@@ -62,10 +62,15 @@ class PrisonBalanceReconciliationService(
     val dpsPrisonBalances =
       doApiCallWithRetries { dpsApiService.getPrisonAccounts(prisonId) }.items.map { it.toPrisonSummary() }
 
+    val (accountCodesInDpsOnly, accountCodesInNomisOnly) =
+      findMissingPrisonBalances(nomisPrisonBalances, dpsPrisonBalances)
+
     val telemetry = mutableMapOf(
       "prisonId" to prisonId,
       "nomisAccountCount" to (nomisPrisonBalances.size.toString()),
       "dpsAccountCount" to (dpsPrisonBalances.size.toString()),
+      "missingFromNomis" to accountCodesInDpsOnly.toString(),
+      "missingFromDps" to accountCodesInNomisOnly.toString(),
     )
 
     if (nomisPrisonBalances.size != dpsPrisonBalances.size) {
@@ -75,35 +80,25 @@ class PrisonBalanceReconciliationService(
         dpsAccountCount = dpsPrisonBalances.size,
         verdict = "different-number-of-accounts",
       ).also { mismatch ->
-        log.info("Prison account sizes do not match  $mismatch")
+        log.info("Prison account sizes do not match $mismatch")
         telemetryClient.trackEvent(
           "prison-balance-reports-reconciliation-mismatch",
-          telemetry + mapOf(
-            "reason" to "different-number-of-accounts",
-          ),
+          telemetry + mapOf("reason" to "different-number-of-accounts"),
         )
       }
     }
 
-    val (accountCodesInDpsOnly, accountCodesInNomisOnly) =
-      findMissingPrisonBalances(nomisPrisonBalances, dpsPrisonBalances)
     if (accountCodesInDpsOnly.isNotEmpty() || accountCodesInNomisOnly.isNotEmpty()) {
       return MismatchPrisonBalance(
         prisonId,
         nomisAccountCount = nomisPrisonBalances.size,
         dpsAccountCount = dpsPrisonBalances.size,
-        missingFromNomis = accountCodesInDpsOnly,
-        missingFromDps = accountCodesInNomisOnly,
         verdict = "different-account-codes",
-      ).also {
+      ).also { mismatch ->
+        log.info("Prison account codes missing $mismatch")
         telemetryClient.trackEvent(
           "prison-balance-reports-reconciliation-mismatch",
-          telemetry +
-            mapOf(
-              "reason" to "different-account-codes",
-              "missingFromNomis" to accountCodesInDpsOnly.toString(),
-              "missingFromDps" to accountCodesInNomisOnly.toString(),
-            ),
+          telemetry + mapOf("reason" to "different-account-codes"),
         )
       }
     }
@@ -121,7 +116,6 @@ class PrisonBalanceReconciliationService(
         prisonId,
         nomisAccountCount = nomisPrisonBalances.size,
         dpsAccountCount = dpsPrisonBalances.size,
-        // TODO add balances
         verdict = "different-prison-account-balance",
       )
     }.firstOrNull()
@@ -160,6 +154,5 @@ data class MismatchPrisonBalance(
   val nomisAccountCount: Int,
   val missingFromNomis: List<Int> = listOf(),
   val missingFromDps: List<Int> = listOf(),
-  // TODO val balanceDifference: List<MismatchAccountBalance> = listOf(),
   val verdict: String,
 )
