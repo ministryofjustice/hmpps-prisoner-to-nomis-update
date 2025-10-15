@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
+import com.github.tomakehurst.wiremock.client.WireMock.status
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -22,10 +23,17 @@ import kotlin.collections.map
 @Component
 class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
-  fun stubGetPrisonerBalanceIdentifiersFromId(lastTransactionId: Long? = null, response: RootOffenderIdsWithLast) {
+  fun stubGetPrisonerBalanceIdentifiersFromId(response: RootOffenderIdsWithLast) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
         .willReturn(okJson(objectMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonerBalanceIdentifiersFromIdError(status: Int = 500) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
+        .willReturn(status(status)),
     )
   }
 

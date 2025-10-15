@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -10,17 +9,16 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationErrorPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ReconciliationSuccessPageResult
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
 import java.time.LocalDate
-import kotlin.collections.map
 
 @Service
 class CourtSentencingReconciliationService(
@@ -29,7 +27,6 @@ class CourtSentencingReconciliationService(
   private val nomisApiService: CourtSentencingNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: CourtSentencingMappingService,
-  private val objectMapper: ObjectMapper,
   @Value("\${reports.court-case.prisoner.reconciliation.page-size:10}") private val prisonerPageSize: Int = 10,
 ) {
   companion object {
