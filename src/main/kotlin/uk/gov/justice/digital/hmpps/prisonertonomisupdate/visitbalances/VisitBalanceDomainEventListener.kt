@@ -20,6 +20,7 @@ class VisitBalanceDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "visitbalance",
 ) {
 
   private companion object {

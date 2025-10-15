@@ -20,6 +20,7 @@ class IncidentsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "incidents",
 ) {
 
   private companion object {

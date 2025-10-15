@@ -21,6 +21,7 @@ class OrganisationsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "organisations",
 ) {
 
   private companion object {

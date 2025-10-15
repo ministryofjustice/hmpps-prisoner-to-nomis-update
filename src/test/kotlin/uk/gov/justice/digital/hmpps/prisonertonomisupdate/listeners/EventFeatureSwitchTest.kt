@@ -9,8 +9,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 
 @TestPropertySource(
   properties = [
-    "feature.event.prison-visit.revised=false",
-    "feature.event.prison-visit.booked=true",
+    "feature.event.prison-visit.revised=true",
+    "feature.event.casenote.prison-visit.booked=false",
+    "feature.event.OTHER_EVENT=false",
   ],
 )
 internal class EventFeatureSwitchTest : SqsIntegrationTestBase() {
@@ -20,17 +21,32 @@ internal class EventFeatureSwitchTest : SqsIntegrationTestBase() {
 
   @Test
   fun `should return true when feature is enabled`() {
-    assertThat(featureSwitch.isEnabled("prison-visit.booked")).isTrue
+    assertThat(featureSwitch.isEnabled("prison-visit.revised", domain = "billybob")).isTrue
   }
 
   @Test
   fun `should return false when feature is disabled`() {
-    assertThat(featureSwitch.isEnabled("prison-visit.revised")).isFalse
+    assertThat(featureSwitch.isEnabled("OTHER_EVENT", domain = "billybob")).isFalse
   }
 
   @Test
   fun `should return true when feature switch is not present`() {
-    assertThat(featureSwitch.isEnabled("prison-visit.cancelled")).isTrue
+    assertThat(featureSwitch.isEnabled("NO_SWITCH_EVENT", domain = "billybob")).isTrue
+  }
+
+  @Test
+  fun `should return true when feature switch is not present for that domain`() {
+    assertThat(featureSwitch.isEnabled("prison-visit.booked", domain = "billybob")).isTrue
+  }
+
+  @Test
+  fun `should return true when feature switch is not present for domain`() {
+    assertThat(featureSwitch.isEnabled("prison-visit.booked", domain = "alert")).isTrue
+  }
+
+  @Test
+  fun `should return false when feature switch is present for domain`() {
+    assertThat(featureSwitch.isEnabled("prison-visit.booked", domain = "casenote")).isFalse()
   }
 
   @Nested
@@ -44,8 +60,9 @@ internal class EventFeatureSwitchTest : SqsIntegrationTestBase() {
         .jsonPath("event-feature-switches").value<Map<String, Boolean>> {
           assertThat(it).containsExactlyEntriesOf(
             mapOf(
-              "prison-visit.booked" to true,
-              "prison-visit.revised" to false,
+              "OTHER_EVENT" to false,
+              "casenote.prison-visit.booked" to false,
+              "prison-visit.revised" to true,
             ),
           )
         }

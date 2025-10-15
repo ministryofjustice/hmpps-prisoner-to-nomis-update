@@ -24,6 +24,7 @@ class ActivitiesDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "activities",
 ) {
 
   private companion object {

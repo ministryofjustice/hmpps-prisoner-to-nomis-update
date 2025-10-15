@@ -21,6 +21,7 @@ class CSIPDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "csip",
 ) {
 
   private companion object {

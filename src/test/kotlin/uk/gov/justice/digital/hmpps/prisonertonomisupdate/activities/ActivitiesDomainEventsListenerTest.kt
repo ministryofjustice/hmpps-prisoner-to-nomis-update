@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
@@ -47,7 +48,7 @@ internal class ActivitiesDomainEventsListenerTest {
     inner class WhenEnabled {
       @BeforeEach
       internal fun setUp() {
-        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(true)
+        whenever(eventFeatureSwitch.isEnabled(any(), eq("activities"))).thenReturn(true)
       }
 
       @Test
@@ -66,7 +67,7 @@ internal class ActivitiesDomainEventsListenerTest {
     inner class WhenDisabled {
       @BeforeEach
       internal fun setUp() {
-        whenever(eventFeatureSwitch.isEnabled(any())).thenReturn(false)
+        whenever(eventFeatureSwitch.isEnabled(any(), any())).thenReturn(false)
       }
 
       @Test
