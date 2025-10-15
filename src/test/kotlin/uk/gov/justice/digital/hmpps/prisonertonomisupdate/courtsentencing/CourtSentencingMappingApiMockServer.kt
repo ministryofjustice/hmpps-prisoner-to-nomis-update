@@ -296,6 +296,10 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubPut("/mapping/court-sentencing/court-cases/replace")
   }
 
+  fun stubDeleteMappingsByDpsIds() {
+    stubPost("/mapping/court-sentencing/court-cases/delete-by-dps-ids")
+  }
+
   // helper methods
 
   fun stubCreate(url: String) {
@@ -311,6 +315,16 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
   fun stubPut(url: String) {
     mappingServer.stubFor(
       put(url).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubPost(url: String) {
+    mappingServer.stubFor(
+      post(url).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200),
