@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-14.656.e7f333b"
+    "version" : "2025-10-14.664.b604c43"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3119,6 +3119,32 @@
         }
       }
     },
+    "/person/{prisonerId}/sentence-envelopes" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "operationId" : "allSentenceEnvelopes",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerSentenceEnvelopes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/person/{prisonerId}/has-sentence-to-chain-to" : {
       "get" : {
         "tags" : [ "person-controller" ],
@@ -4785,7 +4811,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5047,7 +5073,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "courtCode" : {
             "type" : "string"
@@ -7028,7 +7054,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "courtCode" : {
             "type" : "string"
@@ -7042,6 +7068,146 @@
           }
         },
         "required" : [ "appearanceDate", "appearanceType", "courtCode", "futureSkeletonAppearanceUuid" ]
+      },
+      "PrisonerSentenceEnvelope" : {
+        "type" : "object",
+        "properties" : {
+          "envelopeStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerSentenceEnvelopeSentence"
+            }
+          }
+        },
+        "required" : [ "envelopeStartDate", "sentences" ]
+      },
+      "PrisonerSentenceEnvelopePeriodLength" : {
+        "type" : "object",
+        "properties" : {
+          "years" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "months" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "weeks" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "periodOrder" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "periodLengthType" : {
+            "type" : "string",
+            "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+          },
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "periodLengthType", "periodLengthUuid", "periodOrder" ]
+      },
+      "PrisonerSentenceEnvelopeSentence" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceDescription" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceOutcome" : {
+            "type" : "string"
+          },
+          "countNumber" : {
+            "type" : "string"
+          },
+          "lineNumber" : {
+            "type" : "string"
+          },
+          "convictionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerSentenceEnvelopePeriodLength"
+            }
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "fineAmount" : {
+            "type" : "number"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "caseReference" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceTypeDescription" : {
+            "type" : "string"
+          },
+          "mergedFromCase" : {
+            "$ref" : "#/components/schemas/MergedFromCase"
+          },
+          "orderInChain" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "appearanceDate", "courtCode", "offenceCode", "orderInChain", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+      },
+      "PrisonerSentenceEnvelopes" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceEnvelopes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerSentenceEnvelope"
+            }
+          }
+        },
+        "required" : [ "sentenceEnvelopes" ]
       },
       "HasSentenceToChainToResponse" : {
         "type" : "object",
@@ -7507,7 +7673,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7563,7 +7729,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "courtId" : {
             "type" : "string"
@@ -7703,7 +7869,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "charges" : {
             "type" : "array",
@@ -7730,7 +7896,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "courtId" : {
             "type" : "string"
@@ -8259,7 +8425,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "11:34:10.69730625"
+            "example" : "07:23:20.398952309"
           },
           "courtCode" : {
             "type" : "string"
