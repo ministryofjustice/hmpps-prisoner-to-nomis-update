@@ -21,6 +21,7 @@ class NonAssociationsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "nonassociations",
 ) {
 
   private companion object {

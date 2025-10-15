@@ -21,6 +21,7 @@ class AdjudicationsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "adjudications",
 ) {
 
   private companion object {

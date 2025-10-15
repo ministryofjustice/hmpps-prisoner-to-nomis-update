@@ -21,6 +21,7 @@ class AppointmentsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "appointments",
 ) {
 
   private companion object {

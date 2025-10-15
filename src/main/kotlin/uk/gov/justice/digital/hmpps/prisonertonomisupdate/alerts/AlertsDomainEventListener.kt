@@ -22,6 +22,7 @@ class AlertsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "alerts",
 ) {
 
   private companion object {

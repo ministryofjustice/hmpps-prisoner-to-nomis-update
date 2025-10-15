@@ -24,6 +24,7 @@ class ContactPersonDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "personcontacts",
 ) {
 
   private companion object {

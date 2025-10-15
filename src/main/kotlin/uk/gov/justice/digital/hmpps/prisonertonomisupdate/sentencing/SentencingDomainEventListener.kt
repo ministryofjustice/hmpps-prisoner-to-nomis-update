@@ -21,6 +21,7 @@ class SentencingDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "sentencing",
 ) {
 
   private companion object {

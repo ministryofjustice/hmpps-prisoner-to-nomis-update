@@ -21,6 +21,7 @@ abstract class DomainEventListenerNoMapping(
   internal val objectMapper: ObjectMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch,
   internal val telemetryClient: TelemetryClient,
+  private val domain: String,
 ) {
   fun onDomainEvent(
     rawMessage: String,
@@ -32,7 +33,7 @@ abstract class DomainEventListenerNoMapping(
       when (sqsMessage.Type) {
         "Notification" -> {
           val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
-          if (eventFeatureSwitch.isEnabled(eventType)) {
+          if (eventFeatureSwitch.isEnabled(eventType, domain)) {
             processMessage(eventType, sqsMessage.Message)
           } else {
             log.warn("Feature switch is disabled for {}", eventType)
@@ -57,7 +58,8 @@ abstract class DomainEventListener(
   objectMapper: ObjectMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   telemetryClient: TelemetryClient,
-) : DomainEventListenerNoMapping(objectMapper, eventFeatureSwitch, telemetryClient) {
+  domain: String,
+) : DomainEventListenerNoMapping(objectMapper, eventFeatureSwitch, telemetryClient, domain) {
 
   override suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {
     when (sqsMessage.Type) {

@@ -22,6 +22,7 @@ class ExternalMovementsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "externalmovements",
 ) {
 
   private companion object {

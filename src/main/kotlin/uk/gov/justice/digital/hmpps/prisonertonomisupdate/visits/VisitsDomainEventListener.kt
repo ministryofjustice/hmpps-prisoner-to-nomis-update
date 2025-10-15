@@ -22,6 +22,7 @@ class VisitsDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "visits",
 ) {
 
   private companion object {

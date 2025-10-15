@@ -22,6 +22,7 @@ class IncentivesDomainEventListener(
   objectMapper = objectMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
+  domain = "incentives",
 ) {
 
   private companion object {
