@@ -20,9 +20,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 
-private const val OFFENDER_NO = "A5678BZ"
-private const val OFFENDER_ID = 1L
-
 class PrisonerBalanceReconciliationResourceIntTest(
   @Autowired private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
 ) : IntegrationTestBase() {

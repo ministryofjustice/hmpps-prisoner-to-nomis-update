@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -28,7 +27,6 @@ class CourtSentencingReconciliationService(
   private val nomisApiService: CourtSentencingNomisApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: CourtSentencingMappingService,
-  private val objectMapper: ObjectMapper,
   @Value("\${reports.court-case.prisoner.reconciliation.page-size:10}") private val prisonerPageSize: Int = 10,
 ) {
   companion object {
