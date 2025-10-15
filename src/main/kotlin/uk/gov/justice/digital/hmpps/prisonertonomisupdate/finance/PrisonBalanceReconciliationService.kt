@@ -102,8 +102,9 @@ class PrisonBalanceReconciliationService(
         )
       }
     }
-
-    return nomisPrisonBalances.filter { !dpsPrisonBalances.contains(it) }.map {
+    return nomisPrisonBalances.filter { nomisBalance ->
+      nomisBalance.balance.compareTo(dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance) != 0
+    }.map {
       telemetryClient.trackEvent(
         "prison-balance-reports-reconciliation-mismatch",
         telemetry + mapOf(

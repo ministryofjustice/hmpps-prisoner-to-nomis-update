@@ -69,10 +69,20 @@ class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubGetPrisonBalance(prisonId: String = "MDI", response: String) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/finance/prison/$prisonId/balance")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(response),
+      ),
+    )
+  }
+
   fun stubGetPrisonBalance(
     prisonId: String = "MDI",
     prisonBalance: PrisonBalanceDto = PrisonBalanceDto(
-
       prisonId = prisonId,
       accountBalances = listOf(
         PrisonAccountBalanceDto(

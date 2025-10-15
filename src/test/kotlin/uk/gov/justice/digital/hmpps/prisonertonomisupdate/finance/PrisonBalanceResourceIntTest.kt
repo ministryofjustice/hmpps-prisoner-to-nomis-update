@@ -50,7 +50,7 @@ class PrisonBalanceResourceIntTest(
         prisonBalance = prisonBalanceDto().copy(
           prisonId = "MDI1",
           accountBalances = listOf(
-            prisonAccountBalanceDto().copy(balance = BigDecimal.valueOf(7)),
+            prisonAccountBalanceDto().copy(balance = BigDecimal(7)),
           ),
         ),
       )
@@ -90,9 +90,45 @@ class PrisonBalanceResourceIntTest(
           ),
         ),
       )
+      // all others are ok - MDI3 tests for values with different number of decimal places
+      nomisApi.stubGetPrisonBalance(
+        prisonId = "MDI3",
+        response =
+        """
+        {
+          "prisonId" : "MDI3",
+          "accountBalances" : [ {
+            "accountCode" : 2101,
+            "balance" : 93.00,
+            "transactionDate" : "2025-06-01T01:02:03"
+            },
+           {
+            "accountCode" : 2102,
+            "balance" : 12.7,
+            "transactionDate" : "2025-06-01T01:02:03"
+          }]
+        }
+        """.trimIndent(),
+      )
 
-      // all others are ok
-      (3..<numberOfPrisons).forEach {
+      dpsFinanceServer.stubGetPrisonBalance(
+        prisonId = "MDI3",
+        response =
+        """
+        {
+          "items" : [{
+            "accountCode" : 2101,
+            "balance" : 93
+          },
+          {
+            "accountCode" : 2102,
+            "balance" : 12.70
+          }]
+        }
+        """.trimIndent(),
+      )
+
+      (4..<numberOfPrisons).forEach {
         val prisonId = generatePrisonId(sequence = it)
         nomisApi.stubGetPrisonBalance(prisonId = prisonId)
         dpsFinanceServer.stubGetPrisonBalance(
