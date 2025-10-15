@@ -30,11 +30,15 @@ private const val DPS_CASE_ID = "11111111-1111-1111-1111-111111111111"
 
 private const val OFFENDER_NO = "A0001TZ"
 private const val OFFENDER_NO_2 = "A7701TZ"
+private const val BOOKING_ID = 123456L
+private const val BOOKING_ID_2 = 888888L
 
 private const val DPS_CASE_2_ID = "21111111-1111-1111-1111-111111111111"
+private const val DPS_CASE_3_ID = "31111111-1111-1111-1111-222222222222"
 
 private const val NOMIS_CASE_ID = 1L
 private const val NOMIS_CASE_2_ID = 2L
+private const val NOMIS_CASE_3_ID = 3L
 
 class CourtSentencingReconciliationResourceIntTest(
   @Autowired private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
@@ -60,14 +64,14 @@ class CourtSentencingReconciliationResourceIntTest(
       )
 
       stubCases(
-        "$OFFENDER_NO",
+        OFFENDER_NO,
         listOf(nomisCaseResponse().copy(id = NOMIS_CASE_ID)),
         listOf(dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_ID)),
       )
       stubCases("A0002TZ", emptyList(), emptyList())
       stubCases(
         "A0003TZ",
-        listOf(nomisCaseResponse().copy(id = 2L, caseStatus = CodeDescription("I", "Inactive"))),
+        listOf(nomisCaseResponse().copy(id = 2L, bookingId = BOOKING_ID_2, caseStatus = CodeDescription("I", "Inactive"))),
         listOf(dpsCourtCaseResponse().copy(courtCaseUuid = "11111111-1111-1111-1111-111111111112", active = true)),
       )
       stubCases("A0004TZ", emptyList(), emptyList())
@@ -111,6 +115,7 @@ class CourtSentencingReconciliationResourceIntTest(
           mapOf(
             "offenderNo" to "A0003TZ",
             "dpsCaseId" to "11111111-1111-1111-1111-111111111112",
+            "nomisBookingId" to "$BOOKING_ID_2",
             "nomisCaseId" to "2",
             "mismatchCount" to "1",
           ),
@@ -276,6 +281,7 @@ class CourtSentencingReconciliationResourceIntTest(
             .jsonPath("$[0][0].mismatch.differences.size()").isEqualTo("1")
             .jsonPath("$[1][0].mismatch.differences.size()").isEqualTo("1")
             .jsonPath("$[0][0].offenderNo").isEqualTo(OFFENDER_NO)
+            .jsonPath("$[0][0].nomisBookingId").isEqualTo(BOOKING_ID)
             .jsonPath("$[1][0].offenderNo").isEqualTo(OFFENDER_NO_2)
         }
       }

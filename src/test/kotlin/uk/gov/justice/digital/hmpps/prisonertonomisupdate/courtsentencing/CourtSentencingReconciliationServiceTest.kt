@@ -58,6 +58,7 @@ private const val DPS_COURT_CHARGE_2_ID = "4576aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_3_ID = "2376aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val DPS_COURT_CHARGE_4_ID = "2176aa44-642a-484a-a967-2d17b5c9c5a1"
 private const val OFFENDER_NO = "AB12345"
+private const val BOOKING_ID = 123456L
 private const val PRISON_MDI = "MDI"
 private const val PRISON_LEI = "LEI"
 private const val CASE_REFERENCE = "ABC4999"
@@ -833,6 +834,7 @@ fun nomisCaseResponse(
   events: List<CourtEventResponse> = listOf(nomisAppearanceResponse()),
   sentences: List<SentenceResponse> = listOf(nomisSentenceResponse()),
   offenderNo: String = OFFENDER_NO,
+  bookingId: Long = BOOKING_ID,
 ) = CourtCaseResponse(
   id = id,
   offenderNo = offenderNo,
@@ -843,7 +845,7 @@ fun nomisCaseResponse(
   caseStatus = CodeDescription("A", "Active"),
   legalCaseType = CodeDescription("CRT", "Court Appearance"),
   beginDate = beginDate,
-  bookingId = 1,
+  bookingId = bookingId,
   offenderCharges = emptyList(),
   caseSequence = 1,
   caseInfoNumbers = emptyList(),
@@ -854,13 +856,14 @@ fun nomisCaseResponse(
 fun nomisAppearanceResponse(
   id: Long = NOMIS_COURT_APPEARANCE_ID,
   outcomeCode: String? = OUTCOME_1,
+  caseId: Long = NOMIS_COURT_CASE_ID,
   eventDateTime: LocalDateTime = LocalDateTime.of(2024, 1, 1, 10, 10, 0),
   nextEventDateTime: LocalDateTime = LocalDateTime.of(2024, 2, 1, 10, 10, 0),
   charges: List<CourtEventChargeResponse> = listOf(nomisChargeResponse()),
 ) = CourtEventResponse(
   id = id,
   offenderNo = OFFENDER_NO,
-  caseId = NOMIS_COURT_CASE_ID,
+  caseId = caseId,
   courtId = PRISON_LEI,
   courtEventCharges = charges,
   createdDateTime = LocalDateTime.now(),

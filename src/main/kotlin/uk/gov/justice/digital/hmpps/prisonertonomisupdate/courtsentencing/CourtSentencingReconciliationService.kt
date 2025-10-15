@@ -71,29 +71,35 @@ class CourtSentencingReconciliationService(
   )
 
   suspend fun manualCheckCaseDps(offenderNo: String, dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
+    val caseResult = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId)
     MismatchCaseResponse(
       offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
       dpsCaseId = dpsCaseId,
-      mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
+      nomisBookingId = caseResult?.nomisBookingId,
+      mismatch = caseResult,
     )
   }
 
   suspend fun manualCheckCaseNomis(offenderNo: String, nomisCaseId: Long): MismatchCaseResponse = mappingService.getMappingGivenNomisCourtCaseId(nomisCourtCaseId = nomisCaseId).let {
+    val caseResult = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId)
     MismatchCaseResponse(
       offenderNo = offenderNo,
       nomisCaseId = nomisCaseId,
       dpsCaseId = it.dpsCourtCaseId,
-      mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
+      nomisBookingId = caseResult?.nomisBookingId,
+      mismatch = caseResult,
     )
   }
 
   suspend fun checkCasesNomis(offenderNo: String, nomisCaseIds: List<Long>): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
+    val caseResult = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId)
     MismatchCaseResponse(
       offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
       dpsCaseId = it.dpsCourtCaseId,
-      mismatch = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId),
+      nomisBookingId = caseResult?.nomisBookingId,
+      mismatch = caseResult,
     )
   }
 
@@ -111,6 +117,7 @@ class CourtSentencingReconciliationService(
             "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
             mapOf(
               "offenderNo" to it.offenderNo,
+              "nomisBookingId" to mismatch.nomisBookingId.toString(),
               "dpsCaseId" to mismatch.dpsCaseId,
               "nomisCaseId" to mismatch.nomisCaseId.toString(),
               "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
@@ -131,10 +138,14 @@ class CourtSentencingReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> = checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo))
+  suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchCaseResponse> {
+    val caseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo)
+    return if (caseIds.isNotEmpty()) checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = caseIds) else emptyList()
+  }
 
   suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
-    checkCasesNomis(offenderNo = it, nomisCaseIds = nomisApiService.getCourtCaseIdsByOffender(it)).filter { caseResponse -> caseResponse.mismatch != null }
+    val caseIds = nomisApiService.getCourtCaseIdsByOffender(it)
+    if (caseIds.isNotEmpty()) checkCasesNomis(offenderNo = it, nomisCaseIds = caseIds).filter { caseResponse -> caseResponse.mismatch != null } else emptyList()
   }.also {
     log.info(it.toString())
   }
@@ -296,10 +307,11 @@ class CourtSentencingReconciliationService(
     val differenceList = compareObjects(dpsFields, nomisFields)
 
     return if (differenceList.isNotEmpty()) {
-      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       MismatchCase(
         nomisCase = nomisFields,
         dpsCase = dpsFields,
+        nomisBookingId = nomisResponse.bookingId,
         differences = differenceList,
       )
     } else {
@@ -568,6 +580,7 @@ data class MismatchCaseResponse(
   val offenderNo: String,
   val dpsCaseId: String,
   val nomisCaseId: Long,
+  val nomisBookingId: Long? = null,
   val mismatch: MismatchCase?,
 )
 
@@ -681,6 +694,7 @@ data class SentenceTermFields(
 data class MismatchCase(
   val nomisCase: CaseFields,
   val dpsCase: CaseFields,
+  val nomisBookingId: Long,
   val differences: List<Difference> = emptyList(),
 )
 
