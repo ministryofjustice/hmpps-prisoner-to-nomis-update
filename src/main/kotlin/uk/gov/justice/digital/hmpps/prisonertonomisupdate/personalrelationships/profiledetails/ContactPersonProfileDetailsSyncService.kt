@@ -120,11 +120,11 @@ class ContactPersonProfileDetailsSyncService(
 
     val prisonerNumber = event.additionalInformation.nomsNumber
 
-    if (eventFeatureSwitch.isEnabled("personal-relationships-api.domestic-status.created")) {
+    if (eventFeatureSwitch.isEnabled("personal-relationships-api.domestic-status.created", "personcontacts")) {
       syncProfileDetail(prisonerNumber, 0, MARITAL)
     }
 
-    if (eventFeatureSwitch.isEnabled("personal-relationships-api.number-of-children.created")) {
+    if (eventFeatureSwitch.isEnabled("personal-relationships-api.number-of-children.created", "personcontacts")) {
       syncProfileDetail(prisonerNumber, 0, CHILD)
     }
   }
