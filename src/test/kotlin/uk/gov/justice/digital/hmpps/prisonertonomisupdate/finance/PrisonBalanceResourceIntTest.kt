@@ -189,8 +189,7 @@ class PrisonBalanceResourceIntTest(
         assertThat(this).containsEntry("dpsAccountCount", "1")
         assertThat(this).containsEntry("nomisAccountCount", "1")
         assertThat(this).containsEntry("reason", "different-prison-account-balance")
-        assertThat(this).containsEntry("dpsBalanceDifferences", "[AccountSummary(accountCode=2101, balance=23.45)]")
-        assertThat(this).containsEntry("nomisBalanceDifferences", "[AccountSummary(accountCode=2101, balance=7)]")
+        assertThat(this).containsEntry("balanceMismatches", "[MismatchBalance(accountCode=2101, nomisBalance=7, dpsBalance=23.45)]")
       }
       with(telemetryCaptor.allValues.find { it["prisonId"] == "MDI2" }) {
         assertThat(this).containsEntry("dpsAccountCount", "1")
@@ -199,12 +198,12 @@ class PrisonBalanceResourceIntTest(
         assertThat(this).containsEntry("missingFromNomis", "[2101]")
         assertThat(this).containsEntry("missingFromDps", "[2102]")
       }
+
       with(telemetryCaptor.allValues.find { it["prisonId"] == "MDI20" }) {
         assertThat(this).containsEntry("dpsAccountCount", "2")
         assertThat(this).containsEntry("nomisAccountCount", "2")
         assertThat(this).containsEntry("reason", "different-prison-account-balance")
-        assertThat(this).containsEntry("dpsBalanceDifferences", "[AccountSummary(accountCode=2101, balance=23.45)]")
-        assertThat(this).containsEntry("nomisBalanceDifferences", "[AccountSummary(accountCode=2101, balance=63.4)]")
+        assertThat(this).containsEntry("balanceMismatches", "[MismatchBalance(accountCode=2101, nomisBalance=63.4, dpsBalance=23.45)]")
       }
     }
 
@@ -435,6 +434,10 @@ class PrisonBalanceResourceIntTest(
           .jsonPath("prisonId").isEqualTo(prisonId)
           .jsonPath("nomisAccountCount").isEqualTo(2)
           .jsonPath("dpsAccountCount").isEqualTo(2)
+          .jsonPath("balanceMismatches.size()").isEqualTo(1)
+          .jsonPath("balanceMismatches[0].accountCode").isEqualTo(2102)
+          .jsonPath("balanceMismatches[0].nomisBalance").isEqualTo(35.6)
+          .jsonPath("balanceMismatches[0].dpsBalance").isEqualTo(23.45)
 
         verify(telemetryClient).trackEvent(
           eq("prison-balance-reports-reconciliation-mismatch"),
@@ -443,6 +446,7 @@ class PrisonBalanceResourceIntTest(
             assertThat(it).containsEntry("nomisAccountCount", "2")
             assertThat(it).containsEntry("dpsAccountCount", "2")
             assertThat(it).containsEntry("reason", "different-prison-account-balance")
+            assertThat(it).containsEntry("balanceMismatches", "[MismatchBalance(accountCode=2102, nomisBalance=35.6, dpsBalance=23.45)]")
           },
           isNull(),
         )
