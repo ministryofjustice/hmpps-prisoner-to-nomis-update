@@ -27,6 +27,8 @@ class PrisonerBalanceReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  suspend fun manualCheckPrisonerBalance(offenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(offenderId)
+
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
     telemetryClient.trackEvent(
       "$TELEMETRY_PRISONER_PREFIX-requested",
@@ -149,10 +151,14 @@ class PrisonerBalanceReconciliationService(
 
       is AccountFields -> {
         nomisObj as AccountFields
-        if (dpsObj.balance != nomisObj.balance) {
+        if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
         }
-        if (dpsObj.holdBalance != nomisObj.holdBalance) {
+        if (
+          // DPS holdBalance is non-null
+          nomisObj.holdBalance == null ||
+          dpsObj.holdBalance?.compareTo(nomisObj.holdBalance) != 0
+        ) {
           differences.add(Difference("$parentProperty.holdBalance", dpsObj.holdBalance, nomisObj.holdBalance))
         }
         if (dpsObj.accountCode != nomisObj.accountCode) {
@@ -204,7 +210,7 @@ data class BalanceFields(
 data class AccountFields(
   val balance: BigDecimal,
   val holdBalance: BigDecimal?,
-  val accountCode: Int?,
+  val accountCode: Int,
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)

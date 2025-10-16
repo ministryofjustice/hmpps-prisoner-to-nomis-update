@@ -138,6 +138,30 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
+    fun `will handle a null hold balance`() = runTest {
+      val nomis = nomisPrisonerBalanceResponse()
+      stubBalance(
+        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
+        dpsPrisonerAccountResponse(),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].holdBalance", dps = BigDecimal("0.3"), nomis = null),
+        ),
+      )
+    }
+
+    @Test
+    fun `will handle an equal hold balance with different scale`() = runTest {
+      val nomis = nomisPrisonerBalanceResponse()
+      stubBalance(
+        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = BigDecimal("0.30")))),
+        dpsPrisonerAccountResponse(),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isNull()
+    }
+
+    @Test
     fun `will report an account code mismatch`() = runTest {
       val dps = dpsPrisonerAccountResponse()
       stubBalance(
