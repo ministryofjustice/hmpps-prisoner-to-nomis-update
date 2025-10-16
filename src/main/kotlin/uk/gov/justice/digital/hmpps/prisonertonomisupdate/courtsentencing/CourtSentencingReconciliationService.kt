@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.math.BigDecimal
 import java.time.LocalDate
 
+@Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
 @Service
 class CourtSentencingReconciliationService(
   private val telemetryClient: TelemetryClient,
@@ -32,6 +33,12 @@ class CourtSentencingReconciliationService(
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_COURT_CASE_PRISONER_PREFIX = "court-case-prisoner-reconciliation"
+
+    val excludedCaseIds = CourtSentencingReconciliationService::class.java
+      .getResource("/excludedCaseIdsReconciliation.txt")
+      .readText()
+      .split(",")
+      .mapNotNull { it.trim().toLongOrNull() }
   }
   suspend fun generateCourtCasePrisonerReconciliationReportBatch() {
     telemetryClient.trackEvent(
@@ -179,6 +186,10 @@ class CourtSentencingReconciliationService(
   )
 
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
+    if (excludedCaseIds.contains(nomisCaseId)) {
+      log.info("Excluding nomis case id $nomisCaseId from reconciliation")
+      return null
+    }
     val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCourtCaseForReconciliation(nomisCaseId) } to
         async { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
