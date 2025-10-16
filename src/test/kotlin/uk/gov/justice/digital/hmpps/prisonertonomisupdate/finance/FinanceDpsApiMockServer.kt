@@ -160,6 +160,12 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetPrisonBalance(prisonId: String = "MDI", response: String) {
+    stubFor(
+      get("/reconcile/general-ledger-balances/$prisonId")
+        .willReturn(okJson(response)),
+    )
+  }
   fun stubGetPrisonBalance(prisonId: String = "MDI", response: GeneralLedgerBalanceDetailsList = prisonAccounts()) {
     stubFor(
       get("/reconcile/general-ledger-balances/$prisonId")
