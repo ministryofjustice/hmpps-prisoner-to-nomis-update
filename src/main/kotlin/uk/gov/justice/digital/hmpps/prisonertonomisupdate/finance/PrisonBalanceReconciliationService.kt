@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonAccountBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.math.BigDecimal
+import kotlin.String
 import kotlin.collections.plus
 import kotlin.collections.toSet
 
@@ -102,24 +103,26 @@ class PrisonBalanceReconciliationService(
         )
       }
     }
-    return nomisPrisonBalances.filter { nomisBalance ->
-      nomisBalance.balance.compareTo(dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance) != 0
-    }.map {
+
+    val balanceMismatches = nomisPrisonBalances.findMismatchBalances(dpsPrisonBalances)
+    if (balanceMismatches.isNotEmpty()) {
       telemetryClient.trackEvent(
         "prison-balance-reports-reconciliation-mismatch",
         telemetry + mapOf(
           "reason" to "different-prison-account-balance",
-          "nomisBalanceDifferences" to nomisPrisonBalances.filter { !dpsPrisonBalances.contains(it) },
-          "dpsBalanceDifferences" to dpsPrisonBalances.filter { !nomisPrisonBalances.contains(it) },
+          "balanceMismatches" to balanceMismatches,
         ),
       )
-      MismatchPrisonBalance(
+      return MismatchPrisonBalance(
         prisonId,
         nomisAccountCount = nomisPrisonBalances.size,
         dpsAccountCount = dpsPrisonBalances.size,
         verdict = "different-prison-account-balance",
+        balanceMismatches = balanceMismatches,
       )
-    }.firstOrNull()
+    } else {
+      null
+    }
   }.onFailure {
     log.error("Unable to match prison balance for prison with id $prisonId", it)
     telemetryClient.trackEvent(
@@ -129,6 +132,16 @@ class PrisonBalanceReconciliationService(
       ),
     )
   }.getOrNull()
+}
+
+private fun List<AccountSummary>.findMismatchBalances(dpsPrisonBalances: List<AccountSummary>): List<MismatchBalance> = filter { nomisBalance ->
+  nomisBalance.balance.compareTo(dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance) != 0
+}.map { nomisBalance ->
+  MismatchBalance(
+    accountCode = nomisBalance.accountCode,
+    nomisBalance = nomisBalance.balance,
+    dpsBalance = dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance,
+  )
 }
 
 private fun findMissingPrisonBalances(nomisAccountSummaries: List<AccountSummary>, dpsAccountSummaries: List<AccountSummary>): Pair<List<Int>, List<Int>> {
@@ -144,6 +157,12 @@ private fun findMissingPrisonBalances(nomisAccountSummaries: List<AccountSummary
 fun PrisonAccountBalanceDto.toPrisonSummary() = AccountSummary(accountCode.toInt(), balance)
 fun GeneralLedgerBalanceDetails.toPrisonSummary() = AccountSummary(accountCode, balance)
 
+data class MismatchBalance(
+  val accountCode: Int,
+  val nomisBalance: BigDecimal,
+  val dpsBalance: BigDecimal,
+)
+
 data class AccountSummary(
   val accountCode: Int,
   val balance: BigDecimal,
@@ -155,5 +174,6 @@ data class MismatchPrisonBalance(
   val nomisAccountCount: Int,
   val missingFromNomis: List<Int> = listOf(),
   val missingFromDps: List<Int> = listOf(),
+  val balanceMismatches: List<MismatchBalance> = listOf(),
   val verdict: String,
 )
