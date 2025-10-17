@@ -104,24 +104,22 @@ class PrisonBalanceReconciliationService(
       }
     }
 
-    val balanceMismatches = nomisPrisonBalances.findMismatchBalances(dpsPrisonBalances)
-    if (balanceMismatches.isNotEmpty()) {
+    return nomisPrisonBalances.findMismatchBalances(dpsPrisonBalances)?.let {
       telemetryClient.trackEvent(
         "prison-balance-reports-reconciliation-mismatch",
         telemetry + mapOf(
           "reason" to "different-prison-account-balance",
-          "balanceMismatches" to balanceMismatches,
+          "balanceMismatches" to it,
         ),
       )
-      return MismatchPrisonBalance(
-        prisonId,
+
+      MismatchPrisonBalance(
+        prisonId = prisonId,
         nomisAccountCount = nomisPrisonBalances.size,
         dpsAccountCount = dpsPrisonBalances.size,
         verdict = "different-prison-account-balance",
-        balanceMismatches = balanceMismatches,
+        balanceMismatches = it,
       )
-    } else {
-      null
     }
   }.onFailure {
     log.error("Unable to match prison balance for prison with id $prisonId", it)
@@ -134,7 +132,7 @@ class PrisonBalanceReconciliationService(
   }.getOrNull()
 }
 
-private fun List<AccountSummary>.findMismatchBalances(dpsPrisonBalances: List<AccountSummary>): List<MismatchBalance> = filter { nomisBalance ->
+private fun List<AccountSummary>.findMismatchBalances(dpsPrisonBalances: List<AccountSummary>): List<MismatchBalance>? = filter { nomisBalance ->
   nomisBalance.balance.compareTo(dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance) != 0
 }.map { nomisBalance ->
   MismatchBalance(
@@ -142,7 +140,7 @@ private fun List<AccountSummary>.findMismatchBalances(dpsPrisonBalances: List<Ac
     nomisBalance = nomisBalance.balance,
     dpsBalance = dpsPrisonBalances.find { it.accountCode == nomisBalance.accountCode }!!.balance,
   )
-}
+}.takeIf { it.isNotEmpty() }
 
 private fun findMissingPrisonBalances(nomisAccountSummaries: List<AccountSummary>, dpsAccountSummaries: List<AccountSummary>): Pair<List<Int>, List<Int>> {
   val nomisAccountCodes = nomisAccountSummaries.map { it.accountCode }.toSet()
