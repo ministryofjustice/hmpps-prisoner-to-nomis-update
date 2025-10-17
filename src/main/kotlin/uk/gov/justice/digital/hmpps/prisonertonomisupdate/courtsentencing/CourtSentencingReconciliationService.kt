@@ -149,7 +149,14 @@ class CourtSentencingReconciliationService(
 
   suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(it)
-    if (caseIds.isNotEmpty()) checkCasesNomis(offenderNo = it, nomisCaseIds = caseIds).filter { caseResponse -> caseResponse.mismatch != null } else emptyList()
+    if (caseIds.isNotEmpty()) {
+      checkCasesNomis(
+        offenderNo = it,
+        nomisCaseIds = caseIds,
+      ).filter { caseResponse -> caseResponse.mismatch != null }
+    } else {
+      emptyList()
+    }
   }.also {
     log.info(it.toString())
   }
@@ -186,10 +193,6 @@ class CourtSentencingReconciliationService(
   )
 
   suspend fun checkCase(dpsCaseId: String, nomisCaseId: Long): MismatchCase? = runCatching {
-    if (excludedCaseIds.contains(nomisCaseId)) {
-      log.info("Excluding nomis case id $nomisCaseId from reconciliation")
-      return null
-    }
     val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getCourtCaseForReconciliation(nomisCaseId) } to
         async { dpsApiService.getCourtCaseForReconciliation(dpsCaseId) }
@@ -279,9 +282,6 @@ class CourtSentencingReconciliationService(
           chargeAsString = sortCharges(charges).map { it.toSortString() }.toString(),
         )
       },
-      // TODO remove this temp fix for nomis sentences without any charges (bad data)
-      // TODO this includes a second work around for duplicate sentences (same offenderCharge record)
-      // sentences = nomisResponse.sentences.filter { it.offenderCharges.isNotEmpty() }.distinctBy { it.offenderCharges.first().id }.map { sentenceResponse ->
       sentences = nomisResponse.sentences.map { sentenceResponse ->
         val offenderCodeString =
           sentenceResponse.offenderCharges.map { chargeResponse -> chargeResponse.offence.offenceCode }.sorted()
@@ -314,15 +314,23 @@ class CourtSentencingReconciliationService(
 
     val differenceList = compareObjects(dpsFields, nomisFields)
 
+    val excludedCase = excludedCaseIds.contains(nomisCaseId)
     return if (differenceList.isNotEmpty()) {
-      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
-      MismatchCase(
-        nomisCase = nomisFields,
-        dpsCase = dpsFields,
-        nomisBookingId = nomisResponse.bookingId,
-        differences = differenceList,
-      )
+      if (!excludedCase) {
+        MismatchCase(
+          nomisCase = nomisFields,
+          dpsCase = dpsFields,
+          nomisBookingId = nomisResponse.bookingId,
+          differences = differenceList,
+        )
+      } else {
+        log.info("Excluding reconciliation mismatches for case id $nomisCaseId")
+        null
+      }
     } else {
+      if (excludedCase) {
+        log.info("No reconciliation mismatches found for excluded case id $nomisCaseId. Remove from exclusion file.")
+      }
       null
     }
   }.onFailure {
@@ -577,6 +585,7 @@ class CourtSentencingReconciliationService(
     }
     return differences
   }
+
   private fun LocalDate.asValidDate(): LocalDate? = if (this.isAfter(LocalDate.parse("1920-01-01")).and(this.isBefore(LocalDate.now().plusDays(1)))) {
     this
   } else {
