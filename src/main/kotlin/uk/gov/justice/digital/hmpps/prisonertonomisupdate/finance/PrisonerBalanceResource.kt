@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
-@Tag(name = "Prisoner Balance Resource")
+@Tag(name = "Finance Update Resource")
 @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
 class PrisonerBalanceResource(
   private val reconciliationService: PrisonerBalanceReconciliationService,

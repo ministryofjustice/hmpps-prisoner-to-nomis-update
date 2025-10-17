@@ -27,7 +27,7 @@ class PrisonerBalanceReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun manualCheckPrisonerBalance(offenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(offenderId)
+  suspend fun manualCheckPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId)
 
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
     telemetryClient.trackEvent(
@@ -65,8 +65,8 @@ class PrisonerBalanceReconciliationService(
     nextPage = ::getPrisonerIdsForPage,
   )
 
-  internal suspend fun checkPrisonerBalance(offenderId: Long): MismatchPrisonerBalance? = runCatching {
-    val nomisResponse = financeNomisApiService.getPrisonerAccountDetails(offenderId)
+  internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
+    val nomisResponse = financeNomisApiService.getPrisonerAccountDetails(rootOffenderId)
     val dpsResponse = dpsApiService.listPrisonerAccounts(nomisResponse.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisResponse.prisonNumber,
@@ -104,7 +104,7 @@ class PrisonerBalanceReconciliationService(
       return null
     }
   }.onFailure {
-    log.error("Unable to match prisoner balances for offenderId=$offenderId", it)
+    log.error("Unable to match prisoner balances for offenderId=$rootOffenderId", it)
   }.getOrNull()
 
   private fun <T> compareLists(dpsList: List<T>, nomisList: List<T>, parentProperty: String): List<Difference> {
