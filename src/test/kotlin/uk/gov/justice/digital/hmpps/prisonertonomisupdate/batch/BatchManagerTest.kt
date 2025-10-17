@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.LOCATI
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.NON_ASSOCIATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
@@ -43,6 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
@@ -77,6 +79,7 @@ class BatchManagerTest {
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
+  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -257,16 +260,6 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the visit balance reconciliation service`() = runTest {
-    val batchManager = batchManager(SENTENCING_RECON)
-
-    batchManager.onApplicationEvent(event)
-
-    verify(sentencingReconciliationService).generateSentencingReconciliationReport()
-    verify(context).close()
-  }
-
-  @Test
   fun `should call the person contact reconciliation service`() = runTest {
     val batchManager = batchManager(PERSON_CONTACT_RECON)
 
@@ -320,12 +313,22 @@ class BatchManagerTest {
   }
 
   @Test
-  fun `should call the visit balnace reconciliation service`() = runTest {
+  fun `should call the visit balance reconciliation service`() = runTest {
     val batchManager = batchManager(VISIT_BALANCE_RECON)
 
     batchManager.onApplicationEvent(event)
 
     verify(visitBalanceReconciliationService).generateReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the prisoner balance reconciliation service`() = runTest {
+    val batchManager = batchManager(PRISONER_BALANCE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonerBalanceReconciliationService).generatePrisonerBalanceReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -351,5 +354,6 @@ class BatchManagerTest {
     schedulesService,
     sentencingReconciliationService,
     visitBalanceReconciliationService,
+    prisonerBalanceReconciliationService,
   )
 }
