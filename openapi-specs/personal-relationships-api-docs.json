@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-26.2876.3a1c582"
+    "version" : "2025-10-16.2994.7c808cc"
   },
   "servers" : [ {
     "url" : "/",
@@ -11795,6 +11795,11 @@
             "type" : "string",
             "description" : "Any additional comments",
             "example" : "Close family friend"
+          },
+          "approvedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who approved this contact as a visitor",
+            "example" : "Michel Smith"
           }
         },
         "required" : [ "contactId", "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "prisonerContactId", "prisonerNumber", "relationshipToPrisonerCode", "relationshipToPrisonerDescription", "relationshipTypeCode", "relationshipTypeDescription" ]
