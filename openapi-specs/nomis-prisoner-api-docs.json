@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-14.655.7be8918"
+    "version" : "2025-10-16.665.b80c097"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -32076,10 +32076,15 @@
             "format" : "int64",
             "description" : "Movement application ID. Empty for unscheduled movements."
           },
+          "scheduledTemporaryAbsenceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled temporary absence event ID (outbound). Empty for unscheduled movements."
+          },
           "scheduledTemporaryAbsenceReturnId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Scheduled temporary absence return event ID. Empty for unscheduled movements."
+            "description" : "Scheduled temporary absence return event ID (inbound). Empty for unscheduled movements."
           },
           "sequence" : {
             "type" : "integer",

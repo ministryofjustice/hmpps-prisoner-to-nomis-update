@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-14.664.b604c43"
+    "version" : "2025-10-16.676.37c98ad"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3684,6 +3684,42 @@
         }
       }
     },
+    "/court-case/{courtCaseUuid}/validation-dates" : {
+      "get" : {
+        "tags" : [ "court-case-controller" ],
+        "summary" : "Retrieve all dates to be used in validation",
+        "description" : "\n      This endpoint returns the most recent offence start or end date across all appearances and charges for a given court case.  \n      This endpoint also returns the latest remand appearance date for a given court case.\n      Optionally, the result can exclude offences tied to a specific court appearance, used when editing a court appearance in the UI (the latest version of the offence dates are in the UI session).\n      ",
+        "operationId" : "getValidationDates",
+        "parameters" : [ {
+          "name" : "courtCaseUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "appearanceUuidToExclude",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtCaseValidationDate"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/{courtCaseUuid}/latest-offence-date" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
@@ -4811,7 +4847,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5073,7 +5109,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "courtCode" : {
             "type" : "string"
@@ -6929,9 +6965,13 @@
             "items" : {
               "$ref" : "#/components/schemas/UploadedDocument"
             }
+          },
+          "source" : {
+            "type" : "string",
+            "enum" : [ "NOMIS", "DPS" ]
           }
         },
-        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "documents", "warrantType" ]
+        "required" : [ "appearanceDate", "appearanceUuid", "charges", "courtCode", "documents", "source", "warrantType" ]
       },
       "CourtAppearanceOutcome" : {
         "type" : "object",
@@ -7054,7 +7094,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "courtCode" : {
             "type" : "string"
@@ -7673,7 +7713,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7729,7 +7769,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "courtId" : {
             "type" : "string"
@@ -7869,7 +7909,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "charges" : {
             "type" : "array",
@@ -7896,7 +7936,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "courtId" : {
             "type" : "string"
@@ -8026,6 +8066,19 @@
           }
         },
         "required" : [ "cases" ]
+      },
+      "CourtCaseValidationDate" : {
+        "type" : "object",
+        "properties" : {
+          "offenceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "latestRemandAppearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }
       },
       "LatestOffenceDate" : {
         "type" : "object",
@@ -8425,7 +8478,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:20.398952309"
+            "example" : "07:23:21.355171221"
           },
           "courtCode" : {
             "type" : "string"
