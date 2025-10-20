@@ -48,6 +48,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Lo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerNosWithLast
@@ -322,6 +323,11 @@ class NomisApiService(
     .bodyToMono(PrisonerNosWithLast::class.java)
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
     .awaitSingle()
+
+  suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = webClient.get()
+    .uri("/prisoners/{offenderNo}", offenderNo)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   suspend fun getAllLatestBookings(
     activeOnly: Boolean,

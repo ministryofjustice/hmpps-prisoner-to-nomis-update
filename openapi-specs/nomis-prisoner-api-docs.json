@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-16.665.b80c097"
+    "version" : "2025-10-17.668.e38b497"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -26521,12 +26521,24 @@
       },
       "PrisonerDetails" : {
         "type" : "object",
-        "description" : "Details of a prisoner booking",
+        "description" : "Details of a prisoner or booking",
         "properties" : {
           "offenderNo" : {
             "type" : "string",
             "description" : "The NOMIS reference",
             "example" : "A1234AA"
+          },
+          "offenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offenderId",
+            "example" : 1234567
+          },
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS rootOffenderId",
+            "example" : 1234567
           },
           "bookingId" : {
             "type" : "integer",
@@ -26544,7 +26556,7 @@
             "description" : "True if prisoner is active in prison"
           }
         },
-        "required" : [ "active", "bookingId", "location", "offenderNo" ]
+        "required" : [ "active", "bookingId", "location", "offenderId", "offenderNo" ]
       },
       "CreateSentenceAdjustmentRequest" : {
         "type" : "object",

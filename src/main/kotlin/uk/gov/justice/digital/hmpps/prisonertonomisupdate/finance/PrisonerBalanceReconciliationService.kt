@@ -7,17 +7,20 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
 @Service
 class PrisonerBalanceReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val financeNomisApiService: FinanceNomisApiService,
+  private val nomisApiService: NomisApiService,
   private val dpsApiService: FinanceDpsApiService,
   private val objectMapper: ObjectMapper,
   @Value("\${reports.prisoner.balance.reconciliation.page-size:10}") private val pageSize: Int = 10,
@@ -28,6 +31,13 @@ class PrisonerBalanceReconciliationService(
   }
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId)
+
+  suspend fun manualCheckPrisonerBalance(offenderNo: String): MismatchPrisonerBalance? {
+    val prisonerDetails = nomisApiService.getPrisonerDetails(offenderNo)
+      ?: throw NotFoundException("offenderNo $offenderNo not found")
+    return checkPrisonerBalance(prisonerDetails.rootOffenderId!!)
+    // rootOffenderId is nullable but there are no nulls in the table in prod
+  }
 
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
     telemetryClient.trackEvent(

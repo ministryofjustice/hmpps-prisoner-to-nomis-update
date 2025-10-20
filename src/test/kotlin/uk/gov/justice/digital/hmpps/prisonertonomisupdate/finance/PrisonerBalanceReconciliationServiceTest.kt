@@ -23,12 +23,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-private const val OFFENDER_NO = "A5678BZ"
-private const val OFFENDER_ID = 123456789000L
+const val OFFENDER_NO = "A5678BZ"
+const val OFFENDER_ID = 123456789000L
 
 @SpringAPIServiceTest
 @Import(
@@ -36,6 +37,7 @@ private const val OFFENDER_ID = 123456789000L
   FinanceNomisApiService::class,
   FinanceDpsApiService::class,
   FinanceNomisApiMockServer::class,
+  NomisApiService::class,
   FinanceDpsApiMockServer::class,
   RetryApiService::class,
   FinanceConfiguration::class,
@@ -46,7 +48,7 @@ class PrisonerBalanceReconciliationServiceTest {
   lateinit var telemetryClient: TelemetryClient
 
   @Autowired
-  private lateinit var nomisApi: FinanceNomisApiMockServer
+  private lateinit var financeNomisApi: FinanceNomisApiMockServer
 
   private val dpsApi = FinanceDpsApiExtension.dpsFinanceServer
 
@@ -61,7 +63,7 @@ class PrisonerBalanceReconciliationServiceTest {
   @Nested
   inner class CheckMatch {
     private fun stubBalance(nomisBalance: PrisonerBalanceDto, dpsBalance: PrisonerSubAccountDetailsList) {
-      nomisApi.stubGetPrisonerAccountDetails(OFFENDER_ID, nomisBalance)
+      financeNomisApi.stubGetPrisonerAccountDetails(OFFENDER_ID, nomisBalance)
       dpsApi.stubListPrisonerAccounts(OFFENDER_NO, dpsBalance)
     }
 
@@ -180,7 +182,7 @@ class PrisonerBalanceReconciliationServiceTest {
   inner class GetPrisonerIdsForPage {
     @Test
     fun `will return id list`() = runTest {
-      nomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
         RootOffenderIdsWithLast(
           rootOffenderIds = listOf(5, 6, 7, 8),
           lastOffenderId = 8L,
@@ -196,7 +198,7 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will report telemetry on error`() = runTest {
-      nomisApi.stubGetPrisonerBalanceIdentifiersFromIdError()
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromIdError()
 
       val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
 

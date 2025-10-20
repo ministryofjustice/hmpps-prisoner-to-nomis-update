@@ -20,17 +20,16 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
-
-private const val OFFENDER_NO = "A5678BZ"
-private const val OFFENDER_ID = 123456789000L
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
 class PrisonerBalanceReconciliationResourceIntTest(
   @Autowired private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
 ) : IntegrationTestBase() {
 
   @Autowired
-  private lateinit var nomisApi: FinanceNomisApiMockServer
+  private lateinit var financeNomisApi: FinanceNomisApiMockServer
 
   @DisplayName("Prisoner balances reconciliation report")
   @Nested
@@ -38,7 +37,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
         response = RootOffenderIdsWithLast(
           lastOffenderId = 3,
           rootOffenderIds = (1..3L).toList(),
@@ -128,12 +127,12 @@ class PrisonerBalanceReconciliationResourceIntTest(
   }
 
   @Nested
-  inner class ManualPrisonerBalancesReconciliationReport {
+  inner class ManualPrisonerBalancesReconciliationReportOffenderId {
     @Nested
     inner class Security {
       @Test
       fun `access forbidden when no role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
           .headers(setAuthorisation(roles = listOf()))
           .exchange()
           .expectStatus().isForbidden
@@ -141,7 +140,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
       @Test
       fun `access forbidden with wrong role`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
           .headers(setAuthorisation(roles = listOf("BANANAS")))
           .exchange()
           .expectStatus().isForbidden
@@ -149,7 +148,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
       @Test
       fun `access unauthorised with no auth token`() {
-        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
           .exchange()
           .expectStatus().isUnauthorized
       }
@@ -159,7 +158,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        nomisApi.stubGetPrisonBalance()
+        financeNomisApi.stubGetPrisonBalance()
         dpsFinanceServer.stubGetPrisonBalance()
       }
 
@@ -171,7 +170,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
           dpsPrisonerAccountResponse(),
         )
 
-        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
@@ -195,7 +194,98 @@ class PrisonerBalanceReconciliationResourceIntTest(
           dpsPrisonerAccountResponse(),
         )
 
-        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_ID")
+        webTestClient.get().uri("/prisoner-balance/reconciliation/id/$OFFENDER_ID")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
+      }
+    }
+  }
+
+  @Nested
+  inner class ManualPrisonerBalancesReconciliationReportOffenderNo {
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
+          .headers(setAuthorisation(roles = listOf("BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setup() {
+        financeNomisApi.stubGetPrisonBalance()
+        nomisApi.stubGetPrisonerDetails(
+          OFFENDER_NO,
+          PrisonerDetails(
+            offenderNo = OFFENDER_NO,
+            offenderId = OFFENDER_ID,
+            bookingId = 1,
+            location = "BXI",
+            active = true,
+            rootOffenderId = OFFENDER_ID,
+          ),
+        )
+        dpsFinanceServer.stubGetPrisonBalance()
+      }
+
+      @Test
+      fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
+        stubBalances(
+          OFFENDER_ID,
+          nomisPrisonerBalanceResponse().copy(accounts = emptyList()),
+          dpsPrisonerAccountResponse(),
+        )
+
+        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("nomis.prisonNumber").isEqualTo(OFFENDER_NO)
+          .jsonPath("dps.prisonNumber").isEqualTo(OFFENDER_NO)
+          .jsonPath("dps.accounts[0].accountCode").isEqualTo(1001)
+          .jsonPath("differences[0].property").isEqualTo("prisoner-balances.accounts")
+          .jsonPath("differences[0].dps").isEqualTo(1)
+          .jsonPath("differences[0].nomis").isEqualTo(0)
+
+        verifyNoInteractions(telemetryClient)
+      }
+
+      @Test
+      fun `will return no differences when there is a match`() = runTest {
+        stubBalances(
+          OFFENDER_ID,
+          nomisPrisonerBalanceResponse(),
+          dpsPrisonerAccountResponse(),
+        )
+
+        webTestClient.get().uri("/prisoner-balance/reconciliation/$OFFENDER_NO")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus()
@@ -208,7 +298,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
   }
 
   private fun stubBalances(offenderId: Long, nomisResponse: PrisonerBalanceDto, dpsResponse: PrisonerSubAccountDetailsList) {
-    nomisApi.stubGetPrisonerAccountDetails(offenderId, nomisResponse)
+    financeNomisApi.stubGetPrisonerAccountDetails(offenderId, nomisResponse)
     dpsFinanceServer.stubListPrisonerAccounts(nomisResponse.prisonNumber, dpsResponse)
   }
 }

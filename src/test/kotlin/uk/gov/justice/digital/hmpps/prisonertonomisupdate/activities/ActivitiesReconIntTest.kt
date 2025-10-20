@@ -273,7 +273,7 @@ class ActivitiesReconIntTest(
         .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
-          nomisApi.stubGetPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
+          nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
         }
     }
   }
@@ -354,7 +354,7 @@ class ActivitiesReconIntTest(
       fun `should publish failed telemetry where prisoner not found in NOMIS`() = runTest {
         stubGetPrisons("BXI")
         stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "OUT", nomisCount = 1, dpsCount = 2))
-        nomisApi.stubGetPrisonerDetails("[]")
+        nomisApi.stubGetActivitiesPrisonerDetails("[]")
 
         activitiesReconService.suspendedAllocationReconciliationReport()
 
@@ -548,7 +548,7 @@ class ActivitiesReconIntTest(
         .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
-          nomisApi.stubGetPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
+          nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
         }
     }
   }
@@ -791,7 +791,7 @@ class ActivitiesReconIntTest(
         .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
-          nomisApi.stubGetPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
+          nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
         }
     }
   }
