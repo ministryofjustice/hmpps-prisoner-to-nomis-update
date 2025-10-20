@@ -27,8 +27,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 import java.math.BigDecimal
 import java.time.LocalDateTime
 
-private const val OFFENDER_NO = "A5678BZ"
-private const val OFFENDER_ID = 123456789000L
+const val OFFENDER_NO = "A5678BZ"
+const val OFFENDER_ID = 123456789000L
 
 @SpringAPIServiceTest
 @Import(

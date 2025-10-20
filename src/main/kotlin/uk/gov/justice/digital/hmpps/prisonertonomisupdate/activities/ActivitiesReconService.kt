@@ -159,7 +159,17 @@ class ActivitiesReconService(
     differences.all()
       .filterNot { it in ignoredBookings }
       .sorted()
-      .map { differencesWithDetails.firstOrNull { details -> details.bookingId == it } ?: PrisonerDetails("Details not found in NOMIS", it, prisonId, false) }
+      .map {
+        differencesWithDetails.firstOrNull { details -> details.bookingId == it }
+          ?: PrisonerDetails(
+            "Details not found in NOMIS",
+            bookingId = it,
+            location = prisonId,
+            active = false,
+            rootOffenderId = null,
+            offenderId = 0,
+          )
+      }
       .forEach {
         telemetryClient.trackEvent(
           "activity-$type-reconciliation-report-failed",

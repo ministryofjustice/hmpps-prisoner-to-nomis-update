@@ -15,16 +15,27 @@ import org.springframework.web.bind.annotation.RestController
 class PrisonerBalanceResource(
   private val reconciliationService: PrisonerBalanceReconciliationService,
 ) {
-
-  @GetMapping("/prisoner-balance/reconciliation/{rootOffenderId}")
+  @GetMapping("/prisoner-balance/reconciliation/id/{rootOffenderId}")
   @Operation(
     summary = "Run the prisoner balance reconciliation for this prisoner",
-    description = """Retrieves the account balance differences for a prisoner. A flippant response returned if no differences found. 
+    description = """Retrieves the account balance differences for a prisoner. A null response returned if no differences found. 
       Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
     responses = [ApiResponse(responseCode = "200", description = "Reconciliation differences returned")],
   )
-  suspend fun manualCheckCase(
+  suspend fun manualCheckCaseOffenderId(
     @Schema(description = "Prisoner's rootOffenderId", example = "1234567")
     @PathVariable rootOffenderId: Long,
-  ) = reconciliationService.manualCheckPrisonerBalance(rootOffenderId) // ?.run { toString() } ?: "MATCHES! Yay!"
+  ) = reconciliationService.manualCheckPrisonerBalance(rootOffenderId)
+
+  @GetMapping("/prisoner-balance/reconciliation/{offenderNo}")
+  @Operation(
+    summary = "Run the prisoner balance reconciliation for this prisoner",
+    description = """Retrieves the account balance differences for a prisoner. A null response returned if no differences found. 
+      Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
+    responses = [ApiResponse(responseCode = "200", description = "Reconciliation differences returned")],
+  )
+  suspend fun manualCheckCaseOffenderNo(
+    @Schema(description = "Prisoner's offenderNo", example = "A3456NZ")
+    @PathVariable offenderNo: String,
+  ) = reconciliationService.manualCheckPrisonerBalance(offenderNo)
 }

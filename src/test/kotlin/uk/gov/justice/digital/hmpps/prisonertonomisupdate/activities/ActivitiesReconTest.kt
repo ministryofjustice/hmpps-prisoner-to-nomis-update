@@ -318,7 +318,7 @@ class ActivitiesReconTest {
       // stub the booking details calls for all will be reported on (that don't match counts)
       bookingCounts
         .filterNot { it.nomisCount == it.dpsCount }
-        .map { PrisonerDetails(it.offenderNo, it.bookingId, it.location, true) }
+        .map { PrisonerDetails(it.offenderNo, 0, it.bookingId, it.location, true, null) }
         .also { whenever(nomisApiService.getPrisonerDetails(any())).thenReturn(it) }
     }
   }
@@ -502,7 +502,7 @@ class ActivitiesReconTest {
       // stub the booking details calls for all will be reported on (that don't match counts)
       bookingCounts
         .filterNot { it.nomisCount == it.dpsCount }
-        .map { PrisonerDetails(it.offenderNo, it.bookingId, it.location, true) }
+        .map { PrisonerDetails(it.offenderNo, 0, it.bookingId, it.location, true, null) }
         .also { whenever(nomisApiService.getPrisonerDetails(any())).thenReturn(it) }
     }
   }

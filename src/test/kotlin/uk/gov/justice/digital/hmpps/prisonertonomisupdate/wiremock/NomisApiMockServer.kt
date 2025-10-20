@@ -23,11 +23,12 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.objectMapper
 import java.time.LocalDate
-import kotlin.collections.map
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -468,7 +469,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetPrisonerDetails(response: String) {
+  fun stubGetActivitiesPrisonerDetails(response: String) {
     stubFor(
       post("/prisoners/bookings")
         .willReturn(
@@ -1143,6 +1144,18 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(responseCode)
             .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
+  fun stubGetPrisonerDetails(offenderNo: String, details: PrisonerDetails) {
+    stubFor(
+      get("/prisoners/$offenderNo")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-type", "application/json")
+            .withBody(objectMapper.writeValueAsString(details))
+            .withStatus(200),
         ),
     )
   }
@@ -2309,7 +2322,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(objectMapper.writeValueAsString(body))
     return this
   }
 }

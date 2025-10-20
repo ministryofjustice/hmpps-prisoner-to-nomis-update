@@ -524,7 +524,7 @@ class ActivitiesNomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      nomisApi.stubGetPrisonerDetails(jsonResponse())
+      nomisApi.stubGetActivitiesPrisonerDetails(jsonResponse())
 
       activitiesNomisApiService.getPrisonerDetails(listOf(1, 2))
 
@@ -536,7 +536,7 @@ class ActivitiesNomisApiServiceTest {
 
     @Test
     fun `should pass booking ids in body`() = runTest {
-      nomisApi.stubGetPrisonerDetails(jsonResponse())
+      nomisApi.stubGetActivitiesPrisonerDetails(jsonResponse())
 
       activitiesNomisApiService.getPrisonerDetails(listOf(1, 2))
 
@@ -549,7 +549,7 @@ class ActivitiesNomisApiServiceTest {
 
     @Test
     fun `should parse response`() = runTest {
-      nomisApi.stubGetPrisonerDetails(jsonResponse())
+      nomisApi.stubGetActivitiesPrisonerDetails(jsonResponse())
 
       val response = activitiesNomisApiService.getPrisonerDetails(listOf(1, 2))
 
