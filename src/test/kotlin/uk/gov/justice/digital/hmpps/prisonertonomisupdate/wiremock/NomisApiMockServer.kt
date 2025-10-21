@@ -2269,11 +2269,16 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       lastBookingId = 0,
       prisonerIds = emptyList(),
     ),
+    activeOnly: Boolean = false,
   ) {
+    val mappingBuilder = if (activeOnly) {
+      get(urlPathEqualTo("/bookings/ids/latest-from-id"))
+        .withQueryParam("activeOnly", equalTo("true"))
+    } else {
+      get(urlPathEqualTo("/bookings/ids/latest-from-id"))
+    }
     stubFor(
-      get(
-        urlPathEqualTo("/bookings/ids/latest-from-id"),
-      )
+      mappingBuilder
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

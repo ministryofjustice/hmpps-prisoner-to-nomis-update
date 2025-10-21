@@ -101,8 +101,12 @@ generic-service:
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"
-    - name: crt-case-prsner-recon
+    - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
+      schedule: "10 3 * * *"
+      suspend: true
+    - name: court-case-a-recon
+      type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "10 3 * * *"
       suspend: true
     - name: csip-recon

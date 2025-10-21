@@ -70,6 +70,10 @@ generic-service:
       type: COURT_CASE_PRISONER_RECON
       schedule: "0 18 * * 1-5"
       suspend: true
+    - name: court-case-a-recon
+      type: COURT_CASE_ACTIVE_PRISONER_RECON
+      schedule: "0 18 * * 1-5"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
