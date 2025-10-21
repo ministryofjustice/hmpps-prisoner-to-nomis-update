@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentAttendeeSearchResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
@@ -54,18 +55,18 @@ class AppointmentsReconciliationService(
 
   suspend fun generateReconciliationReport(): List<MismatchAppointment> {
     val yesterday = LocalDate.now().minusDays(1)
-    val nextWeek = LocalDate.now().plusDays(lookaheadDays)
+    val horizonDate = LocalDate.now().plusDays(lookaheadDays)
     return dpsApiService.getRolloutPrisons()
       .filter { it.appointmentsRolledOut }
       .flatMap {
         val currentPrisonId = it.prisonCode
-        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
+        val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, horizonDate, 0, 1).totalElements.toInt()
         log.info("--------- Scanning prison {} with appointmentsCount = {}", currentPrisonId, appointmentsCount)
-        generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
+        generateReconciliationReportForPrison(currentPrisonId, yesterday, horizonDate, appointmentsCount)
       }
 //    val currentPrisonId = "ISI"
-//    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, nextWeek, 0, 1).totalElements.toInt()
-//    return  generateReconciliationReportForPrison(currentPrisonId, yesterday, nextWeek, appointmentsCount)
+//    val appointmentsCount = nomisApiService.getAppointmentIds(listOf(currentPrisonId), yesterday, horizonDate, 0, 1).totalElements.toInt()
+//    return generateReconciliationReportForPrison(currentPrisonId, yesterday, horizonDate, appointmentsCount)
   }
 
   // -------------------------------------------- Locations-style :
@@ -127,14 +128,10 @@ class AppointmentsReconciliationService(
     .getOrElse { emptyList() }
     .also { log.info("Nomis Page requested: $page, with ${it.size} appointments") }
 
-  internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<Long> = runCatching {
+  internal suspend fun getDpsAppointmentsForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<AppointmentAttendeeSearchResult> = runCatching {
     dpsApiService.searchAppointments(prisonId, startDate, endDate)
       .filterNot { app -> app.isDeleted }
-      .flatMap { app ->
-        app.attendees.map { attendee ->
-          attendee.appointmentAttendeeId
-        }
-      }
+      .flatMap { app -> app.attendees }
   }
     .onFailure {
       telemetryClient.trackEvent(
@@ -158,21 +155,21 @@ class AppointmentsReconciliationService(
     endDate,
   )
     .takeIf { it.size != nomisTotal || allDpsIdsInNomisPrison.size != nomisTotal }
-    ?.also {
-      log.info("DPS stats are nomisTotal for prison = $nomisTotal, attendees = ${it.size}, allDpsIdsInNomisPrison size = ${allDpsIdsInNomisPrison.size}")
-      log.info("${it.minus(allDpsIdsInNomisPrison)} are in attendees only; ${allDpsIdsInNomisPrison.minus(it.toSet())} are in allDpsIdsInNomisPrison only}")
+    ?.also { appointmentAttendeeSearchResult ->
+      val dpsIds = appointmentAttendeeSearchResult.map { it.appointmentAttendeeId }
+      log.info("DPS stats are nomisTotal for prison = $nomisTotal, attendees = ${dpsIds.size}, allDpsIdsInNomisPrison size = ${allDpsIdsInNomisPrison.size}")
+      log.info("${dpsIds.minus(allDpsIdsInNomisPrison)} are in attendees only; ${allDpsIdsInNomisPrison.minus(dpsIds.toSet())} are in allDpsIdsInNomisPrison only}")
     }
     ?.filterNot {
-      allDpsIdsInNomisPrison.contains((it))
+      allDpsIdsInNomisPrison.contains(it.appointmentAttendeeId)
     }
-    ?.map { appointmentAttendeeId ->
-      val mismatch = MismatchAppointment(dpsId = appointmentAttendeeId)
-      log.info("Appointment Mismatch found extra DPS appointment $appointmentAttendeeId")
+    ?.map { appointmentAttendeeSearchResult ->
+      val appointmentAttendeeId = appointmentAttendeeSearchResult.appointmentAttendeeId
       telemetryClient.trackEvent(
         "appointments-reports-reconciliation-dps-only",
-        mapOf("dpsId" to appointmentAttendeeId),
+        mapOf("dpsId" to appointmentAttendeeId, "details" to appointmentAttendeeSearchResult),
       )
-      mismatch
+      MismatchAppointment(dpsId = appointmentAttendeeId)
     }
     ?: emptyList()
 
