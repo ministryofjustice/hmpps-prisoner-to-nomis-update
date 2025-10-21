@@ -189,6 +189,58 @@ class AppointmentsReconciliationServiceTest {
     }
   }
 
+  @Test
+  fun `will report appointments in DPS only`() = runTest {
+    val allDpsIdsInNomisPrison = setOf(10001L, 10002L)
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(
+        appointmentSearchResults(
+          2345L,
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 10001,
+              prisonerNumber = OFFENDER_NO,
+              bookingId = 1001,
+            ),
+          ),
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 10002,
+              prisonerNumber = "B2345ZZ",
+              bookingId = 1002,
+            ),
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 10003,
+              prisonerNumber = "B2345ZZ",
+              bookingId = 1002,
+            ),
+          ),
+        ),
+      )
+
+    val results = appointmentsReconciliationService.checkForMissingDpsRecords(
+      allDpsIdsInNomisPrison,
+      PRISON_CODE,
+      LocalDate.parse(START_DATE),
+      LocalDate.parse(END_DATE),
+      3,
+    )
+
+    assertThat(results).hasSize(1)
+    assertThat(results.first()).isEqualTo(MismatchAppointment(dpsId = 10003))
+
+    verify(telemetryClient, times(1)).trackEvent(
+      eq("appointments-reports-reconciliation-dps-only"),
+      eq(
+        mapOf(
+          "dpsId" to "10003",
+          "details" to "AppointmentAttendeeSearchResult(appointmentAttendeeId=10003, prisonerNumber=B2345ZZ, bookingId=1002)",
+        ),
+      ),
+      isNull(),
+    )
+  }
+
   private fun nomisResponse(offenderNo: String = OFFENDER_NO, comment: String? = null) = AppointmentResponse(
     bookingId = 123,
     offenderNo = offenderNo,
@@ -221,5 +273,32 @@ class AppointmentsReconciliationServiceTest {
     endTime = "11:20:00",
     internalLocationId = 12345678,
     extraInformation = comment,
+  )
+}
+
+private fun appointmentSearchResults(
+  appointmentId: Long,
+  vararg attendeeLists: List<AppointmentAttendeeSearchResult>,
+): List<AppointmentSearchResult> = attendeeLists.map { attendees ->
+  AppointmentSearchResult(
+    attendees = attendees,
+    appointmentSeriesId = 1234,
+    appointmentId = appointmentId,
+    appointmentType = AppointmentSearchResult.AppointmentType.INDIVIDUAL,
+    prisonCode = PRISON_CODE,
+    appointmentName = "name",
+    category = AppointmentCategorySummary("code", "description"),
+    inCell = false,
+    startDate = LocalDate.now(),
+    startTime = "10:00",
+    timeSlot = AppointmentSearchResult.TimeSlot.AM,
+    isRepeat = false,
+    sequenceNumber = 1,
+    maxSequenceNumber = 2,
+    isEdited = false,
+    isCancelled = false,
+    isExpired = false,
+    isDeleted = false,
+    createdTime = LocalDateTime.now(),
   )
 }
