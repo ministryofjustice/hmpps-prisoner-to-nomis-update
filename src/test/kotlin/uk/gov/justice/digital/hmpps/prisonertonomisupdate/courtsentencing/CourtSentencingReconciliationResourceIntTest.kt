@@ -135,6 +135,92 @@ class CourtSentencingReconciliationResourceIntTest(
     }
   }
 
+  @DisplayName("Court cases active prisoner reconciliation report")
+  @Nested
+  inner class GenerateCourtCaseActivePrisonerReconciliationReport {
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisPrisonerApi.stuGetAllLatestBookings(
+        bookingId = 0,
+        response = BookingIdsWithLast(
+          lastBookingId = 4,
+          prisonerIds = (NOMIS_CASE_ID..4).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+
+      stubCases(
+        OFFENDER_NO,
+        listOf(nomisCaseResponse().copy(id = NOMIS_CASE_ID)),
+        listOf(dpsCourtCaseResponse().copy(courtCaseUuid = DPS_CASE_ID)),
+      )
+      stubCases("A0002TZ", emptyList(), emptyList())
+      stubCases(
+        "A0003TZ",
+        listOf(nomisCaseResponse().copy(id = 2L, bookingId = BOOKING_ID_2, caseStatus = CodeDescription("I", "Inactive"))),
+        listOf(dpsCourtCaseResponse().copy(courtCaseUuid = "11111111-1111-1111-1111-111111111112", active = true)),
+      )
+      stubCases("A0004TZ", emptyList(), emptyList())
+    }
+
+    @Test
+    fun `will output report requested telemetry`() = runTest {
+      courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-case-active-prisoner-reconciliation-requested"),
+        any(),
+        isNull(),
+      )
+
+      awaitReportFinished()
+    }
+
+    @Test
+    fun `will output mismatch report`() = runTest {
+      courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-case-active-prisoner-reconciliation-report"),
+        check {
+          assertThat(it).containsEntry("prisoners-count", "4")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there is a difference in the  DPS record`() = runTest {
+      courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-case-active-prisoner-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0003TZ",
+            "dpsCaseId" to "11111111-1111-1111-1111-111111111112",
+            "nomisBookingId" to "$BOOKING_ID_2",
+            "nomisCaseId" to "2",
+            "mismatchCount" to "1",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    private fun awaitReportFinished() {
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("court-case-active-prisoner-reconciliation-report"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+  }
+
   @Nested
   inner class ManualCaseReconciliationByOffenderId {
 

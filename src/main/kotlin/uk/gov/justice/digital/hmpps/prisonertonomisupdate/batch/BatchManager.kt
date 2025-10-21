@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTEND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_ACTIVE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.DELETE_UNKNOWN_ACTIVITY_MAPPINGS
@@ -66,6 +67,7 @@ enum class BatchType {
   CASE_NOTES_FULL_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
   COURT_CASE_PRISONER_RECON,
+  COURT_CASE_ACTIVE_PRISONER_RECON,
   CSIP_RECON,
   DELETE_UNKNOWN_ACTIVITY_MAPPINGS,
   INCENTIVES_RECON,
@@ -125,6 +127,7 @@ class BatchManager(
       CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
       COURT_CASE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
+      COURT_CASE_ACTIVE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
       CSIP_RECON -> csipReconciliationService.generateCSIPReconciliationReport()
       DELETE_UNKNOWN_ACTIVITY_MAPPINGS -> schedulesService.deleteUnknownMappings()
       INCENTIVES_RECON -> incentivesReconciliationService.generateIncentiveReconciliationReport()

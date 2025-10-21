@@ -33,6 +33,7 @@ class CourtSentencingReconciliationService(
   companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_COURT_CASE_PRISONER_PREFIX = "court-case-prisoner-reconciliation"
+    const val TELEMETRY_COURT_CASE_ACTIVE_PRISONER_PREFIX = "court-case-active-prisoner-reconciliation"
 
     val excludedCaseIds = CourtSentencingReconciliationService::class.java
       .getResource("/excludedCaseIdsReconciliation.txt")
@@ -66,12 +67,44 @@ class CourtSentencingReconciliationService(
       }
   }
 
+  suspend fun generateCourtCaseActivePrisonerReconciliationReportBatch() {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_COURT_CASE_ACTIVE_PRISONER_PREFIX-requested",
+      mapOf(),
+    )
+
+    runCatching { generateActivePrisonerCourtCasesReconciliationReport() }
+      .onSuccess {
+        log.info("Active prisoner court cases reconciliation report completed with ${it.mismatches.size} mismatches")
+        telemetryClient.trackEvent(
+          "$TELEMETRY_COURT_CASE_ACTIVE_PRISONER_PREFIX-report",
+          mapOf(
+            "prisoners-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) +
+            it.mismatches.take(5).asPrisonerMap(),
+        )
+      }
+      .onFailure {
+        telemetryClient.trackEvent("$TELEMETRY_COURT_CASE_ACTIVE_PRISONER_PREFIX-report", mapOf("success" to "false", "error" to (it.message ?: "unknown")))
+        log.error("Active prisoner court case active prisoner reconciliation report failed", it)
+      }
+  }
+
   private fun List<MismatchPrisonerCasesResponse>.asPrisonerMap(): Map<String, String> = this.associate { it.offenderNo to "cases=${it.mismatches.size}" }
+
+  suspend fun generateActivePrisonerCourtCasesReconciliationReport(): ReconciliationResult<MismatchPrisonerCasesResponse> = generateReconciliationReport(
+    threadCount = prisonerPageSize,
+    checkMatch = ::checkActivePrisonerCasesMatch,
+    nextPage = ::getNextBookingsForPageActiveOnly,
+  )
 
   suspend fun generatePrisonerCourtCasesReconciliationReport(): ReconciliationResult<MismatchPrisonerCasesResponse> = generateReconciliationReport(
     threadCount = prisonerPageSize,
     checkMatch = ::checkPrisonerCasesMatch,
-    nextPage = ::getNextBookingsForPage,
+    nextPage = ::getNextBookingsForPageAll,
   )
 
   suspend fun manualCheckCaseDps(offenderNo: String, dpsCaseId: String): MismatchCaseResponse = mappingService.getMappingGivenCourtCaseId(dpsCourtCaseId = dpsCaseId).let {
@@ -107,7 +140,9 @@ class CourtSentencingReconciliationService(
     )
   }
 
-  suspend fun checkPrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = runCatching {
+  suspend fun checkActivePrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = checkPrisonerCasesMatch(prisonerId, TELEMETRY_COURT_CASE_ACTIVE_PRISONER_PREFIX)
+
+  suspend fun checkPrisonerCasesMatch(prisonerId: PrisonerIds, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): MismatchPrisonerCasesResponse? = runCatching {
     manualCheckCaseOffenderNo(prisonerId.offenderNo)
       .filter { it.mismatch != null }
       .takeIf { it.isNotEmpty() }?.let {
@@ -118,7 +153,7 @@ class CourtSentencingReconciliationService(
       }?.also {
         it.mismatches.forEach { mismatch ->
           telemetryClient.trackEvent(
-            "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
+            "$telemetryPrefix-mismatch",
             mapOf(
               "offenderNo" to it.offenderNo,
               "nomisBookingId" to mismatch.nomisBookingId.toString(),
@@ -133,7 +168,7 @@ class CourtSentencingReconciliationService(
   }.onFailure {
     log.error("Unable to match prisoner: ${prisonerId.offenderNo}", it)
     telemetryClient.trackEvent(
-      "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-error",
+      "$telemetryPrefix-error",
       mapOf(
         "offenderNo" to prisonerId.offenderNo,
         "reason" to (it.message ?: "unknown"),
@@ -161,10 +196,13 @@ class CourtSentencingReconciliationService(
     log.info(it.toString())
   }
 
-  private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
+  private suspend fun getNextBookingsForPageActiveOnly(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = true)
+  private suspend fun getNextBookingsForPageAll(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = false)
+
+  private suspend fun getNextBookingsForPage(lastBookingId: Long, activeOnly: Boolean = false): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
       lastBookingId = lastBookingId,
-      activeOnly = false,
+      activeOnly = activeOnly,
       pageSize = prisonerPageSize,
     )
   }.onFailure {
