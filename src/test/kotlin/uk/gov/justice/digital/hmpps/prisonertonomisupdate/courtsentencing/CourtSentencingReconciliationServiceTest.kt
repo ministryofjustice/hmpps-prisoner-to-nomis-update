@@ -9,7 +9,11 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.check
+import org.mockito.kotlin.eq
+import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
+import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -132,7 +136,7 @@ internal class CourtSentencingReconciliationServiceTest {
       @Test
       fun `will not report a mismatch when no differences found`() = runTest {
         assertThat(
-          service.checkCase(nomisCaseId = NOMIS_COURT_CASE_ID, dpsCaseId = DPS_COURT_CASE_ID),
+          service.checkCase(nomisCaseId = NOMIS_COURT_CASE_ID, dpsCaseId = DPS_COURT_CASE_ID, offenderNo = OFFENDER_NO),
         ).isNull()
       }
     }
@@ -147,6 +151,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.active", dps = true, nomis = false, id = DPS_COURT_CASE_ID)))
     }
@@ -169,6 +174,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.appearances", dps = 2, nomis = 1)))
     }
@@ -191,6 +197,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.appearances", dps = 1, nomis = 2)))
     }
@@ -225,6 +232,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -256,6 +264,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -287,6 +296,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -311,6 +321,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(
         listOf(
@@ -340,6 +351,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges", dps = 2, nomis = 1)))
     }
@@ -370,6 +382,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(
         listOf(
@@ -409,6 +422,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isNull()
     }
@@ -439,6 +453,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "1921-04-03", nomis = "1921-03-03", id = DPS_COURT_CHARGE_ID)))
     }
@@ -466,6 +481,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.sentences", dps = 1, nomis = 2)))
     }
@@ -511,6 +527,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -570,6 +587,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(
         listOf(
@@ -581,6 +599,43 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
         ),
       )
+    }
+
+    @Test
+    fun `will detect invalid eventId on court order when processing nomis sentence`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse(eventId = 123),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse(),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      service.checkCase(
+        nomisCaseId = NOMIS_COURT_CASE_ID,
+        dpsCaseId = DPS_COURT_CASE_ID,
+        offenderNo = OFFENDER_NO,
+      ).also {
+        verify(telemetryClient).trackEvent(
+          eq("court-case-prisoner-reconciliation-error"),
+          check {
+            assertThat(it["dpsCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
+            assertThat(it["nomisCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+          },
+          isNull(),
+        )
+      }
     }
 
     @Test
@@ -609,6 +664,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -656,6 +712,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -702,6 +759,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         ),
       ).isNull()
     }
@@ -741,6 +799,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.sentences[0].terms", dps = 2, nomis = 3)))
     }
@@ -784,6 +843,7 @@ internal class CourtSentencingReconciliationServiceTest {
         service.checkCase(
           nomisCaseId = NOMIS_COURT_CASE_ID,
           dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(
         listOf(
