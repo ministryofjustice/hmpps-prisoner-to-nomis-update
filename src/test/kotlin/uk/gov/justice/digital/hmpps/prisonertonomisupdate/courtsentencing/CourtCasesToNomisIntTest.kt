@@ -1605,7 +1605,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not update an court case in NOMIS`() {
-        waitForAnyProcessingToComplete(3)
+        // 1 telemetry for move to DLQ
+        waitForAnyProcessingToComplete(4)
 
         courtSentencingNomisApi.verify(
           0,
@@ -2479,7 +2480,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will create failed telemetry`() {
-        waitForAnyProcessingToComplete(3)
+        // 1 telemetry for move to DLQ
+        waitForAnyProcessingToComplete(4)
 
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(

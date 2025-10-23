@@ -311,7 +311,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
     fun `will send message to the DLQ when mapping API fails`() {
       MappingExtension.mappingServer.stubGetScheduledInstanceMappingWithError(SCHEDULE_INSTANCE_ID, 404)
 
-      awsSnsClient.publishAttendanceDeleted()
+      awsSnsClient.publishAttendanceDeleted(waitForTelemetry = "activity-attendance-delete-failed")
 
       await untilAsserted {
         assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
@@ -336,7 +336,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       MappingExtension.mappingServer.stubGetScheduleInstanceMapping(SCHEDULE_INSTANCE_ID, buildGetScheduleMappingResponse())
       NomisApiExtension.nomisApi.stubDeleteAttendanceWithError(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, 500)
 
-      awsSnsClient.publishAttendanceDeleted()
+      awsSnsClient.publishAttendanceDeleted(waitForTelemetry = "activity-attendance-delete-failed")
 
       await untilAsserted {
         assertThat(awsSqsActivityDlqClient.countMessagesOnQueue(activityDlqUrl).get()).isEqualTo(1)
@@ -361,7 +361,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       MappingExtension.mappingServer.stubGetScheduleInstanceMapping(SCHEDULE_INSTANCE_ID, buildGetScheduleMappingResponse())
       NomisApiExtension.nomisApi.stubDeleteAttendanceWithError(NOMIS_CRS_SCH_ID, NOMIS_BOOKING_ID, 404)
 
-      awsSnsClient.publishAttendanceDeleted()
+      awsSnsClient.publishAttendanceDeleted(waitForTelemetry = "activity-attendance-delete-ignored")
 
       verify(telemetryClient).trackEvent(
         eq("activity-attendance-delete-ignored"),
@@ -378,7 +378,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
       )
     }
 
-    private fun SnsAsyncClient.publishAttendanceDeleted() = publish(
+    private fun SnsAsyncClient.publishAttendanceDeleted(waitForTelemetry: String = "activity-attendance-delete-success") = publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(attendanceDeletedMessagePayload("activities.prisoner.attendance-deleted", SCHEDULE_INSTANCE_ID, NOMIS_BOOKING_ID))
         .messageAttributes(
@@ -389,7 +389,7 @@ class AttendancesIntTest : SqsIntegrationTestBase() {
         ).build(),
     ).get()
       .also {
-        waitForAnyProcessingToComplete()
+        waitForAnyProcessingToComplete(waitForTelemetry)
       }
   }
 }

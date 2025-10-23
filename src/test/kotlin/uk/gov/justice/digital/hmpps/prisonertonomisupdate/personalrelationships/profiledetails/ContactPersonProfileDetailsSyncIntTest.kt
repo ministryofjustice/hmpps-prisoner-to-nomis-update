@@ -669,7 +669,7 @@ class ContactPersonProfileDetailsSyncIntTest(
       publishDomainEvent(
         eventType = "prisoner-offender-search.prisoner.received",
         payload = readmissionSwitchedBookingEvent(prisonerNumber = "A1234BC"),
-      ).also { waitForAnyProcessingToComplete() }
+      ).also { waitForDlqMessage() }
 
       verifyDpsApiCall(profileType = MARITAL)
       verifyDpsApiCall(count = 0, profileType = CHILD)
