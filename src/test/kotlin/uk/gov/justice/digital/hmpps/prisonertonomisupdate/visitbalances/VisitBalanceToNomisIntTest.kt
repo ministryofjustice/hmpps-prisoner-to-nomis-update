@@ -184,7 +184,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-adjustment-created-success"), any(), isNull())
       }
 
       @Test
@@ -214,7 +214,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-adjustment-created-success"), any(), isNull())
       }
 
       @Test
@@ -367,7 +367,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-booking-moved-from-success"), any(), isNull())
       }
 
       @Test
@@ -397,7 +397,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-booking-moved-from-success"), any(), isNull())
       }
 
       @Test
@@ -510,7 +510,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-balance-reset-success"), any(), isNull())
       }
 
       @Test
@@ -540,7 +540,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will not create telemetry tracking`() {
-        verify(telemetryClient, never()).trackEvent(any(), any(), isNull())
+        verify(telemetryClient, never()).trackEvent(eq("visitbalance-synchronisation-balance-reset-success"), any(), isNull())
       }
 
       @Test

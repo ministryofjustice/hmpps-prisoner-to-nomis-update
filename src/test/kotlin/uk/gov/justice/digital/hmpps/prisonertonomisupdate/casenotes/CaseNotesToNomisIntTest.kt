@@ -599,7 +599,8 @@ class CaseNotesToNomisIntTest : SqsIntegrationTestBase() {
               status = 500,
             )
             publishUpdateCaseNoteDomainEvent(caseNoteUuid = DPS_CASE_NOTE_ID, offenderNo = OFFENDER_NO)
-            waitForAnyProcessingToComplete(3)
+            // 1 telemetry for moving message to DLQ
+            waitForAnyProcessingToComplete(4)
           }
 
           @Test
