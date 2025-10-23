@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-07.690.f2aa846"
+    "version" : "2025-10-22.730.91c51a6"
   },
   "servers" : [ {
     "url" : "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk",
@@ -507,6 +507,68 @@
           }
         }
       }
+    },
+    "/admin/prison/{prisonCode}/reset/count" : {
+      "get" : {
+        "tags" : [ "admin-controller" ],
+        "summary" : "Endpoint to get the count of prisoners with a negative balance in a given prison.",
+        "description" : "Takes a prison id and returns the count of prisoners with a negative balance.\n\nRequires one of the following roles:\n* ROLE_VISIT_ALLOCATION_API__ADMIN",
+        "operationId" : "getPrisonNegativePrisonerBalanceCount",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prison code",
+            "example" : "HEI"
+          },
+          "example" : "HEI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Count returned.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonNegativeBalanceCountDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Incorrect permissions to get count.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoners not found for prison.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components" : {
@@ -690,6 +752,12 @@
             "description" : "nomsNumber of the prisoner",
             "example" : "AA123456"
           },
+          "voBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The total of available and accumulated VO balance - any negative VO balance",
+            "example" : 5
+          },
           "availableVos" : {
             "type" : "integer",
             "format" : "int32",
@@ -706,6 +774,12 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "The current negative VO balance, denoted as a positive value",
+            "example" : 5
+          },
+          "pvoBalance" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The total of available PVO balance - any negative VO balance",
             "example" : 5
           },
           "availablePvos" : {
@@ -726,14 +800,26 @@
             "description" : "The date VOs were last allocated to the prisoner",
             "example" : "2025-01-01"
           },
+          "nextVoAllocationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The next likely VO allocation date",
+            "example" : "2025-01-01"
+          },
           "lastPvoAllocatedDate" : {
             "type" : "string",
             "format" : "date",
             "description" : "The date PVOs were last allocated to the prisoner",
             "example" : "2025-01-01"
+          },
+          "nextPvoAllocationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The next likely PVO allocation date",
+            "example" : "2025-01-01"
           }
         },
-        "required" : [ "accumulatedVos", "availablePvos", "availableVos", "lastVoAllocatedDate", "negativePvos", "negativeVos", "prisonerId" ]
+        "required" : [ "accumulatedVos", "availablePvos", "availableVos", "lastVoAllocatedDate", "negativePvos", "negativeVos", "nextVoAllocationDate", "prisonerId", "pvoBalance", "voBalance" ]
       },
       "VisitAllocationPrisonerAdjustmentResponseDto" : {
         "type" : "object",
@@ -829,6 +915,23 @@
           }
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "PrisonNegativeBalanceCountDto" : {
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "code of the prison",
+            "example" : "HEI"
+          },
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The count of all prisoners with a negative balance for given prison",
+            "example" : 5
+          }
+        },
+        "required" : [ "count", "prisonCode" ]
       }
     },
     "securitySchemes" : {
