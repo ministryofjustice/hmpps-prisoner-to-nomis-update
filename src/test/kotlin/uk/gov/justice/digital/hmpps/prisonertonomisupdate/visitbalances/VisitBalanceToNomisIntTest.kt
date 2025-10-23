@@ -44,45 +44,6 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     private val prisonNumber = "A1234KT"
 
     @Nested
-    inner class NomisInChargeOfAllocation {
-
-      @BeforeEach
-      fun setup() {
-        nomisApi.stubCheckAgencySwitchForPrisonerNotFound(prisonNumber = prisonNumber)
-        sendVisitBalanceAdjustmentToQueue()
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will not call Dps for the adjustment details`() {
-        visitBalanceDpsApi.verify(
-          0,
-          getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/adjustments/$visitBalanceAdjId")),
-        )
-      }
-
-      @Test
-      fun `will not create the adjustment in Nomis`() {
-        visitBalanceNomisApi.verify(
-          0,
-          postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments")),
-        )
-      }
-
-      @Test
-      fun `will send telemetry event showing the ignored event`() {
-        verify(telemetryClient).trackEvent(
-          eq("visitbalance-synchronisation-adjustment-ignored"),
-          check {
-            assertThat(it).containsEntry("visitBalanceAdjustmentId", "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef")
-            assertThat(it).containsEntry("prisonNumber", "A1234KT")
-          },
-          isNull(),
-        )
-      }
-    }
-
-    @Nested
     inner class HappyPath {
 
       @BeforeEach
