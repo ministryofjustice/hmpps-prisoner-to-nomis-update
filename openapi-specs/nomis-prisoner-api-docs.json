@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-17.668.e38b497"
+    "version" : "2025-10-23.670.20b43c4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -32039,29 +32039,9 @@
             "type" : "string",
             "description" : "To address description"
           },
-          "toAddressHouse" : {
+          "toFullAddress" : {
             "type" : "string",
-            "description" : "To address house"
-          },
-          "toAddressStreet" : {
-            "type" : "string",
-            "description" : "To address street"
-          },
-          "toAddressLocality" : {
-            "type" : "string",
-            "description" : "To address locality"
-          },
-          "toAddressCity" : {
-            "type" : "string",
-            "description" : "To address city"
-          },
-          "toAddressCounty" : {
-            "type" : "string",
-            "description" : "To address county"
-          },
-          "toAddressCountry" : {
-            "type" : "string",
-            "description" : "To address country"
+            "description" : "Full to address"
           },
           "toAddressPostcode" : {
             "type" : "string",
@@ -32150,29 +32130,9 @@
             "type" : "string",
             "description" : "From address description"
           },
-          "fromAddressHouse" : {
+          "fromFullAddress" : {
             "type" : "string",
-            "description" : "From address house"
-          },
-          "fromAddressStreet" : {
-            "type" : "string",
-            "description" : "From address street"
-          },
-          "fromAddressLocality" : {
-            "type" : "string",
-            "description" : "From address locality"
-          },
-          "fromAddressCity" : {
-            "type" : "string",
-            "description" : "From address city"
-          },
-          "fromAddressCounty" : {
-            "type" : "string",
-            "description" : "From address county"
-          },
-          "fromAddressCountry" : {
-            "type" : "string",
-            "description" : "From address country"
+            "description" : "From full address"
           },
           "fromAddressPostcode" : {
             "type" : "string",
@@ -32260,6 +32220,18 @@
           "toAddressOwnerClass" : {
             "type" : "string",
             "description" : "To address owner class"
+          },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "From address description"
+          },
+          "toFullAddress" : {
+            "type" : "string",
+            "description" : "From full address"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "From address postcode"
           },
           "applicationDate" : {
             "type" : "string",
