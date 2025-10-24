@@ -105,3 +105,16 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_dlq"
+
+  # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
+  # The type must exist in enum BatchType
+  # Can be removed once testing in dev complete
+  batchjobs:
+    - name: prison-bal-recon
+      type: PRISON_BALANCE_RECON
+      schedule: "30 2 * * *"
+      suspend: true
+    - name: prisoner-bal-recon
+      type: PRISONER_BALANCE_RECON
+      schedule: "30 3 * * *"
+      suspend: true

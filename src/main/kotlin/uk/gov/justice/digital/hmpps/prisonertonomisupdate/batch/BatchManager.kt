@@ -35,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
@@ -42,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
@@ -76,13 +78,14 @@ enum class BatchType {
   NON_ASSOCIATIONS_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
+  PRISON_BALANCE_RECON,
+  PRISONER_BALANCE_RECON,
   PRISONER_CONTACT_RECON,
   PRISONER_RESTRICTION_RECON,
   PURGE_ACTIVITY_DLQ,
   SENTENCING_RECON,
   SUSPENDED_ALLOCATION_RECON,
   VISIT_BALANCE_RECON,
-  PRISONER_BALANCE_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -105,11 +108,12 @@ class BatchManager(
   private val locationsReconciliationService: LocationsReconciliationService,
   private val nonAssociationsReconciliationService: NonAssociationsReconciliationService,
   private val organisationReconciliationService: OrganisationsReconciliationService,
+  private val prisonBalanceReconciliationService: PrisonBalanceReconciliationService,
+  private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
   private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   private val schedulesService: SchedulesService,
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
-  private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
 ) {
 
   @EventListener
@@ -136,6 +140,7 @@ class BatchManager(
       NON_ASSOCIATIONS_RECON -> nonAssociationsReconciliationService.generateReconciliationReport()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
+      PRISON_BALANCE_RECON -> prisonBalanceReconciliationService.generateReconciliationReport()
       PRISONER_BALANCE_RECON -> prisonerBalanceReconciliationService.generatePrisonerBalanceReconciliationReportBatch()
       PRISONER_CONTACT_RECON -> contactPersonReconciliationService.generatePrisonerContactReconciliationReportBatch()
       PRISONER_RESTRICTION_RECON -> prisonerRestrictionsReconciliationService.generatePrisonerRestrictionsReconciliationReportBatch()
