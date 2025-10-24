@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-16.212.fb3a526"
+    "version" : "2025-10-23.215.3b1253f"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18117,15 +18117,28 @@
           "nomisMovementSeq" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The NOMIS external movement id"
+            "description" : "The NOMIS movement sequence"
           },
-          "dpsExternalMovementId" : {
+          "dpsMovementId" : {
             "type" : "string",
             "format" : "uuid",
-            "description" : "The DPS external movement id"
+            "description" : "The DPS movement id"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
           }
         },
-        "required" : [ "dpsExternalMovementId", "nomisMovementSeq" ]
+        "required" : [ "dpsAddressText", "dpsMovementId", "nomisMovementSeq" ]
       },
       "ScheduledMovementMappingDto" : {
         "type" : "object",
@@ -18136,13 +18149,32 @@
             "format" : "int64",
             "description" : "The NOMIS scheduled movement id"
           },
-          "dpsScheduledMovementId" : {
+          "dpsOccurrenceId" : {
             "type" : "string",
             "format" : "uuid",
             "description" : "The DPS scheduled movement id"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "description" : "The DPS address",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsScheduledMovementId", "nomisEventId" ]
+        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId" ]
       },
       "TemporaryAbsenceApplicationMappingDto" : {
         "type" : "object",
@@ -19190,7 +19222,7 @@
             "format" : "int64",
             "description" : "The NOMIS event id"
           },
-          "dpsScheduledMovementId" : {
+          "dpsOccurrenceId" : {
             "type" : "string",
             "format" : "uuid",
             "description" : "The DPS scheduled movement id"
@@ -19200,18 +19232,37 @@
             "description" : "The source of the mapping",
             "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
             "example" : "NOMIS_CREATED"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "description" : "The DPS address",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "bookingId", "dpsScheduledMovementId", "mappingType", "nomisEventId", "prisonerNumber" ]
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "mappingType", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "prisonerNumber" ]
       },
       "TemporaryAbsenceScheduleMapping" : {
         "type" : "object",
         "properties" : {
-          "dpsScheduleId" : {
+          "dpsOccurrenceId" : {
             "type" : "string",
             "format" : "uuid"
           },
-          "nomisScheduleId" : {
+          "nomisEventId" : {
             "type" : "integer",
             "format" : "int64"
           },
@@ -19221,6 +19272,21 @@
           "bookingId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string"
+          },
+          "dpsAddressText" : {
+            "type" : "string"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
           "label" : {
             "type" : "string"
@@ -19237,6 +19303,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
+          "whenUpdated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
           "id" : {
             "type" : "string",
             "format" : "uuid"
@@ -19245,7 +19316,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "bookingId", "dpsScheduleId", "id", "isNew", "mappingType", "new", "nomisScheduleId", "offenderNo" ]
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "id", "isNew", "mappingType", "new", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "offenderNo" ]
       },
       "TemporaryAbsenceOutsideMovementSyncMappingDto" : {
         "type" : "object",
@@ -19344,7 +19415,7 @@
             "format" : "int32",
             "description" : "The NOMIS movement sequence number"
           },
-          "dpsExternalMovementId" : {
+          "dpsMovementId" : {
             "type" : "string",
             "format" : "uuid",
             "description" : "The DPS external movement id"
@@ -19354,9 +19425,22 @@
             "description" : "The source of the mapping",
             "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
             "example" : "NOMIS_CREATED"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
           }
         },
-        "required" : [ "bookingId", "dpsExternalMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
+        "required" : [ "bookingId", "dpsAddressText", "dpsMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
       },
       "TemporaryAbsenceMovementMapping" : {
         "type" : "object",
@@ -19376,6 +19460,16 @@
           "offenderNo" : {
             "type" : "string"
           },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string"
+          },
+          "dpsAddressText" : {
+            "type" : "string"
+          },
           "label" : {
             "type" : "string"
           },
@@ -19391,6 +19485,11 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
+          "whenUpdated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
           "id" : {
             "type" : "string",
             "format" : "uuid"
@@ -19399,7 +19498,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "dpsMovementId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisMovementSeq", "offenderNo" ]
+        "required" : [ "dpsAddressText", "dpsMovementId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisMovementSeq", "offenderNo" ]
       },
       "TemporaryAbsenceApplicationSyncMappingDto" : {
         "type" : "object",
@@ -21510,14 +21609,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21685,14 +21784,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21810,14 +21909,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21920,14 +22019,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22026,14 +22125,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22072,14 +22171,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22118,14 +22217,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22192,14 +22291,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22260,14 +22359,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
