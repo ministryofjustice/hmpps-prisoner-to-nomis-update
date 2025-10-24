@@ -58,7 +58,6 @@ generic-service:
     - name: prison-bal-recon
       type: PRISON_BALANCE_RECON
       schedule: "30 2 * * *"
-      suspend: true
     - name: prisoner-bal-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
