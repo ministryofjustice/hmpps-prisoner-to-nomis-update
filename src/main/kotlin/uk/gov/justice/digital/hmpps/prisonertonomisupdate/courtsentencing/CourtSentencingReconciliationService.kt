@@ -340,7 +340,8 @@ class CourtSentencingReconciliationService(
         }
         // All sentences in prod with a case_id have a court order, all orders have an event id, all appearances have an event date
         SentenceFields(
-          sentencingAppearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime!!.toLocalDate(),
+          sentencingAppearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime?.toLocalDate()
+            ?: LocalDate.MIN,
           sentenceCategory = sentenceResponse.category.code,
           sentenceCalcType = sentenceResponse.calculationType.code,
           fine = sentenceResponse.fineAmount?.stripTrailingZeros(),

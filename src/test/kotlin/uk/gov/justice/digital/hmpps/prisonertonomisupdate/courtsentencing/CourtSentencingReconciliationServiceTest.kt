@@ -9,11 +9,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.mockito.kotlin.check
-import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
-import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
@@ -372,7 +369,10 @@ internal class CourtSentencingReconciliationServiceTest {
           appearances = listOf(
             dpsAppearanceResponse().copy(
               charges = listOf(
-                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(2021, 3, 3), chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID)),
+                dpsChargeResponse().copy(
+                  offenceStartDate = LocalDate.of(2021, 3, 3),
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID),
+                ),
               ),
             ),
           ),
@@ -443,7 +443,10 @@ internal class CourtSentencingReconciliationServiceTest {
           appearances = listOf(
             dpsAppearanceResponse().copy(
               charges = listOf(
-                dpsChargeResponse().copy(offenceStartDate = LocalDate.of(1921, 4, 3), chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID)),
+                dpsChargeResponse().copy(
+                  offenceStartDate = LocalDate.of(1921, 4, 3),
+                  chargeUuid = UUID.fromString(DPS_COURT_CHARGE_ID),
+                ),
               ),
             ),
           ),
@@ -455,7 +458,16 @@ internal class CourtSentencingReconciliationServiceTest {
           dpsCaseId = DPS_COURT_CASE_ID,
           offenderNo = OFFENDER_NO,
         )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.appearances[0].charges[0].offenceDate", dps = "1921-04-03", nomis = "1921-03-03", id = DPS_COURT_CHARGE_ID)))
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.appearances[0].charges[0].offenceDate",
+            dps = "1921-04-03",
+            nomis = "1921-03-03",
+            id = DPS_COURT_CHARGE_ID,
+          ),
+        ),
+      )
     }
 
     @Test
@@ -467,7 +479,10 @@ internal class CourtSentencingReconciliationServiceTest {
               courtEventCharges = listOf(nomisChargeResponse(), nomisChargeResponse()),
             ),
           ),
-          sentences = listOf(nomisSentenceResponse(), nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID)))),
+          sentences = listOf(
+            nomisSentenceResponse(),
+            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
+          ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
           appearances = listOf(
@@ -515,9 +530,28 @@ internal class CourtSentencingReconciliationServiceTest {
             dpsAppearanceResponse().copy(
               // will create 3 sentences with the same id (the same sentence)
               charges = listOf(
-                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID))),
-                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID)), offenceCode = OFFENCE_CODE_2),
-                dpsChargeResponse(sentenceResponse = dpsSentenceResponse().copy(sentenceUuid = UUID.fromString(DPS_SENTENCE_ID))),
+                dpsChargeResponse(
+                  sentenceResponse = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(
+                      DPS_SENTENCE_ID,
+                    ),
+                  ),
+                ),
+                dpsChargeResponse(
+                  sentenceResponse = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(
+                      DPS_SENTENCE_ID,
+                    ),
+                  ),
+                  offenceCode = OFFENCE_CODE_2,
+                ),
+                dpsChargeResponse(
+                  sentenceResponse = dpsSentenceResponse().copy(
+                    sentenceUuid = UUID.fromString(
+                      DPS_SENTENCE_ID,
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -548,10 +582,31 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
           sentences = listOf(
             nomisSentenceResponse(),
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_2, offenderChargeId = NOMIS_COURT_CHARGE_2_ID))),
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_2,
+                  offenderChargeId = NOMIS_COURT_CHARGE_2_ID,
+                ),
+              ),
+            ),
             // will reorder on offence code when comparing
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_4, offenderChargeId = NOMIS_COURT_CHARGE_3_ID))),
-            nomisSentenceResponse(charges = listOf(nomisOffenderChargeResponse(offenceCode = OFFENCE_CODE_3, offenderChargeId = NOMIS_COURT_CHARGE_4_ID))),
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_4,
+                  offenderChargeId = NOMIS_COURT_CHARGE_3_ID,
+                ),
+              ),
+            ),
+            nomisSentenceResponse(
+              charges = listOf(
+                nomisOffenderChargeResponse(
+                  offenceCode = OFFENCE_CODE_3,
+                  offenderChargeId = NOMIS_COURT_CHARGE_4_ID,
+                ),
+              ),
+            ),
           ),
         ),
         dpsCase = dpsCourtCaseResponse().copy(
@@ -614,28 +669,29 @@ internal class CourtSentencingReconciliationServiceTest {
             dpsAppearanceResponse().copy(
               charges = listOf(
                 dpsChargeResponse().copy(
-                  sentence = dpsSentenceResponse(),
+                  sentence = null,
                 ),
               ),
             ),
           ),
         ),
       )
-      service.checkCase(
-        nomisCaseId = NOMIS_COURT_CASE_ID,
-        dpsCaseId = DPS_COURT_CASE_ID,
-        offenderNo = OFFENDER_NO,
-      ).also {
-        verify(telemetryClient).trackEvent(
-          eq("court-case-prisoner-reconciliation-error"),
-          check {
-            assertThat(it["dpsCaseId"]).isEqualTo(DPS_COURT_CASE_ID)
-            assertThat(it["nomisCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID.toString())
-            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-          },
-          isNull(),
-        )
-      }
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isEqualTo(
+        listOf(
+          Difference(
+            property = "case.sentences",
+            dps = 0,
+            nomis = 1,
+            id = null,
+          ),
+        ),
+      )
     }
 
     @Test
