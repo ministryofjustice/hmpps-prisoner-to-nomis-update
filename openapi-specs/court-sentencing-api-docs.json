@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-23.707.dfe1382"
+    "version" : "2025-10-27.712.a51a34f"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2375,9 +2375,9 @@
     "/sentence/{sentenceUuid}" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
-        "summary" : "Retrieve sentence details",
-        "description" : "This endpoint will retrieve sentence details",
-        "operationId" : "getSentenceDetails",
+        "summary" : "Retrieve sentence information",
+        "description" : "This endpoint will retrieve sentence information",
+        "operationId" : "getSentence",
         "parameters" : [ {
           "name" : "sentenceUuid",
           "in" : "path",
@@ -2389,7 +2389,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Returns sentence details",
+            "description" : "Returns sentence information",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2424,6 +2424,33 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Sentence"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence/{sentenceUuid}/details" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "operationId" : "getSentenceDetails",
+        "parameters" : [ {
+          "name" : "sentenceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceDetails"
                 }
               }
             }
@@ -4847,7 +4874,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5109,7 +5136,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "courtCode" : {
             "type" : "string"
@@ -6561,6 +6588,127 @@
         },
         "required" : [ "classification", "description", "displayOrder", "sentenceTypeUuid" ]
       },
+      "ChargeOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          },
+          "nomisCode" : {
+            "type" : "string"
+          },
+          "outcomeType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "dispositionCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid" ]
+      },
+      "MergedFromCase" : {
+        "type" : "object",
+        "properties" : {
+          "caseReference" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "warrantDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "mergedFromDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "courtCode", "warrantDate" ]
+      },
+      "SentenceDetails" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeNumber" : {
+            "type" : "string"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PeriodLength"
+            }
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          },
+          "sentenceType" : {
+            "$ref" : "#/components/schemas/SentenceType"
+          },
+          "convictionDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "fineAmount" : {
+            "$ref" : "#/components/schemas/FineAmount"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/SentenceLegacyData"
+          },
+          "consecutiveToSentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "hasRecall" : {
+            "type" : "boolean"
+          },
+          "charge" : {
+            "$ref" : "#/components/schemas/SentenceDetailsCharge"
+          }
+        },
+        "required" : [ "charge", "hasRecall", "periodLengths", "sentenceServeType", "sentenceUuid" ]
+      },
+      "SentenceDetailsCharge" : {
+        "type" : "object",
+        "properties" : {
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "offenceEndDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "outcome" : {
+            "$ref" : "#/components/schemas/ChargeOutcome"
+          },
+          "legacyData" : {
+            "$ref" : "#/components/schemas/ChargeLegacyData"
+          },
+          "mergedFromCase" : {
+            "$ref" : "#/components/schemas/MergedFromCase"
+          }
+        },
+        "required" : [ "chargeUuid", "offenceCode" ]
+      },
       "CourtAppearanceAfterSentence" : {
         "type" : "object",
         "properties" : {
@@ -6892,32 +7040,6 @@
         },
         "required" : [ "chargeUuid", "offenceCode" ]
       },
-      "ChargeOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string"
-          },
-          "nomisCode" : {
-            "type" : "string"
-          },
-          "outcomeType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "dispositionCode" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid" ]
-      },
       "CourtAppearance" : {
         "type" : "object",
         "properties" : {
@@ -7046,26 +7168,6 @@
         },
         "required" : [ "courtCases" ]
       },
-      "MergedFromCase" : {
-        "type" : "object",
-        "properties" : {
-          "caseReference" : {
-            "type" : "string"
-          },
-          "courtCode" : {
-            "type" : "string"
-          },
-          "warrantDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "mergedFromDate" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        },
-        "required" : [ "courtCode", "warrantDate" ]
-      },
       "MergedToCaseDetails" : {
         "type" : "object",
         "properties" : {
@@ -7094,7 +7196,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "courtCode" : {
             "type" : "string"
@@ -7713,7 +7815,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -7773,7 +7875,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "courtId" : {
             "type" : "string"
@@ -7913,7 +8015,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "charges" : {
             "type" : "array",
@@ -7940,7 +8042,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "courtId" : {
             "type" : "string"
@@ -8486,7 +8588,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:22.328114656"
+            "example" : "03:51:38.460165235"
           },
           "courtCode" : {
             "type" : "string"
