@@ -172,6 +172,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
                       answers = listOf(),
                       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
                       createdBy = "JSMITH",
+                      hasMultipleAnswers = false,
                     ),
                   ),
                   requirements = listOf(),
@@ -200,6 +201,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
                       answers = listOf(),
                       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
                       createdBy = "JSMITH",
+                      hasMultipleAnswers = false,
                     ),
                     Question(
                       questionId = 12345,
@@ -208,6 +210,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
                       answers = listOf(),
                       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
                       createdBy = "JSMITH",
+                      hasMultipleAnswers = false,
                     ),
 
                   ),
@@ -371,6 +374,7 @@ private fun incidentResponse(
       ),
       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
       createdBy = "JSMITH",
+      hasMultipleAnswers = false,
     ),
     Question(
       questionId = 12345,
@@ -407,11 +411,11 @@ private fun incidentResponse(
           answer = "Bob",
           responseDate = null,
           comment = "some additional comment",
-
         ),
       ),
       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
       createdBy = "JSMITH",
+      hasMultipleAnswers = true,
     ),
   ),
   history = listOf(
