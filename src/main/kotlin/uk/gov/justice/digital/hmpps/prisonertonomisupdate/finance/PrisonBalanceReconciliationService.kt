@@ -7,6 +7,7 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetails
@@ -22,6 +23,8 @@ class PrisonBalanceReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsApiService: FinanceDpsApiService,
   private val nomisApiService: FinanceNomisApiService,
+  @Value("\${reports.prisonbalance.reconciliation.page-size:20}")
+  private val pageSize: Long = 20,
 ) {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -53,9 +56,11 @@ class PrisonBalanceReconciliationService(
       }
   }
 
-  suspend fun generateReconciliationReport(prisonIds: List<String>): List<MismatchPrisonBalance> = withContext(Dispatchers.Unconfined) {
-    prisonIds.map { async { checkPrisonBalanceMatch(it) } }
-  }.awaitAll().filterNotNull()
+  suspend fun generateReconciliationReport(prisonIds: List<String>): List<MismatchPrisonBalance> = prisonIds.chunked(pageSize.toInt()).flatMap { pagedPrisonIds ->
+    withContext(Dispatchers.Unconfined) {
+      pagedPrisonIds.map { async { checkPrisonBalanceMatch(it) } }
+    }.awaitAll().filterNotNull()
+  }
 
   suspend fun checkPrisonBalanceMatch(prisonId: String): MismatchPrisonBalance? = runCatching {
     val nomisPrisonBalances =
