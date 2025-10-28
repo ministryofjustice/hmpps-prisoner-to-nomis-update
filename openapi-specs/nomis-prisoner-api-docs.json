@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-24.677.0d9c859"
+    "version" : "2025-10-27.683.a16b6a5"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13069,6 +13069,70 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}/time-slot-sequence/{timeSlotSequence}" : {
+      "get" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Get visit time slot",
+        "description" : "Retrieves visit time slot along with visit slots. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getVisitTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
+          }
+        }, {
+          "name" : "timeSlotSequence",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Time slot with visits slots",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitTimeSlotResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Visit time slot not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -28523,15 +28587,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -28560,6 +28624,93 @@
           }
         },
         "required" : [ "visitId" ]
+      },
+      "VisitInternalLocationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id" ]
+      },
+      "VisitSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "internalLocation" : {
+            "$ref" : "#/components/schemas/VisitInternalLocationResponse",
+            "description" : "Room location of  visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max groups allowed in slot",
+            "example" : 1
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max adults allowed in slot",
+            "example" : 1
+          }
+        },
+        "required" : [ "internalLocation" ]
+      },
+      "VisitTimeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "description" : "Day of the week time slot is for",
+            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
+            "example" : "MONDAY"
+          },
+          "timeSlotSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The time slot sequence",
+            "example" : 1
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Slot start time",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "Slot end time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can first be used",
+            "example" : "2022-09-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can no longer be used",
+            "example" : "2032-09-01"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of slots at this time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitSlotResponse"
+            }
+          }
+        },
+        "required" : [ "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
       },
       "PageVisitTimeSlotIdResponse" : {
         "type" : "object",
@@ -28623,7 +28774,7 @@
           },
           "timeSlotSequence" : {
             "type" : "integer",
-            "format" : "int64",
+            "format" : "int32",
             "description" : "The time slot sequence",
             "example" : 1
           }
