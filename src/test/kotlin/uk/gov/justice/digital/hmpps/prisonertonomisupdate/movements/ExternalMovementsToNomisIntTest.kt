@@ -648,11 +648,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement"))
-              .withRequestBodyJsonPath("dpsScheduledMovementId", "$dpsScheduledMovementId")
+              .withRequestBodyJsonPath("dpsOccurrenceId", "$dpsScheduledMovementId")
               .withRequestBodyJsonPath("nomisEventId", "$nomisEventId")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "12345")
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            // TODO check address mappings
           )
         }
       }
@@ -723,15 +724,25 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
                   nomisEventId = nomisEventId,
-                  dpsScheduledMovementId = dpsScheduledMovementId,
+                  dpsOccurrenceId = dpsScheduledMovementId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
+                  eventTime = "",
                 ),
                 duplicate = ScheduledMovementSyncMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
                   nomisEventId = nomisEventId + 1,
-                  dpsScheduledMovementId = dpsScheduledMovementId,
+                  dpsOccurrenceId = dpsScheduledMovementId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
+                  eventTime = "",
                 ),
               ),
               errorCode = 1409,
@@ -916,11 +927,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement"))
-              .withRequestBodyJsonPath("dpsScheduledMovementId", "$dpsScheduledMovementInId")
+              .withRequestBodyJsonPath("dpsOccurrenceId", "$dpsScheduledMovementInId")
               .withRequestBodyJsonPath("nomisEventId", "$nomisInEventId")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "12345")
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            // TODO check address mappings
           )
         }
       }
@@ -993,15 +1005,25 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
                   nomisEventId = nomisInEventId,
-                  dpsScheduledMovementId = dpsScheduledMovementInId,
+                  dpsOccurrenceId = dpsScheduledMovementInId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
+                  eventTime = "",
                 ),
                 duplicate = ScheduledMovementSyncMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
                   nomisEventId = nomisInEventId + 1,
-                  dpsScheduledMovementId = dpsScheduledMovementInId,
+                  dpsOccurrenceId = dpsScheduledMovementInId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
+                  eventTime = "",
                 ),
               ),
               errorCode = 1409,
@@ -1218,11 +1240,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/external-movement"))
-              .withRequestBodyJsonPath("dpsExternalMovementId", "$dpsExternalMovementId")
+              .withRequestBodyJsonPath("dpsMovementId", "$dpsExternalMovementId")
               .withRequestBodyJsonPath("nomisMovementSeq", "$nomisMovementSeq")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "$nomisBookingId")
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            // TODO check address mappings
           )
         }
       }
@@ -1295,15 +1318,23 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   prisonerNumber = "A1234BC",
                   bookingId = nomisBookingId,
                   nomisMovementSeq = nomisMovementSeq,
-                  dpsExternalMovementId = dpsExternalMovementId,
+                  dpsMovementId = dpsExternalMovementId,
                   mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
                 ),
                 duplicate = ExternalMovementSyncMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = nomisBookingId,
                   nomisMovementSeq = nomisMovementSeq + 1,
-                  dpsExternalMovementId = dpsExternalMovementId,
+                  dpsMovementId = dpsExternalMovementId,
                   mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
                 ),
               ),
               errorCode = 1409,
@@ -1471,11 +1502,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create a mapping between the NOMIS and DPS ids`() {
         mappingApi.verify(
           postRequestedFor(urlEqualTo("/mapping/temporary-absence/external-movement"))
-            .withRequestBodyJsonPath("dpsExternalMovementId", "$dpsExternalMovementId")
+            .withRequestBodyJsonPath("dpsMovementId", "$dpsExternalMovementId")
             .withRequestBodyJsonPath("nomisMovementSeq", "$nomisMovementSeq")
             .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
             .withRequestBodyJsonPath("bookingId", "$nomisBookingId")
             .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          // TODO check address mappings
         )
       }
     }
@@ -1606,11 +1638,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/external-movement"))
-              .withRequestBodyJsonPath("dpsExternalMovementId", "$dpsExternalMovementId")
+              .withRequestBodyJsonPath("dpsMovementId", "$dpsExternalMovementId")
               .withRequestBodyJsonPath("nomisMovementSeq", "$nomisMovementSeq")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "$nomisBookingId")
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+            // TODO check address mappings
           )
         }
       }
@@ -1683,15 +1716,23 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   prisonerNumber = "A1234BC",
                   bookingId = nomisBookingId,
                   nomisMovementSeq = nomisMovementSeq,
-                  dpsExternalMovementId = dpsExternalMovementId,
+                  dpsMovementId = dpsExternalMovementId,
                   mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
                 ),
                 duplicate = ExternalMovementSyncMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = nomisBookingId,
                   nomisMovementSeq = nomisMovementSeq + 1,
-                  dpsExternalMovementId = dpsExternalMovementId,
+                  dpsMovementId = dpsExternalMovementId,
                   mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+                  // TODO add address mapping details
+                  nomisAddressId = 0,
+                  nomisAddressOwnerClass = "",
+                  dpsAddressText = "",
                 ),
               ),
               errorCode = 1409,
@@ -1858,11 +1899,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       fun `will create a mapping between the NOMIS and DPS ids`() {
         mappingApi.verify(
           postRequestedFor(urlEqualTo("/mapping/temporary-absence/external-movement"))
-            .withRequestBodyJsonPath("dpsExternalMovementId", "$dpsExternalMovementId")
+            .withRequestBodyJsonPath("dpsMovementId", "$dpsExternalMovementId")
             .withRequestBodyJsonPath("nomisMovementSeq", "$nomisMovementSeq")
             .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
             .withRequestBodyJsonPath("bookingId", "$nomisBookingId")
             .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          // TODO check address mappings
         )
       }
     }
