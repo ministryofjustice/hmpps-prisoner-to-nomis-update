@@ -15,8 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -62,7 +62,7 @@ class PrisonerBalanceReconciliationServiceTest {
 
   @Nested
   inner class CheckMatch {
-    private fun stubBalance(nomisBalance: PrisonerBalanceDto, dpsBalance: PrisonerSubAccountDetailsList) {
+    private fun stubBalance(nomisBalance: PrisonerBalanceDto, dpsBalance: PrisonerEstablishmentBalanceDetailsList) {
       financeNomisApi.stubGetPrisonerAccountDetails(OFFENDER_ID, nomisBalance)
       dpsApi.stubListPrisonerAccounts(OFFENDER_NO, dpsBalance)
     }
@@ -116,7 +116,7 @@ class PrisonerBalanceReconciliationServiceTest {
       val dps = dpsPrisonerAccountResponse()
       stubBalance(
         nomisPrisonerBalanceResponse(),
-        dps.copy(items = listOf(dps.items.first().copy(balance = BigDecimal("100")))),
+        dps.copy(items = listOf(dps.items.first().copy(totalBalance = BigDecimal("100")))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
@@ -168,7 +168,7 @@ class PrisonerBalanceReconciliationServiceTest {
       val dps = dpsPrisonerAccountResponse()
       stubBalance(
         nomisPrisonerBalanceResponse(),
-        dps.copy(items = listOf(dps.items.first().copy(code = 1234))),
+        dps.copy(items = listOf(dps.items.first().copy(accountCode = 1234))),
       )
       assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
         listOf(
@@ -225,7 +225,7 @@ fun nomisPrisonerBalanceResponse() = PrisonerBalanceDto(
   accounts = listOf(nomisAccount(1001)),
 )
 
-fun dpsPrisonerAccountResponse() = PrisonerSubAccountDetailsList(
+fun dpsPrisonerAccountResponse() = PrisonerEstablishmentBalanceDetailsList(
   items = listOf(dpsAccount(1001)),
 )
 
@@ -238,10 +238,9 @@ private fun nomisAccount(accountCode: Long = 1001): PrisonerAccountDto = Prisone
   holdBalance = BigDecimal.valueOf(0.3),
 )
 
-private fun dpsAccount(accountCode: Int = 1001): PrisonerSubAccountDetails = PrisonerSubAccountDetails(
-  code = accountCode,
-  name = "SPEND",
-  prisonNumber = OFFENDER_NO,
-  balance = BigDecimal.valueOf(1.5),
+private fun dpsAccount(accountCode: Int = 1001): PrisonerEstablishmentBalanceDetails = PrisonerEstablishmentBalanceDetails(
+  prisonId = "MDI",
+  accountCode = accountCode,
+  totalBalance = BigDecimal.valueOf(1.5),
   holdBalance = BigDecimal.valueOf(0.3),
 )

@@ -8,8 +8,8 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.NOMISSyncApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.PrisonerTrustAccountsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -35,8 +35,8 @@ class FinanceDpsApiService(
     .getGeneralLedgerTransactionById(id)
     .awaitSingle()
 
-  suspend fun listPrisonerAccounts(prisonerNo: String): PrisonerSubAccountDetailsList = prisonerApi
-    .listPrisonerAccounts(prisonerNo)
+  suspend fun getPrisonerAccounts(prisonNumber: String): PrisonerEstablishmentBalanceDetailsList = syncApi
+    .listPrisonerBalancesByEstablishment(prisonNumber)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
