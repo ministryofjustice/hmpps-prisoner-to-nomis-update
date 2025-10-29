@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-16.212.fb3a526"
+    "version" : "2025-10-27.219.dab75e5"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -134,6 +134,124 @@
         }
       }
     },
+    "/mapping/temporary-absence/scheduled-movement" : {
+      "put" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Updates a mapping for a single scheduled movement",
+        "description" : "Updates a mapping for a single scheduled movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updateScheduledMovementSyncMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled movement mapping updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceScheduleMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Creates a mapping for a single scheduled movement",
+        "description" : "Creates a mapping for a single scheduled movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createScheduledMovementSyncMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Scheduled movement mapping created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceScheduleMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/temporary-absence/migrate" : {
       "put" : {
         "tags" : [ "temporary-absence-resource" ],
@@ -167,6 +285,124 @@
           },
           "403" : {
             "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/external-movement" : {
+      "put" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Updates a mapping for a single temporary absence external movement",
+        "description" : "Updates a mapping for a single temporary absence external movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "updateExternalMovementSyncMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "External movement mapping updated",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceMovementMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Creates a mapping for a single temporary absence external movement",
+        "description" : "Creates a mapping for a single temporary absence external movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createExternalMovementSyncMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "External movement mapping created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceMovementMapping"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1719,66 +1955,6 @@
         }
       }
     },
-    "/mapping/temporary-absence/scheduled-movement" : {
-      "post" : {
-        "tags" : [ "temporary-absence-resource" ],
-        "summary" : "Creates a mapping for a single scheduled movement",
-        "description" : "Creates a mapping for a single scheduled movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createScheduledMovementSyncMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Scheduled movement mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TemporaryAbsenceScheduleMapping"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "The mapping already exists.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/temporary-absence/outside-movement" : {
       "post" : {
         "tags" : [ "temporary-absence-resource" ],
@@ -1802,66 +1978,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TemporaryAbsenceAppMultiMapping"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "The mapping already exists.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/temporary-absence/external-movement" : {
-      "post" : {
-        "tags" : [ "temporary-absence-resource" ],
-        "summary" : "Creates a mapping for a single temporary absence external movement",
-        "description" : "Creates a mapping for a single temporary absence external movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createExternalMovementSyncMapping",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "External movement mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TemporaryAbsenceMovementMapping"
                 }
               }
             }
@@ -18110,6 +18226,122 @@
         },
         "required" : [ "dpsTransactionId", "mappingType", "nomisBookingId", "nomisTransactionId", "offenderNo" ]
       },
+      "ScheduledMovementSyncMappingDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single scheduled movement",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS event id"
+          },
+          "dpsOccurrenceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS scheduled movement id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "description" : "The DPS address",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "mappingType", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "prisonerNumber" ]
+      },
+      "TemporaryAbsenceScheduleMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsOccurrenceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string"
+          },
+          "dpsAddressText" : {
+            "type" : "string"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "whenUpdated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "id", "isNew", "mappingType", "new", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "offenderNo" ]
+      },
       "ExternalMovementMappingDto" : {
         "type" : "object",
         "description" : "Mapping for a single external movement",
@@ -18117,15 +18349,28 @@
           "nomisMovementSeq" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The NOMIS external movement id"
+            "description" : "The NOMIS movement sequence"
           },
-          "dpsExternalMovementId" : {
+          "dpsMovementId" : {
             "type" : "string",
             "format" : "uuid",
-            "description" : "The DPS external movement id"
+            "description" : "The DPS movement id"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
           }
         },
-        "required" : [ "dpsExternalMovementId", "nomisMovementSeq" ]
+        "required" : [ "dpsAddressText", "dpsMovementId", "nomisMovementSeq" ]
       },
       "ScheduledMovementMappingDto" : {
         "type" : "object",
@@ -18136,13 +18381,32 @@
             "format" : "int64",
             "description" : "The NOMIS scheduled movement id"
           },
-          "dpsScheduledMovementId" : {
+          "dpsOccurrenceId" : {
             "type" : "string",
             "format" : "uuid",
             "description" : "The DPS scheduled movement id"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "description" : "The DPS address",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsScheduledMovementId", "nomisEventId" ]
+        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId" ]
       },
       "TemporaryAbsenceApplicationMappingDto" : {
         "type" : "object",
@@ -18254,6 +18518,111 @@
           }
         },
         "required" : [ "bookings", "migrationId", "prisonerNumber" ]
+      },
+      "ExternalMovementSyncMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single external movement",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence number"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS external movement id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string",
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          }
+        },
+        "required" : [ "bookingId", "dpsAddressText", "dpsMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
+      },
+      "TemporaryAbsenceMovementMapping" : {
+        "type" : "object",
+        "properties" : {
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "offenderNo" : {
+            "type" : "string"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : "string"
+          },
+          "dpsAddressText" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "whenUpdated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "dpsAddressText", "dpsMovementId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisMovementSeq", "offenderNo" ]
       },
       "AdjudicationPunishmentBatchUpdateMappingDto" : {
         "type" : "object",
@@ -19170,83 +19539,6 @@
         },
         "required" : [ "dpsId", "mappingType", "nomisVisitBalanceId" ]
       },
-      "ScheduledMovementSyncMappingDto" : {
-        "type" : "object",
-        "description" : "Mapping for a single scheduled movement",
-        "properties" : {
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The NOMIS offender number",
-            "example" : "A1234BC"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS ID of the booking",
-            "example" : 12345
-          },
-          "nomisEventId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS event id"
-          },
-          "dpsScheduledMovementId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS scheduled movement id"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "The source of the mapping",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
-            "example" : "NOMIS_CREATED"
-          }
-        },
-        "required" : [ "bookingId", "dpsScheduledMovementId", "mappingType", "nomisEventId", "prisonerNumber" ]
-      },
-      "TemporaryAbsenceScheduleMapping" : {
-        "type" : "object",
-        "properties" : {
-          "dpsScheduleId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "nomisScheduleId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "offenderNo" : {
-            "type" : "string"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
-          },
-          "new" : {
-            "type" : "boolean"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isNew" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "bookingId", "dpsScheduleId", "id", "isNew", "mappingType", "new", "nomisScheduleId", "offenderNo" ]
-      },
       "TemporaryAbsenceOutsideMovementSyncMappingDto" : {
         "type" : "object",
         "description" : "Mapping for a single temporary absence outside movement",
@@ -19323,83 +19615,6 @@
           }
         },
         "required" : [ "bookingId", "dpsAppMultiId", "id", "isNew", "mappingType", "new", "nomisAppMultiId", "offenderNo" ]
-      },
-      "ExternalMovementSyncMappingDto" : {
-        "type" : "object",
-        "description" : "Mappings for a single external movement",
-        "properties" : {
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The NOMIS offender number",
-            "example" : "A1234BC"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS ID of the booking",
-            "example" : 12345
-          },
-          "nomisMovementSeq" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The NOMIS movement sequence number"
-          },
-          "dpsExternalMovementId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS external movement id"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "The source of the mapping",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
-            "example" : "NOMIS_CREATED"
-          }
-        },
-        "required" : [ "bookingId", "dpsExternalMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
-      },
-      "TemporaryAbsenceMovementMapping" : {
-        "type" : "object",
-        "properties" : {
-          "dpsMovementId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "nomisBookingId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "nomisMovementSeq" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "offenderNo" : {
-            "type" : "string"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
-          },
-          "new" : {
-            "type" : "boolean"
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isNew" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "dpsMovementId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisMovementSeq", "offenderNo" ]
       },
       "TemporaryAbsenceApplicationSyncMappingDto" : {
         "type" : "object",
@@ -21510,14 +21725,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21685,14 +21900,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21810,14 +22025,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -21920,14 +22135,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22026,14 +22241,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22072,14 +22287,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22118,14 +22333,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22192,14 +22407,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -22260,14 +22475,14 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
           },
           "last" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
