@@ -318,8 +318,9 @@ class ExternalMovementsMappingApiServiceTest {
           .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC")))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
           .withRequestBody(matchingJsonPath("nomisEventId", equalTo("1")))
-          .withRequestBody(matchingJsonPath("dpsScheduledMovementId", not(absent())))
+          .withRequestBody(matchingJsonPath("dpsOccurrenceId", not(absent())))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED"))),
+        // TODO check address mapping details
       )
     }
 
@@ -333,15 +334,25 @@ class ExternalMovementsMappingApiServiceTest {
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisEventId = 1L,
-              dpsScheduledMovementId = dpsScheduledMovementId,
+              dpsOccurrenceId = dpsScheduledMovementId,
               mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              // TODO add address mapping details
+              nomisAddressId = 0,
+              nomisAddressOwnerClass = "",
+              dpsAddressText = "",
+              eventTime = "",
             ),
             duplicate = ScheduledMovementSyncMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisEventId = 2L,
-              dpsScheduledMovementId = dpsScheduledMovementId,
+              dpsOccurrenceId = dpsScheduledMovementId,
               mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              // TODO add address mapping details
+              nomisAddressId = 0,
+              nomisAddressOwnerClass = "",
+              dpsAddressText = "",
+              eventTime = "",
             ),
           ),
           errorCode = 1409,
@@ -429,8 +440,9 @@ class ExternalMovementsMappingApiServiceTest {
           .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC")))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
           .withRequestBody(matchingJsonPath("nomisMovementSeq", equalTo("1")))
-          .withRequestBody(matchingJsonPath("dpsExternalMovementId", not(absent())))
+          .withRequestBody(matchingJsonPath("dpsMovementId", not(absent())))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED"))),
+        // TODO check address mapping details
       )
     }
 
@@ -444,15 +456,23 @@ class ExternalMovementsMappingApiServiceTest {
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisMovementSeq = 1,
-              dpsExternalMovementId = dpsExternalMovementId,
+              dpsMovementId = dpsExternalMovementId,
               mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              // TODO add address mapping details
+              nomisAddressId = 0,
+              nomisAddressOwnerClass = "",
+              dpsAddressText = "",
             ),
             duplicate = ExternalMovementSyncMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisMovementSeq = 2,
-              dpsExternalMovementId = dpsExternalMovementId,
+              dpsMovementId = dpsExternalMovementId,
               mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              // TODO add address mapping details
+              nomisAddressId = 0,
+              nomisAddressOwnerClass = "",
+              dpsAddressText = "",
             ),
           ),
           errorCode = 1409,
