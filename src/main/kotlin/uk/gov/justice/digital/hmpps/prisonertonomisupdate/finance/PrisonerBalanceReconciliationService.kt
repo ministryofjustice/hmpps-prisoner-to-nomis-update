@@ -154,7 +154,8 @@ class PrisonerBalanceReconciliationService(
             .thenBy { it.holdBalance },
         )
         val sortedNomisAppearances = nomisObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.accountCode }
+          compareBy<AccountFields>  { it.prisonId }
+            .thenBy { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
@@ -164,6 +165,9 @@ class PrisonerBalanceReconciliationService(
 
       is AccountFields -> {
         nomisObj as AccountFields
+        if (dpsObj.prisonId.compareTo(nomisObj.prisonId) != 0) {
+          differences.add(Difference("$parentProperty.prisonId", dpsObj.prisonId, nomisObj.prisonId))
+        }
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
         }
