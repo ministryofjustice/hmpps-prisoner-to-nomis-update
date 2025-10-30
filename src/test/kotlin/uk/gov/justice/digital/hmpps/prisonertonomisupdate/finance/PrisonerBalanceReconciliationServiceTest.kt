@@ -154,6 +154,18 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
+    fun `will handle a null hold balance matching zero in dps`() = runTest {
+      val nomis = nomisPrisonerBalanceResponse()
+      val dps = dpsPrisonerAccountResponse()
+      stubBalance(
+        nomis.copy(accounts = listOf(nomis.accounts.first().copy(holdBalance = null))),
+        dps.copy(items = listOf(dps.items.first().copy(holdBalance = BigDecimal.ZERO))),
+
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)).isNull()
+    }
+
+    @Test
     fun `will handle an equal hold balance with different scale`() = runTest {
       val nomis = nomisPrisonerBalanceResponse()
       stubBalance(
@@ -174,6 +186,44 @@ class PrisonerBalanceReconciliationServiceTest {
         listOf(
           Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
         ),
+      )
+    }
+
+    @Test
+    fun `will report a mismatch if same accounts at different prisons`() = runTest {
+      val nomis = nomisPrisonerBalanceResponse()
+      stubBalance(
+        nomis.copy(accounts = listOf(nomis.accounts.first().copy(prisonId = "ASI"))),
+        dpsPrisonerAccountResponse(),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).isEqualTo(
+        listOf(
+          Difference(property = "prisoner-balances.accounts[0].prisonId", dps = "MDI", nomis = "ASI"),
+        ),
+      )
+    }
+
+    @Test
+    fun `will report a mismatch if same account codes in different prisons`() = runTest {
+      val nomis = nomisPrisonerBalanceResponse()
+      val dps = dpsPrisonerAccountResponse()
+      stubBalance(
+        nomis.copy(
+          accounts = listOf(
+            nomis.accounts.first().copy(accountCode = 1234),
+            nomis.accounts.first().copy(prisonId = "ASI"),
+          ),
+        ),
+        dpsPrisonerAccountResponse().copy(
+          items = listOf(
+            dps.items.first(),
+            dps.items.first().copy(prisonId = "ASI", accountCode = 1234),
+          ),
+        ),
+      )
+      assertThat(service.checkPrisonerBalance(OFFENDER_ID)?.differences).containsExactly(
+        Difference(property = "prisoner-balances.accounts[0].accountCode", dps = 1234, nomis = 1001),
+        Difference(property = "prisoner-balances.accounts[1].accountCode", dps = 1001, nomis = 1234),
       )
     }
   }
