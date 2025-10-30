@@ -38,4 +38,17 @@ class PrisonerBalanceResource(
     @Schema(description = "Prisoner's offenderNo", example = "A3456NZ")
     @PathVariable offenderNo: String,
   ) = reconciliationService.manualCheckPrisonerBalance(offenderNo)
+
+  @GetMapping("/prisoner-balance/reconciliation/prison/{prisonId}")
+  @Operation(
+    summary = "Run the prisoner balance reconciliation for one prison",
+    description = """Retrieves the account balance differences for all prisoners who have balances for the given prison (not prisoners necessarily in that prison).
+      A null response returned if no differences found. 
+      Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW""",
+    responses = [ApiResponse(responseCode = "200", description = "Reconciliation differences returned")],
+  )
+  suspend fun manualCheckSinglePrisonBalances(
+    @Schema(description = "Prison Id", example = "BXI")
+    @PathVariable prisonId: String,
+  ) = reconciliationService.manualCheckSinglePrisonBalances(prisonId)
 }

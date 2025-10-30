@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
@@ -30,6 +31,8 @@ class PrisonerBalanceReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
+  var filterPrisonId: String? = null
+
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId)
 
   suspend fun manualCheckPrisonerBalance(offenderNo: String): MismatchPrisonerBalance? {
@@ -39,7 +42,13 @@ class PrisonerBalanceReconciliationService(
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
+  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> {
+    this.filterPrisonId = filterPrisonId
+    return generatePrisonerBalanceReconciliationReport()
+  }
+
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
+    this.filterPrisonId = null
     telemetryClient.trackEvent(
       "$TELEMETRY_PRISONER_PREFIX-requested",
       mapOf(),
@@ -171,10 +180,10 @@ class PrisonerBalanceReconciliationService(
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
         }
+        val nomisRealBalance = nomisObj.holdBalance ?: BigDecimal.ZERO
         if (
           // DPS holdBalance is non-null
-          (nomisObj.holdBalance == null && dpsObj.holdBalance!! != BigDecimal.ZERO) ||
-          dpsObj.holdBalance?.compareTo(nomisObj.holdBalance) != 0
+          dpsObj.holdBalance?.compareTo(nomisRealBalance) != 0
         ) {
           differences.add(Difference("$parentProperty.holdBalance", dpsObj.holdBalance, nomisObj.holdBalance))
         }
@@ -187,10 +196,18 @@ class PrisonerBalanceReconciliationService(
   }
 
   internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long): ReconciliationPageResult<Long> = runCatching {
-    financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
-      rootOffenderId = lastOffenderId,
-      pageSize = pageSize,
-    )
+    if (filterPrisonId == null) {
+      financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
+        rootOffenderId = lastOffenderId,
+        pageSize = pageSize,
+      )
+    } else {
+      if (lastOffenderId > 0) {
+        RootOffenderIdsWithLast(emptyList(), 0L)
+      } else {
+        RootOffenderIdsWithLast(financeNomisApiService.getRootOffenderIds(filterPrisonId, 0, 3000).content, 9999L)
+      }
+    }
   }.fold(
     onSuccess = { rootOffenderIdsWithLast ->
       ReconciliationSuccessPageResult<Long>(
