@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-09.150.83295b2"
+    "version" : "2025-10-29.205.caab273"
   },
   "servers" : [ {
     "url" : "/",
@@ -7384,6 +7384,88 @@
         } ]
       }
     },
+    "/definitions/{reportId}" : {
+      "get" : {
+        "tags" : [ "Report Definition API" ],
+        "description" : "Gets report definition summary",
+        "operationId" : "definitionSummary",
+        "parameters" : [ {
+          "name" : "reportId",
+          "in" : "path",
+          "description" : "The ID of the report definition.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "external-movements"
+        }, {
+          "name" : "dataProductDefinitionsPath",
+          "in" : "query",
+          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "definitions/prisons/orphanage"
+          },
+          "example" : "definitions/prisons/orphanage"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReportDefinitionSummary"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/definitions/{reportId}/{variantId}" : {
       "get" : {
         "tags" : [ "Report Definition API" ],
@@ -8999,7 +9081,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Transaction type",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_UPDATE", "SYNC", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
             "example" : "CAPACITY_CHANGE"
           },
           "attribute" : {
@@ -9241,6 +9323,18 @@
             "description" : "Indicates this is the lowest level, often a cell",
             "example" : false
           },
+          "topLevelApprovalLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
+            "example" : "57718979-573c-433a-9e51-2d83f087c11c"
+          },
+          "pendingApprovalRequestId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
+            "example" : "57818979-573c-433a-9e51-2d83f087c11c"
+          },
           "parentId" : {
             "type" : "string",
             "format" : "uuid",
@@ -9468,6 +9562,18 @@
                   "description" : "Indicates this is the lowest level, often a cell",
                   "example" : false
                 },
+                "topLevelApprovalLocationId" : {
+                  "type" : "string",
+                  "format" : "uuid",
+                  "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
+                  "example" : "57718979-573c-433a-9e51-2d83f087c11c"
+                },
+                "pendingApprovalRequestId" : {
+                  "type" : "string",
+                  "format" : "uuid",
+                  "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
+                  "example" : "57818979-573c-433a-9e51-2d83f087c11c"
+                },
                 "parentId" : {
                   "type" : "string",
                   "format" : "uuid",
@@ -9680,7 +9786,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Type of transaction",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_UPDATE", "SYNC", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
             "example" : "CAPACITY_CHANGE"
           },
           "prisonId" : {
@@ -10001,7 +10107,7 @@
             "example" : true
           }
         },
-        "required" : [ "inCellSanitation", "maxCapacity", "workingCapacity" ]
+        "required" : [ "maxCapacity", "workingCapacity" ]
       },
       "UpdateCapacityRequest" : {
         "type" : "object",
@@ -11541,12 +11647,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -11560,6 +11660,12 @@
           "number" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
@@ -11906,6 +12012,18 @@
                   "type" : "boolean",
                   "description" : "Indicates this is the lowest level, often a cell",
                   "example" : false
+                },
+                "topLevelApprovalLocationId" : {
+                  "type" : "string",
+                  "format" : "uuid",
+                  "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
+                  "example" : "57718979-573c-433a-9e51-2d83f087c11c"
+                },
+                "pendingApprovalRequestId" : {
+                  "type" : "string",
+                  "format" : "uuid",
+                  "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
+                  "example" : "57818979-573c-433a-9e51-2d83f087c11c"
                 },
                 "parentId" : {
                   "type" : "string",
