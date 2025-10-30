@@ -281,14 +281,23 @@ fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNu
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
   nomisEventId = nomisEventId,
-  dpsScheduledMovementId = dpsId,
+  dpsOccurrenceId = dpsId,
   mappingType = ScheduledMovementSyncMappingDto.MappingType.MIGRATED,
+  // TODO add address mapping details
+  nomisAddressId = 0,
+  nomisAddressOwnerClass = "",
+  dpsAddressText = "",
+  eventTime = "",
 )
 
 fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ExternalMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = bookingId,
   nomisMovementSeq = movementSeq,
-  dpsExternalMovementId = dpsId,
+  dpsMovementId = dpsId,
   mappingType = ExternalMovementSyncMappingDto.MappingType.MIGRATED,
+  // TODO add address mapping details
+  nomisAddressId = 0,
+  nomisAddressOwnerClass = "",
+  dpsAddressText = "",
 )

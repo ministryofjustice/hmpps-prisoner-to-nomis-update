@@ -175,8 +175,13 @@ class ExternalMovementsService(
             prisonerNumber = prisonerNumber,
             bookingId = bookingId,
             nomisEventId = nomis.eventId,
-            dpsScheduledMovementId = dpsScheduledMovementId,
+            dpsOccurrenceId = dpsScheduledMovementId,
             mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
+            // TODO add address mapping details
+            nomisAddressId = 0,
+            nomisAddressOwnerClass = "",
+            dpsAddressText = "",
+            eventTime = "",
           )
         }
         saveMapping { mappingApiService.createScheduledMovementMapping(it) }
@@ -224,8 +229,13 @@ class ExternalMovementsService(
             prisonerNumber = prisonerNumber,
             bookingId = bookingId,
             nomisEventId = nomis.eventId,
-            dpsScheduledMovementId = dpsScheduledMovementInId,
+            dpsOccurrenceId = dpsScheduledMovementInId,
             mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
+            // TODO add address mapping details
+            nomisAddressId = 0,
+            nomisAddressOwnerClass = "",
+            dpsAddressText = "",
+            eventTime = "",
           )
         }
         saveMapping { mappingApiService.createScheduledMovementMapping(it) }
@@ -278,8 +288,12 @@ class ExternalMovementsService(
             prisonerNumber = prisonerNumber,
             bookingId = bookingId,
             nomisMovementSeq = nomis.movementSequence,
-            dpsExternalMovementId = dpsExternalMovementId,
+            dpsMovementId = dpsExternalMovementId,
             mappingType = ExternalMovementSyncMappingDto.MappingType.DPS_CREATED,
+            // TODO add address mapping details
+            nomisAddressId = 0,
+            nomisAddressOwnerClass = "",
+            dpsAddressText = "",
           )
         }
         saveMapping { mappingApiService.createExternalMovementMapping(it) }
@@ -332,8 +346,12 @@ class ExternalMovementsService(
             prisonerNumber = prisonerNumber,
             bookingId = bookingId,
             nomisMovementSeq = nomis.movementSequence,
-            dpsExternalMovementId = dpsExternalMovementId,
+            dpsMovementId = dpsExternalMovementId,
             mappingType = ExternalMovementSyncMappingDto.MappingType.DPS_CREATED,
+            // TODO add address mapping details
+            nomisAddressId = 0,
+            nomisAddressOwnerClass = "",
+            dpsAddressText = "",
           )
         }
         saveMapping { mappingApiService.createExternalMovementMapping(it) }
