@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDateTime
 import java.util.UUID
+import kotlin.String
 
 @Service
 class IncidentsReconciliationService(
@@ -227,7 +228,21 @@ class IncidentsReconciliationService(
         return "Code mismatch for question: ${nomisQuestion.questionId}"
       }
       if (nomisQuestion.answers.size != dpsQuestion.responses.size) {
-        return "responses mismatch for question: ${nomisQuestion.questionId}"
+        // Ignore and log any dodgy Nomis data
+        if (!nomisQuestion.hasMultipleAnswers && nomisQuestion.answers.size > 1) {
+          telemetryClient.trackEvent(
+            "incidents-reports-reconciliation-mismatch-ignored",
+            mapOf(
+              "nomisIncidentId" to nomis.incidentId,
+              "dpsIncidentId" to dps.id,
+              "questionId" to nomisQuestion.questionId,
+              "hasMultipleAnswers" to false,
+              "totalResponses" to nomisQuestion.answers.size,
+            ),
+          )
+        } else {
+          return "responses mismatch for question: ${nomisQuestion.questionId}"
+        }
       }
     }
 

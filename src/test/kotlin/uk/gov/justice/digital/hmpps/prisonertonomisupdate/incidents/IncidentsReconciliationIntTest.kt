@@ -596,6 +596,30 @@ class IncidentsReconciliationIntTest(
           isNull(),
         )
       }
+
+      @Test
+      fun `will pass reconciliation if invalid Nomis data - multipleAnswers for a single answer question`() {
+        incidentsNomisApi.stubGetIncidentWithInvalidNomisResponseData(incidentId = nomisIncidentId)
+
+        webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch-ignored"),
+          check {
+            assertThat(it).containsEntry("nomisIncidentId", "$nomisIncidentId")
+            assertThat(it).containsKey("dpsIncidentId")
+            assertThat(it).containsEntry("questionId", "1234")
+            assertThat(it).containsEntry("hasMultipleAnswers", "false")
+            assertThat(it).containsEntry("totalResponses", "2")
+          },
+          isNull(),
+        )
+      }
     }
   }
 }

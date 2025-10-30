@@ -212,8 +212,23 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
                       createdBy = "JSMITH",
                       hasMultipleAnswers = false,
                     ),
-
                   ),
+                ),
+            ),
+        ),
+    )
+  }
+
+  fun stubGetIncidentWithInvalidNomisResponseData(incidentId: Long) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/incidents/$incidentId"))
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
+            .withBody(
+              incidentResponse()
+                .copy(
+                  incidentId = incidentId,
+                  questions = listOf(questionWithInvalidNomisData, question2),
                 ),
             ),
         ),
@@ -348,76 +363,7 @@ private fun incidentResponse(
       recordedDate = LocalDateTime.parse("2021-08-06T10:01:02"),
     ),
   ),
-  questions =
-  listOf(
-    Question(
-      questionId = 1234,
-      sequence = 1,
-      question = "Was anybody hurt?",
-      answers = listOf(
-        Response(
-          sequence = 1,
-          recordingStaff = Staff(
-            username = "JSMITH",
-            staffId = 485572,
-            firstName = "JIM",
-            lastName = "SMITH",
-          ),
-          createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-          createdBy = "JSMITH",
-          questionResponseId = 123,
-          answer = "Yes",
-          responseDate = null,
-          comment = null,
-
-        ),
-      ),
-      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-      createdBy = "JSMITH",
-      hasMultipleAnswers = false,
-    ),
-    Question(
-      questionId = 12345,
-      sequence = 2,
-      question = "Where was the drone?",
-      answers = listOf(
-        Response(
-          sequence = 2,
-          recordingStaff = Staff(
-            username = "JSMITH",
-            staffId = 485572,
-            firstName = "JIM",
-            lastName = "SMITH",
-          ),
-          createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-          createdBy = "JSMITH",
-          questionResponseId = 456,
-          answer = "No",
-          responseDate = null,
-          comment = "some comment",
-
-        ),
-        Response(
-          sequence = 3,
-          recordingStaff = Staff(
-            username = "JSMITH",
-            staffId = 485572,
-            firstName = "JIM",
-            lastName = "SMITH",
-          ),
-          createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-          createdBy = "JSMITH",
-          questionResponseId = 789,
-          answer = "Bob",
-          responseDate = null,
-          comment = "some additional comment",
-        ),
-      ),
-      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-      createdBy = "JSMITH",
-      hasMultipleAnswers = true,
-    ),
-  ),
+  questions = listOf(question1, question2),
   history = listOf(
     History(
       questionnaireId = 1234,
@@ -456,4 +402,106 @@ private fun incidentResponse(
       ),
     ),
   ),
+)
+
+val question1 = Question(
+  questionId = 1234,
+  sequence = 1,
+  question = "Was anybody hurt?",
+  hasMultipleAnswers = false,
+  answers = listOf(
+    Response(
+      sequence = 1,
+      recordingStaff = Staff(
+        username = "JSMITH",
+        staffId = 485572,
+        firstName = "JIM",
+        lastName = "SMITH",
+      ),
+      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+      createdBy = "JSMITH",
+      questionResponseId = 123,
+      answer = "Yes",
+      responseDate = null,
+      comment = null,
+    ),
+  ),
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
+)
+
+val question2 = Question(
+  questionId = 12345,
+  sequence = 2,
+  question = "Where was the drone?",
+  answers = listOf(
+    Response(
+      sequence = 2,
+      recordingStaff = Staff(
+        username = "JSMITH",
+        staffId = 485572,
+        firstName = "JIM",
+        lastName = "SMITH",
+      ),
+      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+      createdBy = "JSMITH",
+      questionResponseId = 456,
+      answer = "No",
+      responseDate = null,
+      comment = "some comment",
+    ),
+    Response(
+      sequence = 3,
+      recordingStaff = Staff(
+        username = "JSMITH",
+        staffId = 485572,
+        firstName = "JIM",
+        lastName = "SMITH",
+      ),
+      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+      createdBy = "JSMITH",
+      questionResponseId = 789,
+      answer = "Bob",
+      responseDate = null,
+      comment = "some additional comment",
+    ),
+  ),
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
+  hasMultipleAnswers = true,
+)
+
+val questionWithInvalidNomisData = Question(
+  questionId = 1234,
+  sequence = 1,
+  question = "Was anybody hurt?",
+  hasMultipleAnswers = false,
+  answers = listOf(
+    Response(
+      sequence = 1,
+      recordingStaff = Staff(
+        username = "JSMITH",
+        staffId = 485572,
+        firstName = "JIM",
+        lastName = "SMITH",
+      ),
+      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+      createdBy = "JSMITH",
+    ),
+    Response(
+      questionResponseId = 123,
+      sequence = 2,
+      answer = "Yes",
+      recordingStaff = Staff(
+        username = "JSMITH",
+        staffId = 485572,
+        firstName = "JIM",
+        lastName = "SMITH",
+      ),
+      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+      createdBy = "JSMITH",
+    ),
+  ),
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
 )
