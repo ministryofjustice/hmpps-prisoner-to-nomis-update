@@ -13,8 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -90,13 +90,13 @@ class FinanceDpsApiServiceTest {
   @Nested
   inner class ListPrisonerAccounts {
     val prisonerNo = "A1234AA"
-    val sampleResponse = PrisonerSubAccountDetailsList(items = emptyList())
+    val sampleResponse = PrisonerEstablishmentBalanceDetailsList(items = emptyList())
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
       dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
 
-      apiService.listPrisonerAccounts(prisonerNo)
+      apiService.getPrisonerAccounts(prisonerNo)
 
       dpsFinanceServer.verify(
         getRequestedFor(anyUrl())
@@ -108,10 +108,10 @@ class FinanceDpsApiServiceTest {
     fun `will call the GET endpoint`() = runTest {
       dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
 
-      apiService.listPrisonerAccounts(prisonerNo)
+      apiService.getPrisonerAccounts(prisonerNo)
 
       dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/$prisonerNo/accounts")),
+        getRequestedFor(urlPathEqualTo("/reconcile/prisoner-balances/$prisonerNo")),
       )
     }
 
@@ -119,7 +119,7 @@ class FinanceDpsApiServiceTest {
     fun `will return data`() = runTest {
       dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
 
-      val data = apiService.listPrisonerAccounts(prisonerNo)
+      val data = apiService.getPrisonerAccounts(prisonerNo)
 
       assertThat(data).isEqualTo(sampleResponse)
     }

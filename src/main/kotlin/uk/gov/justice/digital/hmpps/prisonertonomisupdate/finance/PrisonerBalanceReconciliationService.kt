@@ -77,11 +77,12 @@ class PrisonerBalanceReconciliationService(
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
     val nomisResponse = financeNomisApiService.getPrisonerAccountDetails(rootOffenderId)
-    val dpsResponse = dpsApiService.listPrisonerAccounts(nomisResponse.prisonNumber)
+    val dpsResponse = dpsApiService.getPrisonerAccounts(nomisResponse.prisonNumber)
     val nomisFields = BalanceFields(
       prisonNumber = nomisResponse.prisonNumber,
       accounts = nomisResponse.accounts.map {
         AccountFields(
+          prisonId = it.prisonId,
           balance = it.balance,
           holdBalance = it.holdBalance,
           accountCode = it.accountCode.toInt(),
@@ -92,9 +93,10 @@ class PrisonerBalanceReconciliationService(
       prisonNumber = nomisResponse.prisonNumber,
       accounts = dpsResponse.items.map {
         AccountFields(
-          balance = it.balance,
+          prisonId = it.prisonId,
+          balance = it.totalBalance,
           holdBalance = it.holdBalance,
-          accountCode = it.code,
+          accountCode = it.accountCode,
         )
       },
     )
@@ -146,12 +148,14 @@ class PrisonerBalanceReconciliationService(
           differences.add(Difference("$parentProperty.prisonNumber", dpsObj.prisonNumber, nomisObj.prisonNumber))
         }
         val sortedDpsAppearances = dpsObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.accountCode }
+          compareBy<AccountFields> { it.prisonId }
+            .thenBy { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
         val sortedNomisAppearances = nomisObj.accounts.sortedWith(
-          compareBy<AccountFields> { it.accountCode }
+          compareBy<AccountFields> { it.prisonId }
+            .thenBy { it.accountCode }
             .thenBy { it.balance }
             .thenBy { it.holdBalance },
         )
@@ -161,12 +165,15 @@ class PrisonerBalanceReconciliationService(
 
       is AccountFields -> {
         nomisObj as AccountFields
+        if (dpsObj.prisonId.compareTo(nomisObj.prisonId) != 0) {
+          differences.add(Difference("$parentProperty.prisonId", dpsObj.prisonId, nomisObj.prisonId))
+        }
         if (dpsObj.balance.compareTo(nomisObj.balance) != 0) {
           differences.add(Difference("$parentProperty.balance", dpsObj.balance, nomisObj.balance))
         }
         if (
           // DPS holdBalance is non-null
-          nomisObj.holdBalance == null ||
+          (nomisObj.holdBalance == null && dpsObj.holdBalance!! != BigDecimal.ZERO) ||
           dpsObj.holdBalance?.compareTo(nomisObj.holdBalance) != 0
         ) {
           differences.add(Difference("$parentProperty.holdBalance", dpsObj.holdBalance, nomisObj.holdBalance))
@@ -218,6 +225,7 @@ data class BalanceFields(
 )
 
 data class AccountFields(
+  val prisonId: String,
   val balance: BigDecimal,
   val holdBalance: BigDecimal?,
   val accountCode: Int,
