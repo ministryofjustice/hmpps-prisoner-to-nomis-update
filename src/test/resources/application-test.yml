@@ -26,6 +26,7 @@ api.base.url:
   personal.relationships: http://localhost:8099
   organisations: http://localhost:8100
   visit.balance: http://localhost:8101
+  ext.movements: http://localhost:8102
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0
