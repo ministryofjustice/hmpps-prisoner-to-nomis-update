@@ -19,6 +19,7 @@ generic-service:
     API_BASE_URL_CSIP: https://csip-api.hmpps.service.justice.gov.uk
     API_BASE_URL_CASENOTES: https://offender-case-notes.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api.hmpps.service.justice.gov.uk
+    API_BASE_URL_EXT_MOVEMENTS: https://external-movements-api.hmpps.service.justice.gov.uk
     # currently set to self for a mock API until real API is ready
     API_BASE_URL_FINANCE: https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk
     API_BASE_URL_INCENTIVES: https://incentives-api.hmpps.service.justice.gov.uk
