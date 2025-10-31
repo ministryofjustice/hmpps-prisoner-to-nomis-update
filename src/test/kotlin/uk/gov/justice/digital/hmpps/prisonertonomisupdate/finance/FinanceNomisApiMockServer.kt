@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.okJson
 import com.github.tomakehurst.wiremock.client.WireMock.status
@@ -15,10 +16,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pagedModelContent
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import kotlin.collections.map
+import kotlin.math.min
 
 @Component
 class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -119,6 +123,25 @@ class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
             objectMapper.writeValueAsString(error),
           ),
       ),
+    )
+  }
+
+  fun stubGetRootOffenderIds(totalElements: Long = 20, pageSize: Long = 20, firstRootOffenderId: Long = 10000, prisonId: String = "ASI") {
+    val content: List<Long> = (1..min(pageSize, totalElements)).map { firstRootOffenderId + it - 1 }
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/ids"))
+        .withQueryParam("prisonId", equalTo(prisonId))
+        .willReturn(
+          okJson(
+            pagedModelContent(
+              objectMapper = NomisApiExtension.objectMapper,
+              content = content,
+              pageSize = pageSize,
+              pageNumber = 0,
+              totalElements = totalElements,
+            ),
+          ),
+        ),
     )
   }
 

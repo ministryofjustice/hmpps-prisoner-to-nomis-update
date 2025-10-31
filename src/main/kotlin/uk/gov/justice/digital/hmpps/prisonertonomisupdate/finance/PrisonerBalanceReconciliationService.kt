@@ -112,10 +112,16 @@ class PrisonerBalanceReconciliationService(
 
     val differenceList = compareObjects(dpsFields, nomisFields, "prisoner-balances")
 
-    log.info("compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
+    // log.info("compared\n$dpsFields with\n$nomisFields with result\n$differenceList")
 
     if (differenceList.isNotEmpty()) {
-      log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
+      telemetryClient.trackEvent(
+        "prisoner-balance-mismatch",
+        mapOf(
+          "prisoner" to nomisResponse.prisonNumber,
+        ) + differenceList.associate { it.property to it.toString() },
+      )
       return MismatchPrisonerBalance(
         nomis = nomisFields,
         dps = dpsFields,
