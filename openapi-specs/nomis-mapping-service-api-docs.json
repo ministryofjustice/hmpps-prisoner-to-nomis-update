@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-27.219.dab75e5"
+    "version" : "2025-10-30.221.4021b1f"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18277,7 +18277,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "mappingType", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "prisonerNumber" ]
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "mappingType", "nomisEventId", "prisonerNumber" ]
       },
       "TemporaryAbsenceScheduleMapping" : {
         "type" : "object",
@@ -18340,7 +18340,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "id", "isNew", "mappingType", "new", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId", "offenderNo" ]
+        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "id", "isNew", "mappingType", "new", "nomisEventId", "offenderNo" ]
       },
       "ExternalMovementMappingDto" : {
         "type" : "object",
@@ -18401,12 +18401,12 @@
           },
           "eventTime" : {
             "type" : "string",
-            "description" : "The DPS address",
+            "description" : "The scheduled event time",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisAddressId", "nomisAddressOwnerClass", "nomisEventId" ]
+        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisEventId" ]
       },
       "TemporaryAbsenceApplicationMappingDto" : {
         "type" : "object",
