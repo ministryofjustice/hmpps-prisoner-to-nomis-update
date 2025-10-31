@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-27.683.a16b6a5"
+    "version" : "2025-10-30.691.c6e3623"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -31891,6 +31891,18 @@
             "type" : "string",
             "description" : "To address owner class"
           },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "To address description"
+          },
+          "toFullAddress" : {
+            "type" : "string",
+            "description" : "To full address"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "TO address postcode"
+          },
           "applicationDate" : {
             "type" : "string",
             "format" : "date-time",
@@ -32013,6 +32025,18 @@
           "toAddressOwnerClass" : {
             "type" : "string",
             "description" : "To address owner class"
+          },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "To address description"
+          },
+          "toFullAddress" : {
+            "type" : "string",
+            "description" : "Full to address"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "To address postcode"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
@@ -32249,6 +32273,18 @@
           "fromAddressOwnerClass" : {
             "type" : "string",
             "description" : "From address owner class"
+          },
+          "fromAddressDescription" : {
+            "type" : "string",
+            "description" : "From address description"
+          },
+          "fromFullAddress" : {
+            "type" : "string",
+            "description" : "From full address"
+          },
+          "fromAddressPostcode" : {
+            "type" : "string",
+            "description" : "From address postcode"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
@@ -32516,15 +32552,15 @@
           },
           "toAddressDescription" : {
             "type" : "string",
-            "description" : "From address description"
+            "description" : "To address description"
           },
           "toFullAddress" : {
             "type" : "string",
-            "description" : "From full address"
+            "description" : "To full address"
           },
           "toAddressPostcode" : {
             "type" : "string",
-            "description" : "From address postcode"
+            "description" : "To address postcode"
           },
           "applicationDate" : {
             "type" : "string",
