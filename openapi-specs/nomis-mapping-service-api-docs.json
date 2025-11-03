@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-30.221.4021b1f"
+    "version" : "2025-10-31.224.d65fd73"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -6930,6 +6930,73 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/scheduled-movements/nomis-address-id/{nomisAddressId}" : {
+      "get" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Finds scheduled movements for a temporary absence by NOMIS address ID",
+        "description" : "Finds scheduled movements for a temporary absence by NOMIS address ID after the passed date. If no date is passed the default value is today. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "findScheduledMovementsByNomisAddressId",
+        "parameters" : [ {
+          "name" : "nomisAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of movements returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FindScheduledMovementsForAddressResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21799,6 +21866,18 @@
           }
         },
         "required" : [ "mappings" ]
+      },
+      "FindScheduledMovementsForAddressResponse" : {
+        "type" : "object",
+        "properties" : {
+          "scheduleMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
+            }
+          }
+        },
+        "required" : [ "scheduleMappings" ]
       },
       "PageMetadata" : {
         "type" : "object",
