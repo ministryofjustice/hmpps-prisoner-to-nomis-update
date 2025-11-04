@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-30.691.c6e3623"
+    "version" : "2025-11-03.695.721cdd8"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13189,7 +13189,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PageVisitTimeSlotIdResponse"
+                  "$ref" : "#/components/schemas/PagedModelVisitTimeSlotIdResponse"
                 }
               }
             }
@@ -28641,6 +28641,12 @@
       "VisitSlotResponse" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Slot ID",
+            "example" : 1
+          },
           "internalLocation" : {
             "$ref" : "#/components/schemas/VisitInternalLocationResponse",
             "description" : "Room location of  visit slot"
@@ -28658,7 +28664,7 @@
             "example" : 1
           }
         },
-        "required" : [ "internalLocation" ]
+        "required" : [ "id", "internalLocation" ]
       },
       "VisitTimeSlotResponse" : {
         "type" : "object",
@@ -28712,49 +28718,38 @@
         },
         "required" : [ "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
       },
-      "PageVisitTimeSlotIdResponse" : {
+      "PageMetadata" : {
         "type" : "object",
         "properties" : {
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
           "totalPages" : {
             "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
+            "format" : "int64"
+          }
+        }
+      },
+      "PagedModelVisitTimeSlotIdResponse" : {
+        "type" : "object",
+        "properties" : {
           "content" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/VisitTimeSlotIdResponse"
             }
           },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
           }
         }
       },
@@ -33816,27 +33811,6 @@
           }
         },
         "required" : [ "accounts", "prisonNumber", "rootOffenderId" ]
-      },
-      "PageMetadata" : {
-        "type" : "object",
-        "properties" : {
-          "size" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }
       },
       "PagedModelLong" : {
         "type" : "object",
