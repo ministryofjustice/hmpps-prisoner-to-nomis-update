@@ -238,7 +238,7 @@ class PrisonerBalanceReconciliationServiceTest {
           lastOffenderId = 8L,
         ),
       )
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
+      val actual = service.getPrisonerIdsForPage(OFFENDER_ID, filterPrisonId = null)
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
@@ -247,10 +247,21 @@ class PrisonerBalanceReconciliationServiceTest {
     }
 
     @Test
+    fun `will return id list when filtering by prison`() = runTest {
+      financeNomisApi.stubGetRootOffenderIds(totalElements = 4, prisonId = "MDI")
+      val actual = service.getPrisonerIdsForPage(0, filterPrisonId = "MDI")
+
+      assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
+      actual as ReconciliationSuccessPageResult
+      assertThat(actual.ids).isEqualTo(listOf(10000L, 10001L, 10002L, 10003L))
+      assertThat(actual.last).isEqualTo(9999L)
+    }
+
+    @Test
     fun `will report telemetry on error`() = runTest {
       financeNomisApi.stubGetPrisonerBalanceIdentifiersFromIdError()
 
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
+      val actual = service.getPrisonerIdsForPage(OFFENDER_ID, filterPrisonId = null)
 
       assertThat(actual).isInstanceOf(ReconciliationErrorPageResult::class.java)
       actual as ReconciliationErrorPageResult
