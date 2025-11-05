@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-03.765.e0a9f10"
+    "version" : "2025-11-04.792.e38ea7a"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -938,6 +938,13 @@
             "type" : "string",
             "format" : "uuid"
           }
+        }, {
+          "name" : "performedByUser",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -1072,6 +1079,13 @@
           "schema" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }, {
+          "name" : "performedByUser",
+          "in" : "header",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
           }
         } ],
         "responses" : {
@@ -4886,7 +4900,7 @@
             }
           }
         },
-        "required" : [ "createdByPrison", "createdByUsername", "prisonerId", "recallTypeCode" ]
+        "required" : [ "createdByPrison", "createdByUsername", "prisonerId", "recallTypeCode", "revocationDate" ]
       },
       "SaveRecallResponse" : {
         "type" : "object",
@@ -5204,7 +5218,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5521,7 +5535,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "courtCode" : {
             "type" : "string"
@@ -6352,6 +6366,9 @@
         "type" : "object",
         "properties" : {
           "removedPrisonerNumber" : {
+            "type" : "string"
+          },
+          "performedByUser" : {
             "type" : "string"
           },
           "casesCreated" : {
@@ -7655,7 +7672,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "courtCode" : {
             "type" : "string"
@@ -8274,7 +8291,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8334,7 +8351,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "courtId" : {
             "type" : "string"
@@ -8474,7 +8491,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "charges" : {
             "type" : "array",
@@ -8501,7 +8518,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "courtId" : {
             "type" : "string"
@@ -8743,13 +8760,19 @@
       "PageCourtCase" : {
         "type" : "object",
         "properties" : {
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "size" : {
             "type" : "integer",
@@ -8767,12 +8790,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -8829,13 +8846,19 @@
       "PagePagedCourtCase" : {
         "type" : "object",
         "properties" : {
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "size" : {
             "type" : "integer",
@@ -8853,12 +8876,6 @@
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
           },
           "numberOfElements" : {
             "type" : "integer",
@@ -9086,7 +9103,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:26.240269652"
+            "example" : "21:25:15.923140935"
           },
           "courtCode" : {
             "type" : "string"
