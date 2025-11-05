@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-31.261.3f40652"
+    "version" : "2025-11-04.274.9a548ac"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -24,157 +24,11 @@
   "security" : [ {
     "bearer-jwt" : [ "read", "write" ]
   } ],
-  "tags" : [ ],
+  "tags" : [ {
+    "name" : "Sync",
+    "description" : "Endpoints for sync only"
+  } ],
   "paths" : {
-    "/sync/temporary-absence-movement/{personIdentifier}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncTemporaryAbsenceMovement",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapMovementRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.SyncResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sync/temporary-absence-application/{personIdentifier}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncTemporaryAbsenceApplication",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapApplicationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.SyncResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/sync/scheduled-temporary-absence/{parentId}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncScheduledTemporaryAbsence",
-        "parameters" : [ {
-          "name" : "parentId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.ScheduledTemporaryAbsenceRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.SyncResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/temporary-absence-authorisations/{personIdentifier}" : {
-      "post" : {
-        "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
-        "operationId" : "createTapAuthorisation",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.CreateTapAuthorisationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Created",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.ReferenceId"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/temporary-absence-occurrences/{id}" : {
       "get" : {
         "tags" : [ "tap-occurrence-controller" ],
@@ -195,7 +49,190 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapOccurrence"
+                  "$ref" : "#/components/schemas/TapOccurrence"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "tap-occurrence-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "applyActions",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/RescheduleOccurrence"
+                } ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/sync/temporary-absence-movement/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncTapMovement",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TapMovementRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/sync/temporary-absence-application/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncTemporaryAbsenceApplication",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TapApplicationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/sync/scheduled-temporary-absence/{parentId}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncScheduledTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "parentId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ScheduledTemporaryAbsenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/temporary-absence-authorisations/{personIdentifier}" : {
+      "post" : {
+        "tags" : [ "tap-authorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "createTapAuthorisation",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTapAuthorisationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
                 }
               }
             }
@@ -223,7 +260,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapAuthorisation"
+                  "$ref" : "#/components/schemas/TapAuthorisation"
                 }
               }
             }
@@ -251,10 +288,29 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapOccurrence"
+                  "$ref" : "#/components/schemas/SyncReadTapOccurrence"
                 }
               }
             }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "deleteTapOccurrenceById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -279,10 +335,29 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapMovement"
+                  "$ref" : "#/components/schemas/SyncReadTapMovement"
                 }
               }
             }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "deleteTapMovementById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -307,10 +382,29 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapAuthorisation"
+                  "$ref" : "#/components/schemas/SyncReadTapAuthorisation"
                 }
               }
             }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "deleteTapAuthorisationById",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
           }
         }
       }
@@ -325,7 +419,7 @@
           "in" : "query",
           "required" : true,
           "schema" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceSearchRequest"
+            "$ref" : "#/components/schemas/TapOccurrenceSearchRequest"
           }
         } ],
         "responses" : {
@@ -334,7 +428,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceSearchResponse"
+                  "$ref" : "#/components/schemas/TapOccurrenceSearchResponse"
                 }
               }
             }
@@ -352,7 +446,7 @@
           "in" : "query",
           "required" : true,
           "schema" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationSearchRequest"
+            "$ref" : "#/components/schemas/TapAuthorisationSearchRequest"
           }
         } ],
         "responses" : {
@@ -361,7 +455,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationSearchResponse"
+                  "$ref" : "#/components/schemas/TapAuthorisationSearchResponse"
                 }
               }
             }
@@ -390,7 +484,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.ReferenceDataResponse"
+                  "$ref" : "#/components/schemas/ReferenceDataResponse"
                 }
               }
             }
@@ -417,7 +511,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview"
+                  "$ref" : "#/components/schemas/PrisonExternalMovementOverview"
                 }
               }
             }
@@ -446,7 +540,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.AbsenceCategorisations"
+                  "$ref" : "#/components/schemas/AbsenceCategorisations"
                 }
               }
             }
@@ -482,7 +576,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.AbsenceCategorisations"
+                  "$ref" : "#/components/schemas/AbsenceCategorisations"
                 }
               }
             }
@@ -493,7 +587,40 @@
   },
   "components" : {
     "schemas" : {
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.NomisAudit" : {
+      "Action" : {
+        "type" : "object",
+        "discriminator" : {
+          "propertyName" : "type"
+        },
+        "properties" : {
+          "type" : {
+            "type" : "string"
+          },
+          "reason" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "RescheduleOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Action"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "releaseAt" : {
+              "type" : "string",
+              "format" : "date-time"
+            },
+            "returnBy" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          }
+        } ],
+        "required" : [ "type" ]
+      },
+      "NomisAudit" : {
         "type" : "object",
         "properties" : {
           "createDatetime" : {
@@ -520,7 +647,7 @@
         },
         "required" : [ "createDatetime", "createUsername" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapLocation" : {
+      "TapLocation" : {
         "type" : "object",
         "properties" : {
           "description" : {
@@ -534,7 +661,7 @@
           }
         }
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapMovementRequest" : {
+      "TapMovementRequest" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -572,15 +699,15 @@
             "type" : "string"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapLocation"
+            "$ref" : "#/components/schemas/TapLocation"
           },
           "audit" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.NomisAudit"
+            "$ref" : "#/components/schemas/NomisAudit"
           }
         },
         "required" : [ "audit", "direction", "legacyId", "location", "movementDateTime", "movementReason" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.SyncResponse" : {
+      "SyncResponse" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -590,7 +717,7 @@
         },
         "required" : [ "id" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapApplicationRequest" : {
+      "TapApplicationRequest" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -638,12 +765,12 @@
             "format" : "date"
           },
           "audit" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.NomisAudit"
+            "$ref" : "#/components/schemas/NomisAudit"
           }
         },
         "required" : [ "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.ScheduledTemporaryAbsenceRequest" : {
+      "ScheduledTemporaryAbsenceRequest" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -666,7 +793,7 @@
             "format" : "date-time"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapLocation"
+            "$ref" : "#/components/schemas/TapLocation"
           },
           "contactPersonName" : {
             "type" : "string"
@@ -681,14 +808,13 @@
             "type" : "string"
           },
           "audit" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.NomisAudit",
+            "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
         "required" : [ "audit", "eventId", "eventStatus", "location", "returnTime", "startTime" ]
       },
-      "com.fasterxml.jackson.databind.JsonNode" : { },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.CreateTapAuthorisationRequest" : {
+      "CreateTapAuthorisationRequest" : {
         "type" : "object",
         "properties" : {
           "absenceTypeCode" : {
@@ -706,12 +832,12 @@
           "occurrences" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.CreateTapOccurrenceRequest"
+              "$ref" : "#/components/schemas/CreateTapOccurrenceRequest"
             }
           },
           "statusCode" : {
             "type" : "string",
-            "enum" : [ "PENDING", "APPROVED", "WITHDRAWN", "DENIED" ]
+            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED" ]
           },
           "notes" : {
             "type" : "string"
@@ -728,12 +854,12 @@
             "format" : "date"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/com.fasterxml.jackson.databind.JsonNode"
+            "$ref" : "#/components/schemas/JsonNode"
           }
         },
         "required" : [ "absenceTypeCode", "fromDate", "occurrences", "repeat", "statusCode", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.CreateTapOccurrenceRequest" : {
+      "CreateTapOccurrenceRequest" : {
         "type" : "object",
         "properties" : {
           "releaseAt" : {
@@ -751,7 +877,7 @@
             "type" : "string"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "contactInformation" : {
             "type" : "string"
@@ -760,12 +886,13 @@
             "type" : "string"
           },
           "scheduleReference" : {
-            "$ref" : "#/components/schemas/com.fasterxml.jackson.databind.JsonNode"
+            "$ref" : "#/components/schemas/JsonNode"
           }
         },
         "required" : [ "accompaniedByCode", "location", "releaseAt", "returnBy", "transportCode" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location" : {
+      "JsonNode" : { },
+      "Location" : {
         "type" : "object",
         "properties" : {
           "description" : {
@@ -782,7 +909,7 @@
           }
         }
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.ReferenceId" : {
+      "ReferenceId" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -792,7 +919,7 @@
         },
         "required" : [ "id" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.AtAndBy" : {
+      "AtAndBy" : {
         "type" : "object",
         "properties" : {
           "at" : {
@@ -808,7 +935,53 @@
         },
         "required" : [ "at", "by", "displayName" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.Person" : {
+      "Authorisation" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "notes" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "person", "status" ]
+      },
+      "CodedDescription" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "hintText" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description" ]
+      },
+      "Person" : {
         "type" : "object",
         "properties" : {
           "personIdentifier" : {
@@ -830,7 +1003,7 @@
         },
         "required" : [ "dateOfBirth", "firstName", "lastName", "personIdentifier" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapOccurrence" : {
+      "TapOccurrence" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -838,10 +1011,10 @@
             "format" : "uuid"
           },
           "authorisation" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapOccurrence.Authorisation"
+            "$ref" : "#/components/schemas/Authorisation"
           },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "releaseAt" : {
             "type" : "string",
@@ -852,25 +1025,25 @@
             "format" : "date-time"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "accompaniedBy" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "transport" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "added" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.AtAndBy"
+            "$ref" : "#/components/schemas/AtAndBy"
           },
           "cancelled" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.AtAndBy"
+            "$ref" : "#/components/schemas/AtAndBy"
           },
           "contactInformation" : {
             "type" : "string"
           },
           "scheduleReference" : {
-            "$ref" : "#/components/schemas/com.fasterxml.jackson.databind.JsonNode"
+            "$ref" : "#/components/schemas/JsonNode"
           },
           "notes" : {
             "type" : "string"
@@ -878,53 +1051,40 @@
         },
         "required" : [ "accompaniedBy", "added", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapOccurrence.Authorisation" : {
+      "Occurrence" : {
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
             "format" : "uuid"
           },
-          "person" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.Person"
-          },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
-          "absenceType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
           },
-          "absenceSubType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
           },
-          "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
           },
-          "absenceReason" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "transport" : {
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "notes" : {
             "type" : "string"
           }
         },
-        "required" : [ "id", "person", "status" ]
+        "required" : [ "accompaniedBy", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "hintText" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code", "description" ]
-      },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapAuthorisation" : {
+      "TapAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -932,22 +1092,22 @@
             "format" : "uuid"
           },
           "person" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.Person"
+            "$ref" : "#/components/schemas/Person"
           },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "repeat" : {
             "type" : "boolean"
@@ -963,17 +1123,17 @@
           "occurrences" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapAuthorisation.Occurrence"
+              "$ref" : "#/components/schemas/Occurrence"
             }
           },
           "submitted" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.AtAndBy"
+            "$ref" : "#/components/schemas/AtAndBy"
           },
           "approved" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.AtAndBy"
+            "$ref" : "#/components/schemas/AtAndBy"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/com.fasterxml.jackson.databind.JsonNode"
+            "$ref" : "#/components/schemas/JsonNode"
           },
           "notes" : {
             "type" : "string"
@@ -981,40 +1141,20 @@
         },
         "required" : [ "fromDate", "id", "occurrences", "person", "repeat", "status", "submitted", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.TapAuthorisation.Occurrence" : {
+      "SyncAtAndBy" : {
         "type" : "object",
         "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
-          },
-          "releaseAt" : {
+          "at" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
-          },
-          "accompaniedBy" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
-          },
-          "transport" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
-          },
-          "notes" : {
+          "by" : {
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
+        "required" : [ "at", "by" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapOccurrence" : {
+      "SyncReadTapOccurrence" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1022,7 +1162,7 @@
             "format" : "uuid"
           },
           "authorisation" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapOccurrence.Authorisation"
+            "$ref" : "#/components/schemas/SyncReadTapOccurrenceAuthorisation"
           },
           "statusCode" : {
             "type" : "string"
@@ -1036,7 +1176,7 @@
             "format" : "date-time"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "accompaniedByCode" : {
             "type" : "string"
@@ -1050,7 +1190,7 @@
         },
         "required" : [ "accompaniedByCode", "authorisation", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapOccurrence.Authorisation" : {
+      "SyncReadTapOccurrenceAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1072,14 +1212,13 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "submittedAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "submitted" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           }
         },
-        "required" : [ "absenceReasonCode", "id", "repeat", "statusCode", "submittedAt" ]
+        "required" : [ "absenceReasonCode", "id", "repeat", "statusCode", "submitted" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapMovement" : {
+      "SyncReadTapMovement" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1089,6 +1228,9 @@
           "occurrenceId" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
           },
           "occurredAt" : {
             "type" : "string",
@@ -1102,7 +1244,7 @@
             "type" : "string"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "accompaniedByCode" : {
             "type" : "string"
@@ -1117,9 +1259,9 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "direction", "id", "location", "occurredAt", "recordedByPrisonCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "direction", "id", "location", "occurredAt", "personIdentifier", "recordedByPrisonCode" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapAuthorisation" : {
+      "SyncReadTapAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1155,9 +1297,8 @@
             "type" : "string",
             "format" : "date"
           },
-          "submittedAt" : {
-            "type" : "string",
-            "format" : "date-time"
+          "submitted" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "notes" : {
             "type" : "string"
@@ -1165,13 +1306,13 @@
           "occurrences" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapAuthorisation.Occurrence"
+              "$ref" : "#/components/schemas/SyncReadTapAuthorisationOccurrence"
             }
           }
         },
-        "required" : [ "absenceReasonCode", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "statusCode", "submittedAt", "toDate" ]
+        "required" : [ "absenceReasonCode", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "statusCode", "submitted", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.sync.TapAuthorisation.Occurrence" : {
+      "SyncReadTapAuthorisationOccurrence" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1190,7 +1331,7 @@
             "format" : "date-time"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "accompaniedByCode" : {
             "type" : "string"
@@ -1204,7 +1345,7 @@
         },
         "required" : [ "accompaniedByCode", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceSearchRequest" : {
+      "TapOccurrenceSearchRequest" : {
         "type" : "object",
         "properties" : {
           "prisonCode" : {
@@ -1238,7 +1379,7 @@
         },
         "required" : [ "fromDate", "page", "prisonCode", "size", "sort", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.PageMetadata" : {
+      "PageMetadata" : {
         "type" : "object",
         "properties" : {
           "totalElements" : {
@@ -1248,7 +1389,7 @@
         },
         "required" : [ "totalElements" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceAuthorisation" : {
+      "TapOccurrenceAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1256,27 +1397,27 @@
             "format" : "uuid"
           },
           "person" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.Person"
+            "$ref" : "#/components/schemas/Person"
           },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           }
         },
         "required" : [ "id", "person", "status" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceResult" : {
+      "TapOccurrenceResult" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1284,10 +1425,10 @@
             "format" : "uuid"
           },
           "authorisation" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceAuthorisation"
+            "$ref" : "#/components/schemas/TapOccurrenceAuthorisation"
           },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "releaseAt" : {
             "type" : "string",
@@ -1298,13 +1439,13 @@
             "format" : "date-time"
           },
           "accompaniedBy" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "transport" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "location" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+            "$ref" : "#/components/schemas/Location"
           },
           "isCancelled" : {
             "type" : "boolean"
@@ -1312,22 +1453,22 @@
         },
         "required" : [ "accompaniedBy", "authorisation", "id", "isCancelled", "location", "releaseAt", "returnBy", "status", "transport" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceSearchResponse" : {
+      "TapOccurrenceSearchResponse" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapOccurrenceResult"
+              "$ref" : "#/components/schemas/TapOccurrenceResult"
             }
           },
           "metadata" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.PageMetadata"
+            "$ref" : "#/components/schemas/PageMetadata"
           }
         },
         "required" : [ "content", "metadata" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationSearchRequest" : {
+      "TapAuthorisationSearchRequest" : {
         "type" : "object",
         "properties" : {
           "prisonCode" : {
@@ -1346,7 +1487,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "APPROVED", "WITHDRAWN", "DENIED" ]
+              "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED" ]
             },
             "uniqueItems" : true
           },
@@ -1369,7 +1510,7 @@
         },
         "required" : [ "fromDate", "page", "prisonCode", "size", "sort", "status", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationResult" : {
+      "TapAuthorisationResult" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -1377,22 +1518,22 @@
             "format" : "uuid"
           },
           "person" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.Person"
+            "$ref" : "#/components/schemas/Person"
           },
           "status" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "repeat" : {
             "type" : "boolean"
@@ -1408,7 +1549,7 @@
           "locations" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.location.Location"
+              "$ref" : "#/components/schemas/Location"
             }
           },
           "occurrenceCount" : {
@@ -1422,49 +1563,37 @@
         },
         "required" : [ "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "status", "submittedAt", "toDate" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationSearchResponse" : {
+      "TapAuthorisationSearchResponse" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.TapAuthorisationResult"
+              "$ref" : "#/components/schemas/TapAuthorisationResult"
             }
           },
           "metadata" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.paged.PageMetadata"
+            "$ref" : "#/components/schemas/PageMetadata"
           }
         },
         "required" : [ "content", "metadata" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.ReferenceDataResponse" : {
+      "ReferenceDataResponse" : {
         "type" : "object",
         "properties" : {
           "domain" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "items" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+              "$ref" : "#/components/schemas/CodedDescription"
             }
           }
         },
         "required" : [ "domain", "items" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview" : {
-        "type" : "object",
-        "properties" : {
-          "configuration" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview.Configuration"
-          },
-          "tapOverview" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview.TapOverview"
-          }
-        },
-        "required" : [ "configuration", "tapOverview" ]
-      },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview.Configuration" : {
+      "Configuration" : {
         "type" : "object",
         "properties" : {
           "tapEnabled" : {
@@ -1482,7 +1611,19 @@
         },
         "required" : [ "courtMovementsEnabled", "releasesEnabled", "tapEnabled", "transfersEnabled" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.PrisonExternalMovementOverview.TapOverview" : {
+      "PrisonExternalMovementOverview" : {
+        "type" : "object",
+        "properties" : {
+          "configuration" : {
+            "$ref" : "#/components/schemas/Configuration"
+          },
+          "tapOverview" : {
+            "$ref" : "#/components/schemas/TapOverview"
+          }
+        },
+        "required" : [ "configuration", "tapOverview" ]
+      },
+      "TapOverview" : {
         "type" : "object",
         "properties" : {
           "leavingToday" : {
@@ -1504,7 +1645,7 @@
         },
         "required" : [ "approvalsRequired", "leavingNextSevenDays", "leavingToday", "returningToday" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.AbsenceCategorisation" : {
+      "AbsenceCategorisation" : {
         "type" : "object",
         "properties" : {
           "code" : {
@@ -1523,16 +1664,16 @@
         },
         "required" : [ "code", "description" ]
       },
-      "uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.AbsenceCategorisations" : {
+      "AbsenceCategorisations" : {
         "type" : "object",
         "properties" : {
           "domain" : {
-            "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.CodedDescription"
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "items" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/uk.gov.justice.digital.hmpps.externalmovementsapi.model.referencedata.AbsenceCategorisation"
+              "$ref" : "#/components/schemas/AbsenceCategorisation"
             }
           }
         },
