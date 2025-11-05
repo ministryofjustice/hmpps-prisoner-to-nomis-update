@@ -39,7 +39,7 @@ class PrisonerBalanceReconciliationService(
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
-  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> = generatePrisonerBalanceReconciliationReport(filterPrisonId)
+  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> = generatePrisonerBalanceReconciliationReport(listOf(filterPrisonId))
 
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
     telemetryClient.trackEvent(
@@ -47,7 +47,7 @@ class PrisonerBalanceReconciliationService(
       if (filterPrison != null) mapOf("filter-prison" to filterPrison) else emptyMap(),
     )
 
-    runCatching { generatePrisonerBalanceReconciliationReport(filterPrison) }
+    runCatching { generatePrisonerBalanceReconciliationReport(filterPrison?.split(",")) }
       .onSuccess {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-report",
@@ -72,7 +72,7 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: String?): ReconciliationResult<MismatchPrisonerBalance> = generateReconciliationReport(
+  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: List<String>?): ReconciliationResult<MismatchPrisonerBalance> = generateReconciliationReport(
     threadCount = pageSize,
     checkMatch = ::checkPrisonerBalance,
     nextPage = { id -> this.getPrisonerIdsForPage(id, filterPrisonId) },
@@ -195,7 +195,7 @@ class PrisonerBalanceReconciliationService(
     return differences
   }
 
-  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long, filterPrisonId: String?): ReconciliationPageResult<Long> = runCatching {
+  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long, filterPrisonId: List<String>?): ReconciliationPageResult<Long> = runCatching {
     if (filterPrisonId == null) {
       financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
         rootOffenderId = lastOffenderId,

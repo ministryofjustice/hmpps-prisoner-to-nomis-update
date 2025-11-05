@@ -49,8 +49,8 @@ class FinanceNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getRootOffenderIds(prisonId: String?, pageNumber: Long, pageSize: Long): RestResponsePagedModel<Long> = prisonerApi
-    .prepare(prisonerApi.getPrisonerBalanceIdentifiersRequestConfig(page = pageNumber.toInt(), size = pageSize.toInt(), sort = null, prisonId = prisonId))
+  suspend fun getRootOffenderIds(prisonIds: List<String>?, pageNumber: Long, pageSize: Long): RestResponsePagedModel<Long> = prisonerApi
+    .prepare(prisonerApi.getPrisonerBalanceIdentifiersRequestConfig(page = pageNumber.toInt(), size = pageSize.toInt(), sort = null, prisonId = prisonIds))
     .retrieve()
     .bodyToMono(typeReference<RestResponsePagedModel<Long>>())
     .retryWhen(backoffSpec)
