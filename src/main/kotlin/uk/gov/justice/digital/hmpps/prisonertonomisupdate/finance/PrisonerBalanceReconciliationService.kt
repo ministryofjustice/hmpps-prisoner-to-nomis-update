@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -23,15 +22,13 @@ class PrisonerBalanceReconciliationService(
   private val financeNomisApiService: FinanceNomisApiService,
   private val nomisApiService: NomisApiService,
   private val dpsApiService: FinanceDpsApiService,
-  private val objectMapper: ObjectMapper,
   @Value("\${reports.prisoner.balance.reconciliation.page-size:10}") private val pageSize: Int = 10,
+  @Value("\${reports.prisoner.balance.reconciliation.filter-prison:#{null}}") private val filterPrison: String?,
 ) {
   private companion object {
-    const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reconciliation"
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private const val TELEMETRY_PRISONER_PREFIX = "prisoner-balance-reconciliation"
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
-
-  var filterPrisonId: String? = null
 
   suspend fun manualCheckPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = checkPrisonerBalance(rootOffenderId)
 
@@ -42,19 +39,15 @@ class PrisonerBalanceReconciliationService(
     // rootOffenderId is nullable but there are no nulls in the table in prod
   }
 
-  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> {
-    this.filterPrisonId = filterPrisonId
-    return generatePrisonerBalanceReconciliationReport()
-  }
+  suspend fun manualCheckSinglePrisonBalances(filterPrisonId: String): ReconciliationResult<MismatchPrisonerBalance> = generatePrisonerBalanceReconciliationReport(filterPrisonId)
 
   suspend fun generatePrisonerBalanceReconciliationReportBatch() {
-    this.filterPrisonId = null
     telemetryClient.trackEvent(
       "$TELEMETRY_PRISONER_PREFIX-requested",
-      mapOf(),
+      if (filterPrison != null) mapOf("filter-prison" to filterPrison) else emptyMap(),
     )
 
-    runCatching { generatePrisonerBalanceReconciliationReport() }
+    runCatching { generatePrisonerBalanceReconciliationReport(filterPrison) }
       .onSuccess {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-report",
@@ -63,6 +56,7 @@ class PrisonerBalanceReconciliationService(
             "page-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
+            "filter-prison" to (filterPrison ?: ""),
           ), // + it.mismatches, // .asMap(),
         )
       }
@@ -78,10 +72,10 @@ class PrisonerBalanceReconciliationService(
       }
   }
 
-  private suspend fun generatePrisonerBalanceReconciliationReport(): ReconciliationResult<MismatchPrisonerBalance> = generateReconciliationReport<Long, MismatchPrisonerBalance>(
+  private suspend fun generatePrisonerBalanceReconciliationReport(filterPrisonId: String?): ReconciliationResult<MismatchPrisonerBalance> = generateReconciliationReport(
     threadCount = pageSize,
     checkMatch = ::checkPrisonerBalance,
-    nextPage = ::getPrisonerIdsForPage,
+    nextPage = { id -> this.getPrisonerIdsForPage(id, filterPrisonId) },
   )
 
   internal suspend fun checkPrisonerBalance(rootOffenderId: Long): MismatchPrisonerBalance? = runCatching {
@@ -201,7 +195,7 @@ class PrisonerBalanceReconciliationService(
     return differences
   }
 
-  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long): ReconciliationPageResult<Long> = runCatching {
+  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long, filterPrisonId: String?): ReconciliationPageResult<Long> = runCatching {
     if (filterPrisonId == null) {
       financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
         rootOffenderId = lastOffenderId,
@@ -216,7 +210,7 @@ class PrisonerBalanceReconciliationService(
     }
   }.fold(
     onSuccess = { rootOffenderIdsWithLast ->
-      ReconciliationSuccessPageResult<Long>(
+      ReconciliationSuccessPageResult(
         ids = rootOffenderIdsWithLast.rootOffenderIds,
         last = rootOffenderIdsWithLast.lastOffenderId,
       )
@@ -231,7 +225,7 @@ class PrisonerBalanceReconciliationService(
         ),
       )
       log.error("Unable to match entire page of prisoners from offenderId: $lastOffenderId", it)
-      ReconciliationErrorPageResult<Long>(it)
+      ReconciliationErrorPageResult(it)
     },
   )
 }

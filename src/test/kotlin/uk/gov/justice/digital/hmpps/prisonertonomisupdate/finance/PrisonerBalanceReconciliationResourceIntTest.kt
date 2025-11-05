@@ -88,6 +88,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
           assertThat(it).containsEntry("page-count", "1")
           assertThat(it).containsEntry("mismatch-count", "0")
           assertThat(it).containsEntry("success", "true")
+          assertThat(it).containsEntry("filter-prison", "")
         },
         isNull(),
       )
@@ -96,7 +97,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
     }
 
     @Test
-    fun `will output a mismatch when there is a difference in the  DPS record`() = runTest {
+    fun `will output a mismatch when there is a difference in the DPS record`() = runTest {
       stubBalances(
         2,
         nomisPrisonerBalanceResponse().copy(prisonNumber = "A0002NN"),
@@ -111,6 +112,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
           assertThat(it).containsEntry("page-count", "1")
           assertThat(it).containsEntry("mismatch-count", "1")
           assertThat(it).containsEntry("success", "true")
+          assertThat(it).containsEntry("filter-prison", "")
         },
         isNull(),
       )
