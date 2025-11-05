@@ -11,15 +11,16 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.objectMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapMovement.Direction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement.Direction.OUT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrenceAuthorisation
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.*
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapimodellocationLocation as Location
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapAuthorisation as TapAuthorisation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapMovement as TapMovement
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapOccurrence as TapOccurrence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapOccurrenceAuthorisation as TapOccurrenceAuthorisation
 
 class ExternalMovementsDpsApiExtension :
   BeforeAllCallback,
@@ -54,7 +55,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   private val today = now.toLocalDate()
   private val tomorrow = now.plusDays(1)
 
-  fun tapAuthorisation(id: UUID = UUID.randomUUID()) = TapAuthorisation(
+  fun tapAuthorisation(id: UUID = UUID.randomUUID()) = SyncReadTapAuthorisation(
     id = id,
     repeat = true,
     fromDate = today,
@@ -64,20 +65,20 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     statusCode = "PENDING",
     prisonCode = "LEI",
     absenceReasonCode = "R2",
-    submittedAt = now,
+    submitted = SyncAtAndBy(now, "USER1"),
     absenceTypeCode = "SR",
     absenceSubTypeCode = "RDR",
     notes = "Some notes",
   )
 
-  fun tapOccurrence(id: UUID = UUID.randomUUID(), authorisationId: UUID) = TapOccurrence(
+  fun tapOccurrence(id: UUID = UUID.randomUUID(), authorisationId: UUID) = SyncReadTapOccurrence(
     id = id,
-    authorisation = TapOccurrenceAuthorisation(
+    authorisation = SyncReadTapOccurrenceAuthorisation(
       id = authorisationId,
       statusCode = "APPROVED",
       absenceReasonCode = "R2",
       repeat = true,
-      submittedAt = now,
+      submitted = SyncAtAndBy(now, "USER1"),
       absenceTypeCode = "SR",
       absenceSubTypeCode = "RDR",
     ),
@@ -94,11 +95,11 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     transportCode = "TAX",
   )
 
-  fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = TapMovement(
+  fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = SyncReadTapMovement(
     id = id,
     occurrenceId = occurrenceId,
     occurredAt = now,
-    direction = Direction.OUT,
+    direction = OUT,
     absenceReasonCode = "R2",
     location = Location(
       description = "Agency name",
@@ -110,9 +111,10 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     accompaniedByNotes = "Unaccompanied movement notes",
     notes = "movement notes",
     recordedByPrisonCode = "LEI",
+    personIdentifier = "USER1",
   )
 
-  fun stubGetTapAuthorisation(id: UUID, response: TapAuthorisation = tapAuthorisation(id)) {
+  fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-authorisations/$id")
         .willReturn(
@@ -136,7 +138,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetTapOccurrence(id: UUID, authorisationId: UUID, response: TapOccurrence = tapOccurrence(id, authorisationId)) {
+  fun stubGetTapOccurrence(id: UUID, authorisationId: UUID, response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-occurrences/$id")
         .willReturn(
@@ -160,7 +162,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetTapMovement(id: UUID, occurrenceId: UUID, response: TapMovement = tapMovement(id, occurrenceId)) {
+  fun stubGetTapMovement(id: UUID, occurrenceId: UUID, response: SyncReadTapMovement = tapMovement(id, occurrenceId)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-movements/$id")
         .willReturn(

@@ -6,11 +6,11 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.api.SyncApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.*
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapAuthorisation as TapAuthorisation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapMovement as TapMovement
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.UkgovjusticedigitalhmppsexternalmovementsapisyncTapOccurrence as TapOccurrence
 
 @Service
 class ExternalMovementsDpsApiService(
@@ -23,15 +23,15 @@ class ExternalMovementsDpsApiService(
 
   private val syncApi = SyncApi(webClient)
 
-  suspend fun getTapAuthorisation(id: UUID): TapAuthorisation = syncApi.findTapAuthorisationById(id)
+  suspend fun getTapAuthorisation(id: UUID): SyncReadTapAuthorisation = syncApi.findTapAuthorisationById(id)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getTapOccurrence(id: UUID): TapOccurrence = syncApi.findTapOccurrenceById(id)
+  suspend fun getTapOccurrence(id: UUID): SyncReadTapOccurrence = syncApi.findTapOccurrenceById(id)
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getTapMovement(id: UUID): TapMovement = syncApi.findTapMovementById(id)
+  suspend fun getTapMovement(id: UUID): SyncReadTapMovement = syncApi.findTapMovementById(id)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
