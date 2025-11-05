@@ -249,7 +249,7 @@ class PrisonerBalanceReconciliationServiceTest {
     @Test
     fun `will return id list when filtering by prison`() = runTest {
       financeNomisApi.stubGetRootOffenderIds(totalElements = 4, prisonId = "MDI")
-      val actual = service.getPrisonerIdsForPage(0, filterPrisonId = "MDI")
+      val actual = service.getPrisonerIdsForPage(0, filterPrisonId = listOf("MDI"))
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
