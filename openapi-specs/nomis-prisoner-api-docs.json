@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-05.697.cff2e33"
+    "version" : "2025-11-05.701.d8ddd1b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24884,6 +24884,9 @@
           "createdByUsername" : {
             "type" : "string"
           },
+          "modifiedByUsername" : {
+            "type" : "string"
+          },
           "courtEvents" : {
             "type" : "array",
             "items" : {
@@ -24963,9 +24966,15 @@
           },
           "linkedCaseDetails" : {
             "$ref" : "#/components/schemas/LinkedCaseChargeDetails"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "modifiedByUsername" : {
+            "type" : "string"
           }
         },
-        "required" : [ "eventId", "mostSeriousFlag", "offenderCharge" ]
+        "required" : [ "createdByUsername", "eventId", "mostSeriousFlag", "offenderCharge" ]
       },
       "CourtEventResponse" : {
         "type" : "object",
@@ -25025,6 +25034,9 @@
             "format" : "date-time"
           },
           "createdByUsername" : {
+            "type" : "string"
+          },
+          "modifiedByUsername" : {
             "type" : "string"
           },
           "courtEventCharges" : {
@@ -25249,9 +25261,15 @@
           "lidsOffenceNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "modifiedByUsername" : {
+            "type" : "string"
           }
         },
-        "required" : [ "id", "mostSeriousFlag", "offence" ]
+        "required" : [ "createdByUsername", "id", "mostSeriousFlag", "offence" ]
       },
       "RecallCustodyDate" : {
         "type" : "object",
@@ -25487,6 +25505,9 @@
           "createdByUsername" : {
             "type" : "string"
           },
+          "modifiedByUsername" : {
+            "type" : "string"
+          },
           "sentenceTerms" : {
             "type" : "array",
             "items" : {
@@ -25559,9 +25580,15 @@
           },
           "prisonId" : {
             "type" : "string"
+          },
+          "createdByUsername" : {
+            "type" : "string"
+          },
+          "modifiedByUsername" : {
+            "type" : "string"
           }
         },
-        "required" : [ "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
+        "required" : [ "createdByUsername", "lifeSentenceFlag", "prisonId", "startDate", "termSequence" ]
       },
       "CaseIdentifier" : {
         "type" : "object",
