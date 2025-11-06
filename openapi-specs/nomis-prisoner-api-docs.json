@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-05.701.d8ddd1b"
+    "version" : "2025-11-06.706.ab7ac56"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -4057,6 +4057,88 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/movements/{offenderNo}/temporary-absences/application" : {
+      "put" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Inserts or updates a temporary absence application for an offender",
+        "description" : "Creates or updates a temporary absence application on the prisoner's latest booking. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "upsertTemporaryAbsenceApplication",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpsertTemporaryAbsenceApplicationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Temporary absence application created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/UpsertTemporaryAbsenceApplicationResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "One or more fields in the request contains invalid data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11270,88 +11352,6 @@
         }
       }
     },
-    "/movements/{offenderNo}/temporary-absences/application" : {
-      "post" : {
-        "tags" : [ "movements-resource" ],
-        "summary" : "Inserts a temporary absence application for an offender",
-        "description" : "Creates a temporary absence application on the prisoner's latest booking. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "createTemporaryAbsenceApplication",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender no (aka prisoner number)",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender no (aka prisoner number)",
-            "example" : "A1234AK"
-          },
-          "example" : "A1234AK"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateTemporaryAbsenceApplicationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Temporary absence application created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceApplicationResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "One or more fields in the request contains invalid data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/locations" : {
       "post" : {
         "tags" : [ "location-resource" ],
@@ -13099,7 +13099,7 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ]
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
           }
         }, {
           "name" : "timeSlotSequence",
@@ -22441,6 +22441,100 @@
         },
         "required" : [ "effectiveDate", "reason", "recipReason", "type" ]
       },
+      "UpsertTemporaryAbsenceApplicationRequest" : {
+        "type" : "object",
+        "description" : "Upsert temporary absence application request",
+        "properties" : {
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Existing PK, null if new"
+          },
+          "eventSubType" : {
+            "type" : "string",
+            "description" : "Event sub type"
+          },
+          "applicationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Application date"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "From date"
+          },
+          "releaseTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Release time"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "To date"
+          },
+          "returnTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Return time"
+          },
+          "applicationStatus" : {
+            "type" : "string",
+            "description" : "Application status"
+          },
+          "escortCode" : {
+            "type" : "string",
+            "description" : "Escort code"
+          },
+          "transportType" : {
+            "type" : "string",
+            "description" : "Transport type"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID"
+          },
+          "contactPersonName" : {
+            "type" : "string",
+            "description" : "Contact person name"
+          },
+          "applicationType" : {
+            "type" : "string",
+            "description" : "Application type"
+          },
+          "temporaryAbsenceType" : {
+            "type" : "string",
+            "description" : "Temporary absence type"
+          },
+          "temporaryAbsenceSubType" : {
+            "type" : "string",
+            "description" : "Temporary absence sub type"
+          }
+        },
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "releaseTime", "returnTime", "toDate" ]
+      },
+      "UpsertTemporaryAbsenceApplicationResponse" : {
+        "type" : "object",
+        "description" : "Upsert temporary absence application response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "movementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Movement application ID"
+          }
+        },
+        "required" : [ "bookingId", "movementApplicationId" ]
+      },
       "ProfileRequest" : {
         "type" : "object",
         "description" : "Location profile or attribute",
@@ -27663,104 +27757,6 @@
         },
         "required" : [ "bookingId", "movementApplicationId", "outsideMovementId" ]
       },
-      "CreateTemporaryAbsenceApplicationRequest" : {
-        "type" : "object",
-        "description" : "Create temporary absence application request",
-        "properties" : {
-          "eventSubType" : {
-            "type" : "string",
-            "description" : "Event sub type"
-          },
-          "applicationDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Application date"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "From date"
-          },
-          "releaseTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Release time"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "To date"
-          },
-          "returnTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Return time"
-          },
-          "applicationStatus" : {
-            "type" : "string",
-            "description" : "Application status"
-          },
-          "escortCode" : {
-            "type" : "string",
-            "description" : "Escort code"
-          },
-          "transportType" : {
-            "type" : "string",
-            "description" : "Transport type"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison ID"
-          },
-          "toAgencyId" : {
-            "type" : "string",
-            "description" : "To agency ID"
-          },
-          "toAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "To address ID"
-          },
-          "contactPersonName" : {
-            "type" : "string",
-            "description" : "Contact person name"
-          },
-          "applicationType" : {
-            "type" : "string",
-            "description" : "Application type"
-          },
-          "temporaryAbsenceType" : {
-            "type" : "string",
-            "description" : "Temporary absence type"
-          },
-          "temporaryAbsenceSubType" : {
-            "type" : "string",
-            "description" : "Temporary absence sub type"
-          }
-        },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "releaseTime", "returnTime", "toDate" ]
-      },
-      "CreateTemporaryAbsenceApplicationResponse" : {
-        "type" : "object",
-        "description" : "Create temporary absence application response",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking ID"
-          },
-          "movementApplicationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application ID"
-          }
-        },
-        "required" : [ "bookingId", "movementApplicationId" ]
-      },
       "CreateLocationRequest" : {
         "type" : "object",
         "description" : "Location creation request",
@@ -28693,9 +28689,13 @@
             "format" : "int32",
             "description" : "Optional max adults allowed in slot",
             "example" : 1
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
           }
         },
-        "required" : [ "id", "internalLocation" ]
+        "required" : [ "audit", "id", "internalLocation" ]
       },
       "VisitTimeSlotResponse" : {
         "type" : "object",
@@ -28708,8 +28708,8 @@
           "dayOfWeek" : {
             "type" : "string",
             "description" : "Day of the week time slot is for",
-            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
-            "example" : "MONDAY"
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
           },
           "timeSlotSequence" : {
             "type" : "integer",
@@ -28745,9 +28745,13 @@
             "items" : {
               "$ref" : "#/components/schemas/VisitSlotResponse"
             }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
           }
         },
-        "required" : [ "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
+        "required" : [ "audit", "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
       },
       "PageMetadata" : {
         "type" : "object",
@@ -28795,8 +28799,8 @@
           "dayOfWeek" : {
             "type" : "string",
             "description" : "Day of the week time slot is for",
-            "enum" : [ "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY" ],
-            "example" : "MONDAY"
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
           },
           "timeSlotSequence" : {
             "type" : "integer",
