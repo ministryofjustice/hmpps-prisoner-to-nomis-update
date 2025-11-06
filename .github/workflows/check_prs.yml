@@ -67,6 +67,8 @@ jobs:
                     text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
                   - type: mrkdwn
                     text: "*Repository:*\n${{ github.repository }}"
+                  - type: mrkdwn
+                    text: "*Failing branches:*\n${{ steps.check-prs.outputs.failures }}"
 
       - name: Slack message to review combined PR
         if: steps.check-prs.outputs.combined_pr
