@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-05-21.5230.01166b9"
+    "version" : "2025-11-05.76.d4cbdd2"
   },
   "servers" : [ {
     "url" : "https://adjustments-api-dev.hmpps.service.justice.gov.uk",
@@ -1035,7 +1035,7 @@
           "bookingId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The NOMIS booking ID of the adjustment"
+            "description" : "The NOMIS booking ID of the adjustment. If not specified, the latest booking is used."
           },
           "person" : {
             "type" : "string",
@@ -1162,7 +1162,7 @@
             "readOnly" : true
           }
         },
-        "required" : [ "adjustmentType", "bookingId", "person" ]
+        "required" : [ "adjustmentType", "person" ]
       },
       "LawfullyAtLargeDto" : {
         "type" : "object",
@@ -1435,9 +1435,7 @@
         "properties" : {
           "body" : {
             "type" : "object",
-            "additionalProperties" : {
-              "type" : "object"
-            }
+            "additionalProperties" : { }
           },
           "messageId" : {
             "type" : "string"
