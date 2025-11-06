@@ -1256,6 +1256,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
         chargeStatus = "A",
         conviction = true,
       ),
+      createdByUsername = "msmith",
     ),
     offenceDate = offenceStartDate,
     offenceEndDate = offenceStartDate.plusDays(1),
@@ -1267,6 +1268,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       chargeStatus = "A",
       conviction = true,
     ),
+    createdByUsername = "msmith",
   )
 
   fun nomisOffenderChargeResponse(
@@ -1290,6 +1292,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       chargeStatus = "A",
       conviction = true,
     ),
+    createdByUsername = "msmith",
   )
 
   fun nomisSentenceResponse(
@@ -1335,6 +1338,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     termSequence = NOMIS_TERM_SEQ,
     prisonId = PRISON_MDI,
     startDate = LocalDate.of(2023, 1, 1),
+    createdByUsername = "msmith",
   )
 
   fun dpsChargeResponse(
