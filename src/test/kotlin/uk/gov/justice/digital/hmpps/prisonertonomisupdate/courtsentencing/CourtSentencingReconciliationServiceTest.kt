@@ -1034,7 +1034,9 @@ fun nomisChargeResponse(
       chargeStatus = "A",
       conviction = true,
     ),
+    createdByUsername = "msmith",
   ),
+  createdByUsername = "msmith",
   offenceDate = offenceStartDate,
   offenceEndDate = offenceStartDate.plusDays(1),
   mostSeriousFlag = false,
@@ -1068,6 +1070,7 @@ fun nomisOffenderChargeResponse(
     chargeStatus = "A",
     conviction = true,
   ),
+  createdByUsername = "msmith",
 )
 
 fun nomisSentenceResponse(
@@ -1114,6 +1117,7 @@ fun nomisSentenceTermResponse(
   termSequence = NOMIS_TERM_SEQ,
   prisonId = PRISON_MDI,
   startDate = LocalDate.of(2023, 1, 1),
+  createdByUsername = "msmith",
 )
 
 fun dpsChargeResponse(
