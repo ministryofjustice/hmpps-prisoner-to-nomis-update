@@ -8,7 +8,7 @@ else
   OUTPUT_COMPARISON=false
 fi
 
-FAILURE_COUNT=$(gh pr ls --search 'head:api-docs-' --json 'statusCheckRollup,url' --jq '. | map(select(.statusCheckRollup[].state == "FAILURE")) | .[].url' | sort -u | wc -l | awk '{print $1}')
+FAILURE_COUNT=$(gh pr ls --search 'head:api-docs-' --json 'statusCheckRollup,url' --jq '. | map(select(.statusCheckRollup[].conclusion == "FAILURE")) | .[].url' | sort -u | wc -l | awk '{print $1}')
 echo "failure_count=$FAILURE_COUNT" >>"$GITHUB_OUTPUT"
 
 COMBINED_PR=$(gh pr ls --search 'head:combined-prs-branch' --json 'url' --jq '.[].url' | sort -u)
