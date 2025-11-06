@@ -11,14 +11,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceApplicationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -29,7 +29,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
     private val today = LocalDateTime.now()
     private val tomorrow = today.plusDays(1)
 
-    fun createTemporaryAbsenceApplicationRequest() = CreateTemporaryAbsenceApplicationRequest(
+    fun createTemporaryAbsenceApplicationRequest() = UpsertTemporaryAbsenceApplicationRequest(
       eventSubType = "C5",
       applicationDate = today.toLocalDate(),
       fromDate = today.toLocalDate(),
@@ -42,14 +42,12 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       transportType = "VAN",
       comment = "Temporary absence application comment",
       prisonId = "LEI",
-      toAgencyId = "HAZLWD",
-      toAddressId = 3456,
       contactPersonName = "Deek Sanderson",
       temporaryAbsenceType = "RR",
       temporaryAbsenceSubType = "RDR",
     )
 
-    fun createTemporaryAbsenceApplicationResponse() = CreateTemporaryAbsenceApplicationResponse(12345, 56789)
+    fun createTemporaryAbsenceApplicationResponse() = UpsertTemporaryAbsenceApplicationResponse(12345, 56789)
 
     fun createTemporaryAbsenceOutsideMovementRequest() = CreateTemporaryAbsenceOutsideMovementRequest(
       movementApplicationId = 56789,
@@ -138,7 +136,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
 
   fun stubCreateTemporaryAbsenceApplication(
     offenderNo: String = "A1234BC",
-    response: CreateTemporaryAbsenceApplicationResponse = createTemporaryAbsenceApplicationResponse(),
+    response: UpsertTemporaryAbsenceApplicationResponse = createTemporaryAbsenceApplicationResponse(),
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/movements/$offenderNo/temporary-absences/application"))

@@ -144,8 +144,6 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
               .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Tap Application Create comment")
-              .withRequestBodyJsonPath("toAgencyId", "HAZLWD")
-              .withRequestBodyJsonPath("toAddressId", 3456)
               .withRequestBodyJsonPath("contactPersonName", "Deek Sanderson")
               .withRequestBodyJsonPath("temporaryAbsenceType", "RR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),

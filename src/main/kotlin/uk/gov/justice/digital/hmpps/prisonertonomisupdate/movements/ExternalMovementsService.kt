@@ -16,10 +16,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Te
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
@@ -460,7 +460,7 @@ data class TapApplication(
     )
   }
 
-  fun toNomisCreateRequest() = CreateTemporaryAbsenceApplicationRequest(
+  fun toNomisCreateRequest() = UpsertTemporaryAbsenceApplicationRequest(
     eventSubType = eventSubType,
     fromDate = fromDate,
     applicationDate = applicationDate,
@@ -473,8 +473,6 @@ data class TapApplication(
     transportType = transportType,
     comment = comment,
     prisonId = prisonId,
-    toAgencyId = toAgencyId,
-    toAddressId = toAddressId,
     temporaryAbsenceType = temporaryAbsenceType,
     temporaryAbsenceSubType = temporaryAbsenceSubType,
     contactPersonName = contactPersonName,
