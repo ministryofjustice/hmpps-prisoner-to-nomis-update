@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-16.2994.7c808cc"
+    "version" : "2025-11-06.3146.de374e8"
   },
   "servers" : [ {
     "url" : "/",
@@ -7799,7 +7799,7 @@
       "get" : {
         "tags" : [ "Contacts" ],
         "summary" : "Search contacts",
-        "description" : "Search all contacts by their last name or first name or middle name or date of birth",
+        "description" : "Search all contacts by their last name or first name or middle name or date of birth or contact id",
         "operationId" : "searchContacts",
         "parameters" : [ {
           "name" : "lastName",
@@ -7833,15 +7833,22 @@
           },
           "example" : "Simon"
         }, {
+          "name" : "contactId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
           "name" : "dateOfBirth",
           "in" : "query",
-          "description" : "Date of Birth of the contact in ISO format",
+          "description" : "The contact id",
           "required" : false,
           "schema" : {
             "type" : "string",
             "format" : "date"
           },
-          "example" : "30/12/2010"
+          "example" : 123456
         }, {
           "name" : "soundsLike",
           "in" : "query",
@@ -13822,22 +13829,22 @@
             "example" : "FRI"
           },
           "isEmergencyContact" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether they are the emergency contact for the prisoner",
             "example" : true
           },
           "isApprovedVisitor" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether they are approved to visit the prisoner",
             "example" : true
           },
           "isNextOfKin" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether they are the next of kin for the prisoner",
             "example" : true
           },
           "isRelationshipActive" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether the relationship is active",
             "example" : true
           },
@@ -13855,7 +13862,7 @@
         "description" : "Request to patch a new contact. firstName and lastName are not updatable so are intentionally missing from this request.",
         "properties" : {
           "isStaff" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether the contact is a staff member",
             "example" : false
           },
@@ -13865,7 +13872,7 @@
             "example" : "S"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether an interpreter is required",
             "example" : false
           },
@@ -14058,6 +14065,9 @@
         "properties" : {
           "present" : {
             "type" : "boolean"
+          },
+          "undefined" : {
+            "type" : "boolean"
           }
         }
       },
@@ -14072,7 +14082,7 @@
             "maxLength" : 12
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "True if this is the primary address otherwise false",
             "example" : true
           },
@@ -14133,12 +14143,12 @@
             "minLength" : 0
           },
           "verified" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether the address has been verified by postcode lookup",
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
@@ -14153,7 +14163,7 @@
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : "string",
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
