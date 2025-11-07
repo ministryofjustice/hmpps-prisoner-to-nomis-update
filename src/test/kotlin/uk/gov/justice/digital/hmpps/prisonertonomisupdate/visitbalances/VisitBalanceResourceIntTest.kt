@@ -10,7 +10,6 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
 import org.mockito.kotlin.any
@@ -24,9 +23,12 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import kotlin.collections.map
 
 class VisitBalanceResourceIntTest(
   @Autowired private val visitBalanceReconciliationService: VisitBalanceReconciliationService,
@@ -44,12 +46,35 @@ class VisitBalanceResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      val numberOfActivePrisoners = 34L
-      nomisApi.stubGetActivePrisonersInitialCount(numberOfActivePrisoners)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 0)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 1)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 2)
-      nomisApi.stubGetActivePrisonersPage(numberOfActivePrisoners, 3, 4)
+
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 0,
+        response = BookingIdsWithLast(
+          lastBookingId = 10,
+          prisonerIds = (1L..10L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 10,
+        response = BookingIdsWithLast(
+          lastBookingId = 20,
+          prisonerIds = (11L..20L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 20,
+        response = BookingIdsWithLast(
+          lastBookingId = 30,
+          prisonerIds = (21L..30L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
+      nomisApi.stuGetAllLatestBookings(
+        bookingId = 30,
+        response = BookingIdsWithLast(
+          lastBookingId = 34,
+          prisonerIds = (31L..34L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+        ),
+      )
 
       // mock non-matching for first, second and last prisoners
       visitBalanceNomisApi.stubGetVisitBalance("A0001TZ", visitBalance().copy(remainingVisitOrders = 7))
@@ -62,7 +87,7 @@ class VisitBalanceResourceIntTest(
       visitBalanceDpsApi.stubGetVisitBalance(PrisonerBalanceDto(prisonerId = "A0034TZ", voBalance = 17, pvoBalance = 8))
 
       // all others are ok
-      (3..<numberOfActivePrisoners).forEach {
+      (3L..<34L).forEach {
         val offenderNo = generateOffenderNo(sequence = it)
         visitBalanceNomisApi.stubGetVisitBalance(offenderNo)
         visitBalanceDpsApi.stubGetVisitBalance(visitBalanceDto().copy(prisonerId = offenderNo))
@@ -73,7 +98,11 @@ class VisitBalanceResourceIntTest(
     fun `will output report requested telemetry`() = runTest {
       visitBalanceReconciliationService.generateReconciliationReport()
 
-      verify(telemetryClient).trackEvent(eq("visitbalance-reports-reconciliation-requested"), check { assertThat(it).containsEntry("active-prisoners", "34") }, isNull())
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-requested"),
+        check { assertThat(it).isEmpty() },
+        isNull(),
+      )
 
       awaitReportFinished()
     }
@@ -84,15 +113,23 @@ class VisitBalanceResourceIntTest(
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-          .withQueryParam("size", WireMock.equalTo("1")),
+        WireMock.getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("bookingId", WireMock.equalTo("0")),
       )
       nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
-        4,
-        WireMock.getRequestedFor(urlPathEqualTo("/prisoners/ids/active"))
-          .withQueryParam("size", WireMock.equalTo("10")),
+        WireMock.getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("bookingId", WireMock.equalTo("10")),
       )
+      nomisApi.verify(
+        WireMock.getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("bookingId", WireMock.equalTo("20")),
+      )
+      nomisApi.verify(
+        WireMock.getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
+          .withQueryParam("bookingId", WireMock.equalTo("30")),
+      )
+      nomisApi.checkForUnmatchedRequests()
     }
 
     @Test
@@ -235,17 +272,23 @@ class VisitBalanceResourceIntTest(
     }
 
     @Test
-    fun `when initial prison count fails the whole report fails`() = runTest {
-      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 0, responseCode = 500)
+    fun `will attempt to complete a report even if the first page fails`() = runTest {
+      nomisApi.stuGetAllLatestBookings(bookingId = 0, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
-      assertThrows<RuntimeException> {
-        visitBalanceReconciliationService.generateReconciliationReport()
-      }
+      visitBalanceReconciliationService.generateReconciliationReport()
+
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("visitbalance-reports-reconciliation-mismatch-page-error"),
+        any(),
+        isNull(),
+      )
     }
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
-      nomisApi.stubGetActivePrisonersPageWithError(pageNumber = 2, responseCode = 500)
+      nomisApi.stuGetAllLatestBookings(bookingId = 20, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
       visitBalanceReconciliationService.generateReconciliationReport()
 
