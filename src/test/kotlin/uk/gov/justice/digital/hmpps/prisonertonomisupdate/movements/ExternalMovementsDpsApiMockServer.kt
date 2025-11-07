@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndByWithPrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement.Direction.OUT
@@ -65,22 +66,19 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     statusCode = "PENDING",
     prisonCode = "LEI",
     absenceReasonCode = "R2",
-    submitted = SyncAtAndBy(now, "USER1"),
+    created = SyncAtAndBy(now, "USER1"),
     absenceTypeCode = "SR",
     absenceSubTypeCode = "RDR",
     notes = "Some notes",
+    accompaniedByCode = "U",
   )
 
   fun tapOccurrence(id: UUID = UUID.randomUUID(), authorisationId: UUID) = SyncReadTapOccurrence(
     id = id,
     authorisation = SyncReadTapOccurrenceAuthorisation(
       id = authorisationId,
-      statusCode = "APPROVED",
-      absenceReasonCode = "R2",
-      repeat = true,
-      submitted = SyncAtAndBy(now, "USER1"),
-      absenceTypeCode = "SR",
-      absenceSubTypeCode = "RDR",
+      personIdentifier = "A1234AA",
+      prisonCode = "LEI",
     ),
     statusCode = "APPROVED",
     releaseAt = now,
@@ -93,6 +91,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
     accompaniedByCode = "U",
     transportCode = "TAX",
+    absenceReasonCode = "R2",
+    created = SyncAtAndBy(at = now, by = "USER1"),
   )
 
   fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = SyncReadTapMovement(
@@ -110,8 +110,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     accompaniedByCode = "U",
     accompaniedByNotes = "Unaccompanied movement notes",
     notes = "movement notes",
-    recordedByPrisonCode = "LEI",
-    personIdentifier = "USER1",
+    personIdentifier = "A1234AA",
+    created = SyncAtAndByWithPrison(at = now, by = "USER1", prisonCode = "LEI"),
   )
 
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {

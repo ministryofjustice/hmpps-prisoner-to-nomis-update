@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-04.274.9a548ac"
+    "version" : "2025-11-06.282.2fb1771"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -88,6 +88,43 @@
         }
       }
     },
+    "/sync/temporary-absence-movements/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncTemporaryAbsenceMovement",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncWriteTapMovement"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/temporary-absence-movement/{personIdentifier}" : {
       "put" : {
         "tags" : [ "Sync" ],
@@ -124,6 +161,81 @@
           }
         },
         "deprecated" : true
+      }
+    },
+    "/sync/temporary-absence-authorisations/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncTemporaryAbsenceAuthorisation",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncWriteTapAuthorisation"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/temporary-absence-authorisations/{authorisationId}/occurrences" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "syncTemporaryAbsenceOccurrence",
+        "parameters" : [ {
+          "name" : "authorisationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncWriteTapOccurrence"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/sync/temporary-absence-application/{personIdentifier}" : {
@@ -620,6 +732,108 @@
         } ],
         "required" : [ "type" ]
       },
+      "Location" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string"
+          },
+          "address" : {
+            "type" : "string"
+          },
+          "postcode" : {
+            "type" : "string"
+          },
+          "uprn" : {
+            "type" : "string"
+          }
+        }
+      },
+      "SyncAtAndBy" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "by" ]
+      },
+      "SyncAtAndByWithPrison" : {
+        "type" : "object",
+        "properties" : {
+          "at" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "by" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "at", "by", "prisonCode" ]
+      },
+      "SyncWriteTapMovement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "occurrenceId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "accompaniedByNotes" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt" ]
+      },
+      "SyncResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "id" ]
+      },
       "NomisAudit" : {
         "type" : "object",
         "properties" : {
@@ -707,15 +921,109 @@
         },
         "required" : [ "audit", "direction", "legacyId", "location", "movementDateTime", "movementReason" ]
       },
-      "SyncResponse" : {
+      "SyncWriteTapAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "statusCode" : {
+            "type" : "string"
+          },
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "repeat" : {
+            "type" : "boolean"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
-        "required" : [ "id" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "prisonCode", "repeat", "statusCode", "toDate" ]
+      },
+      "SyncWriteTapOccurrence" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "statusCode" : {
+            "type" : "string"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "transportCode" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "legacyId", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
       },
       "TapApplicationRequest" : {
         "type" : "object",
@@ -736,6 +1044,9 @@
             "format" : "date"
           },
           "applicationStatus" : {
+            "type" : "string"
+          },
+          "escort" : {
             "type" : "string"
           },
           "comment" : {
@@ -784,6 +1095,9 @@
           "eventStatus" : {
             "type" : "string"
           },
+          "eventSubType" : {
+            "type" : "string"
+          },
           "startTime" : {
             "type" : "string",
             "format" : "date-time"
@@ -812,7 +1126,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "eventId", "eventStatus", "location", "returnTime", "startTime" ]
+        "required" : [ "audit", "eventId", "eventStatus", "eventSubType", "location", "returnTime", "startTime" ]
       },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",
@@ -892,23 +1206,6 @@
         "required" : [ "accompaniedByCode", "location", "releaseAt", "returnBy", "transportCode" ]
       },
       "JsonNode" : { },
-      "Location" : {
-        "type" : "object",
-        "properties" : {
-          "description" : {
-            "type" : "string"
-          },
-          "address" : {
-            "type" : "string"
-          },
-          "postcode" : {
-            "type" : "string"
-          },
-          "uprn" : {
-            "type" : "string"
-          }
-        }
-      },
       "ReferenceId" : {
         "type" : "object",
         "properties" : {
@@ -1141,19 +1438,6 @@
         },
         "required" : [ "fromDate", "id", "occurrences", "person", "repeat", "status", "submitted", "toDate" ]
       },
-      "SyncAtAndBy" : {
-        "type" : "object",
-        "properties" : {
-          "at" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "by" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "at", "by" ]
-      },
       "SyncReadTapOccurrence" : {
         "type" : "object",
         "properties" : {
@@ -1178,28 +1462,6 @@
           "location" : {
             "$ref" : "#/components/schemas/Location"
           },
-          "accompaniedByCode" : {
-            "type" : "string"
-          },
-          "transportCode" : {
-            "type" : "string"
-          },
-          "notes" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "accompaniedByCode", "authorisation", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
-      },
-      "SyncReadTapOccurrenceAuthorisation" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "statusCode" : {
-            "type" : "string"
-          },
           "absenceTypeCode" : {
             "type" : "string"
           },
@@ -1209,14 +1471,39 @@
           "absenceReasonCode" : {
             "type" : "string"
           },
-          "repeat" : {
-            "type" : "boolean"
+          "accompaniedByCode" : {
+            "type" : "string"
           },
-          "submitted" : {
+          "transportCode" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           }
         },
-        "required" : [ "absenceReasonCode", "id", "repeat", "statusCode", "submitted" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
+      },
+      "SyncReadTapOccurrenceAuthorisation" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "personIdentifier", "prisonCode" ]
       },
       "SyncReadTapMovement" : {
         "type" : "object",
@@ -1255,11 +1542,14 @@
           "notes" : {
             "type" : "string"
           },
-          "recordedByPrisonCode" : {
-            "type" : "string"
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "direction", "id", "location", "occurredAt", "personIdentifier", "recordedByPrisonCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "id", "location", "occurredAt", "personIdentifier" ]
       },
       "SyncReadTapAuthorisation" : {
         "type" : "object",
@@ -1286,6 +1576,9 @@
           "absenceReasonCode" : {
             "type" : "string"
           },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
           "repeat" : {
             "type" : "boolean"
           },
@@ -1297,7 +1590,10 @@
             "type" : "string",
             "format" : "date"
           },
-          "submitted" : {
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "notes" : {
@@ -1310,7 +1606,7 @@
             }
           }
         },
-        "required" : [ "absenceReasonCode", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "statusCode", "submitted", "toDate" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "statusCode", "toDate" ]
       },
       "SyncReadTapAuthorisationOccurrence" : {
         "type" : "object",
@@ -1333,6 +1629,15 @@
           "location" : {
             "$ref" : "#/components/schemas/Location"
           },
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
           "accompaniedByCode" : {
             "type" : "string"
           },
@@ -1341,9 +1646,15 @@
           },
           "notes" : {
             "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           }
         },
-        "required" : [ "accompaniedByCode", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
       },
       "TapOccurrenceSearchRequest" : {
         "type" : "object",
