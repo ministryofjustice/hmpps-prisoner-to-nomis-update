@@ -28,7 +28,7 @@ class ExternalMovementsNomisApiService(
     Context.of("api", "ExternalMovementsNomisApiService"),
   )
 
-  suspend fun createTemporaryAbsenceApplication(offenderNo: String, request: UpsertTemporaryAbsenceApplicationRequest): UpsertTemporaryAbsenceApplicationResponse = webClient.post()
+  suspend fun upsertTemporaryAbsenceApplication(offenderNo: String, request: UpsertTemporaryAbsenceApplicationRequest): UpsertTemporaryAbsenceApplicationResponse = webClient.put()
     .uri("/movements/{offenderNo}/temporary-absences/application", offenderNo)
     .bodyValue(request)
     .retrieve()

@@ -36,7 +36,7 @@ class ExternalMovementsDomainEventListener(
   ): CompletableFuture<Void?> = onDomainEvent(rawMessage) { eventType, message ->
     log.info("Received message: {}", eventType)
     when (eventType) {
-      "external-movements-api.temporary-absence-application.created" -> externalMovementsService.applicationCreated(message.fromJson())
+      "person.temporary-absence-authorisation.approved" -> externalMovementsService.authorisationApproved(message.fromJson())
       "external-movements-api.temporary-absence-outside-movement.created" -> externalMovementsService.outsideMovementCreated(message.fromJson())
       "external-movements-api.temporary-absence-scheduled-movement-out.created" -> externalMovementsService.scheduledMovementOutCreated(message.fromJson())
       "external-movements-api.temporary-absence-scheduled-movement-in.created" -> externalMovementsService.scheduledMovementInCreated(message.fromJson())
@@ -48,15 +48,15 @@ class ExternalMovementsDomainEventListener(
   }
 }
 
-data class TemporaryAbsenceApplicationEvent(
+data class TemporaryAbsenceAuthorisationEvent(
   val description: String?,
   val eventType: String,
   val personReference: PersonReference,
-  val additionalInformation: ApplicationAdditionalInformation,
+  val additionalInformation: AuthorisationAdditionalInformation,
 )
 
-data class ApplicationAdditionalInformation(
-  val applicationId: UUID,
+data class AuthorisationAdditionalInformation(
+  val authorisationId: UUID,
   val source: String,
 )
 
@@ -69,7 +69,7 @@ data class TemporaryAbsenceOutsideMovementEvent(
 
 data class OutsideMovementAdditionalInformation(
   val outsideMovementId: UUID,
-  val applicationId: UUID,
+  val authorisationId: UUID,
   val source: String,
 )
 
@@ -82,7 +82,7 @@ data class TemporaryAbsenceScheduledMovementOutEvent(
 
 data class ScheduledMovementOutAdditionalInformation(
   val scheduledMovementOutId: UUID,
-  val applicationId: UUID,
+  val authorisationId: UUID,
   val source: String,
 )
 
@@ -96,7 +96,7 @@ data class TemporaryAbsenceScheduledMovementInEvent(
 data class ScheduledMovementInAdditionalInformation(
   val scheduledMovementInId: UUID,
   val scheduledMovementOutId: UUID,
-  val applicationId: UUID,
+  val authorisationId: UUID,
   val source: String,
 )
 
@@ -110,7 +110,7 @@ data class TemporaryAbsenceExternalMovementOutEvent(
 data class ExternalMovementOutAdditionalInformation(
   val externalMovementOutId: UUID,
   val scheduledMovementOutId: UUID? = null,
-  val applicationId: UUID? = null,
+  val authorisationId: UUID? = null,
   val source: String,
 )
 
@@ -124,7 +124,7 @@ data class TemporaryAbsenceExternalMovementInEvent(
 data class ExternalMovementInAdditionalInformation(
   val externalMovementInId: UUID,
   val scheduledMovementInId: UUID? = null,
-  val applicationId: UUID? = null,
+  val authorisationId: UUID? = null,
   val source: String,
 )
 

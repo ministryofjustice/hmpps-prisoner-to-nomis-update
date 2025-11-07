@@ -326,7 +326,7 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-          "external-movements-api.temporary-absence-application.created",
+          "person.temporary-absence-authorisation.approved",
           "external-movements-api.temporary-absence-outside-movement.created",
           "external-movements-api.temporary-absence-scheduled-movement-out.created",
           "external-movements-api.temporary-absence-scheduled-movement-in.created",
