@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-31.213.79c712c"
+    "version" : "2025-11-06.242.20c2778"
   },
   "servers" : [ {
     "url" : "/",
@@ -280,6 +280,103 @@
           "schema" : {
             "type" : "string",
             "description" : "Status of the resi service to change",
+            "enum" : [ "ACTIVE", "INACTIVE" ],
+            "example" : "ACTIVE"
+          },
+          "example" : "ACTIVE"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CONFIG_ADMIN role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns configuration",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonConfigurationDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prison-configuration/{prisonId}/non-resi-service/{status}" : {
+      "put" : {
+        "tags" : [ "Prison Configuration" ],
+        "summary" : "Update the status of the service for a prison",
+        "description" : "Requires role LOCATION_CONFIG_ADMIN",
+        "operationId" : "updateNonResiLocationServiceActiveStatus",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "status",
+          "in" : "path",
+          "description" : "Status of the non-resi service to change",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Status of the non-resi service to change",
             "enum" : [ "ACTIVE", "INACTIVE" ],
             "example" : "ACTIVE"
           },
@@ -1700,6 +1797,321 @@
         }
       }
     },
+    "/locations/non-residential/{id}" : {
+      "get" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Returns non-residential information for this ID",
+        "description" : "Requires role VIEW_LOCATIONS",
+        "operationId" : "getNonResidentialLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The non-residential location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The non-residential location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NonResidentialLocationDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Update of a non-residential location",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "updateNonResidentialLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOrUpdateNonResidentialLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns updated location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NonResidentialLocationDTO"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Partial update of a non-residential location, not used by UI, data fixes only",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "patchNonResidentialLocation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PatchNonResidentialLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns updated location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/bulk/reactivate" : {
       "put" : {
         "tags" : [ "Bulk Location Operations" ],
@@ -2828,7 +3240,7 @@
     "/locations/non-residential" : {
       "post" : {
         "tags" : [ "Non-residential functions" ],
-        "summary" : "Creates a non-residential location",
+        "summary" : "Creates a non-residential location, not used by UI, data fixes only",
         "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
         "operationId" : "createNonResidentialLocation",
         "requestBody" : {
@@ -2888,6 +3300,121 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/non-residential/{prisonId}" : {
+      "post" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Creates a non-residential location in a specified prison with basic data",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "createBasicNonResidentialLocation",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOrUpdateNonResidentialLocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Returns created location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NonResidentialLocationDTO"
                 }
               }
             }
@@ -3426,123 +3953,10 @@
         }
       }
     },
-    "/locations/non-residential/{id}" : {
-      "patch" : {
-        "tags" : [ "Non-residential functions" ],
-        "summary" : "Partial update of a non-residential location",
-        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
-        "operationId" : "patchNonResidentialLocation",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The location Id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The location Id",
-            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
-          },
-          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PatchNonResidentialLocationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid Request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns updated location",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Location"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Data not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Location already exists",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/locations/non-residential/key/{key}" : {
       "patch" : {
         "tags" : [ "Non-residential functions" ],
-        "summary" : "Partial update of a non-residential location",
+        "summary" : "Partial update of a non-residential location, not used by UI, data fixes only",
         "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
         "operationId" : "patchNonResidentialLocationByKey",
         "parameters" : [ {
@@ -6197,7 +6611,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/locations/prison/{prisonId}/non-residential-usage-type" : {
@@ -6934,6 +7349,163 @@
           },
           "404" : {
             "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/non-residential/summary/{prisonId}" : {
+      "get" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Get a paged list of non-residential locations for a prison (excluding RTU and BOXes)",
+        "description" : "Requires role VIEW_LOCATIONS",
+        "operationId" : "getPaginatedNonResidentialList",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "status",
+          "in" : "query",
+          "description" : "Filter by given statuses",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : null,
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVE", "INACTIVE", "ARCHIVED", "DRAFT" ]
+            }
+          },
+          "example" : "[ACTIVE,INACTIVE]"
+        }, {
+          "name" : "locationType",
+          "in" : "query",
+          "description" : "Filter by given types",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : null,
+            "items" : {
+              "type" : "string",
+              "enum" : [ "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ]
+            }
+          },
+          "example" : "[ADJUDICATION_ROOM,VIDEO_LINK]"
+        }, {
+          "name" : "serviceType",
+          "in" : "query",
+          "description" : "Filter by service type",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "description" : "Service Type",
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
+            "example" : "APPOINTMENT"
+          },
+          "example" : "APPOINTMENT"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0,
+            "minimum" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 100,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "default" : [ "localName,ASC" ],
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "When input parameters are not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns a paged list of non-residential locations for a prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NonResidentialSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8000,6 +8572,158 @@
                     "type" : "array",
                     "items" : {
                       "$ref" : "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/service-types" : {
+      "get" : {
+        "tags" : [ "Constants" ],
+        "summary" : "Get service type reference data",
+        "description" : "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId" : "nonResidentialServiceTypeConstants",
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns location reference data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "array",
+                    "items" : {
+                      "$ref" : "#/components/schemas/Constant"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/constants/service-family-types" : {
+      "get" : {
+        "tags" : [ "Constants" ],
+        "summary" : "Get service family type reference data",
+        "description" : "Requires the READ_LOCATION_REFERENCE_DATA role.",
+        "operationId" : "serviceFamilyAndTypes",
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the READ_LOCATION_REFERENCE_DATA role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns residential attribute reference data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object",
+                  "additionalProperties" : {
+                    "type" : "array",
+                    "items" : {
+                      "$ref" : "#/components/schemas/CompoundConstant"
                     }
                   }
                 }
@@ -9135,6 +9859,12 @@
             "enum" : [ "ACTIVE", "INACTIVE" ],
             "example" : "ACTIVE"
           },
+          "nonResiServiceActive" : {
+            "type" : "string",
+            "description" : "Indicates that the non-resi service is active",
+            "enum" : [ "ACTIVE", "INACTIVE" ],
+            "example" : "ACTIVE"
+          },
           "includeSegregationInRollCount" : {
             "type" : "string",
             "description" : "Indicates that roll count should include segregation in its calculations for net vacancies",
@@ -9148,7 +9878,7 @@
             "example" : "INACTIVE"
           }
         },
-        "required" : [ "certificationApprovalRequired", "includeSegregationInRollCount", "prisonId", "resiLocationServiceActive" ]
+        "required" : [ "certificationApprovalRequired", "includeSegregationInRollCount", "nonResiServiceActive", "prisonId", "resiLocationServiceActive" ]
       },
       "Capacity" : {
         "type" : "object",
@@ -9209,7 +9939,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Transaction type",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
             "example" : "CAPACITY_CHANGE"
           },
           "attribute" : {
@@ -9868,22 +10598,12 @@
             "type" : "string",
             "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
           },
-          "serviceName" : {
-            "type" : "string"
-          },
-          "usageType" : {
-            "type" : "string",
-            "enum" : [ "ADJUDICATION_HEARING", "APPOINTMENT", "MOVEMENT", "OCCURRENCE", "PROGRAMMES_ACTIVITIES", "PROPERTY", "VISIT", "OTHER" ]
-          },
           "serviceFamilyType" : {
             "type" : "string",
-            "enum" : [ "ACTIVITIES_APPOINTMENTS", "ADJUDICATIONS" ]
-          },
-          "serviceFamilyName" : {
-            "type" : "string"
+            "enum" : [ "ACTIVITIES_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
           }
         },
-        "required" : [ "serviceName", "serviceType", "usageType" ]
+        "required" : [ "serviceFamilyType", "serviceType" ]
       },
       "TransactionDetail" : {
         "type" : "object",
@@ -9953,7 +10673,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Type of transaction",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
             "example" : "CAPACITY_CHANGE"
           },
           "prisonId" : {
@@ -10142,6 +10862,138 @@
             "description" : "Username of the staff updating the location"
           }
         }
+      },
+      "CreateOrUpdateNonResidentialLocationRequest" : {
+        "type" : "object",
+        "description" : "Request to create or update non-residential location",
+        "properties" : {
+          "localName" : {
+            "type" : "string",
+            "description" : "Description of the non-residential locations",
+            "example" : "Adj Room",
+            "maxLength" : 80,
+            "minLength" : 1
+          },
+          "servicesUsingLocation" : {
+            "type" : "array",
+            "description" : "Services that use this location",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "localName", "servicesUsingLocation" ]
+      },
+      "NonResidentialLocationDTO" : {
+        "type" : "object",
+        "description" : "Non Residential Detail",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Location Id",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID",
+            "example" : "MDI"
+          },
+          "localName" : {
+            "type" : "string",
+            "description" : "Description to display for location",
+            "example" : "Gym"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Location Code",
+            "example" : "001"
+          },
+          "pathHierarchy" : {
+            "type" : "string",
+            "description" : "Full path of the location within the prison",
+            "example" : "A-1-001"
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "Location Type",
+            "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
+            "example" : "ADJUDICATION_ROOM"
+          },
+          "permanentlyInactive" : {
+            "type" : "boolean",
+            "description" : "Indicates if the location is permanently inactive",
+            "example" : false
+          },
+          "permanentlyInactiveReason" : {
+            "type" : "string",
+            "description" : "Reason for permanently deactivating",
+            "example" : "Demolished"
+          },
+          "usedByGroupedServices" : {
+            "type" : "array",
+            "description" : "Collections of services that use this location",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "ACTIVITIES_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            }
+          },
+          "usedByServices" : {
+            "type" : "array",
+            "description" : "Services that use this location",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            }
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Status of the location",
+            "enum" : [ "ACTIVE", "INACTIVE", "ARCHIVED", "DRAFT", "NON_RESIDENTIAL", "LOCKED_ACTIVE", "LOCKED_INACTIVE", "LOCKED_DRAFT", "LOCKED_NON_RESIDENTIAL" ],
+            "example" : "ACTIVE"
+          },
+          "deactivatedDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Date the location was deactivated",
+            "example" : "2023-01-23T12:23:00"
+          },
+          "deactivatedReason" : {
+            "type" : "string",
+            "description" : "Reason for deactivation",
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "example" : "DAMAGED"
+          },
+          "deactivationReasonDescription" : {
+            "type" : "string",
+            "description" : "For OTHER deactivation reason, a free text comment is provided",
+            "example" : "Window damage"
+          },
+          "deactivatedBy" : {
+            "type" : "string",
+            "description" : "Staff username who deactivated the location"
+          },
+          "level" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
+            "examples" : [ "1", "2", "3" ]
+          },
+          "parentId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Parent Location Id",
+            "example" : "57718979-573c-433a-9e51-2d83f887c11c"
+          },
+          "key" : {
+            "type" : "string",
+            "description" : "Key for a location",
+            "example" : "MDI-ADJU"
+          }
+        },
+        "required" : [ "code", "id", "key", "level", "localName", "locationType", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "usedByGroupedServices", "usedByServices" ]
       },
       "ReactivateLocationsRequest" : {
         "type" : "object",
@@ -11118,12 +11970,9 @@
               "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             },
             "uniqueItems" : true
-          },
-          "isInternalMovement" : {
-            "type" : "boolean"
           }
         },
-        "required" : [ "code", "isInternalMovement", "locationType", "prisonId" ]
+        "required" : [ "code", "locationType", "prisonId" ]
       },
       "CreateWingAndStructureRequest" : {
         "type" : "object",
@@ -12348,6 +13197,67 @@
         },
         "required" : [ "children", "key", "name" ]
       },
+      "NonResidentialSummary" : {
+        "type" : "object",
+        "description" : "Non Residential Summary",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison Id"
+          },
+          "locations" : {
+            "$ref" : "#/components/schemas/PageNonResidentialLocationDTO",
+            "description" : "All non-residential locations for this prison"
+          }
+        },
+        "required" : [ "locations", "prisonId" ]
+      },
+      "PageNonResidentialLocationDTO" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NonResidentialLocationDTO"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
       "CellType" : {
         "type" : "object",
         "description" : "Cell with specialist cell attribute",
@@ -12651,6 +13561,10 @@
           "defaultQuickFilterValue" : {
             "type" : "string",
             "enum" : [ "today", "yesterday", "last-seven-days", "last-thirty-days", "last-month", "last-full-month", "last-ninety-days", "last-three-months", "last-full-three-months", "last-year", "last-full-year", "tomorrow", "next-seven-days", "next-thirty-days", "next-month", "next-full-month", "next-ninety-days", "next-three-months", "next-full-three-months", "next-year", "next-full-year" ]
+          },
+          "index" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "mandatory", "type" ]
