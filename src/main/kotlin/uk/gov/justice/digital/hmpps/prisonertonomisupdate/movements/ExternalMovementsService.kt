@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
@@ -10,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.EXTERNAL_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.OUTSIDE_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
@@ -22,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -31,6 +35,7 @@ import java.util.*
 class ExternalMovementsService(
   private val mappingApiService: ExternalMovementsMappingApiService,
   private val nomisApiService: ExternalMovementsNomisApiService,
+  private val dpsApiService: ExternalMovementsDpsApiService,
   private val retryQueueService: ExternalMovementsRetryQueueService,
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
@@ -48,52 +53,68 @@ class ExternalMovementsService(
           ?: throw IllegalStateException("Mapping type $entityName does not exist")
       }
     }
+
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun applicationCreated(event: TemporaryAbsenceApplicationEvent) {
+  suspend fun authorisationApproved(event: TemporaryAbsenceAuthorisationEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsId = event.additionalInformation.applicationId
+    val dpsId = event.additionalInformation.authorisationId
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
-      "dpsMovementApplicationId" to dpsId.toString(),
+      "dpsAuthorisationId" to dpsId.toString(),
     )
+    var updateType: String? = "create"
 
-    if (event.additionalInformation.source == "DPS") {
-      synchronise {
-        name = APPLICATION.entityName
-        telemetryClient = this@ExternalMovementsService.telemetryClient
-        retryQueueService = this@ExternalMovementsService.retryQueueService
-        eventTelemetry = telemetryMap
-
-        checkMappingDoesNotExist {
-          mappingApiService.getApplicationMapping(dpsId)
-        }
-        transform {
-//          val dps = dpsApiService.getTapApplication(dpsId)
-          val dps = TapApplication.CREATE_DATA
-          val nomis = nomisApiService.createTemporaryAbsenceApplication(prisonerNumber, dps.toNomisCreateRequest())
-          val bookingId = nomis.bookingId
-            .also { telemetryMap["bookingId"] = it.toString() }
-          val nomisApplicationId = nomis.movementApplicationId
-            .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
-          TemporaryAbsenceApplicationSyncMappingDto(
-            prisonerNumber = prisonerNumber,
-            bookingId = bookingId,
-            nomisMovementApplicationId = nomisApplicationId,
-            dpsMovementApplicationId = dpsId,
-            mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.DPS_CREATED,
-          )
-        }
-        saveMapping { mappingApiService.createApplicationMapping(it) }
-      }
-    } else {
+    if (event.additionalInformation.source != "DPS") {
       telemetryClient.trackEvent("${APPLICATION.entityName}-create-ignored", telemetryMap)
+      return
     }
+
+    runCatching {
+      val existingMapping = mappingApiService.getApplicationMapping(dpsId)
+      if (existingMapping != null) updateType = "update"
+      val dps = dpsApiService.getTapAuthorisation(dpsId)
+      val nomis = nomisApiService.upsertTemporaryAbsenceApplication(
+        prisonerNumber,
+        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId),
+      )
+        .also { telemetryMap["bookingId"] = it.bookingId.toString() }
+        .also { telemetryMap["nomisApplicationId"] = it.movementApplicationId.toString() }
+
+      if (existingMapping == null) {
+        TemporaryAbsenceApplicationSyncMappingDto(
+          prisonerNumber = prisonerNumber,
+          bookingId = nomis.bookingId,
+          nomisMovementApplicationId = nomis.movementApplicationId,
+          dpsMovementApplicationId = dpsId,
+          mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.DPS_CREATED,
+        )
+          .also { mapping ->
+            createMapping(
+              mapping,
+              telemetryClient,
+              { createApplicationMapping(mapping, telemetryMap) },
+              telemetryMap,
+              retryQueueService,
+              APPLICATION.entityName,
+              log,
+            )
+          }
+      } else {
+        // we're not creating the mapping so no need to wait for it before publishing success telemetry
+        telemetryClient.trackEvent("${APPLICATION.entityName}-$updateType-success", telemetryMap)
+      }
+    }
+      .onFailure {
+        telemetryClient.trackEvent("${APPLICATION.entityName}-$updateType-failed", telemetryMap)
+        throw it
+      }
   }
 
   suspend fun outsideMovementCreated(event: TemporaryAbsenceOutsideMovementEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsMovementApplicationId = event.additionalInformation.authorisationId
     val dpsOutsideMovementId = event.additionalInformation.outsideMovementId
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
@@ -143,7 +164,7 @@ class ExternalMovementsService(
 
   suspend fun scheduledMovementOutCreated(event: TemporaryAbsenceScheduledMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsMovementApplicationId = event.additionalInformation.authorisationId
     val dpsScheduledMovementId = event.additionalInformation.scheduledMovementOutId
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
@@ -193,7 +214,7 @@ class ExternalMovementsService(
 
   suspend fun scheduledMovementInCreated(event: TemporaryAbsenceScheduledMovementInEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsMovementApplicationId = event.additionalInformation.authorisationId
     val dpsScheduledMovementOutId = event.additionalInformation.scheduledMovementOutId
     val dpsScheduledMovementInId = event.additionalInformation.scheduledMovementInId
     val telemetryMap = mutableMapOf(
@@ -247,7 +268,7 @@ class ExternalMovementsService(
 
   suspend fun externalMovementOutCreated(event: TemporaryAbsenceExternalMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsMovementApplicationId = event.additionalInformation.authorisationId
     val dpsScheduledMovementOutId = event.additionalInformation.scheduledMovementOutId
     val dpsExternalMovementId = event.additionalInformation.externalMovementOutId
     val telemetryMap = mutableMapOf(
@@ -305,7 +326,7 @@ class ExternalMovementsService(
 
   suspend fun externalMovementInCreated(event: TemporaryAbsenceExternalMovementInEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsMovementApplicationId = event.additionalInformation.applicationId
+    val dpsMovementApplicationId = event.additionalInformation.authorisationId
     val dpsScheduledMovementInId = event.additionalInformation.scheduledMovementInId
     val dpsExternalMovementId = event.additionalInformation.externalMovementInId
     val telemetryMap = mutableMapOf(
@@ -378,10 +399,14 @@ class ExternalMovementsService(
   }
 
   suspend fun createApplicationMapping(message: CreateMappingRetryMessage<TemporaryAbsenceApplicationSyncMappingDto>) {
-    mappingApiService.createApplicationMapping(message.mapping).also {
+    createApplicationMapping(message.mapping, message.telemetryAttributes)
+  }
+
+  suspend fun createApplicationMapping(mapping: TemporaryAbsenceApplicationSyncMappingDto, telemetry: Map<String, String>) {
+    mappingApiService.createApplicationMapping(mapping).also {
       telemetryClient.trackEvent(
         "${APPLICATION.entityName}-create-success",
-        message.telemetryAttributes,
+        telemetry,
       )
     }
   }
@@ -416,67 +441,31 @@ class ExternalMovementsService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-// TODO drop this class and replace with DPS API model when the DPS API is available
-data class TapApplication(
-  val id: UUID,
-  val eventSubType: String,
-  val applicationDate: LocalDate,
-  val fromDate: LocalDate,
-  val releaseTime: LocalDateTime,
-  val toDate: LocalDate,
-  val returnTime: LocalDateTime,
-  val applicationStatus: String,
-  val applicationType: String,
-  val escortCode: String? = null,
-  val transportType: String? = null,
-  val comment: String? = null,
-  val prisonId: String? = null,
-  val toAgencyId: String? = null,
-  val toAddressId: Long? = null,
-  val toAddressOwnerClass: String? = null,
-  val contactPersonName: String? = null,
-  val temporaryAbsenceType: String? = null,
-  val temporaryAbsenceSubType: String? = null,
-) {
-  companion object {
-    val CREATE_DATA = TapApplication(
-      id = UUID.randomUUID(),
-      eventSubType = "C5",
-      applicationStatus = "APP",
-      applicationType = "TAP",
-      transportType = "CAR",
-      applicationDate = LocalDate.now(),
-      fromDate = LocalDate.now(),
-      releaseTime = LocalDateTime.now(),
-      toDate = LocalDate.now().plusDays(1),
-      returnTime = LocalDateTime.now().plusDays(1),
-      escortCode = "U",
-      comment = "Tap Application Create comment",
-      contactPersonName = "Deek Sanderson",
-      toAgencyId = "HAZLWD",
-      toAddressId = 3456,
-      temporaryAbsenceType = "RR",
-      temporaryAbsenceSubType = "RDR",
-    )
-  }
+private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?) = UpsertTemporaryAbsenceApplicationRequest(
+  movementApplicationId = nomisApplicationId,
+  eventSubType = absenceReasonCode,
+  fromDate = fromDate,
+  applicationDate = created.at.toLocalDate(),
+  releaseTime = fromDate.atStartOfDay(),
+  toDate = toDate,
+  returnTime = toDate.plusDays(1).atStartOfDay(),
+  applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
+  applicationType = if (repeat) "REPEATING" else "SINGLE",
+  escortCode = occurrences.firstOrNull()?.accompaniedByCode,
+  transportType = occurrences.firstOrNull()?.transportCode,
+  comment = notes,
+  prisonId = prisonCode,
+  temporaryAbsenceType = absenceTypeCode,
+  temporaryAbsenceSubType = absenceSubTypeCode,
+)
 
-  fun toNomisCreateRequest() = UpsertTemporaryAbsenceApplicationRequest(
-    eventSubType = eventSubType,
-    fromDate = fromDate,
-    applicationDate = applicationDate,
-    releaseTime = releaseTime,
-    toDate = toDate,
-    returnTime = returnTime,
-    applicationStatus = applicationStatus,
-    applicationType = applicationType,
-    escortCode = escortCode,
-    transportType = transportType,
-    comment = comment,
-    prisonId = prisonId,
-    temporaryAbsenceType = temporaryAbsenceType,
-    temporaryAbsenceSubType = temporaryAbsenceSubType,
-    contactPersonName = contactPersonName,
-  )
+private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
+  "PENDING" -> "PEN"
+  "APPROVED" if (occurrenceCount == 0) -> "APP-UNSCH"
+  "APPROVED" -> "APP-SCH"
+  "DENIED" -> "DEN"
+  "CANCELLED" -> "CAN"
+  else -> throw IllegalArgumentException("Unknown application status: $this")
 }
 
 // TODO drop this class and replace with DPS API model when the DPS API is available

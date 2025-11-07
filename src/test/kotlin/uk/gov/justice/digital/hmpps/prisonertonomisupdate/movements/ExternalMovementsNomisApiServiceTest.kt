@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
@@ -16,10 +17,10 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createScheduledTemporaryAbsenceReturnRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -39,27 +40,27 @@ class ExternalMovementsNomisApiServiceTest {
   inner class TemporaryAbsenceApplication {
 
     @Nested
-    inner class CreateTemporaryAbsenceApplication {
+    inner class UpsertTemporaryAbsenceApplication {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceApplication()
+        mockServer.stubUpsertTemporaryAbsenceApplication()
 
-        apiService.createTemporaryAbsenceApplication("A1234BC", createTemporaryAbsenceApplicationRequest())
+        apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
 
         mockServer.verify(
-          postRequestedFor(anyUrl())
+          putRequestedFor(anyUrl())
             .withHeader("Authorization", equalTo("Bearer ABCDE")),
         )
       }
 
       @Test
-      fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceApplication()
+      fun `will call upsert endpoint`() = runTest {
+        mockServer.stubUpsertTemporaryAbsenceApplication()
 
-        apiService.createTemporaryAbsenceApplication("A1234BC", createTemporaryAbsenceApplicationRequest())
+        apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
 
         mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
+          putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
             .withRequestBody(
               matchingJsonPath("applicationStatus", equalTo("APP-SCH")),
             ),
@@ -68,10 +69,10 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceApplication(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertTemporaryAbsenceApplication(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createTemporaryAbsenceApplication("A1234BC", createTemporaryAbsenceApplicationRequest())
+          apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
         }
       }
     }

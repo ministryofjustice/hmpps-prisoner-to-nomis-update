@@ -129,6 +129,12 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
   internal val visitBalanceQueueUrl by lazy { visitBalanceQueue.queueUrl }
   internal val visitBalanceDlqUrl by lazy { visitBalanceQueue.dlqUrl }
 
+  internal val movementsQueue by lazy { hmppsQueueService.findByQueueId("externalmovements") as HmppsQueue }
+  internal val movementsQueueClient by lazy { movementsQueue.sqsClient }
+  internal val movementsDlqClient by lazy { movementsQueue.sqsDlqClient }
+  internal val movementsQueueUrl by lazy { movementsQueue.queueUrl }
+  internal val movementsDlqUrl by lazy { movementsQueue.dlqUrl }
+
   internal val awsSnsClient by lazy { topic.snsClient }
   internal val topicArn by lazy { topic.arn }
 
@@ -179,6 +185,9 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
 
     visitBalanceQueueClient.purgeQueue(visitBalanceQueueUrl).get()
     visitBalanceDlqClient?.purgeQueue(visitBalanceDlqUrl)?.get()
+
+    movementsQueueClient.purgeQueue(movementsQueueUrl).get()
+    movementsDlqClient?.purgeQueue(movementsDlqUrl)?.get()
 
     fromNomisCourtSentencingQueue.purgeQueue()
   }
