@@ -1,20 +1,19 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitBalanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 
@@ -24,55 +23,69 @@ class VisitBalanceReconciliationService(
   private val dpsVisitBalanceApiService: VisitBalanceDpsApiService,
   private val nomisVisitBalanceApiService: VisitBalanceNomisApiService,
   private val nomisApiService: NomisApiService,
-  @Value("\${reports.visit-balance.reconciliation.page-size}")
-  private val pageSize: Long = 20,
+  @Value($$"${reports.visit-balance.reconciliation.page-size}")
+  private val prisonerPageSize: Int = 20,
 ) {
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private const val TELEMETRY_VISIT_BALANCE_PREFIX = "visitbalance-reports-reconciliation"
   }
   suspend fun generateReconciliationReport() {
-    val activePrisonersCount = nomisApiService.getActivePrisoners(0, 1).totalElements
-
     telemetryClient.trackEvent(
-      "visitbalance-reports-reconciliation-requested",
-      mapOf("active-prisoners" to activePrisonersCount.toString()),
+      "$TELEMETRY_VISIT_BALANCE_PREFIX-requested",
+      mapOf(),
     )
-    log.info("Visit Balance reconciliation report requested for $activePrisonersCount active prisoners")
-
-    runCatching { generateReconciliationReport(activePrisonersCount) }
+    runCatching {
+      generateReconciliationReport(
+        threadCount = prisonerPageSize,
+        checkMatch = ::checkVisitBalanceMatch,
+        nextPage = ::getNextBookingsForPage,
+      )
+    }
       .onSuccess {
-        log.info("Visit balance reconciliation report completed with ${it.size} mismatches")
+        log.info("Visit balance reconciliation report completed with ${it.mismatches.size} mismatches")
         telemetryClient.trackEvent(
-          "visitbalance-reports-reconciliation-report",
-          mapOf("mismatch-count" to it.size.toString(), "success" to "true"),
+          "$TELEMETRY_VISIT_BALANCE_PREFIX-report",
+          mapOf(
+            "prisoners-count" to it.itemsChecked.toString(),
+            "pages-count" to it.pagesChecked.toString(),
+            "mismatch-count" to it.mismatches.size.toString(),
+            "success" to "true",
+          ) +
+            it.mismatches.take(5).asPrisonerMap(),
         )
       }
       .onFailure {
-        telemetryClient.trackEvent("visitbalance-reports-reconciliation-report", mapOf("success" to "false"))
+        telemetryClient.trackEvent("$TELEMETRY_VISIT_BALANCE_PREFIX-report", mapOf("success" to "false", "error" to (it.message ?: "unknown")))
         log.error("Visit balance reconciliation report failed", it)
       }
   }
 
-  suspend fun generateReconciliationReport(activePrisonersCount: Long): List<MismatchVisitBalance> = activePrisonersCount.asPages(pageSize).flatMap { page ->
-    val activePrisoners = getActivePrisonersForPage(page)
+  private fun List<MismatchVisitBalance>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "dpsBalance=${it.dpsVisitBalance}, nomisBalance=${it.nomisVisitBalance}" }
 
-    withContext(Dispatchers.Unconfined) {
-      activePrisoners.map { async { checkVisitBalanceMatch(it) } }
-    }.awaitAll().filterNotNull()
+  private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
+    nomisApiService.getAllLatestBookings(
+      lastBookingId = lastBookingId,
+      activeOnly = true,
+      pageSize = prisonerPageSize,
+    )
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_VISIT_BALANCE_PREFIX-mismatch-page-error",
+      mapOf(
+        "booking" to lastBookingId.toString(),
+      ),
+    )
+    log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
   }
-
-  private suspend fun getActivePrisonersForPage(page: Pair<Long, Long>) = runCatching { nomisApiService.getActivePrisoners(page.first, page.second).content }
-    .onFailure {
-      telemetryClient.trackEvent(
-        "visitbalance-reports-reconciliation-mismatch-page-error",
-        mapOf(
-          "page" to page.first.toString(),
-        ),
+    .map {
+      ReconciliationSuccessPageResult(
+        ids = it.prisonerIds,
+        last = it.lastBookingId,
       )
-      log.error("Unable to match entire page of prisoners: $page", it)
     }
-    .getOrElse { emptyList() }
-    .also { log.info("Page requested: $page, with ${it.size} active prisoners") }
+    .getOrElse { ReconciliationErrorPageResult(it) }
+    .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
 
   suspend fun checkVisitBalanceMatch(prisonerId: PrisonerIds): MismatchVisitBalance? = runCatching {
     // Note that the lack of a balance is treated identically to a balance of 0, since it could be created and then not
@@ -92,7 +105,7 @@ class VisitBalanceReconciliationService(
         )
         // booking will be 0 if reconciliation run for single prisoner, in which case ignore
         prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
-        telemetryClient.trackEvent("visitbalance-reports-reconciliation-mismatch", telemetry)
+        telemetryClient.trackEvent("$TELEMETRY_VISIT_BALANCE_PREFIX-mismatch", telemetry)
       }
     } else {
       null
@@ -100,7 +113,7 @@ class VisitBalanceReconciliationService(
   }.onFailure {
     log.error("Unable to match visit balance for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
-      "visitbalance-reports-reconciliation-mismatch-error",
+      "$TELEMETRY_VISIT_BALANCE_PREFIX-mismatch-error",
       mapOf(
         "offenderNo" to prisonerId.offenderNo,
         "bookingId" to prisonerId.bookingId.toString(),
