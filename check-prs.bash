@@ -18,8 +18,12 @@ echo "failures=$FAILURE_BRANCHES" >>"$GITHUB_OUTPUT"
 COMBINED_PR=$(gh pr ls --search 'head:combined-prs-branch' --json 'url' --jq '.[].url' | sort -u)
 echo "combined_pr=$COMBINED_PR" >>"$GITHUB_OUTPUT"
 
-PR_COUNT=$(gh pr ls --search 'head:api-docs-' --json 'url' --jq '.[].url' | sort -u | { grep "^.*$" -c || test $? = 1; })
+PRS=$(gh pr ls --search 'head:api-docs-' --json 'headRefName' --jq '.[].headRefName' | sort -u)
+# grep -c counts matching lines and the test ensures that grep exit status on non matches is ignored
+PR_COUNT=$(echo -n "$PRS" | { grep "^.*$" -c || test $? = 1; })
+PR_BRANCHES=$(echo "$PRS" | grep -ve "$FAILURE_BRANCHES" | paste -sd' ' -)
 echo "pr_count=$PR_COUNT" >>"$GITHUB_OUTPUT"
+echo "prs=$PR_BRANCHES" >>"$GITHUB_OUTPUT"
 
 if [[ $OUTPUT_COMPARISON = true ]]; then
   cat "$GITHUB_OUTPUT"
