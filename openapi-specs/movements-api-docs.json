@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-06.282.2fb1771"
+    "version" : "2025-11-07.296.d9015e3"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -1153,6 +1153,12 @@
             "type" : "string",
             "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED" ]
           },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "transportCode" : {
+            "type" : "string"
+          },
           "notes" : {
             "type" : "string"
           },
@@ -1167,15 +1173,30 @@
             "type" : "string",
             "format" : "date"
           },
+          "contactInformation" : {
+            "type" : "string"
+          },
           "schedule" : {
             "$ref" : "#/components/schemas/JsonNode"
           }
         },
-        "required" : [ "absenceTypeCode", "fromDate", "occurrences", "repeat", "statusCode", "toDate" ]
+        "required" : [ "absenceTypeCode", "accompaniedByCode", "fromDate", "occurrences", "repeat", "statusCode", "toDate", "transportCode" ]
       },
       "CreateTapOccurrenceRequest" : {
         "type" : "object",
         "properties" : {
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCategoryCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
           "releaseAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -1203,7 +1224,7 @@
             "$ref" : "#/components/schemas/JsonNode"
           }
         },
-        "required" : [ "accompaniedByCode", "location", "releaseAt", "returnBy", "transportCode" ]
+        "required" : [ "location", "releaseAt", "returnBy" ]
       },
       "JsonNode" : { },
       "ReferenceId" : {
@@ -1257,11 +1278,17 @@
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "repeat" : {
+            "type" : "boolean"
+          },
           "notes" : {
             "type" : "string"
           }
         },
-        "required" : [ "id", "person", "status" ]
+        "required" : [ "accompaniedBy", "id", "person", "repeat", "status" ]
       },
       "CodedDescription" : {
         "type" : "object",
@@ -1310,6 +1337,18 @@
           "authorisation" : {
             "$ref" : "#/components/schemas/Authorisation"
           },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
           "status" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
@@ -1356,6 +1395,18 @@
             "format" : "uuid"
           },
           "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "releaseAt" : {
@@ -1406,6 +1457,9 @@
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
           "repeat" : {
             "type" : "boolean"
           },
@@ -1436,7 +1490,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "fromDate", "id", "occurrences", "person", "repeat", "status", "submitted", "toDate" ]
+        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "submitted", "toDate" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -1724,9 +1778,12 @@
           },
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "repeat" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "id", "person", "status" ]
+        "required" : [ "id", "person", "repeat", "status" ]
       },
       "TapOccurrenceResult" : {
         "type" : "object",
