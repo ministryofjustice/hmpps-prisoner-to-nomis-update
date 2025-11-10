@@ -58,7 +58,7 @@ jobs:
     name: Run the tests
     strategy:
       matrix: ${{ fromJson(needs.setup-test-matrix.outputs.matrix) }}
-    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_localstack_verify.yml@v2 # WORKFLOW_VERSION
+    uses: ministryofjustice/hmpps-github-actions/.github/workflows/gradle_verify.yml@v2 # WORKFLOW_VERSION
     secrets: inherit
     with:
       gradle-command: ./gradlew ${{ matrix.tests }}
