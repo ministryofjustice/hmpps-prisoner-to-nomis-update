@@ -119,3 +119,5 @@ jobs:
                     text: "*Workflow:*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|${{ github.workflow }}>"
                   - type: mrkdwn
                     text: "*Repository:*\n${{ github.repository }}"
+                  - type: mrkdwn
+                    text: "*Branches:*\n${{ steps.check-prs.outputs.prs }}"
