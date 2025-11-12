@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-06.706.ab7ac56"
+    "version" : "2025-11-11.728.2139445"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -14186,6 +14186,62 @@
         }
       }
     },
+    "/profile-details/{bookingId}/sequence/{sequence}/type/{type}" : {
+      "get" : {
+        "tags" : [ "profile-details-resource" ],
+        "summary" : "Get a specific profile details record",
+        "description" : "Retrieves profile detail for the given PK. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getProfileDetail",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID",
+            "example" : 12345678
+          },
+          "example" : 12345678
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence number",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence number",
+            "example" : 1
+          },
+          "example" : 1
+        }, {
+          "name" : "type",
+          "in" : "path",
+          "description" : "Profile type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Profile type",
+            "example" : "IMM"
+          },
+          "example" : "IMM"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileDetailsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisons/{prisonId}/incentive-levels" : {
       "get" : {
         "tags" : [ "prison-resource" ],
@@ -22516,7 +22572,7 @@
             "description" : "Temporary absence sub type"
           }
         },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "UpsertTemporaryAbsenceApplicationResponse" : {
         "type" : "object",
@@ -27413,7 +27469,7 @@
             "description" : "To address ID"
           }
         },
-        "required" : [ "movementDate", "movementReason", "movementTime" ]
+        "required" : [ "fromPrison", "movementDate", "movementReason", "movementTime" ]
       },
       "CreateTemporaryAbsenceResponse" : {
         "type" : "object",
@@ -27485,7 +27541,7 @@
             "description" : "From address ID"
           }
         },
-        "required" : [ "movementDate", "movementReason", "movementTime" ]
+        "required" : [ "movementDate", "movementReason", "movementTime", "toPrison" ]
       },
       "CreateTemporaryAbsenceReturnResponse" : {
         "type" : "object",
@@ -29560,6 +29616,56 @@
         },
         "required" : [ "questionnaireId" ]
       },
+      "ProfileDetailsResponse" : {
+        "type" : "object",
+        "description" : "Profile details recorded against a prisoner",
+        "properties" : {
+          "type" : {
+            "type" : "string",
+            "description" : "The type of profile info",
+            "example" : "BUILD"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "The value of the profile info",
+            "example" : "SLIM"
+          },
+          "checkDate" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time at which the value was checked to be valid",
+            "example" : "2020-07-17T12:34:56"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time the profile info was created",
+            "example" : "2020-07-17T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the profile info",
+            "example" : "AQ425D"
+          },
+          "modifiedDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The time the profile info was last changed",
+            "example" : "2021-07-16T12:34:56"
+          },
+          "modifiedBy" : {
+            "type" : "string",
+            "description" : "The user who modified the profile info",
+            "example" : "AQ425D"
+          },
+          "auditModuleName" : {
+            "type" : "string",
+            "description" : "The name of the module that last changed the profile info, indicates if this was NOMIS or the synchronisation service",
+            "example" : "DPS_SYNCHRONISATION"
+          }
+        },
+        "required" : [ "createDateTime", "createdBy", "type" ]
+      },
       "IncentiveLevel" : {
         "type" : "object",
         "description" : "An incentive levels",
@@ -29749,50 +29855,6 @@
           }
         },
         "required" : [ "bookings", "offenderNo" ]
-      },
-      "ProfileDetailsResponse" : {
-        "type" : "object",
-        "description" : "Profile details recorded against a prisoner",
-        "properties" : {
-          "type" : {
-            "type" : "string",
-            "description" : "The type of profile info",
-            "example" : "BUILD"
-          },
-          "code" : {
-            "type" : "string",
-            "description" : "The value of the profile info",
-            "example" : "SLIM"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the profile info was created",
-            "example" : "2020-07-17T12:34:56"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The user who created the profile info",
-            "example" : "AQ425D"
-          },
-          "modifiedDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The time the profile info was last changed",
-            "example" : "2021-07-16T12:34:56"
-          },
-          "modifiedBy" : {
-            "type" : "string",
-            "description" : "The user who modified the profile info",
-            "example" : "AQ425D"
-          },
-          "auditModuleName" : {
-            "type" : "string",
-            "description" : "The name of the module that last changed the profile info, indicates if this was NOMIS or the synchronisation service",
-            "example" : "DPS_SYNCHRONISATION"
-          }
-        },
-        "required" : [ "createDateTime", "createdBy", "type" ]
       },
       "MergeDetail" : {
         "type" : "object",
@@ -32181,7 +32243,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "absences", "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "outsideMovements", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "absences", "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "outsideMovements", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "TemporaryAbsenceApplicationOutsideMovement" : {
         "type" : "object",
@@ -32411,7 +32473,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence" ]
+        "required" : [ "audit", "bookingId", "fromPrison", "movementDate", "movementReason", "movementTime", "sequence" ]
       },
       "TemporaryAbsenceReturnResponse" : {
         "type" : "object",
@@ -32502,7 +32564,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence" ]
+        "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence", "toPrison" ]
       },
       "ScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
@@ -32540,6 +32602,10 @@
           "eventStatus" : {
             "type" : "string",
             "description" : "Event status"
+          },
+          "inboundEventStatus" : {
+            "type" : "string",
+            "description" : "Inbound event status"
           },
           "comment" : {
             "type" : "string",
@@ -32605,6 +32671,14 @@
           "contactPersonName" : {
             "type" : "string",
             "description" : "Contact person name"
+          },
+          "temporaryAbsenceType" : {
+            "type" : "string",
+            "description" : "Temporary absence type"
+          },
+          "temporaryAbsenceSubType" : {
+            "type" : "string",
+            "description" : "Temporary absence sub type"
           },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
@@ -32849,7 +32923,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "movementApplicationId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
