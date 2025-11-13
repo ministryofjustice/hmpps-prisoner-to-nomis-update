@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-11.309.222655e"
+    "version" : "2025-11-12.316.629332e"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -125,44 +125,6 @@
         }
       }
     },
-    "/sync/temporary-absence-movement/{personIdentifier}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncTapMovement",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/TapMovementRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      }
-    },
     "/sync/temporary-absence-authorisations/{personIdentifier}" : {
       "put" : {
         "tags" : [ "Sync" ],
@@ -236,83 +198,6 @@
             }
           }
         }
-      }
-    },
-    "/sync/temporary-absence-application/{personIdentifier}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncTemporaryAbsenceApplication",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/TapApplicationRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      }
-    },
-    "/sync/scheduled-temporary-absence/{parentId}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "syncScheduledTemporaryAbsence",
-        "parameters" : [ {
-          "name" : "parentId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ScheduledTemporaryAbsenceRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
       }
     },
     "/temporary-absence-authorisations/{personIdentifier}" : {
@@ -834,93 +719,6 @@
         },
         "required" : [ "id" ]
       },
-      "NomisAudit" : {
-        "type" : "object",
-        "properties" : {
-          "createDatetime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "createUsername" : {
-            "type" : "string"
-          },
-          "modifyUserId" : {
-            "type" : "string"
-          },
-          "modifyDatetime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "auditTimestamp" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "auditUserId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "createDatetime", "createUsername" ]
-      },
-      "TapLocation" : {
-        "type" : "object",
-        "properties" : {
-          "description" : {
-            "type" : "string"
-          },
-          "address" : {
-            "type" : "string"
-          },
-          "postcode" : {
-            "type" : "string"
-          }
-        }
-      },
-      "TapMovementRequest" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "occurrenceId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "legacyId" : {
-            "type" : "string"
-          },
-          "movementDateTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "movementReason" : {
-            "type" : "string"
-          },
-          "direction" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT" ]
-          },
-          "escort" : {
-            "type" : "string"
-          },
-          "escortText" : {
-            "type" : "string"
-          },
-          "prisonCode" : {
-            "type" : "string"
-          },
-          "commentText" : {
-            "type" : "string"
-          },
-          "location" : {
-            "$ref" : "#/components/schemas/TapLocation"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit"
-          }
-        },
-        "required" : [ "audit", "direction", "legacyId", "location", "movementDateTime", "movementReason" ]
-      },
       "SyncWriteTapAuthorisation" : {
         "type" : "object",
         "properties" : {
@@ -1024,109 +822,6 @@
           }
         },
         "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "legacyId", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
-      },
-      "TapApplicationRequest" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "movementApplicationId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "eventSubType" : {
-            "type" : "string"
-          },
-          "applicationDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "applicationStatus" : {
-            "type" : "string"
-          },
-          "escort" : {
-            "type" : "string"
-          },
-          "comment" : {
-            "type" : "string"
-          },
-          "prisonId" : {
-            "type" : "string"
-          },
-          "contactPersonName" : {
-            "type" : "string"
-          },
-          "applicationType" : {
-            "type" : "string"
-          },
-          "temporaryAbsenceType" : {
-            "type" : "string"
-          },
-          "temporaryAbsenceSubType" : {
-            "type" : "string"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit"
-          }
-        },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "toDate" ]
-      },
-      "ScheduledTemporaryAbsenceRequest" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "eventId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "eventStatus" : {
-            "type" : "string"
-          },
-          "eventSubType" : {
-            "type" : "string"
-          },
-          "startTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnTime" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "location" : {
-            "$ref" : "#/components/schemas/TapLocation"
-          },
-          "contactPersonName" : {
-            "type" : "string"
-          },
-          "escort" : {
-            "type" : "string"
-          },
-          "comment" : {
-            "type" : "string"
-          },
-          "transportType" : {
-            "type" : "string"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "audit", "eventId", "eventStatus", "eventSubType", "location", "returnTime", "startTime" ]
       },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",

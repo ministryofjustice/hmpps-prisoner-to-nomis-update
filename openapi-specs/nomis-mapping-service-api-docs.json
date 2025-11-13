@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-10.240.1f0cc90"
+    "version" : "2025-11-12.244.2adb137"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -4215,6 +4215,46 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/profile" : {
+      "post" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Creates a core person profile mapping",
+        "description" : "Creates a core person profile mapping typically when syncing a newly created profile item to DPS.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createProfileMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ProfileMappingIdDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileMapping"
                 }
               }
             }
@@ -13150,6 +13190,82 @@
         }
       }
     },
+    "/mapping/core-person/profile/cpr-id/{cprId}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get a core person profile mapping by cpr Id",
+        "description" : "Retrieves the core person profile mapping.\n      Note this Id may refer to one of several tables in the CPR service, e.g. Disability, sexual orientation etc.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getProfileMappingByDpsId",
+        "parameters" : [ {
+          "name" : "cprId",
+          "in" : "path",
+          "description" : "CPR UUID",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR UUID",
+            "example" : "12345678-1234-5678-abcd-1234567890ab"
+          },
+          "example" : "12345678-1234-5678-abcd-1234567890ab"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileMappingDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/profile/booking/{bookingId}/type/{profileType}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get a core person profile mapping by booking Id and Nomis profile type",
+        "description" : "Retrieves the core person profile mapping.\n      Note this can retrieve a CPR Id which may refer to one of several tables in the CPR service, e.g. Disability, sexual orientation etc.\n      Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getProfileMappingByNomisIds",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking id",
+            "example" : 12345678
+          },
+          "example" : 12345678
+        }, {
+          "name" : "profileType",
+          "in" : "path",
+          "description" : "Nomis profile type",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Nomis profile type",
+            "example" : "SEXO"
+          },
+          "example" : "SEXO"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProfileMappingDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person/phone/nomis-phone-id/{nomisPhoneId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -20941,6 +21057,76 @@
         },
         "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
+      "ProfileMappingIdDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR profile id"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id"
+          },
+          "nomisProfileType" : {
+            "type" : "string",
+            "description" : "NOMIS profile type"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS Prison number aka Offender number"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type - currently defaulted to be NOMIS_CREATED",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
+      },
+      "ProfileMapping" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisProfileType" : {
+            "type" : "string"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "new" : {
+            "type" : "boolean"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isNew" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "cprId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
+      },
       "CorePersonMappingIdDto" : {
         "type" : "object",
         "description" : "NOMIS to CPR core person mapping IDs",
@@ -20999,9 +21185,16 @@
             "items" : {
               "$ref" : "#/components/schemas/CorePersonSimpleMappingIdDto"
             }
+          },
+          "profileMappings" : {
+            "type" : "array",
+            "description" : "Core Person profile mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/ProfileMappingIdDto"
+            }
           }
         },
-        "required" : [ "addressMappings", "emailMappings", "mappingType", "personMapping", "phoneMappings" ]
+        "required" : [ "addressMappings", "emailMappings", "mappingType", "personMapping", "phoneMappings", "profileMappings" ]
       },
       "CorePersonPhoneMappingIdDto" : {
         "type" : "object",
@@ -22254,6 +22447,44 @@
             "type" : "boolean"
           }
         }
+      },
+      "ProfileMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR profile id"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id"
+          },
+          "nomisProfileType" : {
+            "type" : "string",
+            "description" : "NOMIS profile type"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string",
+            "description" : "NOMIS Prison number aka Offender number"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
       },
       "CorePersonPhoneMappingDto" : {
         "type" : "object",
