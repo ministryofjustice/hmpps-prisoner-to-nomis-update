@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-12.316.629332e"
+    "version" : "2025-11-13.322.416c6b7"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -778,8 +778,8 @@
             "type" : "string",
             "format" : "uuid"
           },
-          "statusCode" : {
-            "type" : "string"
+          "isCancelled" : {
+            "type" : "boolean"
           },
           "releaseAt" : {
             "type" : "string",
@@ -821,7 +821,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "legacyId", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "isCancelled", "legacyId", "location", "releaseAt", "returnBy", "transportCode" ]
       },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",
@@ -880,18 +880,6 @@
       "CreateTapOccurrenceRequest" : {
         "type" : "object",
         "properties" : {
-          "absenceTypeCode" : {
-            "type" : "string"
-          },
-          "absenceSubTypeCode" : {
-            "type" : "string"
-          },
-          "absenceReasonCategoryCode" : {
-            "type" : "string"
-          },
-          "absenceReasonCode" : {
-            "type" : "string"
-          },
           "releaseAt" : {
             "type" : "string",
             "format" : "date-time"
@@ -900,20 +888,8 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "accompaniedByCode" : {
-            "type" : "string"
-          },
-          "transportCode" : {
-            "type" : "string"
-          },
           "location" : {
             "$ref" : "#/components/schemas/Location"
-          },
-          "contactInformation" : {
-            "type" : "string"
-          },
-          "notes" : {
-            "type" : "string"
           },
           "scheduleReference" : {
             "$ref" : "#/components/schemas/JsonNode"
