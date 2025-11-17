@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-10-28.334.7c82b6f"
+    "version" : "2025-11-13.367.08543ba"
   },
   "servers" : [ {
     "url" : "/",
@@ -3752,6 +3752,156 @@
         } ]
       }
     },
+    "/reports/{reportId}/dashboards/{dashboardId}" : {
+      "get" : {
+        "tags" : [ "Data API - Synchronous" ],
+        "description" : "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
+        "operationId" : "configuredApiDatasetForDashboard",
+        "parameters" : [ {
+          "name" : "selectedPage",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 1,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sortColumn",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sortedAsc",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
+        }, {
+          "name" : "reportId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dashboardId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dataProductDefinitionsPath",
+          "in" : "query",
+          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "definitions/prisons/orphanage"
+          },
+          "example" : "definitions/prisons/orphanage"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default" : {
+            "description" : "default response",
+            "headers" : {
+              "x-no-data-warning" : {
+                "description" : "Provides additional information about why no data has been returned.",
+                "style" : "simple",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : { }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -3825,6 +3975,143 @@
             }
           }
         }
+      }
+    },
+    "/productCollections" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets all product collections",
+        "operationId" : "getCollections",
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductCollectionSummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/productCollections/{id}" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets product collection by id",
+        "operationId" : "getCollections_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the product collection.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "72c22579-3f77-4e23-8d16-1e5aadcc88c9"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductCollectionDTO"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
       }
     },
     "/incident-reports/{id}/with-details" : {
@@ -7101,6 +7388,57 @@
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
+      "ProductCollectionSummary" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "version" ]
+      },
+      "ProductCollectionDTO" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductCollectionProduct"
+            }
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "products", "version" ]
+      },
+      "ProductCollectionProduct" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "productId" ]
+      },
       "SimplePageReportBasic" : {
         "type" : "object",
         "description" : "Page of results",
@@ -7139,17 +7477,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
@@ -7345,6 +7683,10 @@
           "defaultQuickFilterValue" : {
             "type" : "string",
             "enum" : [ "today", "yesterday", "last-seven-days", "last-thirty-days", "last-month", "last-full-month", "last-ninety-days", "last-three-months", "last-full-three-months", "last-year", "last-full-year", "tomorrow", "next-seven-days", "next-thirty-days", "next-month", "next-full-month", "next-ninety-days", "next-three-months", "next-full-three-months", "next-year", "next-full-year" ]
+          },
+          "index" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "mandatory", "type" ]
@@ -7484,6 +7826,22 @@
         },
         "required" : [ "id", "name", "resourceName" ]
       },
+      "DashboardBucketDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "min" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "max" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hexColour" : {
+            "type" : "string"
+          }
+        }
+      },
       "DashboardDefinition" : {
         "type" : "object",
         "properties" : {
@@ -7510,6 +7868,29 @@
           }
         },
         "required" : [ "id", "name", "sections" ]
+      },
+      "DashboardOptionDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "useRagColour" : {
+            "type" : "boolean"
+          },
+          "baseColour" : {
+            "type" : "string"
+          },
+          "buckets" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DashboardBucketDefinition"
+            }
+          },
+          "showLatest" : {
+            "type" : "boolean"
+          },
+          "columnsAsList" : {
+            "type" : "boolean"
+          }
+        }
       },
       "DashboardSectionDefinition" : {
         "type" : "object",
@@ -7554,9 +7935,12 @@
           },
           "axis" : {
             "type" : "string"
+          },
+          "optional" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "display", "id" ]
+        "required" : [ "id" ]
       },
       "DashboardVisualisationColumnsDefinition" : {
         "type" : "object",
@@ -7593,7 +7977,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group" ]
+            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group", "matrix-timeseries", "line-timeseries" ]
           },
           "display" : {
             "type" : "string"
@@ -7603,6 +7987,9 @@
           },
           "columns" : {
             "$ref" : "#/components/schemas/DashboardVisualisationColumnsDefinition"
+          },
+          "options" : {
+            "$ref" : "#/components/schemas/DashboardOptionDefinition"
           }
         },
         "required" : [ "columns", "id", "type" ]
