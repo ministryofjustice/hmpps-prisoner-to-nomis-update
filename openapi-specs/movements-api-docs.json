@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-13.322.416c6b7"
+    "version" : "2025-11-14.328.a261ef8"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -74,6 +74,8 @@
             "application/json" : {
               "schema" : {
                 "oneOf" : [ {
+                  "$ref" : "#/components/schemas/CancelOccurrence"
+                }, {
                   "$ref" : "#/components/schemas/RescheduleOccurrence"
                 } ]
               }
@@ -590,14 +592,19 @@
           "propertyName" : "type"
         },
         "properties" : {
-          "type" : {
+          "reason" : {
             "type" : "string"
           },
-          "reason" : {
+          "type" : {
             "type" : "string"
           }
         },
         "required" : [ "type" ]
+      },
+      "CancelOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/Action"
+        } ]
       },
       "RescheduleOccurrence" : {
         "allOf" : [ {
@@ -614,8 +621,7 @@
               "format" : "date-time"
             }
           }
-        } ],
-        "required" : [ "type" ]
+        } ]
       },
       "Location" : {
         "type" : "object",
@@ -908,22 +914,6 @@
         },
         "required" : [ "id" ]
       },
-      "AtAndBy" : {
-        "type" : "object",
-        "properties" : {
-          "at" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "by" : {
-            "type" : "string"
-          },
-          "displayName" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "at", "by", "displayName" ]
-      },
       "Authorisation" : {
         "type" : "object",
         "properties" : {
@@ -1040,12 +1030,6 @@
           "transport" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
-          "added" : {
-            "$ref" : "#/components/schemas/AtAndBy"
-          },
-          "cancelled" : {
-            "$ref" : "#/components/schemas/AtAndBy"
-          },
           "contactInformation" : {
             "type" : "string"
           },
@@ -1056,7 +1040,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "added", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
       },
       "Occurrence" : {
         "type" : "object",
@@ -1148,12 +1132,6 @@
               "$ref" : "#/components/schemas/Occurrence"
             }
           },
-          "submitted" : {
-            "$ref" : "#/components/schemas/AtAndBy"
-          },
-          "approved" : {
-            "$ref" : "#/components/schemas/AtAndBy"
-          },
           "schedule" : {
             "$ref" : "#/components/schemas/JsonNode"
           },
@@ -1161,7 +1139,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "submitted", "toDate" ]
+        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "toDate" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -1606,13 +1584,9 @@
           "occurrenceCount" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "submittedAt" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         },
-        "required" : [ "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "status", "submittedAt", "toDate" ]
+        "required" : [ "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "status", "toDate" ]
       },
       "TapAuthorisationSearchResponse" : {
         "type" : "object",
