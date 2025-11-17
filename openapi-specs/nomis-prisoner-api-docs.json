@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-12.740.4e3a323"
+    "version" : "2025-11-14.748.77bbc4b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13177,7 +13177,7 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : [ "createDatetime,ASC" ],
+            "default" : [ "createDatetime,ASC", "agencyVisitTimesId.location,ASC", "agencyVisitTimesId.weekDay,ASC", "agencyVisitTimesId.timeSlotSequence,ASC" ],
             "items" : {
               "type" : "string"
             }
