@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-09-18.56.a64cf23"
+    "version" : "2025-11-14.547.ff100a4"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -321,86 +321,6 @@
         "deprecated" : true
       }
     },
-    "/scheduled-instances/{instanceId}/cancel" : {
-      "put" : {
-        "tags" : [ "scheduled-instance-controller" ],
-        "summary" : "Cancel a scheduled instance",
-        "description" : "Cancels scheduled instance and associated attendance records\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
-        "operationId" : "cancelScheduledInstance",
-        "parameters" : [ {
-          "name" : "instanceId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/ScheduleInstanceCancelRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "204" : {
-            "description" : "Scheduled instance successfully cancelled",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The scheduled instance was not found.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "deprecated" : true
-      }
-    },
     "/scheduled-instances/uncancel" : {
       "put" : {
         "tags" : [ "scheduled-instance-controller" ],
@@ -524,7 +444,7 @@
     "/queue-admin/retry-dlq/{dlqName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
         "operationId" : "retryDlq",
         "parameters" : [ {
           "name" : "dlqName",
@@ -572,7 +492,7 @@
     "/queue-admin/purge-queue/{queueName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
         "operationId" : "purgeQueue",
         "parameters" : [ {
           "name" : "queueName",
@@ -1352,6 +1272,105 @@
         }
       }
     },
+    "/waiting-list-applications/{prisonCode}/prisoner/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "waiting-list-application-controller" ],
+        "summary" : "Adds a prisoner to up to five activity schedule waiting lists",
+        "description" : "Adds the supplied waiting list creation requests to the selected activity schedules.\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
+        "operationId" : "addToWaitingList",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "Caseload-Id",
+          "in" : "header",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "The request with the prisoner waiting list details",
+                "items" : {
+                  "$ref" : "#/components/schemas/PrisonerWaitingListApplicationRequest"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "The waiting list entry was created and added to the schedule.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "An activity schedule was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/utility/update-case-note-uuid" : {
       "post" : {
         "tags" : [ "utility-controller" ],
@@ -1617,6 +1636,75 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/ActivityScheduleInstance"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/scheduled-instances/scheduled-attendees" : {
+      "post" : {
+        "tags" : [ "scheduled-instance-controller" ],
+        "summary" : "Get a list of scheduled attendees for a list of scheduled instances",
+        "description" : "Returns a list of prisoners who are scheduled to attend the given scheduled instances.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "operationId" : "getScheduledAttendeesByScheduledInstances",
+        "parameters" : [ {
+          "name" : "Caseload-Id",
+          "in" : "header",
+          "content" : {
+            "*/*" : {
+              "schema" : {
+                "type" : "string"
+              }
+            }
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "type" : "array",
+                "description" : "The scheduled instance ids",
+                "items" : {
+                  "type" : "integer",
+                  "format" : "int64"
+                }
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Scheduled attendees found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ScheduledAttendee"
                   }
                 }
               }
@@ -2528,68 +2616,6 @@
         }
       }
     },
-    "/job/fix-zero-pay" : {
-      "post" : {
-        "tags" : [ "job-trigger-controller" ],
-        "summary" : "Trigger the job fix zero pay activities",
-        "description" : "Can only be accessed from within the ingress. Requests from elsewhere will result in a 401 response code.",
-        "operationId" : "triggerFixZeroPayJob",
-        "parameters" : [ {
-          "name" : "deallocate",
-          "in" : "query",
-          "description" : "If supplied will deallocate prisoners",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "makeUnpaid",
-          "in" : "query",
-          "description" : "If supplied will make activity unpaid",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "allocate",
-          "in" : "query",
-          "description" : "If supplied will reallocate prisoners",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "prisonCode",
-          "in" : "query",
-          "description" : "The prison code",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "activityScheduleId",
-          "in" : "query",
-          "description" : "The activity schedule Id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "202" : {
-            "description" : "Accepted",
-            "content" : {
-              "text/plain" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/job/fix-locations" : {
       "post" : {
         "tags" : [ "job-trigger-controller" ],
@@ -2794,210 +2820,6 @@
           },
           "404" : {
             "description" : "Waiting list application not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/integration-api/scheduled-events/prison/{prisonCode}" : {
-      "get" : {
-        "tags" : [ "integration-api-controller" ],
-        "summary" : "Get a list of scheduled events for a prison, prisoner, date range (max 3 months) and optional time slot.",
-        "description" : "\n      Returns scheduled events for the prison, prisoner, date range (max 3 months) and optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as active for appointments and/or activities.\n      (Intended usage: Prisoner calendar / schedule)\n    \n\nRequires one of the following roles:\n* ACTIVITIES__HMPPS_INTEGRATION_API",
-        "operationId" : "getScheduledEventsForSinglePrisoner",
-        "parameters" : [ {
-          "name" : "prisonCode",
-          "in" : "path",
-          "description" : "The 3-digit prison code.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "prisonerNumber",
-          "in" : "query",
-          "description" : "Prisoner number (required). Format A9999AA.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "startDate",
-          "in" : "query",
-          "description" : "Start date of query (required). Format YYYY-MM-DD.",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        }, {
-          "name" : "endDate",
-          "in" : "query",
-          "description" : "End date of query (required). Format YYYY-MM-DD. The end date must be within 3 months of the start date)",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        }, {
-          "name" : "timeSlot",
-          "in" : "query",
-          "description" : "Time slot for the events (optional). If supplied, one of AM, PM or ED.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "AM", "PM", "ED" ]
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Successful call - zero or more scheduled events found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerScheduledEvents"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Requested resource not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "post" : {
-        "tags" : [ "integration-api-controller" ],
-        "summary" : "Get a list of scheduled events for a prison and list of prisoner numbers for a date and time slot",
-        "description" : "\n      Returns scheduled events for the prison, prisoner numbers, single date and an optional time slot.\n      Court hearings, adjudication hearings, transfers and visits come from NOMIS (via prison API).\n      Activities and appointments come from either NOMIS or the local database depending on whether the prison is\n      marked as rolled-out for activities and/or appointments.\n      (Intended usage: Unlock list)\n    \n\nRequires one of the following roles:\n* ACTIVITIES__HMPPS_INTEGRATION_API",
-        "operationId" : "getScheduledEventsForMultiplePrisoners_1",
-        "parameters" : [ {
-          "name" : "prisonCode",
-          "in" : "path",
-          "description" : "The 3-character prison code.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "date",
-          "in" : "query",
-          "description" : "The exact date to return events for (required) in format YYYY-MM-DD",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        }, {
-          "name" : "timeSlot",
-          "in" : "query",
-          "description" : "Time slot of the events (optional). If supplied, one of AM, PM or ED.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "AM", "PM", "ED" ]
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "type" : "array",
-                "description" : "Set of prisoner numbers (required). Example ['G11234YI', 'B5234YI'].",
-                "items" : {
-                  "type" : "string"
-                },
-                "uniqueItems" : true
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Successful call - zero or more scheduled events found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerScheduledEvents"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Requested resource not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3582,7 +3404,7 @@
         "tags" : [ "allocation-controller" ],
         "summary" : "Add a prisoner to an activity schedule waiting list",
         "description" : "Adds the supplied waiting list creation request to the activity schedule.\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
-        "operationId" : "addToWaitingList",
+        "operationId" : "addToWaitingList_1",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -3662,7 +3484,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/allocations/{prisonCode}/unsuspend" : {
@@ -4905,7 +4728,7 @@
       "get" : {
         "tags" : [ "activity-schedule-controller" ],
         "summary" : "Get a schedules waiting list applications",
-        "description" : "Returns zero or more activity schedule waiting list applications.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
+        "description" : "Returns zero or more activity schedule waiting list applications. Excludes applications that are REMOVED or ALLOCATED.\n\nRequires one of the following roles:\n* PRISON\n* ACTIVITY_ADMIN",
         "operationId" : "getWaitingListApplicationsBy",
         "parameters" : [ {
           "name" : "scheduleId",
@@ -5348,7 +5171,8 @@
               }
             }
           }
-        }
+        },
+        "deprecated" : true
       }
     },
     "/scheduled-instances/attendance-summary" : {
@@ -5547,7 +5371,7 @@
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
-        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_ADMIN",
+        "description" : "\n\nRequires one of the following roles:\n* ACTIVITY_QUEUE_ADMIN",
         "operationId" : "getDlqMessages",
         "parameters" : [ {
           "name" : "dlqName",
@@ -6349,7 +6173,7 @@
         }
       }
     },
-    "/integration-api/prisons/{prisonCode}/{prisonerNumber}/scheduled-instances" : {
+    "/integration-api/prisons/{prisonCode}/prisoner/{prisonerNumber}/scheduled-instances" : {
       "get" : {
         "tags" : [ "integration-api-controller" ],
         "summary" : "Get a list of scheduled instances for a prisoner, prison, date range (max 3 months) and time slot (AM, PM or ED - optional)",
@@ -8513,31 +8337,6 @@
         },
         "required" : [ "displayName", "username" ]
       },
-      "ScheduleInstanceCancelRequest" : {
-        "type" : "object",
-        "description" : "The scheduled instance cancellation request",
-        "properties" : {
-          "reason" : {
-            "type" : "string",
-            "description" : "The reason for cancelling the schedule instance",
-            "example" : "No tutor available",
-            "maxLength" : 100,
-            "minLength" : 0
-          },
-          "username" : {
-            "type" : "string",
-            "description" : "The username of the user cancelling the schedule instance",
-            "example" : "RJ56DDE",
-            "minLength" : 1
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "A field for any additional comments",
-            "example" : "Resume tomorrow"
-          }
-        },
-        "required" : [ "reason", "username" ]
-      },
       "ScheduleInstancesUncancelRequest" : {
         "type" : "object",
         "description" : "The uncancel scheduled instances request",
@@ -8760,6 +8559,11 @@
             "description" : "\n    Extra information for the prisoner or prisoners attending this appointment.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
+          },
           "createdTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -8951,6 +8755,11 @@
             "type" : "string",
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
+          },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
           },
           "createdTime" : {
             "type" : "string",
@@ -9314,7 +9123,7 @@
             "example" : [ "DECLINED", "PENDING" ],
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED" ]
+              "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ]
             }
           }
         }
@@ -9381,19 +9190,13 @@
       "PagedWaitingListApplication" : {
         "type" : "object",
         "properties" : {
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "size" : {
             "type" : "integer",
@@ -9408,6 +9211,12 @@
           "number" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
           },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
@@ -9485,7 +9294,7 @@
           "status" : {
             "type" : "string",
             "description" : "The status of this waiting list",
-            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED" ],
+            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
           },
           "statusUpdatedTime" : {
@@ -9547,6 +9356,45 @@
           }
         },
         "required" : [ "activityId", "bookingId", "createdBy", "creationTime", "earliestReleaseDate", "id", "prisonCode", "prisonerNumber", "requestedBy", "requestedDate", "scheduleId", "status" ]
+      },
+      "PrisonerWaitingListApplicationRequest" : {
+        "type" : "object",
+        "description" : "\n  Describes a single waiting list application for a prisoner to an activity.\n  ",
+        "properties" : {
+          "activityScheduleId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internally-generated ID for this activity schedule (assumes 1-2-1 with activity)",
+            "example" : 7654321
+          },
+          "applicationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The past or present date on which the waiting list application was requested",
+            "example" : "2023-06-23"
+          },
+          "requestedBy" : {
+            "type" : "string",
+            "description" : "The person who made the request",
+            "example" : "Fred Bloggs",
+            "maxLength" : 100,
+            "minLength" : 0
+          },
+          "comments" : {
+            "type" : "string",
+            "description" : "Any particular comments related to the waiting list request",
+            "example" : "The prisoner has specifically requested to attend this activity",
+            "maxLength" : 500,
+            "minLength" : 0
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "The status of the application. Only PENDING, APPROVED or DECLINED are allowed when creating.",
+            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
+            "example" : "PENDING"
+          }
+        },
+        "required" : [ "activityScheduleId", "applicationDate", "requestedBy", "status" ]
       },
       "UpdateCaseNoteUUIDResponse" : {
         "type" : "object",
@@ -10358,6 +10206,46 @@
           }
         },
         "required" : [ "code", "description", "id" ]
+      },
+      "ScheduledAttendee" : {
+        "type" : "object",
+        "description" : "Describes a prisoner scheduled to attend to an activity",
+        "properties" : {
+          "scheduledInstanceId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal ID of the scheduled instance",
+            "example" : 1
+          },
+          "allocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal ID of the allocation",
+            "example" : 1
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The candidate's prisoner number",
+            "example" : "GF10101"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id of the prisoner",
+            "example" : 10001
+          },
+          "suspended" : {
+            "type" : "boolean",
+            "description" : "Set to true if this prisoner is suspended from the scheduled event",
+            "example" : false
+          },
+          "autoSuspended" : {
+            "type" : "boolean",
+            "description" : "Set to true if this prisoner is auto-suspended from the scheduled event",
+            "example" : false
+          }
+        },
+        "required" : [ "allocationId", "autoSuspended", "prisonerNumber", "scheduledInstanceId", "suspended" ]
       },
       "PrisonerScheduledEvents" : {
         "type" : "object",
@@ -11586,6 +11474,11 @@
             "description" : "\n    Extra information for the prisoner attending this appointment instance.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
+          },
           "createdTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -12173,6 +12066,11 @@
             "description" : "\n    Extra information for the prisoner or prisoners attending this appointment.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
+          },
           "createdTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -12339,6 +12237,13 @@
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment. Shown only on the appointments details\n    page and on printed movement slips. Wing staff will be notified there is extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison",
             "maxLength" : 4000,
+            "minLength" : 0
+          },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early",
+            "maxLength" : 400,
             "minLength" : 0
           }
         },
@@ -12584,6 +12489,13 @@
             "maxLength" : 4000,
             "minLength" : 0
           },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early",
+            "maxLength" : 400,
+            "minLength" : 0
+          },
           "originalAppointmentId" : {
             "type" : "integer",
             "format" : "int64",
@@ -12633,7 +12545,7 @@
           "status" : {
             "type" : "string",
             "description" : "The status of the application. Only PENDING, APPROVED or DECLINED are allowed when creating.",
-            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED" ],
+            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
           }
         },
@@ -13553,7 +13465,7 @@
           "status" : {
             "type" : "string",
             "description" : "The updated status of the application. Only PENDING, APPROVED or DECLINED are allowed when updating.",
-            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED" ],
+            "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
           }
         }
@@ -13636,6 +13548,13 @@
             "description" : "\n    Updated extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison",
             "maxLength" : 4000,
+            "minLength" : 0
+          },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Updated prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early",
+            "maxLength" : 400,
             "minLength" : 0
           },
           "removePrisonerNumbers" : {
@@ -13992,11 +13911,50 @@
         },
         "required" : [ "activityScheduleId", "attendanceId", "bookingId", "prisonerNumber", "scheduledInstanceId", "sessionDate", "sessionEndTime", "sessionStartTime", "status" ]
       },
+      "Attachment" : {
+        "type" : "object",
+        "properties" : {
+          "attachmentNumber" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name or description of the attachment which will be included in the report"
+          },
+          "contentType" : {
+            "type" : "string",
+            "description" : "The content type of the attachment"
+          },
+          "url" : {
+            "type" : "string",
+            "description" : "The url to be used to download the attachment file"
+          },
+          "filesize" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The size of the attachment file in bytes"
+          },
+          "filename" : {
+            "type" : "string",
+            "description" : "The filename of attachment file"
+          }
+        },
+        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+      },
       "HmppsSubjectAccessRequestContent" : {
         "type" : "object",
         "properties" : {
           "content" : {
             "description" : "The content of the subject access request response"
+          },
+          "attachments" : {
+            "type" : "array",
+            "description" : "The details of any attachments for the subject access request response",
+            "items" : {
+              "$ref" : "#/components/schemas/Attachment"
+            }
           }
         },
         "required" : [ "content" ]
@@ -14516,19 +14474,13 @@
       "PageActivityCandidate" : {
         "type" : "object",
         "properties" : {
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "size" : {
             "type" : "integer",
@@ -14544,6 +14496,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
@@ -14558,46 +14516,6 @@
             "type" : "boolean"
           }
         }
-      },
-      "ScheduledAttendee" : {
-        "type" : "object",
-        "description" : "Describes a prisoner scheduled to attend to an activity",
-        "properties" : {
-          "scheduledInstanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The internal ID of the scheduled instance",
-            "example" : 1
-          },
-          "allocationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The internal ID of the allocation",
-            "example" : 1
-          },
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The candidate's prisoner number",
-            "example" : "GF10101"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The booking id of the prisoner",
-            "example" : 10001
-          },
-          "suspended" : {
-            "type" : "boolean",
-            "description" : "Set to true if this prisoner is suspended from the scheduled event",
-            "example" : false
-          },
-          "autoSuspended" : {
-            "type" : "boolean",
-            "description" : "Set to true if this prisoner is auto-suspended from the scheduled event",
-            "example" : false
-          }
-        },
-        "required" : [ "allocationId", "autoSuspended", "prisonerNumber", "scheduledInstanceId", "suspended" ]
       },
       "AttendanceSummaryDetails" : {
         "type" : "object",
