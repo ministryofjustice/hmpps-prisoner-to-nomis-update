@@ -38,8 +38,7 @@ class ExternalMovementsDomainEventListener(
     when (eventType) {
       "person.temporary-absence-authorisation.approved" -> externalMovementsService.authorisationApproved(message.fromJson())
       "external-movements-api.temporary-absence-outside-movement.created" -> externalMovementsService.outsideMovementCreated(message.fromJson())
-      "external-movements-api.temporary-absence-scheduled-movement-out.created" -> externalMovementsService.scheduledMovementOutCreated(message.fromJson())
-      "external-movements-api.temporary-absence-scheduled-movement-in.created" -> externalMovementsService.scheduledMovementInCreated(message.fromJson())
+      "person.temporary-absence.scheduled" -> externalMovementsService.occurrenceChanged(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-out.created" -> externalMovementsService.externalMovementOutCreated(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-in.created" -> externalMovementsService.externalMovementInCreated(message.fromJson())
 
@@ -73,29 +72,15 @@ data class OutsideMovementAdditionalInformation(
   val source: String,
 )
 
-data class TemporaryAbsenceScheduledMovementOutEvent(
+data class TapOccurrenceEvent(
   val description: String?,
   val eventType: String,
   val personReference: PersonReference,
-  val additionalInformation: ScheduledMovementOutAdditionalInformation,
+  val additionalInformation: TapOccurrenceAdditionalInformation,
 )
 
-data class ScheduledMovementOutAdditionalInformation(
-  val scheduledMovementOutId: UUID,
-  val authorisationId: UUID,
-  val source: String,
-)
-
-data class TemporaryAbsenceScheduledMovementInEvent(
-  val description: String?,
-  val eventType: String,
-  val personReference: PersonReference,
-  val additionalInformation: ScheduledMovementInAdditionalInformation,
-)
-
-data class ScheduledMovementInAdditionalInformation(
-  val scheduledMovementInId: UUID,
-  val scheduledMovementOutId: UUID,
+data class TapOccurrenceAdditionalInformation(
+  val occurrenceId: UUID,
   val authorisationId: UUID,
   val source: String,
 )

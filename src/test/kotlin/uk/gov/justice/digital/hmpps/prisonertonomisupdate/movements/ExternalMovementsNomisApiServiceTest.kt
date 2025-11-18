@@ -15,11 +15,10 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createScheduledTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createScheduledTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -124,27 +123,27 @@ class ExternalMovementsNomisApiServiceTest {
   inner class ScheduledTemporaryAbsence {
 
     @Nested
-    inner class CreateScheduledTemporaryAbsence {
+    inner class UpsertScheduledTemporaryAbsence {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsence()
+        mockServer.stubUpsertScheduledTemporaryAbsence()
 
-        apiService.createScheduledTemporaryAbsence("A1234BC", createScheduledTemporaryAbsenceRequest())
+        apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
 
         mockServer.verify(
-          postRequestedFor(anyUrl())
+          putRequestedFor(anyUrl())
             .withHeader("Authorization", equalTo("Bearer ABCDE")),
         )
       }
 
       @Test
       fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsence()
+        mockServer.stubUpsertScheduledTemporaryAbsence()
 
-        apiService.createScheduledTemporaryAbsence("A1234BC", createScheduledTemporaryAbsenceRequest())
+        apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
 
         mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence"))
+          putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence"))
             .withRequestBody(
               matchingJsonPath("eventSubType", equalTo("C5")),
             ),
@@ -153,52 +152,10 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsence(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertScheduledTemporaryAbsence(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createScheduledTemporaryAbsence("A1234BC", createScheduledTemporaryAbsenceRequest())
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class ScheduledTemporaryAbsenceReturn {
-
-    @Nested
-    inner class CreateScheduledTemporaryAbsenceReturn {
-      @Test
-      fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsenceReturn()
-
-        apiService.createScheduledTemporaryAbsenceReturn("A1234BC", createScheduledTemporaryAbsenceReturnRequest())
-
-        mockServer.verify(
-          postRequestedFor(anyUrl())
-            .withHeader("Authorization", equalTo("Bearer ABCDE")),
-        )
-      }
-
-      @Test
-      fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsenceReturn()
-
-        apiService.createScheduledTemporaryAbsenceReturn("A1234BC", createScheduledTemporaryAbsenceReturnRequest())
-
-        mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence-return"))
-            .withRequestBody(
-              matchingJsonPath("eventSubType", equalTo("C5")),
-            ),
-        )
-      }
-
-      @Test
-      fun `will throw if error`() = runTest {
-        mockServer.stubCreateScheduledTemporaryAbsenceReturn(status = HttpStatus.INTERNAL_SERVER_ERROR)
-
-        assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createScheduledTemporaryAbsenceReturn("A1234BC", createScheduledTemporaryAbsenceReturnRequest())
+          apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
         }
       }
     }
