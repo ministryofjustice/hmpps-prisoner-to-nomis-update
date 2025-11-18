@@ -328,8 +328,7 @@ hmpps.sqs:
         { "eventType":[
           "person.temporary-absence-authorisation.approved",
           "external-movements-api.temporary-absence-outside-movement.created",
-          "external-movements-api.temporary-absence-scheduled-movement-out.created",
-          "external-movements-api.temporary-absence-scheduled-movement-in.created",
+          "person.temporary-absence.scheduled",
           "external-movements-api.temporary-absence-external-movement-out.created",
           "external-movements-api.temporary-absence-external-movement-in.created"
         ]}

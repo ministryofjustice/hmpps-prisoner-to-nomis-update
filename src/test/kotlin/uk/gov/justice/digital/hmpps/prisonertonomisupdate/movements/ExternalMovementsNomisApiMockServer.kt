@@ -8,16 +8,14 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateScheduledTemporaryAbsenceReturnResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -67,7 +65,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
 
     fun createTemporaryAbsenceOutsideMovementResponse(applicationMultiId: Long = 101112) = CreateTemporaryAbsenceOutsideMovementResponse(12345, 56789, applicationMultiId)
 
-    fun createScheduledTemporaryAbsenceRequest() = CreateScheduledTemporaryAbsenceRequest(
+    fun upsertScheduledTemporaryAbsenceRequest() = UpsertScheduledTemporaryAbsenceRequest(
       movementApplicationId = 56789,
       eventSubType = "C5",
       eventStatus = "SCH",
@@ -84,22 +82,7 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       toAddressId = 3456,
     )
 
-    fun createScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = CreateScheduledTemporaryAbsenceResponse(12345, 56789, eventId)
-
-    fun createScheduledTemporaryAbsenceReturnRequest(scheduledTemporaryAbsenceEventId: Long = 131415) = CreateScheduledTemporaryAbsenceReturnRequest(
-      movementApplicationId = 56789,
-      scheduledTemporaryAbsenceEventId = scheduledTemporaryAbsenceEventId,
-      eventSubType = "C5",
-      eventStatus = "SCH",
-      eventDate = today.toLocalDate(),
-      escort = "U",
-      startTime = today,
-      comment = "Scheduled temporary absence return comment",
-      fromAgency = "HAZLWD",
-      toPrison = "LEI",
-    )
-
-    fun createScheduledTemporaryAbsenceReturnResponse(eventId: Long = 161718) = CreateScheduledTemporaryAbsenceReturnResponse(12345, 56789, eventId)
+    fun upsertScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = UpsertScheduledTemporaryAbsenceResponse(12345, 56789, eventId)
 
     fun createTemporaryAbsenceRequest(scheduledTemporaryAbsenceId: Long = 131415) = CreateTemporaryAbsenceRequest(
       movementDate = today.toLocalDate(),
@@ -197,12 +180,12 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
-  fun stubCreateScheduledTemporaryAbsence(
+  fun stubUpsertScheduledTemporaryAbsence(
     offenderNo: String = "A1234BC",
-    response: CreateScheduledTemporaryAbsenceResponse = createScheduledTemporaryAbsenceResponse(),
+    response: UpsertScheduledTemporaryAbsenceResponse = upsertScheduledTemporaryAbsenceResponse(),
   ) {
     nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
+      put(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -212,44 +195,13 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
     )
   }
 
-  fun stubCreateScheduledTemporaryAbsence(
+  fun stubUpsertScheduledTemporaryAbsence(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(status.value())
-            .withBody(objectMapper.writeValueAsString(error)),
-        ),
-    )
-  }
-
-  fun stubCreateScheduledTemporaryAbsenceReturn(
-    offenderNo: String = "A1234BC",
-    response: CreateScheduledTemporaryAbsenceReturnResponse = createScheduledTemporaryAbsenceReturnResponse(),
-  ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence-return"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.CREATED.value())
-            .withBody(objectMapper.writeValueAsString(response)),
-        ),
-    )
-  }
-
-  fun stubCreateScheduledTemporaryAbsenceReturn(
-    offenderNo: String = "A1234BC",
-    status: HttpStatus,
-    error: ErrorResponse = ErrorResponse(status),
-  ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence-return"))
+      put(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
