@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-14.328.a261ef8"
+    "version" : "2025-11-17.335.462a0b0"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -74,9 +74,96 @@
             "application/json" : {
               "schema" : {
                 "oneOf" : [ {
+                  "$ref" : "#/components/schemas/AmendOccurrenceNotes"
+                }, {
                   "$ref" : "#/components/schemas/CancelOccurrence"
                 }, {
+                  "$ref" : "#/components/schemas/ChangeOccurrenceAccompaniment"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeOccurrenceLocation"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeOccurrenceTransport"
+                }, {
+                  "$ref" : "#/components/schemas/ExpireOccurrence"
+                }, {
+                  "$ref" : "#/components/schemas/MarkOccurrenceOverdue"
+                }, {
+                  "$ref" : "#/components/schemas/RecategoriseOccurrence"
+                }, {
                   "$ref" : "#/components/schemas/RescheduleOccurrence"
+                }, {
+                  "$ref" : "#/components/schemas/ScheduleOccurrence"
+                } ]
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
+          }
+        }
+      }
+    },
+    "/temporary-absence-authorisations/{id}" : {
+      "get" : {
+        "tags" : [ "tap-authorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getTapAuthorisation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapAuthorisation"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "tap-authorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "applyActions_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/AmendAuthorisationNotes"
+                }, {
+                  "$ref" : "#/components/schemas/ApproveAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/CancelAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/ChangePrisonPerson"
+                }, {
+                  "$ref" : "#/components/schemas/DenyAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/RecategoriseAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/RescheduleAuthorisation"
                 } ]
               }
             }
@@ -232,34 +319,6 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ReferenceId"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/temporary-absence-authorisations/{id}" : {
-      "get" : {
-        "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
-        "operationId" : "getTapAuthorisation",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TapAuthorisation"
                 }
               }
             }
@@ -586,41 +645,66 @@
   },
   "components" : {
     "schemas" : {
-      "Action" : {
-        "type" : "object",
-        "discriminator" : {
-          "propertyName" : "type"
-        },
-        "properties" : {
-          "reason" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "type" ]
-      },
-      "CancelOccurrence" : {
+      "AmendOccurrenceNotes" : {
         "allOf" : [ {
-          "$ref" : "#/components/schemas/Action"
-        } ]
-      },
-      "RescheduleOccurrence" : {
-        "allOf" : [ {
-          "$ref" : "#/components/schemas/Action"
+          "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
           "type" : "object",
           "properties" : {
-            "releaseAt" : {
-              "type" : "string",
-              "format" : "date-time"
-            },
-            "returnBy" : {
-              "type" : "string",
-              "format" : "date-time"
+            "notes" : {
+              "type" : "string"
             }
           }
+        } ],
+        "required" : [ "notes" ]
+      },
+      "CancelOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
+      },
+      "ChangeOccurrenceAccompaniment" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "accompaniedByCode" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "accompaniedByCode" ]
+      },
+      "ChangeOccurrenceLocation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "location" : {
+              "$ref" : "#/components/schemas/Location"
+            }
+          }
+        } ],
+        "required" : [ "location" ]
+      },
+      "ChangeOccurrenceTransport" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "transportCode" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "transportCode" ]
+      },
+      "ExpireOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
         } ]
       },
       "Location" : {
@@ -639,6 +723,203 @@
             "type" : "string"
           }
         }
+      },
+      "MarkOccurrenceOverdue" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
+      },
+      "OccurrenceAction" : {
+        "type" : "object",
+        "discriminator" : {
+          "propertyName" : "type"
+        },
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "ReasonPath" : {
+        "type" : "object",
+        "properties" : {
+          "path" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReferenceDataKey"
+            }
+          }
+        },
+        "required" : [ "path" ]
+      },
+      "RecategoriseOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "absenceTypeCode" : {
+              "type" : "string"
+            },
+            "absenceSubTypeCode" : {
+              "type" : "string"
+            },
+            "absenceReasonCategoryCode" : {
+              "type" : "string"
+            },
+            "absenceReasonCode" : {
+              "type" : "string"
+            },
+            "reasonPath" : {
+              "$ref" : "#/components/schemas/ReasonPath"
+            }
+          }
+        } ],
+        "required" : [ "reasonPath" ]
+      },
+      "ReferenceDataKey" : {
+        "type" : "object",
+        "properties" : {
+          "domain" : {
+            "type" : "string",
+            "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
+          },
+          "code" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "domain" ]
+      },
+      "RescheduleOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "releaseAt" : {
+              "type" : "string",
+              "format" : "date-time"
+            },
+            "returnBy" : {
+              "type" : "string",
+              "format" : "date-time"
+            }
+          }
+        } ]
+      },
+      "ScheduleOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
+      },
+      "AmendAuthorisationNotes" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "notes" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "notes" ]
+      },
+      "ApproveAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        } ]
+      },
+      "AuthorisationAction" : {
+        "type" : "object",
+        "discriminator" : {
+          "propertyName" : "type"
+        },
+        "properties" : {
+          "reason" : {
+            "type" : "string"
+          },
+          "type" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "CancelAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        } ]
+      },
+      "ChangePrisonPerson" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "personIdentifier" : {
+              "type" : "string"
+            },
+            "prisonCode" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "personIdentifier", "prisonCode" ]
+      },
+      "DenyAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        } ]
+      },
+      "RecategoriseAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "absenceTypeCode" : {
+              "type" : "string"
+            },
+            "absenceSubTypeCode" : {
+              "type" : "string"
+            },
+            "absenceReasonCategoryCode" : {
+              "type" : "string"
+            },
+            "absenceReasonCode" : {
+              "type" : "string"
+            },
+            "reasonPath" : {
+              "$ref" : "#/components/schemas/ReasonPath"
+            }
+          }
+        } ],
+        "required" : [ "reasonPath" ]
+      },
+      "RescheduleAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "from" : {
+              "type" : "string",
+              "format" : "date"
+            },
+            "to" : {
+              "type" : "string",
+              "format" : "date"
+            },
+            "repeat" : {
+              "type" : "boolean"
+            }
+          }
+        } ],
+        "required" : [ "from", "repeat", "to" ]
       },
       "SyncAtAndBy" : {
         "type" : "object",
@@ -750,6 +1031,9 @@
           "accompaniedByCode" : {
             "type" : "string"
           },
+          "transportCode" : {
+            "type" : "string"
+          },
           "repeat" : {
             "type" : "boolean"
           },
@@ -775,7 +1059,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "prisonCode", "repeat", "statusCode", "toDate" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "prisonCode", "repeat", "statusCode", "toDate", "transportCode" ]
       },
       "SyncWriteTapOccurrence" : {
         "type" : "object",
@@ -1115,6 +1399,9 @@
           "accompaniedBy" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
+          "transport" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
           "repeat" : {
             "type" : "boolean"
           },
@@ -1139,7 +1426,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "toDate" ]
+        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "toDate", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
