@@ -106,7 +106,6 @@ generic-service:
     - name: court-case-a-recon
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "10 3 * * *"
-      suspend: true
     - name: csip-recon
       type: CSIP_RECON
       schedule: "5 0 * * *"
