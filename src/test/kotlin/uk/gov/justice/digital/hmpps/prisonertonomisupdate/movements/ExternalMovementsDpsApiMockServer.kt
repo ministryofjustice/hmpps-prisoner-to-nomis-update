@@ -80,7 +80,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       personIdentifier = "A1234AA",
       prisonCode = "LEI",
     ),
-    statusCode = "APPROVED",
+    statusCode = "SCHEDULED",
     releaseAt = now,
     returnBy = tomorrow,
     location = Location(
@@ -93,6 +93,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     transportCode = "TAX",
     absenceReasonCode = "R2",
     created = SyncAtAndBy(at = now, by = "USER1"),
+    notes = "Tap occurrence comment",
   )
 
   fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = SyncReadTapMovement(
