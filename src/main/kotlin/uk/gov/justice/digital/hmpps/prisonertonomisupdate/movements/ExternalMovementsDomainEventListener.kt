@@ -81,7 +81,6 @@ data class TapOccurrenceEvent(
 
 data class TapOccurrenceAdditionalInformation(
   val occurrenceId: UUID,
-  val authorisationId: UUID,
   val source: String,
 )
 
