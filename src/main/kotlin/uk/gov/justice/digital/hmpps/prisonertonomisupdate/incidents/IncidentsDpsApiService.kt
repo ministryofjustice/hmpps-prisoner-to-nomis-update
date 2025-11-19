@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Simple
 class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val webClient: WebClient) {
   companion object {
     val openStatusValues = listOf("AWAITING_REVIEW", "NEEDS_UPDATING", "ON_HOLD", "UPDATED")
-    val closedStatusValues = listOf("CLOSED", "DUPLICATE", "NOT_REPORTABLE")
+    val closedStatusValues = listOf("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "WAS_CLOSED")
   }
 
   suspend fun getIncident(incidentId: String): ReportWithDetails = webClient.get()
