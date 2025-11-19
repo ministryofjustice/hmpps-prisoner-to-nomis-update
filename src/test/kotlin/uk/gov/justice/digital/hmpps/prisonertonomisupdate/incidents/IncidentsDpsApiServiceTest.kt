@@ -3,8 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.havingExactly
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -113,25 +114,70 @@ class IncidentsDpsApiServiceTest {
   @Nested
   @DisplayName("GET /incident-reports")
   inner class GetIncidentsByAgencyAndStatus {
+
+    @Nested
+    inner class OpenIncidents {
+      @BeforeEach
+      internal fun setUp() {
+        incidentsDpsApi.stubGetIncidentCounts(5, 5)
+
+        runBlocking {
+          apiService.getOpenIncidentsCount(agencyId = "ASI")
+        }
+      }
+
+      @Test
+      fun `should call api with OAuth2 token`() {
+        incidentsDpsApi.verify(
+          getRequestedFor(urlPathEqualTo("/incident-reports"))
+            .withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
+
+      @Test
+      fun `should pass location, size and status`() {
+        incidentsDpsApi.verify(
+          getRequestedFor(urlPathEqualTo("/incident-reports"))
+            .withQueryParam("location", equalTo("ASI"))
+            .withQueryParam("status", havingExactly("AWAITING_REVIEW", "NEEDS_UPDATING", "ON_HOLD", "UPDATED"))
+            .withQueryParam("size", equalTo("1")),
+        )
+      }
+
+      @Test
+      fun `will retrieve paged incidents from the api`() {
+        runBlocking {
+          assertThat(apiService.getOpenIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
+        }
+      }
+    }
+  }
+
+  @Nested
+  inner class ClosedIncidents {
     @BeforeEach
     internal fun setUp() {
       incidentsDpsApi.stubGetIncidentCounts(5, 5)
 
       runBlocking {
-        apiService.getOpenIncidentsCount(agencyId = "ASI")
+        apiService.getClosedIncidentsCount(agencyId = "ASI")
       }
     }
 
     @Test
     fun `should call api with OAuth2 token`() {
       incidentsDpsApi.verify(
-        getRequestedFor(urlMatching("/incident-reports?.*"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE"))
+        getRequestedFor(urlPathEqualTo("/incident-reports"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should pass location, size and status`() {
+      incidentsDpsApi.verify(
+        getRequestedFor(urlPathEqualTo("/incident-reports"))
           .withQueryParam("location", equalTo("ASI"))
-          .withQueryParam("status", equalTo("AWAITING_REVIEW"))
-          .withQueryParam("status", equalTo("NEEDS_UPDATING"))
-          .withQueryParam("status", equalTo("ON_HOLD"))
-          .withQueryParam("status", equalTo("UPDATED"))
+          .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "WAS_CLOSED"))
           .withQueryParam("size", equalTo("1")),
       )
     }
@@ -139,7 +185,7 @@ class IncidentsDpsApiServiceTest {
     @Test
     fun `will retrieve paged incidents from the api`() {
       runBlocking {
-        assertThat(apiService.getOpenIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
+        assertThat(apiService.getClosedIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
       }
     }
   }
