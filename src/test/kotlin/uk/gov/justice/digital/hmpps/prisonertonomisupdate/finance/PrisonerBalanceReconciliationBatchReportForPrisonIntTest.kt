@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 
 @TestPropertySource(
   properties = [
@@ -39,8 +40,12 @@ class PrisonerBalanceReconciliationBatchReportForPrisonIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      financeNomisApi.stubGetRootOffenderIds(totalElements = 3, prisonId = "MDI")
-
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+        RootOffenderIdsWithLast(
+          rootOffenderIds = listOf(10000, 10001, 10002),
+          lastOffenderId = 10002L,
+        ),
+      )
       stubBalances(
         10000L,
         nomisPrisonerBalanceResponse().copy(prisonNumber = "A0001NN"),
