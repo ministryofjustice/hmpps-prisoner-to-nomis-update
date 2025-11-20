@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-18.760.c9dcc53"
+    "version" : "2025-11-19.768.331996d"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12924,7 +12924,7 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : [ "whenCreated,ASC" ],
+            "default" : [ "createDatetime,ASC" ],
             "items" : {
               "type" : "string"
             }
@@ -16572,7 +16572,7 @@
         "tags" : [ "official-visits-resource" ],
         "summary" : "Get an official visit",
         "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getVisitTimeSlot_1",
+        "operationId" : "getOfficialVisit",
         "parameters" : [ {
           "name" : "visitId",
           "in" : "path",
