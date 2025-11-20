@@ -342,7 +342,12 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        financeNomisApi.stubGetRootOffenderIds(totalElements = 10, pageSize = 3, firstRootOffenderId = 1, prisonId = "ASI")
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+          RootOffenderIdsWithLast(
+            rootOffenderIds = listOf(1, 2, 3),
+            lastOffenderId = 3L,
+          ),
+        )
 
         stubBalances(
           1,

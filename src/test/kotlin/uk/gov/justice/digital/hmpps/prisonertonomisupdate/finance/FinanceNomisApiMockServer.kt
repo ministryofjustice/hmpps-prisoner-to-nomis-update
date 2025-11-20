@@ -126,25 +126,6 @@ class FinanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
-  fun stubGetRootOffenderIds(totalElements: Long = 20, pageSize: Long = 20, firstRootOffenderId: Long = 10000, prisonId: String = "ASI") {
-    val content: List<Long> = (1..min(pageSize, totalElements)).map { firstRootOffenderId + it - 1 }
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/finance/prisoners/ids"))
-        .withQueryParam("prisonId", equalTo(prisonId))
-        .willReturn(
-          okJson(
-            pagedModelContent(
-              objectMapper = NomisApiExtension.objectMapper,
-              content = content,
-              pageSize = pageSize,
-              pageNumber = 0,
-              totalElements = totalElements,
-            ),
-          ),
-        ),
-    )
-  }
-
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
