@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-06.3146.de374e8"
+    "version" : "2025-11-19.3340.d855e46"
   },
   "servers" : [ {
     "url" : "/",
@@ -13859,7 +13859,7 @@
       },
       "PatchContactRequest" : {
         "type" : "object",
-        "description" : "Request to patch a new contact. firstName and lastName are not updatable so are intentionally missing from this request.",
+        "description" : "Request to patch a contact.",
         "properties" : {
           "isStaff" : {
             "type" : "string",
@@ -13909,6 +13909,20 @@
             "type" : "string",
             "description" : "The date the contact deceased, if known",
             "example" : "1980-01-01"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the contact",
+            "example" : "John",
+            "maxLength" : 35,
+            "minLength" : 0
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the contact",
+            "example" : "Doe",
+            "maxLength" : 35,
+            "minLength" : 0
           }
         }
       },
