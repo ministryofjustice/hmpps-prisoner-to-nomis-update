@@ -61,13 +61,13 @@ class FinanceNomisApiServiceTest {
     fun `can pass prisonIds to filter by`() = runTest {
       mockServer.stubGetPrisonerBalanceIdentifiersFromId(rootOffenderIdsWithLast)
 
-      apiService.getPrisonerBalanceIdentifiersFromId(12345678L, 5, prisonIds= listOf("MDI", "LEI"))
+      apiService.getPrisonerBalanceIdentifiersFromId(12345678L, 5, prisonIds = listOf("MDI", "LEI"))
 
       mockServer.verify(
         getRequestedFor(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
           .withQueryParam("rootOffenderId", equalTo("12345678"))
           .withQueryParam("pageSize", equalTo("5"))
-          .withQueryParam("prisonId", havingExactly("LEI", "MDI", ))
+          .withQueryParam("prisonId", havingExactly("LEI", "MDI")),
       )
     }
 
