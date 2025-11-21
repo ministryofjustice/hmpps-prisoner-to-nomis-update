@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-19.3340.d855e46"
+    "version" : "2025-11-20.3354.fe6d894"
   },
   "servers" : [ {
     "url" : "/",
@@ -7795,6 +7795,67 @@
         }
       }
     },
+    "/contact/{contactId}/history" : {
+      "get" : {
+        "tags" : [ "Contacts" ],
+        "summary" : "Get contact change history",
+        "description" : "Gets the full change history for a contact by id. Returns Envers snapshot per revision with metadata.",
+        "operationId" : "getContactHistory",
+        "parameters" : [ {
+          "name" : "contactId",
+          "in" : "path",
+          "description" : "The id of the contact",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Found the contact history",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactAuditEntry"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No contact with that id could be found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/search" : {
       "get" : {
         "tags" : [ "Contacts" ],
@@ -15316,6 +15377,109 @@
             "$ref" : "#/components/schemas/PageMetadata"
           }
         }
+      },
+      "ContactAuditEntry" : {
+        "type" : "object",
+        "description" : "An audit history entry for a contact",
+        "properties" : {
+          "revisionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Revision id",
+            "example" : 101
+          },
+          "revisionType" : {
+            "type" : "string",
+            "description" : "Revision type",
+            "enum" : [ "ADD", "MOD", "DEL" ],
+            "example" : "ADD"
+          },
+          "revisionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Revision timestamp"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "User who performed the change",
+            "example" : "read_write_user"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the contact",
+            "example" : 123456
+          },
+          "titleCode" : {
+            "type" : "string",
+            "description" : "Title code"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name"
+          },
+          "middleNames" : {
+            "type" : "string",
+            "description" : "Middle names"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth"
+          },
+          "deceasedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Deceased date"
+          },
+          "isStaff" : {
+            "type" : "boolean",
+            "description" : "Staff flag"
+          },
+          "isRemitter" : {
+            "type" : "boolean",
+            "description" : "Remitter flag"
+          },
+          "genderCode" : {
+            "type" : "string",
+            "description" : "Gender code"
+          },
+          "domesticStatusCode" : {
+            "type" : "string",
+            "description" : "Domestic status code"
+          },
+          "languageCode" : {
+            "type" : "string",
+            "description" : "Language code"
+          },
+          "interpreterRequired" : {
+            "type" : "boolean",
+            "description" : "Interpreter required"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Created by"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Created time"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Updated by"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Updated time"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "firstName", "id", "interpreterRequired", "isRemitter", "isStaff", "lastName", "revisionId", "revisionTimestamp", "revisionType" ]
       },
       "ContactSearchResultItem" : {
         "type" : "object",
