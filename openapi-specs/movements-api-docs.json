@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-17.335.462a0b0"
+    "version" : "2025-11-21.362.798bcca"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -79,6 +79,8 @@
                   "$ref" : "#/components/schemas/CancelOccurrence"
                 }, {
                   "$ref" : "#/components/schemas/ChangeOccurrenceAccompaniment"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeOccurrenceContactInformation"
                 }, {
                   "$ref" : "#/components/schemas/ChangeOccurrenceLocation"
                 }, {
@@ -319,6 +321,34 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temporary-absence-occurrences/{id}/history" : {
+      "get" : {
+        "tags" : [ "tap-occurrence-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getTapOccurrenceHistory",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
                 }
               }
             }
@@ -675,6 +705,19 @@
           }
         } ],
         "required" : [ "accompaniedByCode" ]
+      },
+      "ChangeOccurrenceContactInformation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "information" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "information" ]
       },
       "ChangeOccurrenceLocation" : {
         "allOf" : [ {
@@ -1097,6 +1140,9 @@
           "transportCode" : {
             "type" : "string"
           },
+          "contactInformation" : {
+            "type" : "string"
+          },
           "notes" : {
             "type" : "string"
           },
@@ -1326,6 +1372,69 @@
         },
         "required" : [ "accompaniedBy", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
       },
+      "AuditHistory" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditedAction"
+            }
+          }
+        },
+        "required" : [ "content" ]
+      },
+      "AuditedAction" : {
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/User"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "domainEvents" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Change"
+            }
+          }
+        },
+        "required" : [ "changes", "domainEvents", "occurredAt", "user" ]
+      },
+      "Change" : {
+        "type" : "object",
+        "properties" : {
+          "propertyName" : {
+            "type" : "string"
+          },
+          "previous" : { },
+          "change" : { }
+        },
+        "required" : [ "propertyName" ]
+      },
+      "User" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "username" ]
+      },
       "Occurrence" : {
         "type" : "object",
         "properties" : {
@@ -1419,6 +1528,12 @@
               "$ref" : "#/components/schemas/Occurrence"
             }
           },
+          "locations" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Location"
+            }
+          },
           "schedule" : {
             "$ref" : "#/components/schemas/JsonNode"
           },
@@ -1426,7 +1541,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "fromDate", "id", "occurrences", "person", "repeat", "status", "toDate", "transport" ]
+        "required" : [ "accompaniedBy", "fromDate", "id", "locations", "occurrences", "person", "repeat", "status", "toDate", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -1465,6 +1580,9 @@
             "type" : "string"
           },
           "transportCode" : {
+            "type" : "string"
+          },
+          "contactInformation" : {
             "type" : "string"
           },
           "notes" : {
