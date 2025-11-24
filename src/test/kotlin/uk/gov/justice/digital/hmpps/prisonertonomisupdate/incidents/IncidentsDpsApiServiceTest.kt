@@ -177,7 +177,7 @@ class IncidentsDpsApiServiceTest {
       incidentsDpsApi.verify(
         getRequestedFor(urlPathEqualTo("/incident-reports"))
           .withQueryParam("location", equalTo("ASI"))
-          .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "WAS_CLOSED"))
+          .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED"))
           .withQueryParam("size", equalTo("1")),
       )
     }
