@@ -1,16 +1,16 @@
 {
   "openapi" : "3.1.0",
   "info" : {
-    "title" : "HMPPS Prisoner Finance API - ALPHA",
-    "description" : "API for retrieving and managing transactions and balance information related to prisoner finance.\n\n## Authentication\nThis API uses **OAuth2 with JWTs**. Pass your JWT in the `Authorization` header using the `Bearer` scheme.\n**Important:** This service is designed for client tokens only; user tokens should not be used.\n\n## Authorization\nAccess to API endpoints is controlled by roles. The required roles are documented with each endpoint.\nIntegrations should request one of the following roles based on their needs:\n\n* `ROLE_PRISONER_FINANCE__RO`: Grants **read-only access** (e.g., retrieving transactions, balances).\n* `ROLE_PRISONER_FINANCE__RW`: Grants **read/write access** (e.g., creating transactions, adding amendments).\n* `ROLE_PRISONER_FINANCE_SYNC__RW`: Grants **read/write access** to the NOMIS sync endpoints.",
+    "title" : "HMPPS Prisoner Finance Sync API",
+    "description" : "API for synchronising NOMIS transactions with the Prisoner Finance Ledger.\n\n## Authentication\nThis API uses **OAuth2 with JWTs**. Pass your JWT in the `Authorization` header using the `Bearer` scheme.\n**Important:** This service is designed for client tokens only; user tokens should not be used.\n\n## Authorization\nAccess to API endpoints is controlled by roles. The required roles are documented with each endpoint.\nIntegrations should request one of the following roles based on their needs:\n\n* `ROLE_PRISONER_FINANCE_SYNC__RW`: Grants **read/write access** to the NOMIS sync endpoints.",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-13.142.3a7cc54"
+    "version" : "2025-11-24.22.9340a0b"
   },
   "servers" : [ {
-    "url" : "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/",
+    "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
     "description" : "Development"
   }, {
     "url" : "http://localhost:8080",
