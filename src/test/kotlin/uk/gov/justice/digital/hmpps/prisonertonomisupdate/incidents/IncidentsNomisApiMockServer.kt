@@ -147,6 +147,17 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         ),
     )
   }
+
+  fun stubGetIncident(incidentResponse: IncidentResponse = incidentResponse()) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/incidents/${incidentResponse.incidentId}"))
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
+            .withBody(incidentResponse),
+        ),
+    )
+  }
+
   fun stubGetIncidents(startIncidentId: Long, endIncidentId: Long) {
     (startIncidentId..endIncidentId).forEach { nomisIncidentId ->
       stubGetIncident(nomisIncidentId)
@@ -220,40 +231,6 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
-  fun stubGetIncidentWithInvalidNomisResponseCount(incidentId: Long) {
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/incidents/$incidentId"))
-        .willReturn(
-          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
-            .withBody(
-              incidentResponse()
-                .copy(
-                  incidentId = incidentId,
-                  questions = listOf(question1WithInvalidAnswerCount, question2With2Answers),
-                ),
-            ),
-        ),
-    )
-  }
-
-  fun stubGetIncidentWithMissingNomisResponse(incidentId: Long) {
-    val incidentQuestions = incidentResponse().questions.toMutableList()
-    incidentQuestions.add(questionWithNoAnswers)
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/incidents/$incidentId"))
-        .willReturn(
-          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
-            .withBody(
-              incidentResponse()
-                .copy(
-                  incidentId = incidentId,
-                  questions = incidentQuestions,
-                ),
-            ),
-        ),
-    )
-  }
-
   fun stubUpsertIncident(
     incidentId: Long = 123456,
   ) {
@@ -280,7 +257,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder = this.withBody(objectMapper.writeValueAsString(body))
 }
 
-private fun incidentResponse(
+fun incidentResponse(
   nomisIncidentId: Long = 1234,
   offenderPartyPrisonNumber: String = "A1234BC",
   status: String = "AWAN",

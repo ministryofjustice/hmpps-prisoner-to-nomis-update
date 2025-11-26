@@ -556,12 +556,13 @@ class IncidentsReconciliationIntTest(
 
       @BeforeEach
       fun setup() {
-        incidentsNomisApi.stubGetIncident()
-        incidentsDpsApi.stubGetIncidentByNomisId(nomisIncidentId = 1234)
+        incidentsDpsApi.stubGetIncidentByNomisId()
       }
 
       @Test
       fun `will return no differences`() {
+        incidentsNomisApi.stubGetIncident()
+
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
@@ -599,7 +600,11 @@ class IncidentsReconciliationIntTest(
 
       @Test
       fun `will pass reconciliation if invalid Nomis data - multipleAnswers for a single answer question`() {
-        incidentsNomisApi.stubGetIncidentWithInvalidNomisResponseCount(incidentId = nomisIncidentId)
+        incidentsNomisApi.stubGetIncident(
+          incidentResponse().copy(
+            questions = listOf(question1WithInvalidAnswerCount, question2With2Answers),
+          ),
+        )
 
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -623,7 +628,12 @@ class IncidentsReconciliationIntTest(
 
       @Test
       fun `will pass reconciliation if invalid Nomis data - question with no answers`() {
-        incidentsNomisApi.stubGetIncidentWithMissingNomisResponse(incidentId = nomisIncidentId)
+        val response = incidentResponse()
+        incidentsNomisApi.stubGetIncident(
+          response.copy(
+            questions = response.questions + questionWithNoAnswers,
+          ),
+        )
 
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
