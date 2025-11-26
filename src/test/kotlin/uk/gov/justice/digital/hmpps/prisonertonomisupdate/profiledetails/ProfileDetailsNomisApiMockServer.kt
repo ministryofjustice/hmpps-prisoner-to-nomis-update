@@ -114,6 +114,7 @@ fun booking(profileDetails: List<ProfileDetailsResponse> = listOf(profileDetails
   bookingId = 1,
   startDateTime = LocalDateTime.parse("2024-02-03T12:34:56"),
   latestBooking = true,
+  sequence = 1,
   profileDetails = profileDetails,
 )
 
