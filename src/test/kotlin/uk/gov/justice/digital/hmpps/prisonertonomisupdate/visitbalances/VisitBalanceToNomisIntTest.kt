@@ -183,6 +183,34 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
         visitBalanceNomisApi.verify(0, postRequestedFor(urlPathEqualTo("/prisoners/A1234KT/visit-balance-adjustments")))
       }
     }
+
+    @Nested
+    inner class HappyPathForUnchangedBalance {
+
+      @BeforeEach
+      fun setup() {
+        nomisApi.stubCheckAgencySwitchForPrisoner(prisonNumber = prisonNumber)
+        sendVisitBalanceAdjustmentToQueue(hasBalanceChanged = false)
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will not retrieve the adjustment details from Dps`() {
+        visitBalanceDpsApi.verify(0, getRequestedFor(urlPathEqualTo("/visits/allocation/prisoner/$prisonNumber/balance")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the event is ignored success`() {
+        verify(telemetryClient).trackEvent(
+          eq("visitbalance-synchronisation-adjustment-ignored"),
+          check {
+            assertThat(it).containsEntry("visitBalanceAdjustmentId", "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef")
+            assertThat(it).containsEntry("prisonNumber", "A1234KT")
+          },
+          isNull(),
+        )
+      }
+    }
   }
 
   @Nested
@@ -515,6 +543,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String = "prison-visit-allocation.adjustment.created",
     offenderNo: String = "A1234KT",
     visitBalanceAdjustmentId: String = "a77fa39f-49cf-4e07-af09-f47cfdb3c6ef",
+    hasBalanceChanged: Boolean = true,
   ) {
     visitBalanceQueueClient.sendMessage(
       SendMessageRequest.builder().queueUrl(visitBalanceQueueUrl).messageBody(
@@ -522,6 +551,7 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
           eventType = eventType,
           offenderNo = offenderNo,
           visitBalanceAdjustmentId = visitBalanceAdjustmentId,
+          hasBalanceChanged = hasBalanceChanged,
         ),
       )
         .build(),
@@ -532,10 +562,11 @@ class VisitBalanceToNomisIntTest : SqsIntegrationTestBase() {
     eventType: String,
     offenderNo: String,
     visitBalanceAdjustmentId: String,
+    hasBalanceChanged: Boolean,
   ) = // language=JSON
     """{
     "MessageId": "ae06c49e-1f41-4b9f-b2f2-dcca610d02cd", "Type": "Notification", "Timestamp": "2019-10-21T14:01:18.500Z", 
-    "Message": "{\"eventId\":\"5958295\",\"eventType\":\"$eventType\",\"eventDatetime\":\"2019-10-21T15:00:25.489964\",\"additionalInformation\":{\"adjustmentId\":\"$visitBalanceAdjustmentId\"},\"personReference\":{\"identifiers\":[{\"type\":\"NOMIS\",\"value\":\"$offenderNo\"}]}}",
+    "Message": "{\"eventId\":\"5958295\",\"eventType\":\"$eventType\",\"eventDatetime\":\"2019-10-21T15:00:25.489964\",\"additionalInformation\":{\"adjustmentId\":\"$visitBalanceAdjustmentId\",\"hasBalanceChanged\":$hasBalanceChanged},\"personReference\":{\"identifiers\":[{\"type\":\"NOMIS\",\"value\":\"$offenderNo\"}]}}",
     "TopicArn": "arn:aws:sns:eu-west-1:000000000000:offender_events", 
     "MessageAttributes": {
       "eventType": {"Type": "String", "Value": "$eventType"}, 
