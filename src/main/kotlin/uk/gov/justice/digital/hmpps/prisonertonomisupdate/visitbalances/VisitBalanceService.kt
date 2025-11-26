@@ -30,18 +30,23 @@ class VisitBalanceService(
       "visitBalanceAdjustmentId" to visitBalanceAdjustmentId,
       "prisonNumber" to prisonNumber,
     )
-    // We can assume it is safe to consume this event as it will only fire when Dps is in charge Of Visit Allocation
-    dpsApiService.getVisitBalanceAdjustment(
-      prisonNumber = prisonNumber,
-      visitBalanceAdjustmentId = visitBalanceAdjustmentId,
-    ).also {
-      visitBalanceNomisApiService.createVisitBalanceAdjustment(
-        it.prisonerId,
-        it.toNomisCreateVisitBalanceAdjustmentRequest(),
-      )
-      it.changeToVoBalance?.let { telemetry["visitBalanceChange"] = it }
-      it.changeToPvoBalance?.let { telemetry["privilegeVisitBalanceChange"] = it }
-      telemetryClient.trackEvent("visitbalance-synchronisation-adjustment-created-success", telemetry)
+    // only process if the balance has actually changed
+    if (event.additionalInformation.hasBalanceChanged) {
+      // We can assume it is safe to consume this event as it will only fire when Dps is in charge Of Visit Allocation
+      dpsApiService.getVisitBalanceAdjustment(
+        prisonNumber = prisonNumber,
+        visitBalanceAdjustmentId = visitBalanceAdjustmentId,
+      ).also {
+        visitBalanceNomisApiService.createVisitBalanceAdjustment(
+          it.prisonerId,
+          it.toNomisCreateVisitBalanceAdjustmentRequest(),
+        )
+        it.changeToVoBalance?.let { telemetry["visitBalanceChange"] = it }
+        it.changeToPvoBalance?.let { telemetry["privilegeVisitBalanceChange"] = it }
+        telemetryClient.trackEvent("visitbalance-synchronisation-adjustment-created-success", telemetry)
+      }
+    } else {
+      telemetryClient.trackEvent("visitbalance-synchronisation-adjustment-ignored", telemetry)
     }
   }
 
@@ -105,6 +110,7 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
 
 data class VisitBalanceAdjustmentAdditionalInformation(
   val adjustmentId: String,
+  val hasBalanceChanged: Boolean,
 )
 
 fun VisitAllocationPrisonerAdjustmentResponseDto.toNomisCreateVisitBalanceAdjustmentRequest() = CreateVisitBalanceAdjustmentRequest(
