@@ -91,11 +91,12 @@ class SentencingAdjustmentsService(
     }
   }
 
-  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean) = updateAdjustment(
+  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean, setActive: Boolean) = updateAdjustment(
     offenderNo = offenderNo,
     adjustmentId = adjustmentId,
     source = "DPS",
     forceStatus = forceStatus,
+    setActive = setActive,
   )
 
   suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) = updateAdjustment(
@@ -103,9 +104,10 @@ class SentencingAdjustmentsService(
     adjustmentId = createEvent.additionalInformation.id,
     source = createEvent.additionalInformation.source,
     forceStatus = false,
+    setActive = false,
   )
 
-  suspend fun updateAdjustment(offenderNo: String, adjustmentId: String, source: String, forceStatus: Boolean) {
+  suspend fun updateAdjustment(offenderNo: String, adjustmentId: String, source: String, forceStatus: Boolean, setActive: Boolean) {
     val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
     if (isDpsCreated(source)) {
       runCatching {
@@ -123,7 +125,7 @@ class SentencingAdjustmentsService(
             .also { telemetryMap["nomisAdjustmentId"] = it.toString() }
 
         sentencingAdjustmentsApiService.getAdjustment(adjustmentId).let { adjustment ->
-          updateTransformedAdjustment(nomisAdjustmentId, adjustment, forceStatus)
+          updateTransformedAdjustment(nomisAdjustmentId, adjustment, forceStatus, setActive = setActive)
           telemetryClient.trackEvent("sentencing-adjustment-updated-success", telemetryMap, null)
         }
       }.onFailure { e ->
@@ -135,7 +137,7 @@ class SentencingAdjustmentsService(
     }
   }
 
-  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean) = UpdateSentencingAdjustmentRequest(
+  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean, setActive: Boolean) = UpdateSentencingAdjustmentRequest(
     adjustmentTypeCode = adjustment.adjustmentType.value,
     adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
     adjustmentFromDate = adjustment.adjustmentFromDate,
@@ -143,7 +145,9 @@ class SentencingAdjustmentsService(
     comment = adjustment.comment,
     sentenceSequence = adjustment.sentenceSequence,
   ).let {
-    if (forceStatus) {
+    if (setActive) {
+      it.copy(active = true)
+    } else if (forceStatus) {
       it.copy(active = adjustment.active)
     } else {
       it
