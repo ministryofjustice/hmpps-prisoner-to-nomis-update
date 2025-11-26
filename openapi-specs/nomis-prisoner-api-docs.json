@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-21.776.5a13783"
+    "version" : "2025-11-25.787.823099c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -16674,6 +16674,38 @@
               "type" : "string"
             }
           }
+        }, {
+          "name" : "prisonIds",
+          "in" : "query",
+          "description" : "Filter results by prison ids (returns all prisons if not specified)",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "example" : "['MDI','LEI']"
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Filter results by visits that were created on or after the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-11-03"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Filter results by visits that were created on or before the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2025-11-03"
         } ],
         "responses" : {
           "200" : {
@@ -29756,6 +29788,12 @@
             "type" : "string",
             "description" : "The name of the module that last changed the profile info, indicates if this was NOMIS or the synchronisation service",
             "example" : "DPS_SYNCHRONISATION"
+          },
+          "auditTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of the last change",
+            "example" : "2025-11-29T12:34:56"
           }
         },
         "required" : [ "createDateTime", "createdBy", "type" ]
@@ -29922,6 +29960,12 @@
             "description" : "Whether this is the latest booking or not. Note that latest does not imply active.",
             "example" : true
           },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The booking sequence number.",
+            "example" : 1
+          },
           "startDateTime" : {
             "type" : "string",
             "format" : "date-time",
@@ -29929,7 +29973,7 @@
             "example" : "2020-07-17T12:34:56"
           }
         },
-        "required" : [ "bookingId", "latestBooking", "profileDetails", "startDateTime" ]
+        "required" : [ "bookingId", "latestBooking", "profileDetails", "sequence", "startDateTime" ]
       },
       "PrisonerProfileDetailsResponse" : {
         "type" : "object",
@@ -31872,15 +31916,19 @@
           },
           "visitStatus" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of the visit"
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
           },
           "visitOutcome" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome of the visit"
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
           },
-          "outcomeReason" : {
+          "cancellationReason" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome reason of the visit"
+            "description" : "The reason of the visit cancellation"
+          },
+          "prisonerAttendanceOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of prisoner, Attended or Absent"
           },
           "prisonerSearchType" : {
             "$ref" : "#/components/schemas/CodeDescription",
@@ -31933,6 +31981,11 @@
             "type" : "string",
             "description" : "Surname name of the person"
           },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth name of the person"
+          },
           "leadVisitor" : {
             "type" : "boolean",
             "description" : "Indicates lead visitor for the visit"
@@ -31941,17 +31994,17 @@
             "type" : "boolean",
             "description" : "Indicates visitor requires assistance"
           },
-          "visitOutcome" : {
+          "visitorAttendanceOutcome" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome of the visit"
+            "description" : "The status of visitor, Attended or Absent"
           },
-          "outcomeReason" : {
+          "cancellationReason" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome reason of the visit"
+            "description" : "The reason of the visit cancellation - typically matches the overall cancellation reason"
           },
           "eventStatus" : {
             "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of visitor"
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
           },
           "commentText" : {
             "type" : "string",
