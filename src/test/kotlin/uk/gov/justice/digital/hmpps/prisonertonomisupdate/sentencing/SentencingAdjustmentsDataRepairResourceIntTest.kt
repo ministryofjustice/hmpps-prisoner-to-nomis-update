@@ -152,6 +152,43 @@ class SentencingAdjustmentsDataRepairResourceIntTest : SqsIntegrationTestBase() 
           )
         }
       }
+
+      @Nested
+      inner class WithSetActiveFlag {
+        @BeforeEach
+        fun setUp() {
+          webTestClient.post().uri("/prisoners/$offenderNo/sentencing-adjustments/$adjustmentId/repair?set-active=true")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus().isOk
+        }
+
+        @Test
+        fun `will log the repair details`() {
+          verify(telemetryClient).trackEvent(
+            eq("to-nomis-synch-adjustment-repair"),
+            check {
+              assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+              assertThat(it["adjustmentId"]).isEqualTo(adjustmentId)
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update a sentence adjustment in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlEqualTo("/sentence-adjustments/$nomisAdjustmentId"))
+              .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+              .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+              .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("99")))
+              .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
+              .withRequestBody(matchingJsonPath("sentenceSequence", equalTo("$sentenceSequence")))
+              .withRequestBody(matchingJsonPath("active", equalTo("true")))
+              .withRequestBody(matchingJsonPath("comment", equalTo("Adjusted for remand"))),
+          )
+        }
+      }
     }
   }
 }
