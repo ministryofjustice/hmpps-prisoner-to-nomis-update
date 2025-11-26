@@ -219,10 +219,13 @@ class IncidentsReconciliationService(
     if (offendersDifference.isNotEmpty()) return "Offender parties mismatch $offendersDifference"
 
     if (nomis.requirements.size != dps.correctionRequests.size) return "requirements mismatch"
-    if (nomis.questions.size != dps.questions.size) {
+    val nomisQuestionsWithAnswers = nomis.questions.filter { it.answers.isNotEmpty() }
+    if (nomisQuestionsWithAnswers.size != dps.questions.size) {
       return "questions mismatch"
     }
-    nomis.questions.forEachIndexed { i, nomisQuestion ->
+    nomis.logAndIgnoreNomisQuestionsWithoutAnswers(dps)
+
+    nomisQuestionsWithAnswers.forEachIndexed { i, nomisQuestion ->
       val dpsQuestion = dps.questions[i]
       if (dpsQuestion.code != nomisQuestion.questionId.toString()) {
         return "Code mismatch for question: ${nomisQuestion.questionId}"
@@ -231,7 +234,7 @@ class IncidentsReconciliationService(
         // Ignore and log any dodgy Nomis data
         if (!nomisQuestion.hasMultipleAnswers && nomisQuestion.answers.size > 1) {
           telemetryClient.trackEvent(
-            "incidents-reports-reconciliation-mismatch-ignored",
+            "incidents-reports-reconciliation-mismatch-multiple-answers-ignored",
             mapOf(
               "nomisIncidentId" to nomis.incidentId,
               "dpsIncidentId" to dps.id,
@@ -245,8 +248,23 @@ class IncidentsReconciliationService(
         }
       }
     }
-
     return null
+  }
+
+  fun IncidentResponse.logAndIgnoreNomisQuestionsWithoutAnswers(dps: ReportWithDetails) {
+    val nomisQuestionsWithMissingAnswers = questions.filter { it.answers.isEmpty() }
+    if (nomisQuestionsWithMissingAnswers.isNotEmpty()) {
+      telemetryClient.trackEvent(
+        "incidents-reports-reconciliation-mismatch-empty-response-ignored",
+        mapOf(
+          "nomisIncidentId" to incidentId,
+          "dpsIncidentId" to dps.id,
+          "totalNomisQuestions" to questions.size,
+          "missingQuestionIds" to nomisQuestionsWithMissingAnswers.joinToString { it.questionId.toString() },
+          "totalDpsQuestions" to dps.questions.size,
+        ),
+      )
+    }
   }
 
   fun List<String>.compare(otherList: List<String>): List<String> {

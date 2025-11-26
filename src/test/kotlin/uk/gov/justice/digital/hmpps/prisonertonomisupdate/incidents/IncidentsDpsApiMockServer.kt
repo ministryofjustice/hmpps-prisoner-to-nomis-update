@@ -90,7 +90,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetIncidentByNomisId(nomisIncidentId: Long) {
+  fun stubGetIncidentByNomisId(nomisIncidentId: Long = 1234) {
     stubFor(
       get(urlMatching("/incident-reports/reference/$nomisIncidentId/with-details")).willReturn(
         aResponse()
