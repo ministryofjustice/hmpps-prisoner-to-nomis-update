@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-21.362.798bcca"
+    "version" : "2025-11-26.383.0eaf7cb"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -103,7 +103,14 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK"
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditedAction"
+                }
+              }
+            }
           }
         }
       }
@@ -120,6 +127,22 @@
           "schema" : {
             "type" : "string",
             "format" : "uuid"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
           }
         } ],
         "responses" : {
@@ -174,7 +197,14 @@
         },
         "responses" : {
           "200" : {
-            "description" : "OK"
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditedAction"
+                }
+              }
+            }
           }
         }
       }
@@ -333,6 +363,34 @@
         "tags" : [ "tap-occurrence-controller" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getTapOccurrenceHistory",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temporary-absence-authorisations/{id}/history" : {
+      "get" : {
+        "tags" : [ "tap-authorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getTapAuthorisationHistory",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -859,6 +917,57 @@
           "$ref" : "#/components/schemas/OccurrenceAction"
         } ]
       },
+      "AuditedAction" : {
+        "type" : "object",
+        "properties" : {
+          "user" : {
+            "$ref" : "#/components/schemas/User"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "domainEvents" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "reason" : {
+            "type" : "string"
+          },
+          "changes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Change"
+            }
+          }
+        },
+        "required" : [ "changes", "domainEvents", "occurredAt", "user" ]
+      },
+      "Change" : {
+        "type" : "object",
+        "properties" : {
+          "propertyName" : {
+            "type" : "string"
+          },
+          "previous" : { },
+          "change" : { }
+        },
+        "required" : [ "propertyName" ]
+      },
+      "User" : {
+        "type" : "object",
+        "properties" : {
+          "username" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "name", "username" ]
+      },
       "AmendAuthorisationNotes" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1384,57 +1493,6 @@
         },
         "required" : [ "content" ]
       },
-      "AuditedAction" : {
-        "type" : "object",
-        "properties" : {
-          "user" : {
-            "$ref" : "#/components/schemas/User"
-          },
-          "occurredAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "domainEvents" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          },
-          "reason" : {
-            "type" : "string"
-          },
-          "changes" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Change"
-            }
-          }
-        },
-        "required" : [ "changes", "domainEvents", "occurredAt", "user" ]
-      },
-      "Change" : {
-        "type" : "object",
-        "properties" : {
-          "propertyName" : {
-            "type" : "string"
-          },
-          "previous" : { },
-          "change" : { }
-        },
-        "required" : [ "propertyName" ]
-      },
-      "User" : {
-        "type" : "object",
-        "properties" : {
-          "username" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "name", "username" ]
-      },
       "Occurrence" : {
         "type" : "object",
         "properties" : {
@@ -1779,6 +1837,14 @@
             "type" : "string",
             "format" : "date"
           },
+          "status" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+            },
+            "uniqueItems" : true
+          },
           "query" : {
             "type" : "string"
           },
@@ -1796,7 +1862,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "fromDate", "page", "prisonCode", "size", "sort", "toDate" ]
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
       },
       "PageMetadata" : {
         "type" : "object",
@@ -1942,7 +2008,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "fromDate", "page", "prisonCode", "size", "sort", "status", "toDate" ]
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
       },
       "TapAuthorisationResult" : {
         "type" : "object",
