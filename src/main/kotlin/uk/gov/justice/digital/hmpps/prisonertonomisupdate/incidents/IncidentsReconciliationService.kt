@@ -219,13 +219,10 @@ class IncidentsReconciliationService(
     if (offendersDifference.isNotEmpty()) return "Offender parties mismatch $offendersDifference"
 
     if (nomis.requirements.size != dps.correctionRequests.size) return "requirements mismatch"
-    val nomisQuestionsWithAnswers = nomis.questions.filter { it.answers.isNotEmpty() }
-    if (nomisQuestionsWithAnswers.size != dps.questions.size) {
+    if (nomis.questions.size != dps.questions.size) {
       return "questions mismatch"
     }
-    nomis.logAndIgnoreNomisQuestionsWithoutAnswers(dps)
-
-    nomisQuestionsWithAnswers.forEachIndexed { i, nomisQuestion ->
+    nomis.questions.forEachIndexed { i, nomisQuestion ->
       val dpsQuestion = dps.questions[i]
       if (dpsQuestion.code != nomisQuestion.questionId.toString()) {
         return "Code mismatch for question: ${nomisQuestion.questionId}"
@@ -249,22 +246,6 @@ class IncidentsReconciliationService(
       }
     }
     return null
-  }
-
-  fun IncidentResponse.logAndIgnoreNomisQuestionsWithoutAnswers(dps: ReportWithDetails) {
-    val nomisQuestionsWithMissingAnswers = questions.filter { it.answers.isEmpty() }
-    if (nomisQuestionsWithMissingAnswers.isNotEmpty()) {
-      telemetryClient.trackEvent(
-        "incidents-reports-reconciliation-mismatch-empty-response-ignored",
-        mapOf(
-          "nomisIncidentId" to incidentId,
-          "dpsIncidentId" to dps.id,
-          "totalNomisQuestions" to questions.size,
-          "missingQuestionIds" to nomisQuestionsWithMissingAnswers.joinToString { it.questionId.toString() },
-          "totalDpsQuestions" to dps.questions.size,
-        ),
-      )
-    }
   }
 
   fun List<String>.compare(otherList: List<String>): List<String> {

@@ -627,11 +627,18 @@ class IncidentsReconciliationIntTest(
       }
 
       @Test
-      fun `will pass reconciliation if invalid Nomis data - question with no answers`() {
-        val response = incidentResponse()
+      fun `will pass reconciliation if questions with no answers for both Nomis and Dps`() {
+        val dpsResponse = dpsIncident()
+        incidentsDpsApi.stubGetIncidentByNomisId(
+          response = dpsResponse.copy(
+            questions = dpsResponse.questions + dpsQuestionWithNoAnswers,
+          ),
+        )
+
+        val nomisResponse = incidentResponse()
         incidentsNomisApi.stubGetIncident(
-          response.copy(
-            questions = response.questions + questionWithNoAnswers,
+          nomisResponse.copy(
+            questions = nomisResponse.questions + nomisQuestionWithNoAnswers,
           ),
         )
 
@@ -642,17 +649,7 @@ class IncidentsReconciliationIntTest(
           .isOk
           .expectBody().isEmpty
 
-        verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-mismatch-empty-response-ignored"),
-          check {
-            assertThat(it).containsEntry("nomisIncidentId", "$nomisIncidentId")
-            assertThat(it).containsKey("dpsIncidentId")
-            assertThat(it).containsEntry("totalNomisQuestions", "3")
-            assertThat(it).containsEntry("totalDpsQuestions", "2")
-            assertThat(it).containsEntry("missingQuestionIds", "5678")
-          },
-          isNull(),
-        )
+        verifyNoInteractions(telemetryClient)
       }
     }
   }
