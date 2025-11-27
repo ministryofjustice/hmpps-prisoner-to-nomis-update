@@ -90,13 +90,13 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetIncidentByNomisId(nomisIncidentId: Long = 1234) {
+  fun stubGetIncidentByNomisId(nomisIncidentId: Long = 1234, response: ReportWithDetails = dpsIncident().copy(reportReference = nomisIncidentId.toString())) {
     stubFor(
       get(urlMatching("/incident-reports/reference/$nomisIncidentId/with-details")).willReturn(
         aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-          .withBody(dpsIncident().copy(reportReference = nomisIncidentId.toString())),
+          .withBody(response),
       ),
     )
   }
@@ -360,4 +360,13 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       changedBy = "JSMITH",
     ),
   ),
+)
+
+val dpsQuestionWithNoAnswers = Question(
+  code = "5678",
+  question = "Was anybody hurt?",
+  additionalInformation = null,
+  sequence = 3,
+  responses = listOf(),
+  label = "Was anybody hurt?",
 )

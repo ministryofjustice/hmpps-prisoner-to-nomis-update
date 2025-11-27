@@ -409,7 +409,7 @@ val answer2 = Response(
   comment = null,
 )
 
-val questionWithNoAnswers = Question(
+val nomisQuestionWithNoAnswers = Question(
   questionId = 5678,
   sequence = 3,
   question = "Was anybody hurt?",
