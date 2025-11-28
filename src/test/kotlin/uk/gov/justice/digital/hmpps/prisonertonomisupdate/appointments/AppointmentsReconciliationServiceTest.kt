@@ -12,6 +12,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -85,6 +86,25 @@ class AppointmentsReconciliationServiceTest {
 
     verify(nomisApiService, times(1)).getAppointmentIds(eq(listOf(PRISON_CODE)), any(), any(), eq(0), eq(1))
     verifyNoMoreInteractions(nomisApiService)
+  }
+
+  @Test
+  fun `will skip appointments in Nomis in the exclude list`() = runTest {
+    whenever(nomisApiService.getAppointmentIds(listOf(PRISON_CODE), LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 0, 5))
+      .thenReturn(
+        PageImpl(
+          listOf(AppointmentIdResponse(676842281), AppointmentIdResponse(681900464)),
+          Pageable.ofSize(5),
+          2,
+        ),
+      )
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(emptyList())
+
+    val results = appointmentsReconciliationService.generateReconciliationReportForPrison(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 2)
+    assertThat(results).isEmpty()
+
+    verifyNoInteractions(telemetryClient)
   }
 
   @Test
@@ -233,12 +253,48 @@ class AppointmentsReconciliationServiceTest {
       eq("appointments-reports-reconciliation-dps-only"),
       eq(
         mapOf(
-          "dpsId" to "10003",
+          "prisonId" to PRISON_CODE,
           "details" to "AppointmentAttendeeSearchResult(appointmentAttendeeId=10003, prisonerNumber=B2345ZZ, bookingId=1002)",
         ),
       ),
       isNull(),
     )
+  }
+
+  @Test
+  fun `will skip appointments in DPS only in the exclude list`() = runTest {
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(
+        appointmentSearchResults(
+          2345L,
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 3995802L,
+              prisonerNumber = OFFENDER_NO,
+              bookingId = 1001,
+            ),
+          ),
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 3997037L,
+              prisonerNumber = "B2345ZZ",
+              bookingId = 1002,
+            ),
+          ),
+        ),
+      )
+
+    val results = appointmentsReconciliationService.checkForMissingDpsRecords(
+      emptySet(),
+      PRISON_CODE,
+      LocalDate.parse(START_DATE),
+      LocalDate.parse(END_DATE),
+      3,
+    )
+
+    assertThat(results).isEmpty()
+
+    verifyNoInteractions(telemetryClient)
   }
 
   private fun nomisResponse(offenderNo: String = OFFENDER_NO, comment: String? = null) = AppointmentResponse(

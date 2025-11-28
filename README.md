@@ -600,9 +600,10 @@ Action to take is:
 * Clear the message from the DLQ - it will never succeed
 * Inform DPS on `#collab-connect-dps-syscon` to delete the duplicate alert; i.e. the one that was failing to sync with no mapping record.
 
-## Contacts a.k.a Personal Relationships
+### Contacts a.k.a Personal Relationships
 
 DPS has different terminology for the 2 key entities to NOMIS:
+
 ---
 * NOMIS: Person
 * DPS: Contact
@@ -650,7 +651,6 @@ Authorization: Bearer {{$auth.token("hmpps-auth")}}
   "mappingType": "DPS_CREATED"
 }
 ```
-
 
 ## Architecture
 

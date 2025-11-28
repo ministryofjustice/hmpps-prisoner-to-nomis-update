@@ -32,6 +32,20 @@ class AppointmentsReconciliationService(
 ) {
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
+
+    // A repeating CHAP appointment at CWI deleted from nomis 10 Oct,
+    // and a repeating CHAP at BSI deleted from nomis 19 may
+    // last event date is 19 Dec so these exclusions can be removed after that
+    private val excludeDpsIds = listOf<Long>(
+      3991971, 3994037, 3994957, 3995802, 3997037, 3997213, 3998728, 3999944, 4003314, 4008202, 4015679, 4017433, 4018526, 4018536, 7898256, 7898257, 7898490, 7898599, 7898604, 7899533, 7899720, 7899727, 7899950, 7900288, 7900313, 7900807, 7900889, 7900921, 7900943, 7900977, 7901183, 7901281,
+    ) + listOf<Long>(
+      7901394, 7901700, 7901764, 7902088, 7902095, 7902325, 7902483, 7902525, 7902592, 7902608, 7902772, 7903118, 7903323, 7903462, 7903660, 7903908, 7904195, 7904209, 7904257, 7904528, 7904557, 7904561, 7904564, 7904576, 7905016, 7905092, 7905176, 7905185, 7905866, 7905930, 7910332, 7910359, 7910431, 7910440, 9118422, 9120100, 9121264, 9122895, 9122946, 9123734,
+    ) + listOf<Long>(
+      // CWI CHAP 21-24 Dec
+      7910442, 7899954, 7898878, 7899092, 7897750, 7901367, 7905276, 7904347, 7903671, 7910442, 7905935, 7905479, 7905777,
+    ).toSet()
+
+    private val excludeNomisIds = setOf<Long>(676842281, 681900464) // occur on 10th and 4th dec respectively
   }
 
   suspend fun generateReconciliationReportBatch() {
@@ -69,8 +83,6 @@ class AppointmentsReconciliationService(
 //    return generateReconciliationReportForPrison(currentPrisonId, yesterday, horizonDate, appointmentsCount)
   }
 
-  // -------------------------------------------- Locations-style :
-
   suspend fun generateReconciliationReportForPrison(prisonId: String, startDate: LocalDate, endDate: LocalDate, nomisTotal: Int): List<MismatchAppointment> {
     val allDpsIdsInNomisPrison = HashSet<Long>(nomisTotal)
     if (nomisTotal == 0) {
@@ -84,28 +96,34 @@ class AppointmentsReconciliationService(
       }
         .mapNotNull { appointmentIdResponse ->
           val nomisId = appointmentIdResponse.eventId
-          runCatching {
-            mappingService.getMappingGivenNomisIdOrNull(nomisId)
-              ?.also { mappingDto ->
-                allDpsIdsInNomisPrison.add(mappingDto.appointmentInstanceId)
-              }
-              ?: run {
-                val nomisDetails = nomisApiService.getAppointment(nomisId)
 
-                log.info("No mapping found for appointment $nomisId, prisoner ${nomisDetails.offenderNo}")
-                telemetryClient.trackEvent(
-                  "appointments-reports-reconciliation-mismatch-missing-mapping",
-                  mapOf("appointmentId" to nomisId.toString()),
-                )
-                null
-              }
-          }.onFailure {
-            telemetryClient.trackEvent(
-              "appointments-reports-reconciliation-retrieval-error",
-              mapOf("nomis-appointment-id" to nomisId.toString(), "error" to (it.message ?: "")),
-            )
-            log.error("Unexpected error from api getting nomis appointment $nomisId", it)
-          }.getOrNull()
+          if (excludeNomisIds.contains(nomisId)) {
+            log.info("Ignoring excluded nomisId: $nomisId")
+            null
+          } else {
+            runCatching {
+              mappingService.getMappingGivenNomisIdOrNull(nomisId)
+                ?.also { mappingDto ->
+                  allDpsIdsInNomisPrison.add(mappingDto.appointmentInstanceId)
+                }
+                ?: run {
+                  val nomisDetails = nomisApiService.getAppointment(nomisId)
+
+                  log.info("No mapping found for appointment $nomisId, prisoner ${nomisDetails.offenderNo}")
+                  telemetryClient.trackEvent(
+                    "appointments-reports-reconciliation-mismatch-missing-mapping",
+                    mapOf("nomisId" to nomisId.toString(), "prisonId" to prisonId, "offenderNo" to nomisDetails.offenderNo),
+                  )
+                  null
+                }
+            }.onFailure {
+              telemetryClient.trackEvent(
+                "appointments-reports-reconciliation-retrieval-error",
+                mapOf("nomis-appointment-id" to nomisId.toString(), "prisonId" to prisonId, "error" to (it.message ?: "")),
+              )
+              log.error("Unexpected error from api getting nomis appointment $nomisId", it)
+            }.getOrNull()
+          }
         }
 
       withContext(Dispatchers.Unconfined) {
@@ -121,7 +139,7 @@ class AppointmentsReconciliationService(
     .onFailure {
       telemetryClient.trackEvent(
         "appointments-reports-reconciliation-mismatch-page-error",
-        mapOf("page" to page.first.toString(), "error" to (it.message ?: "")),
+        mapOf("page" to page.first.toString(), "prisonId" to prisonId, "error" to (it.message ?: "")),
       )
       log.error("Unable to match entire Nomis page of prisoners: $page", it)
     }
@@ -163,11 +181,19 @@ class AppointmentsReconciliationService(
     ?.filterNot {
       allDpsIdsInNomisPrison.contains(it.appointmentAttendeeId)
     }
+    ?.filterNot {
+      excludeDpsIds.contains(it.appointmentAttendeeId)
+        .also { b ->
+          if (b) {
+            log.info("Ignoring excluded dpsId: ${it.appointmentAttendeeId}")
+          }
+        }
+    }
     ?.map { appointmentAttendeeSearchResult ->
       val appointmentAttendeeId = appointmentAttendeeSearchResult.appointmentAttendeeId
       telemetryClient.trackEvent(
         "appointments-reports-reconciliation-dps-only",
-        mapOf("dpsId" to appointmentAttendeeId, "details" to appointmentAttendeeSearchResult),
+        mapOf("prisonId" to prisonId, "details" to appointmentAttendeeSearchResult),
       )
       MismatchAppointment(dpsId = appointmentAttendeeId)
     }
@@ -212,6 +238,7 @@ class AppointmentsReconciliationService(
         mapOf(
           "nomisId" to mismatch.nomisId.toString(),
           "dpsId" to mismatch.dpsId.toString(),
+          "prisonId" to nomisRecord.prisonId.toString(),
           "verdict" to verdict,
           "nomis" to (mismatch.nomisAppointment?.toString() ?: "null"),
           "dps" to (mismatch.dpsAppointment?.toString() ?: "null"),
@@ -285,155 +312,3 @@ data class MismatchAppointment(
   val nomisAppointment: AppointmentReportDetail? = null,
   val dpsAppointment: AppointmentReportDetail? = null,
 )
-
-// ---------------------------------------------------------- thread-style :
-
-/*suspend fun generateReconciliationReport()
-  : ReconciliationResult<MismatchPrisonerAppointmentsResponse> = generateReconciliationReport(
-  threadCount = pageSize,
-  checkMatch = ::checkAppointmentsMatch,
-  nextPage = ::getIdsForPage,
-)
-
-data class MismatchAppointments(
-  // val offenderNo: String,
-  val dpsCount: Int,
-  val nomisCount: Int,
-)
-
-suspend fun checkAppointment(dpsAppointmentId: Long, nomisAppointmentId: Long): MismatchAppointment? = runCatching {
-  val (nomisResponse, dpsResponse) = withContext(Dispatchers.Unconfined) {
-    async { nomisApiService.getAppointment(nomisAppointmentId) } to
-      async { dpsApiService.getAppointmentInstance(dpsAppointmentId) }
-  }.awaitBoth()
-  val nomisFields: AppointmentFields = AppointmentFields()
-  val dpsFields: AppointmentFields = AppointmentFields()
-  val differenceList = compareObjects(dpsFields, nomisFields)
-
-  if (differenceList.isNotEmpty()) {
-    // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
-    return MismatchAppointment(
-      nomis = nomisFields,
-      dps = dpsFields,
-      differences = differenceList,
-    )
-  } else {
-    return null
-  }
-}.onFailure {
-  log.error("Unable to match case with ids: dps:$dpsAppointmentId and nomis:$nomisAppointmentId", it)
-}.getOrNull()
-
-suspend fun checkAppointments(
-  nomisLists: PrisonerAppointmentLists,
-  dpsLists: List<DpsAppointment>,
-): List<MismatchAppointmentResponse> =
-  nomisLists.offenderAppointments
-    .map {
-      val dpsId = dpsLists.find { }
-
-      MismatchAppointmentResponse(
-        offenderNo = "xxx",
-        nomisAppointmentId = it.appointmentId,
-        dpsAppointmentId = dpsId,
-        mismatch = checkAppointment(dpsAppointmentId = dpsId, nomisAppointmentId = it.appointmentId),
-      )
-    }
-
-
-suspend fun manualCheckCaseOffenderNo(offenderNo: String): List<MismatchAppointmentResponse> = checkAppointments(
-  nomisLists = nomisApiService.getGLAppointmentsForPrisoner(offenderNo),
-  dpsLists = dpsApiService.getPrisonerAppointments(offenderNo),
-)
-
-suspend fun checkAppointmentsMatch(prisonerId: PrisonerIds): MismatchPrisonerAppointmentsResponse? = runCatching {
-  manualCheckCaseOffenderNo(prisonerId.offenderNo)
-    .filter { it.mismatch != null }
-    .takeIf { it.isNotEmpty() }?.let {
-      MismatchPrisonerAppointmentsResponse(
-        offenderNo = prisonerId.offenderNo,
-        mismatches = it,
-      )
-    }?.also {
-      it.mismatches.forEach { mismatch ->
-        telemetryClient.trackEvent(
-          "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch",
-          mapOf(
-            "offenderNo" to it.offenderNo,
-            "dpsAppointmentId" to mismatch.dpsAppointmentId.toString(),
-            "nomisAppointmentId" to mismatch.nomisAppointmentId.toString(),
-            "mismatchCount" to mismatch.mismatch!!.differences.size.toString(),
-          ),
-          null,
-        )
-      }
-    }
-}.onFailure {
-  log.error("Unable to match prisoner: ${id.offenderNo}", it)
-  telemetryClient.trackEvent(
-    "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-error",
-    mapOf(
-      "offenderNo" to id.offenderNo,
-      "reason" to (it.message ?: "unknown"),
-    ),
-    null,
-  )
-}.getOrNull()
-
-private suspend fun getIdsForPage(pageNumber: Int): ReconciliationPageResult<AppointmentIdResponse> = runCatching {
-  nomisApiService.getAppointmentIds(
-    prisonIds = xxx,
-    fromDate = xxx,
-    toDate = null,
-    pageNumber = pageNumber,
-    pageSize = pageSize,
-  )
-}.onFailure {
-  telemetryClient.trackEvent(
-    "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-mismatch-page-error",
-    mapOf(
-      "booking" to lastBookingId.toString(),
-    ),
-  )
-  log.error("Unable to match entire page of bookings from booking: $lastBookingId", it)
-}
-  .map {
-    ReconciliationSuccessPageResult(
-      ids = it.prisonerIds,
-      last = it.lastBookingId,
-    )
-  }
-  .getOrElse { ReconciliationErrorPageResult(it) }
-  .also { log.info("Page requested from booking: $lastBookingId, with $prisonerPageSize bookings") }
-}
-data class AppointmentFields(
-val active: Boolean,
-val id: String,
-val glReferences: List<String> = emptyList(),
-) {
-override fun equals(other: Any?): Boolean {
-  if (this === other) return true
-  other as CaseFields
-  return active == other.active
-}
-}
-
-data class MismatchAppointment(
-val nomis: AppointmentFields,
-val dps: AppointmentFields,
-val differences: List<Difference> = emptyList(),
-)
-data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
-
-data class MismatchPrisonerAppointmentsResponse(
-val offenderNo: String,
-val mismatches: List<MismatchAppointmentResponse>,
-)
-
-data class MismatchAppointmentResponse(
-val offenderNo: String = "TODO",
-val dpsAppointmentId: UUID,
-val nomisAppointmentId: Long,
-val mismatch: MismatchAppointment?,
-)
- */
