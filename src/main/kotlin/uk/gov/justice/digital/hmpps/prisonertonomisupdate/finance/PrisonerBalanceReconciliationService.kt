@@ -110,7 +110,7 @@ class PrisonerBalanceReconciliationService(
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       telemetryClient.trackEvent(
-        "prisoner-balance-mismatch",
+        "prisoner-balance-reports-reconciliation-mismatch",
         mapOf(
           "prisoner" to nomisResponse.prisonNumber,
         ) + differenceList.associate { it.property to it.toString() },
@@ -210,7 +210,7 @@ class PrisonerBalanceReconciliationService(
     },
     onFailure = {
       telemetryClient.trackEvent(
-        "prisoner-balance-mismatch-page-error",
+        "prisoner-balance-reports-reconciliation-mismatch-page-error",
         mapOf(
           "lastOffenderId" to lastOffenderId.toString(),
           "error" to (it.message ?: ""),
