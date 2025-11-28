@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -79,10 +80,10 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
       comment = "Scheduled temporary absence comment",
       toAgency = "HAZLWD",
       transportType = "VAN",
-      toAddressId = 3456,
+      toAddress = UpsertTemporaryAbsenceAddress(id = 3456),
     )
 
-    fun upsertScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = UpsertScheduledTemporaryAbsenceResponse(12345, 56789, eventId)
+    fun upsertScheduledTemporaryAbsenceResponse(eventId: Long = 131415) = UpsertScheduledTemporaryAbsenceResponse(12345, 56789, eventId, 77, "OFF")
 
     fun createTemporaryAbsenceRequest(scheduledTemporaryAbsenceId: Long = 131415) = CreateTemporaryAbsenceRequest(
       movementDate = today.toLocalDate(),

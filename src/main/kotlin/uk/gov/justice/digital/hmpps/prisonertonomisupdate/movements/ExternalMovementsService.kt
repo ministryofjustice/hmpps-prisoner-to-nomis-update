@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -185,7 +186,7 @@ class ExternalMovementsService(
         ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for ${dps.authorisation.id}")
       val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
         prisonerNumber,
-        dps.toNomisUpsertRequest(applicationMapping.nomisMovementApplicationId, existingMapping?.nomisEventId),
+        dps.toNomisUpsertRequest(applicationMapping.nomisMovementApplicationId, existingMapping),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisEventId"] = it.eventId.toString() }
@@ -429,11 +430,11 @@ private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) 
   else -> throw IllegalArgumentException("Unknown application status: $this")
 }
 
-private fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, eventId: Long?): UpsertScheduledTemporaryAbsenceRequest {
+private fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertScheduledTemporaryAbsenceRequest {
   val (status, returnStatus) = this.statusCode.toNomisOccurrenceStatus()
   return UpsertScheduledTemporaryAbsenceRequest(
     movementApplicationId = applicationId,
-    eventId = eventId,
+    eventId = existingMapping?.nomisEventId,
     eventDate = this.releaseAt.toLocalDate(),
     startTime = this.releaseAt,
     eventSubType = this.absenceReasonCode,
@@ -447,6 +448,8 @@ private fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, even
     applicationTime = this.created.at,
     comment = this.notes,
     transportType = this.transportCode,
+    // TODO SDIT-3032 populate address request. Only send addressId if new (no existing mapping), dps address details have  changed or the address owner class as derived from absence reason has changed.
+    toAddress = UpsertTemporaryAbsenceAddress(),
   )
 }
 
