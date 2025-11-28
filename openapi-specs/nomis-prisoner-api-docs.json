@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-25.787.823099c"
+    "version" : "2025-11-28.791.f87b18b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -21781,14 +21781,12 @@
           "remainingVisitOrders" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Total number of unallocated (remaining) visit orders",
-            "minimum" : 0
+            "description" : "Total number of unallocated (remaining) visit orders"
           },
           "remainingPrivilegedVisitOrders" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Total number of unallocated (remaining) privileged visit orders",
-            "minimum" : 0
+            "description" : "Total number of unallocated (remaining) privileged visit orders"
           }
         }
       },
@@ -22753,10 +22751,9 @@
             "format" : "date-time",
             "description" : "Return time"
           },
-          "toAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "To address ID"
+          "toAddress" : {
+            "$ref" : "#/components/schemas/UpsertTemporaryAbsenceAddress",
+            "description" : "To address"
           },
           "applicationDate" : {
             "type" : "string",
@@ -22769,7 +22766,34 @@
             "description" : "Application time"
           }
         },
-        "required" : [ "applicationDate", "escort", "eventDate", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime", "startTime" ]
+        "required" : [ "applicationDate", "escort", "eventDate", "eventStatus", "eventSubType", "fromPrison", "movementApplicationId", "returnDate", "returnTime", "startTime", "toAddress" ]
+      },
+      "UpsertTemporaryAbsenceAddress" : {
+        "type" : "object",
+        "description" : "Upsert temporary absence address",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address ID - if entered then this is a known NOMIS address, if not a new address is required based on the other properties"
+          },
+          "name" : {
+            "type" : "string",
+            "description" : "The name of a corporation or agency"
+          },
+          "addressText" : {
+            "type" : "string",
+            "description" : "The full address text"
+          },
+          "postalCode" : {
+            "type" : "string",
+            "description" : "The postal code"
+          },
+          "ownerClass" : {
+            "type" : "string",
+            "description" : "The address owner class"
+          }
+        }
       },
       "UpsertScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
@@ -22789,9 +22813,18 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Event ID"
+          },
+          "addressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Address ID"
+          },
+          "addressOwnerClass" : {
+            "type" : "string",
+            "description" : "Address owner class"
           }
         },
-        "required" : [ "bookingId", "eventId", "movementApplicationId" ]
+        "required" : [ "addressId", "addressOwnerClass", "bookingId", "eventId", "movementApplicationId" ]
       },
       "UpsertTemporaryAbsenceApplicationRequest" : {
         "type" : "object",
