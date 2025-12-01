@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-26.383.0eaf7cb"
+    "version" : "2025-11-28.399.dfbe2f0"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -107,7 +107,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AuditedAction"
+                  "$ref" : "#/components/schemas/AuditHistory"
                 }
               }
             }
@@ -182,13 +182,13 @@
                 }, {
                   "$ref" : "#/components/schemas/CancelAuthorisation"
                 }, {
+                  "$ref" : "#/components/schemas/ChangeAuthorisationDateRange"
+                }, {
                   "$ref" : "#/components/schemas/ChangePrisonPerson"
                 }, {
                   "$ref" : "#/components/schemas/DenyAuthorisation"
                 }, {
                   "$ref" : "#/components/schemas/RecategoriseAuthorisation"
-                }, {
-                  "$ref" : "#/components/schemas/RescheduleAuthorisation"
                 } ]
               }
             }
@@ -201,7 +201,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AuditedAction"
+                  "$ref" : "#/components/schemas/AuditHistory"
                 }
               }
             }
@@ -917,6 +917,18 @@
           "$ref" : "#/components/schemas/OccurrenceAction"
         } ]
       },
+      "AuditHistory" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AuditedAction"
+            }
+          }
+        },
+        "required" : [ "content" ]
+      },
       "AuditedAction" : {
         "type" : "object",
         "properties" : {
@@ -1006,6 +1018,24 @@
           "$ref" : "#/components/schemas/AuthorisationAction"
         } ]
       },
+      "ChangeAuthorisationDateRange" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "from" : {
+              "type" : "string",
+              "format" : "date"
+            },
+            "to" : {
+              "type" : "string",
+              "format" : "date"
+            }
+          }
+        } ],
+        "required" : [ "from", "to" ]
+      },
       "ChangePrisonPerson" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1051,27 +1081,6 @@
           }
         } ],
         "required" : [ "reasonPath" ]
-      },
-      "RescheduleAuthorisation" : {
-        "allOf" : [ {
-          "$ref" : "#/components/schemas/AuthorisationAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "from" : {
-              "type" : "string",
-              "format" : "date"
-            },
-            "to" : {
-              "type" : "string",
-              "format" : "date"
-            },
-            "repeat" : {
-              "type" : "boolean"
-            }
-          }
-        } ],
-        "required" : [ "from", "repeat", "to" ]
       },
       "SyncAtAndBy" : {
         "type" : "object",
@@ -1480,18 +1489,6 @@
           }
         },
         "required" : [ "accompaniedBy", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
-      },
-      "AuditHistory" : {
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/AuditedAction"
-            }
-          }
-        },
-        "required" : [ "content" ]
       },
       "Occurrence" : {
         "type" : "object",
