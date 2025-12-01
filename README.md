@@ -127,7 +127,7 @@ Then we delete any conflicting mappings from the mappings preprod database:
 * `delete from activity_schedule_mapping where nomis_course_schedule_id > <max(crs_sch_id)>;`
 * `delete from activity_schedule_mapping where scheduled_instance_id > <max(scheduled_instance_id)>;`
 
-There may still be some discrepancies between NOMIS and DPS, e.g. a new schedule or allocation could have been created in DPS between the NOMIS and DPS refreshes. These can probably be fixed by calling the manual sync endpoints, but it's messy - see advise on the [reconciliation report](activities-reconciliation-report-alerts-allocations-and-attendances) if you really want to try this. It's probably better to advise people to create new test data in DPS, which will be possible now that the bad mappings have been deleted.
+There may still be some discrepancies between NOMIS and DPS, e.g. a new schedule or allocation could have been created in DPS between the NOMIS and DPS refreshes. These can probably be fixed by calling the manual sync endpoints, but it's messy - see advice on the [reconciliation report](activities-reconciliation-report-alerts-allocations-and-attendances) if you really want to try this. It's probably better to advise people to create new test data in DPS, which will be possible now that the bad mappings have been deleted.
 
 TODO: we normally need to purge the DLQ after a preprod refresh because of bad data - next time do the above first and see if that's enough to avoid the need to purge the DLQ.
 
