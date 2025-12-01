@@ -5391,7 +5391,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5712,7 +5712,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "courtCode" : {
             "type" : "string"
@@ -7894,7 +7894,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "courtCode" : {
             "type" : "string"
@@ -8525,7 +8525,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8585,7 +8585,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "courtId" : {
             "type" : "string"
@@ -8725,7 +8725,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "charges" : {
             "type" : "array",
@@ -8752,7 +8752,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "courtId" : {
             "type" : "string"
@@ -9340,7 +9340,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:29.642343325"
+            "example" : "06:23:28.551336987"
           },
           "courtCode" : {
             "type" : "string"
