@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-24.255.b16d222"
+    "version" : "2025-11-27.259.283122d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18968,6 +18968,11 @@
             "type" : "string",
             "description" : "The DPS address"
           },
+          "dpsUprn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The DPS address unique ID"
+          },
           "eventTime" : {
             "type" : "string",
             "description" : "The DPS address",
@@ -19197,6 +19202,11 @@
           "dpsAddressText" : {
             "type" : "string",
             "description" : "The DPS address"
+          },
+          "dpsUprn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The DPS address unique ID"
           }
         },
         "required" : [ "bookingId", "dpsAddressText", "dpsMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
