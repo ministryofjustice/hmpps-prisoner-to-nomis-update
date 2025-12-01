@@ -17,6 +17,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCaseUuids
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
@@ -59,7 +60,7 @@ class CourtSentencingReconciliationResourceIntTest(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 4,
-          prisonerIds = (NOMIS_CASE_ID..4).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
+          prisonerIds = (NOMIS_CASE_ID..5).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
 
@@ -75,6 +76,8 @@ class CourtSentencingReconciliationResourceIntTest(
         listOf(dpsCourtCaseResponse().copy(courtCaseUuid = "11111111-1111-1111-1111-111111111112", active = true)),
       )
       stubCases("A0004TZ", emptyList(), emptyList())
+
+      stubCases("A0005TZ", listOf(nomisCaseResponse().copy(id = 5)), emptyList())
     }
 
     @Test
@@ -98,8 +101,27 @@ class CourtSentencingReconciliationResourceIntTest(
       verify(telemetryClient).trackEvent(
         eq("court-case-prisoner-reconciliation-report"),
         check {
-          assertThat(it).containsEntry("prisoners-count", "4")
+          assertThat(it).containsEntry("prisoners-count", "5")
         },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will output a mismatch when there a difference in the number of cases`() = runTest {
+      courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("court-case-prisoner-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0005TZ",
+            "dpsCaseCount" to "0",
+            "nomisCaseCount" to "1",
+            "caseCountMismatch" to "true",
+          ),
+        ),
         isNull(),
       )
     }
@@ -376,7 +398,8 @@ class CourtSentencingReconciliationResourceIntTest(
 
   private fun stubCases(offenderNo: String, nomisCases: List<CourtCaseResponse>, dpsCases: List<ReconciliationCourtCase>) {
     nomisApi.stubGetCourtCaseIdsByOffenderNo(offenderNo, response = nomisCases.map { it.id })
-    if (nomisCases.isNotEmpty()) {
+    dpsApi.stubGetCourtCaseIdsForReconciliation(offenderNo, LegacyCourtCaseUuids(dpsCases.map { it.courtCaseUuid }))
+    if (nomisCases.isNotEmpty() && dpsCases.size == nomisCases.size) {
       courtSentencingMappingApi.stubPostCourtCaseMappingsGivenNomisIds(
         nomisCases.map { it.id },
         dpsCases.map { it.courtCaseUuid },

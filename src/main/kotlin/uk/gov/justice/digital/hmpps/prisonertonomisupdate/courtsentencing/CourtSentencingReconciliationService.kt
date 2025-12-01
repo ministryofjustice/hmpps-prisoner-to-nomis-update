@@ -41,6 +41,7 @@ class CourtSentencingReconciliationService(
       .split(",")
       .mapNotNull { it.trim().toLongOrNull() }
   }
+
   suspend fun generateCourtCasePrisonerReconciliationReportBatch() {
     telemetryClient.trackEvent(
       "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-requested",
@@ -129,8 +130,17 @@ class CourtSentencingReconciliationService(
     )
   }
 
-  suspend fun checkCasesNomis(offenderNo: String, nomisCaseIds: List<Long>, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
-    val caseResult = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId, offenderNo = offenderNo, telemetryPrefix = telemetryPrefix)
+  suspend fun checkCasesNomis(
+    offenderNo: String,
+    nomisCaseIds: List<Long>,
+    telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX,
+  ): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
+    val caseResult = checkCase(
+      dpsCaseId = it.dpsCourtCaseId,
+      nomisCaseId = it.nomisCourtCaseId,
+      offenderNo = offenderNo,
+      telemetryPrefix = telemetryPrefix,
+    )
     MismatchCaseResponse(
       offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
@@ -138,6 +148,35 @@ class CourtSentencingReconciliationService(
       nomisBookingId = caseResult?.nomisBookingId,
       mismatch = caseResult,
     )
+  }
+
+  suspend fun checkCaseCount(
+    dpsCaseIds: List<String>,
+    nomisCaseIds: List<Long>,
+    offenderNo: String,
+    telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX,
+  ): MismatchCaseResponse? = if (nomisCaseIds.size != dpsCaseIds.size) {
+    val nomisCount = nomisCaseIds.size.toLong()
+    val dpsCount = dpsCaseIds.size.toString()
+    telemetryClient.trackEvent(
+      "$telemetryPrefix-mismatch",
+      mapOf(
+        "nomisCaseCount" to nomisCount.toString(),
+        "dpsCaseCount" to dpsCount,
+        "caseCountMismatch" to "true",
+        "offenderNo" to offenderNo,
+      ),
+      null,
+    )
+    MismatchCaseResponse(
+      offenderNo = offenderNo,
+      caseCountMismatch = true,
+      dpsCaseId = dpsCount,
+      nomisCaseId = nomisCount,
+      mismatch = null,
+    )
+  } else {
+    null
   }
 
   suspend fun checkActivePrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = checkPrisonerCasesMatch(
@@ -182,24 +221,47 @@ class CourtSentencingReconciliationService(
 
   suspend fun manualCheckCaseOffenderNo(offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): List<MismatchCaseResponse> {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo)
-    return if (caseIds.isNotEmpty()) checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = caseIds, telemetryPrefix = telemetryPrefix) else emptyList()
+    val dpsCaseIds = dpsApiService.getCourtCaseIdsForOffender(offenderNo).courtCaseUuids
+    val checkCaseCount =
+      checkCaseCount(dpsCaseIds, caseIds, offenderNo = offenderNo, telemetryPrefix = TELEMETRY_COURT_CASE_PRISONER_PREFIX)
+    return if (checkCaseCount != null) {
+      listOf(checkCaseCount)
+    } else {
+      if (caseIds.isNotEmpty()) {
+        checkCasesNomis(
+          offenderNo = offenderNo,
+          nomisCaseIds = caseIds,
+          telemetryPrefix = telemetryPrefix,
+        )
+      } else {
+        emptyList()
+      }
+    }
   }
 
   suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(it)
-    if (caseIds.isNotEmpty()) {
-      checkCasesNomis(
-        offenderNo = it,
-        nomisCaseIds = caseIds,
-      ).filter { caseResponse -> caseResponse.mismatch != null }
+    val dpsCaseIds = dpsApiService.getCourtCaseIdsForOffender(it).courtCaseUuids
+    val checkCaseCount =
+      checkCaseCount(dpsCaseIds, caseIds, offenderNo = it, telemetryPrefix = TELEMETRY_COURT_CASE_PRISONER_PREFIX)
+    if (checkCaseCount != null) {
+      listOf(checkCaseCount)
     } else {
-      emptyList()
+      if (caseIds.isNotEmpty()) {
+        checkCasesNomis(
+          offenderNo = it,
+          nomisCaseIds = caseIds,
+        ).filter { caseResponse -> caseResponse.mismatch != null }
+      } else {
+        emptyList()
+      }
     }
   }.also {
     log.info(it.toString())
   }
 
   private suspend fun getNextBookingsForPageActiveOnly(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = true)
+
   private suspend fun getNextBookingsForPageAll(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = false)
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long, activeOnly: Boolean = false): ReconciliationPageResult<PrisonerIds> = runCatching {
@@ -651,6 +713,7 @@ data class MismatchCaseResponse(
   val dpsCaseId: String,
   val nomisCaseId: Long,
   val nomisBookingId: Long? = null,
+  val caseCountMismatch: Boolean = false,
   val mismatch: MismatchCase?,
 )
 
