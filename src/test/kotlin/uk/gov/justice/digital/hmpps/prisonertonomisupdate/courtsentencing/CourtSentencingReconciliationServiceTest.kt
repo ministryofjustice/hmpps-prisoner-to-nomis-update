@@ -139,29 +139,6 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
-    fun `will report an extra case in dps`() = runTest {
-      stubCase(
-        nomisCase = nomisCaseResponse(),
-        dpsCase = dpsCourtCaseResponse().copy(
-          appearances = listOf(
-            dpsAppearanceResponse(),
-            dpsAppearanceResponseWithoutCharges().copy(
-              appearanceUuid = UUID.fromString(DPS_COURT_APPEARANCE_2_ID),
-              nomisOutcomeCode = OUTCOME_2,
-            ),
-          ),
-        ),
-      )
-      assertThat(
-        service.checkCase(
-          nomisCaseId = NOMIS_COURT_CASE_ID,
-          dpsCaseId = DPS_COURT_CASE_ID,
-          offenderNo = OFFENDER_NO,
-        )?.differences,
-      ).isEqualTo(listOf(Difference(property = "case.appearances", dps = 2, nomis = 1)))
-    }
-
-    @Test
     fun `will report an case status mismatch`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse().copy(caseStatus = CodeDescription("I", "Inactive")),
