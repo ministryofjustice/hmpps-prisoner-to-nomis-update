@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-26.921.aed9c3e"
+    "version" : "2025-11-28.937.df41702"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -1913,6 +1913,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recall/is-possible" : {
+      "post" : {
+        "tags" : [ "recall-controller" ],
+        "summary" : "Check if recall is possible",
+        "description" : "check if recall is possible for given sentneces and recall type",
+        "operationId" : "isRecallPossible",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IsRecallPossibleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns if recall is possible.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
                 }
               }
             }
@@ -5341,7 +5391,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5662,7 +5712,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "courtCode" : {
             "type" : "string"
@@ -5872,6 +5922,33 @@
           }
         },
         "required" : [ "sentenceUuid" ]
+      },
+      "IsRecallPossibleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "recallType" : {
+            "type" : "string",
+            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+          }
+        },
+        "required" : [ "recallType", "sentenceIds" ]
+      },
+      "IsRecallPossibleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "isRecallPossible" : {
+            "type" : "string",
+            "enum" : [ "YES", "UNKNOWN_PRE_RECALL_MAPPING", "RECALL_TYPE_AND_SENTENCE_MAPPING_NOT_POSSIBLE" ]
+          }
+        },
+        "required" : [ "isRecallPossible" ]
       },
       "LegacySentenceCreatedResponse" : {
         "type" : "object",
@@ -7739,9 +7816,12 @@
           },
           "isSubList" : {
             "type" : "boolean"
+          },
+          "dispositionCode" : {
+            "type" : "string"
           }
         },
-        "required" : [ "displayOrder", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
+        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
       },
       "CourtCase" : {
         "type" : "object",
@@ -7814,7 +7894,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "courtCode" : {
             "type" : "string"
@@ -8445,7 +8525,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8505,7 +8585,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "courtId" : {
             "type" : "string"
@@ -8645,7 +8725,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "charges" : {
             "type" : "array",
@@ -8672,7 +8752,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "courtId" : {
             "type" : "string"
@@ -9260,7 +9340,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:34.918836514"
+            "example" : "06:23:29.642343325"
           },
           "courtCode" : {
             "type" : "string"
