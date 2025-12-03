@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-24.22.9340a0b"
+    "version" : "2025-12-02.75.5aa070e"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1645,8 +1645,10 @@
         "properties" : {
           "offenderTransactions" : {
             "type" : "array",
+            "description" : "The list of offender transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
+              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse",
+              "description" : "The list of offender transactions on the current page"
             }
           },
           "page" : {
@@ -1769,8 +1771,10 @@
         "properties" : {
           "transactions" : {
             "type" : "array",
+            "description" : "The list of general ledger transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
+              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse",
+              "description" : "The list of general ledger transactions on the current page"
             }
           },
           "page" : {
@@ -2116,6 +2120,7 @@
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "A HMPPS Auth access token with the `ROLE_PRISONER_FINANCE_SYNC__RW` role.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
