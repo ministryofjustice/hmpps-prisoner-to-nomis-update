@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-27.259.283122d"
+    "version" : "2025-12-03.269.184af50"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2118,6 +2118,146 @@
           },
           "409" : {
             "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/addresses/by-nomis-id" : {
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Finds a DPS address matching the NOMIS address details",
+        "description" : "Check for an existing mapping of NOMIS address to DPS address. For address owner class OFF this must be an offender address, otherwise it's an address matching the address owner class. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "findAddressByNomisId",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FindTemporaryAbsenceAddressByNomisIdRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "An address was returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceAddressMappingResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request is invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "An address could not be found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/addresses/by-dps-id" : {
+      "post" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Finds a NOMIS address matching the DPS address details",
+        "description" : "Check for an existing mapping of DPS address to NOMIS address. For address owner class OFF this must be an offender address, otherwise it's an address matching the address owner class. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "findAddressByDpsId",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/FindTemporaryAbsenceAddressByDpsIdRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "An address was returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceAddressMappingResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request is invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "An address could not be found.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -20244,6 +20384,79 @@
         },
         "required" : [ "bookingId", "dpsMovementApplicationId", "mappingType", "nomisMovementApplicationId", "prisonerNumber" ]
       },
+      "FindTemporaryAbsenceAddressByNomisIdRequest" : {
+        "type" : "object",
+        "description" : "Find a DPS address from the NOMIS address details",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Offender Number"
+          },
+          "ownerClass" : {
+            "type" : "string",
+            "description" : "Address owner class"
+          },
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique NOMIS address id"
+          }
+        },
+        "required" : [ "nomisAddressId", "offenderNo", "ownerClass" ]
+      },
+      "TemporaryAbsenceAddressMappingResponse" : {
+        "type" : "object",
+        "description" : "The temporary absence address found",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Offender Number"
+          },
+          "ownerClass" : {
+            "type" : "string",
+            "description" : "Address owner class"
+          },
+          "addressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique NOMIS address id"
+          },
+          "dpsUprn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique DPS id from OS places"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address text"
+          }
+        },
+        "required" : [ "addressId", "dpsAddressText", "ownerClass" ]
+      },
+      "FindTemporaryAbsenceAddressByDpsIdRequest" : {
+        "type" : "object",
+        "description" : "Find a NOMIS address from the DPS address details",
+        "properties" : {
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Offender Number"
+          },
+          "ownerClass" : {
+            "type" : "string",
+            "description" : "Address owner class"
+          },
+          "dpsUprn" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique DPS id from OS places"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address text"
+          }
+        },
+        "required" : [ "dpsAddressText", "offenderNo", "ownerClass" ]
+      },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",
         "description" : "NOMIS to Sentencing mapping",
@@ -22459,12 +22672,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -22545,12 +22758,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -22693,12 +22906,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -22765,12 +22978,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -22890,12 +23103,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23038,12 +23251,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23144,12 +23357,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23190,12 +23403,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23236,12 +23449,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23310,12 +23523,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
@@ -23378,12 +23591,12 @@
           "last" : {
             "type" : "boolean"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "pageable" : {
             "$ref" : "#/components/schemas/PageableObject"
