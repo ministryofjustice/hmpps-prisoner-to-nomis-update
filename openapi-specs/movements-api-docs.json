@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-28.399.dfbe2f0"
+    "version" : "2025-12-02.413.b5b8f7e"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -314,6 +314,43 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SyncResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/temporary-absences/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "migrateTemporaryAbsences",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigrateTapRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MigrateTapResponse"
                 }
               }
             }
@@ -1276,6 +1313,247 @@
           }
         },
         "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "isCancelled", "legacyId", "location", "releaseAt", "returnBy", "transportCode" ]
+      },
+      "MigrateTapAuthorisation" : {
+        "type" : "object",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "statusCode" : {
+            "type" : "string"
+          },
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "transportCode" : {
+            "type" : "string"
+          },
+          "repeat" : {
+            "type" : "boolean"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "occurrences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateTapOccurrence"
+            }
+          }
+        },
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "occurrences", "prisonCode", "repeat", "statusCode", "toDate", "transportCode" ]
+      },
+      "MigrateTapMovement" : {
+        "type" : "object",
+        "properties" : {
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "accompaniedByNotes" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt" ]
+      },
+      "MigrateTapOccurrence" : {
+        "type" : "object",
+        "properties" : {
+          "isCancelled" : {
+            "type" : "boolean"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "absenceTypeCode" : {
+            "type" : "string"
+          },
+          "absenceSubTypeCode" : {
+            "type" : "string"
+          },
+          "absenceReasonCode" : {
+            "type" : "string"
+          },
+          "accompaniedByCode" : {
+            "type" : "string"
+          },
+          "transportCode" : {
+            "type" : "string"
+          },
+          "contactInformation" : {
+            "type" : "string"
+          },
+          "notes" : {
+            "type" : "string"
+          },
+          "created" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "updated" : {
+            "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateTapMovement"
+            }
+          }
+        },
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "isCancelled", "legacyId", "location", "movements", "releaseAt", "returnBy", "transportCode" ]
+      },
+      "MigrateTapRequest" : {
+        "type" : "object",
+        "properties" : {
+          "temporaryAbsences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateTapAuthorisation"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateTapMovement"
+            }
+          }
+        },
+        "required" : [ "temporaryAbsences", "unscheduledMovements" ]
+      },
+      "MigrateTapResponse" : {
+        "type" : "object",
+        "properties" : {
+          "temporaryAbsences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedAuthorisation"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedMovement"
+            }
+          }
+        },
+        "required" : [ "temporaryAbsences", "unscheduledMovements" ]
+      },
+      "MigratedAuthorisation" : {
+        "type" : "object",
+        "properties" : {
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "occurrences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedOccurrence"
+            }
+          }
+        },
+        "required" : [ "id", "legacyId", "occurrences" ]
+      },
+      "MigratedMovement" : {
+        "type" : "object",
+        "properties" : {
+          "legacyId" : {
+            "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "id", "legacyId" ]
+      },
+      "MigratedOccurrence" : {
+        "type" : "object",
+        "properties" : {
+          "legacyId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigratedMovement"
+            }
+          }
+        },
+        "required" : [ "id", "legacyId", "movements" ]
       },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",
