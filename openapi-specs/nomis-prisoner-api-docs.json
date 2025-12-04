@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-28.791.f87b18b"
+    "version" : "2025-12-03.797.d93b64b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13260,108 +13260,6 @@
           },
           "404" : {
             "description" : "Adjustment does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/visit-balances/ids" : {
-      "get" : {
-        "tags" : [ "visit-balance-resource" ],
-        "summary" : "Find paged visit balance ids",
-        "description" : "\n      Returns the visit balance ids (which are booking ids) for the latest booking for offenders with balance entries.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "findVisitBalanceIds",
-        "parameters" : [ {
-          "name" : "page",
-          "in" : "query",
-          "description" : "Zero-based page index (0..N)",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "default" : 0,
-            "minimum" : 0
-          }
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "description" : "The size of the page to be returned",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "default" : 10,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "default" : [ "offenderBookingId,ASC" ],
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }, {
-          "name" : "prisonId",
-          "in" : "query",
-          "description" : "Prison id",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "description" : "Prison id"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PageVisitBalanceIdResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -29120,64 +29018,6 @@
           }
         },
         "required" : [ "adjustmentDate", "adjustmentReason", "createUsername", "latestBooking" ]
-      },
-      "PageVisitBalanceIdResponse" : {
-        "type" : "object",
-        "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/VisitBalanceIdResponse"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "VisitBalanceIdResponse" : {
-        "type" : "object",
-        "description" : "visit balance id",
-        "properties" : {
-          "visitBalanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit balance (booking) id"
-          }
-        },
-        "required" : [ "visitBalanceId" ]
       },
       "GeneralLedgerTransactionDto" : {
         "type" : "object",

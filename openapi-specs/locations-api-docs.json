@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-06.242.20c2778"
+    "version" : "2025-12-03.321.e996624"
   },
   "servers" : [ {
     "url" : "/",
@@ -2105,6 +2105,106 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/edit-cells" : {
+      "put" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Updates a list of DRAFT cells below a parent DRAFT location",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "updateCells",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellDraftUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Returns updates locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
                 }
               }
             }
@@ -4767,6 +4867,156 @@
         } ]
       }
     },
+    "/reports/{reportId}/dashboards/{dashboardId}" : {
+      "get" : {
+        "tags" : [ "Data API - Synchronous" ],
+        "description" : "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
+        "operationId" : "configuredApiDatasetForDashboard",
+        "parameters" : [ {
+          "name" : "selectedPage",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 1,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sortColumn",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sortedAsc",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
+        }, {
+          "name" : "reportId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dashboardId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dataProductDefinitionsPath",
+          "in" : "query",
+          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "definitions/prisons/orphanage"
+          },
+          "example" : "definitions/prisons/orphanage"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default" : {
+            "description" : "default response",
+            "headers" : {
+              "x-no-data-warning" : {
+                "description" : "Provides additional information about why no data has been returned.",
+                "style" : "simple",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : { }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -4840,6 +5090,143 @@
             }
           }
         }
+      }
+    },
+    "/productCollections" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets all product collections",
+        "operationId" : "getCollections",
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductCollectionSummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/productCollections/{id}" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets product collection by id",
+        "operationId" : "getCollections_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the product collection.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "72c22579-3f77-4e23-8d16-1e5aadcc88c9"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductCollectionDTO"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
       }
     },
     "/prisoner-locations/prison/{prisonId}" : {
@@ -8199,6 +8586,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -8290,6 +8693,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -9887,14 +10306,21 @@
           "maxCapacity" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Max capacity of the location",
+            "description" : "Max capacity of the cell",
             "example" : 2,
             "maximum" : 99
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Working capacity of the location",
+            "description" : "Working capacity of the cell",
+            "example" : 1,
+            "maximum" : 99
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "CNA of the cell",
             "example" : 2,
             "maximum" : 99
           }
@@ -9920,6 +10346,7 @@
           "certifiedNormalAccommodation" : {
             "type" : "integer",
             "format" : "int32",
+            "deprecated" : true,
             "description" : "CNA (Certified normal accommodation)",
             "example" : 1
           }
@@ -10054,8 +10481,14 @@
             "format" : "int32",
             "description" : "When a cell is inactive, show the active working capacity value"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a cell",
+            "example" : true
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
+            "deprecated" : true,
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "usage" : {
@@ -10300,8 +10733,14 @@
                   "format" : "int32",
                   "description" : "When a cell is inactive, show the active working capacity value"
                 },
+                "certifiedCell" : {
+                  "type" : "boolean",
+                  "description" : "Indicates that this location is certified for use as a cell",
+                  "example" : true
+                },
                 "certification" : {
                   "$ref" : "#/components/schemas/Certification",
+                  "deprecated" : true,
                   "description" : "Indicates that this location is certified for use as a residential location"
                 },
                 "usage" : {
@@ -10623,7 +11062,7 @@
           "attributeCode" : {
             "type" : "string",
             "description" : "Attribute Code",
-            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "CERTIFIED_CAPACITY", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
+            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "CERTIFIED_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
           },
           "attribute" : {
             "type" : "string",
@@ -10994,6 +11433,114 @@
           }
         },
         "required" : [ "code", "id", "key", "level", "localName", "locationType", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "usedByGroupedServices", "usedByServices" ]
+      },
+      "CellDraftUpdateRequest" : {
+        "type" : "object",
+        "description" : "Request to a create location and cell locations below it",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID where the location is situated",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "parentLocation" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Parent location under which cells is to be updated, this location must be DRAFT"
+          },
+          "cellsUsedFor" : {
+            "type" : "array",
+            "description" : "Used for types for all cells",
+            "items" : {
+              "type" : "string",
+              "description" : "Used For Types",
+              "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
+            },
+            "uniqueItems" : true
+          },
+          "accommodationType" : {
+            "type" : "string",
+            "default" : "NORMAL_ACCOMMODATION",
+            "description" : "Accommodation type for all cells",
+            "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ],
+            "example" : "NORMAL_ACCOMMODATION"
+          },
+          "cells" : {
+            "type" : "array",
+            "description" : "Set of cells that are to be created or amended, if the location is for update then missing cells will be removed",
+            "items" : {
+              "$ref" : "#/components/schemas/CellInformation"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "cells", "parentLocation", "prisonId" ]
+      },
+      "CellInformation" : {
+        "type" : "object",
+        "description" : "Information about cells to be created or updated",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "ID of the location, update only",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Code of the location",
+            "example" : "001",
+            "minLength" : 1
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark of the location",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "CNA value",
+            "maximum" : 99
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "Max capacity of the location",
+            "example" : 2,
+            "maximum" : 99
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "Working capacity of the location",
+            "example" : 2,
+            "maximum" : 99
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist cell types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "In-cell sanitation for cell"
+          }
+        },
+        "required" : [ "code" ]
       },
       "ReactivateLocationsRequest" : {
         "type" : "object",
@@ -11577,9 +12124,14 @@
             "$ref" : "#/components/schemas/Capacity",
             "description" : "Capacity details of the location"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a residential location"
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
-            "description" : "Indicates that this location is certified for use as a residential location"
+            "deprecated" : true,
+            "description" : "Deprecated mechanism for displaying and updating CNA and certified status"
           },
           "attributes" : {
             "type" : "array",
@@ -11678,8 +12230,14 @@
             "$ref" : "#/components/schemas/Capacity",
             "description" : "Capacity details of the location"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a cell",
+            "example" : true
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
+            "deprecated" : true,
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "attributes" : {
@@ -11911,6 +12469,7 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 0,
+            "deprecated" : true,
             "description" : "CNA value",
             "maximum" : 99
           },
@@ -12051,8 +12610,9 @@
           },
           "cells" : {
             "type" : "array",
+            "description" : "Set of cells that are to be created",
             "items" : {
-              "$ref" : "#/components/schemas/NewCellRequest"
+              "$ref" : "#/components/schemas/CellInformation"
             },
             "uniqueItems" : true
           }
@@ -12061,6 +12621,7 @@
       },
       "LevelAboveCells" : {
         "type" : "object",
+        "description" : "Holds information about the level above which the cells should be created",
         "properties" : {
           "levelCode" : {
             "type" : "string",
@@ -12085,62 +12646,6 @@
           }
         },
         "required" : [ "levelCode" ]
-      },
-      "NewCellRequest" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Code of the location",
-            "example" : "001",
-            "minLength" : 1
-          },
-          "cellMark" : {
-            "type" : "string",
-            "description" : "Cell mark of the location",
-            "example" : "A1",
-            "minLength" : 1
-          },
-          "certifiedNormalAccommodation" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "CNA value",
-            "maximum" : 99
-          },
-          "maxCapacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "Max capacity of the location",
-            "example" : 2,
-            "maximum" : 99
-          },
-          "workingCapacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "Working capacity of the location",
-            "example" : 2,
-            "maximum" : 99
-          },
-          "specialistCellTypes" : {
-            "type" : "array",
-            "description" : "Specialist Cell Types",
-            "items" : {
-              "type" : "string",
-              "description" : "Specialist Cell Types",
-              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
-            },
-            "uniqueItems" : true
-          },
-          "inCellSanitation" : {
-            "type" : "boolean",
-            "default" : true,
-            "description" : "In-cell sanitation for cell"
-          }
-        },
-        "required" : [ "code" ]
       },
       "PatchResidentialLocationRequest" : {
         "type" : "object",
@@ -12305,6 +12810,57 @@
           }
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "ProductCollectionSummary" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "version" ]
+      },
+      "ProductCollectionDTO" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductCollectionProduct"
+            }
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "products", "version" ]
+      },
+      "ProductCollectionProduct" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "productId" ]
       },
       "Alert" : {
         "type" : "object",
@@ -12709,12 +13265,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -12899,8 +13455,14 @@
                   "format" : "int32",
                   "description" : "When a cell is inactive, show the active working capacity value"
                 },
+                "certifiedCell" : {
+                  "type" : "boolean",
+                  "description" : "Indicates that this location is certified for use as a cell",
+                  "example" : true
+                },
                 "certification" : {
                   "$ref" : "#/components/schemas/Certification",
+                  "deprecated" : true,
                   "description" : "Indicates that this location is certified for use as a residential location"
                 },
                 "usage" : {
@@ -13704,6 +14266,22 @@
         },
         "required" : [ "id", "name", "resourceName" ]
       },
+      "DashboardBucketDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "min" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "max" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hexColour" : {
+            "type" : "string"
+          }
+        }
+      },
       "DashboardDefinition" : {
         "type" : "object",
         "properties" : {
@@ -13730,6 +14308,29 @@
           }
         },
         "required" : [ "id", "name", "sections" ]
+      },
+      "DashboardOptionDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "useRagColour" : {
+            "type" : "boolean"
+          },
+          "baseColour" : {
+            "type" : "string"
+          },
+          "buckets" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DashboardBucketDefinition"
+            }
+          },
+          "showLatest" : {
+            "type" : "boolean"
+          },
+          "columnsAsList" : {
+            "type" : "boolean"
+          }
+        }
       },
       "DashboardSectionDefinition" : {
         "type" : "object",
@@ -13774,9 +14375,12 @@
           },
           "axis" : {
             "type" : "string"
+          },
+          "optional" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "display", "id" ]
+        "required" : [ "id" ]
       },
       "DashboardVisualisationColumnsDefinition" : {
         "type" : "object",
@@ -13813,7 +14417,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group" ]
+            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group", "matrix-timeseries", "line-timeseries" ]
           },
           "display" : {
             "type" : "string"
@@ -13823,6 +14427,9 @@
           },
           "columns" : {
             "$ref" : "#/components/schemas/DashboardVisualisationColumnsDefinition"
+          },
+          "options" : {
+            "$ref" : "#/components/schemas/DashboardOptionDefinition"
           }
         },
         "required" : [ "columns", "id", "type" ]
