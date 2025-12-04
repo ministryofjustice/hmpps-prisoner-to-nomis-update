@@ -176,7 +176,7 @@ reports:
   appointments:
     reconciliation:
       page-size: 50
-      # this is the lookahead limit for now as there is a bug in the activities repo
+      # this is the lookahead limit as there is a restriction of 1 month in the activities repo
       lookahead-days: 28
   sentencing:
     reconciliation:
