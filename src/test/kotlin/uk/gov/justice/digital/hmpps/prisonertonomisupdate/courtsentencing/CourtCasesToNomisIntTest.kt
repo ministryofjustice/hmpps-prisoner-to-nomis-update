@@ -3980,8 +3980,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
-            // always set to active despite original sentence status
-            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
+            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("false")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
