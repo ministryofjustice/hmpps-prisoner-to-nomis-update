@@ -187,6 +187,7 @@ reports:
   casenotes:
     reconciliation:
       page-size: 30
+      retry-delay-ms: 5000
   non-associations:
     reconciliation:
       page-size: 40

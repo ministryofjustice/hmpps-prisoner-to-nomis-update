@@ -5,6 +5,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
@@ -31,8 +32,10 @@ class CaseNotesReconciliationService(
   private val caseNotesNomisApiService: CaseNotesNomisApiService,
   private val nomisApiService: NomisApiService,
   private val caseNotesMappingApiService: CaseNotesMappingApiService,
-  @Value("\${reports.casenotes.reconciliation.page-size}")
-  private val pageSize: Long = 20,
+  @Value($$"${reports.casenotes.reconciliation.page-size}")
+  private val pageSize: Int = 20,
+  @Value($$"${reports.casenotes.reconciliation.retry-delay-ms}")
+  private val retryDelay: Int = 20,
 ) {
   internal companion object {
     internal val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -67,7 +70,7 @@ class CaseNotesReconciliationService(
 
   suspend fun generateReconciliationReport(prisonerCount: Long, activeOnly: Boolean): List<MismatchCaseNote> {
     if (activeOnly) {
-      return prisonerCount.asPages(pageSize).flatMap { page ->
+      return prisonerCount.asPages(pageSize.toLong()).flatMap { page ->
         val prisoners = getAllPrisonersForPage(page)
 
         withContext(Dispatchers.Unconfined) {
@@ -84,7 +87,7 @@ class CaseNotesReconciliationService(
       do {
         runCatching {
           results.addAll(
-            nomisApiService.getAllPrisoners(last, pageSize.toInt()).let {
+            nomisApiService.getAllPrisoners(last, pageSize).let {
               size = it.prisonerIds.size
               log.info("Page $pageNumber requested from id $last, with $size prisoners")
               last = it.lastOffenderId
@@ -107,7 +110,7 @@ class CaseNotesReconciliationService(
             )
             log.error("Unable to match entire page of prisoners: page $pageNumber, pageErrors $pageErrors", it)
           }.getOrNull()
-      } while (size == pageSize.toInt() && pageErrors < 100)
+      } while (size == pageSize && pageErrors < 100)
 
       if (pageErrors >= 100) {
         throw RuntimeException("Aborted: Too many page errors, at page $pageNumber")
@@ -149,16 +152,51 @@ class CaseNotesReconciliationService(
     }.getOrNull()
   }
 
+  private data class PrisonerCaseNotes(
+    var mappings: List<CaseNoteMappingDto>,
+    var mappingsDpsDistinctIds: List<String>,
+    var dpsCaseNotes: Map<String, ComparisonCaseNote>,
+    var nomisCaseNotes: Map<Long, ComparisonCaseNote>,
+  )
+
+  /**
+   * It is possible that a casenote may be being created at the same time as it is being checked here.
+   * So a size discrepancy could be due to this. We avoid this by just waiting and retrying the comparison later
+   */
+  private suspend fun getDataWithRetry(offenderNo: String): PrisonerCaseNotes {
+    var mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
+    var mappingsDpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+    var dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+
+    if (mappingsDpsDistinctIds.size != dpsCaseNotes.size) {
+      log.warn("getDataWithRetry() retrying after $retryDelay ms: size of mappingsDpsDistinctIds=${mappingsDpsDistinctIds.size}, dpsCaseNotes=${dpsCaseNotes.size}")
+      delay(retryDelay.toLong())
+      mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
+      mappingsDpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+      dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+    }
+
+    var nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
+
+    if (mappings.size != nomisCaseNotes.size) {
+      log.warn("getDataWithRetry() retrying after $retryDelay ms: size of mappings=${mappings.size}, nomisCaseNotes=${nomisCaseNotes.size}")
+      delay(retryDelay.toLong())
+      mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
+      mappingsDpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
+      dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
+      nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
+    }
+
+    return PrisonerCaseNotes(
+      mappings,
+      mappingsDpsDistinctIds,
+      dpsCaseNotes.associate { it.caseNoteId to it.transformFromDps() },
+      nomisCaseNotes.associate { it.caseNoteId to it.transformFromNomis() },
+    )
+  }
+
   suspend fun checkMatchOrThrowException(offenderNo: String): MismatchCaseNote? {
-    val mappings = caseNotesMappingApiService.getByPrisoner(offenderNo).mappings
-
-    val mappingsDpsDistinctIds = mappings.map { it.dpsCaseNoteId }.distinct()
-
-    val dpsCaseNotes = caseNotesDpsApiService.getCaseNotesForPrisoner(offenderNo)
-      .associate { it.caseNoteId to it.transformFromDps() }
-
-    val nomisCaseNotes = caseNotesNomisApiService.getCaseNotesForPrisoner(offenderNo).caseNotes
-      .associate { it.caseNoteId to it.transformFromNomis() }
+    val (mappings, mappingsDpsDistinctIds, dpsCaseNotes, nomisCaseNotes) = getDataWithRetry(offenderNo)
 
     val message = "mappings.size = ${mappings.size}, mappingsDpsDistinctIds.size = ${mappingsDpsDistinctIds.size}, nomisCaseNotes.size = ${nomisCaseNotes.size}, dpsCaseNotes.size = ${dpsCaseNotes.size}"
 
