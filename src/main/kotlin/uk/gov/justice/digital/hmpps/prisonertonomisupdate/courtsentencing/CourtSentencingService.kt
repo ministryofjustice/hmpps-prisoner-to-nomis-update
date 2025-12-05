@@ -1121,7 +1121,7 @@ class CourtSentencingService(
                 ),
                 sentenceCategory = sentence.dpsSentence.sentenceCategory,
                 sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
-                active = true,
+                active = sentence.dpsSentence.active,
               )
             },
             returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
@@ -1190,7 +1190,7 @@ class CourtSentencingService(
                 ),
                 sentenceCategory = sentence.dpsSentence.sentenceCategory,
                 sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
-                active = true,
+                active = sentence.dpsSentence.active,
               )
             },
             returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
@@ -1255,8 +1255,7 @@ class CourtSentencingService(
                   ),
                   sentenceCategory = sentence.dpsSentence.sentenceCategory,
                   sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
-                  // TODO - check with DPS if there is ever a scenario when this can be false
-                  active = true,
+                  active = sentence.dpsSentence.active,
                 )
               },
               returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
