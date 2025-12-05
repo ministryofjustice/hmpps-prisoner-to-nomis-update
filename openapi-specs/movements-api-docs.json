@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-02.413.b5b8f7e"
+    "version" : "2025-12-04.429.4162f4f"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -882,18 +882,6 @@
         },
         "required" : [ "type" ]
       },
-      "ReasonPath" : {
-        "type" : "object",
-        "properties" : {
-          "path" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ReferenceDataKey"
-            }
-          }
-        },
-        "required" : [ "path" ]
-      },
       "RecategoriseOccurrence" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
@@ -911,26 +899,9 @@
             },
             "absenceReasonCode" : {
               "type" : "string"
-            },
-            "reasonPath" : {
-              "$ref" : "#/components/schemas/ReasonPath"
             }
           }
-        } ],
-        "required" : [ "reasonPath" ]
-      },
-      "ReferenceDataKey" : {
-        "type" : "object",
-        "properties" : {
-          "domain" : {
-            "type" : "string",
-            "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
-          },
-          "code" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code", "domain" ]
+        } ]
       },
       "RescheduleOccurrence" : {
         "allOf" : [ {
@@ -1061,17 +1032,17 @@
         }, {
           "type" : "object",
           "properties" : {
-            "from" : {
+            "fromDate" : {
               "type" : "string",
               "format" : "date"
             },
-            "to" : {
+            "toDate" : {
               "type" : "string",
               "format" : "date"
             }
           }
         } ],
-        "required" : [ "from", "to" ]
+        "required" : [ "fromDate", "toDate" ]
       },
       "ChangePrisonPerson" : {
         "allOf" : [ {
@@ -1111,13 +1082,9 @@
             },
             "absenceReasonCode" : {
               "type" : "string"
-            },
-            "reasonPath" : {
-              "$ref" : "#/components/schemas/ReasonPath"
             }
           }
-        } ],
-        "required" : [ "reasonPath" ]
+        } ]
       },
       "SyncAtAndBy" : {
         "type" : "object",
