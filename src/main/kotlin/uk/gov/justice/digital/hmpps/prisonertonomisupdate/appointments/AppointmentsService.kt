@@ -75,7 +75,7 @@ class AppointmentsService(
           return
         }
       }
-      mappingService.getMappingGivenAppointmentInstanceId(event.additionalInformation.appointmentInstanceId).nomisEventId
+      mappingService.getMappingGivenAppointmentInstanceId(appointmentInstanceId).nomisEventId
         .also {
           telemetryMap["nomisEventId"] = it.toString()
         }

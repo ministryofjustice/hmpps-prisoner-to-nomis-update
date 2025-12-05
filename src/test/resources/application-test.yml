@@ -355,6 +355,7 @@ reports:
   casenotes:
     reconciliation:
       page-size: 5
+      retry-delay-ms: 10
   sentencing:
     reconciliation:
       page-size: 10
