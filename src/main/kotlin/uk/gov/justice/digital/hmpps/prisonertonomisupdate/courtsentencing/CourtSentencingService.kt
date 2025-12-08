@@ -1342,6 +1342,7 @@ class CourtSentencingService(
     LegacyRecall.RecallType.FTR_HDC_28 -> 28
     LegacyRecall.RecallType.CUR_HDC -> null
     LegacyRecall.RecallType.IN_HDC -> null
+    LegacyRecall.RecallType.FTR_56 -> 56
   }
 
   private fun LegacyRecall.RecallType.isFixedTermRecall(): Boolean = when (this) {
@@ -1352,6 +1353,7 @@ class CourtSentencingService(
     LegacyRecall.RecallType.FTR_HDC_28 -> true
     LegacyRecall.RecallType.CUR_HDC -> false
     LegacyRecall.RecallType.IN_HDC -> false
+    LegacyRecall.RecallType.FTR_56 -> true
   }
 
   suspend fun updateSentenceTerm(createEvent: PeriodLengthCreatedEvent) {
