@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-02.413.b5b8f7e"
+    "version" : "2025-12-05.431.eee7116"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -384,6 +384,44 @@
         "responses" : {
           "201" : {
             "description" : "Created",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReferenceId"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temporary-absence-authorisations/{id}/occurrences" : {
+      "post" : {
+        "tags" : [ "tap-authorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "createOccurrence",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOccurrenceRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -858,7 +896,8 @@
             "type" : "string"
           },
           "uprn" : {
-            "type" : "string"
+            "type" : "integer",
+            "format" : "int64"
           }
         }
       },
@@ -882,18 +921,6 @@
         },
         "required" : [ "type" ]
       },
-      "ReasonPath" : {
-        "type" : "object",
-        "properties" : {
-          "path" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ReferenceDataKey"
-            }
-          }
-        },
-        "required" : [ "path" ]
-      },
       "RecategoriseOccurrence" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
@@ -911,26 +938,9 @@
             },
             "absenceReasonCode" : {
               "type" : "string"
-            },
-            "reasonPath" : {
-              "$ref" : "#/components/schemas/ReasonPath"
             }
           }
-        } ],
-        "required" : [ "reasonPath" ]
-      },
-      "ReferenceDataKey" : {
-        "type" : "object",
-        "properties" : {
-          "domain" : {
-            "type" : "string",
-            "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
-          },
-          "code" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code", "domain" ]
+        } ]
       },
       "RescheduleOccurrence" : {
         "allOf" : [ {
@@ -1061,17 +1071,17 @@
         }, {
           "type" : "object",
           "properties" : {
-            "from" : {
+            "fromDate" : {
               "type" : "string",
               "format" : "date"
             },
-            "to" : {
+            "toDate" : {
               "type" : "string",
               "format" : "date"
             }
           }
         } ],
-        "required" : [ "from", "to" ]
+        "required" : [ "fromDate", "toDate" ]
       },
       "ChangePrisonPerson" : {
         "allOf" : [ {
@@ -1111,13 +1121,9 @@
             },
             "absenceReasonCode" : {
               "type" : "string"
-            },
-            "reasonPath" : {
-              "$ref" : "#/components/schemas/ReasonPath"
             }
           }
-        } ],
-        "required" : [ "reasonPath" ]
+        } ]
       },
       "SyncAtAndBy" : {
         "type" : "object",
@@ -1573,7 +1579,7 @@
           "occurrences" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/CreateTapOccurrenceRequest"
+              "$ref" : "#/components/schemas/OccurrenceRequest"
             }
           },
           "statusCode" : {
@@ -1609,7 +1615,8 @@
         },
         "required" : [ "absenceTypeCode", "accompaniedByCode", "fromDate", "occurrences", "repeat", "statusCode", "toDate", "transportCode" ]
       },
-      "CreateTapOccurrenceRequest" : {
+      "JsonNode" : { },
+      "OccurrenceRequest" : {
         "type" : "object",
         "properties" : {
           "releaseAt" : {
@@ -1629,7 +1636,6 @@
         },
         "required" : [ "location", "releaseAt", "returnBy" ]
       },
-      "JsonNode" : { },
       "ReferenceId" : {
         "type" : "object",
         "properties" : {
@@ -1639,6 +1645,26 @@
           }
         },
         "required" : [ "id" ]
+      },
+      "CreateOccurrenceRequest" : {
+        "type" : "object",
+        "properties" : {
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "notes" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "location", "releaseAt", "returnBy" ]
       },
       "Authorisation" : {
         "type" : "object",
