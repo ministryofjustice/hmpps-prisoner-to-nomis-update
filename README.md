@@ -497,7 +497,7 @@ An activity update (event type `activities.activity-schedule.amended`) could inv
 * the activity details have changed
 * pay rates have been updated and/or deleted and/or created
 * schedule rules have been deleted and/or created
-* scheduled instances have been delete and/or created
+* scheduled instances have been deleted and/or created
 
 Normally the error will represent a validation failure which should appear in the traces. In theory this should not happen but if it does then either the validation in the Activities service or the validation in this service is wrong. Work out which is wrong and fix - when fixed the message will eventually be retried and succeed.
 
@@ -651,6 +651,36 @@ Authorization: Bearer {{$auth.token("hmpps-auth")}}
   "mappingType": "DPS_CREATED"
 }
 ```
+
+### Case notes
+
+#### Reconciliation mismatches
+
+There are 2 types of mismatch event - size differences and specific diffs in a case note which contains details of what fields are different.
+
+Watch out for size difference reconciliation errors due to :
+- A creation happening at the same time as the recon check;
+- Dupes caused by NULL audit_module_name column value;
+- Dupes caused by a timeout
+
+The reconciliation process can detect and automatically delete duplicates in some circumstances, though it will still report these.
+
+### Appointments
+
+This is a one way sync to Nomis.
+
+#### Reconciliation mismatches
+
+The appointments reconciliation currently (Nov 2025) just looks 28 days ahead rather than doing all.
+
+Mismatches are usually due to:
+- An appointment is in DPS only because the Nomis counterpart was deleted, probably very soon after the migration of that prison and
+before the P-Nomis screeen was disabled. In this case there will be a mapping table entry.
+- An appointment is in Nomis only because it was created in Nomis, again very soon after the migration and
+  before the P-Nomis screeen was disabled. In this case there will NOT be a mapping table entry.
+
+In both cases it should be established whether an extra similar appointment has been created in the other system, if so the only action needed
+is to temporarily add the offending appointment ids to the exclude list.
 
 ## Architecture
 
