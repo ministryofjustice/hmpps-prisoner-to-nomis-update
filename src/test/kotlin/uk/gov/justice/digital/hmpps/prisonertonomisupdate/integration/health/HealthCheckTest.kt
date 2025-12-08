@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesDpsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonDpsApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension
@@ -121,6 +121,6 @@ class HealthCheckTest : IntegrationTestBase() {
     FinanceDpsApiExtension.dpsFinanceServer.stubHealthPing(status)
     OrganisationsDpsApiExtension.dpsOrganisationsServer.stubHealthPing(status)
     VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
-    CorePersonDpsApiExtension.corePersonDpsApi.stubHealthPing(status)
+    CorePersonCprApiExtension.corePersonCprApi.stubHealthPing(status)
   }
 }
