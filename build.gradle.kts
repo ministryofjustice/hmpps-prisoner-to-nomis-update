@@ -111,6 +111,11 @@ val models = listOf(
     models = "CaseNote,CaseNoteAmendment",
   ),
   ModelConfiguration(
+    name = "core-person",
+    packageName = "coreperson",
+    url = "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "court-sentencing",
     packageName = "court.sentencing",
     testPackageName = "courtsentencing",
