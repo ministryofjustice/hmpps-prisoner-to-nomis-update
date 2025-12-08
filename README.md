@@ -179,11 +179,35 @@ A duplicate scheduled instance won't receive a `To NOMIS synchronisation duplica
 
 A duplicate activity schedule update won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate activity schedule update errors](#duplicate-activity-schedule-update-errors) for more details.
 
-#### Incentives
+## Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
 
-#### Visits
+## Adjudications
+
+### Punishment Repair
+
+A rare scenario happens where the NOMIS punishment is deleted as a result of a DPS synchronisation. This is for old historic Adjudications that have multiple charges. In DPS these are represented with multiple adjudications whereas NOMIS represents these as a single Adjudication with multiple charges. In NOMIS the hearing can therefore be shared between multiple DPS adjudications. If that hearing is deleted in DPS it was also delete the NOMIS hearing which might also cascade to the outcomes and punishments or multiple charges.
+
+In this situation the following has been deleted in NOMIS:
+* The hearing
+* The outcome result
+* The punishments
+
+The mapping for the punishments and the hearings will remain that complicates the repair.
+
+To repair, the mappings need deleting and the hearing, outcome and punishments all need resynchronisation.
+
+1. Find the hearing and punishments in DPS that need synchronising
+2. Delete the hearing mapping DELETE https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk/mapping/hearings/dps/{dps-hearing-id}
+3. Delete each of the punishments mappings DELETE https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk/mapping/punishments/{dps-punishment-id}
+4. Repair hearing POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/hearing/dps-hearing-id/{dps-hearingid}
+5. Repair hearing outcome POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/hearing/dps-hearing-id/{dps-hearingid}/outcome
+6. Repair hearing punishments POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/punishments/repair
+
+TODO - if this becomes common add new endpoint to do all of the above programmatically
+
+## Visits
 
 A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
 
@@ -201,7 +225,7 @@ curl --location --request PUT 'https://nomis-prisoner-api.prison.service.justice
 * Check in Nomis again and the duplicate visit should have been cancelled
 
 ```
-#### Sentencing adjustments
+## Sentencing adjustments
 
 A duplicate sentencing adjustment is serious since it will result in the prisoner being released early/late. Therefore the sentencing adjustment should be cancelled. This could be dome by #dps-appsupport or by us using the delete endpoint. The delete endpoint is the quickest solution.
 
