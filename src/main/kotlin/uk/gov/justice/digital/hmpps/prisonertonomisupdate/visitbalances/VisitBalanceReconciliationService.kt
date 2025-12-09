@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitBalanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visit.balance.model.PrisonerBalanceDto
 
 @Service
@@ -90,8 +89,8 @@ class VisitBalanceReconciliationService(
   suspend fun checkVisitBalanceMatch(prisonerId: PrisonerIds): MismatchVisitBalance? = runCatching {
     // Note that the lack of a balance is treated identically to a balance of 0, since it could be created and then not
     // used in either system
-    val nomisVisitBalance = doApiCallWithRetries { nomisVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo) }?.toBalance() ?: PrisonerBalance()
-    val dpsVisitBalance = doApiCallWithRetries { dpsVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo) }?.toBalance() ?: PrisonerBalance()
+    val nomisVisitBalance = nomisVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo)?.toBalance() ?: PrisonerBalance()
+    val dpsVisitBalance = dpsVisitBalanceApiService.getVisitBalance(prisonerId.offenderNo)?.toBalance() ?: PrisonerBalance()
 
     return if (nomisVisitBalance != dpsVisitBalance) {
       MismatchVisitBalance(prisonNumber = prisonerId.offenderNo, dpsVisitBalance = dpsVisitBalance, nomisVisitBalance = nomisVisitBalance).also { mismatch ->
