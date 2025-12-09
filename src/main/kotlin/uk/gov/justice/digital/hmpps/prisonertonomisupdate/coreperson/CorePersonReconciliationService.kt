@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 
 @Service
 class CorePersonReconciliationService(
@@ -25,8 +24,8 @@ class CorePersonReconciliationService(
   private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "cprPerson=${it.cprCorePerson}, nomisPerson=${it.nomisCorePerson}" }
 
   suspend fun checkCorePersonMatch(prisonerId: PrisonerIds): MismatchCorePerson? = runCatching {
-    val nomisCorePerson = doApiCallWithRetries { nomisCorePersonApiService.getPrisoner(prisonerId.offenderNo) }?.toPerson() ?: PrisonerPerson()
-    val cprCorePerson = doApiCallWithRetries { cprCorePersonApiService.getCorePerson(prisonerId.offenderNo) }?.toPerson() ?: PrisonerPerson()
+    val nomisCorePerson = nomisCorePersonApiService.getPrisoner(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson()
+    val cprCorePerson = cprCorePersonApiService.getCorePerson(prisonerId.offenderNo)?.toPerson() ?: PrisonerPerson()
 
     return if (nomisCorePerson != cprCorePerson) {
       MismatchCorePerson(prisonNumber = prisonerId.offenderNo, cprCorePerson = cprCorePerson, nomisCorePerson = nomisCorePerson).also { mismatch ->
