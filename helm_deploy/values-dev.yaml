@@ -64,6 +64,14 @@ generic-service:
     - name: prisoner-bal-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
+    - name: core-person-recon
+      type: CORE_PERSON_FULL_RECON
+      schedule: "30 12 * * *"
+      suspend: true
+    - name: core-person-ac-recon
+      type: COREPERSON_ACTIVE_RECON
+      schedule: "30 14 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
