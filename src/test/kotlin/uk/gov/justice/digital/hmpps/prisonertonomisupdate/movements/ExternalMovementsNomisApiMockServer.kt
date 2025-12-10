@@ -8,8 +8,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceOutsideMovementResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
@@ -48,23 +46,6 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
     )
 
     fun upsertTemporaryAbsenceApplicationResponse() = UpsertTemporaryAbsenceApplicationResponse(12345, 56789)
-
-    fun createTemporaryAbsenceOutsideMovementRequest() = CreateTemporaryAbsenceOutsideMovementRequest(
-      movementApplicationId = 56789,
-      eventSubType = "C5",
-      fromDate = today.toLocalDate(),
-      releaseTime = today,
-      toDate = tomorrow.toLocalDate(),
-      returnTime = tomorrow,
-      comment = "Temporary Absence Outside Movement comment",
-      toAgencyId = "HAZLWD",
-      toAddressId = 3456,
-      contactPersonName = "Deek Sanderson",
-      temporaryAbsenceType = "RR",
-      temporaryAbsenceSubType = "RDR",
-    )
-
-    fun createTemporaryAbsenceOutsideMovementResponse(applicationMultiId: Long = 101112) = CreateTemporaryAbsenceOutsideMovementResponse(12345, 56789, applicationMultiId)
 
     fun upsertScheduledTemporaryAbsenceRequest() = UpsertScheduledTemporaryAbsenceRequest(
       movementApplicationId = 56789,
@@ -141,37 +122,6 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
   ) {
     nomisApi.stubFor(
       put(urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(status.value())
-            .withBody(objectMapper.writeValueAsString(error)),
-        ),
-    )
-  }
-
-  fun stubCreateTemporaryAbsenceOutsideMovement(
-    offenderNo: String = "A1234BC",
-    response: CreateTemporaryAbsenceOutsideMovementResponse = createTemporaryAbsenceOutsideMovementResponse(),
-  ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/outside-movement"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(HttpStatus.CREATED.value())
-            .withBody(objectMapper.writeValueAsString(response)),
-        ),
-    )
-  }
-
-  fun stubCreateTemporaryAbsenceOutsideMovement(
-    offenderNo: String = "A1234BC",
-    status: HttpStatus,
-    error: ErrorResponse = ErrorResponse(status),
-  ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/outside-movement"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

@@ -37,7 +37,6 @@ class ExternalMovementsDomainEventListener(
     log.info("Received message: {}", eventType)
     when (eventType) {
       "person.temporary-absence-authorisation.approved" -> externalMovementsService.authorisationApproved(message.fromJson())
-      "external-movements-api.temporary-absence-outside-movement.created" -> externalMovementsService.outsideMovementCreated(message.fromJson())
       "person.temporary-absence.scheduled" -> externalMovementsService.occurrenceChanged(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-out.created" -> externalMovementsService.externalMovementOutCreated(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-in.created" -> externalMovementsService.externalMovementInCreated(message.fromJson())
@@ -55,19 +54,6 @@ data class TemporaryAbsenceAuthorisationEvent(
 )
 
 data class AuthorisationAdditionalInformation(
-  val authorisationId: UUID,
-  val source: String,
-)
-
-data class TemporaryAbsenceOutsideMovementEvent(
-  val description: String?,
-  val eventType: String,
-  val personReference: PersonReference,
-  val additionalInformation: OutsideMovementAdditionalInformation,
-)
-
-data class OutsideMovementAdditionalInformation(
-  val outsideMovementId: UUID,
   val authorisationId: UUID,
   val source: String,
 )
