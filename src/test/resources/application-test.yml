@@ -380,4 +380,7 @@ reports:
   visit-balance:
     reconciliation:
       page-size: 10
+  core-person:
+    reconciliation:
+      page-size: 10
 api.locations.timeout: 1s

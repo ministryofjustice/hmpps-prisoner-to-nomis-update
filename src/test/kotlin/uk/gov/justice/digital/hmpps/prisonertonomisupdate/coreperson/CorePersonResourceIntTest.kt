@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.untilAsserted
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -11,7 +10,6 @@ import org.mockito.Captor
 import org.mockito.kotlin.any
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,11 +20,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import java.time.LocalDateTime
 
 class CorePersonResourceIntTest(
-  @Autowired private val corePersonReconciliationService: CorePersonReconciliationService,
   @Autowired private val corePersonNomisApi: CorePersonNomisApiMockServer,
 ) : IntegrationTestBase() {
 
-  private val corePersonCprApi = CorePersonCprApiExtension.Companion.corePersonCprApi
+  private val corePersonCprApi = CorePersonCprApiExtension.corePersonCprApi
 
   @Captor
   lateinit var telemetryCaptor: ArgumentCaptor<Map<String, String>>
@@ -66,7 +63,7 @@ class CorePersonResourceIntTest(
     inner class Validation {
       @Test
       fun `return null when offender not found`() {
-        corePersonNomisApi.stubGetCorePerson("A9999BC", HttpStatus.NOT_FOUND)
+        corePersonNomisApi.stubGetCorePerson("A9999BC", status = HttpStatus.NOT_FOUND)
         webTestClient.get().uri("/core-person/reconciliation/A9999BC")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
@@ -99,6 +96,7 @@ class CorePersonResourceIntTest(
       @Test
       fun `will return mismatch with nomis`() {
         corePersonNomisApi.stubGetCorePerson(
+          prisonNumber,
           corePerson(prisonNumber).copy(
             nationalities = listOf(
               OffenderNationality(
@@ -119,8 +117,9 @@ class CorePersonResourceIntTest(
           .expectBody()
           .consumeWith(System.out::println)
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
-          .jsonPath("nomisCorePerson.nationality").isEqualTo("BR")
-          .jsonPath("cprCorePerson.nationality").isEqualTo(null)
+          .jsonPath("differences").value<List<String>> {
+            assertThat(it).containsExactly("nationality: nomis=BR, cpr=null")
+          }
 
         verify(telemetryClient).trackEvent(
           eq("coreperson-reports-reconciliation-mismatch"),
@@ -129,9 +128,5 @@ class CorePersonResourceIntTest(
         )
       }
     }
-  }
-
-  private fun awaitReportFinished() {
-    await untilAsserted { verify(telemetryClient).trackEvent(eq("coreperson-reports-reconciliation-report"), any(), isNull()) }
   }
 }
