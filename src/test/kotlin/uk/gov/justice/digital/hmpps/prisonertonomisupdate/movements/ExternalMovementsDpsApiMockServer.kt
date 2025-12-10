@@ -61,6 +61,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     repeat = true,
     fromDate = today,
     toDate = today,
+    start = today,
+    end = today,
     occurrences = listOf(),
     personIdentifier = "USER1",
     statusCode = "PENDING",
@@ -70,6 +72,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     absenceTypeCode = "SR",
     absenceSubTypeCode = "RDR",
     notes = "Some notes",
+    comments = "Some notes",
     accompaniedByCode = "U",
   )
 
@@ -81,7 +84,9 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonCode = "LEI",
     ),
     statusCode = "SCHEDULED",
+    start = now,
     releaseAt = now,
+    end = tomorrow,
     returnBy = tomorrow,
     location = Location(
       description = "Agency name",
@@ -94,6 +99,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     absenceReasonCode = "R2",
     created = SyncAtAndBy(at = now, by = "USER1"),
     notes = "Tap occurrence comment",
+    comments = "Tap occurrence comment",
   )
 
   fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = SyncReadTapMovement(
@@ -109,8 +115,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       uprn = 1,
     ),
     accompaniedByCode = "U",
-    accompaniedByNotes = "Unaccompanied movement notes",
-    notes = "movement notes",
+    accompaniedByComments = "Unaccompanied movement notes",
+    comments = "movement notes",
     personIdentifier = "A1234AA",
     created = SyncAtAndByWithPrison(at = now, by = "USER1", prisonCode = "LEI"),
   )
