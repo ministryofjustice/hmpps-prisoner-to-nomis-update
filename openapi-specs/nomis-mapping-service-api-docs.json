@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-03.274.32be2c2"
+    "version" : "2025-12-09.281.5bb308e"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18807,6 +18807,14 @@
             "format" : "int64",
             "description" : "The DPS address unique ID"
           },
+          "dpsDescription" : {
+            "type" : "string",
+            "description" : "The DPS description"
+          },
+          "dpsPostcode" : {
+            "type" : "string",
+            "description" : "The DPS postcode"
+          },
           "eventTime" : {
             "type" : "string",
             "description" : "The DPS address",
@@ -18842,6 +18850,14 @@
           "dpsAddressText" : {
             "type" : "string",
             "description" : "The DPS address"
+          },
+          "dpsDescription" : {
+            "type" : "string",
+            "description" : "The DPS address description"
+          },
+          "dpsPostcode" : {
+            "type" : "string",
+            "description" : "The DPS postcode"
           }
         },
         "required" : [ "dpsAddressText", "dpsMovementId", "nomisMovementSeq" ]
@@ -18872,6 +18888,14 @@
           "dpsAddressText" : {
             "type" : "string",
             "description" : "The DPS address"
+          },
+          "dpsDescription" : {
+            "type" : "string",
+            "description" : "The DPS address description"
+          },
+          "dpsPostcode" : {
+            "type" : "string",
+            "description" : "The DPS postcode"
           },
           "eventTime" : {
             "type" : "string",
@@ -19036,6 +19060,14 @@
           "dpsAddressText" : {
             "type" : "string",
             "description" : "The DPS address"
+          },
+          "dpsDescription" : {
+            "type" : "string",
+            "description" : "The DPS description"
+          },
+          "dpsPostcode" : {
+            "type" : "string",
+            "description" : "The DPS postcode"
           },
           "dpsUprn" : {
             "type" : "integer",
@@ -20090,6 +20122,14 @@
           "dpsAddressText" : {
             "type" : "string",
             "description" : "The DPS address text"
+          },
+          "dpsDescription" : {
+            "type" : "string",
+            "description" : "The DPS address description"
+          },
+          "dpsPostcode" : {
+            "type" : "string",
+            "description" : "The DPS address postcode"
           }
         },
         "required" : [ "addressId", "dpsAddressText", "ownerClass" ]
