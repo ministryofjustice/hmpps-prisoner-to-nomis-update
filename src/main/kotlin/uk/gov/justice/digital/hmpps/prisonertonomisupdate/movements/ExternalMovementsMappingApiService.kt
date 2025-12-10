@@ -9,7 +9,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.*
 
@@ -27,13 +26,6 @@ class ExternalMovementsMappingApiService(
 
   suspend fun getApplicationMapping(dpsId: UUID): TemporaryAbsenceApplicationSyncMappingDto? = webClient.get()
     .uri("$domainUrl/application/dps-id/{dpsId}", dpsId)
-    .retrieve()
-    .awaitBodyOrNullForNotFound()
-
-  suspend fun createOutsideMovementMapping(mapping: TemporaryAbsenceOutsideMovementSyncMappingDto) = webClient.createMapping("$domainUrl/outside-movement", mapping)
-
-  suspend fun getOutsideMovementMapping(dpsId: UUID): TemporaryAbsenceOutsideMovementSyncMappingDto? = webClient.get()
-    .uri("$domainUrl/outside-movement/dps-id/{dpsId}", dpsId)
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
