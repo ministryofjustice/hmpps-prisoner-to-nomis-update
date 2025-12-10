@@ -30,9 +30,13 @@ import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.time.LocalDateTime
+import kotlin.collections.listOf
 
 class CorePersonReconciliationIntTest(
   @Autowired private val nomisApi: CorePersonNomisApiMockServer,
@@ -80,6 +84,43 @@ class CorePersonReconciliationIntTest(
             mapOf(
               "prisonNumber" to "A1234BC",
               "differences5" to "nationality: nomis=BR, cpr=M",
+            ),
+          )
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should ignore previous bookings`() = runTest {
+      nomisApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          nationalities =
+          listOf(
+            OffenderNationality(
+              bookingId = 1,
+              nationality = CodeDescription(code = "M", description = "M Description"),
+              latestBooking = false,
+              startDateTime = LocalDateTime.now().minusDays(1),
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M"))
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly("nationality: nomis=null, cpr=M")
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("$TELEMETRY_PREFIX-mismatch"),
+        check {
+          assertThat(it).containsExactlyInAnyOrderEntriesOf(
+            mapOf(
+              "prisonNumber" to "A1234BC",
+              "differences5" to "nationality: nomis=null, cpr=M",
             ),
           )
         },

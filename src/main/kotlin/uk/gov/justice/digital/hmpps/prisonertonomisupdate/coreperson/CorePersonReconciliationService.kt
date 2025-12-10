@@ -154,7 +154,7 @@ class CorePersonReconciliationService(
 }
 
 fun CanonicalRecord.toPerson() = PrisonerPerson(nationality = nationalities.firstOrNull()?.code)
-fun CorePerson.toPerson() = PrisonerPerson(nationality = this.nationalities?.firstOrNull()?.nationality?.code)
+fun CorePerson.toPerson() = PrisonerPerson(nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code)
 
 data class MismatchCorePerson(
   val prisonNumber: String,
