@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-08.442.7cfe866"
+    "version" : "2025-12-10.458.093025d"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -74,11 +74,11 @@
             "application/json" : {
               "schema" : {
                 "oneOf" : [ {
-                  "$ref" : "#/components/schemas/AmendOccurrenceNotes"
-                }, {
                   "$ref" : "#/components/schemas/CancelOccurrence"
                 }, {
                   "$ref" : "#/components/schemas/ChangeOccurrenceAccompaniment"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeOccurrenceComments"
                 }, {
                   "$ref" : "#/components/schemas/ChangeOccurrenceContactInformation"
                 }, {
@@ -129,7 +129,7 @@
             "format" : "uuid"
           }
         }, {
-          "name" : "fromDate",
+          "name" : "start",
           "in" : "query",
           "required" : false,
           "schema" : {
@@ -137,7 +137,7 @@
             "format" : "date"
           }
         }, {
-          "name" : "toDate",
+          "name" : "end",
           "in" : "query",
           "required" : false,
           "schema" : {
@@ -176,13 +176,13 @@
             "application/json" : {
               "schema" : {
                 "oneOf" : [ {
-                  "$ref" : "#/components/schemas/AmendAuthorisationNotes"
-                }, {
                   "$ref" : "#/components/schemas/ApproveAuthorisation"
                 }, {
                   "$ref" : "#/components/schemas/CancelAuthorisation"
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationAccompaniment"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeAuthorisationComments"
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationDateRange"
                 }, {
@@ -812,19 +812,6 @@
   },
   "components" : {
     "schemas" : {
-      "AmendOccurrenceNotes" : {
-        "allOf" : [ {
-          "$ref" : "#/components/schemas/OccurrenceAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "notes" : {
-              "type" : "string"
-            }
-          }
-        } ],
-        "required" : [ "notes" ]
-      },
       "CancelOccurrence" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
@@ -842,6 +829,19 @@
           }
         } ],
         "required" : [ "accompaniedByCode" ]
+      },
+      "ChangeOccurrenceComments" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "comments" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "comments" ]
       },
       "ChangeOccurrenceContactInformation" : {
         "allOf" : [ {
@@ -952,11 +952,11 @@
         }, {
           "type" : "object",
           "properties" : {
-            "releaseAt" : {
+            "start" : {
               "type" : "string",
               "format" : "date-time"
             },
-            "returnBy" : {
+            "end" : {
               "type" : "string",
               "format" : "date-time"
             }
@@ -1031,19 +1031,6 @@
         },
         "required" : [ "name", "username" ]
       },
-      "AmendAuthorisationNotes" : {
-        "allOf" : [ {
-          "$ref" : "#/components/schemas/AuthorisationAction"
-        }, {
-          "type" : "object",
-          "properties" : {
-            "notes" : {
-              "type" : "string"
-            }
-          }
-        } ],
-        "required" : [ "notes" ]
-      },
       "ApproveAuthorisation" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1082,23 +1069,36 @@
         } ],
         "required" : [ "accompaniedByCode" ]
       },
+      "ChangeAuthorisationComments" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "comments" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "comments" ]
+      },
       "ChangeAuthorisationDateRange" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
           "type" : "object",
           "properties" : {
-            "fromDate" : {
+            "start" : {
               "type" : "string",
               "format" : "date"
             },
-            "toDate" : {
+            "end" : {
               "type" : "string",
               "format" : "date"
             }
           }
         } ],
-        "required" : [ "fromDate", "toDate" ]
+        "required" : [ "end", "start" ]
       },
       "ChangeAuthorisationTransport" : {
         "allOf" : [ {
@@ -1212,10 +1212,10 @@
           "accompaniedByCode" : {
             "type" : "string"
           },
-          "accompaniedByNotes" : {
+          "accompaniedByComments" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1271,15 +1271,15 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1293,7 +1293,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "prisonCode", "repeat", "statusCode", "toDate", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "legacyId", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
       },
       "SyncWriteTapOccurrence" : {
         "type" : "object",
@@ -1305,11 +1305,11 @@
           "isCancelled" : {
             "type" : "boolean"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1334,7 +1334,7 @@
           "contactInformation" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1348,7 +1348,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "isCancelled", "legacyId", "location", "releaseAt", "returnBy", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "start", "transportCode" ]
       },
       "MigrateTapAuthorisation" : {
         "type" : "object",
@@ -1427,10 +1427,10 @@
           "accompaniedByCode" : {
             "type" : "string"
           },
-          "accompaniedByNotes" : {
+          "accompaniedByComments" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1451,11 +1451,11 @@
           "isCancelled" : {
             "type" : "boolean"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1480,7 +1480,7 @@
           "contactInformation" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1500,7 +1500,7 @@
             }
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "isCancelled", "legacyId", "location", "movements", "releaseAt", "returnBy", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "movements", "start", "transportCode" ]
       },
       "MigrateTapRequest" : {
         "type" : "object",
@@ -1622,17 +1622,17 @@
           "transportCode" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -1643,17 +1643,17 @@
             "$ref" : "#/components/schemas/JsonNode"
           }
         },
-        "required" : [ "absenceTypeCode", "accompaniedByCode", "fromDate", "occurrences", "repeat", "statusCode", "toDate", "transportCode" ]
+        "required" : [ "absenceTypeCode", "accompaniedByCode", "end", "occurrences", "repeat", "start", "statusCode", "transportCode" ]
       },
       "JsonNode" : { },
       "OccurrenceRequest" : {
         "type" : "object",
         "properties" : {
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1664,7 +1664,7 @@
             "$ref" : "#/components/schemas/JsonNode"
           }
         },
-        "required" : [ "location", "releaseAt", "returnBy" ]
+        "required" : [ "end", "location", "start" ]
       },
       "ReferenceId" : {
         "type" : "object",
@@ -1679,22 +1679,22 @@
       "CreateOccurrenceRequest" : {
         "type" : "object",
         "properties" : {
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
           "location" : {
             "$ref" : "#/components/schemas/Location"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           }
         },
-        "required" : [ "location", "releaseAt", "returnBy" ]
+        "required" : [ "end", "location", "start" ]
       },
       "Authorisation" : {
         "type" : "object",
@@ -1726,6 +1726,9 @@
           },
           "repeat" : {
             "type" : "boolean"
+          },
+          "comments" : {
+            "type" : "string"
           },
           "notes" : {
             "type" : "string"
@@ -1795,11 +1798,11 @@
           "status" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1818,11 +1821,22 @@
           "scheduleReference" : {
             "$ref" : "#/components/schemas/JsonNode"
           },
+          "comments" : {
+            "type" : "string"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "notes" : {
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
       },
       "Occurrence" : {
         "type" : "object",
@@ -1846,11 +1860,11 @@
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1863,11 +1877,22 @@
           "transport" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
+          "comments" : {
+            "type" : "string"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
           "notes" : {
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "id", "location", "releaseAt", "returnBy", "status", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
       },
       "TapAuthorisation" : {
         "type" : "object",
@@ -1903,11 +1928,11 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -1926,11 +1951,22 @@
           "schedule" : {
             "$ref" : "#/components/schemas/JsonNode"
           },
+          "comments" : {
+            "type" : "string"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
           "notes" : {
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "fromDate", "id", "locations", "occurrences", "person", "repeat", "status", "toDate", "transport" ]
+        "required" : [ "accompaniedBy", "end", "fromDate", "id", "locations", "occurrences", "person", "repeat", "start", "status", "toDate", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -1945,11 +1981,11 @@
           "statusCode" : {
             "type" : "string"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -1974,7 +2010,7 @@
           "contactInformation" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1982,9 +2018,20 @@
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "notes" : {
+            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "end", "id", "location", "releaseAt", "returnBy", "start", "statusCode", "transportCode" ]
       },
       "SyncReadTapOccurrenceAuthorisation" : {
         "type" : "object",
@@ -2033,10 +2080,10 @@
           "accompaniedByCode" : {
             "type" : "string"
           },
-          "accompaniedByNotes" : {
+          "accompaniedByComments" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -2079,11 +2126,11 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -2093,7 +2140,7 @@
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "occurrences" : {
@@ -2101,9 +2148,20 @@
             "items" : {
               "$ref" : "#/components/schemas/SyncReadTapAuthorisationOccurrence"
             }
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "notes" : {
+            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "statusCode", "toDate" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode", "toDate" ]
       },
       "SyncReadTapAuthorisationOccurrence" : {
         "type" : "object",
@@ -2115,11 +2173,11 @@
           "statusCode" : {
             "type" : "string"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -2141,7 +2199,7 @@
           "transportCode" : {
             "type" : "string"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -2149,9 +2207,20 @@
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "notes" : {
+            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "id", "location", "releaseAt", "returnBy", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "location", "releaseAt", "returnBy", "start", "statusCode", "transportCode" ]
       },
       "TapOccurrenceSearchRequest" : {
         "type" : "object",
@@ -2261,11 +2330,11 @@
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
-          "releaseAt" : {
+          "start" : {
             "type" : "string",
             "format" : "date-time"
           },
-          "returnBy" : {
+          "end" : {
             "type" : "string",
             "format" : "date-time"
           },
@@ -2280,9 +2349,17 @@
           },
           "isCancelled" : {
             "type" : "boolean"
+          },
+          "releaseAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "returnBy" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "id", "isCancelled", "location", "releaseAt", "returnBy", "status", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
       },
       "TapOccurrenceSearchResponse" : {
         "type" : "object",
@@ -2306,11 +2383,11 @@
             "type" : "string",
             "minLength" : 1
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -2369,11 +2446,11 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -2386,9 +2463,17 @@
           "occurrenceCount" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date"
           }
         },
-        "required" : [ "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "status", "toDate" ]
+        "required" : [ "end", "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "start", "status", "toDate" ]
       },
       "TapAuthorisationSearchResponse" : {
         "type" : "object",
