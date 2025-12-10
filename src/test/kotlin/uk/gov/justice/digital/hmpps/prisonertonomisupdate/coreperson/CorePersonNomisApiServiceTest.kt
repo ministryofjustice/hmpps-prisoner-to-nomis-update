@@ -34,7 +34,7 @@ class CorePersonNomisApiServiceTest {
   inner class GetCorePerson {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetCorePerson(corePerson("A1234BC"))
+      mockServer.stubGetCorePerson("A1234BC")
 
       apiService.getPrisoner(prisonNumber = "A1234BC")
 
@@ -45,7 +45,7 @@ class CorePersonNomisApiServiceTest {
 
     @Test
     fun `will pass NOMIS id to service`() = runTest {
-      mockServer.stubGetCorePerson(corePerson("A1234BC"))
+      mockServer.stubGetCorePerson("A1234BC")
 
       apiService.getPrisoner(prisonNumber = "A1234BC")
 
@@ -57,6 +57,7 @@ class CorePersonNomisApiServiceTest {
     @Test
     fun `will return core person`() = runTest {
       mockServer.stubGetCorePerson(
+        prisonNumber = "A1234BC",
         CorePerson(
           prisonNumber = "A1234BC",
           activeFlag = true,

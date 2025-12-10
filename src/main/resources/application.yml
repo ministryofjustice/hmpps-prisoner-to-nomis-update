@@ -205,6 +205,9 @@ reports:
   visit-balance:
     reconciliation:
       page-size: 40
+  core-person:
+    reconciliation:
+      page-size: 20
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600

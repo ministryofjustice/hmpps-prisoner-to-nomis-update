@@ -22,6 +22,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ATTEND
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_ACTIVE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CASE_NOTES_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CONTACT_PERSON_PROFILE_DETAILS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CORE_PERSON_ACTIVE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CORE_PERSON_FULL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_ACTIVE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.COURT_CASE_PRISONER_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.CSIP_RECON
@@ -41,6 +43,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTEN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonBalanceReconciliationService
@@ -68,6 +71,8 @@ enum class BatchType {
   CASE_NOTES_ACTIVE_RECON,
   CASE_NOTES_FULL_RECON,
   CONTACT_PERSON_PROFILE_DETAILS_RECON,
+  CORE_PERSON_ACTIVE_RECON,
+  CORE_PERSON_FULL_RECON,
   COURT_CASE_PRISONER_RECON,
   COURT_CASE_ACTIVE_PRISONER_RECON,
   CSIP_RECON,
@@ -100,6 +105,7 @@ class BatchManager(
   private val caseNotesReconciliationService: CaseNotesReconciliationService,
   private val contactPersonProfileDetailsReconService: ContactPersonProfileDetailsReconciliationService,
   private val contactPersonReconciliationService: ContactPersonReconciliationService,
+  private val corePersonReconciliationService: CorePersonReconciliationService,
   private val courtSentencingReconciliationService: CourtSentencingReconciliationService,
   private val csipReconciliationService: CSIPReconciliationService,
   private val hmppsQueueService: HmppsQueueService,
@@ -130,6 +136,8 @@ class BatchManager(
       CASE_NOTES_ACTIVE_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = true)
       CASE_NOTES_FULL_RECON -> caseNotesReconciliationService.generateReconciliationReport(activeOnly = false)
       CONTACT_PERSON_PROFILE_DETAILS_RECON -> contactPersonProfileDetailsReconService.reconciliationReport()
+      CORE_PERSON_ACTIVE_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = true)
+      CORE_PERSON_FULL_RECON -> corePersonReconciliationService.generateReconciliationReport(activeOnly = false)
       COURT_CASE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCasePrisonerReconciliationReportBatch()
       COURT_CASE_ACTIVE_PRISONER_RECON -> courtSentencingReconciliationService.generateCourtCaseActivePrisonerReconciliationReportBatch()
       CSIP_RECON -> csipReconciliationService.generateCSIPReconciliationReport()

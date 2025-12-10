@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
@@ -77,10 +78,11 @@ class NomisApiService(
   retryApiService: RetryApiService,
 ) {
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
-
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
+  private val bookingApi = BookingsResourceApi(webClient)
 
   suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
     .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
@@ -333,14 +335,14 @@ class NomisApiService(
     activeOnly: Boolean,
     lastBookingId: Long,
     pageSize: Int,
-  ): BookingIdsWithLast = webClient.get()
-    .uri {
-      it.path("/bookings/ids/latest-from-id")
-        .queryParam("activeOnly", activeOnly)
-        .queryParam("bookingId", lastBookingId)
-        .queryParam("pageSize", pageSize)
-        .build()
-    }
+  ): BookingIdsWithLast = bookingApi
+    .prepare(
+      bookingApi.getAllLatestBookingsFromIdRequestConfig(
+        bookingId = lastBookingId,
+        activeOnly = activeOnly,
+        pageSize = pageSize,
+      ),
+    )
     .retrieve()
     .bodyToMono(BookingIdsWithLast::class.java)
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))

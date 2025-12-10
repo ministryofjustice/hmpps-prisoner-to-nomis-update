@@ -8,32 +8,30 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDateTime
 import kotlin.String
 
 @Component
 class CorePersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
 
   fun stubGetCorePerson(
-    response: CorePerson = corePerson(prisonNumber = "A1234KT"),
+    prisonNumber: String = "AA1234A",
+    response: CorePerson = corePerson(prisonNumber = prisonNumber),
+    fixedDelay: Int = 30,
+    status: HttpStatus = HttpStatus.OK,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
     nomisApi.stubFor(
       get(urlEqualTo("/core-person/${response.prisonNumber}")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(response)),
-      ),
-    )
-  }
-  fun stubGetCorePerson(prisonNumber: String, status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/core-person/$prisonNumber")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(objectMapper.writeValueAsString(if (status == HttpStatus.OK) response else error))
+          .withFixedDelay(fixedDelay),
       ),
     )
   }
@@ -41,8 +39,20 @@ class CorePersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
-fun corePerson(prisonNumber: String): CorePerson = CorePerson(
-  prisonNumber = prisonNumber,
+fun corePerson(prisonNumber: String? = null, nationality: String? = null): CorePerson = CorePerson(
+  prisonNumber = prisonNumber ?: "A1234KT",
   activeFlag = true,
   inOutStatus = "IN",
+  nationalities = if (nationality != null) {
+    listOf(
+      OffenderNationality(
+        bookingId = 1,
+        nationality = CodeDescription(code = nationality, description = "$nationality Description"),
+        latestBooking = true,
+        startDateTime = LocalDateTime.now().minusDays(1),
+      ),
+    )
+  } else {
+    null
+  },
 )

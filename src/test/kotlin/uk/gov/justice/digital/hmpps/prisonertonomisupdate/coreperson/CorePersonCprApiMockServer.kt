@@ -9,14 +9,17 @@ import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
+import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSex
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 
 class CorePersonCprApiExtension :
   BeforeAllCallback,
@@ -58,13 +61,13 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCorePerson(personNumber: String = "AA1234A", response: CanonicalRecord = corePersonDto()) {
+  fun stubGetCorePerson(prisonNumber: String = "AA1234A", response: CanonicalRecord = corePersonDto(), status: HttpStatus = HttpStatus.OK, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
-      get("/person/prison/$personNumber").willReturn(
+      get("/person/prison/$prisonNumber").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withStatus(200)
-          .withBody(objectMapper.writeValueAsString(response)),
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(if (status == HttpStatus.OK) response else error)),
       ),
     )
   }
@@ -75,7 +78,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun corePersonDto() = CanonicalRecord(
+fun corePersonDto(nationality: String? = null) = CanonicalRecord(
   addresses = listOf(),
   aliases = listOf(),
   dateOfBirth = null,
@@ -94,7 +97,7 @@ fun corePersonDto() = CanonicalRecord(
   ),
   lastName = "Smith",
   middleNames = null,
-  nationalities = listOf(),
+  nationalities = if (nationality != null) listOf(CanonicalNationality(nationality, "$nationality Description")) else listOf(),
   religion = CanonicalReligion(),
   sex = CanonicalSex(),
   title = CanonicalTitle(),
