@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-09.814.ddf5254"
+    "version" : "2025-12-10.818.60cd6e4"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -11188,88 +11188,6 @@
         }
       }
     },
-    "/movements/{offenderNo}/temporary-absences/outside-movement" : {
-      "post" : {
-        "tags" : [ "movements-resource" ],
-        "summary" : "Inserts a temporary absence outside movement for an offender",
-        "description" : "Creates a temporary absence outside movement on the prisoner's latest booking. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "createTemporaryAbsenceOutsideMovement",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender no (aka prisoner number)",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender no (aka prisoner number)",
-            "example" : "A1234AK"
-          },
-          "example" : "A1234AK"
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CreateTemporaryAbsenceOutsideMovementRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Temporary absence outside movement created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CreateTemporaryAbsenceOutsideMovementResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "One or more fields in the request contains invalid data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/locations" : {
       "post" : {
         "tags" : [ "location-resource" ],
@@ -17288,80 +17206,6 @@
           },
           "404" : {
             "description" : "Offender or scheduled temporary absence return not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/movements/{offenderNo}/temporary-absences/outside-movement/{appMultiId}" : {
-      "get" : {
-        "tags" : [ "movements-resource" ],
-        "summary" : "Get a specific temporary absence application outside movement for an offender",
-        "description" : "Get a specific temporary absence application outside movement for an offender by application multi ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getTemporaryAbsenceApplicationOutsideMovement",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender number (NOMS ID)",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender number (NOMS ID)",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        }, {
-          "name" : "appMultiId",
-          "in" : "path",
-          "description" : "Application Multi ID",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Application Multi ID",
-            "example" : 123
-          },
-          "example" : 123
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Offender temporary absence application outside movement returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TemporaryAbsenceApplicationOutsideMovementResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender or outside movement not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -27695,89 +27539,6 @@
         },
         "required" : [ "bookingId", "movementSequence" ]
       },
-      "CreateTemporaryAbsenceOutsideMovementRequest" : {
-        "type" : "object",
-        "description" : "Create temporary absence outside movement request",
-        "properties" : {
-          "movementApplicationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application ID"
-          },
-          "eventSubType" : {
-            "type" : "string",
-            "description" : "Event sub type"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "From date"
-          },
-          "releaseTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Release time"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "To date"
-          },
-          "returnTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Return time"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment"
-          },
-          "toAgencyId" : {
-            "type" : "string",
-            "description" : "To agency ID"
-          },
-          "toAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "To address ID"
-          },
-          "contactPersonName" : {
-            "type" : "string",
-            "description" : "Contact person name"
-          },
-          "temporaryAbsenceType" : {
-            "type" : "string",
-            "description" : "Temporary absence type"
-          },
-          "temporaryAbsenceSubType" : {
-            "type" : "string",
-            "description" : "Temporary absence sub type"
-          }
-        },
-        "required" : [ "eventSubType", "fromDate", "movementApplicationId", "releaseTime", "returnTime", "toDate" ]
-      },
-      "CreateTemporaryAbsenceOutsideMovementResponse" : {
-        "type" : "object",
-        "description" : "Create temporary absence outside movement response",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking ID"
-          },
-          "movementApplicationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application ID"
-          },
-          "outsideMovementId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Outside movement ID"
-          }
-        },
-        "required" : [ "bookingId", "movementApplicationId", "outsideMovementId" ]
-      },
       "CreateLocationRequest" : {
         "type" : "object",
         "description" : "Location creation request",
@@ -32354,88 +32115,12 @@
               "$ref" : "#/components/schemas/Absence"
             }
           },
-          "outsideMovements" : {
-            "type" : "array",
-            "description" : "Outside movements",
-            "items" : {
-              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationOutsideMovement"
-            }
-          },
           "audit" : {
             "$ref" : "#/components/schemas/NomisAudit",
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "absences", "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "outsideMovements", "prisonId", "releaseTime", "returnTime", "toDate" ]
-      },
-      "TemporaryAbsenceApplicationOutsideMovement" : {
-        "type" : "object",
-        "description" : "Temporary absence application outside movement response",
-        "properties" : {
-          "outsideMovementId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application ID"
-          },
-          "temporaryAbsenceType" : {
-            "type" : "string",
-            "description" : "Temporary absence type"
-          },
-          "temporaryAbsenceSubType" : {
-            "type" : "string",
-            "description" : "Temporary absence sub type"
-          },
-          "eventSubType" : {
-            "type" : "string",
-            "description" : "Event sub type"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "From date"
-          },
-          "releaseTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Release time"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "To date"
-          },
-          "returnTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Return time"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment"
-          },
-          "toAgencyId" : {
-            "type" : "string",
-            "description" : "To agency ID"
-          },
-          "toAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "To address ID"
-          },
-          "toAddressOwnerClass" : {
-            "type" : "string",
-            "description" : "To address owner class"
-          },
-          "contactPersonName" : {
-            "type" : "string",
-            "description" : "Contact person name"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "audit", "eventSubType", "fromDate", "outsideMovementId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "absences", "applicationDate", "applicationStatus", "applicationType", "audit", "eventSubType", "fromDate", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "TemporaryAbsenceReturn" : {
         "type" : "object",
@@ -32874,85 +32559,6 @@
           }
         },
         "required" : [ "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "parentEventId", "startTime" ]
-      },
-      "TemporaryAbsenceApplicationOutsideMovementResponse" : {
-        "type" : "object",
-        "description" : "Temporary absence application outside movement response",
-        "properties" : {
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Booking ID"
-          },
-          "movementApplicationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application ID"
-          },
-          "outsideMovementId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Movement application multi ID"
-          },
-          "temporaryAbsenceType" : {
-            "type" : "string",
-            "description" : "Temporary absence type"
-          },
-          "temporaryAbsenceSubType" : {
-            "type" : "string",
-            "description" : "Temporary absence sub type"
-          },
-          "eventSubType" : {
-            "type" : "string",
-            "description" : "Event sub type"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "From date"
-          },
-          "releaseTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Release time"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "To date"
-          },
-          "returnTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Return time"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Comment"
-          },
-          "toAgencyId" : {
-            "type" : "string",
-            "description" : "To agency ID"
-          },
-          "toAddressId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "To address ID"
-          },
-          "toAddressOwnerClass" : {
-            "type" : "string",
-            "description" : "To address owner class"
-          },
-          "contactPersonName" : {
-            "type" : "string",
-            "description" : "Contact person name"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit data associated with the records"
-          }
-        },
-        "required" : [ "audit", "bookingId", "eventSubType", "fromDate", "movementApplicationId", "outsideMovementId", "releaseTime", "returnTime", "toDate" ]
       },
       "TemporaryAbsenceApplicationResponse" : {
         "type" : "object",
