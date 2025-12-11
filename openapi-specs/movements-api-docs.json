@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-10.458.093025d"
+    "version" : "2025-12-11.464.b2e4fc1"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -191,6 +191,8 @@
                   "$ref" : "#/components/schemas/ChangePrisonPerson"
                 }, {
                   "$ref" : "#/components/schemas/DenyAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/ExpireAuthorisation"
                 }, {
                   "$ref" : "#/components/schemas/RecategoriseAuthorisation"
                 } ]
@@ -1134,6 +1136,11 @@
           "$ref" : "#/components/schemas/AuthorisationAction"
         } ]
       },
+      "ExpireAuthorisation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        } ]
+      },
       "RecategoriseAuthorisation" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1377,15 +1384,15 @@
           "repeat" : {
             "type" : "boolean"
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
-          "notes" : {
+          "comments" : {
             "type" : "string"
           },
           "created" : {
@@ -1405,7 +1412,7 @@
             }
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "fromDate", "legacyId", "occurrences", "prisonCode", "repeat", "statusCode", "toDate", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "legacyId", "occurrences", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
       },
       "MigrateTapMovement" : {
         "type" : "object",
@@ -1614,7 +1621,7 @@
           },
           "statusCode" : {
             "type" : "string",
-            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED" ]
+            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
           },
           "accompaniedByCode" : {
             "type" : "string"
@@ -1729,9 +1736,6 @@
           },
           "comments" : {
             "type" : "string"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
         "required" : [ "accompaniedBy", "id", "person", "repeat", "status" ]
@@ -1823,20 +1827,9 @@
           },
           "comments" : {
             "type" : "string"
-          },
-          "releaseAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "start", "status", "transport" ]
       },
       "Occurrence" : {
         "type" : "object",
@@ -1879,20 +1872,9 @@
           },
           "comments" : {
             "type" : "string"
-          },
-          "releaseAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "location", "start", "status", "transport" ]
       },
       "TapAuthorisation" : {
         "type" : "object",
@@ -1953,20 +1935,9 @@
           },
           "comments" : {
             "type" : "string"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "fromDate", "id", "locations", "occurrences", "person", "repeat", "start", "status", "toDate", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "repeat", "start", "status", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -2018,20 +1989,9 @@
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
-          },
-          "releaseAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "end", "id", "location", "releaseAt", "returnBy", "start", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "end", "id", "location", "start", "statusCode", "transportCode" ]
       },
       "SyncReadTapOccurrenceAuthorisation" : {
         "type" : "object",
@@ -2148,20 +2108,9 @@
             "items" : {
               "$ref" : "#/components/schemas/SyncReadTapAuthorisationOccurrence"
             }
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "fromDate", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode", "toDate" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode" ]
       },
       "SyncReadTapAuthorisationOccurrence" : {
         "type" : "object",
@@ -2207,20 +2156,9 @@
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
-          },
-          "releaseAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "notes" : {
-            "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "location", "releaseAt", "returnBy", "start", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "location", "start", "statusCode", "transportCode" ]
       },
       "TapOccurrenceSearchRequest" : {
         "type" : "object",
@@ -2229,11 +2167,11 @@
             "type" : "string",
             "minLength" : 1
           },
-          "fromDate" : {
+          "start" : {
             "type" : "string",
             "format" : "date"
           },
-          "toDate" : {
+          "end" : {
             "type" : "string",
             "format" : "date"
           },
@@ -2349,17 +2287,9 @@
           },
           "isCancelled" : {
             "type" : "boolean"
-          },
-          "releaseAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "returnBy" : {
-            "type" : "string",
-            "format" : "date-time"
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "releaseAt", "returnBy", "start", "status", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "start", "status", "transport" ]
       },
       "TapOccurrenceSearchResponse" : {
         "type" : "object",
@@ -2395,7 +2325,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED" ]
+              "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
             },
             "uniqueItems" : true
           },
@@ -2463,17 +2393,9 @@
           "occurrenceCount" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "fromDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "toDate" : {
-            "type" : "string",
-            "format" : "date"
           }
         },
-        "required" : [ "end", "fromDate", "id", "locations", "occurrenceCount", "person", "repeat", "start", "status", "toDate" ]
+        "required" : [ "end", "id", "locations", "occurrenceCount", "person", "repeat", "start", "status" ]
       },
       "TapAuthorisationSearchResponse" : {
         "type" : "object",

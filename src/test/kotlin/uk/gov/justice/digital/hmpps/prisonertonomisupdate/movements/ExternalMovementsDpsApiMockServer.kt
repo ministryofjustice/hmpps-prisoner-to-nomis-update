@@ -59,8 +59,6 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun tapAuthorisation(id: UUID = UUID.randomUUID()) = SyncReadTapAuthorisation(
     id = id,
     repeat = true,
-    fromDate = today,
-    toDate = today,
     start = today,
     end = today,
     occurrences = listOf(),
@@ -71,7 +69,6 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     created = SyncAtAndBy(now, "USER1"),
     absenceTypeCode = "SR",
     absenceSubTypeCode = "RDR",
-    notes = "Some notes",
     comments = "Some notes",
     accompaniedByCode = "U",
   )
@@ -85,9 +82,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
     statusCode = "SCHEDULED",
     start = now,
-    releaseAt = now,
     end = tomorrow,
-    returnBy = tomorrow,
     location = Location(
       description = "Agency name",
       address = "agency address",
@@ -98,7 +93,6 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     transportCode = "TAX",
     absenceReasonCode = "R2",
     created = SyncAtAndBy(at = now, by = "USER1"),
-    notes = "Tap occurrence comment",
     comments = "Tap occurrence comment",
   )
 
