@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2025-12-09.1735.a09e8ca"
+    "version" : "2025-12-10.1763.c4125f6"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1147,7 +1147,7 @@
           "ni" : {
             "type" : "string"
           },
-          "additionalIdentifier" : {
+          "additionalIdentifiers" : {
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/ProbationCaseAdditionalIdentifier"
