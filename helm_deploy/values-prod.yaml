@@ -102,8 +102,7 @@ generic-service:
       schedule: "30 3 * * *"
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
-      schedule: "10 3 * * *"
-      suspend: true
+      schedule: "0 19 * * SAT"
     - name: court-case-a-recon
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "10 3 * * *"
