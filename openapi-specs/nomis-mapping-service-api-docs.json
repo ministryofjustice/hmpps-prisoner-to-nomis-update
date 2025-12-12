@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-10.289.a0ac699"
+    "version" : "2025-12-11.291.18e6fa1"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -4072,60 +4072,6 @@
         }
       }
     },
-    "/mapping/corporate/migrate" : {
-      "post" : {
-        "tags" : [ "corporate-mapping-resource" ],
-        "summary" : "Creates a tree of corporate mappings typically for a migration",
-        "description" : "Creates a tree of corporate mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_3",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/CorporateMappingsDto"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Mappings created",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "409" : {
-            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/corporate/email" : {
       "post" : {
         "tags" : [ "corporate-mapping-resource" ],
@@ -4333,7 +4279,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Creates a tree of core person mappings typically for a migration",
         "description" : "Creates a tree of core person mappings typically for a migration between NOMIS ids and cpr ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_4",
+        "operationId" : "createMappings_3",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4905,7 +4851,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Creates a tree of contact person mappings typically for a migration",
         "description" : "Creates a tree of contact person mappings typically for a migration between NOMIS ids and dps ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_5",
+        "operationId" : "createMappings_4",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5342,7 +5288,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a batch of new casenote mappings",
         "description" : "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_6",
+        "operationId" : "createMappings_5",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5551,7 +5497,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a batch of new alert mappings",
         "description" : "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_7",
+        "operationId" : "createMappings_6",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -12272,65 +12218,6 @@
         }
       }
     },
-    "/mapping/corporate/organisation/migration-id/{migrationId}" : {
-      "get" : {
-        "tags" : [ "corporate-mapping-resource" ],
-        "summary" : "Get paged corporate mappings by migration id",
-        "description" : "Retrieve all corporate mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getCorporateMappingsByMigrationId",
-        "parameters" : [ {
-          "name" : "pageRequest",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/Pageable"
-          }
-        }, {
-          "name" : "migrationId",
-          "in" : "path",
-          "description" : "Migration Id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Migration Id",
-            "example" : "2020-03-24T12:00:00"
-          },
-          "example" : "2020-03-24T12:00:00"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Corporate mapping page returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PageOrganisationsMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/corporate/organisation/dps-organisation-id/{dpsOrganisationId}" : {
       "get" : {
         "tags" : [ "corporate-mapping-resource" ],
@@ -18231,46 +18118,12 @@
         }
       }
     },
-    "/mapping/corporate" : {
-      "delete" : {
-        "tags" : [ "corporate-mapping-resource" ],
-        "summary" : "Deletes all corporate mappings",
-        "description" : "Deletes all corporate mappings regardless of source. This includes corporate, phone, address, address phone, email, web. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_6",
-        "responses" : {
-          "204" : {
-            "description" : "All mappings deleted",
-            "content" : { }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access forbidden for this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person" : {
       "delete" : {
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Deletes all core person mappings",
         "description" : "Deletes all core person mappings regardless of source. This includes person and address. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_7",
+        "operationId" : "deleteAllMappings_6",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -18304,7 +18157,7 @@
         "tags" : [ "contact-person-mapping-resource" ],
         "summary" : "Deletes all contact person mappings",
         "description" : "Deletes all contact person mappings regardless of source. This includes person, phone, address, email, employment, identifiers, restrictions, contacts and contact restrictions. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_8",
+        "operationId" : "deleteAllMappings_7",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -20968,83 +20821,6 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
-      },
-      "CorporateMappingIdDto" : {
-        "type" : "object",
-        "description" : "NOMIS to DPS simple mapping IDs",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          }
-        },
-        "required" : [ "dpsId", "nomisId" ]
-      },
-      "CorporateMappingsDto" : {
-        "type" : "object",
-        "description" : "Mappings for a Corporate and there associated child entities",
-        "properties" : {
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          },
-          "corporateMapping" : {
-            "$ref" : "#/components/schemas/CorporateMappingIdDto",
-            "description" : "Corporate mapping"
-          },
-          "corporateAddressMapping" : {
-            "type" : "array",
-            "description" : "Corporate address mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateAddressPhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate address phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporatePhoneMapping" : {
-            "type" : "array",
-            "description" : "Corporate phone mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateEmailMapping" : {
-            "type" : "array",
-            "description" : "Corporate email mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          },
-          "corporateWebMapping" : {
-            "type" : "array",
-            "description" : "Corporate web mapping",
-            "items" : {
-              "$ref" : "#/components/schemas/CorporateMappingIdDto"
-            }
-          }
-        },
-        "required" : [ "corporateAddressMapping", "corporateAddressPhoneMapping", "corporateEmailMapping", "corporateMapping", "corporatePhoneMapping", "corporateWebMapping", "mappingType" ]
       },
       "ProfileMappingIdDto" : {
         "type" : "object",
