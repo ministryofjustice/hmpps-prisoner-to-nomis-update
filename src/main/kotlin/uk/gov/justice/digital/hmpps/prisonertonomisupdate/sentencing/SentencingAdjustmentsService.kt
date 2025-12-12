@@ -23,12 +23,18 @@ class SentencingAdjustmentsService(
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
-  suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
+  suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) = createAdjustment(
+    offenderNo = createEvent.additionalInformation.offenderNo,
+    adjustmentId = createEvent.additionalInformation.id,
+    source = createEvent.additionalInformation.source,
+  )
+
+  suspend fun createAdjustment(offenderNo: String, adjustmentId: String, source: String) {
     val telemetryMap = mapOf(
-      "adjustmentId" to createEvent.additionalInformation.id,
-      "offenderNo" to createEvent.additionalInformation.offenderNo,
+      "adjustmentId" to adjustmentId,
+      "offenderNo" to offenderNo,
     )
-    if (isDpsCreated(createEvent.additionalInformation)) {
+    if (isDpsCreated(source)) {
       synchronise {
         name = "sentencing-adjustment"
         telemetryClient = this@SentencingAdjustmentsService.telemetryClient
@@ -36,15 +42,15 @@ class SentencingAdjustmentsService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(createEvent.additionalInformation.id)
+          sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)
         }
         transform {
-          sentencingAdjustmentsApiService.getAdjustmentOrNull(createEvent.additionalInformation.id)
+          sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
             ?.let { adjustment ->
               SentencingAdjustmentMappingDto(
                 nomisAdjustmentId = createTransformedAdjustment(adjustment).id,
                 nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-                adjustmentId = createEvent.additionalInformation.id,
+                adjustmentId = adjustmentId,
               )
             } ?: run {
             this@SentencingAdjustmentsService.telemetryClient.trackEvent(
@@ -85,24 +91,34 @@ class SentencingAdjustmentsService(
     } else {
       nomisApiService.createSentenceAdjustment(
         adjustment.bookingId,
-        adjustment.sentenceSequence!!.toLong(),
+        adjustment.sentenceSequence.toLong(),
         this,
       )
     }
   }
 
-  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean, setActive: Boolean) = updateAdjustment(
-    offenderNo = offenderNo,
-    adjustmentId = adjustmentId,
-    source = "DPS",
-    forceStatus = forceStatus,
-    setActive = setActive,
-  )
+  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean, setActive: Boolean) {
+    if (sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId) == null) {
+      createAdjustment(
+        offenderNo = offenderNo,
+        adjustmentId = adjustmentId,
+        source = "DPS",
+      )
+    } else {
+      updateAdjustment(
+        offenderNo = offenderNo,
+        adjustmentId = adjustmentId,
+        source = "DPS",
+        forceStatus = forceStatus,
+        setActive = setActive,
+      )
+    }
+  }
 
-  suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) = updateAdjustment(
-    offenderNo = createEvent.additionalInformation.offenderNo,
-    adjustmentId = createEvent.additionalInformation.id,
-    source = createEvent.additionalInformation.source,
+  suspend fun updateAdjustment(updateEvent: AdjustmentUpdatedEvent) = updateAdjustment(
+    offenderNo = updateEvent.additionalInformation.offenderNo,
+    adjustmentId = updateEvent.additionalInformation.id,
+    source = updateEvent.additionalInformation.source,
     forceStatus = false,
     setActive = false,
   )
