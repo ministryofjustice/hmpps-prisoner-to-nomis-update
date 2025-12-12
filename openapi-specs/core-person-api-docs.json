@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2025-12-10.1763.c4125f6"
+    "version" : "2025-12-11.1769.5557264"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -314,8 +314,8 @@
     "/syscon-sync/religion/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Creates a new prison religion record, or updates the existing one if a record matching the prison number is found",
-        "operationId" : "saveReligion",
+        "description" : "Updates the prison religion records for the given prison number",
+        "operationId" : "saveReligions",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -329,7 +329,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/PrisonReligion"
+                "$ref" : "#/components/schemas/PrisonReligionRequest"
               }
             }
           },
@@ -1409,6 +1409,21 @@
           }
         },
         "required" : [ "current" ]
+      },
+      "PrisonReligionRequest" : {
+        "type" : "object",
+        "properties" : {
+          "religions" : {
+            "type" : "array",
+            "description" : "The list of religions for a given prison number",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonReligion"
+            },
+            "maxItems" : 2147483647,
+            "minItems" : 1
+          }
+        },
+        "required" : [ "religions" ]
       },
       "PrisonNationality" : {
         "type" : "object",
