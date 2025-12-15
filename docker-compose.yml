@@ -19,7 +19,7 @@ services:
       - API_BASE_URL_VISIT_MAPPING=http://hmpps-nomis-visit-mapping-api:8080
 
   hmpps-auth:
-    image: quay.io/hmpps/hmpps-auth:latest
+    image: ghcr.io/ministryofjustice/hmpps-auth:latest
     networks:
       - hmpps
     container_name: hmpps-auth
