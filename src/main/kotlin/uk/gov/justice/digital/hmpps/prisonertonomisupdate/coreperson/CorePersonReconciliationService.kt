@@ -129,6 +129,7 @@ class CorePersonReconciliationService(
     val differences = mutableMapOf<String, String>()
 
     appendDifference(nomisCorePerson.nationality, cprCorePerson.nationality, differences, "nationality")
+    // This should be comparing the code, but core person only currently holds the description (even in code field)
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
 
     return differences.takeIf { it.isNotEmpty() }?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
@@ -162,11 +163,11 @@ class CorePersonReconciliationService(
 
 fun CanonicalRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
-  religion = religion.code,
+  religion = religion.description,
 )
 fun CorePerson.toPerson() = PrisonerPerson(
   nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
-  religion = this.beliefs?.firstOrNull()?.belief?.code,
+  religion = this.beliefs?.firstOrNull()?.belief?.description,
 )
 
 data class MismatchCorePerson(
