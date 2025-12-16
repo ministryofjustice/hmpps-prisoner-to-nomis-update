@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.entry
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
@@ -41,7 +42,7 @@ import kotlin.collections.listOf
 class CorePersonReconciliationIntTest(
   @Autowired private val nomisApi: CorePersonNomisApiMockServer,
   @Autowired private val service: CorePersonReconciliationService,
-  @Value("\${reports.core-person.reconciliation.page-size}") private val pageSize: Long,
+  @Value($$"${reports.core-person.reconciliation.page-size}") private val pageSize: Long,
 ) : IntegrationTestBase() {
   private companion object {
     private const val TELEMETRY_PREFIX = "coreperson-reports-reconciliation"
@@ -55,8 +56,8 @@ class CorePersonReconciliationIntTest(
   inner class SinglePrisoner {
     @Test
     fun `should do nothing if no differences`() = runTest {
-      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
+      stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR", religion = "ZOO")
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR", religion = "ZOO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it).isNull()
@@ -70,11 +71,14 @@ class CorePersonReconciliationIntTest(
     @Test
     fun `should report differences`() = runTest {
       stubGetCorePerson(prisonNumber = "A1234BC", nationality = "BR")
-      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M"))
+      cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "M", religion = "ZOO"))
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly("nationality: nomis=BR, cpr=M")
+        assertThat(it?.differences).containsExactly(
+          entry("nationality", "nomis=BR, cpr=M"),
+          entry("religion", "nomis=null, cpr=ZOO"),
+        )
       }
 
       verify(telemetryClient).trackEvent(
@@ -83,7 +87,8 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality: nomis=BR, cpr=M",
+              "nationality" to "nomis=BR, cpr=M",
+              "religion" to "nomis=null, cpr=ZOO",
             ),
           )
         },
@@ -111,7 +116,7 @@ class CorePersonReconciliationIntTest(
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly("nationality: nomis=null, cpr=M")
+        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=M"))
       }
 
       verify(telemetryClient).trackEvent(
@@ -120,7 +125,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality: nomis=null, cpr=M",
+              "nationality" to "nomis=null, cpr=M",
             ),
           )
         },
@@ -135,7 +140,7 @@ class CorePersonReconciliationIntTest(
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly("nationality: nomis=null, cpr=BR")
+        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=BR"))
       }
 
       verify(telemetryClient).trackEvent(
@@ -144,7 +149,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality: nomis=null, cpr=BR",
+              "nationality" to "nomis=null, cpr=BR",
             ),
           )
         },
@@ -159,7 +164,7 @@ class CorePersonReconciliationIntTest(
 
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
-        assertThat(it?.differences).containsExactly("nationality: nomis=null, cpr=BR")
+        assertThat(it?.differences).containsExactly(entry("nationality", "nomis=null, cpr=BR"))
       }
 
       verify(telemetryClient).trackEvent(
@@ -168,7 +173,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality: nomis=null, cpr=BR",
+              "nationality" to "nomis=null, cpr=BR",
             ),
           )
         },
@@ -405,15 +410,15 @@ class CorePersonReconciliationIntTest(
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
-        assertThat(this).containsEntry("differences5", "nationality: nomis=GB, cpr=12")
+        assertThat(this).containsEntry("nationality", "nomis=GB, cpr=12")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
-        assertThat(this).containsEntry("differences5", "nationality: nomis=US, cpr=9")
+        assertThat(this).containsEntry("nationality", "nomis=US, cpr=9")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
-        assertThat(this).containsEntry("differences5", "nationality: nomis=IS, cpr=17")
+        assertThat(this).containsEntry("nationality", "nomis=IS, cpr=17")
       }
     }
 
@@ -552,9 +557,10 @@ class CorePersonReconciliationIntTest(
   fun stubGetCorePerson(
     prisonNumber: String = "A1234BC",
     nationality: String? = "BR",
+    religion: String? = null,
     fixedDelay: Int = 30,
   ) = nomisApi.stubGetCorePerson(
-    response = corePerson(prisonNumber = prisonNumber, nationality = nationality),
+    response = corePerson(prisonNumber = prisonNumber, nationality = nationality, religion = religion),
     fixedDelay = fixedDelay,
   )
 

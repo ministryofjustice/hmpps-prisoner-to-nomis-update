@@ -78,7 +78,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun corePersonDto(nationality: String? = null) = CanonicalRecord(
+fun corePersonDto(nationality: String? = null, religion: String? = null) = CanonicalRecord(
   addresses = listOf(),
   aliases = listOf(),
   dateOfBirth = null,
@@ -98,7 +98,7 @@ fun corePersonDto(nationality: String? = null) = CanonicalRecord(
   lastName = "Smith",
   middleNames = null,
   nationalities = if (nationality != null) listOf(CanonicalNationality(nationality, "$nationality Description")) else listOf(),
-  religion = CanonicalReligion(),
+  religion = CanonicalReligion(religion, if (religion != null) "$religion Description" else null),
   sex = CanonicalSex(),
   title = CanonicalTitle(),
 )

@@ -28,7 +28,11 @@ class CorePersonReconciliationService(
   private val nomisApiService: NomisApiService,
   @Value($$"${reports.core-person.reconciliation.page-size}")
   private val prisonerPageSize: Int = 20,
+  @Value($$"${reports.prisoner.balance.reconciliation.fields:#{null}}")
+  fields: String?,
 ) {
+  private val reconciliationFields: Set<String>? = fields?.split(",")?.toSet()
+
   private companion object {
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
     private const val TELEMETRY_CORE_PERSON_PREFIX = "coreperson-reports-reconciliation"
@@ -66,7 +70,7 @@ class CorePersonReconciliationService(
       }
   }
 
-  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "differences5=${it.differences.take(5)}" }
+  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "differences5=${it.differences.asSequence().take(5).joinToString()}" }
 
   private suspend fun getNextActiveBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = nextBookingsForPage(lastBookingId, activeOnly = true)
 
@@ -122,9 +126,10 @@ class CorePersonReconciliationService(
     nomisCorePerson: PrisonerPerson,
     cprCorePerson: PrisonerPerson,
   ): MismatchCorePerson? {
-    val differences = mutableListOf<String>()
+    val differences = mutableMapOf<String, String>()
 
     appendDifference(nomisCorePerson.nationality, cprCorePerson.nationality, differences, "nationality")
+    appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
 
     return differences.takeIf { it.isNotEmpty() }?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
       log.info("CorePerson mismatch found {}", mismatch)
@@ -132,8 +137,9 @@ class CorePersonReconciliationService(
         "$TELEMETRY_CORE_PERSON_PREFIX-mismatch",
         telemetryOf(
           "prisonNumber" to mismatch.prisonNumber,
-          "differences5" to differences.take(5).joinToString(),
         ).also { telemetry ->
+          // only put the first 5 differences into telemetry
+          telemetry.putAll(differences.asSequence().take(5).associate { it.key to it.value })
           // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
           prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
         },
@@ -144,23 +150,31 @@ class CorePersonReconciliationService(
   private fun appendDifference(
     nomisField: String?,
     cprField: String?,
-    differences: MutableList<String>,
+    differences: MutableMap<String, String>,
     fieldName: String,
   ) {
-    if (nomisField != cprField) differences.add("$fieldName: nomis=$nomisField, cpr=$cprField")
+    if (reconciliationFields != null && !reconciliationFields.contains(fieldName)) return
+    if (nomisField != cprField) differences[fieldName] = "nomis=$nomisField, cpr=$cprField"
   }
 
   suspend fun checkCorePersonMatch(offenderNo: String): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo))
 }
 
-fun CanonicalRecord.toPerson() = PrisonerPerson(nationality = nationalities.firstOrNull()?.code)
-fun CorePerson.toPerson() = PrisonerPerson(nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code)
+fun CanonicalRecord.toPerson() = PrisonerPerson(
+  nationality = nationalities.firstOrNull()?.code,
+  religion = religion.code,
+)
+fun CorePerson.toPerson() = PrisonerPerson(
+  nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
+  religion = this.beliefs?.firstOrNull()?.belief?.code,
+)
 
 data class MismatchCorePerson(
   val prisonNumber: String,
-  val differences: List<String>,
+  val differences: Map<String, String>,
 )
 
 data class PrisonerPerson(
   val nationality: String? = null,
+  val religion: String? = null,
 )

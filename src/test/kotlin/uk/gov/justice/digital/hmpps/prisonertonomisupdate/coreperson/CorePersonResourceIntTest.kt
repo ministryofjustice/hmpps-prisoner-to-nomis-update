@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.entry
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -117,8 +118,8 @@ class CorePersonResourceIntTest(
           .expectBody()
           .consumeWith(System.out::println)
           .jsonPath("prisonNumber").isEqualTo(prisonNumber)
-          .jsonPath("differences").value<List<String>> {
-            assertThat(it).containsExactly("nationality: nomis=BR, cpr=null")
+          .jsonPath("differences").value<Map<String, String>> {
+            assertThat(it).containsExactly(entry("nationality", "nomis=BR, cpr=null"))
           }
 
         verify(telemetryClient).trackEvent(
