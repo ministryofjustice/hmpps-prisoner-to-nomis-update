@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2025-12-11.1769.5557264"
+    "version" : "2025-12-15.1832.034712b"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1408,7 +1408,7 @@
             "example" : true
           }
         },
-        "required" : [ "current" ]
+        "required" : [ "current", "modifyDateTime", "modifyUserId" ]
       },
       "PrisonReligionRequest" : {
         "type" : "object",
@@ -1419,7 +1419,6 @@
             "items" : {
               "$ref" : "#/components/schemas/PrisonReligion"
             },
-            "maxItems" : 2147483647,
             "minItems" : 1
           }
         },
