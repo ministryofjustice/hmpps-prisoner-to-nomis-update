@@ -70,7 +70,7 @@ class CorePersonReconciliationService(
       }
   }
 
-  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "differences5=${it.differences.asSequence().take(5).joinToString()}" }
+  private fun List<MismatchCorePerson>.asPrisonerMap(): Map<String, String> = this.associate { it.prisonNumber to "differences5=${it.differences.keys.asSequence().take(5).joinToString()}" }
 
   private suspend fun getNextActiveBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = nextBookingsForPage(lastBookingId, activeOnly = true)
 
@@ -139,7 +139,7 @@ class CorePersonReconciliationService(
           "prisonNumber" to mismatch.prisonNumber,
         ).also { telemetry ->
           // only put the first 5 differences into telemetry
-          telemetry.putAll(differences.asSequence().take(5).associate { it.key to it.value })
+          telemetry["differences5"] = differences.keys.asSequence().take(5).joinToString()
           // booking will be 0 if reconciliation is run for a single prisoner, in which case ignore
           prisonerId.bookingId.takeIf { it != 0L }?.let { telemetry["bookingId"] = it }
         },

@@ -87,8 +87,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "nationality" to "nomis=BR, cpr=M",
-              "religion" to "nomis=null, cpr=ZOO",
+              "differences5" to "nationality, religion",
             ),
           )
         },
@@ -125,7 +124,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "nationality" to "nomis=null, cpr=M",
+              "differences5" to "nationality",
             ),
           )
         },
@@ -149,7 +148,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "nationality" to "nomis=null, cpr=BR",
+              "differences5" to "nationality",
             ),
           )
         },
@@ -173,7 +172,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "nationality" to "nomis=null, cpr=BR",
+              "differences5" to "nationality",
             ),
           )
         },
@@ -410,15 +409,15 @@ class CorePersonReconciliationIntTest(
       assertThat(mismatchedRecords).containsOnly("A0001TZ", "A0002TZ", "A0034TZ")
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0001TZ" }) {
         assertThat(this).containsEntry("bookingId", "1")
-        assertThat(this).containsEntry("nationality", "nomis=GB, cpr=12")
+        assertThat(this).containsEntry("differences5", "nationality")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0002TZ" }) {
         assertThat(this).containsEntry("bookingId", "2")
-        assertThat(this).containsEntry("nationality", "nomis=US, cpr=9")
+        assertThat(this).containsEntry("differences5", "nationality")
       }
       with(telemetryCaptor.allValues.find { it["prisonNumber"] == "A0034TZ" }) {
         assertThat(this).containsEntry("bookingId", "34")
-        assertThat(this).containsEntry("nationality", "nomis=IS, cpr=17")
+        assertThat(this).containsEntry("differences5", "nationality")
       }
     }
 
