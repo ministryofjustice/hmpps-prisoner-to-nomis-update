@@ -825,10 +825,10 @@ data class SentenceTermFields(
 }
 
 data class MismatchCase(
+  val differences: List<Difference> = emptyList(),
   val nomisCase: CaseFields,
   val dpsCase: CaseFields,
   val nomisBookingId: Long,
-  val differences: List<Difference> = emptyList(),
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
