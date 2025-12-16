@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-11.464.b2e4fc1"
+    "version" : "2025-12-15.492.909b974"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -32,7 +32,7 @@
     "/temporary-absence-occurrences/{id}" : {
       "get" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getTapOccurrence",
         "parameters" : [ {
           "name" : "id",
@@ -58,7 +58,7 @@
       },
       "put" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "applyActions",
         "parameters" : [ {
           "name" : "id",
@@ -118,7 +118,7 @@
     "/temporary-absence-authorisations/{id}" : {
       "get" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getTapAuthorisation",
         "parameters" : [ {
           "name" : "id",
@@ -160,7 +160,7 @@
       },
       "put" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "applyActions_1",
         "parameters" : [ {
           "name" : "id",
@@ -367,7 +367,7 @@
     "/temporary-absence-authorisations/{personIdentifier}" : {
       "post" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "createTapAuthorisation",
         "parameters" : [ {
           "name" : "personIdentifier",
@@ -404,7 +404,7 @@
     "/temporary-absence-authorisations/{id}/occurrences" : {
       "post" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "createOccurrence",
         "parameters" : [ {
           "name" : "id",
@@ -442,7 +442,7 @@
     "/temporary-absence-occurrences/{id}/history" : {
       "get" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getTapOccurrenceHistory",
         "parameters" : [ {
           "name" : "id",
@@ -470,7 +470,7 @@
     "/temporary-absence-authorisations/{id}/history" : {
       "get" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getTapAuthorisationHistory",
         "parameters" : [ {
           "name" : "id",
@@ -639,7 +639,7 @@
     "/search/temporary-absence-occurrences" : {
       "get" : {
         "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "findTapOccurrences",
         "parameters" : [ {
           "name" : "request",
@@ -666,7 +666,7 @@
     "/search/temporary-absence-authorisations" : {
       "get" : {
         "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "findTapAuthorisations",
         "parameters" : [ {
           "name" : "request",
@@ -690,10 +690,44 @@
         }
       }
     },
+    "/search/prisons/{prisonCode}/external-movements/schedules" : {
+      "get" : {
+        "tags" : [ "search-external-movements-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__RO",
+        "operationId" : "externalMovementSchedules",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "request",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/SearchScheduledMovementsRequest"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ScheduledMovements"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reference-data/{domain}" : {
       "get" : {
         "tags" : [ "reference-data-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getDomain",
         "parameters" : [ {
           "name" : "domain",
@@ -722,7 +756,7 @@
     "/prisons/{prisonIdentifier}/external-movements/overview" : {
       "get" : {
         "tags" : [ "prison-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getPrisonerOverview",
         "parameters" : [ {
           "name" : "prisonIdentifier",
@@ -749,7 +783,7 @@
     "/absence-categorisation/{domain}" : {
       "get" : {
         "tags" : [ "absence-categorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getAbsenceCategorisationDomain",
         "parameters" : [ {
           "name" : "domain",
@@ -778,7 +812,7 @@
     "/absence-categorisation/{domain}/{code}" : {
       "get" : {
         "tags" : [ "absence-categorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getAbsenceCategorisationOptions",
         "parameters" : [ {
           "name" : "domain",
@@ -1918,6 +1952,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "totalOccurrenceCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "occurrences" : {
             "type" : "array",
             "items" : {
@@ -1937,7 +1975,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "repeat", "start", "status", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
@@ -2411,6 +2449,100 @@
           }
         },
         "required" : [ "content", "metadata" ]
+      },
+      "SearchScheduledMovementsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "personIdentifiers" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "includeSensitive" : {
+            "type" : "boolean"
+          },
+          "includeLocation" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "end", "includeLocation", "includeSensitive", "personIdentifiers", "start" ]
+      },
+      "Detail" : {
+        "type" : "object",
+        "properties" : {
+          "uiUrl" : {
+            "type" : "string"
+          },
+          "requiredRoles" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "requiredRoles", "uiUrl" ]
+      },
+      "ScheduledMovement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "personIdentifier" : {
+            "type" : "string"
+          },
+          "domain" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "location" : {
+            "type" : "string"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "detail" : {
+            "$ref" : "#/components/schemas/Detail"
+          }
+        },
+        "required" : [ "description", "detail", "domain", "end", "id", "location", "personIdentifier", "start", "status", "type" ]
+      },
+      "ScheduledMovements" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduledMovement"
+            }
+          }
+        },
+        "required" : [ "content" ]
       },
       "ReferenceDataResponse" : {
         "type" : "object",
