@@ -77,7 +77,7 @@ class CorePersonReconciliationIntTest(
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
           entry("nationality", "nomis=BR, cpr=M"),
-          entry("religion", "nomis=null, cpr=ZOO"),
+          entry("religion", "nomis=null, cpr=ZOO Description"),
         )
       }
 
