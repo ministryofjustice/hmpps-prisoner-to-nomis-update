@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentSearchRequest
@@ -26,7 +27,13 @@ class AppointmentsApiService(
     .get()
     .uri("/appointment-instances/{id}", id)
     .retrieve()
-    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/appointment-instances/$id")))
+    .awaitBody()
+
+  suspend fun getAppointmentInstanceWithRetries(id: Long): AppointmentInstance = webClient
+    .get()
+    .uri("/appointment-instances/{id}", id)
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "activities-api", "url", "/appointment-instances/$id")))
 
   suspend fun getRolloutPrisons(): List<RolloutPrisonPlan> = webClient
     .get()
@@ -36,12 +43,12 @@ class AppointmentsApiService(
         .build()
     }
     .retrieve()
-    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/rollout")))
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "activities-api", "url", "/rollout")))
 
   suspend fun searchAppointments(prisonId: String, startDate: LocalDate, endDate: LocalDate): List<AppointmentSearchResult> = webClient
     .post()
     .uri("/appointments/{prisonId}/search", prisonId)
     .bodyValue(AppointmentSearchRequest(startDate = startDate, endDate = endDate))
     .retrieve()
-    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "appointments-nomis-api", "url", "/appointments/$prisonId/search")))
+    .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "activities-api", "url", "/appointments/$prisonId/search")))
 }

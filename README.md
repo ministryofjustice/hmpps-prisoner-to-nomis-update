@@ -703,8 +703,15 @@ before the P-Nomis screeen was disabled. In this case there will be a mapping ta
 - An appointment is in Nomis only because it was created in Nomis, again very soon after the migration and
   before the P-Nomis screeen was disabled. In this case there will NOT be a mapping table entry.
 
-In both cases it should be established whether an extra similar appointment has been created in the other system, if so the only action needed
+In both these cases it should be established whether an extra similar appointment has been created in the other system, if so the only action needed
 is to temporarily add the offending appointment ids to the exclude list.
+
+- An appointment is in Nomis only, and there is no mapping because a Nomis dupe has occurred when there was a timeout on the
+  client side when POSTing the nomis creation (yet it succeeded on the nomis-api side).
+
+In this case the dupe should be deleted. You can directly call the nomis-api endpoint for this.
+
+Troubleshooting approach should be to look at OFFENDER_IND_SCHEDULES in the Nomis database to find when the appointment was created, then check appinsights at this time.
 
 ## Architecture
 

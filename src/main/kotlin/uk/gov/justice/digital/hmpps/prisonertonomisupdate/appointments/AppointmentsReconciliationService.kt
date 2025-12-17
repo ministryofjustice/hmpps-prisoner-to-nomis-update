@@ -211,7 +211,7 @@ class AppointmentsReconciliationService(
   internal suspend fun checkMatch(mapping: AppointmentMappingDto): MismatchAppointment? = runCatching {
     val (nomisRecord, dpsRecord) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getAppointment(mapping.nomisEventId) } to
-        async { dpsApiService.getAppointmentInstance(mapping.appointmentInstanceId) }
+        async { dpsApiService.getAppointmentInstanceWithRetries(mapping.appointmentInstanceId) }
     }.awaitBoth()
     val startDateTime = nomisRecord.startDateTime
     if (startDateTime != null && startDateTime >= LocalDateTime.now().plusYears(1)) {

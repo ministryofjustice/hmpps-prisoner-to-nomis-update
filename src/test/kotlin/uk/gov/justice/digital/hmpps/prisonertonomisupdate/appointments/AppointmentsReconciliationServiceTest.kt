@@ -110,7 +110,7 @@ class AppointmentsReconciliationServiceTest {
   @Test
   fun `will not report mismatch where details match`() = runTest {
     whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID)).thenReturn(nomisResponse())
-    whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
+    whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
     assertThat(appointmentsReconciliationService.checkMatch(appointmentMappingDto)).isNull()
   }
@@ -118,7 +118,7 @@ class AppointmentsReconciliationServiceTest {
   @Test
   fun `will report mismatch where appointments have a different offender`() = runTest {
     whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID)).thenReturn(nomisResponse(offenderNo = "A9876ZZ"))
-    whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
+    whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
     val actual = appointmentsReconciliationService.checkMatch(appointmentMappingDto)
     assertThat(actual?.nomisId).isEqualTo(NOMIS_EVENT_ID)
@@ -145,7 +145,7 @@ class AppointmentsReconciliationServiceTest {
 
       whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID))
         .thenReturn(nomisResponse().copy(offenderNo = "A9876ZZ"))
-      whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID))
+      whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID))
         .thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
       // Total of 2 => no missing dps records
