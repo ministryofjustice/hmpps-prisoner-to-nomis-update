@@ -70,14 +70,14 @@ class AppointmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(id: Long, response: String) {
+  fun stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(id: Long, response: String, status: Int = 500) {
     stubFor(
       get("/appointment-instances/$id")
         .inScenario("Retry Appointment instance Scenario")
         .whenScenarioStateIs(Scenario.STARTED)
         .willReturn(
           aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
+            .withStatus(status) // request unsuccessful with status code 500
             .withHeader("Content-Type", "application/json"),
         )
         .willSetStateTo("Cause Appointments Success"),
