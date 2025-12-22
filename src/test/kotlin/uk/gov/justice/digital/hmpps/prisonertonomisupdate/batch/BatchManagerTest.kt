@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
@@ -85,6 +86,7 @@ class BatchManagerTest {
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
+  private val officialVisitsAllReconciliationService = mock<OfficialVisitsAllReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -367,6 +369,16 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the official visits full reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_BALANCE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsAllReconciliationService).generateAllVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -392,5 +404,6 @@ class BatchManagerTest {
     schedulesService = schedulesService,
     sentencingReconciliationService = sentencingReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
+    officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
   )
 }

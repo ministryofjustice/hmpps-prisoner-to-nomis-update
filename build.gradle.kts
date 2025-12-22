@@ -186,6 +186,12 @@ val models = listOf(
     packageName = "visit.balance",
     url = "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
+  ModelConfiguration(
+    name = "officialvisits",
+    packageName = "officialvisits",
+    testPackageName = "officialvisits",
+    url = "https://official-visits-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
 )
 
 tasks {
