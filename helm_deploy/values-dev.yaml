@@ -31,6 +31,7 @@ generic-service:
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_EXT_MOVEMENTS: https://external-movements-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false

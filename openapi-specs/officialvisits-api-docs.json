@@ -1,0 +1,2393 @@
+{
+  "openapi" : "3.1.0",
+  "info" : {
+    "title" : "Official Visits API",
+    "description" : "API for managing official visits",
+    "contact" : {
+      "name" : "HMPPS Digital Studio",
+      "email" : "feedback@digital.justice.gov.uk"
+    },
+    "version" : "2025-12-18.217.8d13c47"
+  },
+  "servers" : [ {
+    "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
+    "description" : "Development"
+  }, {
+    "url" : "https://official-visits-api-preprod.hmpps.service.justice.gov.uk",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://official-visits-api.hmpps.service.justice.gov.uk",
+    "description" : "Production"
+  }, {
+    "url" : "/",
+    "description" : "Local"
+  } ],
+  "security" : [ {
+    "bearer-jwt" : [ "read", "write" ]
+  } ],
+  "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}" : {
+      "post" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Endpoint to support the creation of official visits.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "createOfficialVisit",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOfficialVisitRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "The response containing the details of the created official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateOfficialVisitResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}/find-by-criteria" : {
+      "post" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Endpoint to search fo official visit summaries for given search criteria.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "findByCriteria",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "default" : 10
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficialVisitSummarySearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelOfficialVisitSummarySearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/visit" : {
+      "post" : {
+        "tags" : [ "Migration" ],
+        "summary" : "Migrate a single official visit and its visitors",
+        "description" : "Migrate a visit and all visitors\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "migrateVisit",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigrateVisitRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The visit and visitor ID mappings between NOMIS and DPS",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MigrateVisitResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/migrate/visit-configuration" : {
+      "post" : {
+        "tags" : [ "Migration" ],
+        "summary" : "Migrate official visits configuration",
+        "description" : "Migrate a visit time slot and its associated visit slots, locations and capacity limits\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "migrateVisitConfiguration",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigrateVisitConfigRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The time slot and associated visit slots was migrated successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MigrateVisitConfigResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits-booked/prison/{prisonCode}" : {
+      "get" : {
+        "tags" : [ "Visits booked" ],
+        "summary" : "Endpoint to return the official visits booked for a prison - TRIAL ONLY",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getVisitsBookedForPrison",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of visits booked at the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VisitBookedEntity"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reference-data/group/{groupCode}" : {
+      "get" : {
+        "tags" : [ "Reference data" ],
+        "summary" : "Endpoint to return reference data for a provided group key, sorted by display sequence and description",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getReferenceDataByGroup",
+        "parameters" : [ {
+          "name" : "groupCode",
+          "in" : "path",
+          "description" : "The group code of the reference codes to load",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/ReferenceDataGroup"
+          },
+          "example" : "VIS_STATUS"
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "Whether to only return active codes or not, defaults to true",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of reference data codes/values",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ReferenceDataItem"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/official-visits/identifiers" : {
+      "get" : {
+        "tags" : [ "Official visits Reconciliation" ],
+        "summary" : "Endpoint to return the all the official visit ids for reconciliation",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getAllOfficialVisits",
+        "parameters" : [ {
+          "name" : "currentTerm",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
+        }, {
+          "name" : "page",
+          "in" : "query",
+          "description" : "Zero-based page index (0..N)",
+          "schema" : {
+            "type" : "integer",
+            "default" : 0
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "description" : "The size of the page to be returned",
+          "schema" : {
+            "type" : "integer",
+            "default" : 20
+          }
+        }, {
+          "name" : "sort",
+          "in" : "query",
+          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of  paged list of DPS visit IDs for the current term",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SyncOfficialVisitId"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoner/{prisonerNumber}/approved-relationships" : {
+      "get" : {
+        "tags" : [ "Contacts" ],
+        "summary" : "Get the approved contacts for a prisoner for official or social visits",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getApprovedContacts",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "relationshipType",
+          "in" : "query",
+          "description" : "The relationship type should be S for social or O for official",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "O"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of approved contacts of the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ApprovedContact"
+                  }
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prisoner was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}/id/{officialVisitId}" : {
+      "get" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Get an official visit by prison code and ID",
+        "description" : "Get the full details of an official visit, its visitors and prisoner details\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "getOfficialVisits",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MIC"
+        }, {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The id of the Official visit",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitDetails"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No Official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/available-slots/{prisonCode}" : {
+      "get" : {
+        "tags" : [ "Available slots" ],
+        "summary" : "Endpoint to return the available slots for official visits for a prison for a given date range.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getAvailableSlotsForPrison",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "The from date in ISO format (YYYY-MM-DD).",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "The to date in ISO format (YYYY-MM-DD).",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "videoOnly",
+          "in" : "query",
+          "description" : "Boolean flag. A value of 'true' will only return video reservable slots.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of available slots at the prison",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AvailableSlot"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components" : {
+    "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "CreateOfficialVisitRequest" : {
+        "type" : "object",
+        "description" : "The request with the official visit details",
+        "properties" : {
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS ID)",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the official visit will take place",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time of the official visit",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time of the official visit",
+            "example" : "11:00"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the official visit is to take place",
+            "example" : "aaaa-bbbb-9f9f9f9f-9f9f9f9f"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The visit type code",
+            "example" : "IN_PERSON"
+          },
+          "staffNotes" : {
+            "type" : "string",
+            "description" : "Notes for staff that will not be shared on movement slips",
+            "example" : "Staff notes",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "prisonerNotes" : {
+            "type" : "string",
+            "description" : "Notes for prisoners that may be shared on movement slips",
+            "example" : "Prisoner notes",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "searchTypeCode" : {
+            "$ref" : "#/components/schemas/SearchLevelType",
+            "description" : "Search type code relates to the search that will be done on the prisoner after the visit",
+            "example" : "FULL"
+          },
+          "officialVisitors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitor"
+            }
+          }
+        },
+        "required" : [ "dpsLocationId", "endTime", "officialVisitors", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitTypeCode" ]
+      },
+      "OfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "visitorTypeCode" : {
+            "$ref" : "#/components/schemas/VisitorType",
+            "description" : "The visitor type code (CONTACT, OPV, PRISONER)",
+            "example" : "CONTACT"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID for the visitor",
+            "example" : 123456
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact ID for the visitor",
+            "example" : 123456
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The relationship code",
+            "example" : "POM",
+            "minLength" : 1
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Set to true if this is the lead visitor",
+            "example" : false
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Set to true if this visitor requires an assisted visit",
+            "example" : false
+          },
+          "assistedNotes" : {
+            "type" : "string",
+            "description" : "Any required assistance notes to keep about this visitor.  Will be ignored if assisted visit is not true",
+            "example" : "Wheelchair access required",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "visitorEquipment" : {
+            "$ref" : "#/components/schemas/VisitorEquipment",
+            "description" : "Details of any equipment the visitor will bring to the visit."
+          }
+        },
+        "required" : [ "relationshipCode", "visitorTypeCode" ]
+      },
+      "SearchLevelType" : {
+        "type" : "string",
+        "enum" : [ "FULL", "PAT", "RUB", "RUB_A", "RUB_B", "STR" ]
+      },
+      "VisitType" : {
+        "type" : "string",
+        "enum" : [ "IN_PERSON", "TELEPHONE", "VIDEO", "UNKNOWN" ]
+      },
+      "VisitorEquipment" : {
+        "type" : "object",
+        "description" : "Represents details of any equipment the visitor will bring to the visit.",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the equipment the visitor will bring",
+            "example" : "Laptop",
+            "maxLength" : 240,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "description" ]
+      },
+      "VisitorType" : {
+        "type" : "string",
+        "enum" : [ "CONTACT", "OPV", "PRISONER" ]
+      },
+      "CreateOfficialVisitResponse" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "officialVisitId" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "OfficialVisitSummarySearchRequest" : {
+        "type" : "object",
+        "description" : "The request with the official visit summary search details",
+        "properties" : {
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The earliest date the official visits will start",
+            "example" : "2022-12-23"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The latest date the official visits will end",
+            "example" : "2022-12-23"
+          },
+          "visitTypes" : {
+            "type" : "array",
+            "description" : "The visit types to search for",
+            "examples" : [ "IN_PERSON", "VIDEO" ],
+            "items" : {
+              "$ref" : "#/components/schemas/VisitType"
+            }
+          },
+          "visitStatuses" : {
+            "type" : "array",
+            "description" : "The visit statuses to search for",
+            "examples" : [ "SCHEDULED", "COMPLETED" ],
+            "items" : {
+              "$ref" : "#/components/schemas/VisitStatusType"
+            }
+          },
+          "prisonerNumbers" : {
+            "type" : "array",
+            "description" : "The prisoner numbers to search for",
+            "examples" : [ "G9190VP", "G9190VP" ],
+            "items" : {
+              "type" : "string"
+            }
+          },
+          "locationIds" : {
+            "type" : "array",
+            "description" : "The location identifiers to search for",
+            "examples" : [ "aaaa-bbbb-9f9f9f9f-9f9f9f9f" ],
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "endDate", "startDate" ]
+      },
+      "VisitStatusType" : {
+        "type" : "string",
+        "enum" : [ "SCHEDULED", "CANCELLED", "COMPLETED", "EXPIRED" ]
+      },
+      "OfficialVisitSummarySearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit id",
+            "example" : 1
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The 3 letter code for the prison",
+            "example" : "MDI"
+          },
+          "prisonDescription" : {
+            "type" : "string",
+            "description" : "The official visit prison description",
+            "example" : "Moorland (HMP & YOI)"
+          },
+          "visitStatus" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The official visit status type",
+            "example" : "SCHEDULED"
+          },
+          "visitStatusDescription" : {
+            "type" : "string",
+            "description" : "The official visit status description",
+            "example" : "Visit status description"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The official visit type code",
+            "example" : "IN_PERSON"
+          },
+          "visitTypeDescription" : {
+            "type" : "string",
+            "description" : "The official visit type description"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the official visit takes place",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time of the official visit",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time of the official visit",
+            "example" : "11:00"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the official visit takes place",
+            "example" : "aaaa-bbbb-9f9f9f9f-9f9f9f9f"
+          },
+          "locationDescription" : {
+            "type" : "string",
+            "description" : "The official visit location description",
+            "example" : "Legal visits ward"
+          },
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prison visit slot identifier for the official visit slot",
+            "example" : 1
+          },
+          "staffNotes" : {
+            "type" : "string",
+            "description" : "Notes for staff that will not be shared on movement slips",
+            "example" : "Legal representation details"
+          },
+          "prisonerNotes" : {
+            "type" : "string",
+            "description" : "Notes for prisoners that may be shared on movement slips",
+            "example" : "Please arrive 10 minutes early"
+          },
+          "visitorConcernNotes" : {
+            "type" : "string"
+          },
+          "numberOfVisitors" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of visitors attending the official visit",
+            "example" : 2
+          },
+          "completionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The official visit completion type",
+            "example" : "VISITOR_CANCELLED"
+          },
+          "completionDescription" : {
+            "type" : "string",
+            "description" : "The official visit completion description"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The name of the user who created the official visit",
+            "example" : "Fred Bloggs"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the official visit was created",
+            "example" : "2025-12-02 14:45"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The name of the last user who updated the official visit",
+            "example" : "Jane Bloggs"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the official visit was last updated",
+            "example" : "22025-12-04 09:50"
+          },
+          "prisoner" : {
+            "$ref" : "#/components/schemas/PrisonerVisitedDetails",
+            "description" : "The details of the prisoner being visited"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "locationDescription", "numberOfVisitors", "officialVisitId", "prisonCode", "prisonDescription", "prisoner", "startTime", "visitDate", "visitSlotId", "visitStatus", "visitStatusDescription", "visitTypeCode", "visitTypeDescription" ]
+      },
+      "PageMetadata" : {
+        "type" : "object",
+        "properties" : {
+          "size" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }
+      },
+      "PagedModelOfficialVisitSummarySearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitSummarySearchResponse"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "PrisonerVisitedDetails" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The official visitor - prisoner number",
+            "example" : 1
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The official visitor Prisoner code"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The official visitor - Prisoner first name"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The official visitor prisoner last name"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The official visitor - Prisoner date of birth"
+          },
+          "cellLocation" : {
+            "type" : "string",
+            "description" : "Prisoner Cell location"
+          },
+          "middleNames" : {
+            "type" : "string",
+            "description" : "Prisoner middle name"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prisoner offender booking id"
+          },
+          "attendanceCode" : {
+            "type" : "string",
+            "description" : "Prisoner attendance code"
+          },
+          "attendanceCodeDescription" : {
+            "type" : "string",
+            "description" : "Prisoner attendance code description"
+          }
+        },
+        "required" : [ "prisonCode", "prisonerNumber" ]
+      },
+      "VisitCompletionType" : {
+        "type" : "string",
+        "enum" : [ "NORMAL", "STAFF_CANCELLED", "VISITOR_CANCELLED", "VISITOR_DENIED", "PRISONER_EARLY", "VISITOR_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "PRISONER_CANCELLED", "VISITOR_NO_SHOW" ]
+      },
+      "AttendanceType" : {
+        "type" : "string",
+        "enum" : [ "ATTENDED", "ABSENT" ]
+      },
+      "MigrateVisitRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit ID",
+            "example" : 133232
+          },
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The DPS visit slot ID - this provides the location, start time and end time via configuration data",
+            "example" : 123132
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code where the visit takes place",
+            "example" : "PVI",
+            "minLength" : 1
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender book ID to echo back. It will be stored in DPS against the visit.",
+            "example" : 74748
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMS ID)",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "If this visits relates to the current or latest term (booking) in prison true, else false.",
+            "example" : true
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the official visit will take place",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time for this official visit",
+            "example" : "09:15"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time for this official visit",
+            "example" : "10:15"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location where the visit takes place.",
+            "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
+          },
+          "visitStatusCode" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The DPS visit status code. The Syscon migration service will map the NOMIS state to a value in this enumerated type.",
+            "example" : "SCHEDULED"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The DPS visit type code. For migrated NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
+            "example" : "UNKNOWN"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visit comment text",
+            "example" : "This is a comment"
+          },
+          "searchTypeCode" : {
+            "$ref" : "#/components/schemas/SearchLevelType",
+            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
+            "example" : "RUB_A"
+          },
+          "visitCompletionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The DPS visit completion code. Default is NORMAL if not supplied.",
+            "example" : "NORMAL"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visit concern text from NOMIS",
+            "example" : "I am concerned"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "The staff username who authorised an override for a ban for this visit",
+            "example" : "X3243H"
+          },
+          "visitOrderNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit order number (if present) for the official visit",
+            "example" : 12344
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
+          },
+          "visitors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateVisitor"
+            }
+          }
+        },
+        "required" : [ "createDateTime", "createUsername", "currentTerm", "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitStatusCode", "visitors" ]
+      },
+      "MigrateVisitor" : {
+        "type" : "object",
+        "description" : "The details of an official visitor",
+        "properties" : {
+          "offenderVisitVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit visitor ID",
+            "example" : 133232
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS person ID (same as contactId) for this visitor",
+            "example" : 13989898
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the visitor",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the visitor",
+            "example" : "Harris"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The visitors date of birth",
+            "example" : "2011-01-03"
+          },
+          "relationshipTypeCode" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL"
+          },
+          "relationshipToPrisoner" : {
+            "type" : "string",
+            "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
+            "example" : "POL"
+          },
+          "groupLeaderFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "assistedVisitFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visitor comment text from NOMIS",
+            "example" : "Some comments"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "createDateTime", "createUsername", "offenderVisitVisitorId", "personId" ]
+      },
+      "RelationshipType" : {
+        "type" : "string",
+        "enum" : [ "OFFICIAL", "SOCIAL" ]
+      },
+      "IdPair" : {
+        "type" : "object",
+        "properties" : {
+          "elementType" : {
+            "type" : "string",
+            "description" : "The category of information returned",
+            "enum" : [ "PRISON_VISIT_SLOT", "OFFICIAL_VISIT", "OFFICIAL_VISITOR", "PRISONER_VISITED" ],
+            "example" : "PRISON_VISIT_SLOT"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique ID for this data item provided in the request",
+            "example" : 123435
+          },
+          "dpsId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique ID created in the DPS official visits service",
+            "example" : 1234
+          }
+        },
+        "required" : [ "dpsId", "elementType", "nomisId" ]
+      },
+      "MigrateVisitResponse" : {
+        "type" : "object",
+        "description" : "The migration response for an official visit and the visitors attending",
+        "properties" : {
+          "visit" : {
+            "$ref" : "#/components/schemas/IdPair",
+            "description" : "The pair of IDs for this visit"
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "The list of ID pairs for each visitor on this visit",
+            "items" : {
+              "$ref" : "#/components/schemas/IdPair"
+            }
+          },
+          "prisoner" : {
+            "$ref" : "#/components/schemas/IdPair",
+            "description" : "The pair of IDs for the prisoner on this visit. NOMS ID is used as the NOMIS ID, as it has no other ID"
+          }
+        },
+        "required" : [ "prisoner", "visit", "visitors" ]
+      },
+      "MigrateVisitConfigRequest" : {
+        "type" : "object",
+        "description" : "Request to migrate a day and time slot for a prison and its associated visit slots from NOMIS",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The 3-letter agy_loc_id from NOMIS where this visit time slot exists",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "type" : "string",
+            "description" : "The 3-letter day of the week code where this slot falls in this prison.",
+            "example" : "TUE"
+          },
+          "timeSlotSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The time slot sequence in NOMIS. This is used to build a response object for cross-reference",
+            "example" : 1
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time for this visit time slot",
+            "example" : "13:30"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time for this visit time slot",
+            "example" : "14:30"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date from which this row will be effective",
+            "example" : "1980-01-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date from which this row will no longer be effective",
+            "example" : "1980-01-01"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "The list of visit slots which are linked to this time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateVisitSlot"
+            }
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the record",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the record",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime", "timeSlotSeq", "visitSlots" ]
+      },
+      "MigrateVisitSlot" : {
+        "type" : "object",
+        "properties" : {
+          "agencyVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique ID for this visit slot in NOMIS. For building a response to cross-reference with a DPS visit slot.",
+            "example" : 1
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal location ID from NOMIS. Information only",
+            "example" : 1090909
+          },
+          "locationKey" : {
+            "type" : "string",
+            "description" : "The location key from NOMIS. Information only",
+            "example" : "MDI-OFFICIAL_VISITS"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID (mapped from the NOMIS internal location ID)",
+            "example" : "9485cf4a-750b-4d74-b594-59bacbcda247"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The maximum number of groups that can be booked into this visit slot. Effectively, the max visits limit for the slot.",
+            "example" : 8
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The maximum number of adults who can be booked into this visits slot.",
+            "example" : 22
+          },
+          "maxVideoSessions" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The maximum number of video sessions that can be booked into this visits slot.",
+            "example" : 8
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the record",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the record",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "agencyVisitSlotId", "dpsLocationId" ]
+      },
+      "MigrateVisitConfigResponse" : {
+        "type" : "object",
+        "description" : "The migration response for an official visit time slot and its visit slots",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The 3-letter agy_loc_id from NOMIS where this time slot exists",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "type" : "string",
+            "description" : "The 3-letter day of the week code where this slot exists in this prison.",
+            "example" : "TUE"
+          },
+          "timeSlotSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The time slot sequence from NOMIS",
+            "example" : 1
+          },
+          "dpsTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID created in DPS for this prison time slot",
+            "example" : 123456
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of NOMIS and DPS IDs for the visit slots created",
+            "items" : {
+              "$ref" : "#/components/schemas/IdPair"
+            }
+          }
+        },
+        "required" : [ "dayCode", "dpsTimeSlotId", "prisonCode", "timeSlotSeq", "visitSlots" ]
+      },
+      "VisitBookedEntity" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "dayCode" : {
+            "type" : "string"
+          },
+          "dayDescription" : {
+            "type" : "string"
+          },
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "startTime" : {
+            "type" : "string"
+          },
+          "endTime" : {
+            "type" : "string"
+          },
+          "visitStatusCode" : {
+            "type" : "string"
+          },
+          "visitTypeCode" : {
+            "type" : "string"
+          },
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "visitorTypeCode" : {
+            "type" : "string"
+          },
+          "relationshipTypeCode" : {
+            "type" : "string"
+          },
+          "relationshipCode" : {
+            "type" : "string"
+          },
+          "firstName" : {
+            "type" : "string"
+          },
+          "lastName" : {
+            "type" : "string"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        },
+        "required" : [ "dayCode", "dayDescription", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonTimeSlotId", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitTypeCode" ]
+      },
+      "ReferenceDataGroup" : {
+        "type" : "string",
+        "enum" : [ "ATTENDANCE", "DAY", "RELATIONSHIP_TYPE", "SEARCH_LEVEL", "TEST_TYPE", "VIS_COMPLETION", "VIS_STATUS", "VIS_TYPE", "VISITOR_TYPE" ]
+      },
+      "ReferenceDataItem" : {
+        "type" : "object",
+        "description" : "Describes the details of a reference code",
+        "properties" : {
+          "referenceDataId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "An internally-generated unique identifier for this reference code.",
+            "example" : 12345
+          },
+          "groupCode" : {
+            "$ref" : "#/components/schemas/ReferenceDataGroup",
+            "description" : "The group name for related reference codes.",
+            "example" : "VIS_STATUS"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "The code for this reference data",
+            "example" : "SCHEDULED"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "A fuller description of the reference code",
+            "example" : "Scheduled"
+          },
+          "displaySequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The default order configured for the reference code, lowest number first.",
+            "example" : 5
+          },
+          "enabled" : {
+            "type" : "boolean",
+            "description" : "Whether the reference code is still in use. Old reference codes are maintained for compatability with legacy data.",
+            "example" : true
+          }
+        },
+        "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
+      },
+      "SyncOfficialVisitId" : {
+        "type" : "object",
+        "description" : "Response object for sync reconciliation",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID for an Official visits",
+            "example" : 111111
+          }
+        },
+        "required" : [ "officialVisitId" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "ApprovedContact" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact number",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact",
+            "example" : 1
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "Prisoner number (NOMS ID)"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the contact"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the contact"
+          },
+          "relationshipTypeCode" : {
+            "type" : "string",
+            "description" : "Coded value indicating either a social or official contact"
+          },
+          "relationshipTypeDescription" : {
+            "type" : "string",
+            "description" : "Relationship type Description"
+          },
+          "relationshipToPrisonerCode" : {
+            "type" : "string",
+            "description" : "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type."
+          },
+          "relationshipToPrisonerDescription" : {
+            "type" : "string",
+            "description" : "Relationship type Description"
+          },
+          "isApprovedVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the contact is an approved visitor"
+          },
+          "isNextOfKin" : {
+            "type" : "boolean",
+            "description" : "Is this contact the prisoner's next of kin?"
+          },
+          "isEmergencyContact" : {
+            "type" : "boolean",
+            "description" : "Is this contact the prisoner's emergency contact?"
+          },
+          "isRelationshipActive" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship active?"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "Is this relationship active for the current booking?"
+          },
+          "isStaff" : {
+            "type" : "boolean",
+            "description" : "Whether the contact is a staff member"
+          },
+          "restrictionSummary" : {
+            "$ref" : "#/components/schemas/RestrictionsSummary",
+            "description" : "Restriction Summary"
+          },
+          "titleCode" : {
+            "type" : "string",
+            "description" : "The title code for the contact"
+          },
+          "titleDescription" : {
+            "type" : "string",
+            "description" : "The description of the title code, if present"
+          },
+          "middleNames" : {
+            "type" : "string",
+            "description" : "The middle names of the contact, if any"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of birth of the contact"
+          },
+          "deceasedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the contact deceased, if known"
+          },
+          "flat" : {
+            "type" : "string",
+            "description" : "Flat number in the address, if any"
+          },
+          "property" : {
+            "type" : "string",
+            "description" : "Property name or number"
+          },
+          "street" : {
+            "type" : "string",
+            "description" : "Street Name"
+          },
+          "area" : {
+            "type" : "string",
+            "description" : "Area or locality, if any"
+          },
+          "cityCode" : {
+            "type" : "string",
+            "description" : "City code"
+          },
+          "cityDescription" : {
+            "type" : "string",
+            "description" : "The description of city code"
+          },
+          "countyCode" : {
+            "type" : "string",
+            "description" : "Country code"
+          },
+          "countyDescription" : {
+            "type" : "string",
+            "description" : "The description of county code"
+          },
+          "postcode" : {
+            "type" : "string",
+            "description" : "Postal code"
+          },
+          "countryCode" : {
+            "type" : "string",
+            "description" : "Country Code"
+          },
+          "countryDescription" : {
+            "type" : "string",
+            "description" : "Flag to indicate whether this address indicates no fixed address"
+          },
+          "noFixedAddress" : {
+            "type" : "boolean",
+            "description" : "Flag to indicate whether this address indicates no fixed address"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "If true this address should be considered as the primary residential address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "If true this address should be considered for sending mail to"
+          },
+          "phoneType" : {
+            "type" : "string",
+            "description" : "Type of the latest phone number"
+          },
+          "phoneTypeDescription" : {
+            "type" : "string",
+            "description" : "Description of the type of the latest phone number"
+          },
+          "phoneNumber" : {
+            "type" : "string",
+            "description" : "The latest phone number, if there are any"
+          },
+          "extNumber" : {
+            "type" : "string",
+            "description" : "The extension number of the latest phone number"
+          }
+        },
+        "required" : [ "contactId", "currentTerm", "firstName", "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "isStaff", "lastName", "prisonerContactId", "prisonerNumber", "relationshipToPrisonerCode", "relationshipToPrisonerDescription", "relationshipTypeCode", "relationshipTypeDescription", "restrictionSummary" ]
+      },
+      "RestrictionTypeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "restrictionType" : {
+            "type" : "string"
+          },
+          "restrictionTypeDescription" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "restrictionType", "restrictionTypeDescription" ]
+      },
+      "RestrictionsSummary" : {
+        "type" : "object",
+        "properties" : {
+          "active" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/RestrictionTypeDetails"
+            },
+            "uniqueItems" : true
+          },
+          "totalActive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "totalExpired" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "active", "totalActive", "totalExpired" ]
+      },
+      "OfficialVisitDetails" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit id",
+            "example" : 1
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code",
+            "example" : "MDI"
+          },
+          "prisonDescription" : {
+            "type" : "string",
+            "description" : "The official visit prison description",
+            "example" : "Moorland (HMP & YOI)"
+          },
+          "visitStatus" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The Official visit status type "
+          },
+          "visitStatusDescription" : {
+            "type" : "string",
+            "description" : "The Official visit status description",
+            "example" : "Visit Status"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The Official visit visit type",
+            "example" : "AP"
+          },
+          "visitTypeDescription" : {
+            "type" : "string",
+            "description" : "The Official visit type description"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The Official visit date"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The Official visit start time"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The Official visit end time"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The Official visit Location Id"
+          },
+          "locationDescription" : {
+            "type" : "string",
+            "description" : "The Official visit location description"
+          },
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The Official visit - visitor slot slot identifier for the official visit takes place"
+          },
+          "staffNotes" : {
+            "type" : "string",
+            "description" : "The Official visit - staff notes"
+          },
+          "prisonerNotes" : {
+            "type" : "string",
+            "description" : "The Official visit - prisoner notes"
+          },
+          "visitorConcernNotes" : {
+            "type" : "string",
+            "description" : "The Official visit - visitor concern notes"
+          },
+          "completionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The Official visit completion type"
+          },
+          "completionDescription" : {
+            "type" : "string",
+            "description" : "The Official visit creation description"
+          },
+          "searchTypeCode" : {
+            "$ref" : "#/components/schemas/SearchLevelType",
+            "description" : "The Official visit Search Level type"
+          },
+          "searchTypeDescription" : {
+            "type" : "string",
+            "description" : "The Official visit search type"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The Official visit creation time"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The Official visit created by User"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The Official visit updated date time"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The Official visit updated by user"
+          },
+          "officialVisitors" : {
+            "type" : "array",
+            "description" : "The Official visit updated by user",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitorDetails"
+            }
+          },
+          "prisonerVisited" : {
+            "$ref" : "#/components/schemas/PrisonerVisitedDetails",
+            "description" : "The Prisoner Information"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "startTime", "visitDate", "visitStatus", "visitTypeCode", "visitTypeDescription" ]
+      },
+      "OfficialVisitorDetails" : {
+        "type" : "object",
+        "properties" : {
+          "visitorTypeCode" : {
+            "$ref" : "#/components/schemas/VisitorType",
+            "description" : "The Official visitor Visit Type code"
+          },
+          "visitorTypeDescription" : {
+            "type" : "string",
+            "description" : "The Official visitor TypeDescription"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The Official visitor first name"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The Official visitor last name"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The Official visitor contact id"
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact id"
+          },
+          "relationshipTypeCode" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The Official visitor relationship type code"
+          },
+          "relationshipTypeDescription" : {
+            "type" : "string",
+            "description" : "The Official visitor relationship Type Description"
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The Official visitor relationship code"
+          },
+          "relationshipDescription" : {
+            "type" : "string",
+            "description" : "The Official visitor relationship description"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "The Official visitor - is lead visitor"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "The Official visitor - is assisted visit"
+          },
+          "visitorNotes" : {
+            "type" : "string",
+            "description" : "The Official visitor visitor notes"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The Official visitor attendance type"
+          },
+          "attendanceDescription" : {
+            "type" : "string",
+            "description" : "The Official visitor attendance description"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The Official visitor created by user"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The Official visitor created date time"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The Official visitor updated by user"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The Official visitor updated date time"
+          },
+          "offenderVisitVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The Official visitor offender visit visitor id"
+          }
+        },
+        "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "visitorTypeCode" ]
+      },
+      "AvailableSlot" : {
+        "type" : "object",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prison visit slot identifier for the official visit slot",
+            "example" : 1
+          },
+          "timeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prison time slot identifier for the official visit slot",
+            "example" : 1
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code where the visit takes place",
+            "example" : "PVI"
+          },
+          "dayCode" : {
+            "type" : "string",
+            "description" : "The 3-letter day of the week code where this slot falls in this prison.",
+            "example" : "TUE"
+          },
+          "dayDescription" : {
+            "type" : "string",
+            "description" : "The day of the week code where this slot falls in this prison.",
+            "example" : "Tuesday"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date for the official visit slot"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time for the official visit slot"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time for the official visit slot"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location where the official visit takes place for the slot",
+            "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
+          },
+          "availableVideoSessions" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The available video sessions for official visit slot"
+          },
+          "availableAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The available adults for official visit slot"
+          },
+          "availableGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The available groups for official visit slot"
+          },
+          "locationDescription" : {
+            "type" : "string",
+            "description" : "The description of the location where this slot exists",
+            "example" : "Legal visits room 8"
+          }
+        },
+        "required" : [ "availableAdults", "availableGroups", "availableVideoSessions", "dayCode", "dayDescription", "dpsLocationId", "endTime", "prisonCode", "startTime", "timeSlotId", "visitDate", "visitSlotId" ]
+      }
+    },
+    "securitySchemes" : {
+      "bearer-jwt" : {
+        "type" : "http",
+        "name" : "Authorization",
+        "in" : "header",
+        "scheme" : "bearer",
+        "bearerFormat" : "JWT"
+      }
+    }
+  }
+}

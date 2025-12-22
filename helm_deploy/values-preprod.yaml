@@ -32,6 +32,7 @@ generic-service:
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk
     API_BASE_URL_CORE_PERSON: https://hmpps-person-record-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_EXT_MOVEMENTS: https://external-movements-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api-preprod.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
@@ -75,6 +76,11 @@ generic-service:
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "0 18 * * 1-5"
       suspend: true
+    - name: official-visits-all-recon
+      type: OFFICIAL_VISIT_ALL_BALANCE_RECON
+      schedule: "30 5 * * SAT"
+      suspend: true
+
 
 generic-prometheus-alerts:
   businessHoursOnly: true

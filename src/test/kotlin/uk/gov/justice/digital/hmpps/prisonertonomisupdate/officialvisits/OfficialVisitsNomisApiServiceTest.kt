@@ -1,0 +1,73 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
+
+import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import kotlinx.coroutines.test.runTest
+import org.junit.jupiter.api.Nested
+import org.junit.jupiter.api.Test
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
+
+@SpringAPIServiceTest
+@Import(OfficialVisitsNomisApiService::class, OfficialVisitsConfiguration::class, OfficialVisitsNomisApiMockServer::class)
+class OfficialVisitsNomisApiServiceTest {
+  @Autowired
+  private lateinit var apiService: OfficialVisitsNomisApiService
+
+  @Autowired
+  private lateinit var mockServer: OfficialVisitsNomisApiMockServer
+
+  @Nested
+  inner class GetOfficialVisitIds {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitIds(
+        pageNumber = 0,
+        pageSize = 20,
+        content = listOf(
+          VisitIdResponse(
+            visitId = 1234,
+          ),
+        ),
+      )
+
+      apiService.getOfficialVisitIds(
+        pageNumber = 0,
+        pageSize = 20,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get IDs endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitIds(
+        pageNumber = 10,
+        pageSize = 30,
+        content = listOf(
+          VisitIdResponse(
+            visitId = 1234,
+          ),
+        ),
+      )
+
+      apiService.getOfficialVisitIds(
+        pageNumber = 10,
+        pageSize = 30,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/official-visits/ids"))
+          .withQueryParam("page", equalTo("10"))
+          .withQueryParam("size", equalTo("30")),
+      )
+    }
+  }
+}

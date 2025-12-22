@@ -122,6 +122,11 @@ spring:
             client-id: ${ext.movements.client.id}
             client-secret: ${ext.movements.client.secret}
             authorization-grant-type: client_credentials
+          official-visits-api:
+            provider: hmpps-auth
+            client-id: ${officialvisits.client.id}
+            client-secret: ${officialvisits.client.secret}
+            authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
