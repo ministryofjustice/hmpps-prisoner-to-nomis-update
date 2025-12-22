@@ -16,7 +16,7 @@ import java.time.Duration
 class OfficialVisitsConfiguration(
   @Value("\${api.base.url.officialvisits}") val apiBaseUri: String,
   @Value("\${api.health-timeout:2s}") val healthTimeout: Duration,
-  @Value("\${api.timeout:90s}") val timeout: Duration,
+  @Value("\${api.timeout:60s}") val timeout: Duration,
 ) {
 
   @Bean

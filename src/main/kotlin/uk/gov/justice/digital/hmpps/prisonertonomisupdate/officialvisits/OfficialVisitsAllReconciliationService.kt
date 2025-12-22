@@ -21,12 +21,12 @@ class OfficialVisitsAllReconciliationService(
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
-    const val TELEMETRY_PRISONER_PREFIX = "official-visits-all-reconciliation"
+    const val TELEMETRY_ALL_VISITS_PREFIX = "official-visits-all-reconciliation"
   }
 
   suspend fun generateAllVisitsReconciliationReportBatch() {
     telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-requested",
+      "$TELEMETRY_ALL_VISITS_PREFIX-requested",
       mapOf(),
     )
 
@@ -34,7 +34,7 @@ class OfficialVisitsAllReconciliationService(
       .onSuccess {
         log.info("Official visits all reconciliation report completed with ${it.mismatches.size} mismatches")
         telemetryClient.trackEvent(
-          "$TELEMETRY_PRISONER_PREFIX-report",
+          "$TELEMETRY_ALL_VISITS_PREFIX-report",
           mapOf(
             "visit-count" to it.itemsChecked.toString(),
             "pages-count" to it.pagesChecked.toString(),
@@ -44,7 +44,7 @@ class OfficialVisitsAllReconciliationService(
         )
       }
       .onFailure {
-        telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-report", mapOf("success" to "false"))
+        telemetryClient.trackEvent("$TELEMETRY_ALL_VISITS_PREFIX-report", mapOf("success" to "false"))
         log.error("Official visits all reconciliation report failed", it)
       }
   }
@@ -70,7 +70,7 @@ class OfficialVisitsAllReconciliationService(
 
     if (nomisTotal != dpsTotal) {
       telemetryClient.trackEvent(
-        "$TELEMETRY_PRISONER_PREFIX-mismatch-totals",
+        "$TELEMETRY_ALL_VISITS_PREFIX-mismatch-totals",
         mapOf(
           "nomisTotal" to nomisTotal.toString(),
           "dpsTotal" to dpsTotal.toString(),
@@ -80,7 +80,7 @@ class OfficialVisitsAllReconciliationService(
   }.onFailure {
     log.error("Unable to get official visit totals", it)
     telemetryClient.trackEvent(
-      "$TELEMETRY_PRISONER_PREFIX-mismatch-totals-error",
+      "$TELEMETRY_ALL_VISITS_PREFIX-mismatch-totals-error",
       mapOf(),
     )
   }
