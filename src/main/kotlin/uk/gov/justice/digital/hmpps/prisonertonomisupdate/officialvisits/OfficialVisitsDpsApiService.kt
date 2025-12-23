@@ -6,27 +6,31 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.OfficialVisitsReconciliationApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.ReconciliationApi
 
 @Service
 class OfficialVisitsDpsApiService(
   @Qualifier("officialVisitsApiWebClient") private val webClient: WebClient,
 ) {
-  private val api = OfficialVisitsReconciliationApi(webClient)
+  private val api = ReconciliationApi(webClient)
 
   // TODO - once DPS fix swagger
   suspend fun getOfficialVisitIds(
     pageNumber: Int = 0,
     pageSize: Int = 1,
   ): PagedModelSyncOfficialVisitIdResponse = api.prepare(
-    api.getAllOfficialVisitsRequestConfig(
+    api.getAllOfficialVisitIdsRequestConfig(
       currentTerm = false,
       page = pageNumber,
       size = pageSize,
     ),
   ).retrieve().awaitBody()
 }
+
+// TODO - once DPS fix swagger
+data class SyncOfficialVisitId(
+  val officialVisitId: Long,
+)
 
 // TODO - once DPS fix swagger
 data class PagedModelSyncOfficialVisitIdResponse(
