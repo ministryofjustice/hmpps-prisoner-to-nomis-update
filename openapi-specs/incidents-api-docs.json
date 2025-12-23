@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2025-11-18.377.bb3b5bd"
+    "version" : "2025-12-19.447.a61d694"
   },
   "servers" : [ {
     "url" : "/",
@@ -4612,6 +4612,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -4703,6 +4719,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -7477,17 +7509,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
@@ -7889,6 +7921,23 @@
           },
           "columnsAsList" : {
             "type" : "boolean"
+          },
+          "horizontal" : {
+            "type" : "boolean"
+          },
+          "xStacked" : {
+            "type" : "boolean",
+            "writeOnly" : true
+          },
+          "yStacked" : {
+            "type" : "boolean",
+            "writeOnly" : true
+          },
+          "xstacked" : {
+            "type" : "boolean"
+          },
+          "ystacked" : {
+            "type" : "boolean"
           }
         }
       },
@@ -8004,7 +8053,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "equals", "id" ]
+        "required" : [ "id" ]
       },
       "UserTypeConstantDescription" : {
         "type" : "object",
