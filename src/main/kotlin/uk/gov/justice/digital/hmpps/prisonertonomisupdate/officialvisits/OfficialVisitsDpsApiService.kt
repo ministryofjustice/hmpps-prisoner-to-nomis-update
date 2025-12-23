@@ -5,8 +5,10 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.ReconciliationApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
 
 @Service
 class OfficialVisitsDpsApiService(
@@ -25,6 +27,8 @@ class OfficialVisitsDpsApiService(
       size = pageSize,
     ),
   ).retrieve().awaitBody()
+
+  suspend fun getOfficialVisitOrNull(visitId: Long): SyncOfficialVisit? = api.prepare(api.getOfficialVisitByIdRequestConfig(visitId)).retrieve().awaitBodyOrNullForNotFound()
 }
 
 // TODO - once DPS fix swagger

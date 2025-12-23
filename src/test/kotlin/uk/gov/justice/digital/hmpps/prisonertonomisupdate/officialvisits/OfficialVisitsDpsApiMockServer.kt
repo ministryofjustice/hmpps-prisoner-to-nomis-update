@@ -14,6 +14,15 @@ import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension.Companion.dpsOfficialVisitsServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.RelationshipType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitor
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
+import java.time.LocalDate
+import java.util.UUID
 
 class OfficialVisitsDpsApiExtension :
   BeforeAllCallback,
@@ -50,6 +59,32 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         totalElements = totalElements,
         totalPages = Math.ceilDiv(totalElements, pageSize),
       ),
+    )
+
+    fun syncOfficialVisit() = SyncOfficialVisit(
+      officialVisitId = 1,
+      visitDate = LocalDate.now(),
+      startTime = "10:00",
+      endTime = "11:00",
+      prisonVisitSlotId = 10,
+      dpsLocationId = UUID.randomUUID(),
+      prisonCode = "WWI",
+      prisonerNumber = "A1234KT",
+      statusCode = VisitStatusType.COMPLETED,
+      visitors = listOf(syncOfficialVisitor()),
+      completionCode = VisitCompletionType.NORMAL,
+      offenderBookId = 20,
+      offenderVisitId = 30,
+    )
+
+    fun syncOfficialVisitor() = SyncOfficialVisitor(
+      officialVisitorId = 1,
+      contactId = 1,
+      firstName = "Ayomide",
+      lastName = "Olawale",
+      relationshipType = RelationshipType.OFFICIAL,
+      relationshipCode = "SOL",
+      attendanceCode = AttendanceType.ATTENDED,
     )
   }
 
@@ -90,5 +125,35 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             ),
         ),
     )
+  }
+  fun stubGetOfficialVisit(
+    officialVisitId: Long = 1,
+    response: SyncOfficialVisit? = syncOfficialVisit(),
+  ) {
+    if (response == null) {
+      dpsOfficialVisitsServer.stubFor(
+        get(urlPathEqualTo("/reconcile/official-visit/id/$officialVisitId"))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(HttpStatus.NOT_FOUND.value())
+              .withBody(
+                OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(ErrorResponse(status = 404)),
+              ),
+          ),
+      )
+    } else {
+      dpsOfficialVisitsServer.stubFor(
+        get(urlPathEqualTo("/reconcile/official-visit/id/$officialVisitId"))
+          .willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(HttpStatus.OK.value())
+              .withBody(
+                OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(response),
+              ),
+          ),
+      )
+    }
   }
 }
