@@ -4,14 +4,23 @@ import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.OfficialVisitsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
-class OfficialVisitsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
+class OfficialVisitsNomisApiService(
+  @Qualifier("nomisApiWebClient")
+  webClient: WebClient,
+  retryApiService: RetryApiService,
+) {
   private val api = OfficialVisitsResourceApi(webClient)
+  private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "OfficialVisitsMappingService"),
+  )
 
   suspend fun getOfficialVisitIds(
     pageNumber: Int = 0,
@@ -20,13 +29,13 @@ class OfficialVisitsNomisApiService(@Qualifier("nomisApiWebClient") private val 
     page = pageNumber,
     size = pageSize,
     prisonIds = emptyList(),
-  ).awaitSingle()
+  ).retryWhen(retrySpec).awaitSingle()
 
   suspend fun getOfficialVisit(
     visitId: Long,
   ): OfficialVisitResponse = api.getOfficialVisit(
     visitId = visitId,
-  ).awaitSingle()
+  ).retryWhen(retrySpec).awaitSingle()
 
   suspend fun getOfficialVisitIdsByLastId(
     lastVisitId: Long = 0,
@@ -35,5 +44,5 @@ class OfficialVisitsNomisApiService(@Qualifier("nomisApiWebClient") private val 
     visitId = lastVisitId,
     size = pageSize.toInt(),
     prisonIds = emptyList(),
-  ).awaitSingle()
+  ).retryWhen(retrySpec).awaitSingle()
 }

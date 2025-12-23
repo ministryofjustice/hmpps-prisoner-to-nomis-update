@@ -4,17 +4,24 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
+import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.ReconciliationApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
 class OfficialVisitsDpsApiService(
-  @Qualifier("officialVisitsApiWebClient") private val webClient: WebClient,
+  @Qualifier("officialVisitsApiWebClient")
+  webClient: WebClient,
+  retryApiService: RetryApiService,
 ) {
   private val api = ReconciliationApi(webClient)
+  private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "OfficialVisitsDpsApiService"),
+  )
 
   // TODO - once DPS fix swagger
   suspend fun getOfficialVisitIds(
@@ -26,9 +33,9 @@ class OfficialVisitsDpsApiService(
       page = pageNumber,
       size = pageSize,
     ),
-  ).retrieve().awaitBody()
+  ).retrieve().awaitBodyWithRetry(retrySpec)
 
-  suspend fun getOfficialVisitOrNull(visitId: Long): SyncOfficialVisit? = api.prepare(api.getOfficialVisitByIdRequestConfig(visitId)).retrieve().awaitBodyOrNullForNotFound()
+  suspend fun getOfficialVisitOrNull(visitId: Long): SyncOfficialVisit? = api.prepare(api.getOfficialVisitByIdRequestConfig(visitId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
 }
 
 // TODO - once DPS fix swagger

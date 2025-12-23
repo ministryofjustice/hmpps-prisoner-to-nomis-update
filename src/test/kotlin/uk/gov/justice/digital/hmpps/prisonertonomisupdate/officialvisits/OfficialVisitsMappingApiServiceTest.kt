@@ -12,9 +12,10 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
-@Import(OfficialVisitsMappingService::class, OfficialVisitsMappingApiMockServer::class)
+@Import(OfficialVisitsMappingService::class, OfficialVisitsMappingApiMockServer::class, RetryApiService::class)
 class OfficialVisitsMappingApiServiceTest {
 
   @Autowired
