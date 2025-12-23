@@ -70,4 +70,84 @@ class OfficialVisitsNomisApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetOfficialVisit {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubGetOfficialVisit(
+        visitId = 1234,
+      )
+
+      apiService.getOfficialVisit(
+        visitId = 1234,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get time slot endpoint`() = runTest {
+      mockServer.stubGetOfficialVisit(
+        visitId = 1234,
+      )
+
+      apiService.getOfficialVisit(
+        visitId = 1234,
+      )
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/official-visits/1234")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetOfficialVisitIdsByLastId {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitIdsByLastId(
+        content = listOf(
+          VisitIdResponse(
+            visitId = 1234,
+          ),
+        ),
+      )
+
+      apiService.getOfficialVisitIdsByLastId(
+        lastVisitId = 0,
+        pageSize = 20,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get IDs endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitIdsByLastId(
+        visitId = 99,
+        content = listOf(
+          VisitIdResponse(
+            visitId = 1234,
+          ),
+        ),
+      )
+
+      apiService.getOfficialVisitIdsByLastId(
+        lastVisitId = 99,
+        pageSize = 30,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/official-visits/ids/all-from-id"))
+          .withQueryParam("visitId", equalTo("99"))
+          .withQueryParam("size", equalTo("30")),
+      )
+    }
+  }
 }

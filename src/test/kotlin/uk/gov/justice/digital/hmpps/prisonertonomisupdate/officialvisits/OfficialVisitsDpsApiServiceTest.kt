@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,6 +66,46 @@ class OfficialVisitsDpsApiServiceTest {
           .withQueryParam("page", equalTo("10"))
           .withQueryParam("size", equalTo("30")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetOfficialVisit {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisit(officialVisitId = 1234)
+
+      apiService.getOfficialVisitOrNull(visitId = 1234)
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisit(officialVisitId = 1234)
+
+      apiService.getOfficialVisitOrNull(visitId = 1234)
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconcile/official-visit/id/1234")),
+      )
+    }
+
+    @Test
+    fun `will return null when not found`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisit(officialVisitId = 1234, response = null)
+
+      assertThat(apiService.getOfficialVisitOrNull(visitId = 1234)).isNull()
+    }
+
+    @Test
+    fun `will return visit when found`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisit(officialVisitId = 1234)
+
+      assertThat(apiService.getOfficialVisitOrNull(visitId = 1234)).isNotNull()
     }
   }
 }

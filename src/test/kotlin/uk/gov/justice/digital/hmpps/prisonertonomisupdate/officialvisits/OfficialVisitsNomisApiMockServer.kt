@@ -8,10 +8,17 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.time.LocalDateTime
 
 @Component
 class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
@@ -23,6 +30,43 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         number = pageNumber.toLong(),
         totalElements = totalElements,
         totalPages = Math.ceilDiv(totalElements, pageSize),
+      ),
+    )
+
+    fun officialVisitResponse() = OfficialVisitResponse(
+      audit = NomisAudit(
+        createDatetime = LocalDateTime.parse("2020-01-01T10:00"),
+        createUsername = "B.BOB",
+      ),
+      visitId = 1,
+      visitSlotId = 20,
+      prisonId = "MDI",
+      offenderNo = "A1234KT",
+      bookingId = 30,
+      currentTerm = true,
+      startDateTime = LocalDateTime.parse("2020-01-01T10:00"),
+      endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
+      internalLocationId = 40,
+      visitStatus = CodeDescription("NORM", "Normal Completion"),
+      visitors = listOf(officialVisitor()),
+    )
+
+    fun officialVisitor() = OfficialVisitor(
+      id = 123,
+      audit = NomisAudit(
+        createDatetime = LocalDateTime.parse("2020-01-01T10:00"),
+        createUsername = "B.BOB",
+      ),
+      personId = 20,
+      firstName = "JANE",
+      lastName = "DEO",
+      leadVisitor = true,
+      assistedVisit = true,
+      relationships = listOf(
+        ContactRelationship(
+          relationshipType = CodeDescription(code = "POL", description = "Police"),
+          contactType = CodeDescription(code = "O", description = "Official"),
+        ),
       ),
     )
   }
@@ -42,6 +86,34 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
             .withStatus(HttpStatus.OK.value())
             .withBody(objectMapper.writeValueAsString(pageVisitIdResponse(content, pageSize = pageSize, pageNumber = pageNumber, totalElements = totalElements))),
         ),
+    )
+  }
+
+  fun stubGetOfficialVisit(
+    visitId: Long = 1234,
+    response: OfficialVisitResponse = officialVisitResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/official-visits/$visitId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetOfficialVisitIdsByLastId(
+    content: List<VisitIdResponse>,
+    visitId: Long = 0,
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/official-visits/ids/all-from-id")).withQueryParam("visitId", equalTo(visitId.toString())).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(VisitIdsPage(content))),
+      ),
     )
   }
 
