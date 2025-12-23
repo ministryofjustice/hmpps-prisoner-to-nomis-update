@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-18.217.8d13c47"
+    "version" : "2025-12-22.225.8f5871c"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -164,7 +164,7 @@
     "/official-visit/prison/{prisonCode}/find-by-criteria" : {
       "post" : {
         "tags" : [ "Official visits" ],
-        "summary" : "Endpoint to search fo official visit summaries for given search criteria.",
+        "summary" : "Endpoint to search for official visit summaries for given search criteria.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS_RW",
         "operationId" : "findByCriteria",
         "parameters" : [ {
@@ -476,10 +476,10 @@
     },
     "/reconcile/official-visits/identifiers" : {
       "get" : {
-        "tags" : [ "Official visits Reconciliation" ],
-        "summary" : "Endpoint to return the all the official visit ids for reconciliation",
+        "tags" : [ "Reconciliation" ],
+        "summary" : "Endpoint to return a paged list of all official visit IDs",
         "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
-        "operationId" : "getAllOfficialVisits",
+        "operationId" : "getAllOfficialVisitIds",
         "parameters" : [ {
           "name" : "currentTerm",
           "in" : "query",
@@ -516,15 +516,51 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "List of  paged list of DPS visit IDs for the current term",
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/SyncOfficialVisitId"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/official-visit/id/{officialVisitId}" : {
+      "get" : {
+        "tags" : [ "Reconciliation" ],
+        "summary" : "Endpoint to return one official visit by ID for reconciliation",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getOfficialVisitById",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Official visit details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOfficialVisit"
                 }
               }
             }
@@ -676,7 +712,7 @@
         }, {
           "name" : "officialVisitId",
           "in" : "path",
-          "description" : "The id of the Official visit",
+          "description" : "The official visit ID",
           "required" : true,
           "schema" : {
             "type" : "integer",
@@ -696,7 +732,7 @@
             }
           },
           "404" : {
-            "description" : "No Official visit found",
+            "description" : "No official visit found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1845,18 +1881,127 @@
         },
         "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
       },
-      "SyncOfficialVisitId" : {
+      "SyncOfficialVisit" : {
         "type" : "object",
-        "description" : "Response object for sync reconciliation",
         "properties" : {
           "officialVisitId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The ID for an Official visits",
-            "example" : 111111
+            "description" : "The internal official visit ID",
+            "example" : 1
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The visit date",
+            "example" : "2020-01-02"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The visit start time",
+            "example" : "09:15"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The visit end time",
+            "example" : "10:15"
+          },
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit slot ID",
+            "example" : 12345
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison establishment code",
+            "example" : "MDI"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1111AA"
+          },
+          "statusCode" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The visit status code",
+            "example" : "SCHEDULED"
+          },
+          "completionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The visit completion code",
+            "example" : "NORMAL"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking ID in NOMIS",
+            "example" : 12345
+          },
+          "offenderVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender visit ID in NOMIS (only present for migrated bookings)",
+            "example" : 12345
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "The offender visitor details",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOfficialVisitor"
+            }
           }
         },
-        "required" : [ "officialVisitId" ]
+        "required" : [ "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitors" ]
+      },
+      "SyncOfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal official visitor ID",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID of the person visiting",
+            "example" : 123
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The visitor first Name",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The visitor last Name",
+            "example" : "Smith"
+          },
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
+            "example" : "OFFICIAL"
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The visitor relationship code",
+            "example" : "POM"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
+            "example" : "ABSENT"
+          }
+        },
+        "required" : [ "officialVisitorId" ]
       },
       "DlqMessage" : {
         "type" : "object",
