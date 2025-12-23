@@ -2,22 +2,29 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withContext
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @Service
 class OfficialVisitsAllReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: OfficialVisitsNomisApiService,
   private val dpsApiService: OfficialVisitsDpsApiService,
+  private val mappingService: OfficialVisitsMappingService,
+  @param:Value($$"${reports.official-visits.all-visits.reconciliation.page-size:10}") private val pageSize: Int = 10,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -55,12 +62,88 @@ class OfficialVisitsAllReconciliationService(
   suspend fun generateAllVisitsReconciliationReport(): ReconciliationResult<MismatchVisit> {
     checkTotalsMatch()
 
-    return ReconciliationResult(
-      mismatches = emptyList(),
-      itemsChecked = 0,
-      pagesChecked = 0,
+    return generateReconciliationReport(
+      threadCount = pageSize,
+      checkMatch = ::checkVisitsMatch,
+      nextPage = ::getNextNomisVisitIdsForPage,
     )
   }
+
+  private suspend fun getNextNomisVisitIdsForPage(lastNomisVisitId: Long): ReconciliationPageResult<Long> = runCatching {
+    nomisApiService.getOfficialVisitIdsByLastId(lastVisitId = lastNomisVisitId, pageSize = pageSize.toLong())
+  }
+    .onFailure {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_ALL_VISITS_PREFIX-mismatch-page-error",
+        mapOf(
+          "nomisVisitId" to lastNomisVisitId.toString(),
+        ),
+      )
+      log.error("Unable to match entire page of visits from nomisVisitId: $lastNomisVisitId", it)
+    }
+    .map { ReconciliationSuccessPageResult(ids = it.ids.map { it.visitId }, last = it.ids.last().visitId) }
+    .getOrElse { ReconciliationErrorPageResult(it) }
+    .also { log.info("Page requested from visit: $lastNomisVisitId, with $pageSize visits") }
+
+  suspend fun checkVisitsMatch(nomisVisitId: Long): MismatchVisit? = runCatching {
+    val (nomisVisit, dpsResult: DpsOfficialVisitResult) = nomisVisitToPossibleDpsVisit(nomisVisitId)
+
+    return when (dpsResult) {
+      is NoMapping -> {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_ALL_VISITS_PREFIX-mismatch",
+          mapOf(
+            "nomisVisitId" to nomisVisitId.toString(),
+            "offenderNo" to nomisVisit.offenderNo,
+            "reason" to "official-visit-mapping-missing",
+          ),
+        )
+        MismatchVisit(nomisVisitId = nomisVisitId)
+      }
+
+      is NoOfficialVisit -> {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_ALL_VISITS_PREFIX-mismatch",
+          mapOf(
+            "nomisVisitId" to nomisVisitId.toString(),
+            "dpsVisitId" to dpsResult.dpsVisitId,
+            "offenderNo" to nomisVisit.offenderNo,
+            "reason" to "dps-record-missing",
+          ),
+        )
+        MismatchVisit(nomisVisitId = nomisVisitId)
+      }
+
+      is OfficialVisit -> {
+        // TODO - compare visits
+        null
+      }
+    }
+  }.onFailure {
+    telemetryClient.trackEvent(
+      "$TELEMETRY_ALL_VISITS_PREFIX-mismatch-error",
+      mapOf(
+        "nomisVisitId" to "$nomisVisitId",
+      ),
+    )
+  }.getOrNull()
+
+  private suspend fun nomisVisitToPossibleDpsVisit(nomisVisitId: Long): Pair<OfficialVisitResponse, DpsOfficialVisitResult> = withContext(Dispatchers.Unconfined) {
+    async { nomisApiService.getOfficialVisit(nomisVisitId) } to
+      async {
+        val mapping = mappingService.getByNomisIdsOrNull(nomisVisitId)
+        if (mapping != null) {
+          val dpsOfficialVisit = dpsApiService.getOfficialVisitOrNull(mapping.dpsId.toLong())
+          if (dpsOfficialVisit == null) {
+            NoOfficialVisit(mapping.dpsId)
+          } else {
+            OfficialVisit(dpsOfficialVisit)
+          }
+        } else {
+          NoMapping()
+        }
+      }
+  }.awaitBoth()
 
   private suspend fun checkTotalsMatch() = runCatching {
     val (nomisTotal, dpsTotal) = withContext(Dispatchers.Unconfined) {
@@ -89,3 +172,8 @@ class OfficialVisitsAllReconciliationService(
 data class MismatchVisit(
   val nomisVisitId: Long,
 )
+
+sealed interface DpsOfficialVisitResult
+data class OfficialVisit(val visit: SyncOfficialVisit) : DpsOfficialVisitResult
+class NoMapping : DpsOfficialVisitResult
+data class NoOfficialVisit(val dpsVisitId: String) : DpsOfficialVisitResult
