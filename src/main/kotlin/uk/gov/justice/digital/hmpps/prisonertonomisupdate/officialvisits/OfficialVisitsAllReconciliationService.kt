@@ -24,7 +24,7 @@ class OfficialVisitsAllReconciliationService(
   private val nomisApiService: OfficialVisitsNomisApiService,
   private val dpsApiService: OfficialVisitsDpsApiService,
   private val mappingService: OfficialVisitsMappingService,
-  @param:Value($$"${reports.official-visits.all-visits.reconciliation.page-size:10}") private val pageSize: Int = 10,
+  @param:Value($$"${reports.official-visits.all-visits.reconciliation.page-size}") private val pageSize: Int = 30,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
