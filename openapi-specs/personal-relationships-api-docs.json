@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-17.3541.2937a9d"
+    "version" : "2025-12-19.3579.b265353"
   },
   "servers" : [ {
     "url" : "/",
@@ -7910,7 +7910,7 @@
       "get" : {
         "tags" : [ "Contacts" ],
         "summary" : "Search contacts",
-        "description" : "Search all contacts by their last name or first name or middle name or date of birth",
+        "description" : "Search all contacts by their last name or first name or middle name or date of birth or contact id",
         "operationId" : "searchContacts",
         "parameters" : [ {
           "name" : "lastName",
@@ -7944,254 +7944,26 @@
           },
           "example" : "Simon"
         }, {
-          "name" : "dateOfBirth",
-          "in" : "query",
-          "description" : "Date of Birth of the contact in dd/MM/yyyy format",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "example" : "30/12/2010"
-        }, {
-          "name" : "includeAnyExistingRelationshipsToPrisoner",
-          "in" : "query",
-          "description" : "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "[a-zA-Z0-9]*"
-          },
-          "example" : "A1234BC"
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "description" : "Zero-based page index (0..N)",
-          "schema" : {
-            "type" : "integer",
-            "default" : 0
-          }
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "description" : "The size of the page to be returned",
-          "schema" : {
-            "type" : "integer",
-            "default" : 20
-          }
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Found contacts",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PagedModelContactSearchResultItem"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/contact/search/partial-contact-id" : {
-      "get" : {
-        "tags" : [ "Contacts" ],
-        "summary" : "Search contacts by partial contact id",
-        "description" : "Search contacts by a partial match on contact id (contact id as string). Returns contacts whose contactId string contains the provided value.",
-        "operationId" : "searchContactsByIdPartialMatch",
-        "parameters" : [ {
           "name" : "contactId",
           "in" : "query",
-          "description" : "The contact id (partial match)",
-          "required" : true,
+          "required" : false,
           "schema" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "example" : 123
+            "type" : "string"
+          }
         }, {
           "name" : "dateOfBirth",
           "in" : "query",
-          "description" : "Date of Birth of the contact in dd/MM/yyyy format",
+          "description" : "The contact id",
           "required" : false,
           "schema" : {
             "type" : "string",
             "format" : "date"
           },
-          "example" : "30/12/2010"
-        }, {
-          "name" : "includeAnyExistingRelationshipsToPrisoner",
-          "in" : "query",
-          "description" : "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "[a-zA-Z0-9]*"
-          },
-          "example" : "A1234BC"
-        }, {
-          "name" : "page",
-          "in" : "query",
-          "description" : "Zero-based page index (0..N)",
-          "schema" : {
-            "type" : "integer",
-            "default" : 0
-          }
-        }, {
-          "name" : "size",
-          "in" : "query",
-          "description" : "The size of the page to be returned",
-          "schema" : {
-            "type" : "integer",
-            "default" : 20
-          }
-        }, {
-          "name" : "sort",
-          "in" : "query",
-          "description" : "Sorting criteria in the format: property,(asc|desc). Default sort order is ascending. Multiple sort criteria are supported.",
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Found contacts",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PagedModelAdvancedContactSearchResultItem"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/contact/advanced-search" : {
-      "get" : {
-        "tags" : [ "Contacts" ],
-        "summary" : "Sound like or partial Search contacts",
-        "description" : "Search all contacts by their last name or first name or middle name or date of birth with improved matching algorithms, such as sounds-like or partial search for contacts.",
-        "operationId" : "advancedSearchContacts",
-        "parameters" : [ {
-          "name" : "lastName",
-          "in" : "query",
-          "description" : "Last name of the contact",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "minLength" : 1,
-            "pattern" : "[a-zA-Z\\s,.'-]*"
-          },
-          "example" : "Jones"
-        }, {
-          "name" : "firstName",
-          "in" : "query",
-          "description" : "First name of the contact",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "[a-zA-Z\\s,.'-]*"
-          },
-          "example" : "Elton"
-        }, {
-          "name" : "middleNames",
-          "in" : "query",
-          "description" : "Middle names of the contact",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "[a-zA-Z\\s,.'-]*"
-          },
-          "example" : "Simon"
-        }, {
-          "name" : "dateOfBirth",
-          "in" : "query",
-          "description" : "Date of Birth of the contact in dd/MM/yyyy format",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "example" : "30/12/2010"
+          "example" : 123456
         }, {
           "name" : "soundsLike",
           "in" : "query",
-          "description" : "If true, use sounds-like search (trigram similarity) for name fields. If false, use partial match.",
+          "description" : "If true, use sounds-like search (trigram similarity)",
           "required" : false,
           "schema" : {
             "type" : "boolean"
@@ -8240,7 +8012,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PagedModelAdvancedContactSearchResultItem"
+                  "$ref" : "#/components/schemas/PagedModelContactSearchResultItem"
                 }
               }
             }
@@ -16110,78 +15882,6 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/ContactSearchResultItem"
-            }
-          },
-          "page" : {
-            "$ref" : "#/components/schemas/PageMetadata"
-          }
-        }
-      },
-      "AdvancedContactSearchResultItem" : {
-        "type" : "object",
-        "description" : "The details of a contact as an individual",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the contact",
-            "example" : 123456
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "The last name of the contact",
-            "example" : "Doe"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "The first name of the contact",
-            "example" : "John"
-          },
-          "middleNames" : {
-            "type" : "string",
-            "description" : "The middle name of the contact, if any",
-            "example" : "William"
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date of birth of the contact, if known",
-            "example" : "1980-01-01"
-          },
-          "deceasedDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date the contact deceased, if known",
-            "example" : "1980-01-01"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The id of the user who created the contact",
-            "example" : "JD000001"
-          },
-          "createdTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The timestamp of when the contact was created",
-            "example" : "2024-01-01T00:00:00Z"
-          },
-          "existingRelationships" : {
-            "type" : "array",
-            "description" : "A list of existing relationships to a prisoner if a check against the prisoner number was requested. Empty if there are no existing relationships or null if it was not requested.",
-            "items" : {
-              "$ref" : "#/components/schemas/ExistingRelationshipToPrisoner"
-            }
-          }
-        },
-        "required" : [ "firstName", "id", "lastName" ]
-      },
-      "PagedModelAdvancedContactSearchResultItem" : {
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/AdvancedContactSearchResultItem"
             }
           },
           "page" : {
