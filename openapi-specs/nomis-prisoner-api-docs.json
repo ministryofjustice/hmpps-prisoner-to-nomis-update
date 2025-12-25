@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-22.846.f7f182b"
+    "version" : "2025-12-24.866.aba3754"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -11403,6 +11403,44 @@
         }
       }
     },
+    "/csra/{offenderNo}" : {
+      "post" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Creates a CSRA record for a prisoner",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createCsra",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CsraDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraCreateResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/corporates" : {
       "post" : {
         "tags" : [ "corporate-resource" ],
@@ -18714,6 +18752,51 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/csra/booking/{bookingId}/sequence/{sequence}" : {
+      "get" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Get a CSRA record for a prisoner",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCsra",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "description" : "Booking Id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking Id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        }, {
+          "name" : "sequence",
+          "in" : "path",
+          "description" : "Sequence within booking",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Sequence within booking",
+            "example" : 3
+          },
+          "example" : 3
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CsraDto"
                 }
               }
             }
@@ -27831,6 +27914,125 @@
         },
         "required" : [ "codeList" ]
       },
+      "CsraDto" : {
+        "type" : "object",
+        "properties" : {
+          "assessmentDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date the CSRA was created",
+            "example" : "2025-11-22"
+          },
+          "type" : {
+            "type" : "string",
+            "description" : "CSRA type as configured in the ASSESSMENTS table:\n    CSRF\t  CSR Full\n    CSRH\t  CSR Health\n    CSRDO\t  CSR Locate\n    CSR\t    CSR Rating\n    CSR1\t  CSR Reception\n    CSRREV\tCSR Review\n  ",
+            "enum" : [ "CSRF", "CSRH", "CSRDO", "CSR", "CSR1", "CSRREV" ]
+          },
+          "calculatedLevel" : {
+            "type" : "string",
+            "description" : "The calculated CSRA level",
+            "example" : "STANDARD"
+          },
+          "score" : {
+            "type" : "number",
+            "description" : "Score",
+            "example" : 1000
+          },
+          "status" : {
+            "type" : "string",
+            "description" : "Status, active, inactive or provisional",
+            "enum" : [ "I", "A", "P" ]
+          },
+          "assessmentStaffId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Staff id of user that created the CSRA",
+            "example" : 123456
+          },
+          "committeeCode" : {
+            "type" : "string",
+            "description" : "The assessment committee code (reference code in domain 'ASSESS_COMM')"
+          },
+          "nextReviewDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Next review date, defaults to current date + 6 months, if not provided"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Comment text"
+          },
+          "placementAgencyId" : {
+            "type" : "string",
+            "description" : "A prison to be transferred to",
+            "example" : "LEI"
+          },
+          "createdDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Timestamp for when the CSRA was created",
+            "example" : "2025-12-06T12:34:56"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The user who created the CSRA, required for CSRA creation",
+            "example" : "NQP56Y"
+          },
+          "reviewLevel" : {
+            "type" : "string",
+            "description" : "The review CSRA level"
+          },
+          "approvedLevel" : {
+            "type" : "string",
+            "description" : "The approval CSRA level"
+          },
+          "evaluationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Evaluation or approval date"
+          },
+          "evaluationResultCode" : {
+            "type" : "string",
+            "description" : "Approved or rejected indicator",
+            "enum" : [ "APP", "REJ" ]
+          },
+          "reviewCommitteeCode" : {
+            "type" : "string",
+            "description" : "The review/approval committee code (reference code in domain 'ASSESS_COMM')"
+          },
+          "reviewCommitteeComment" : {
+            "type" : "string",
+            "description" : "Approval Committee Comment text"
+          },
+          "reviewPlacementAgencyId" : {
+            "type" : "string",
+            "description" : "Approval Comment text"
+          },
+          "reviewComment" : {
+            "type" : "string",
+            "description" : "Approval Comment text"
+          }
+        },
+        "required" : [ "assessmentDate", "assessmentStaffId", "score", "status", "type" ]
+      },
+      "CsraCreateResponse" : {
+        "type" : "object",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The booking id",
+            "example" : 2345678
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The sequence number of the assessment",
+            "example" : 2
+          }
+        },
+        "required" : [ "bookingId", "sequence" ]
+      },
       "CreateCorporateOrganisationRequest" : {
         "type" : "object",
         "description" : "Request to create a corporate organisation in NOMIS",
@@ -28558,12 +28760,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
