@@ -236,6 +236,41 @@ class ContactPersonMappingApiMockServer(private val objectMapper: ObjectMapper) 
       )
     }
   }
+  fun stubGetByDpsContactAddressIdOrNullAsNullFollowedByValue(
+    dpsContactAddressId: Long = 123456,
+    mapping: PersonAddressMappingDto = PersonAddressMappingDto(
+      nomisId = 654321,
+      dpsId = dpsContactAddressId.toString(),
+      mappingType = PersonAddressMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    val scenario = "Address Mapping Created Scenario"
+    val foundScenario = "Address Mapping Found Scenario"
+    mappingServer.stubFor(
+      get(urlEqualTo("/mapping/contact-person/address/dps-contact-address-id/$dpsContactAddressId"))
+        .inScenario(scenario)
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ).willSetStateTo(foundScenario),
+    )
+
+    mappingServer.stubFor(
+      get(urlEqualTo("/mapping/contact-person/address/dps-contact-address-id/$dpsContactAddressId"))
+        .inScenario(scenario)
+        .whenScenarioStateIs(foundScenario)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
   fun stubGetByDpsContactAddressId(
     dpsContactAddressId: Long = 123456,
     mapping: PersonAddressMappingDto = PersonAddressMappingDto(
