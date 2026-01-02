@@ -137,6 +137,41 @@ class OfficialVisitsAllReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenVisitEndTimeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            startDateTime = "2026-03-30T10:00".dateTime(),
+            endDateTime = "2026-03-30T11:15".dateTime(),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            visitDate = "2026-03-30".date(),
+            startTime = "10:00",
+            endTime = "11:30",
+          ),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("official-visits-all-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsVisitId"]).isEqualTo(dpsVisitId.toString())
+            assertThat(it["reason"]).isEqualTo("different-visit-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenVisitorIdsDoNotMatch {
       @BeforeEach
       fun setUp() {

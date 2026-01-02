@@ -190,7 +190,11 @@ data class MismatchVisit(
   val nomisVisitId: Long,
 )
 
-private data class Visit(val visitStartDateTime: LocalDateTime, val visitors: List<Visitor>)
+private data class Visit(
+  val startDateTime: LocalDateTime,
+  val endDateTime: LocalDateTime,
+  val visitors: List<Visitor>,
+)
 private data class Visitor(val nomisPersonAndDpsContactId: Long)
 sealed interface DpsOfficialVisitResult
 data class OfficialVisit(val visit: SyncOfficialVisit) : DpsOfficialVisitResult
@@ -198,7 +202,8 @@ class NoMapping : DpsOfficialVisitResult
 data class NoOfficialVisit(val dpsVisitId: String) : DpsOfficialVisitResult
 
 private fun OfficialVisitResponse.toVisit() = Visit(
-  visitStartDateTime = this.startDateTime,
+  startDateTime = this.startDateTime,
+  endDateTime = this.endDateTime,
   visitors = this.visitors.map {
     Visitor(
       nomisPersonAndDpsContactId = it.personId,
@@ -206,7 +211,8 @@ private fun OfficialVisitResponse.toVisit() = Visit(
   }.sortedBy { it.nomisPersonAndDpsContactId },
 )
 private fun SyncOfficialVisit.toVisit() = Visit(
-  visitStartDateTime = this.visitDate.atTime(this.startTime.asTime()),
+  startDateTime = this.visitDate.atTime(this.startTime.asTime()),
+  endDateTime = this.visitDate.atTime(this.endTime.asTime()),
   visitors = this.visitors.filter { it.contactId != null }.map {
     Visitor(
       nomisPersonAndDpsContactId = it.contactId!!,
