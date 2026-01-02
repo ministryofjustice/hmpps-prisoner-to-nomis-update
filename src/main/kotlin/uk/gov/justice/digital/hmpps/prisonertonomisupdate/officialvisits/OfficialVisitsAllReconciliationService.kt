@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 @Service
 class OfficialVisitsAllReconciliationService(
@@ -81,7 +83,7 @@ class OfficialVisitsAllReconciliationService(
       )
       log.error("Unable to match entire page of visits from nomisVisitId: $lastNomisVisitId", it)
     }
-    .map { ReconciliationSuccessPageResult(ids = it.ids.map { it.visitId }, last = it.ids.last().visitId) }
+    .map { page -> ReconciliationSuccessPageResult(ids = page.ids.map { it.visitId }, last = page.ids.last().visitId) }
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from visit: $lastNomisVisitId, with $pageSize visits") }
 
@@ -115,8 +117,21 @@ class OfficialVisitsAllReconciliationService(
       }
 
       is OfficialVisit -> {
-        // TODO - compare visits
-        null
+        checkVisitsMatch(
+          nomisVisitId = nomisVisitId,
+          dpsVisit = dpsResult.visit.toVisit(),
+          nomisVisit = nomisVisit.toVisit(),
+        )?.also {
+          telemetryClient.trackEvent(
+            "$TELEMETRY_ALL_VISITS_PREFIX-mismatch",
+            mapOf(
+              "nomisVisitId" to nomisVisitId.toString(),
+              "dpsVisitId" to dpsResult.visit.officialVisitId,
+              "offenderNo" to nomisVisit.offenderNo,
+              "reason" to "different-visit-details",
+            ),
+          )
+        }
       }
     }
   }.onFailure {
@@ -167,13 +182,45 @@ class OfficialVisitsAllReconciliationService(
       mapOf(),
     )
   }
+
+  private fun checkVisitsMatch(nomisVisitId: Long, dpsVisit: Visit, nomisVisit: Visit): MismatchVisit? = takeIf { dpsVisit != nomisVisit }?.let { MismatchVisit(nomisVisitId = nomisVisitId) }
 }
 
 data class MismatchVisit(
   val nomisVisitId: Long,
 )
 
+private data class Visit(
+  val startDateTime: LocalDateTime,
+  val endDateTime: LocalDateTime,
+  val prisonId: String,
+  val visitors: List<Visitor>,
+)
+private data class Visitor(val nomisPersonAndDpsContactId: Long)
 sealed interface DpsOfficialVisitResult
 data class OfficialVisit(val visit: SyncOfficialVisit) : DpsOfficialVisitResult
 class NoMapping : DpsOfficialVisitResult
 data class NoOfficialVisit(val dpsVisitId: String) : DpsOfficialVisitResult
+
+private fun OfficialVisitResponse.toVisit() = Visit(
+  startDateTime = this.startDateTime,
+  endDateTime = this.endDateTime,
+  prisonId = this.prisonId,
+  visitors = this.visitors.map {
+    Visitor(
+      nomisPersonAndDpsContactId = it.personId,
+    )
+  }.sortedBy { it.nomisPersonAndDpsContactId },
+)
+private fun SyncOfficialVisit.toVisit() = Visit(
+  startDateTime = this.visitDate.atTime(this.startTime.asTime()),
+  endDateTime = this.visitDate.atTime(this.endTime.asTime()),
+  prisonId = this.prisonCode,
+  visitors = this.visitors.filter { it.contactId != null }.map {
+    Visitor(
+      nomisPersonAndDpsContactId = it.contactId!!,
+    )
+  }.sortedBy { it.nomisPersonAndDpsContactId },
+)
+
+private fun String.asTime() = LocalTime.parse(this)

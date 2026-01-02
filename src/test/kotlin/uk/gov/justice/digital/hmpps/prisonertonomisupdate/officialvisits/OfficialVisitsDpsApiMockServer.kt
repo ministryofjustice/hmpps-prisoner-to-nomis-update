@@ -65,12 +65,12 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
     fun syncOfficialVisit() = SyncOfficialVisit(
       officialVisitId = 1,
-      visitDate = LocalDate.now(),
+      visitDate = LocalDate.parse("2020-01-01"),
       startTime = "10:00",
       endTime = "11:00",
       prisonVisitSlotId = 10,
       dpsLocationId = UUID.randomUUID(),
-      prisonCode = "WWI",
+      prisonCode = "MDI",
       prisonerNumber = "A1234KT",
       statusCode = VisitStatusType.COMPLETED,
       visitors = listOf(syncOfficialVisitor()),
@@ -81,11 +81,11 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
     fun syncOfficialVisitor() = SyncOfficialVisitor(
       officialVisitorId = 1,
-      contactId = 1,
+      contactId = 100,
       firstName = "Ayomide",
       lastName = "Olawale",
       relationshipType = RelationshipType.OFFICIAL,
-      relationshipCode = "SOL",
+      relationshipCode = "POL",
       attendanceCode = AttendanceType.ATTENDED,
     )
   }
