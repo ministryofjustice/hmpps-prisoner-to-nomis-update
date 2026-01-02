@@ -15,7 +15,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -194,9 +197,11 @@ private data class Visit(
   val startDateTime: LocalDateTime,
   val endDateTime: LocalDateTime,
   val prisonId: String,
+  val visitStatus: VisitStatusType,
+  val visitOutcome: VisitCompletionType?,
   val visitors: List<Visitor>,
 )
-private data class Visitor(val nomisPersonAndDpsContactId: Long)
+private data class Visitor(val nomisPersonAndDpsContactId: Long, val attendance: AttendanceType?)
 sealed interface DpsOfficialVisitResult
 data class OfficialVisit(val visit: SyncOfficialVisit) : DpsOfficialVisitResult
 class NoMapping : DpsOfficialVisitResult
@@ -206,9 +211,12 @@ private fun OfficialVisitResponse.toVisit() = Visit(
   startDateTime = this.startDateTime,
   endDateTime = this.endDateTime,
   prisonId = this.prisonId,
+  visitStatus = this.visitStatus.code.toDpsVisitStatusType(),
+  visitOutcome = this.visitOutcome?.code.toDpsVisitCompletionType(this.visitStatus.code),
   visitors = this.visitors.map {
     Visitor(
       nomisPersonAndDpsContactId = it.personId,
+      attendance = it.visitorAttendanceOutcome?.code?.toDpsAttendanceType(),
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
 )
@@ -216,11 +224,69 @@ private fun SyncOfficialVisit.toVisit() = Visit(
   startDateTime = this.visitDate.atTime(this.startTime.asTime()),
   endDateTime = this.visitDate.atTime(this.endTime.asTime()),
   prisonId = this.prisonCode,
+  visitStatus = this.statusCode,
+  visitOutcome = this.completionCode,
   visitors = this.visitors.filter { it.contactId != null }.map {
     Visitor(
       nomisPersonAndDpsContactId = it.contactId!!,
+      attendance = it.attendanceCode,
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
 )
 
 private fun String.asTime() = LocalTime.parse(this)
+
+private fun String.toDpsVisitStatusType(): VisitStatusType = when (this) {
+  "CANC" -> VisitStatusType.CANCELLED
+  "VDE" -> VisitStatusType.COMPLETED
+  "HMPOP" -> VisitStatusType.COMPLETED
+  "OFFEND" -> VisitStatusType.COMPLETED
+  "VISITOR" -> VisitStatusType.COMPLETED
+  "NORM" -> VisitStatusType.COMPLETED
+  "SCH" -> VisitStatusType.SCHEDULED
+  "EXP" -> VisitStatusType.EXPIRED
+  else -> throw IllegalArgumentException("Unknown visit status code: $this")
+}
+
+private fun String?.toDpsVisitCompletionType(nomisVisitStatus: String): VisitCompletionType? = when (this) {
+  "NO_VO" -> VisitCompletionType.STAFF_CANCELLED
+
+  "VO_CANCEL" -> VisitCompletionType.STAFF_CANCELLED
+
+  "REFUSED" -> VisitCompletionType.PRISONER_REFUSED
+
+  "OFFCANC" -> VisitCompletionType.PRISONER_CANCELLED
+
+  "VISCANC" -> VisitCompletionType.VISITOR_CANCELLED
+
+  "NSHOW" -> VisitCompletionType.VISITOR_NO_SHOW
+
+  "ADMIN" -> VisitCompletionType.STAFF_CANCELLED
+
+  "ADMIN_CANCEL" -> VisitCompletionType.STAFF_CANCELLED
+
+  "HMP" -> VisitCompletionType.STAFF_CANCELLED
+
+  "NO_ID" -> VisitCompletionType.VISITOR_DENIED
+
+  "BATCH_CANC" -> VisitCompletionType.STAFF_CANCELLED
+
+  null -> when (nomisVisitStatus) {
+    "VDE" -> VisitCompletionType.VISITOR_DENIED
+    "HMPOP" -> VisitCompletionType.STAFF_EARLY
+    "OFFEND" -> VisitCompletionType.PRISONER_EARLY
+    "VISITOR" -> VisitCompletionType.VISITOR_EARLY
+    "NORM" -> VisitCompletionType.NORMAL
+    "SCH" -> null
+    "EXP" -> VisitCompletionType.NORMAL
+    else -> null
+  }
+
+  else -> null
+}
+
+private fun String.toDpsAttendanceType(): AttendanceType = when (this) {
+  "ATT" -> AttendanceType.ATTENDED
+  "ABS" -> AttendanceType.ABSENT
+  else -> throw IllegalArgumentException("Unknown attendance type code: $this")
+}

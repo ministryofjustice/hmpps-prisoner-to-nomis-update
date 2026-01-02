@@ -48,6 +48,7 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
       endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
       internalLocationId = 40,
       visitStatus = CodeDescription("NORM", "Normal Completion"),
+      visitOutcome = null,
       visitors = listOf(officialVisitor()),
     )
 
@@ -62,6 +63,7 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
       lastName = "OLAWALE",
       leadVisitor = true,
       assistedVisit = true,
+      visitorAttendanceOutcome = CodeDescription("ATT", "Attended"),
       relationships = listOf(
         ContactRelationship(
           relationshipType = CodeDescription(code = "POL", description = "Police"),
