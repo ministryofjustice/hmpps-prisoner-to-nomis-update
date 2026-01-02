@@ -193,6 +193,7 @@ data class MismatchVisit(
 private data class Visit(
   val startDateTime: LocalDateTime,
   val endDateTime: LocalDateTime,
+  val prisonId: String,
   val visitors: List<Visitor>,
 )
 private data class Visitor(val nomisPersonAndDpsContactId: Long)
@@ -204,6 +205,7 @@ data class NoOfficialVisit(val dpsVisitId: String) : DpsOfficialVisitResult
 private fun OfficialVisitResponse.toVisit() = Visit(
   startDateTime = this.startDateTime,
   endDateTime = this.endDateTime,
+  prisonId = this.prisonId,
   visitors = this.visitors.map {
     Visitor(
       nomisPersonAndDpsContactId = it.personId,
@@ -213,6 +215,7 @@ private fun OfficialVisitResponse.toVisit() = Visit(
 private fun SyncOfficialVisit.toVisit() = Visit(
   startDateTime = this.visitDate.atTime(this.startTime.asTime()),
   endDateTime = this.visitDate.atTime(this.endTime.asTime()),
+  prisonId = this.prisonCode,
   visitors = this.visitors.filter { it.contactId != null }.map {
     Visitor(
       nomisPersonAndDpsContactId = it.contactId!!,

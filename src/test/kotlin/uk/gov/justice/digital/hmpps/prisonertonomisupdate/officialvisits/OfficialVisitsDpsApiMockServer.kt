@@ -70,7 +70,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       endTime = "11:00",
       prisonVisitSlotId = 10,
       dpsLocationId = UUID.randomUUID(),
-      prisonCode = "WWI",
+      prisonCode = "MDI",
       prisonerNumber = "A1234KT",
       statusCode = VisitStatusType.COMPLETED,
       visitors = listOf(syncOfficialVisitor()),
