@@ -208,6 +208,36 @@ class OfficialVisitsAllReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenPrisonNumberDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = "A9999KT",
+          ),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("official-visits-all-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsVisitId"]).isEqualTo(dpsVisitId.toString())
+            assertThat(it["reason"]).isEqualTo("different-visit-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenStatusDoesNotMatch {
       @BeforeEach
       fun setUp() {

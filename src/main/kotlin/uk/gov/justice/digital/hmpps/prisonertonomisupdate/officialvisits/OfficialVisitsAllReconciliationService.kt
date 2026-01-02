@@ -103,7 +103,7 @@ class OfficialVisitsAllReconciliationService(
             "reason" to "official-visit-mapping-missing",
           ),
         )
-        MismatchVisit(nomisVisitId = nomisVisitId)
+        MismatchVisit(nomisVisitId = nomisVisitId, reason = "official-visit-mapping-missing")
       }
 
       is NoOfficialVisit -> {
@@ -116,7 +116,7 @@ class OfficialVisitsAllReconciliationService(
             "reason" to "dps-record-missing",
           ),
         )
-        MismatchVisit(nomisVisitId = nomisVisitId)
+        MismatchVisit(nomisVisitId = nomisVisitId, reason = "dps-record-missing")
       }
 
       is OfficialVisit -> {
@@ -186,48 +186,61 @@ class OfficialVisitsAllReconciliationService(
     )
   }
 
-  private fun checkVisitsMatch(nomisVisitId: Long, dpsVisit: Visit, nomisVisit: Visit): MismatchVisit? = takeIf { dpsVisit != nomisVisit }?.let { MismatchVisit(nomisVisitId = nomisVisitId) }
+  private fun checkVisitsMatch(nomisVisitId: Long, dpsVisit: OfficialVisitSummary, nomisVisit: OfficialVisitSummary): MismatchVisit? = takeIf { dpsVisit != nomisVisit }?.let {
+    MismatchVisit(
+      nomisVisitId = nomisVisitId,
+      reason = "different-visit-details",
+      nomisVisit = nomisVisit,
+      dpsVisit = dpsVisit,
+    )
+  }
 }
 
 data class MismatchVisit(
   val nomisVisitId: Long,
+  val reason: String,
+  val nomisVisit: OfficialVisitSummary? = null,
+  val dpsVisit: OfficialVisitSummary? = null,
 )
 
-private data class Visit(
+data class OfficialVisitSummary(
   val startDateTime: LocalDateTime,
   val endDateTime: LocalDateTime,
   val prisonId: String,
+  val offenderNo: String,
   val visitStatus: VisitStatusType,
   val visitOutcome: VisitCompletionType?,
-  val visitors: List<Visitor>,
+  val visitors: List<VisitorSummary>,
 )
-private data class Visitor(val nomisPersonAndDpsContactId: Long, val attendance: AttendanceType?)
+data class VisitorSummary(val nomisPersonAndDpsContactId: Long, val attendance: AttendanceType?)
 sealed interface DpsOfficialVisitResult
 data class OfficialVisit(val visit: SyncOfficialVisit) : DpsOfficialVisitResult
 class NoMapping : DpsOfficialVisitResult
 data class NoOfficialVisit(val dpsVisitId: String) : DpsOfficialVisitResult
 
-private fun OfficialVisitResponse.toVisit() = Visit(
+private fun OfficialVisitResponse.toVisit() = OfficialVisitSummary(
   startDateTime = this.startDateTime,
   endDateTime = this.endDateTime,
   prisonId = this.prisonId,
+  offenderNo = this.offenderNo,
   visitStatus = this.visitStatus.code.toDpsVisitStatusType(),
   visitOutcome = this.visitOutcome?.code.toDpsVisitCompletionType(this.visitStatus.code),
   visitors = this.visitors.map {
-    Visitor(
+    VisitorSummary(
       nomisPersonAndDpsContactId = it.personId,
       attendance = it.visitorAttendanceOutcome?.code?.toDpsAttendanceType(),
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
 )
-private fun SyncOfficialVisit.toVisit() = Visit(
+private fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
   startDateTime = this.visitDate.atTime(this.startTime.asTime()),
   endDateTime = this.visitDate.atTime(this.endTime.asTime()),
   prisonId = this.prisonCode,
+  offenderNo = this.prisonerNumber,
   visitStatus = this.statusCode,
   visitOutcome = this.completionCode,
   visitors = this.visitors.filter { it.contactId != null }.map {
-    Visitor(
+    VisitorSummary(
       nomisPersonAndDpsContactId = it.contactId!!,
       attendance = it.attendanceCode,
     )
