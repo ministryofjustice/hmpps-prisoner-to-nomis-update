@@ -277,7 +277,7 @@ class OfficialVisitsAllReconciliationServiceTest {
           nomisVisit = officialVisitResponse().copy(
             offenderNo = offenderNo,
             visitStatus = CodeDescription("CANC", "Cancelled"),
-            visitOutcome = CodeDescription("OFFCANC", "Offender Cancelled"),
+            cancellationReason = CodeDescription("OFFCANC", "Offender Cancelled"),
           ),
           dpsVisit = syncOfficialVisit().copy(
             prisonerNumber = offenderNo,
@@ -300,6 +300,30 @@ class OfficialVisitsAllReconciliationServiceTest {
           },
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    inner class WhenCancellationReasonNotPresentInNOMISButCompletedNormally {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            visitStatus = CodeDescription("NORM", "Normal Completion"),
+            cancellationReason = null,
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            statusCode = VisitStatusType.COMPLETED,
+            completionCode = VisitCompletionType.NORMAL,
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report or return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNull()
       }
     }
 

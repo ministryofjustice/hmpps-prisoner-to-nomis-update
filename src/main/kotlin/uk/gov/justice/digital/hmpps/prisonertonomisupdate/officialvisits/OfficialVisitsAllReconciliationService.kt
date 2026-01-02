@@ -224,7 +224,7 @@ private fun OfficialVisitResponse.toVisit() = OfficialVisitSummary(
   prisonId = this.prisonId,
   offenderNo = this.offenderNo,
   visitStatus = this.visitStatus.code.toDpsVisitStatusType(),
-  visitOutcome = this.visitOutcome?.code.toDpsVisitCompletionType(this.visitStatus.code),
+  visitOutcome = this.cancellationReason?.code.toDpsVisitCompletionType(this.visitStatus.code),
   visitors = this.visitors.map {
     VisitorSummary(
       nomisPersonAndDpsContactId = it.personId,
