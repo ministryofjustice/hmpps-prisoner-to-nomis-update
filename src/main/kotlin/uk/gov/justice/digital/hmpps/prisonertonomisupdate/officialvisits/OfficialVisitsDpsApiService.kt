@@ -29,7 +29,7 @@ class OfficialVisitsDpsApiService(
     pageSize: Int = 1,
   ): PagedModelSyncOfficialVisitIdResponse = api.prepare(
     api.getAllOfficialVisitIdsRequestConfig(
-      currentTerm = false,
+      currentTermOnly = false,
       page = pageNumber,
       size = pageSize,
     ),

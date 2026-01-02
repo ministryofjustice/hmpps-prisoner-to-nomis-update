@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-23.227.64a0f50"
+    "version" : "2025-12-24.232.abf76bd"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -481,12 +481,12 @@
         "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
         "operationId" : "getAllOfficialVisitIds",
         "parameters" : [ {
-          "name" : "currentTerm",
+          "name" : "currentTermOnly",
           "in" : "query",
           "required" : false,
           "schema" : {
             "type" : "boolean",
-            "default" : false
+            "default" : true
           }
         }, {
           "name" : "page",
@@ -516,6 +516,16 @@
           }
         } ],
         "responses" : {
+          "200" : {
+            "description" : "A paginated list of all official visit IDs",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PagedModelSyncOfficialVisitId"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
             "content" : {
@@ -1880,6 +1890,33 @@
           }
         },
         "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
+      },
+      "PagedModelSyncOfficialVisitId" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOfficialVisitId"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "SyncOfficialVisitId" : {
+        "type" : "object",
+        "description" : "Response object for sync reconciliation",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID for an Official visits",
+            "example" : 111111
+          }
+        },
+        "required" : [ "officialVisitId" ]
       },
       "SyncOfficialVisit" : {
         "type" : "object",

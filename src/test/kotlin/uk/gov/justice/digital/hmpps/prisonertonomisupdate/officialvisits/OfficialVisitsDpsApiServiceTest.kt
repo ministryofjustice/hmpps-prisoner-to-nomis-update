@@ -64,6 +64,7 @@ class OfficialVisitsDpsApiServiceTest {
 
       dpsOfficialVisitsServer.verify(
         getRequestedFor(urlPathEqualTo("/reconcile/official-visits/identifiers"))
+          .withQueryParam("currentTermOnly", equalTo("false"))
           .withQueryParam("page", equalTo("10"))
           .withQueryParam("size", equalTo("30")),
       )
