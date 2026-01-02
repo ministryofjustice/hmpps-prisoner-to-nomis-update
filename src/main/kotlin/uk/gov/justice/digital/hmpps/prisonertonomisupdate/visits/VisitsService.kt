@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
@@ -190,7 +190,7 @@ class VisitsService(
     vsipToNomisOutcomeMap[it]?.name
   } ?: NomisCancellationOutcome.ADMIN.name
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this, object : TypeReference<T>() {})
 }
 
 data class VisitBookedEvent(
