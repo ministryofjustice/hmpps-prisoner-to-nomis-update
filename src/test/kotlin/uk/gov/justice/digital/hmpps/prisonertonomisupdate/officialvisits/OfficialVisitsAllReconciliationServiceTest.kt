@@ -15,12 +15,16 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitor
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -204,6 +208,72 @@ class OfficialVisitsAllReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenStatusDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            visitStatus = CodeDescription("CANC", "Cancelled"),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            statusCode = VisitStatusType.COMPLETED,
+          ),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("official-visits-all-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsVisitId"]).isEqualTo(dpsVisitId.toString())
+            assertThat(it["reason"]).isEqualTo("different-visit-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenOutcomeDoesNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            visitStatus = CodeDescription("CANC", "Cancelled"),
+            visitOutcome = CodeDescription("OFFCANC", "Offender Cancelled"),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            statusCode = VisitStatusType.CANCELLED,
+            completionCode = VisitCompletionType.VISITOR_CANCELLED,
+          ),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("official-visits-all-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsVisitId"]).isEqualTo(dpsVisitId.toString())
+            assertThat(it["reason"]).isEqualTo("different-visit-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenVisitorIdsDoNotMatch {
       @BeforeEach
       fun setUp() {
@@ -215,6 +285,38 @@ class OfficialVisitsAllReconciliationServiceTest {
           dpsVisit = syncOfficialVisit().copy(
             prisonerNumber = offenderNo,
             visitors = listOf(syncOfficialVisitor().copy(contactId = 9877)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report and return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNotNull()
+        verify(telemetryClient).trackEvent(
+          eq("official-visits-all-reconciliation-mismatch"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsVisitId"]).isEqualTo(dpsVisitId.toString())
+            assertThat(it["reason"]).isEqualTo("different-visit-details")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenVisitorAttendanceDoNotMatch {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            visitors = listOf(officialVisitor().copy(visitorAttendanceOutcome = CodeDescription("ATT", "Attended"))),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            visitors = listOf(syncOfficialVisitor().copy(attendanceCode = AttendanceType.ABSENT)),
           ),
         )
       }
