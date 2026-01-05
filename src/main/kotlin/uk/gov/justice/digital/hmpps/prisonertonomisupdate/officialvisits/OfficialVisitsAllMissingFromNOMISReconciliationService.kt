@@ -22,7 +22,8 @@ class OfficialVisitsAllMissingFromNOMISReconciliationService(
   private val nomisApiService: OfficialVisitsNomisApiService,
   private val dpsApiService: OfficialVisitsDpsApiService,
   private val mappingService: OfficialVisitsMappingService,
-  @param:Value($$"${reports.official-visits.all-missing-nomis-visits.reconciliation.page-size}") private val pageSize: Int = 30,
+  @param:Value($$"${reports.official-visits.all-missing-nomis-visits.reconciliation.page-size}") private val pageSize: Int = 1000,
+  @param:Value($$"${reports.official-visits.all-missing-nomis-visits.reconciliation.thread-count}") private val threadCount: Int = 30,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -61,7 +62,8 @@ class OfficialVisitsAllMissingFromNOMISReconciliationService(
     checkTotalsMatch()
 
     return generateReconciliationReport(
-      threadCount = pageSize,
+      threadCount = threadCount,
+      pageSize = pageSize,
       checkMatch = ::checkNomisVisitExists,
       nextPage = ::getNextNomisVisitIdsForPage,
     )

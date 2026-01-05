@@ -388,4 +388,5 @@ reports:
     all-missing-nomis-visits:
       reconciliation:
         page-size: 2
+        thread-count: 10
 api.locations.timeout: 1s
