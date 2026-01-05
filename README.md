@@ -382,39 +382,70 @@ If the prisoner has been released or transferred to a different prison then ther
 
 For attendances a failure indicates that some bookings have a different number of attendances to pay in NOMIS and DPS. By "attendances to pay" we mean the pay flag is true - not related to the results of the NOMIS payroll for which the rules are many and complex. However, this is a problem that might cause NOMIS to miss payments to the prisoner.
 
-To try and work out what's different start with the following queries:
+To try and work out what's different start with the following DB queries (adjusting date for older reconciliation failures):
 
 NOMIS:
 ```sql
-select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES 
-where OFFENDER_BOOK_ID=<insert offender book id here> 
-and event_date=to_date('<insert report date here>', 'YYYY-MM-DD') 
-and PAY_FLAG='Y';
+select ca.DESCRIPTION, ca.crs_acty_id,oca.* from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES oca
+  join oms_owner.COURSE_ACTIVITIES ca on oca.CRS_ACTY_ID=ca.CRS_ACTY_ID
+  join oms_owner.OFFENDER_BOOKINGS ob on oca.OFFENDER_BOOK_ID=ob.OFFENDER_BOOK_ID
+  join oms_owner.offenders o on ob.ROOT_OFFENDER_ID=o.OFFENDER_ID
+where OFFENDER_ID_DISPLAY='<prisoner number>' and EVENT_DATE = to_date(current_date-1);
 ```
 
 DPS:
 ```sql
-select att.* from attendance att
-join scheduled_instance si on att.scheduled_instance_id = si.scheduled_instance_id
-join allocation al on al.activity_schedule_id = si.activity_schedule_id and att.prisoner_number = al.prisoner_number
-where si.session_date = '<insert report date here>'
-and att.prisoner_number = '<insert offenderNo here>';
+select a.description, si.time_slot, att.*  from attendance att
+  join scheduled_instance si on att.scheduled_instance_id=si.scheduled_instance_id
+  join activity_schedule asch on si.activity_schedule_id=asch.activity_schedule_id
+  join activity a on asch.activity_id=a.activity_id
+where att.prisoner_number='<prisoner number>' and si.session_date = current_date-1;
 ```
 
-To get an overview of what's been happening with the synchronisation events for this offender run the following query in App Insights:
+You should be able to compare the attendances in both systems to work out what's different. Then it's a case of trying to work out why they are different.
+
+To get an overview of what's been happening with the synchronisation events for this offender run the following Log Analytics query in App Insights:
 ```ksql
-customEvents
-| where name startswith "activity"
-| where customDimensions.bookingId == '<insert booking id here>'
+AppEvents
+| where Name startswith "activity"
+| where Properties.bookingId == '<insert booking id here>'
 ```
 
-To get a broader overview of what's been happening with the prisoner run the following query in App Insights:
+To get a broader overview of what's been happening with the prisoner run the following Log Analytics query in App Insights:
 ```ksql
-customEvents
-| where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
+AppEvents
+| where (Properties has '<insert booking id>' or Properties has '<insert offenderNo>')
 ```
 
-Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
+##### Resynchronising attendances from DPS to NOMIS
+
+Often the fix involves grabbing the `attendance_id` from DPS and re-synchronising the DPS attendance which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/Activities%20Update%20Resource/synchroniseUpsertAttendance).
+
+##### Known issues with attendance reconciliation
+
+###### Synchronisation to NOMIS failed
+
+You can spot this issue because either the NOMIS attendances are missing entirely, or the audit fields indicate the NOMIS attendances weren't updated when the attendance was marked in DPS.
+
+The reasons for the synchronisation failure are varied. You can usually work out what happened with the above App Insights queries and some further digging. The most interesting scenario is where DPS failed to generate the `activities.prisoner.attendance-*` domain event, in which case we need to raise with the DPS team. Another interesting failure is where the call to nomis-prisoner-api failed with a 400/500 - though this very rarely happens. If the failure reason is that NOMIS payroll has already run so we rejected the update, it looks like DPS updated the attendance record too late and this might be worth raising with the DPS team. 
+
+Most often the fix is to re-synchronise to NOMIS.
+
+###### Synchronisation to NOMIS failed as already paid in NOMIS (OTDDSBAL)
+
+There is a feature in NOMIS where a prisoner can be paid on the same day as an attendance when they're preparing to be released (instead of waiting for the overnight payroll job). Later in DPS the attendance is either paid or cancelled - but we reject the sync because the attendance is alrady paid in NOMIS. These can be identified because the NOMIS `AUDIT_MODULE_NAME` is `OTDDSBAL`, the NOMIS module that allows early pay.
+
+There's nothing to be done here so this issue can be ignored.
+
+This situation will go away once prisoner finance has been migrated to DPS. (We did look at ignoring these in the reconciliation but it's a bit complicated, and they're easy to spot).
+
+###### Prisoner switched to old booking
+
+We've seen a couple of cases recently where a prisoner was admitted, allocated to an activity and then attended. Later that day the prisoner is switched to an old booking because they've actually returned on a recall.
+
+This means that the prisoner is paid on the wrong booking in NOMIS (i.e. not the active booking) and this confuses the reconciliation.
+
+These can be ignored because the prisoner does actually get paid in NOMIS so there's not much to be done.
 
 ##### Re-running old attendance reconciliation errors
 
