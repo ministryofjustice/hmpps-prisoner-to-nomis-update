@@ -100,4 +100,81 @@ class OfficialVisitsMappingApiServiceTest {
       ).isNull()
     }
   }
+
+  @Nested
+  inner class GetByDpsIdsOrNull {
+    val dpsVisitId = 12345L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+        mapping = OfficialVisitMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitId,
+          mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubGetByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+        mapping = OfficialVisitMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitId,
+          mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/official-visits/visit/dps-id/$dpsVisitId")),
+      )
+    }
+
+    @Test
+    fun `will return dpsId when mapping exists`() = runTest {
+      mockServer.stubGetByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+        mapping = OfficialVisitMappingDto(
+          dpsId = dpsVisitId.toString(),
+          nomisId = 1234,
+          mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      val mapping = apiService.getByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+      )
+
+      assertThat(mapping?.nomisId).isEqualTo(1234)
+    }
+
+    @Test
+    fun `will return null if mapping does not exist`() = runTest {
+      mockServer.stubGetByDpsIdsOrNull(
+        dpsVisitId = dpsVisitId,
+        mapping = null,
+      )
+
+      assertThat(
+        apiService.getByDpsIdsOrNull(
+          dpsVisitId = dpsVisitId,
+        ),
+      ).isNull()
+    }
+  }
 }

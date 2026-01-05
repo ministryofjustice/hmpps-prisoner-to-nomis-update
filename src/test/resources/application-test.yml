@@ -384,4 +384,8 @@ reports:
   core-person:
     reconciliation:
       page-size: 10
+  official-visits:
+    all-missing-nomis-visits:
+      reconciliation:
+        page-size: 2
 api.locations.timeout: 1s

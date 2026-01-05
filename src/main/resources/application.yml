@@ -217,6 +217,9 @@ reports:
     all-visits:
       reconciliation:
         page-size: 30
+    all-missing-nomis-visits:
+      reconciliation:
+        page-size: 30
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600

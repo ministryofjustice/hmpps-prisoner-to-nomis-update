@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
@@ -87,6 +88,7 @@ class BatchManagerTest {
   private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val officialVisitsAllReconciliationService = mock<OfficialVisitsAllReconciliationService>()
+  private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -371,11 +373,21 @@ class BatchManagerTest {
 
   @Test
   fun `should call the official visits full reconciliation service`() = runTest {
-    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_BALANCE_RECON)
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_RECON)
 
     batchManager.onApplicationEvent(event)
 
     verify(officialVisitsAllReconciliationService).generateAllVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the official visits full nomis missing reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_MISSING_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsAllMissingFromNOMISReconciliationService).generateAllVisitsReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -405,5 +417,6 @@ class BatchManagerTest {
     sentencingReconciliationService = sentencingReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
+    officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
   )
 }

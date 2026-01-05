@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-02.322.535b629"
+    "version" : "2026-01-05.324.8973cf6"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -8439,7 +8439,7 @@
         "tags" : [ "official-visits-resource" ],
         "summary" : "Gets visit mapping by nomis visit id",
         "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getVisitMappingByNomisIds",
+        "operationId" : "getVisitMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisVisitId",
           "in" : "path",
@@ -8449,6 +8449,68 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "NOMIS visit id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/official-visits/visit/dps-id/{dpsVisitId}" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Gets visit mapping by dps visit id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getVisitMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsVisitId",
+          "in" : "path",
+          "description" : "DPS visit id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS visit id",
             "example" : 123
           },
           "example" : 123
@@ -21603,12 +21665,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"

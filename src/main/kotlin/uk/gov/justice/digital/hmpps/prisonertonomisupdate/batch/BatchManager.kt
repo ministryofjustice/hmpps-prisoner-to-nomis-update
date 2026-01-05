@@ -32,7 +32,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCIDENTS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.LOCATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.NON_ASSOCIATIONS_RECON
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_MISSING_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PERSON_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_BALANCE_RECON
@@ -53,6 +54,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
@@ -93,7 +95,8 @@ enum class BatchType {
   SENTENCING_RECON,
   SUSPENDED_ALLOCATION_RECON,
   VISIT_BALANCE_RECON,
-  OFFICIAL_VISIT_ALL_BALANCE_RECON,
+  OFFICIAL_VISIT_ALL_RECON,
+  OFFICIAL_VISIT_ALL_MISSING_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -124,6 +127,7 @@ class BatchManager(
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val officialVisitsAllReconciliationService: OfficialVisitsAllReconciliationService,
+  private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
 ) {
 
   @EventListener
@@ -160,7 +164,8 @@ class BatchManager(
       SENTENCING_RECON -> sentencingReconciliationService.generateSentencingReconciliationReport()
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
-      OFFICIAL_VISIT_ALL_BALANCE_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ALL_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ALL_MISSING_RECON -> officialVisitsAllMissingFromNOMISReconciliationService.generateAllVisitsReconciliationReportBatch()
     }
   }
 
