@@ -77,8 +77,12 @@ generic-service:
       schedule: "0 18 * * 1-5"
       suspend: true
     - name: official-visits-all-recon
-      type: OFFICIAL_VISIT_ALL_BALANCE_RECON
+      type: OFFICIAL_VISIT_ALL_RECON
       schedule: "30 5 * * SAT"
+      suspend: true
+    - name: official-visits-all-missing-recon
+      type: OFFICIAL_VISIT_ALL_MISSING_RECON
+      schedule: "30 3 * * SAT"
       suspend: true
 
 

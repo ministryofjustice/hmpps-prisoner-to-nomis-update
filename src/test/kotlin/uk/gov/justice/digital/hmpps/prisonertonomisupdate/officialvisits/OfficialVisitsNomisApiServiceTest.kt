@@ -5,12 +5,14 @@ import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -102,6 +104,67 @@ class OfficialVisitsNomisApiServiceTest {
       mockServer.verify(
         getRequestedFor(urlPathEqualTo("/official-visits/1234")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetOfficialVisitOrNull {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitOrNull(
+        visitId = 1234,
+      )
+
+      apiService.getOfficialVisitOrNull(
+        visitId = 1234,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get time slot endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitOrNull(
+        visitId = 1234,
+      )
+
+      apiService.getOfficialVisitOrNull(
+        visitId = 1234,
+      )
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/official-visits/1234")),
+      )
+    }
+
+    @Test
+    fun `will return null when not found`() = runTest {
+      mockServer.stubGetOfficialVisitOrNull(
+        visitId = 1234,
+        response = null,
+      )
+
+      assertThat(
+        apiService.getOfficialVisitOrNull(
+          visitId = 1234,
+        ),
+      ).isNull()
+    }
+
+    @Test
+    fun `will return mapping when  found`() = runTest {
+      mockServer.stubGetOfficialVisitOrNull(
+        visitId = 1234,
+        response = officialVisitResponse(),
+      )
+
+      assertThat(
+        apiService.getOfficialVisitOrNull(
+          visitId = 1234,
+        ),
+      ).isNotNull()
     }
   }
 

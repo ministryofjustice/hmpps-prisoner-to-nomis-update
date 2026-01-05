@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
@@ -103,6 +104,23 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
           .withBody(objectMapper.writeValueAsString(response)),
       ),
     )
+  }
+  fun stubGetOfficialVisitOrNull(
+    visitId: Long = 1234,
+    response: OfficialVisitResponse? = null,
+  ) {
+    if (response == null) {
+      nomisApi.stubFor(
+        get(urlPathEqualTo("/official-visits/$visitId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    } else {
+      stubGetOfficialVisit(visitId, response)
+    }
   }
 
   fun stubGetOfficialVisitIdsByLastId(

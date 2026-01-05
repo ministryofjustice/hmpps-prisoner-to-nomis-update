@@ -21,8 +21,16 @@ class OfficialVisitsMappingService(
   )
 
   suspend fun getByNomisIdsOrNull(nomisVisitId: Long): OfficialVisitMappingDto? = api.prepare(
-    api.getVisitMappingByNomisIdsRequestConfig(
+    api.getVisitMappingByNomisIdRequestConfig(
       nomisVisitId = nomisVisitId,
+    ),
+  )
+    .retrieve()
+    .awaitBodyOrNullForNotFound(retrySpec)
+
+  suspend fun getByDpsIdsOrNull(dpsVisitId: Long): OfficialVisitMappingDto? = api.prepare(
+    api.getVisitMappingByDpsIdRequestConfig(
+      dpsVisitId = dpsVisitId.toString(),
     ),
   )
     .retrieve()

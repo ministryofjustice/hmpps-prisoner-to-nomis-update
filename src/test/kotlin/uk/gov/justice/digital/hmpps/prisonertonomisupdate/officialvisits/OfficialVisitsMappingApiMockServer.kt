@@ -43,6 +43,34 @@ class OfficialVisitsMappingApiMockServer(private val objectMapper: ObjectMapper)
       )
     }
   }
+  fun stubGetByDpsIdsOrNull(
+    dpsVisitId: Long = 1234L,
+    mapping: OfficialVisitMappingDto? = OfficialVisitMappingDto(
+      dpsId = dpsVisitId.toString(),
+      nomisId = 544321,
+      mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/official-visits/visit/dps-id/$dpsVisitId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(objectMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/official-visits/visit/dps-id/$dpsVisitId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
