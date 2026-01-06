@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
@@ -26,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import java.time.LocalDate
 
 @SpringAPIServiceTest
+@AutoConfigureJson
 @Import(ActivitiesNomisApiService::class)
 class ActivitiesNomisApiServiceTest {
 
@@ -512,12 +514,16 @@ class ActivitiesNomisApiServiceTest {
         {
           "bookingId": 1,
           "offenderNo": "A1234AA",
-          "location": "BXI"
+          "location": "BXI",
+          "offenderId": 1234,
+          "active": true
         },
         {
           "bookingId": 2,
           "offenderNo": "A1234BB",
-          "location": "OUT"
+          "location": "OUT",
+          "offenderId": 1232,
+          "active": false
         }
       ]
     """.trimIndent()

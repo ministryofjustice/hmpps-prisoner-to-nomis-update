@@ -516,6 +516,9 @@ fun buildGetActivityResponse(
   "payPerSession": "F",
   "summary": "Maths level 1",
   "description": "A basic maths course suitable for introduction to the subject",
+  "onWing": false,
+  "offWing": true,
+  "paid": false,
   "category": {
     "id": 1,
     "code": "LEISURE_SOCIAL",
@@ -588,6 +591,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
       "suspendedUntil": "2023-01-13"
     }
   ],
+  "usePrisonRegimeTime": true,
   "internalLocation": {
     "id": $ACTIVITIES_NOMIS_LOCATION_ID,
     "code": "EDU-ROOM-1",
@@ -605,6 +609,9 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     "payPerSession": "F",
     "summary": "Maths level 1",
     "description": "A basic maths course suitable for introduction to the subject",
+    "onWing": false,
+    "offWing": true,
+    "paid": false,
     "category": {
       "id": 1,
       "code": "LEISURE_SOCIAL",
@@ -628,10 +635,12 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     "capacity": 10,
     "allocated": 5
   },
+  "scheduleWeeks": 1,
   "slots": [{
     "id"        : 555666001,
     "startTime" : "07:45",
     "endTime"   : "09:25",
+    "weekNumber": 2,
     "daysOfWeek": ["Sun","Thu"],
     "mondayFlag": false,
     "tuesdayFlag": false,
@@ -646,6 +655,7 @@ fun buildGetScheduleResponse(id: Long = ACTIVITY_SCHEDULE_ID): String =
     "id"        : 555666002,
     "startTime" : "13:45",
     "endTime"   : "14:25",
+    "weekNumber": 2,
     "daysOfWeek": ["Tue","Wed"],
     "mondayFlag": false,
     "tuesdayFlag": true,
@@ -688,6 +698,7 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
       "suspendedUntil": "2023-01-13"
     }
   ],
+  "usePrisonRegimeTime": true,
   "internalLocation": {
     "id": $ACTIVITIES_NOMIS_LOCATION_ID,
     "code": "EDU-ROOM-1",
@@ -705,6 +716,9 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     "payPerSession": "F",
     "summary": "Maths level 1",
     "description": "A basic maths course suitable for introduction to the subject",
+    "onWing": false,
+    "offWing": true,
+    "paid": false,
     "category": {
       "id": 1,
       "code": "LEISURE_SOCIAL",
@@ -728,10 +742,12 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     "capacity": 10,
     "allocated": 5
   },
+  "scheduleWeeks": 1,
   "slots": [{
     "id"        : 555666001,
     "startTime" : "07:45",
     "endTime"   : "09:25",
+    "weekNumber": 3,
     "daysOfWeek": ["Sun","Thu"],
     "mondayFlag": false,
     "tuesdayFlag": false,
@@ -746,6 +762,7 @@ fun buildGetScheduleResponseWithMissingInstance(id: Long = ACTIVITY_SCHEDULE_ID)
     "id"        : 555666002,
     "startTime" : "13:45",
     "endTime"   : "14:25",
+    "weekNumber": 3,
     "daysOfWeek": ["Tue","Wed"],
     "mondayFlag": false,
     "tuesdayFlag": true,

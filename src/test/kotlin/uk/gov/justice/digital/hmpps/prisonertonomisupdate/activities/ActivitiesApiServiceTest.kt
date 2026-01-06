@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
@@ -25,6 +26,7 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @SpringAPIServiceTest
+@AutoConfigureJson
 @Import(ActivitiesApiService::class, ActivitiesConfiguration::class)
 internal class ActivitiesApiServiceTest {
 
@@ -53,6 +55,7 @@ internal class ActivitiesApiServiceTest {
             "attendances": [
               {
                 "id": 123456,
+                "scheduleInstanceId": 123456,
                 "prisonerNumber": "A1234AA",
                 "attendanceReason": {
                   "id": 123456,
@@ -75,7 +78,9 @@ internal class ActivitiesApiServiceTest {
                 "payAmount": 100,
                 "bonusAmount": 50,
                 "pieces": 0,
-                "attendanceHistory": []
+                "attendanceHistory": [],
+                "editable": false,
+                "payable": false
               }
             ],
             "advanceAttendances": []
@@ -87,7 +92,10 @@ internal class ActivitiesApiServiceTest {
             "prisonerNumber": "A1234AA",
             "bookingId": 10001,
             "activitySummary": "string",
+            "activityId": 123456,
+            "scheduleId": 2345,
             "scheduleDescription": "string",
+            "isUnemployment": false,
             "prisonPayBand": {
                "id": 987,
                "displaySequence": 1,
@@ -117,6 +125,8 @@ internal class ActivitiesApiServiceTest {
             "suspendedUntil": "2022-12-30"
           }
         ],
+        "usePrisonRegimeTime": true,
+        "usePrisonRegimeTime": true,
         "internalLocation": {
           "id": 98877667,
           "code": "EDU-ROOM-1",
@@ -134,6 +144,9 @@ internal class ActivitiesApiServiceTest {
           "payPerSession": "F",
           "summary": "Maths level 1",
           "description": "A basic maths course suitable for introduction to the subject",
+          "onWing": false,
+          "offWing": true,
+          "paid": false,
           "category": {
             "id": 1,
             "code": "LEISURE_SOCIAL",
@@ -157,11 +170,13 @@ internal class ActivitiesApiServiceTest {
           "capacity": 10,
           "allocated": 5
         },
+        "scheduleWeeks": 1,
         "slots": [
           {
             "id": 123456,
             "startTime": "9:00",
             "endTime": "11:30",
+            "weekNumber": 2,
             "daysOfWeek": ["Mon","Tue","Wed"],
             "mondayFlag": true,
             "tuesdayFlag": true,
@@ -260,6 +275,9 @@ internal class ActivitiesApiServiceTest {
       "payPerSession": "F",
       "summary": "Maths level 1",
       "description": "A basic maths course suitable for introduction to the subject",
+      "onWing": false,
+      "offWing": true,
+      "paid": false,
       "category": {
         "id": 1,
         "code": "LEISURE_SOCIAL",
@@ -306,7 +324,9 @@ internal class ActivitiesApiServiceTest {
                   "payAmount": 100,
                   "bonusAmount": 50,
                   "pieces": 0,
-                  "attendanceHistory": []
+                  "attendanceHistory": [],
+                  "editable": false,
+                  "payable": false
                 }
               ],
               "advanceAttendances": []
@@ -318,7 +338,10 @@ internal class ActivitiesApiServiceTest {
               "prisonerNumber": "A1234AA",
               "bookingId": 10001,
               "activitySummary": "string",
+              "activityId": 123456,
+              "scheduleId": 2345,
               "scheduleDescription": "string",
+              "isUnemployment": false,
               "prisonPayBand": {
                  "id": 987,
                  "displaySequence": 1,
@@ -348,6 +371,7 @@ internal class ActivitiesApiServiceTest {
               "suspendedUntil": "2022-12-30"
             }
           ],
+          "usePrisonRegimeTime": true,
           "internalLocation": {
             "id": 98877667,
             "code": "EDU-ROOM-1",
@@ -365,6 +389,9 @@ internal class ActivitiesApiServiceTest {
             "payPerSession": "F",
             "summary": "Maths level 1",
             "description": "A basic maths course suitable for introduction to the subject",
+            "onWing": false,
+            "offWing": true,
+            "paid": false,
             "category": {
               "id": 1,
               "code": "LEISURE_SOCIAL",
@@ -388,11 +415,13 @@ internal class ActivitiesApiServiceTest {
             "capacity": 10,
             "allocated": 5
           },
+          "scheduleWeeks": 1,
           "slots": [
             {
               "id": 123456,
               "startTime": "9:00",
               "endTime": "11:30",
+              "weekNumber": 4,
               "daysOfWeek": ["Mon","Tue","Wed"],
               "mondayFlag": true,
               "tuesdayFlag": true,
@@ -514,6 +543,7 @@ internal class ActivitiesApiServiceTest {
         """
           {
             "id": 1234,
+            "activityId": 1434,
             "prisonerNumber": "A1234AA",
             "bookingId": 10001,
             "activitySummary": "Some activity summary",
@@ -563,6 +593,7 @@ internal class ActivitiesApiServiceTest {
       val allocation = activitiesApiService.getAllocation(1234)
 
       assertThat(allocation.id).isEqualTo(1234)
+      assertThat(allocation.activityId).isEqualTo(1434)
       assertThat(allocation.prisonerNumber).isEqualTo("A1234AA")
       assertThat(allocation.bookingId).isEqualTo(10001)
       assertThat(allocation.activitySummary).isEqualTo("Some activity summary")
@@ -707,6 +738,7 @@ internal class ActivitiesApiServiceTest {
   "activitySchedule": {
     "id": 4,
     "description": "Pen testing again",
+    "usePrisonRegimeTime": true,
     "internalLocation": {
       "id": 197684,
       "code": "ASSO",
@@ -724,6 +756,9 @@ internal class ActivitiesApiServiceTest {
       "payPerSession": "H",
       "summary": "Pen testing again",
       "description": "Pen testing again",
+      "onWing": false,
+      "offWing": true,
+      "paid": false,
       "category": {
         "id": 3,
         "code": "SAA_PRISON_JOBS",
@@ -739,11 +774,13 @@ internal class ActivitiesApiServiceTest {
       "capacity": 10,
       "allocated": 5
     },
+    "scheduleWeeks": 1,
     "slots": [
       {
         "id": 5,
         "startTime": "09:00",
         "endTime": "12:00",
+        "weekNumber": 3,
         "daysOfWeek": [
           "Mon",
           "Tue",
@@ -764,6 +801,7 @@ internal class ActivitiesApiServiceTest {
         "id": 6,
         "startTime": "13:00",
         "endTime": "16:30",
+        "weekNumber": 4,
         "daysOfWeek": [
           "Mon",
           "Tue",

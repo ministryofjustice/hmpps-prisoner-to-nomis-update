@@ -14,6 +14,7 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Report
 import java.util.UUID
 
 @SpringAPIServiceTest
+@AutoConfigureJson
 @Import(IncidentsDpsApiService::class, IncidentsConfiguration::class)
 class IncidentsDpsApiServiceTest {
   @Autowired

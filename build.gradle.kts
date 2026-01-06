@@ -12,7 +12,7 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0-beta-4"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0"
   kotlin("plugin.spring") version "2.3.0"
   id("org.openapi.generator") version "7.18.0"
 }
@@ -25,15 +25,16 @@ configurations {
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0-beta-3")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
   implementation("org.springframework.boot:spring-boot-starter-security")
   implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.data:spring-data-commons")
   implementation("org.springframework.security:spring-security-access")
   implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.0")
+  implementation("org.springframework.boot:spring-boot-jackson2")
 
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.0-beta")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.0")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
@@ -44,7 +45,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.56.0")
   implementation("com.google.guava:guava:33.5.0-jre")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0-beta-3")
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
   testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
   testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
     exclude(group = "io.swagger.core.v3")

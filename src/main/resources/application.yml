@@ -242,3 +242,9 @@ hmpps.sqs:
   queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW
 api:
   timeout: 60s
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

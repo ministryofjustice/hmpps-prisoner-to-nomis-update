@@ -11,12 +11,14 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @SpringAPIServiceTest
+@AutoConfigureJson
 @Import(
   VisitBalanceNomisApiService::class,
   VisitBalanceNomisApiMockServer::class,
