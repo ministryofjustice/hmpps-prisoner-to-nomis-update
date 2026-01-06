@@ -32,6 +32,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.INCIDENTS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.LOCATIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.NON_ASSOCIATIONS_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ACTIVE_SCH_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_MISSING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.OFFICIAL_VISIT_ALL_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.ORGANISATIONS_RECON
@@ -54,6 +55,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
@@ -63,7 +65,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.SentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceReconciliationService
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
-import java.lang.IllegalArgumentException
 import java.time.LocalDate
 
 enum class BatchType {
@@ -97,6 +98,7 @@ enum class BatchType {
   VISIT_BALANCE_RECON,
   OFFICIAL_VISIT_ALL_RECON,
   OFFICIAL_VISIT_ALL_MISSING_RECON,
+  OFFICIAL_VISIT_ACTIVE_SCH_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -128,6 +130,7 @@ class BatchManager(
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val officialVisitsAllReconciliationService: OfficialVisitsAllReconciliationService,
   private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
+  private val officialVisitsActiveScheduledReconciliationService: OfficialVisitsActiveScheduledReconciliationService,
 ) {
 
   @EventListener
@@ -166,6 +169,7 @@ class BatchManager(
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       OFFICIAL_VISIT_ALL_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
       OFFICIAL_VISIT_ALL_MISSING_RECON -> officialVisitsAllMissingFromNOMISReconciliationService.generateAllVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
     }
   }
 

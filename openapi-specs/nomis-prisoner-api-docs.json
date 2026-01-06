@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-02.870.92394b6"
+    "version" : "2026-01-06.878.4881def"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -16308,6 +16308,77 @@
         }
       }
     },
+    "/prisoner/{offenderNo}/official-visits" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Get official visits for a prisoner optional filtered by scheduled date",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOfficialVisitsForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "Filter results by visits that are scheduled on or after the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2024-11-03"
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "Filter results by visits that are scheduled on or before the given date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "example" : "2025-11-03"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of visits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OfficialVisitResponse"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/persons/ids" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -21547,8 +21618,7 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX" ],
-            "example" : "RX",
-            "minLength" : 1
+            "example" : "RX"
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -21731,8 +21801,7 @@
           "outcome" : {
             "type" : "string",
             "description" : "The cancellation reason",
-            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ],
-            "minLength" : 1
+            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ]
           }
         },
         "required" : [ "outcome" ]
@@ -23001,8 +23070,7 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA",
-            "minLength" : 1
+            "example" : "ADA"
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -26902,7 +26970,7 @@
             "type" : "number"
           },
           "consecutiveAward" : {
-            "required" : [ "effectiveDate", "sequence" ]
+            "$ref" : "#/components/schemas/HearingResultAward"
           },
           "chargeSequence" : {
             "type" : "integer",
@@ -27232,8 +27300,7 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX" ],
-            "example" : "RX",
-            "minLength" : 1
+            "example" : "RX"
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -27298,8 +27365,7 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA",
-            "minLength" : 1
+            "example" : "ADA"
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -28765,12 +28831,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -31380,6 +31446,192 @@
         },
         "required" : [ "alerts" ]
       },
+      "ContactRelationship" : {
+        "type" : "object",
+        "properties" : {
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The relationship type, e.g. police"
+          },
+          "contactType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The contact type, e.g. social or official"
+          }
+        },
+        "required" : [ "contactType", "relationshipType" ]
+      },
+      "OfficialVisitResponse" : {
+        "type" : "object",
+        "description" : "Official Visit information",
+        "properties" : {
+          "visitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit id"
+          },
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit slot id"
+          },
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison where the visit is to occur"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "The offender number, aka nomsId, prisonerId"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking id"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "true if the related booking is current"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit start date and time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit end date and time"
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The room where the visit will take place"
+          },
+          "visitStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "visitOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          },
+          "cancellationReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The reason of the visit cancellation"
+          },
+          "prisonerAttendanceOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of prisoner, Attended or Absent"
+          },
+          "prisonerSearchType" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The type of search to apply to prisoner"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visitor concerns text"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visit comments"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "A username associated with the staff user who override ban"
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "Visitors",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitor"
+            }
+          },
+          "visitOrder" : {
+            "$ref" : "#/components/schemas/VisitOrder",
+            "description" : "Details about any related visitor order"
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "bookingId", "currentTerm", "endDateTime", "internalLocationId", "offenderNo", "prisonId", "startDateTime", "visitId", "visitSlotId", "visitStatus", "visitors" ]
+      },
+      "OfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "ID of the visitor"
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "visitor NOMIS person Id"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name of the person"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Surname name of the person"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth name of the person"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcome" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "cancellationReason" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The reason of the visit cancellation - typically matches the overall cancellation reason"
+          },
+          "eventStatus" : {
+            "$ref" : "#/components/schemas/CodeDescription",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          },
+          "relationships" : {
+            "type" : "array",
+            "description" : "List of visitor contact relationships",
+            "items" : {
+              "$ref" : "#/components/schemas/ContactRelationship"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "assistedVisit", "audit", "firstName", "id", "lastName", "leadVisitor", "personId", "relationships" ]
+      },
+      "VisitOrder" : {
+        "type" : "object",
+        "properties" : {
+          "number" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit order number as displayed in NOMIS",
+            "example" : 123456789
+          }
+        },
+        "required" : [ "number" ]
+      },
       "ContactForPrisoner" : {
         "type" : "object",
         "description" : "The data held in NOMIS about a person's contact with a prisoner",
@@ -31874,192 +32126,6 @@
           }
         },
         "required" : [ "lastPersonId", "personIds" ]
-      },
-      "ContactRelationship" : {
-        "type" : "object",
-        "properties" : {
-          "relationshipType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The relationship type, e.g. police"
-          },
-          "contactType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The contact type, e.g. social or official"
-          }
-        },
-        "required" : [ "contactType", "relationshipType" ]
-      },
-      "OfficialVisitResponse" : {
-        "type" : "object",
-        "description" : "Official Visit information",
-        "properties" : {
-          "visitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit id"
-          },
-          "visitSlotId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit slot id"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "Prison where the visit is to occur"
-          },
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "The offender number, aka nomsId, prisonerId"
-          },
-          "bookingId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender booking id"
-          },
-          "currentTerm" : {
-            "type" : "boolean",
-            "description" : "true if the related booking is current"
-          },
-          "startDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Visit start date and time"
-          },
-          "endDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "Visit end date and time"
-          },
-          "internalLocationId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The room where the visit will take place"
-          },
-          "visitStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
-          },
-          "visitOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
-          },
-          "cancellationReason" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The reason of the visit cancellation"
-          },
-          "prisonerAttendanceOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of prisoner, Attended or Absent"
-          },
-          "prisonerSearchType" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The type of search to apply to prisoner"
-          },
-          "visitorConcernText" : {
-            "type" : "string",
-            "description" : "Visitor concerns text"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Visit comments"
-          },
-          "overrideBanStaffUsername" : {
-            "type" : "string",
-            "description" : "A username associated with the staff user who override ban"
-          },
-          "visitors" : {
-            "type" : "array",
-            "description" : "Visitors",
-            "items" : {
-              "$ref" : "#/components/schemas/OfficialVisitor"
-            }
-          },
-          "visitOrder" : {
-            "$ref" : "#/components/schemas/VisitOrder",
-            "description" : "Details about any related visitor order"
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "bookingId", "currentTerm", "endDateTime", "internalLocationId", "offenderNo", "prisonId", "startDateTime", "visitId", "visitSlotId", "visitStatus", "visitors" ]
-      },
-      "OfficialVisitor" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "ID of the visitor"
-          },
-          "personId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "visitor NOMIS person Id"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "First name of the person"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "Surname name of the person"
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date of birth name of the person"
-          },
-          "leadVisitor" : {
-            "type" : "boolean",
-            "description" : "Indicates lead visitor for the visit"
-          },
-          "assistedVisit" : {
-            "type" : "boolean",
-            "description" : "Indicates visitor requires assistance"
-          },
-          "visitorAttendanceOutcome" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of visitor, Attended or Absent"
-          },
-          "cancellationReason" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The reason of the visit cancellation - typically matches the overall cancellation reason"
-          },
-          "eventStatus" : {
-            "$ref" : "#/components/schemas/CodeDescription",
-            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "Visitor comments"
-          },
-          "relationships" : {
-            "type" : "array",
-            "description" : "List of visitor contact relationships",
-            "items" : {
-              "$ref" : "#/components/schemas/ContactRelationship"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "assistedVisit", "audit", "firstName", "id", "lastName", "leadVisitor", "personId", "relationships" ]
-      },
-      "VisitOrder" : {
-        "type" : "object",
-        "properties" : {
-          "number" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit order number as displayed in NOMIS",
-            "example" : 123456789
-          }
-        },
-        "required" : [ "number" ]
       },
       "PagedModelVisitIdResponse" : {
         "type" : "object",

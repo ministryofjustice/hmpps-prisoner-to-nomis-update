@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @Service
 class OfficialVisitsNomisApiService(
@@ -49,5 +50,15 @@ class OfficialVisitsNomisApiService(
     visitId = lastVisitId,
     size = pageSize.toInt(),
     prisonIds = emptyList(),
+  ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun getOfficialVisitsForPrisoner(
+    offenderNo: String,
+    fromDate: LocalDate? = null,
+    toDate: LocalDate? = null,
+  ): List<OfficialVisitResponse> = api.getOfficialVisitsForPrisoner(
+    offenderNo = offenderNo,
+    fromDate = fromDate,
+    toDate = toDate,
   ).retryWhen(retrySpec).awaitSingle()
 }

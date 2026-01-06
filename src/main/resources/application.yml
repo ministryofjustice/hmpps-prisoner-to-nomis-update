@@ -214,6 +214,9 @@ reports:
     reconciliation:
       page-size: 20
   official-visits:
+    active-prisoners-visits:
+      reconciliation:
+        page-size: 30
     all-visits:
       reconciliation:
         page-size: 30
