@@ -137,6 +137,17 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
+  fun stubGetOfficialVisitsForPrisoner(offenderNo: String, response: List<VisitIdResponse> = emptyList()) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoner/$offenderNo/official-visits")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(objectMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }

@@ -84,6 +84,10 @@ generic-service:
       type: OFFICIAL_VISIT_ALL_MISSING_RECON
       schedule: "30 3 * * SAT"
       suspend: true
+    - name: official-visits-active-sch-recon
+      type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
+      schedule: "30 2 * * *"
+      suspend: true
 
 
 generic-prometheus-alerts:

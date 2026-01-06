@@ -93,7 +93,7 @@ class OfficialVisitsNomisApiServiceTest {
     }
 
     @Test
-    fun `will call the get time slot endpoint`() = runTest {
+    fun `will call the get visit endpoint`() = runTest {
       mockServer.stubGetOfficialVisit(
         visitId = 1234,
       )
@@ -211,6 +211,39 @@ class OfficialVisitsNomisApiServiceTest {
         getRequestedFor(urlPathEqualTo("/official-visits/ids/all-from-id"))
           .withQueryParam("visitId", equalTo("99"))
           .withQueryParam("size", equalTo("30")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetOfficialVisitsForPrisoner {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get visits endpoint`() = runTest {
+      mockServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits")),
       )
     }
   }

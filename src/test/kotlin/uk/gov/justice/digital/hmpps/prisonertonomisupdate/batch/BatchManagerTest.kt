@@ -52,6 +52,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
@@ -89,6 +90,7 @@ class BatchManagerTest {
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val officialVisitsAllReconciliationService = mock<OfficialVisitsAllReconciliationService>()
   private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
+  private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -391,6 +393,16 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the official visits active scheduled reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ACTIVE_SCH_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsActiveScheduledReconciliationService).generateActiveScheduledVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -418,5 +430,6 @@ class BatchManagerTest {
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
     officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
+    officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
   )
 }
