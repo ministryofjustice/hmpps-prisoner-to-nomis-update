@@ -66,7 +66,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       nomisApi.verify(
         getRequestedFor(urlPathMatching("/prisoners/A1234BC/profile-details"))
           .withQueryParam("latestBookingOnly", equalTo("true"))
-          .withQueryParam("profileTypes", havingExactly("MARITAL", "CHILD"))
+          .withQueryParam("profileTypes", havingExactly("MARITAL", "CHILD")),
       )
       dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
       dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/number-of-children")))

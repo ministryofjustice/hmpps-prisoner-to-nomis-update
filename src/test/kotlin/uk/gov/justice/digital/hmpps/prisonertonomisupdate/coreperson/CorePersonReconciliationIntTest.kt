@@ -12,10 +12,12 @@ import org.awaitility.kotlin.untilAsserted
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.ArgumentMatchers.anyString
 import org.mockito.Captor
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -39,6 +41,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffen
 import java.time.LocalDateTime
 import kotlin.collections.listOf
 
+@ExtendWith(MockitoExtension::class)
 class CorePersonReconciliationIntTest(
   @Autowired private val nomisApi: CorePersonNomisApiMockServer,
   @Autowired private val service: CorePersonReconciliationService,
