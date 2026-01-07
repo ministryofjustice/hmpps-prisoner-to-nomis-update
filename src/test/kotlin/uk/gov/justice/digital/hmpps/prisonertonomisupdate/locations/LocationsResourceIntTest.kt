@@ -142,7 +142,8 @@ class LocationsResourceIntTest(
     },
     "certification": {
       "certified": true,
-      "certifiedNormalAccommodation": 1
+      "certifiedNormalAccommodation": 1,
+      "capacityOfCertifiedCell": 3
     },
     "orderWithinParentLocation": 1,
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",

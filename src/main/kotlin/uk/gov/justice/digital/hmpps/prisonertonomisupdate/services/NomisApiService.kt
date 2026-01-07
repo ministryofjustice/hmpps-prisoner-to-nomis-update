@@ -184,6 +184,7 @@ class NomisApiService(
       it.path("/appointments/ids")
         .apply {
           prisonIds.forEach { queryParam("prisonIds", it) }
+          fromDate?.let { queryParam("fromDate", it) }
           toDate?.let { queryParam("toDate", it) }
         }
         .queryParam("page", pageNumber)
