@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-24.232.abf76bd"
+    "version" : "2026-01-06.237.82997c6"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -446,6 +446,85 @@
                   "type" : "array",
                   "items" : {
                     "$ref" : "#/components/schemas/ReferenceDataItem"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/prisoner/{prisonerNumber}" : {
+      "get" : {
+        "tags" : [ "Reconciliation" ],
+        "summary" : "Endpoint to return all official visits for a prisoner between the specified  visit dates and  current term",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getAllOfficialVisitForPrisoner",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "description" : "The prisoner Number",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "currentTermOnly",
+          "in" : "query",
+          "description" : "Is current term only?",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "description" : "The from date in ISO format (YYYY-MM-DD).",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "toDate",
+          "in" : "query",
+          "description" : "The to date in ISO format (YYYY-MM-DD).",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of all Official visit details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/SyncOfficialVisit"
                   }
                 }
               }
@@ -1891,33 +1970,6 @@
         },
         "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
       },
-      "PagedModelSyncOfficialVisitId" : {
-        "type" : "object",
-        "properties" : {
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SyncOfficialVisitId"
-            }
-          },
-          "page" : {
-            "$ref" : "#/components/schemas/PageMetadata"
-          }
-        }
-      },
-      "SyncOfficialVisitId" : {
-        "type" : "object",
-        "description" : "Response object for sync reconciliation",
-        "properties" : {
-          "officialVisitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The ID for an Official visits",
-            "example" : 111111
-          }
-        },
-        "required" : [ "officialVisitId" ]
-      },
       "SyncOfficialVisit" : {
         "type" : "object",
         "properties" : {
@@ -2039,6 +2091,33 @@
           }
         },
         "required" : [ "officialVisitorId" ]
+      },
+      "PagedModelSyncOfficialVisitId" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOfficialVisitId"
+            }
+          },
+          "page" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        }
+      },
+      "SyncOfficialVisitId" : {
+        "type" : "object",
+        "description" : "Response object for sync reconciliation",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The ID for an Official visits",
+            "example" : 111111
+          }
+        },
+        "required" : [ "officialVisitId" ]
       },
       "DlqMessage" : {
         "type" : "object",
