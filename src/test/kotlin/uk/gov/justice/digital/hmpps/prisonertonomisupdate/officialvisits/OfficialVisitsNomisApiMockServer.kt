@@ -137,7 +137,7 @@ class OfficialVisitsNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
 
-  fun stubGetOfficialVisitsForPrisoner(offenderNo: String, response: List<VisitIdResponse> = emptyList()) {
+  fun stubGetOfficialVisitsForPrisoner(offenderNo: String, response: List<OfficialVisitResponse> = emptyList()) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/prisoner/$offenderNo/official-visits")).willReturn(
         aResponse()

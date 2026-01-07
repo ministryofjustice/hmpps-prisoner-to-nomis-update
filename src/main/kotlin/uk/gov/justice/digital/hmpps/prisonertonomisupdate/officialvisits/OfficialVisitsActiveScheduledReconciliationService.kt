@@ -44,7 +44,7 @@ class OfficialVisitsActiveScheduledReconciliationService(
         telemetryClient.trackEvent(
           "$TELEMETRY_ACTIVE_VISITS_PREFIX-report",
           mapOf(
-            "visit-count" to it.itemsChecked.toString(),
+            "prisoners-count" to it.itemsChecked.toString(),
             "pages-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
@@ -95,7 +95,7 @@ class OfficialVisitsActiveScheduledReconciliationService(
       offenderNo = prisonerId.offenderNo,
       dpsVisits = dpsVisits.map { it.toVisit() },
       nomisVisits = nomisVisits.map { it.toVisit() },
-    )
+    ).asSummaryResult()
   }.onFailure {
     log.error("Unable to match official visits for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
@@ -107,7 +107,47 @@ class OfficialVisitsActiveScheduledReconciliationService(
     )
   }.getOrNull()
 
-  private fun checkVisitsMatch(offenderNo: String, dpsVisits: List<OfficialVisitSummary>, nomisVisits: List<OfficialVisitSummary>): MismatchPrisonerVisit? = null
+  private fun checkVisitsMatch(offenderNo: String, dpsVisits: List<OfficialVisitSummary>, nomisVisits: List<OfficialVisitSummary>): List<MismatchPrisonerVisit> {
+    val mismatches = mutableListOf<MismatchPrisonerVisit>()
+    if (dpsVisits.size != nomisVisits.size) {
+      mismatches.add(MismatchPrisonerVisit(offenderNo = offenderNo))
+      telemetryClient.trackEvent(
+        "$TELEMETRY_ACTIVE_VISITS_PREFIX-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "dpsCount" to dpsVisits.size.toString(),
+          "nomisCount" to nomisVisits.size.toString(),
+          "reason" to "visit-record-missing",
+        ),
+      )
+    }
+    dpsVisits.filter { !nomisVisits.contains(it) }.forEach { dpsVisit ->
+      mismatches.add(MismatchPrisonerVisit(offenderNo = offenderNo))
+      telemetryClient.trackEvent(
+        "$TELEMETRY_ACTIVE_VISITS_PREFIX-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "startDateTime" to dpsVisit.startDateTime.toString(),
+          "reason" to "dps-visit-not-found",
+        ),
+      )
+    }
+    nomisVisits.filter { !dpsVisits.contains(it) }.forEach { nomisVisit ->
+      mismatches.add(MismatchPrisonerVisit(offenderNo = offenderNo))
+      telemetryClient.trackEvent(
+        "$TELEMETRY_ACTIVE_VISITS_PREFIX-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "startDateTime" to nomisVisit.startDateTime.toString(),
+          "reason" to "nomis-visit-not-found",
+        ),
+      )
+    }
+
+    return mismatches.toList()
+  }
+
+  private fun List<MismatchPrisonerVisit>.asSummaryResult(): MismatchPrisonerVisit? = takeIf { it.isNotEmpty() }?.let { MismatchPrisonerVisit(offenderNo = it.first().offenderNo) }
 }
 
 data class MismatchPrisonerVisit(
