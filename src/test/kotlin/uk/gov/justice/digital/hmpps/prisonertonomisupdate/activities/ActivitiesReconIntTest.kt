@@ -30,7 +30,7 @@ class ActivitiesReconIntTest(
       @Test
       fun `should publish success telemetry if no differences`() = runTest {
         stubGetPrisons("BXI")
-        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1, offenderId =1234))
+        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1, offenderId = 1234))
 
         activitiesReconService.allocationReconciliationReport()
 

@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import tools.jackson.databind.JsonNode
 
 val log: Logger = LoggerFactory.getLogger("HelperApi")
 

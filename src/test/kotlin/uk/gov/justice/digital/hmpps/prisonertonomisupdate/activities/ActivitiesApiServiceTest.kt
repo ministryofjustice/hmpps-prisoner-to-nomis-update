@@ -13,7 +13,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
@@ -26,7 +25,6 @@ import java.time.LocalDateTime
 import java.util.UUID
 
 @SpringAPIServiceTest
-@AutoConfigureJson
 @Import(ActivitiesApiService::class, ActivitiesConfiguration::class)
 internal class ActivitiesApiServiceTest {
 

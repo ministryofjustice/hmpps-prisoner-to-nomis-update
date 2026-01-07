@@ -16,7 +16,6 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
@@ -24,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 
 @SpringAPIServiceTest
-@AutoConfigureJson
 @Import(ActivitiesMappingService::class)
 internal class ActivitiesMappingServiceTest {
 

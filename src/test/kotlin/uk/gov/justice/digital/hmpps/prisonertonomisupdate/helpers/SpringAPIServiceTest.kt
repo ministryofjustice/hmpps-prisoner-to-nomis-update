@@ -4,6 +4,7 @@ import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.http.codec.autoconfigure.CodecsAutoConfiguration
 import org.springframework.boot.jackson.autoconfigure.JacksonAutoConfiguration
 import org.springframework.boot.security.oauth2.client.autoconfigure.reactive.ReactiveOAuth2ClientAutoConfiguration
+import org.springframework.boot.test.autoconfigure.json.AutoConfigureJson
 import org.springframework.boot.test.context.SpringBootTest
 import org.springframework.boot.test.context.SpringBootTestContextBootstrapper
 import org.springframework.boot.webclient.autoconfigure.WebClientAutoConfiguration
@@ -76,5 +77,6 @@ import kotlin.annotation.AnnotationTarget.CLASS
 )
 @ActiveProfiles("test")
 @SpringBootTest(classes = [JacksonAutoConfiguration::class, CodecsAutoConfiguration::class, WebClientConfiguration::class, WebClientAutoConfiguration::class, ReactiveOAuth2ClientAutoConfiguration::class, HmppsReactiveWebClientConfiguration::class])
+@AutoConfigureJson
 @BootstrapWith(SpringBootTestContextBootstrapper::class)
 annotation class SpringAPIServiceTest
