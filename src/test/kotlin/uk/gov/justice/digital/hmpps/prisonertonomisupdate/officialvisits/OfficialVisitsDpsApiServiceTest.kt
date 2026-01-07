@@ -158,6 +158,7 @@ class OfficialVisitsDpsApiServiceTest {
       )
       dpsOfficialVisitsServer.verify(
         getRequestedFor(urlPathEqualTo("/reconcile/prisoner/A1234KT"))
+          .withQueryParam("currentTermOnly", equalTo("false"))
           .withQueryParam("fromDate", equalTo("2020-01-01"))
           .withQueryParam("toDate", equalTo("2020-01-02")),
       )

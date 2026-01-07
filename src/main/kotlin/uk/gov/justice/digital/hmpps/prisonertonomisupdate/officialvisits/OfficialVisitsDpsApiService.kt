@@ -41,9 +41,11 @@ class OfficialVisitsDpsApiService(
     offenderNo: String,
     fromDate: LocalDate? = null,
     toDate: LocalDate? = null,
+    currentTermOnly: Boolean = false,
   ): List<SyncOfficialVisit> = api.getAllOfficialVisitForPrisoner(
     prisonerNumber = offenderNo,
     fromDate = fromDate,
     toDate = toDate,
+    currentTermOnly = currentTermOnly,
   ).retryWhen(retrySpec).awaitSingle()
 }
