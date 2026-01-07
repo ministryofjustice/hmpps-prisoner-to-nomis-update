@@ -24,7 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.S
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 class OfficialVisitsDpsApiExtension :
   BeforeAllCallback,
@@ -157,5 +157,16 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           ),
       )
     }
+  }
+
+  fun stubGetOfficialVisitsForPrisoner(offenderNo: String, response: List<SyncOfficialVisit> = emptyList()) {
+    dpsOfficialVisitsServer.stubFor(
+      get(urlPathEqualTo("/reconcile/prisoner/$offenderNo")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(response)),
+      ),
+    )
   }
 }

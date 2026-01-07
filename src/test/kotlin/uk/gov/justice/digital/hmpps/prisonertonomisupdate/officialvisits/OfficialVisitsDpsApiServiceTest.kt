@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension.Companion.dpsOfficialVisitsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @SpringAPIServiceTest
 @Import(OfficialVisitsDpsApiService::class, OfficialVisitsConfiguration::class, RetryApiService::class)
@@ -109,6 +110,57 @@ class OfficialVisitsDpsApiServiceTest {
       dpsOfficialVisitsServer.stubGetOfficialVisit(officialVisitId = 1234)
 
       assertThat(apiService.getOfficialVisitOrNull(visitId = 1234)).isNotNull()
+    }
+  }
+
+  @Nested
+  inner class GetOfficialVisitsForPrisoner {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get visits endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconcile/prisoner/A1234KT")),
+      )
+    }
+
+    @Test
+    fun `will call the get visits endpoint with parameters`() = runTest {
+      dpsOfficialVisitsServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+        fromDate = LocalDate.parse("2020-01-01"),
+        toDate = LocalDate.parse("2020-01-02"),
+      )
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconcile/prisoner/A1234KT"))
+          .withQueryParam("fromDate", equalTo("2020-01-01"))
+          .withQueryParam("toDate", equalTo("2020-01-02")),
+      )
     }
   }
 }

@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @SpringAPIServiceTest
 @Import(OfficialVisitsNomisApiService::class, OfficialVisitsConfiguration::class, OfficialVisitsNomisApiMockServer::class, RetryApiService::class)
@@ -244,6 +245,24 @@ class OfficialVisitsNomisApiServiceTest {
       )
       mockServer.verify(
         getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits")),
+      )
+    }
+
+    @Test
+    fun `will call the get visits endpoint with parameters`() = runTest {
+      mockServer.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+      )
+
+      apiService.getOfficialVisitsForPrisoner(
+        offenderNo = "A1234KT",
+        fromDate = LocalDate.parse("2020-01-01"),
+        toDate = LocalDate.parse("2020-01-02"),
+      )
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits"))
+          .withQueryParam("fromDate", equalTo("2020-01-01"))
+          .withQueryParam("toDate", equalTo("2020-01-02")),
       )
     }
   }
