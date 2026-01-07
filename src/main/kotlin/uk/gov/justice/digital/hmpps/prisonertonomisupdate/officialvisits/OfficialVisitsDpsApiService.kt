@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -10,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.Rec
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.PagedModelSyncOfficialVisitId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @Service
 class OfficialVisitsDpsApiService(
@@ -34,4 +36,14 @@ class OfficialVisitsDpsApiService(
   ).retrieve().awaitBodyWithRetry(retrySpec)
 
   suspend fun getOfficialVisitOrNull(visitId: Long): SyncOfficialVisit? = api.prepare(api.getOfficialVisitByIdRequestConfig(visitId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
+
+  suspend fun getOfficialVisitsForPrisoner(
+    offenderNo: String,
+    fromDate: LocalDate? = null,
+    toDate: LocalDate? = null,
+  ): List<SyncOfficialVisit> = api.getAllOfficialVisitForPrisoner(
+    prisonerNumber = offenderNo,
+    fromDate = fromDate,
+    toDate = toDate,
+  ).retryWhen(retrySpec).awaitSingle()
 }

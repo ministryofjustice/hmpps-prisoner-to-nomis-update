@@ -17,11 +17,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
 
 @Service
 class OfficialVisitsActiveScheduledReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: OfficialVisitsNomisApiService,
+  private val dpsApiService: OfficialVisitsDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   @param:Value($$"${reports.official-visits.active-prisoners-visits.reconciliation.page-size}") private val pageSize: Int = 30,
 ) {
@@ -85,12 +87,15 @@ class OfficialVisitsActiveScheduledReconciliationService(
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
 
   suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerVisit? = runCatching {
-    // TODO - call DPS service and match visits
-    val (_, _) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getOfficialVisitsForPrisoner(prisonerId.offenderNo) } to
-        async { emptyList<Any>() }
+    val (nomisVisits, dpsVisits) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getOfficialVisitsForPrisoner(prisonerId.offenderNo, fromDate = LocalDate.now(), toDate = LocalDate.now().plusMonths(1)) } to
+        async { dpsApiService.getOfficialVisitsForPrisoner(prisonerId.offenderNo, fromDate = LocalDate.now(), toDate = LocalDate.now().plusMonths(1)) }
     }.awaitBoth()
-    null
+    checkVisitsMatch(
+      offenderNo = prisonerId.offenderNo,
+      dpsVisits = dpsVisits.map { it.toVisit() },
+      nomisVisits = nomisVisits.map { it.toVisit() },
+    )
   }.onFailure {
     log.error("Unable to match official visits for prisoner with ${prisonerId.offenderNo} booking: ${prisonerId.bookingId}", it)
     telemetryClient.trackEvent(
@@ -101,6 +106,8 @@ class OfficialVisitsActiveScheduledReconciliationService(
       ),
     )
   }.getOrNull()
+
+  private fun checkVisitsMatch(offenderNo: String, dpsVisits: List<OfficialVisitSummary>, nomisVisits: List<OfficialVisitSummary>): MismatchPrisonerVisit? = null
 }
 
 data class MismatchPrisonerVisit(
