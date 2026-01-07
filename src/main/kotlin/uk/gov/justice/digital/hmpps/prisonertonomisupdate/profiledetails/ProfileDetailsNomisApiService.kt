@@ -30,7 +30,7 @@ class ProfileDetailsNomisApiService(@Qualifier("nomisApiWebClient") private val 
     .uri {
       it.path("/prisoners/{offenderNo}/profile-details")
         .apply {
-          profileTypes.forEach { queryParam("status", it) }
+          profileTypes.forEach { queryParam("profileTypes", it) }
           bookingId?.run { queryParam("bookingId", "$bookingId") }
         }
         .queryParam("latestBookingOnly", "$latestBookingOnly")
