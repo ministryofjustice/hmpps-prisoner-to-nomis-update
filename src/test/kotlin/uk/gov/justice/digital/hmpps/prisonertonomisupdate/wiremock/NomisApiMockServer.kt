@@ -1132,6 +1132,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetAllPrisoners(prisoners: List<String>, offenderId: Long, pageSize: Long) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/ids/all-from-id"))
+        .withQueryParam("offenderId", equalTo("$offenderId"))
+        .withQueryParam("pageSize", equalTo("$pageSize"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              """
+              {
+                "prisonerIds": [${prisoners.joinToString { """{"offenderNo": "$it"}""" }}],
+                "lastOffenderId": ${prisoners.size}
+              }
+              """,
+            ),
+        ),
+    )
+  }
+
   fun stubGetAllPrisonersPageWithError(pageNumber: Long, pageSize: Long? = null, responseCode: Int) {
     stubFor(
       get(

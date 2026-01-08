@@ -51,6 +51,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -81,16 +82,17 @@ class BatchManagerTest {
   private val incidentsReconciliationService = mock<IncidentsReconciliationService>()
   private val locationsReconciliationService = mock<LocationsReconciliationService>()
   private val nonAssociationsReconciliationService = mock<NonAssociationsReconciliationService>()
-  private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
-  private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
-  private val schedulesService = mock<SchedulesService>()
-  private val sentencingReconciliationService = mock<SentencingReconciliationService>()
-  private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
-  private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
-  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val officialVisitsAllReconciliationService = mock<OfficialVisitsAllReconciliationService>()
   private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
   private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
+  private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
+  private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
+  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
+  private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
+  private val schedulesService = mock<SchedulesService>()
+  private val sentencingReconciliationService = mock<SentencingReconciliationService>()
+  private val temporaryAbsencesAllPrisonersReconciliationService = mock<TemporaryAbsencesAllPrisonersReconciliationService>()
+  private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -403,6 +405,16 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the TAP all prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.TAP_ALL_PRISONERS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(temporaryAbsencesAllPrisonersReconciliationService).generateTapAllPrisonersReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
     batchType = batchType,
     activitiesDlqName = activityDlqName,
@@ -421,15 +433,16 @@ class BatchManagerTest {
     incidentsReconciliationService = incidentsReconciliationService,
     locationsReconciliationService = locationsReconciliationService,
     nonAssociationsReconciliationService = nonAssociationsReconciliationService,
+    officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
+    officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
+    officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
     organisationReconciliationService = organisationsReconciliationService,
     prisonBalanceReconciliationService = prisonBalanceReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,
     sentencingReconciliationService = sentencingReconciliationService,
+    temporaryAbsencesAllPrisonersReconciliationService = temporaryAbsencesAllPrisonersReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
-    officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
-    officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
-    officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
   )
 }
