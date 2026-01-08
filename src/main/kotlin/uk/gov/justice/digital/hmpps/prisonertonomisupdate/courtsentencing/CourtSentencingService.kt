@@ -1159,7 +1159,7 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun updateRecallSentences(recallUpdateEvent: RecallEvent) {
+  suspend fun updateRecallSentences(recallUpdateEvent: UpdateRecallEvent) {
     val source = recallUpdateEvent.additionalInformation.source
     val recallId = recallUpdateEvent.additionalInformation.recallId
     val offenderNo: String = recallUpdateEvent.personReference.identifiers.first { it.type == "NOMS" }.value
@@ -1175,24 +1175,16 @@ class CourtSentencingService(
           telemetryMap["recallType"] = it.recallType.name
         }
         val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
+        val dpsRemovedSentenceIds = recallUpdateEvent.additionalInformation.previousSentenceIds.subtract(dpsSentenceIds).toList()
         val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
+        val sentenceAndMappingsToRemove = getSentenceAndMappings(dpsRemovedSentenceIds).also { telemetryMap.toRemovedTelemetry(it) }
         val breachCourtAppearanceIds =
           courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
         nomisApiService.updateRecallSentences(
           offenderNo,
           UpdateRecallRequest(
-            sentences = sentenceAndMappings.map { sentence ->
-              RecallRelatedSentenceDetails(
-                sentenceId =
-                SentenceId(
-                  offenderBookingId = sentence.nomisBookingId,
-                  sentenceSequence = sentence.nomisSentenceSequence,
-                ),
-                sentenceCategory = sentence.dpsSentence.sentenceCategory,
-                sentenceCalcType = sentence.dpsSentence.sentenceCalcType,
-                active = sentence.dpsSentence.active,
-              )
-            },
+            sentences = sentenceAndMappings.map { it.toRecallRelatedSentenceDetails() },
+            sentencesRemoved = sentenceAndMappingsToRemove.map { it.toRecallRelatedSentenceDetails() },
             returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
@@ -1314,24 +1306,42 @@ class CourtSentencingService(
     val nomisSentenceSequence: Long,
   )
 
-  private suspend fun getSentenceAndMappings(dpsSentenceIds: List<String>): List<DpsSentenceWithNomisKey> = courtSentencingApiService.getSentences(LegacySearchSentence(dpsSentenceIds.map { UUID.fromString(it) }))
-    .let { dpsSentences ->
-      val mappings = courtCaseMappingService.getMappingsGivenSentenceIds(dpsSentenceIds)
-      dpsSentences.map { sentence ->
-        val mapping = mappings.find { it.dpsSentenceId == sentence.lifetimeUuid.toString() }
-          ?: throw IllegalStateException("Not all sentences have a mapping: ${mappings.map { it.dpsSentenceId }}")
-        DpsSentenceWithNomisKey(
-          dpsSentence = sentence,
-          nomisBookingId = mapping.nomisBookingId,
-          nomisSentenceSequence = mapping.nomisSentenceSequence.toLong(),
-        )
+  fun DpsSentenceWithNomisKey.toRecallRelatedSentenceDetails() = RecallRelatedSentenceDetails(
+    sentenceId =
+    SentenceId(
+      offenderBookingId = this.nomisBookingId,
+      sentenceSequence = this.nomisSentenceSequence,
+    ),
+    sentenceCategory = this.dpsSentence.sentenceCategory,
+    sentenceCalcType = this.dpsSentence.sentenceCalcType,
+    active = this.dpsSentence.active,
+  )
+
+  private suspend fun getSentenceAndMappings(dpsSentenceIds: List<String>): List<DpsSentenceWithNomisKey> = dpsSentenceIds.takeIf { it.isNotEmpty() }?.let {
+    courtSentencingApiService.getSentences(LegacySearchSentence(dpsSentenceIds.map { UUID.fromString(it) }))
+      .let { dpsSentences ->
+        val mappings = courtCaseMappingService.getMappingsGivenSentenceIds(dpsSentenceIds)
+        dpsSentences.map { sentence ->
+          val mapping = mappings.find { it.dpsSentenceId == sentence.lifetimeUuid.toString() }
+            ?: throw IllegalStateException("Not all sentences have a mapping: ${mappings.map { it.dpsSentenceId }}")
+          DpsSentenceWithNomisKey(
+            dpsSentence = sentence,
+            nomisBookingId = mapping.nomisBookingId,
+            nomisSentenceSequence = mapping.nomisSentenceSequence.toLong(),
+          )
+        }
       }
-    }
+  } ?: emptyList()
 
   private fun MutableMap<String, String>.toTelemetry(sentence: List<DpsSentenceWithNomisKey>) {
     this["nomisSentenceSeq"] = sentence.joinToString { it.nomisSentenceSequence.toString() }
     this["nomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
     this["dpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
+  }
+  private fun MutableMap<String, String>.toRemovedTelemetry(sentence: List<DpsSentenceWithNomisKey>) {
+    this["removedNomisSentenceSeq"] = sentence.joinToString { it.nomisSentenceSequence.toString() }
+    this["removedNomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
+    this["removedDpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
   }
 
   private fun LegacyRecall.RecallType.toDays(): Int? = when (this) {
@@ -1603,6 +1613,14 @@ class CourtSentencingService(
     val source: String,
   )
 
+  data class UpdateRecallAdditionalInformation(
+    val recallId: String,
+    val previousRecallId: String?,
+    val sentenceIds: List<String>,
+    val previousSentenceIds: List<String> = emptyList(),
+    val source: String,
+  )
+
   data class CourtCaseCreatedEvent(
     val additionalInformation: AdditionalInformation,
     val personReference: PersonReferenceList,
@@ -1635,6 +1653,10 @@ class CourtSentencingService(
 
   data class RecallEvent(
     val additionalInformation: RecallAdditionalInformation,
+    val personReference: PersonReferenceList,
+  )
+  data class UpdateRecallEvent(
+    val additionalInformation: UpdateRecallAdditionalInformation,
     val personReference: PersonReferenceList,
   )
 }

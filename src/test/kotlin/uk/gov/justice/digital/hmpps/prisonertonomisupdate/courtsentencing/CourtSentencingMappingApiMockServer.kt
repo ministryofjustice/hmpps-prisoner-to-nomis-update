@@ -2,9 +2,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -93,7 +94,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     mappingServer.stubFor(
       post("/mapping/court-sentencing/court-cases/nomis-case-ids/get-list")
         // just check the first one to differentiate
-        .withRequestBodyJsonPath("[0]", WireMock.equalTo(ids.first().toString()))
+        .withRequestBodyJsonPath("[0]", equalTo(ids.first().toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -210,14 +211,16 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubGetWithError("/mapping/court-sentencing/sentences/dps-sentence-id/$id", status)
   }
 
-  fun stubGetMappingsGivenSentenceIds(mappings: List<SentenceMappingDto>) {
+  fun stubGetMappingsGivenSentenceIds(request: List<String>, mappings: List<SentenceMappingDto>) {
     mappingServer.stubFor(
-      post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(MappingExtension.Companion.objectMapper.writeValueAsString(mappings))
-          .withStatus(200),
-      ),
+      post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list")
+        .withRequestBody(equalToJson(MappingExtension.objectMapper.writeValueAsString(request)))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(MappingExtension.objectMapper.writeValueAsString(mappings))
+            .withStatus(200),
+        ),
     )
   }
 
