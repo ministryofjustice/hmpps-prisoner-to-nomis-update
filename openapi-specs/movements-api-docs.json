@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-16.507.712baca"
+    "version" : "2026-01-07"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -32,7 +32,7 @@
     "/temporary-absence-occurrences/{id}" : {
       "get" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getTapOccurrence",
         "parameters" : [ {
           "name" : "id",
@@ -58,7 +58,7 @@
       },
       "put" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "applyActions",
         "parameters" : [ {
           "name" : "id",
@@ -118,7 +118,7 @@
     "/temporary-absence-authorisations/{id}" : {
       "get" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getTapAuthorisation",
         "parameters" : [ {
           "name" : "id",
@@ -160,7 +160,7 @@
       },
       "put" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "applyActions_1",
         "parameters" : [ {
           "name" : "id",
@@ -367,7 +367,7 @@
     "/temporary-absence-authorisations/{personIdentifier}" : {
       "post" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "createTapAuthorisation",
         "parameters" : [ {
           "name" : "personIdentifier",
@@ -404,7 +404,7 @@
     "/temporary-absence-authorisations/{id}/occurrences" : {
       "post" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "createOccurrence",
         "parameters" : [ {
           "name" : "id",
@@ -442,7 +442,7 @@
     "/temporary-absence-occurrences/{id}/history" : {
       "get" : {
         "tags" : [ "tap-occurrence-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getTapOccurrenceHistory",
         "parameters" : [ {
           "name" : "id",
@@ -470,7 +470,7 @@
     "/temporary-absence-authorisations/{id}/history" : {
       "get" : {
         "tags" : [ "tap-authorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getTapAuthorisationHistory",
         "parameters" : [ {
           "name" : "id",
@@ -639,7 +639,7 @@
     "/search/temporary-absence-occurrences" : {
       "get" : {
         "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "findTapOccurrences",
         "parameters" : [ {
           "name" : "request",
@@ -666,7 +666,7 @@
     "/search/temporary-absence-authorisations" : {
       "get" : {
         "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "findTapAuthorisations",
         "parameters" : [ {
           "name" : "request",
@@ -727,7 +727,7 @@
     "/reference-data/{domain}" : {
       "get" : {
         "tags" : [ "reference-data-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getDomain",
         "parameters" : [ {
           "name" : "domain",
@@ -753,10 +753,37 @@
         }
       }
     },
+    "/reconciliation/{personIdentifier}/temporary-absences" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "getTemporaryAbsences",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonTapCounts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisons/{prisonIdentifier}/external-movements/overview" : {
       "get" : {
         "tags" : [ "prison-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
         "operationId" : "getPrisonerOverview",
         "parameters" : [ {
           "name" : "prisonIdentifier",
@@ -783,7 +810,7 @@
     "/absence-categorisation/{domain}" : {
       "get" : {
         "tags" : [ "absence-categorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getAbsenceCategorisationDomain",
         "parameters" : [ {
           "name" : "domain",
@@ -812,7 +839,7 @@
     "/absence-categorisation/{domain}/{code}" : {
       "get" : {
         "tags" : [ "absence-categorisation-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__UI\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getAbsenceCategorisationOptions",
         "parameters" : [ {
           "name" : "domain",
@@ -2566,6 +2593,67 @@
           }
         },
         "required" : [ "domain", "items" ]
+      },
+      "MovementInOutCount" : {
+        "type" : "object",
+        "properties" : {
+          "outCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "inCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "inCount", "outCount" ]
+      },
+      "PersonAuthorisationCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "count" ]
+      },
+      "PersonMovementsCount" : {
+        "type" : "object",
+        "properties" : {
+          "scheduled" : {
+            "$ref" : "#/components/schemas/MovementInOutCount"
+          },
+          "unscheduled" : {
+            "$ref" : "#/components/schemas/MovementInOutCount"
+          }
+        },
+        "required" : [ "scheduled", "unscheduled" ]
+      },
+      "PersonOccurrenceCount" : {
+        "type" : "object",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "count" ]
+      },
+      "PersonTapCounts" : {
+        "type" : "object",
+        "properties" : {
+          "authorisations" : {
+            "$ref" : "#/components/schemas/PersonAuthorisationCount"
+          },
+          "occurrences" : {
+            "$ref" : "#/components/schemas/PersonOccurrenceCount"
+          },
+          "movements" : {
+            "$ref" : "#/components/schemas/PersonMovementsCount"
+          }
+        },
+        "required" : [ "authorisations", "movements", "occurrences" ]
       },
       "Configuration" : {
         "type" : "object",
