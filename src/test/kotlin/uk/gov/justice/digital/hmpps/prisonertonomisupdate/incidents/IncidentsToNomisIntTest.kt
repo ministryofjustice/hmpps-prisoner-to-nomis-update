@@ -47,6 +47,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
+          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishCreateIncidentDomainEvent(dpsId = "12345", nomisId = 1234L, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
