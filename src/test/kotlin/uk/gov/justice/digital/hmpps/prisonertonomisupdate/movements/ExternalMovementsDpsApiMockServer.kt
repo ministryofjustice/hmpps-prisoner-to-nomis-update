@@ -12,6 +12,11 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonOccurrenceCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndByWithPrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
@@ -115,6 +120,15 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     created = SyncAtAndByWithPrison(at = now, by = "USER1", prisonCode = "LEI"),
   )
 
+  fun personTapCounts() = PersonTapCounts(
+    authorisations = PersonAuthorisationCount(count = 1),
+    occurrences = PersonOccurrenceCount(count = 2),
+    movements = PersonMovementsCount(
+      scheduled = MovementInOutCount(outCount = 3, inCount = 4),
+      unscheduled = MovementInOutCount(outCount = 5, inCount = 6),
+    ),
+  )
+
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-authorisations/$id")
@@ -178,6 +192,30 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetTapMovementError(id: UUID, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-movements/$id")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliation(personIdentifier: String, response: PersonTapCounts = personTapCounts()) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation/$personIdentifier/temporary-absences")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()
             .withStatus(status)

@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.api.SyncApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
@@ -32,6 +33,10 @@ class ExternalMovementsDpsApiService(
     .awaitSingle()
 
   suspend fun getTapMovement(id: UUID): SyncReadTapMovement = syncApi.findTapMovementById(id)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getTapReconciliation(personIdentifier: String): PersonTapCounts = syncApi.getTemporaryAbsences(personIdentifier)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
