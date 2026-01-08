@@ -1338,10 +1338,11 @@ class CourtSentencingService(
     this["nomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
     this["dpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
   }
-  private fun MutableMap<String, String>.toRemovedTelemetry(sentence: List<DpsSentenceWithNomisKey>) {
+  private fun MutableMap<String, String>.toRemovedTelemetry(sentence: List<DpsSentenceWithNomisKey>) = this.takeIf { it.isNotEmpty() }?.apply {
     this["removedNomisSentenceSeq"] = sentence.joinToString { it.nomisSentenceSequence.toString() }
     this["removedNomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
     this["removedDpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
+    this["removedDpsSentenceIds"] = sentence.map { it.dpsSentence.lifetimeUuid }.toSortedSet().joinToString()
   }
 
   private fun LegacyRecall.RecallType.toDays(): Int? = when (this) {

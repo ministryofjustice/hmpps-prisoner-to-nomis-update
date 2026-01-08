@@ -4058,6 +4058,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
             assertThat(it["removedNomisSentenceSeq"]).isEqualTo("3")
             assertThat(it["removedNomisBookingId"]).isEqualTo("$BOOKING_ID")
+            assertThat(it["removedDpsSentenceIds"]).isEqualTo("654212d8-4b58-4499-b465-73f9936999d9")
           },
           isNull(),
         )
