@@ -2,16 +2,22 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Applications
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Movements
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementsByDirection
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
@@ -98,6 +104,16 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
     )
 
     fun createTemporaryAbsenceReturnResponse(bookingId: Long = 12345, movementSequence: Int = 3) = CreateTemporaryAbsenceReturnResponse(bookingId, movementSequence)
+
+    fun createTemporaryAbsenceSummaryResponse() = OffenderTemporaryAbsenceSummaryResponse(
+      applications = Applications(count = 1),
+      scheduledOutMovements = ScheduledOut(count = 2),
+      movements = Movements(
+        count = 18,
+        scheduled = MovementsByDirection(outCount = 3, inCount = 4),
+        unscheduled = MovementsByDirection(outCount = 5, inCount = 6),
+      ),
+    )
   }
 
   fun stubUpsertTemporaryAbsenceApplication(
@@ -215,6 +231,37 @@ class ExternalMovementsNomisApiMockServer(private val objectMapper: ObjectMapper
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTemporaryAbsencePrisonerSummary(
+    offenderNo: String = "A1234BC",
+    response: OffenderTemporaryAbsenceSummaryResponse = createTemporaryAbsenceSummaryResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.CREATED.value())
+            .withBody(objectMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTemporaryAbsencePrisonerSummary(
+    offenderNo: String = "A1234BC",
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

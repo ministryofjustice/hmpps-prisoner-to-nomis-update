@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -198,6 +199,41 @@ class ExternalMovementsNomisApiServiceTest {
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class TemporaryAbsencePrisonerSummary {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+
+      apiService.getTemporaryAbsenceSummary("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+
+      apiService.getTemporaryAbsenceSummary("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/summary")),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary(status = HttpStatus.INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTemporaryAbsenceSummary("A1234BC")
       }
     }
   }
