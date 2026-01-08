@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-07.890.db73927"
+    "version" : "2026-01-08.897.d771af2"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17320,6 +17320,68 @@
         }
       }
     },
+    "/movements/{offenderNo}/temporary-absences/summary" : {
+      "get" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Get temporary absence applications, schedules and external movement counts for an offender",
+        "description" : "Get temporary absence applications, schedules and external movement counts for an offender. This is used for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTemporaryAbsencesAndMovementCounts",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender temporary absence counts returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderTemporaryAbsenceSummaryResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence/{eventId}" : {
       "get" : {
         "tags" : [ "movements-resource" ],
@@ -17457,68 +17519,6 @@
           },
           "404" : {
             "description" : "Offender or scheduled temporary absence return not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/movements/{offenderNo}/temporary-absences/counts" : {
-      "get" : {
-        "tags" : [ "movements-resource" ],
-        "summary" : "Get temporary absence applications, schedules and external movement counts for an offender",
-        "description" : "Get temporary absence applications, schedules and external movement counts for an offender. This is used for reconciliation. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getTemporaryAbsencesAndMovementCounts",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "Offender number (NOMS ID)",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "Offender number (NOMS ID)",
-            "example" : "A1234BC"
-          },
-          "example" : "A1234BC"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Offender temporary absence counts returned",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/OffenderTemporaryAbsenceCountsResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Offender not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -32996,6 +32996,86 @@
         },
         "required" : [ "audit", "bookingId", "movementDate", "movementReason", "movementTime", "sequence", "toPrison" ]
       },
+      "Applications" : {
+        "type" : "object",
+        "description" : "Offender temporary absence application counts",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of applications"
+          }
+        },
+        "required" : [ "count" ]
+      },
+      "Movements" : {
+        "type" : "object",
+        "description" : "Offender temporary absence movement counts",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of actual movements"
+          },
+          "scheduled" : {
+            "$ref" : "#/components/schemas/MovementsByDirection",
+            "description" : "The number of scheduled movements by direction"
+          },
+          "unscheduled" : {
+            "$ref" : "#/components/schemas/MovementsByDirection",
+            "description" : "The number of unscheduled movements by direction"
+          }
+        },
+        "required" : [ "count", "scheduled", "unscheduled" ]
+      },
+      "MovementsByDirection" : {
+        "type" : "object",
+        "description" : "Offender temporary absence scheduled movement counts",
+        "properties" : {
+          "outCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of actual OUT movements"
+          },
+          "inCount" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of actual IN movements"
+          }
+        },
+        "required" : [ "inCount", "outCount" ]
+      },
+      "OffenderTemporaryAbsenceSummaryResponse" : {
+        "type" : "object",
+        "description" : "Offender temporary absence counts for an offender",
+        "properties" : {
+          "applications" : {
+            "$ref" : "#/components/schemas/Applications",
+            "description" : "The application counts"
+          },
+          "scheduledOutMovements" : {
+            "$ref" : "#/components/schemas/ScheduledOut",
+            "description" : "The scheduled outbound movement counts"
+          },
+          "movements" : {
+            "$ref" : "#/components/schemas/Movements",
+            "description" : "The actual movement counts"
+          }
+        },
+        "required" : [ "applications", "movements", "scheduledOutMovements" ]
+      },
+      "ScheduledOut" : {
+        "type" : "object",
+        "description" : "Offender temporary absence scheduled OUT counts",
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The number of scheduled OUT movements"
+          }
+        },
+        "required" : [ "count" ]
+      },
       "ScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
         "description" : "Scheduled temporary absence response",
@@ -33181,86 +33261,6 @@
           }
         },
         "required" : [ "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "parentEventId", "startTime" ]
-      },
-      "Applications" : {
-        "type" : "object",
-        "description" : "Offender temporary absence application counts",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of applications"
-          }
-        },
-        "required" : [ "count" ]
-      },
-      "Movements" : {
-        "type" : "object",
-        "description" : "Offender temporary absence movement counts",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of actual movements"
-          },
-          "scheduled" : {
-            "$ref" : "#/components/schemas/MovementsByDirection",
-            "description" : "The number of scheduled movements by direction"
-          },
-          "unscheduled" : {
-            "$ref" : "#/components/schemas/MovementsByDirection",
-            "description" : "The number of unscheduled movements by direction"
-          }
-        },
-        "required" : [ "count", "scheduled", "unscheduled" ]
-      },
-      "MovementsByDirection" : {
-        "type" : "object",
-        "description" : "Offender temporary absence scheduled movement counts",
-        "properties" : {
-          "outCount" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of actual OUT movements"
-          },
-          "inCount" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of actual IN movements"
-          }
-        },
-        "required" : [ "inCount", "outCount" ]
-      },
-      "OffenderTemporaryAbsenceCountsResponse" : {
-        "type" : "object",
-        "description" : "Offender temporary absence counts for an offender",
-        "properties" : {
-          "applications" : {
-            "$ref" : "#/components/schemas/Applications",
-            "description" : "The application counts"
-          },
-          "scheduledOutMovements" : {
-            "$ref" : "#/components/schemas/ScheduledOut",
-            "description" : "The scheduled outbound movement counts"
-          },
-          "movements" : {
-            "$ref" : "#/components/schemas/Movements",
-            "description" : "The actual movement counts"
-          }
-        },
-        "required" : [ "applications", "movements", "scheduledOutMovements" ]
-      },
-      "ScheduledOut" : {
-        "type" : "object",
-        "description" : "Offender temporary absence scheduled OUT counts",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of scheduled OUT movements"
-          }
-        },
-        "required" : [ "count" ]
       },
       "TemporaryAbsenceApplicationResponse" : {
         "type" : "object",
