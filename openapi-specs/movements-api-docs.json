@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-07"
+    "version" : "2026-01-08"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -323,6 +323,28 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/move/temporary-absences" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "moveTemporaryAbsences",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MoveTemporaryAbsencesRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK"
           }
         }
       }
@@ -1417,6 +1439,34 @@
           }
         },
         "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "start", "transportCode" ]
+      },
+      "MoveTemporaryAbsencesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fromPersonIdentifier" : {
+            "type" : "string"
+          },
+          "toPersonIdentifier" : {
+            "type" : "string"
+          },
+          "authorisationIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          },
+          "unscheduledMovementIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ]
       },
       "MigrateTapAuthorisation" : {
         "type" : "object",
