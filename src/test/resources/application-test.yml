@@ -390,3 +390,5 @@ reports:
         page-size: 2
         thread-count: 10
 api.locations.timeout: 1s
+
+cronjob.auth.secret: some-secret
