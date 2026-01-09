@@ -26,7 +26,8 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
   private val nomisApiService: ExternalMovementsNomisApiService,
   private val dpsApiService: ExternalMovementsDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
-  @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.page-size}") private val pageSize: Int = 30,
+  @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
+  @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -62,7 +63,8 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     .sortedBy { it.offenderNo }.take(10).let { mismatch -> "offenderNos" to mismatch.joinToString { it.offenderNo } }
 
   suspend fun generateTapAllPrisonersReconciliationReport(): ReconciliationResult<PrisonerId> = generateReconciliationReport(
-    threadCount = pageSize,
+    threadCount = threadCount,
+    pageSize = pageSize,
     checkMatch = ::checkPrisonerTapsMatch,
     nextPage = ::getNextPrisonersForPage,
   )

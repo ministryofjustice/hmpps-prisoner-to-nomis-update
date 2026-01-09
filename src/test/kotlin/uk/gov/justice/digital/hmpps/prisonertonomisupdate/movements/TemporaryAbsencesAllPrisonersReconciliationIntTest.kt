@@ -39,7 +39,7 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
       reset(telemetryClient)
       NomisApiExtension.nomisApi.stubGetAllPrisoners(
         offenderId = 0,
-        pageSize = 30,
+        pageSize = 100,
         prisoners = (1L..3).map { generateOffenderNo(sequence = it) },
       )
 
