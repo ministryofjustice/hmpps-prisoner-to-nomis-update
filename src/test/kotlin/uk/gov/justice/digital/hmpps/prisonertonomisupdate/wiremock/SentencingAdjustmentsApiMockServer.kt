@@ -26,7 +26,7 @@ class SentencingAdjustmentsApiExtension :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
     sentencingAdjustmentsApi.start()
   }
 
@@ -375,6 +375,8 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             {
               $adjustmentDateJson
               "adjustmentDays": $adjustmentDays,
+              "bookingReleased": false,
+              "currentTerm": false,
               $startPeriodJson
               "bookingId": $bookingId,
               "offenderNo": "A1234AA", 
@@ -439,6 +441,8 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             {
               "adjustmentDate": "$adjustmentDate",
               "adjustmentDays": $adjustmentDays,
+              "bookingReleased": false,
+              "currentTerm": false,
               "bookingId": $bookingId,
               "offenderNo": "A1234AA", 
               "sentenceSequence": $sentenceSequence,

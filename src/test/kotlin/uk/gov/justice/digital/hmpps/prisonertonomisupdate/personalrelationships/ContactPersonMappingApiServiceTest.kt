@@ -1692,7 +1692,7 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }

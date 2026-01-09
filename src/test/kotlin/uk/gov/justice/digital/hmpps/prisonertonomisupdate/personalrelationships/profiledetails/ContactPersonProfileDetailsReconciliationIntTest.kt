@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.havingExactly
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import kotlinx.coroutines.test.runTest
@@ -65,8 +66,7 @@ class ContactPersonProfileDetailsReconciliationIntTest(
       nomisApi.verify(
         getRequestedFor(urlPathMatching("/prisoners/A1234BC/profile-details"))
           .withQueryParam("latestBookingOnly", equalTo("true"))
-          .withQueryParam("profileTypes", equalTo("MARITAL"))
-          .withQueryParam("profileTypes", equalTo("CHILD")),
+          .withQueryParam("profileTypes", havingExactly("MARITAL", "CHILD")),
       )
       dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/domestic-status")))
       dpsApi.verify(getRequestedFor(urlPathEqualTo("/sync/A1234BC/number-of-children")))

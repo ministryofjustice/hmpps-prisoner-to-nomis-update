@@ -31,8 +31,8 @@ class SchedulesIntTest(@Autowired private val schedulesService: SchedulesService
     @Test
     fun `should update scheduled instance`() {
       ActivitiesApiExtension.activitiesApi.stubGetScheduledInstance(SCHEDULE_INSTANCE_ID, buildGetScheduledInstanceResponse())
-      MappingExtension.mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
-      NomisApiExtension.nomisApi.stubScheduledInstanceUpdate(NOMIS_CRS_ACTY_ID, """{ "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
+      mappingServer.stubGetMappings(ACTIVITY_SCHEDULE_ID, buildGetMappingResponse())
+      nomisApi.stubScheduledInstanceUpdate(NOMIS_CRS_ACTY_ID, """{ "courseScheduleId": $NOMIS_CRS_SCH_ID }""")
 
       awsSnsClient.publish(amendScheduledInstanceEvent())
 
@@ -112,6 +112,8 @@ private fun buildGetScheduledInstanceResponse() =
         "description": "activity",
         "capacity": 5,
         "slots": [],
+        "scheduleWeeks": 3,
+        "usePrisonRegimeTime": false,
         "startDate": "2023-02-01",
         "activity": {
           "id": $ACTIVITY_ID,
@@ -126,6 +128,11 @@ private fun buildGetScheduledInstanceResponse() =
           "minimumIncentiveNomisCode": "BAS",
           "minimumIncentiveLevel": "BAS",
           "minimumEducationLevel": [],
+          "onWing": false,
+          "offWing": true,
+          "paid": false,
+          "capacity": 4,
+          "allocated": 4,
           "category": {
             "id": 123,
             "code": "any",

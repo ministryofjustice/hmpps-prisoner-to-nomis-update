@@ -23,7 +23,7 @@ class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val web
     .uri {
       it.path("/incident-reports")
         .queryParam("location", agencyId)
-        .queryParam("status", statusValues)
+        .apply { statusValues.forEach { queryParam("status", it) } }
         .queryParam("size", 1)
         .build()
     }

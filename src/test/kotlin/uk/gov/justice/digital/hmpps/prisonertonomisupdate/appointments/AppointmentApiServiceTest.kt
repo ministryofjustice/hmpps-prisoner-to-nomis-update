@@ -27,6 +27,9 @@ internal class AppointmentApiServiceTest {
 
   private val appointmentInstanceResponse = """{
     "id": 1234,
+    "appointmentSeriesId": 1234,
+    "appointmentId": 1234,
+    "appointmentAttendeeId": 1234,
     "appointmentType": "INDIVIDUAL",
     "bookingId": 12345,
     "internalLocationId": 34567,

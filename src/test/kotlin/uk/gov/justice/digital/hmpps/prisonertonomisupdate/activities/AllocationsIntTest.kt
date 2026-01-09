@@ -217,8 +217,11 @@ class AllocationsIntTest : SqsIntegrationTestBase() {
 fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
+    "activityId": 1234,
+    "isUnemployment": false,
     "prisonerNumber": "A1234AA",
     "bookingId": $NOMIS_BOOKING_ID,
+    "activityId": 1234,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
     "startDate": "2023-01-12",
     "prisonPayBand": {
@@ -234,13 +237,16 @@ fun buildApiAllocationDtoJsonResponse(id: Long = ALLOCATION_ID): String = """
     "scheduleDescription" : "description",
     "activitySummary" : "summary",
     "status": "ACTIVE",
-    "exclusions": []
+    "exclusions": [],
+    "isUnemployment": false
   }
 """.trimIndent()
 
 fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
+    "activityId": 1234,
+    "isUnemployment": false,
     "prisonerNumber": "A1234AA",
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
@@ -257,6 +263,8 @@ fun buildApiAllocationDtoWithMissingPayBand(id: Long = ALLOCATION_ID): String = 
 fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID, plannedDeallocation: String = ""): String = """
   {
     "id": $id,
+    "activityId": 1234,
+    "isUnemployment": false,
     "prisonerNumber": "A1234AA",
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
@@ -289,6 +297,8 @@ fun buildApiAllocationDeallocatedJsonResponse(id: Long = ALLOCATION_ID, plannedD
 fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
+    "activityId": 1234,
+    "isUnemployment": false,
     "prisonerNumber": "A1234AA",
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
@@ -316,6 +326,8 @@ fun buildApiAllocationSuspendedJsonResponse(id: Long = ALLOCATION_ID): String = 
 fun buildApiAllocationWithExclusionsJsonResponse(id: Long = ALLOCATION_ID): String = """
   {
     "id": $id,
+    "activityId": 1234,
+    "isUnemployment": false,
     "prisonerNumber": "A1234AA",
     "bookingId": $NOMIS_BOOKING_ID,
     "scheduleId": $ACTIVITY_SCHEDULE_ID,
