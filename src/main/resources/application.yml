@@ -224,6 +224,10 @@ reports:
       reconciliation:
         page-size: 1000
         thread-count: 30
+  temporary-absences:
+    all-prisoners:
+      reconciliation:
+        page-size: 30
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600

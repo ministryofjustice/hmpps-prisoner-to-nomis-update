@@ -44,6 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ALL_PRISONERS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
@@ -54,6 +55,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -86,6 +88,9 @@ enum class BatchType {
   INCIDENTS_RECON,
   LOCATIONS_RECON,
   NON_ASSOCIATIONS_RECON,
+  OFFICIAL_VISIT_ALL_RECON,
+  OFFICIAL_VISIT_ALL_MISSING_RECON,
+  OFFICIAL_VISIT_ACTIVE_SCH_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
   PRISON_BALANCE_RECON,
@@ -95,10 +100,8 @@ enum class BatchType {
   PURGE_ACTIVITY_DLQ,
   SENTENCING_RECON,
   SUSPENDED_ALLOCATION_RECON,
+  TAP_ALL_PRISONERS_RECON,
   VISIT_BALANCE_RECON,
-  OFFICIAL_VISIT_ALL_RECON,
-  OFFICIAL_VISIT_ALL_MISSING_RECON,
-  OFFICIAL_VISIT_ACTIVE_SCH_RECON,
 }
 
 @ConditionalOnProperty(name = ["batch.enabled"], havingValue = "true")
@@ -121,16 +124,17 @@ class BatchManager(
   private val incidentsReconciliationService: IncidentsReconciliationService,
   private val locationsReconciliationService: LocationsReconciliationService,
   private val nonAssociationsReconciliationService: NonAssociationsReconciliationService,
+  private val officialVisitsAllReconciliationService: OfficialVisitsAllReconciliationService,
+  private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
+  private val officialVisitsActiveScheduledReconciliationService: OfficialVisitsActiveScheduledReconciliationService,
   private val organisationReconciliationService: OrganisationsReconciliationService,
   private val prisonBalanceReconciliationService: PrisonBalanceReconciliationService,
   private val prisonerBalanceReconciliationService: PrisonerBalanceReconciliationService,
   private val prisonerRestrictionsReconciliationService: PrisonerRestrictionsReconciliationService,
   private val schedulesService: SchedulesService,
   private val sentencingReconciliationService: SentencingReconciliationService,
+  private val temporaryAbsencesAllPrisonersReconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
-  private val officialVisitsAllReconciliationService: OfficialVisitsAllReconciliationService,
-  private val officialVisitsAllMissingFromNOMISReconciliationService: OfficialVisitsAllMissingFromNOMISReconciliationService,
-  private val officialVisitsActiveScheduledReconciliationService: OfficialVisitsActiveScheduledReconciliationService,
 ) {
 
   @EventListener
@@ -157,6 +161,9 @@ class BatchManager(
       INCIDENTS_RECON -> incidentsReconciliationService.incidentsReconciliation()
       LOCATIONS_RECON -> locationsReconciliationService.generateReconciliationReport()
       NON_ASSOCIATIONS_RECON -> nonAssociationsReconciliationService.generateReconciliationReport()
+      OFFICIAL_VISIT_ALL_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ALL_MISSING_RECON -> officialVisitsAllMissingFromNOMISReconciliationService.generateAllVisitsReconciliationReportBatch()
+      OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
       ORGANISATIONS_RECON -> organisationReconciliationService.generateOrganisationsReconciliationReport()
       PERSON_CONTACT_RECON -> contactPersonReconciliationService.generatePersonContactReconciliationReportBatch()
       PRISON_BALANCE_RECON -> prisonBalanceReconciliationService.generateReconciliationReport()
@@ -166,10 +173,8 @@ class BatchManager(
       PURGE_ACTIVITY_DLQ -> purgeQueue(activitiesDlqName)
       SENTENCING_RECON -> sentencingReconciliationService.generateSentencingReconciliationReport()
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
+      TAP_ALL_PRISONERS_RECON -> temporaryAbsencesAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
-      OFFICIAL_VISIT_ALL_RECON -> officialVisitsAllReconciliationService.generateAllVisitsReconciliationReportBatch()
-      OFFICIAL_VISIT_ALL_MISSING_RECON -> officialVisitsAllMissingFromNOMISReconciliationService.generateAllVisitsReconciliationReportBatch()
-      OFFICIAL_VISIT_ACTIVE_SCH_RECON -> officialVisitsActiveScheduledReconciliationService.generateActiveScheduledVisitsReconciliationReportBatch()
     }
   }
 
