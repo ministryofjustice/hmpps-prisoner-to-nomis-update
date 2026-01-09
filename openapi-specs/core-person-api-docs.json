@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2025-12-15.1832.034712b"
+    "version" : "2026-01-08.1939.2b49ec4"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -41,8 +41,7 @@
           "description" : "The identifier of the offender source system (NOMIS)",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "minLength" : 1
+            "type" : "string"
           }
         } ],
         "requestBody" : {
@@ -117,45 +116,6 @@
         "responses" : {
           "200" : {
             "description" : "Immigration status updated in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/syscon-sync/disability-status/{cprDisabilityStatusId}" : {
-      "put" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "Update a prisoner disability status",
-        "operationId" : "updateDisabilityStatus",
-        "parameters" : [ {
-          "name" : "cprDisabilityStatusId",
-          "in" : "path",
-          "description" : "The identifier of the prison disability status",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonDisabilityStatus"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Disability Status updated in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -276,8 +236,8 @@
     "/syscon-sync/sexual-orientation/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Creates a new prison sexual orientation record, or updates the existing one if a record matching the prison number is found",
-        "operationId" : "saveSexualOrientation",
+        "description" : "Update the sexual orientation by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updateSexualOrientation",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -299,7 +259,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Sexual Orientation saved in CPR",
+            "description" : "Sexual Orientation updated in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -416,11 +376,20 @@
         }
       }
     },
-    "/syscon-sync/disability-status" : {
+    "/syscon-sync/disability-status/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Store a prisoner disability status",
-        "operationId" : "insertDisabilityStatus",
+        "description" : "Update the disability status by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updateDisabilityStatus",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "The identifier of the offender source system (NOMIS)",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -432,12 +401,12 @@
           "required" : true
         },
         "responses" : {
-          "201" : {
-            "description" : "Disability Status created in CPR",
+          "200" : {
+            "description" : "Disability status updated in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonDisabilityStatusResponse"
+                  "type" : "string"
                 }
               }
             }
@@ -1031,70 +1000,6 @@
         },
         "required" : [ "current", "interestToImmigration", "prisonNumber" ]
       },
-      "PrisonDisabilityStatus" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The identifier of the offender source system (NOMIS)"
-          },
-          "disability" : {
-            "type" : "boolean",
-            "description" : "The disability flag",
-            "example" : false
-          },
-          "current" : {
-            "type" : "boolean",
-            "description" : "Flag indicating whether data is current or previous",
-            "example" : true
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The disability start date",
-            "example" : "1980-01-01"
-          },
-          "endDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The disability end date",
-            "example" : "2000-01-01"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The disability creation user id",
-            "example" : 12345
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The disability creation date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "createDisplayName" : {
-            "type" : "string",
-            "description" : "The disability creation display name",
-            "example" : "Other"
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The disability modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : "string",
-            "description" : "The disability modify user id",
-            "example" : 12345
-          },
-          "modifyDisplayName" : {
-            "type" : "string",
-            "description" : "The disability modify display name",
-            "example" : "John Smith"
-          }
-        },
-        "required" : [ "current", "disability", "prisonNumber" ]
-      },
       "RetryDlqResult" : {
         "type" : "object",
         "properties" : {
@@ -1348,13 +1253,9 @@
             "type" : "string",
             "description" : "The sexual orientation modify user id",
             "example" : 12345
-          },
-          "modifyDisplayName" : {
-            "type" : "string",
-            "description" : "The sexual orientation modify display name",
-            "example" : "John Smith"
           }
-        }
+        },
+        "required" : [ "modifyDateTime", "modifyUserId" ]
       },
       "PrisonReligion" : {
         "type" : "object",
@@ -1418,8 +1319,7 @@
             "description" : "The list of religions for a given prison number",
             "items" : {
               "$ref" : "#/components/schemas/PrisonReligion"
-            },
-            "minItems" : 1
+            }
           }
         },
         "required" : [ "religions" ]
@@ -1461,15 +1361,27 @@
         },
         "required" : [ "cprImmigrationStatusId" ]
       },
-      "PrisonDisabilityStatusResponse" : {
+      "PrisonDisabilityStatus" : {
         "type" : "object",
         "properties" : {
-          "cprDisabilityStatusId" : {
+          "disability" : {
+            "type" : "boolean",
+            "description" : "The disability flag",
+            "example" : false
+          },
+          "modifyDateTime" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "date-time",
+            "description" : "The disability modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : "string",
+            "description" : "The disability modify user id",
+            "example" : 12345
           }
         },
-        "required" : [ "cprDisabilityStatusId" ]
+        "required" : [ "disability", "modifyDateTime", "modifyUserId" ]
       },
       "DlqMessage" : {
         "type" : "object",
