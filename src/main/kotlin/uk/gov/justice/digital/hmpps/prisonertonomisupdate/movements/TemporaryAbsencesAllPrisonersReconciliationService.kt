@@ -148,8 +148,8 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 data class MismatchPrisonerTaps(
   val offenderNo: String,
   val type: TapMismatchTypes,
-  val nomisCount: Int,
   val dpsCount: Int,
+  val nomisCount: Int,
 )
 
 enum class TapMismatchTypes {
