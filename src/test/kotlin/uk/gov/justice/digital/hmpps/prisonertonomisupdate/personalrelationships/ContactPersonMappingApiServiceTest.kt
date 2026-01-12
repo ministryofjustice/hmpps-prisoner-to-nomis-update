@@ -188,7 +188,7 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }
@@ -1068,8 +1068,8 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisPersonId"]).isEqualTo(nomisPersonId)
-      assertThat(error.moreInfo.existing!!["nomisSequenceNumber"]).isEqualTo(existingNomisSequenceNumber)
+      assertThat(error.moreInfo.existing["nomisPersonId"]).isEqualTo(nomisPersonId)
+      assertThat(error.moreInfo.existing["nomisSequenceNumber"]).isEqualTo(existingNomisSequenceNumber)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisPersonId"]).isEqualTo(nomisPersonId)
       assertThat(error.moreInfo.duplicate["nomisSequenceNumber"]).isEqualTo(nomisSequenceNumber)
@@ -1259,8 +1259,8 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisPersonId"]).isEqualTo(nomisPersonId)
-      assertThat(error.moreInfo.existing!!["nomisSequenceNumber"]).isEqualTo(existingNomisSequenceNumber)
+      assertThat(error.moreInfo.existing["nomisPersonId"]).isEqualTo(nomisPersonId)
+      assertThat(error.moreInfo.existing["nomisSequenceNumber"]).isEqualTo(existingNomisSequenceNumber)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisPersonId"]).isEqualTo(nomisPersonId)
       assertThat(error.moreInfo.duplicate["nomisSequenceNumber"]).isEqualTo(nomisSequenceNumber)
@@ -1629,7 +1629,7 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }
@@ -1692,7 +1692,7 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }
@@ -1759,7 +1759,7 @@ class ContactPersonMappingApiServiceTest {
       }.error
 
       assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(dpsId)
-      assertThat(error.moreInfo.existing!!["nomisId"]).isEqualTo(existingNomisId)
+      assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(existingNomisId)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(nomisId)
     }

@@ -390,3 +390,9 @@ reports:
         page-size: 2
         thread-count: 10
 api.locations.timeout: 1s
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

@@ -394,7 +394,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`(): Unit = runTest {
-      nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+      nomisApi.stubAppointmentCreate("""{ "id": 12345, "eventId": 1234 }""")
 
       nomisApiService.createAppointment(newAppointment())
 
@@ -406,7 +406,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`(): Unit = runTest {
-      nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+      nomisApi.stubAppointmentCreate("""{ "id": 12345, "eventId": 1234 }""")
 
       nomisApiService.createAppointment(newAppointment())
 

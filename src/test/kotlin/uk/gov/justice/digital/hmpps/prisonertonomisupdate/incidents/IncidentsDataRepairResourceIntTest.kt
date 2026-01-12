@@ -15,6 +15,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
@@ -82,11 +83,14 @@ class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
       @Test
       fun `draft incident doesn't get synced`() {
         nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
+        incidentsDpsApi.stubGetIncidentByNomisId(INCIDENT_ID, response = dpsIncident().copy(status = ReportWithDetails.Status.DRAFT))
         webTestClient.post().uri("/incidents/{incidentId}/repair", INCIDENT_ID)
           .headers(setAuthorisation(roles = listOf("ROLE_PRISONER_TO_NOMIS__UPDATE__RW")))
           .contentType(MediaType.APPLICATION_JSON)
           .exchange()
           .expectStatus().is5xxServerError
+          .expectBody()
+          .jsonPath("userMessage").isEqualTo("Unexpected error: DRAFT")
       }
     }
 

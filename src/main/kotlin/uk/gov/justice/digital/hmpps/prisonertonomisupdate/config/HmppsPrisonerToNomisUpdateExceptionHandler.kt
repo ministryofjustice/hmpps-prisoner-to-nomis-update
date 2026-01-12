@@ -47,7 +47,7 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
   }
 
   @ExceptionHandler(java.lang.Exception::class)
-  fun handleException(e: java.lang.Exception): ResponseEntity<ErrorResponse?>? {
+  fun handleException(e: java.lang.Exception): ResponseEntity<ErrorResponse> {
     log.error("Unexpected exception", e)
     return ResponseEntity
       .status(INTERNAL_SERVER_ERROR)
@@ -75,7 +75,7 @@ class HmppsPrisonerToNomisUpdateExceptionHandler {
   }
 
   @ExceptionHandler(NotFoundException::class)
-  fun handleNotFoundException(e: Exception): ResponseEntity<ErrorResponse?>? {
+  fun handleNotFoundException(e: Exception): ResponseEntity<ErrorResponse> {
     log.info("Not Found: {}", e.message)
     return ResponseEntity
       .status(HttpStatus.NOT_FOUND)

@@ -57,7 +57,7 @@ class NomisApiExtension :
 class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8082
-    private const val ERROR_RESPONSE = """{ "error": "some error" }"""
+    private const val ERROR_RESPONSE = """{ "status": 500, "error": "some error" }"""
   }
 
   fun stubHealthPing(status: Int) {
