@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-07.337.80f472e"
+    "version" : "2026-01-09.340.4c1e850"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -18144,8 +18144,7 @@
           "moreInfo" : {
             "type" : "string"
           }
-        },
-        "required" : [ "status" ]
+        }
       },
       "TransactionMappingDto" : {
         "type" : "object",
@@ -18187,7 +18186,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsTransactionId", "mappingType", "nomisBookingId", "nomisTransactionId", "offenderNo" ]
+        "required" : [ "dpsTransactionId", "nomisBookingId", "nomisTransactionId", "offenderNo" ]
       },
       "ScheduledMovementSyncMappingDto" : {
         "type" : "object",
@@ -18252,8 +18251,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "bookingId", "dpsAddressText", "dpsOccurrenceId", "eventTime", "mappingType", "nomisEventId", "prisonerNumber" ]
+        }
       },
       "ExternalMovementMappingDto" : {
         "type" : "object",
@@ -18290,8 +18288,7 @@
             "type" : "string",
             "description" : "The DPS postcode"
           }
-        },
-        "required" : [ "dpsAddressText", "dpsMovementId", "nomisMovementSeq" ]
+        }
       },
       "ScheduledMovementMappingDto" : {
         "type" : "object",
@@ -18334,8 +18331,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisEventId" ]
+        }
       },
       "TemporaryAbsenceApplicationMappingDto" : {
         "type" : "object",
@@ -18365,8 +18361,7 @@
               "$ref" : "#/components/schemas/ExternalMovementMappingDto"
             }
           }
-        },
-        "required" : [ "dpsMovementApplicationId", "movements", "nomisMovementApplicationId", "schedules" ]
+        }
       },
       "TemporaryAbsenceBookingMappingDto" : {
         "type" : "object",
@@ -18392,8 +18387,7 @@
               "$ref" : "#/components/schemas/ExternalMovementMappingDto"
             }
           }
-        },
-        "required" : [ "applications", "bookingId", "unscheduledMovements" ]
+        }
       },
       "TemporaryAbsencesPrisonerMappingDto" : {
         "type" : "object",
@@ -18421,8 +18415,7 @@
             "description" : "The created time of the mappings",
             "example" : "2025-08-11T15:34:43"
           }
-        },
-        "required" : [ "bookings", "migrationId", "prisonerNumber" ]
+        }
       },
       "ExternalMovementSyncMappingDto" : {
         "type" : "object",
@@ -18481,8 +18474,7 @@
             "format" : "int64",
             "description" : "The DPS address unique ID"
           }
-        },
-        "required" : [ "bookingId", "dpsAddressText", "dpsMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
+        }
       },
       "AdjudicationPunishmentBatchUpdateMappingDto" : {
         "type" : "object",
@@ -18502,7 +18494,7 @@
             }
           }
         },
-        "required" : [ "punishmentsToCreate", "punishmentsToDelete" ]
+        "required" : [ "punishmentsToCreate" ]
       },
       "AdjudicationPunishmentMappingDto" : {
         "type" : "object",
@@ -18585,8 +18577,7 @@
               "$ref" : "#/components/schemas/CourtChargeNomisIdDto"
             }
           }
-        },
-        "required" : [ "courtChargesToCreate", "courtChargesToDelete" ]
+        }
       },
       "CourtChargeMappingDto" : {
         "type" : "object",
@@ -18670,8 +18661,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
+        }
       },
       "CourtCaseBatchMappingDto" : {
         "type" : "object",
@@ -18727,8 +18717,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "courtAppearances", "courtCases", "courtCharges", "mappingType", "sentenceTerms", "sentences" ]
+        }
       },
       "CourtCaseBatchUpdateAndCreateMappingDto" : {
         "type" : "object",
@@ -18742,8 +18731,7 @@
             "$ref" : "#/components/schemas/CourtCaseBatchUpdateMappingDto",
             "description" : "Mappings that need creating"
           }
-        },
-        "required" : [ "mappingsToCreate", "mappingsToUpdate" ]
+        }
       },
       "CourtCaseBatchUpdateMappingDto" : {
         "type" : "object",
@@ -18784,8 +18772,7 @@
               "$ref" : "#/components/schemas/CourtSentenceTermIdPair"
             }
           }
-        },
-        "required" : [ "courtAppearances", "courtCases", "courtCharges", "sentenceTerms", "sentences" ]
+        }
       },
       "CourtCaseMappingDto" : {
         "type" : "object",
@@ -18825,8 +18812,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsCourtCaseId", "nomisCourtCaseId" ]
+        }
       },
       "CourtSentenceIdPair" : {
         "type" : "object",
@@ -18837,8 +18823,7 @@
           "toNomisId" : {
             "$ref" : "#/components/schemas/SentenceId"
           }
-        },
-        "required" : [ "fromNomisId", "toNomisId" ]
+        }
       },
       "CourtSentenceTermIdPair" : {
         "type" : "object",
@@ -18849,8 +18834,7 @@
           "toNomisId" : {
             "$ref" : "#/components/schemas/SentenceTermId"
           }
-        },
-        "required" : [ "fromNomisId", "toNomisId" ]
+        }
       },
       "SentenceId" : {
         "type" : "object",
@@ -18863,8 +18847,7 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "nomisBookingId", "nomisSequence" ]
+        }
       },
       "SentenceMappingDto" : {
         "type" : "object",
@@ -18906,7 +18889,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsSentenceId", "nomisBookingId", "nomisSentenceSequence" ]
+        "required" : [ "nomisBookingId", "nomisSentenceSequence" ]
       },
       "SentenceTermId" : {
         "type" : "object",
@@ -18918,8 +18901,7 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "nomisSentenceId", "nomisSequence" ]
+        }
       },
       "SentenceTermMappingDto" : {
         "type" : "object",
@@ -18967,7 +18949,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsTermId", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
+        "required" : [ "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
       },
       "SimpleCourtSentencingIdPair" : {
         "type" : "object",
@@ -18980,8 +18962,7 @@
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "fromNomisId", "toNomisId" ]
+        }
       },
       "CaseNoteMappingDto" : {
         "type" : "object",
@@ -19023,7 +19004,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsCaseNoteId", "mappingType", "nomisBookingId", "nomisCaseNoteId", "offenderNo" ]
+        "required" : [ "dpsCaseNoteId", "nomisBookingId", "nomisCaseNoteId", "offenderNo" ]
       },
       "AlertMappingIdDto" : {
         "type" : "object",
@@ -19043,8 +19024,7 @@
             "format" : "int64",
             "description" : "NOMIS alert sequence"
           }
-        },
-        "required" : [ "dpsAlertId", "nomisAlertSequence", "nomisBookingId" ]
+        }
       },
       "MergedPrisonerAlertMappingsDto" : {
         "type" : "object",
@@ -19057,8 +19037,7 @@
             "$ref" : "#/components/schemas/PrisonerAlertMappingsDto",
             "description" : "Mappings for a prisoner after the merge"
           }
-        },
-        "required" : [ "prisonerMapping", "removedOffenderNo" ]
+        }
       },
       "PrisonerAlertMappingsDto" : {
         "type" : "object",
@@ -19086,8 +19065,7 @@
               "$ref" : "#/components/schemas/AlertMappingIdDto"
             }
           }
-        },
-        "required" : [ "mappingType", "mappings" ]
+        }
       },
       "AlertMappingDto" : {
         "type" : "object",
@@ -19126,8 +19104,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsAlertId", "mappingType", "nomisAlertSequence", "nomisBookingId", "offenderNo" ]
+        }
       },
       "NomisMappingIdUpdate" : {
         "type" : "object",
@@ -19138,8 +19115,7 @@
             "format" : "int64",
             "description" : "NOMIS booking id"
           }
-        },
-        "required" : [ "bookingId" ]
+        }
       },
       "ActivityMappingDto" : {
         "type" : "object",
@@ -19225,12 +19201,11 @@
             "type" : "string",
             "description" : "nomis room description (unique within prison)"
           },
-          "isOpen" : {
-            "type" : "boolean",
-            "description" : "open or closed indicator, default is false"
+          "open" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "isOpen", "nomisRoomDescription", "vsipId" ]
+        "required" : [ "nomisRoomDescription", "vsipId" ]
       },
       "VisitMappingDto" : {
         "type" : "object",
@@ -19274,8 +19249,7 @@
         "properties" : {
           "duplicate" : { },
           "existing" : { }
-        },
-        "required" : [ "duplicate", "existing" ]
+        }
       },
       "DuplicateMappingErrorResponse" : {
         "type" : "object",
@@ -19297,8 +19271,7 @@
           "developerMessage" : {
             "type" : "string"
           }
-        },
-        "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
+        }
       },
       "VisitSlotMigrationMappingDto" : {
         "type" : "object",
@@ -19310,8 +19283,7 @@
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "dpsId", "nomisId" ]
+        }
       },
       "VisitTimeSlotMigrationMappingDto" : {
         "type" : "object",
@@ -19347,8 +19319,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisDayOfWeek", "nomisPrisonId", "nomisSlotSequence", "visitSlots" ]
+        }
       },
       "VisitBalanceAdjustmentMappingDto" : {
         "type" : "object",
@@ -19381,7 +19352,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsId", "mappingType", "nomisVisitBalanceAdjustmentId" ]
+        "required" : [ "dpsId", "nomisVisitBalanceAdjustmentId" ]
       },
       "TemporaryAbsenceApplicationSyncMappingDto" : {
         "type" : "object",
@@ -19414,8 +19385,7 @@
             "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
             "example" : "NOMIS_CREATED"
           }
-        },
-        "required" : [ "bookingId", "dpsMovementApplicationId", "mappingType", "nomisMovementApplicationId", "prisonerNumber" ]
+        }
       },
       "FindTemporaryAbsenceAddressByNomisIdRequest" : {
         "type" : "object",
@@ -19434,8 +19404,7 @@
             "format" : "int64",
             "description" : "The unique NOMIS address id"
           }
-        },
-        "required" : [ "nomisAddressId", "offenderNo", "ownerClass" ]
+        }
       },
       "TemporaryAbsenceAddressMappingResponse" : {
         "type" : "object",
@@ -19471,8 +19440,7 @@
             "type" : "string",
             "description" : "The DPS address postcode"
           }
-        },
-        "required" : [ "addressId", "dpsAddressText", "ownerClass" ]
+        }
       },
       "FindTemporaryAbsenceAddressByDpsIdRequest" : {
         "type" : "object",
@@ -19495,8 +19463,7 @@
             "type" : "string",
             "description" : "The DPS address text"
           }
-        },
-        "required" : [ "dpsAddressText", "offenderNo", "ownerClass" ]
+        }
       },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",
@@ -19583,8 +19550,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisRootOffenderId" ]
+        }
       },
       "PrisonBalanceMappingDto" : {
         "type" : "object",
@@ -19617,8 +19583,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "OfficialVisitMigrationMappingDto" : {
         "type" : "object",
@@ -19648,8 +19613,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId", "visitors" ]
+        }
       },
       "VisitorMigrationMappingDto" : {
         "type" : "object",
@@ -19661,8 +19625,7 @@
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "dpsId", "nomisId" ]
+        }
       },
       "NonAssociationMappingDto" : {
         "type" : "object",
@@ -19708,7 +19671,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "firstOffenderNo", "mappingType", "nomisTypeSequence", "nonAssociationId", "secondOffenderNo" ]
+        "required" : [ "firstOffenderNo", "nomisTypeSequence", "nonAssociationId", "secondOffenderNo" ]
       },
       "LocationMappingDto" : {
         "type" : "object",
@@ -19743,7 +19706,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsLocationId", "mappingType", "nomisLocationId" ]
+        "required" : [ "dpsLocationId", "nomisLocationId" ]
       },
       "IncidentMappingDto" : {
         "type" : "object",
@@ -19778,7 +19741,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsIncidentId", "mappingType", "nomisIncidentId" ]
+        "required" : [ "dpsIncidentId", "nomisIncidentId" ]
       },
       "IncentiveMappingDto" : {
         "type" : "object",
@@ -19938,7 +19901,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsCSIPReportId", "dpsId", "mappingType", "nomisId" ]
+        "required" : [ "dpsCSIPReportId", "dpsId", "nomisId" ]
       },
       "CSIPReviewMapping" : {
         "type" : "object",
@@ -19970,12 +19933,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPReportId", "dpsCSIPReviewId", "id", "isNew", "mappingType", "new", "nomisCSIPReviewId" ]
+        }
       },
       "CSIPPlanMapping" : {
         "type" : "object",
@@ -20007,12 +19966,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPPlanId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPPlanId" ]
+        }
       },
       "CSIPInterviewMapping" : {
         "type" : "object",
@@ -20044,12 +19999,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPInterviewId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPInterviewId" ]
+        }
       },
       "CSIPFactorMapping" : {
         "type" : "object",
@@ -20081,12 +20032,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPFactorId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPFactorId" ]
+        }
       },
       "CSIPFullMappingDto" : {
         "type" : "object",
@@ -20154,7 +20101,7 @@
             }
           }
         },
-        "required" : [ "attendeeMappings", "dpsCSIPReportId", "factorMappings", "interviewMappings", "mappingType", "nomisCSIPReportId", "planMappings", "reviewMappings" ]
+        "required" : [ "dpsCSIPReportId", "nomisCSIPReportId" ]
       },
       "CSIPAttendeeMapping" : {
         "type" : "object",
@@ -20186,12 +20133,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPAttendeeId", "dpsCSIPReportId", "id", "isNew", "mappingType", "new", "nomisCSIPAttendeeId" ]
+        }
       },
       "CSIPReportMappingDto" : {
         "type" : "object",
@@ -20224,7 +20167,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsCSIPReportId", "mappingType", "nomisCSIPReportId" ]
+        "required" : [ "dpsCSIPReportId", "nomisCSIPReportId" ]
       },
       "CSIPMapping" : {
         "type" : "object",
@@ -20253,12 +20196,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCSIPId", "id", "isNew", "mappingType", "new", "nomisCSIPId" ]
+        }
       },
       "NomisSentenceId" : {
         "type" : "object",
@@ -20310,12 +20249,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsSentenceId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence" ]
+        }
       },
       "SentenceTermMapping" : {
         "type" : "object",
@@ -20352,12 +20287,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsTermId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisSentenceSequence", "nomisTermSequence" ]
+        }
       },
       "CourtChargeMapping" : {
         "type" : "object",
@@ -20386,12 +20317,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCourtChargeId", "id", "isNew", "mappingType", "new", "nomisCourtChargeId" ]
+        }
       },
       "DpsCourtCaseBatchMappingDto" : {
         "type" : "object",
@@ -20432,8 +20359,7 @@
               "type" : "string"
             }
           }
-        },
-        "required" : [ "courtAppearances", "courtCases", "courtCharges", "sentenceTerms", "sentences" ]
+        }
       },
       "CourtCaseAllMappingDto" : {
         "type" : "object",
@@ -20489,8 +20415,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "courtAppearances", "courtCharges", "dpsCourtCaseId", "nomisCourtCaseId", "sentences" ]
+        }
       },
       "CourtAppearanceRecallMappingsDto" : {
         "type" : "object",
@@ -20529,7 +20454,7 @@
             "description" : "Mappings that need updating"
           }
         },
-        "required" : [ "dpsRecallId", "mappingsToUpdate", "nomisCourtAppearanceIds" ]
+        "required" : [ "dpsRecallId", "nomisCourtAppearanceIds" ]
       },
       "CourtAppearanceMapping" : {
         "type" : "object",
@@ -20558,12 +20483,8 @@
           },
           "id" : {
             "type" : "string"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "dpsCourtAppearanceId", "id", "isNew", "mappingType", "new", "nomisCourtAppearanceId" ]
+        }
       },
       "OrganisationsMappingDto" : {
         "type" : "object",
@@ -20592,8 +20513,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "ProfileMappingIdDto" : {
         "type" : "object",
@@ -20620,8 +20540,7 @@
             "description" : "Mapping type - currently defaulted to be NOMIS_CREATED",
             "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
           }
-        },
-        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
+        }
       },
       "ProfileMapping" : {
         "type" : "object",
@@ -20658,12 +20577,8 @@
           "id" : {
             "type" : "string",
             "format" : "uuid"
-          },
-          "isNew" : {
-            "type" : "boolean"
           }
-        },
-        "required" : [ "cprId", "id", "isNew", "mappingType", "new", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
+        }
       },
       "CorePersonMappingIdDto" : {
         "type" : "object",
@@ -20677,8 +20592,7 @@
             "type" : "string",
             "description" : "NOMIS Prison number aka Offender number"
           }
-        },
-        "required" : [ "cprId", "nomisPrisonNumber" ]
+        }
       },
       "CorePersonMappingsDto" : {
         "type" : "object",
@@ -20731,8 +20645,7 @@
               "$ref" : "#/components/schemas/ProfileMappingIdDto"
             }
           }
-        },
-        "required" : [ "addressMappings", "emailMappings", "mappingType", "personMapping", "phoneMappings", "profileMappings" ]
+        }
       },
       "CorePersonPhoneMappingIdDto" : {
         "type" : "object",
@@ -20752,8 +20665,7 @@
             "description" : "CPR phone type",
             "enum" : [ "ADDRESS", "CORE_PERSON" ]
           }
-        },
-        "required" : [ "cprId", "cprPhoneType", "nomisId" ]
+        }
       },
       "CorePersonSimpleMappingIdDto" : {
         "type" : "object",
@@ -20768,8 +20680,7 @@
             "format" : "int64",
             "description" : "NOMIS id"
           }
-        },
-        "required" : [ "cprId", "nomisId" ]
+        }
       },
       "ContactPersonPrisonerMappingsDto" : {
         "type" : "object",
@@ -20814,8 +20725,7 @@
               "type" : "string"
             }
           }
-        },
-        "required" : [ "mappingType", "personContactMapping", "personContactMappingsToRemoveByDpsId", "personContactRestrictionMapping", "personContactRestrictionMappingsToRemoveByDpsId" ]
+        }
       },
       "ContactPersonSimpleMappingIdDto" : {
         "type" : "object",
@@ -20830,8 +20740,7 @@
             "format" : "int64",
             "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "nomisId" ]
+        }
       },
       "PrisonerRestrictionMappingsDto" : {
         "type" : "object",
@@ -20855,8 +20764,7 @@
               "$ref" : "#/components/schemas/ContactPersonSimpleMappingIdDto"
             }
           }
-        },
-        "required" : [ "mappingType", "mappings" ]
+        }
       },
       "ContactPersonMappingsDto" : {
         "type" : "object",
@@ -20937,8 +20845,7 @@
               "$ref" : "#/components/schemas/ContactPersonSimpleMappingIdDto"
             }
           }
-        },
-        "required" : [ "mappingType", "personAddressMapping", "personContactMapping", "personContactRestrictionMapping", "personEmailMapping", "personEmploymentMapping", "personIdentifierMapping", "personMapping", "personPhoneMapping", "personRestrictionMapping" ]
+        }
       },
       "ContactPersonPhoneMappingIdDto" : {
         "type" : "object",
@@ -20958,8 +20865,7 @@
             "description" : "DPS phone type",
             "enum" : [ "ADDRESS", "PERSON" ]
           }
-        },
-        "required" : [ "dpsId", "dpsPhoneType", "nomisId" ]
+        }
       },
       "ContactPersonSequenceMappingIdDto" : {
         "type" : "object",
@@ -20979,25 +20885,11 @@
             "format" : "int64",
             "description" : "NOMIS sequence"
           }
-        },
-        "required" : [ "dpsId", "nomisPersonId", "nomisSequenceNumber" ]
+        }
       },
       "PrisonerRestrictionMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "offenderNo" : {
-            "type" : "string",
-            "description" : "Prisoner number"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21012,13 +20904,40 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "offenderNo" : {
+            "type" : "string",
+            "description" : "Prisoner number"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId", "offenderNo" ]
+        }
       },
       "PersonPhoneMappingDto" : {
         "type" : "object",
         "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
           "dpsId" : {
             "type" : "string",
             "description" : "DPS id"
@@ -21032,37 +20951,12 @@
             "type" : "string",
             "description" : "DPS phone type",
             "enum" : [ "ADDRESS", "PERSON" ]
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "dpsPhoneType", "mappingType", "nomisId" ]
+        }
       },
       "PersonRestrictionMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21077,22 +20971,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PersonMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21107,27 +21000,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PersonIdentifierMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisPersonId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "nomisSequenceNumber" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS sequence"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21142,13 +21029,41 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisPersonId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "nomisSequenceNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS sequence"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisPersonId", "nomisSequenceNumber" ]
+        }
       },
       "PersonEmploymentMappingDto" : {
         "type" : "object",
         "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
           "dpsId" : {
             "type" : "string",
             "description" : "DPS id"
@@ -21162,37 +21077,12 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "NOMIS sequence"
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisPersonId", "nomisSequenceNumber" ]
+        }
       },
       "PersonEmailMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21207,22 +21097,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PersonContactRestrictionMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21237,22 +21126,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PersonContactMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21267,22 +21155,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PersonAddressMappingDto" : {
         "type" : "object",
         "properties" : {
-          "dpsId" : {
-            "type" : "string",
-            "description" : "DPS id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -21297,9 +21184,17 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "dpsId" : {
+            "type" : "string",
+            "description" : "DPS id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "AppointmentMappingDto" : {
         "type" : "object",
@@ -21435,7 +21330,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "adjudicationId", "hearings", "label", "punishments" ]
+        "required" : [ "adjudicationId", "hearings", "punishments" ]
       },
       "ActivityMigrationMappingDto" : {
         "type" : "object",
@@ -21484,8 +21379,7 @@
             "description" : "DPS sentence id",
             "example" : "f4499772-2e43-4951-861d-04ad86df43fc"
           }
-        },
-        "required" : [ "dpsSentenceId", "nomisSentenceId" ]
+        }
       },
       "NomisDpsLocationMapping" : {
         "type" : "object",
@@ -21502,8 +21396,7 @@
             "description" : "Internal Location id in NOMIS",
             "example" : 2318905
           }
-        },
-        "required" : [ "dpsLocationId", "nomisLocationId" ]
+        }
       },
       "RoomMappingDto" : {
         "type" : "object",
@@ -21521,12 +21414,11 @@
             "type" : "string",
             "description" : "prison id"
           },
-          "isOpen" : {
-            "type" : "boolean",
-            "description" : "open or closed indicator"
+          "open" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "isOpen", "nomisRoomDescription", "prisonId", "vsipId" ]
+        "required" : [ "nomisRoomDescription", "prisonId", "vsipId" ]
       },
       "Pageable" : {
         "type" : "object",
@@ -21571,8 +21463,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "VisitTimeSlotMappingDto" : {
         "type" : "object",
@@ -21602,8 +21493,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisDayOfWeek", "nomisPrisonId", "nomisSlotSequence" ]
+        }
       },
       "PageVisitTimeSlotMappingDto" : {
         "type" : "object",
@@ -21702,8 +21592,7 @@
               "$ref" : "#/components/schemas/TransactionMappingDto"
             }
           }
-        },
-        "required" : [ "mappings" ]
+        }
       },
       "FindScheduledMovementsForAddressResponse" : {
         "type" : "object",
@@ -21716,8 +21605,7 @@
               "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
             }
           }
-        },
-        "required" : [ "scheduleMappings" ]
+        }
       },
       "PageTemporaryAbsenceMigrationDto" : {
         "type" : "object",
@@ -21785,8 +21673,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "prisonerNumber" ]
+        }
       },
       "PageMetadata" : {
         "type" : "object",
@@ -21859,8 +21746,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
+        }
       },
       "PageOfficialVisitMappingDto" : {
         "type" : "object",
@@ -21931,8 +21817,7 @@
             "type" : "string",
             "description" : "the migration the offender was migrated in"
           }
-        },
-        "required" : [ "mappingsCount", "offenderNo" ]
+        }
       },
       "PageCourtSentencingMigrationSummary" : {
         "type" : "object",
@@ -22013,8 +21898,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "dpsRecallId", "nomisCourtAppearanceId" ]
+        }
       },
       "CourtAppearanceAllMappingDto" : {
         "type" : "object",
@@ -22056,8 +21940,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "courtCharges", "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
+        }
       },
       "PageOrganisationsMappingDto" : {
         "type" : "object",
@@ -22108,6 +21991,21 @@
       "ProfileMappingDto" : {
         "type" : "object",
         "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
           "cprId" : {
             "type" : "string",
             "description" : "CPR profile id"
@@ -22124,7 +22022,12 @@
           "nomisPrisonNumber" : {
             "type" : "string",
             "description" : "NOMIS Prison number aka Offender number"
-          },
+          }
+        }
+      },
+      "CorePersonPhoneMappingDto" : {
+        "type" : "object",
+        "properties" : {
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -22139,13 +22042,7 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisBookingId", "nomisPrisonNumber", "nomisProfileType" ]
-      },
-      "CorePersonPhoneMappingDto" : {
-        "type" : "object",
-        "properties" : {
+          },
           "cprId" : {
             "type" : "string",
             "description" : "CPR id"
@@ -22159,7 +22056,12 @@
             "type" : "string",
             "description" : "CPR phone type",
             "enum" : [ "ADDRESS", "CORE_PERSON" ]
-          },
+          }
+        }
+      },
+      "CorePersonMappingDto" : {
+        "type" : "object",
+        "properties" : {
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -22174,13 +22076,7 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "cprPhoneType", "mappingType", "nomisId" ]
-      },
-      "CorePersonMappingDto" : {
-        "type" : "object",
-        "properties" : {
+          },
           "cprId" : {
             "type" : "string",
             "description" : "CPR id"
@@ -22188,24 +22084,8 @@
           "nomisPrisonNumber" : {
             "type" : "string",
             "description" : "NOMIS Prison number aka Offender number"
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "cprId", "mappingType", "nomisPrisonNumber" ]
+        }
       },
       "PageCorePersonMappingDto" : {
         "type" : "object",
@@ -22256,15 +22136,6 @@
       "CorePersonEmailAddressMappingDto" : {
         "type" : "object",
         "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -22279,22 +22150,21 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "cprId", "mappingType", "nomisId" ]
+        }
       },
       "CorePersonAddressMappingDto" : {
         "type" : "object",
         "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
           "label" : {
             "type" : "string",
             "description" : "Label (a timestamp for migrated ids)"
@@ -22309,9 +22179,17 @@
             "description" : "Date time the mapping was created",
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
           }
-        },
-        "required" : [ "cprId", "mappingType", "nomisId" ]
+        }
       },
       "PagePersonMappingDto" : {
         "type" : "object",
@@ -22370,8 +22248,7 @@
               "$ref" : "#/components/schemas/CaseNoteMappingDto"
             }
           }
-        },
-        "required" : [ "mappings" ]
+        }
       },
       "AllPrisonerAlertMappingsDto" : {
         "type" : "object",
@@ -22384,8 +22261,7 @@
               "$ref" : "#/components/schemas/AlertMappingDto"
             }
           }
-        },
-        "required" : [ "mappings" ]
+        }
       },
       "PagePrisonerAlertMappingsSummaryDto" : {
         "type" : "object",
@@ -22452,8 +22328,7 @@
             "example" : "2021-07-05T10:35:17",
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
-        },
-        "required" : [ "mappingsCount", "offenderNo" ]
+        }
       },
       "PageAlertMappingDto" : {
         "type" : "object",
