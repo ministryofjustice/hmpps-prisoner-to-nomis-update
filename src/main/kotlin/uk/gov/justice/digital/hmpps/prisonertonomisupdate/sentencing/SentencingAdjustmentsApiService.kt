@@ -1,7 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
+import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.NOT_FOUND
-import org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
@@ -31,5 +31,5 @@ class SentencingAdjustmentsApiService(private val sentenceAdjustmentsApiWebClien
   suspend fun getAdjustments(offenderNo: String): List<AdjustmentDto>? = sentenceAdjustmentsApiWebClient.get()
     .uri("/adjustments?person={offenderNo}", offenderNo)
     .retrieve()
-    .awaitBodyOrNullForStatus(NOT_FOUND, UNPROCESSABLE_ENTITY)
+    .awaitBodyOrNullForStatus(NOT_FOUND, HttpStatus.UNPROCESSABLE_CONTENT)
 }
