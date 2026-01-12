@@ -5,8 +5,10 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
@@ -19,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.Report
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
+@ExtendWith(MockitoExtension::class)
 class IncidentsDataRepairResourceIntTest : IntegrationTestBase() {
   @Autowired
   private lateinit var incidentsNomisApi: IncidentsNomisApiMockServer
