@@ -32,8 +32,8 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
   private lateinit var incidentsNomisApi: IncidentsNomisApiMockServer
 
-  private val nomisApi = NomisApiExtension.Companion.nomisApi
-  private val dpsApi = IncidentsDpsApiExtension.Companion.incidentsDpsApi
+  private val nomisApi = NomisApiExtension.nomisApi
+  private val dpsApi = IncidentsDpsApiExtension.incidentsDpsApi
 
   @Nested
   inner class Incident {
@@ -47,6 +47,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
+          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishCreateIncidentDomainEvent(dpsId = "12345", nomisId = 1234L, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }

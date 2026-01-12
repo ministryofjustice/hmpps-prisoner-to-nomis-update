@@ -47,7 +47,8 @@ internal class LocationsApiServiceTest {
       },
       "certification": {
         "certified": true,
-        "certifiedNormalAccommodation": 1
+        "certifiedNormalAccommodation": 1,
+        "capacityOfCertifiedCell": 3
       },
       "attributes": ["LOCATE_FLAT", "ELIGIBLE"],
       "orderWithinParentLocation": 1,

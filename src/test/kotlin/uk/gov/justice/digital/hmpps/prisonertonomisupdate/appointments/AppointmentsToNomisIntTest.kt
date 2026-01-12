@@ -48,6 +48,9 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
   private val appointmentResponse = """{
       "id": $APPOINTMENT_INSTANCE_ID,
+      "appointmentSeriesId": 1234,
+      "appointmentId": 1234,
+      "appointmentAttendeeId": 1234,
       "appointmentType": "INDIVIDUAL",
       "bookingId": $BOOKING_ID,
       "internalLocationId": $APPOINTMENT_NOMIS_LOCATION_ID,

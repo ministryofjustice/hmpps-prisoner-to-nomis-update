@@ -30,7 +30,7 @@ class ActivitiesReconIntTest(
       @Test
       fun `should publish success telemetry if no differences`() = runTest {
         stubGetPrisons("BXI")
-        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1))
+        stubBookingCounts("BXI", BookingDetailsStub(bookingId = 1234567, offenderNo = "A1234AA", location = "BXI", nomisCount = 1, dpsCount = 1, offenderId = 1234))
 
         activitiesReconService.allocationReconciliationReport()
 
@@ -270,7 +270,7 @@ class ActivitiesReconIntTest(
 
       bookingCounts
         .filterNot { it.nomisCount == it.dpsCount }
-        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
+        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "offenderId": "${it.offenderId}", "active": "${it.active}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
           nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
@@ -545,7 +545,7 @@ class ActivitiesReconIntTest(
 
       bookingCounts
         .filterNot { it.nomisCount == it.dpsCount }
-        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
+        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "offenderId": "${it.offenderId}", "active": "${it.active}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
           nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
@@ -788,7 +788,7 @@ class ActivitiesReconIntTest(
 
       bookingCounts
         .filterNot { it.nomisCount == it.dpsCount }
-        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "location": "${it.location}" }""" }
+        .map { """{ "bookingId": ${it.bookingId}, "offenderNo": "${it.offenderNo}", "offenderId": "${it.offenderId}", "active": "${it.active}", "location": "${it.location}" }""" }
         .takeIf { it.isNotEmpty() }
         ?.run {
           nomisApi.stubGetActivitiesPrisonerDetails(""" [ ${this.joinToString(",")} ] """)
