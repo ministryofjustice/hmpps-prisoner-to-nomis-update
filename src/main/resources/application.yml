@@ -231,7 +231,7 @@ reports:
     all-prisoners:
       reconciliation:
         page-size: 100
-        thread-count: 15
+        thread-count: 5
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600

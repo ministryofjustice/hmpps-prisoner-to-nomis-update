@@ -27,7 +27,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
   private val dpsApiService: ExternalMovementsDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
-  @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
+  @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.thread-count}") private val threadCount: Int = 5,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
