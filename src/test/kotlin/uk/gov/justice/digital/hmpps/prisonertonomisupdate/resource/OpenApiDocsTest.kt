@@ -4,15 +4,19 @@ import io.swagger.v3.parser.OpenAPIV3Parser
 import net.minidev.json.JSONArray
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.springframework.boot.test.web.server.LocalServerPort
+import org.springframework.boot.webtestclient.autoconfigure.AutoConfigureWebTestClient
 import org.springframework.http.MediaType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
+@AutoConfigureWebTestClient(timeout = "PT60S")
 class OpenApiDocsTest : SqsIntegrationTestBase() {
   @LocalServerPort
-  private var port: Int = 0
+  private val port: Int = 0
 
   @Test
   fun `open api docs are available`() {
@@ -63,19 +67,57 @@ class OpenApiDocsTest : SqsIntegrationTestBase() {
   }
 
   @Test
-  fun `the security scheme is setup for bearer tokens`() {
-    val bearerJwts = JSONArray()
-    bearerJwts.addAll(listOf("read", "write"))
+  fun `the generated open api for date times hasn't got the time zone`() {
     webTestClient.get()
       .uri("/v3/api-docs")
       .accept(MediaType.APPLICATION_JSON)
       .exchange()
       .expectStatus().isOk
       .expectBody()
-      .jsonPath("$.components.securitySchemes.bearer-jwt.type").isEqualTo("http")
-      .jsonPath("$.components.securitySchemes.bearer-jwt.scheme").isEqualTo("bearer")
-      .jsonPath("$.components.securitySchemes.bearer-jwt.bearerFormat").isEqualTo("JWT")
-      .jsonPath("$.security[0].bearer-jwt")
-      .isEqualTo(bearerJwts)
+      .jsonPath("$.components.schemas.OfficialVisitSummary.properties.startDateTime.example").isEqualTo("2021-07-16T12:34:56")
+      .jsonPath("$.components.schemas.OfficialVisitSummary.properties.startDateTime.description")
+      .isEqualTo("The start time of the visit")
+      .jsonPath("$.components.schemas.OfficialVisitSummary.properties.startDateTime.type").isEqualTo("string")
+      .jsonPath("$.components.schemas.OfficialVisitSummary.properties.startDateTime.format").isEqualTo("date-time")
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = ["bearer-jwt, ROLE_QUEUE_ADMIN"])
+  fun `the security scheme is setup for bearer tokens`(key: String, role: String) {
+    webTestClient.get()
+      .uri("/v3/api-docs")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.components.securitySchemes.$key.type").isEqualTo("http")
+      .jsonPath("$.components.securitySchemes.$key.scheme").isEqualTo("bearer")
+      .jsonPath("$.components.securitySchemes.$key.description").isEqualTo("An HMPPS Auth access token.")
+      .jsonPath("$.components.securitySchemes.$key.bearerFormat").isEqualTo("JWT")
+      .jsonPath("$.security[0].$key").isEqualTo(JSONArray().apply { addAll(listOf("read", "write")) })
+  }
+
+  @Test
+  fun `the open api json doesn't include LocalTime`() {
+    webTestClient.get()
+      .uri("/v3/api-docs")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("components.schemas.LocalTime").doesNotExist()
+  }
+
+  @Test
+  fun `the response contains required fields`() {
+    webTestClient.get()
+      .uri("/v3/api-docs")
+      .accept(MediaType.APPLICATION_JSON)
+      .exchange()
+      .expectStatus().isOk
+      .expectBody()
+      .jsonPath("$.components.schemas.ErrorResponse.required").value<List<String>> {
+        assertThat(it).containsExactly("status")
+      }
   }
 }
