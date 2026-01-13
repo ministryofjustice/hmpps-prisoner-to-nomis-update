@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import io.swagger.v3.oas.annotations.media.Schema
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
@@ -9,7 +10,9 @@ import java.time.LocalDateTime
 import java.time.LocalTime
 
 data class OfficialVisitSummary(
+  @Schema(description = "The start time of the visit", example = "2021-07-16T12:34:56")
   val startDateTime: LocalDateTime,
+  @Schema(description = "The end time of the visit", example = "2020-04-20T18:00:00")
   val endDateTime: LocalDateTime,
   val prisonId: String,
   val offenderNo: String,
