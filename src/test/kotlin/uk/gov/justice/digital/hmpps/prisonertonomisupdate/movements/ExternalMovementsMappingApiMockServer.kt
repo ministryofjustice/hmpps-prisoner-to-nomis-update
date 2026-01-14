@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
@@ -14,9 +15,11 @@ import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceAddressMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
 import java.util.*
 
 @Component
@@ -118,6 +121,28 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
 
   fun stubCreateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement")
 
+  fun stubUpdateScheduledMovementMapping() {
+    mappingServer.stubFor(
+      put("/mapping/temporary-absence/scheduled-movement")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+        ),
+    )
+  }
+
+  fun stubUpdateScheduledMovementMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      put("/mapping/temporary-absence/scheduled-movement").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(objectMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
   fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisEventId: Long = 1) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
@@ -195,6 +220,29 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
     )
   }
 
+  fun stubGetTemporaryAbsenceAddressMapping() {
+    mappingServer.stubFor(
+      post(urlPathMatching("/mapping/temporary-absence/addresses/by-dps-id"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(objectMapper.writeValueAsString(temporaryAbsenceAddressMapping())),
+        ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceAddressMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post(urlPathMatching("/mapping/temporary-absence/addresses/by-dps-id"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(objectMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
@@ -218,11 +266,13 @@ fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNu
   nomisEventId = nomisEventId,
   dpsOccurrenceId = dpsId,
   mappingType = ScheduledMovementSyncMappingDto.MappingType.MIGRATED,
-  // TODO add address mapping details
-  nomisAddressId = 0,
-  nomisAddressOwnerClass = "",
-  dpsAddressText = "",
-  eventTime = "",
+  dpsAddressText = "some address",
+  eventTime = "${LocalDateTime.now()}",
+  nomisAddressId = 54321,
+  nomisAddressOwnerClass = "OFF",
+  dpsUprn = 654,
+  dpsDescription = null,
+  dpsPostcode = "SW1A 1AA",
 )
 
 fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ExternalMovementSyncMappingDto(
@@ -235,4 +285,14 @@ fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSe
   nomisAddressId = 0,
   nomisAddressOwnerClass = "",
   dpsAddressText = "",
+)
+
+fun temporaryAbsenceAddressMapping() = TemporaryAbsenceAddressMappingResponse(
+  ownerClass = "OFF",
+  addressId = 12345,
+  dpsAddressText = "some address",
+  offenderNo = "A1234BC",
+  dpsUprn = 654,
+  dpsDescription = null,
+  dpsPostcode = "SW1A 1AA",
 )
