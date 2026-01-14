@@ -166,7 +166,6 @@ fun newIncentive(
   iepDate = LocalDate.parse("2023-09-08"),
   iepTime = LocalDateTime.parse("2023-09-08T09:30"),
   bookingId = 123,
-  sequence = 1,
   iepCode = "STD",
   iepLevel = "Standard",
   userId = "me",
