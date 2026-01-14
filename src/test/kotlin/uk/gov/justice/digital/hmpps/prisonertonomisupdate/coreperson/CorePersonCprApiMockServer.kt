@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.Canon
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSex
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSexualOrientation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 
@@ -99,6 +100,7 @@ fun corePersonDto(nationality: String? = null, religion: String? = null) = Canon
   middleNames = null,
   nationalities = if (nationality != null) listOf(CanonicalNationality(nationality, "$nationality Description")) else listOf(),
   religion = CanonicalReligion(religion, if (religion != null) "$religion Description" else null),
+  sexualOrientation = CanonicalSexualOrientation("HET", "Hetrosexual Description"),
   sex = CanonicalSex(),
   title = CanonicalTitle(),
 )

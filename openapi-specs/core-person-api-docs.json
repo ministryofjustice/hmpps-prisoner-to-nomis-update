@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-09.1944.d3ecaa2"
+    "version" : "2026-01-14.1976.1dfd493"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -91,7 +91,7 @@
     "/syscon-sync/immigration-status/{cprImmigrationStatusId}" : {
       "put" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Update a prisoner immigration status",
+        "description" : "No-Op - To be removed",
         "operationId" : "updateImmigrationStatus",
         "parameters" : [ {
           "name" : "cprImmigrationStatusId",
@@ -350,7 +350,7 @@
     "/syscon-sync/immigration-status" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Store a prisoner sexual orientation",
+        "description" : "No-Op - To be removed",
         "operationId" : "createImmigrationStatus",
         "requestBody" : {
           "content" : {
@@ -369,6 +369,44 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonImmigrationStatusResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/syscon-sync/immigration-status/{prisonNumber}" : {
+      "post" : {
+        "tags" : [ "Syscon Sync" ],
+        "description" : "Update the immigration status by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "updateImmigrationStatus_1",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "description" : "The identifier of the offender source system (NOMIS)",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonImmigrationStatus"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Immigration status updated in CPR",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "string"
                 }
               }
             }
@@ -939,47 +977,10 @@
       "PrisonImmigrationStatus" : {
         "type" : "object",
         "properties" : {
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "The identifier of the offender source system (NOMIS)"
-          },
           "interestToImmigration" : {
             "type" : "boolean",
             "description" : "Flag indicating whether data is an interest to immigration",
             "example" : true
-          },
-          "current" : {
-            "type" : "boolean",
-            "description" : "Flag indicating whether data is current or previous",
-            "example" : true
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The immigration status start date",
-            "example" : "1980-01-01"
-          },
-          "endDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The immigration status end date",
-            "example" : "2000-01-01"
-          },
-          "createUserId" : {
-            "type" : "string",
-            "description" : "The immigration status creation user id",
-            "example" : 12345
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The immigration status creation date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "createDisplayName" : {
-            "type" : "string",
-            "description" : "The immigration status creation display name",
-            "example" : "Other"
           },
           "modifyDateTime" : {
             "type" : "string",
@@ -991,14 +992,9 @@
             "type" : "string",
             "description" : "The immigration status modify user id",
             "example" : 12345
-          },
-          "modifyDisplayName" : {
-            "type" : "string",
-            "description" : "The immigration status modify display name",
-            "example" : "John Smith"
           }
         },
-        "required" : [ "current", "interestToImmigration", "prisonNumber" ]
+        "required" : [ "interestToImmigration", "modifyDateTime", "modifyUserId" ]
       },
       "RetryDlqResult" : {
         "type" : "object",
@@ -1358,8 +1354,7 @@
             "type" : "string",
             "format" : "uuid"
           }
-        },
-        "required" : [ "cprImmigrationStatusId" ]
+        }
       },
       "PrisonDisabilityStatus" : {
         "type" : "object",
@@ -1651,6 +1646,16 @@
             "description" : "Person date of birth",
             "example" : "1990-08-21"
           },
+          "disability" : {
+            "type" : "boolean",
+            "description" : "Person disability",
+            "example" : true
+          },
+          "interestToImmigration" : {
+            "type" : "boolean",
+            "description" : "Person interest to immigration",
+            "example" : true
+          },
           "title" : {
             "$ref" : "#/components/schemas/CanonicalTitle",
             "description" : "Person title"
@@ -1658,6 +1663,10 @@
           "sex" : {
             "$ref" : "#/components/schemas/CanonicalSex",
             "description" : "Person sex"
+          },
+          "sexualOrientation" : {
+            "$ref" : "#/components/schemas/CanonicalSexualOrientation",
+            "description" : "Person sexual orientation"
           },
           "religion" : {
             "$ref" : "#/components/schemas/CanonicalReligion",
@@ -1693,7 +1702,7 @@
             "description" : "Person identifiers"
           }
         },
-        "required" : [ "addresses", "aliases", "ethnicity", "identifiers", "nationalities", "religion", "sex", "title" ]
+        "required" : [ "addresses", "aliases", "ethnicity", "identifiers", "nationalities", "religion", "sex", "sexualOrientation", "title" ]
       },
       "CanonicalReligion" : {
         "type" : "object",
@@ -1722,6 +1731,21 @@
             "type" : "string",
             "description" : "Person sex description",
             "example" : "Male"
+          }
+        }
+      },
+      "CanonicalSexualOrientation" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Person sexual orientation code",
+            "example" : "HET"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Person sexual orientation description",
+            "example" : "Heterosexual"
           }
         }
       },
