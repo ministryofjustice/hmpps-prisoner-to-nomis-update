@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-07.337.80f472e"
+    "version" : "2026-01-13.348.594bcea"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2463,45 +2463,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      },
-      "delete" : {
-        "tags" : [ "non-associations-mapping-resource" ],
-        "summary" : "Deletes non-association mappings.",
-        "description" : "Deletes all rows from the non-associations mapping table. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteNonAssociationMappings",
-        "parameters" : [ {
-          "name" : "onlyMigrated",
-          "in" : "query",
-          "description" : "if true delete mapping entries created by the migration process only (synchronisation records are unaffected)",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean",
-            "default" : false
-          },
-          "example" : true
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Non association mappings deleted",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "type" : "object"
                 }
               }
             }
@@ -8639,31 +8600,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Mapping Information Returned",
+            "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/NonAssociationMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Non association id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -8733,21 +8674,11 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Mapping page returned",
+            "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/NonAssociationMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/PageNonAssociationMappingDto"
                 }
               }
             }
@@ -8838,7 +8769,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Mapping Information Returned",
+            "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8846,23 +8777,49 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/mapping/non-associations/find/common-between/{oldOffenderNo}/and/{newOffenderNo}" : {
+      "get" : {
+        "tags" : [ "non-associations-mapping-resource" ],
+        "summary" : "Find third parties where mappings exist with both offenders",
+        "description" : "Gets any third party offenders where NAs exist with both the old and the new.\n      This info is needed to check whether a merge will succeed or hit an index constraint. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getNonAssociationMappingsOfMerge",
+        "parameters" : [ {
+          "name" : "oldOffenderNo",
+          "in" : "path",
+          "description" : "Old offender number of merge",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Old offender number of merge",
+            "example" : "A1234BC"
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "example" : "A1234BC"
+        }, {
+          "name" : "newOffenderNo",
+          "in" : "path",
+          "description" : "New offender number of merge",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "New offender number of merge",
+            "example" : "D5678EF"
+          },
+          "example" : "D5678EF"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Non association id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "type" : "string"
+                  }
                 }
               }
             }
@@ -21665,12 +21622,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -21881,6 +21838,52 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/OfficialVisitMappingDto"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "PageNonAssociationMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NonAssociationMappingDto"
             }
           },
           "number" : {
