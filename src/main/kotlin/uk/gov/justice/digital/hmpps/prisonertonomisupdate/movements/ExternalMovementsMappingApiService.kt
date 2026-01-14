@@ -7,7 +7,9 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.FindTemporaryAbsenceAddressByDpsIdRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceAddressMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.*
@@ -31,6 +33,12 @@ class ExternalMovementsMappingApiService(
 
   suspend fun createScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto) = webClient.createMapping("$domainUrl/scheduled-movement", mapping)
 
+  suspend fun updateScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto): ScheduledMovementSyncMappingDto? = webClient.put()
+    .uri("$domainUrl/scheduled-movement")
+    .bodyValue(mapping)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun getScheduledMovementMapping(dpsId: UUID): ScheduledMovementSyncMappingDto? = webClient.get()
     .uri("$domainUrl/scheduled-movement/dps-id/{dpsId}", dpsId)
     .retrieve()
@@ -40,6 +48,12 @@ class ExternalMovementsMappingApiService(
 
   suspend fun getExternalMovementMapping(dpsId: UUID): ExternalMovementSyncMappingDto? = webClient.get()
     .uri("$domainUrl/external-movement/dps-id/{dpsId}", dpsId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getAddressMapping(request: FindTemporaryAbsenceAddressByDpsIdRequest): TemporaryAbsenceAddressMappingResponse? = webClient.post()
+    .uri("$domainUrl/addresses/by-dps-id")
+    .bodyValue(request)
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
