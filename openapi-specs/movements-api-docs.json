@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-08"
+    "version" : "2026-01-12"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -85,6 +85,12 @@
                   "$ref" : "#/components/schemas/ChangeOccurrenceLocation"
                 }, {
                   "$ref" : "#/components/schemas/ChangeOccurrenceTransport"
+                }, {
+                  "$ref" : "#/components/schemas/CommenceOccurrence"
+                }, {
+                  "$ref" : "#/components/schemas/CompleteOccurrence"
+                }, {
+                  "$ref" : "#/components/schemas/DenyOccurrence"
                 }, {
                   "$ref" : "#/components/schemas/ExpireOccurrence"
                 }, {
@@ -966,6 +972,21 @@
           }
         } ],
         "required" : [ "transportCode" ]
+      },
+      "CommenceOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
+      },
+      "CompleteOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
+      },
+      "DenyOccurrence" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        } ]
       },
       "ExpireOccurrence" : {
         "allOf" : [ {
