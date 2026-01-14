@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-12.913.693c4a5"
+    "version" : "2026-01-13.920.1b3cd76"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -17530,6 +17530,68 @@
         }
       }
     },
+    "/movements/{offenderNo}/temporary-absences/ids" : {
+      "get" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Get IDs for temporary absence applications, schedules and external movements for an offender",
+        "description" : "Get IDs temporary absence applications, schedules and external movements for an offender. This is used to migrate temporary absences to DPS. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTemporaryAbsencesAndMovementIds",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender temporary absences IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OffenderTemporaryAbsenceIdsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/{offenderNo}/temporary-absences/application/{applicationId}" : {
       "get" : {
         "tags" : [ "movements-resource" ],
@@ -28899,12 +28961,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -33261,6 +33323,74 @@
           }
         },
         "required" : [ "audit", "bookingId", "eventDate", "eventId", "eventStatus", "eventSubType", "movementApplicationId", "parentEventId", "startTime" ]
+      },
+      "OffenderTemporaryAbsenceId" : {
+        "type" : "object",
+        "description" : "The ID of a single movement",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Movement sequence"
+          }
+        },
+        "required" : [ "bookingId", "sequence" ]
+      },
+      "OffenderTemporaryAbsenceIdsResponse" : {
+        "type" : "object",
+        "description" : "Offender temporary absence ids by booking, including applications and scheduled absences",
+        "properties" : {
+          "applicationIds" : {
+            "type" : "array",
+            "description" : "List of TAP application IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "scheduleIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "scheduledMovementOutIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement OUT IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTemporaryAbsenceId"
+            }
+          },
+          "scheduledMovementInIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement IN IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTemporaryAbsenceId"
+            }
+          },
+          "unscheduledMovementOutIds" : {
+            "type" : "array",
+            "description" : "List of TAP unscheduled movement OUT IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTemporaryAbsenceId"
+            }
+          },
+          "unscheduledMovementInIds" : {
+            "type" : "array",
+            "description" : "List of TAP unscheduled movement IN IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/OffenderTemporaryAbsenceId"
+            }
+          }
+        },
+        "required" : [ "applicationIds", "scheduleIds", "scheduledMovementInIds", "scheduledMovementOutIds", "unscheduledMovementInIds", "unscheduledMovementOutIds" ]
       },
       "TemporaryAbsenceApplicationResponse" : {
         "type" : "object",
