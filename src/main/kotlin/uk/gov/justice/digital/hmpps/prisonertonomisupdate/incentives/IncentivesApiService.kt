@@ -53,7 +53,6 @@ data class IepDetail(
   val comments: String? = null,
   val prisonerNumber: String? = null,
   val bookingId: Long,
-  val sequence: Long,
   val iepDate: LocalDate,
   val iepTime: LocalDateTime,
   val agencyId: String,
