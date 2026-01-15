@@ -10,7 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.APPLICATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.EXTERNAL_MOVEMENT
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_CREATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_UPDATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Te
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -43,7 +45,8 @@ class ExternalMovementsService(
   private companion object {
     enum class MappingTypes(val entityName: String) {
       APPLICATION("temporary-absence-application"),
-      SCHEDULED_MOVEMENT("temporary-absence-schedule"),
+      SCHEDULED_MOVEMENT_CREATE("temporary-absence-schedule-create"),
+      SCHEDULED_MOVEMENT_UPDATE("temporary-absence-schedule-update"),
       EXTERNAL_MOVEMENT("temporary-absence-external-movement"),
       ;
 
@@ -124,62 +127,98 @@ class ExternalMovementsService(
       "prisonerNumber" to prisonerNumber,
       "dpsOccurrenceId" to dpsOccurrenceId.toString(),
     )
-    var updateType: String? = "create"
+    var updateType: MappingTypes = SCHEDULED_MOVEMENT_CREATE
 
     if (event.additionalInformation.source != "DPS") {
-      telemetryClient.trackEvent("${SCHEDULED_MOVEMENT.entityName}-create-ignored", telemetryMap)
+      telemetryClient.trackEvent("${updateType.entityName}-ignored", telemetryMap)
+      return
     }
 
     runCatching {
       val existingMapping = mappingApiService.getScheduledMovementMapping(dpsOccurrenceId)
-      if (existingMapping != null) updateType = "update"
+      if (existingMapping != null) updateType = SCHEDULED_MOVEMENT_UPDATE
       val dps = dpsApiService.getTapOccurrence(dpsOccurrenceId)
         .also { telemetryMap["dpsAuthorisationId"] = "${it.authorisation.id}" }
       val applicationMapping = mappingApiService.getApplicationMapping(dps.authorisation.id)
         ?.also { telemetryMap["nomisApplicationId"] = it.nomisMovementApplicationId.toString() }
         ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for ${dps.authorisation.id}")
+
+      // perform the sync to NOMIS
       val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
         prisonerNumber,
         dps.toNomisUpsertRequest(prisonerNumber, applicationMapping.nomisMovementApplicationId, existingMapping),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisEventId"] = it.eventId.toString() }
-      if (existingMapping == null) {
-        ScheduledMovementSyncMappingDto(
-          prisonerNumber = prisonerNumber,
-          bookingId = nomis.bookingId,
-          nomisEventId = nomis.eventId,
-          dpsOccurrenceId = dpsOccurrenceId,
-          mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
-          dpsAddressText = dps.location.address!!,
-          eventTime = "${dps.start}",
-          nomisAddressId = nomis.addressId,
-          nomisAddressOwnerClass = nomis.addressOwnerClass,
-          dpsUprn = dps.location.uprn,
-          dpsDescription = dps.location.description,
-          dpsPostcode = dps.location.postcode,
-        )
-          .also { mapping ->
-            createMapping(
-              mapping,
-              telemetryClient,
-              { createScheduledMovementMapping(mapping, telemetryMap) },
-              telemetryMap,
-              retryQueueService,
-              SCHEDULED_MOVEMENT.entityName,
-              log,
-            )
-          }
-      } else {
-        // TODO instead of this telemetry, update the mapping and publish telemetry there (update mapping in case the NOMIS address has changed)
-        telemetryClient.trackEvent("${SCHEDULED_MOVEMENT.entityName}-$updateType-success", telemetryMap)
+
+      // create or update mappings
+      when {
+        existingMapping == null -> createScheduledMovementMapping(prisonerNumber, nomis, dpsOccurrenceId, dps, telemetryMap)
+        existingMapping.nomisAddressId != nomis.addressId -> updateScheduledMovementMapping(existingMapping, nomis, dps, telemetryMap)
+        else -> telemetryClient.trackEvent("${updateType.entityName}-success", telemetryMap)
       }
     }
       .onFailure {
-        telemetryClient.trackEvent("${SCHEDULED_MOVEMENT.entityName}-$updateType-failed", telemetryMap)
+        telemetryClient.trackEvent("${updateType.entityName}-failed", telemetryMap)
         throw it
       }
   }
+
+  private suspend fun createScheduledMovementMapping(
+    prisonerNumber: String,
+    nomis: UpsertScheduledTemporaryAbsenceResponse,
+    dpsOccurrenceId: UUID,
+    dps: SyncReadTapOccurrence,
+    telemetryMap: MutableMap<String, String>,
+  ): ScheduledMovementSyncMappingDto = ScheduledMovementSyncMappingDto(
+    prisonerNumber = prisonerNumber,
+    bookingId = nomis.bookingId,
+    nomisEventId = nomis.eventId,
+    dpsOccurrenceId = dpsOccurrenceId,
+    mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
+    dpsAddressText = dps.location.address!!,
+    eventTime = "${dps.start}",
+    nomisAddressId = nomis.addressId,
+    nomisAddressOwnerClass = nomis.addressOwnerClass,
+    dpsUprn = dps.location.uprn,
+    dpsDescription = dps.location.description,
+    dpsPostcode = dps.location.postcode,
+  )
+    .also { mapping ->
+      createMapping(
+        mapping,
+        telemetryClient,
+        { createScheduledMovementMapping(mapping, telemetryMap) },
+        telemetryMap,
+        retryQueueService,
+        SCHEDULED_MOVEMENT_CREATE.entityName,
+        log,
+      )
+    }
+
+  private suspend fun updateScheduledMovementMapping(
+    existingMapping: ScheduledMovementSyncMappingDto,
+    nomis: UpsertScheduledTemporaryAbsenceResponse,
+    dps: SyncReadTapOccurrence,
+    telemetryMap: MutableMap<String, String>,
+  ): ScheduledMovementSyncMappingDto = existingMapping.copy(
+    nomisAddressId = nomis.addressId,
+    nomisAddressOwnerClass = nomis.addressOwnerClass,
+    dpsAddressText = dps.location.address!!,
+    dpsUprn = dps.location.uprn,
+    dpsPostcode = dps.location.postcode,
+  )
+    .also { mapping ->
+      createMapping(
+        mapping,
+        telemetryClient,
+        { updateScheduledMovementMapping(mapping, telemetryMap) },
+        telemetryMap,
+        retryQueueService,
+        SCHEDULED_MOVEMENT_UPDATE.entityName,
+        log,
+      )
+    }
 
   suspend fun externalMovementOutCreated(event: TemporaryAbsenceExternalMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
@@ -307,7 +346,8 @@ class ExternalMovementsService(
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
       APPLICATION -> createApplicationMapping(message.fromJson())
-      SCHEDULED_MOVEMENT -> createScheduledMovementMapping(message.fromJson())
+      SCHEDULED_MOVEMENT_CREATE -> createScheduledMovementMapping(message.fromJson())
+      SCHEDULED_MOVEMENT_UPDATE -> updateScheduledMovementMapping(message.fromJson())
       EXTERNAL_MOVEMENT -> createExternalMovementMapping(message.fromJson())
     }
   }
@@ -332,7 +372,20 @@ class ExternalMovementsService(
   suspend fun createScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto, telemetry: Map<String, String>) {
     mappingApiService.createScheduledMovementMapping(mapping).also {
       telemetryClient.trackEvent(
-        "${SCHEDULED_MOVEMENT.entityName}-create-success",
+        "${SCHEDULED_MOVEMENT_CREATE.entityName}-success",
+        telemetry,
+      )
+    }
+  }
+
+  suspend fun updateScheduledMovementMapping(message: CreateMappingRetryMessage<ScheduledMovementSyncMappingDto>) {
+    updateScheduledMovementMapping(message.mapping, message.telemetryAttributes)
+  }
+
+  suspend fun updateScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto, telemetry: Map<String, String>) {
+    mappingApiService.updateScheduledMovementMapping(mapping).also {
+      telemetryClient.trackEvent(
+        "${SCHEDULED_MOVEMENT_UPDATE.entityName}-success",
         telemetry,
       )
     }
@@ -372,16 +425,24 @@ class ExternalMovementsService(
   private suspend fun Location.populateAddressMapping(
     prisonerNumber: String,
     existingMapping: ScheduledMovementSyncMappingDto?,
-  ) = if (existingMapping == null) {
+  ): UpsertTemporaryAbsenceAddress {
     if (address.isNullOrEmpty()) throw ExternalMovementsSyncException("No address text received from DPS")
     val ownerClass = description?.let { "CORP" } ?: "OFF"
-    mappingApiService.getAddressMapping(FindTemporaryAbsenceAddressByDpsIdRequest(prisonerNumber, ownerClass, address, uprn))
+
+    suspend fun getOrCreateAddressUpsertRequest() = mappingApiService.getAddressMapping(FindTemporaryAbsenceAddressByDpsIdRequest(prisonerNumber, ownerClass, address, uprn))
       ?.let { UpsertTemporaryAbsenceAddress(id = it.addressId) }
       ?: UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
-  } else {
-    // TODO SDIT-3032 populate DPS address request if dps address details have changed
-    UpsertTemporaryAbsenceAddress()
+
+    return when {
+      // New scheduled movement or new DPS address - try to find an existing address mapping
+      existingMapping == null -> getOrCreateAddressUpsertRequest()
+      existingMapping.dpsAddressChanged(this) -> getOrCreateAddressUpsertRequest()
+      // Address not changed - use the existing NOMIS address
+      else -> UpsertTemporaryAbsenceAddress(id = existingMapping.nomisAddressId)
+    }
   }
+
+  private fun ScheduledMovementSyncMappingDto.dpsAddressChanged(dpsLocation: Location) = dpsAddressText != dpsLocation.address || dpsPostcode != dpsLocation.postcode || dpsUprn != dpsLocation.uprn
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
