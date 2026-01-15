@@ -11,9 +11,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.APPLICATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.EXTERNAL_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.FindTemporaryAbsenceAddressByDpsIdRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
@@ -138,7 +140,7 @@ class ExternalMovementsService(
         ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for ${dps.authorisation.id}")
       val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
         prisonerNumber,
-        dps.toNomisUpsertRequest(applicationMapping.nomisMovementApplicationId, existingMapping),
+        dps.toNomisUpsertRequest(prisonerNumber, applicationMapping.nomisMovementApplicationId, existingMapping),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisEventId"] = it.eventId.toString() }
@@ -149,10 +151,13 @@ class ExternalMovementsService(
           nomisEventId = nomis.eventId,
           dpsOccurrenceId = dpsOccurrenceId,
           mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
-          dpsAddressText = dps.location.address ?: "",
+          dpsAddressText = dps.location.address!!,
           eventTime = "${dps.start}",
-          // TODO nomisAddressId = nomis.toAddressId,
-          // TODO nomisAddressOwnerClass = nomis.toAddressOwnerClass,
+          nomisAddressId = nomis.addressId,
+          nomisAddressOwnerClass = nomis.addressOwnerClass,
+          dpsUprn = dps.location.uprn,
+          dpsDescription = dps.location.description,
+          dpsPostcode = dps.location.postcode,
         )
           .also { mapping ->
             createMapping(
@@ -342,6 +347,42 @@ class ExternalMovementsService(
     }
   }
 
+  private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(prisonerNumber: String, applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertScheduledTemporaryAbsenceRequest {
+    val (status, returnStatus) = this.statusCode.toNomisOccurrenceStatus()
+    return UpsertScheduledTemporaryAbsenceRequest(
+      movementApplicationId = applicationId,
+      eventId = existingMapping?.nomisEventId,
+      eventDate = this.start.toLocalDate(),
+      startTime = this.start,
+      eventSubType = this.absenceReasonCode,
+      eventStatus = status,
+      returnEventStatus = returnStatus,
+      escort = accompaniedByCode,
+      fromPrison = authorisation.prisonCode,
+      returnDate = this.end.toLocalDate(),
+      returnTime = this.end,
+      applicationDate = this.created.at,
+      applicationTime = this.created.at,
+      comment = this.comments,
+      transportType = this.transportCode,
+      toAddress = this.location.populateAddressMapping(prisonerNumber, existingMapping),
+    )
+  }
+
+  private suspend fun Location.populateAddressMapping(
+    prisonerNumber: String,
+    existingMapping: ScheduledMovementSyncMappingDto?,
+  ) = if (existingMapping == null) {
+    if (address.isNullOrEmpty()) throw ExternalMovementsSyncException("No address text received from DPS")
+    val ownerClass = description?.let { "CORP" } ?: "OFF"
+    mappingApiService.getAddressMapping(FindTemporaryAbsenceAddressByDpsIdRequest(prisonerNumber, ownerClass, address, uprn))
+      ?.let { UpsertTemporaryAbsenceAddress(id = it.addressId) }
+      ?: UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
+  } else {
+    // TODO SDIT-3032 populate DPS address request if dps address details have changed
+    UpsertTemporaryAbsenceAddress()
+  }
+
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
@@ -370,29 +411,6 @@ private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) 
   "DENIED" -> "DEN"
   "CANCELLED" -> "CAN"
   else -> throw IllegalArgumentException("Unknown application status: $this")
-}
-
-private fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertScheduledTemporaryAbsenceRequest {
-  val (status, returnStatus) = this.statusCode.toNomisOccurrenceStatus()
-  return UpsertScheduledTemporaryAbsenceRequest(
-    movementApplicationId = applicationId,
-    eventId = existingMapping?.nomisEventId,
-    eventDate = this.start.toLocalDate(),
-    startTime = this.start,
-    eventSubType = this.absenceReasonCode,
-    eventStatus = status,
-    returnEventStatus = returnStatus,
-    escort = accompaniedByCode,
-    fromPrison = authorisation.prisonCode,
-    returnDate = this.end.toLocalDate(),
-    returnTime = this.end,
-    applicationDate = this.created.at,
-    applicationTime = this.created.at,
-    comment = this.comments,
-    transportType = this.transportCode,
-    // TODO SDIT-3032 populate address request. Only send addressId if new (no existing mapping), dps address details have  changed or the address owner class as derived from absence reason has changed.
-    toAddress = UpsertTemporaryAbsenceAddress(),
-  )
 }
 
 private fun String.toNomisOccurrenceStatus() = when (this) {
@@ -507,3 +525,5 @@ data class ExternalMovementIn(
     fromAddressId = fromAddressId,
   )
 }
+
+data class ExternalMovementsSyncException(override val message: String) : RuntimeException(message)

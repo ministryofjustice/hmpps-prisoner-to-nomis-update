@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-14.922.5ea6062"
+    "version" : "2026-01-15.924.9733ff6"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22882,10 +22882,6 @@
           "postalCode" : {
             "type" : "string",
             "description" : "The postal code"
-          },
-          "ownerClass" : {
-            "type" : "string",
-            "description" : "The address owner class"
           }
         }
       },
@@ -28961,12 +28957,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
