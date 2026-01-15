@@ -78,7 +78,11 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     accompaniedByCode = "U",
   )
 
-  fun tapOccurrence(id: UUID = UUID.randomUUID(), authorisationId: UUID) = SyncReadTapOccurrence(
+  fun tapOccurrence(
+    id: UUID = UUID.randomUUID(),
+    authorisationId: UUID,
+    location: Location,
+  ) = SyncReadTapOccurrence(
     id = id,
     authorisation = SyncReadTapOccurrenceAuthorisation(
       id = authorisationId,
@@ -88,12 +92,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     statusCode = "SCHEDULED",
     start = now,
     end = tomorrow,
-    location = Location(
-      description = "Agency name",
-      address = "agency address",
-      postcode = "agency postcode",
-      uprn = 1,
-    ),
+    location = location,
     accompaniedByCode = "U",
     transportCode = "TAX",
     absenceReasonCode = "R2",
@@ -153,7 +152,12 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetTapOccurrence(id: UUID, authorisationId: UUID, response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId)) {
+  fun stubGetTapOccurrence(
+    id: UUID,
+    authorisationId: UUID,
+    location: Location = Location(description = "Agency name", address = "agency address", postcode = "agency postcode", uprn = 1),
+    response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId, location),
+  ) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-occurrences/$id")
         .willReturn(
