@@ -59,12 +59,12 @@ class ExternalMovementsService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun authorisationApproved(event: TemporaryAbsenceAuthorisationEvent) {
+  suspend fun authorisationChanged(event: TemporaryAbsenceEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsId = event.additionalInformation.authorisationId
+    val dpsAuthorisationId = event.additionalInformation.id
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
-      "dpsAuthorisationId" to dpsId.toString(),
+      "dpsAuthorisationId" to dpsAuthorisationId.toString(),
     )
     var updateType: String? = "create"
 
@@ -74,9 +74,9 @@ class ExternalMovementsService(
     }
 
     runCatching {
-      val existingMapping = mappingApiService.getApplicationMapping(dpsId)
+      val existingMapping = mappingApiService.getApplicationMapping(dpsAuthorisationId)
       if (existingMapping != null) updateType = "update"
-      val dps = dpsApiService.getTapAuthorisation(dpsId)
+      val dps = dpsApiService.getTapAuthorisation(dpsAuthorisationId)
       val nomis = nomisApiService.upsertTemporaryAbsenceApplication(
         prisonerNumber,
         dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId),
@@ -89,7 +89,7 @@ class ExternalMovementsService(
           prisonerNumber = prisonerNumber,
           bookingId = nomis.bookingId,
           nomisMovementApplicationId = nomis.movementApplicationId,
-          dpsMovementApplicationId = dpsId,
+          dpsMovementApplicationId = dpsAuthorisationId,
           mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.DPS_CREATED,
         )
           .also { mapping ->
@@ -120,9 +120,9 @@ class ExternalMovementsService(
     ?.nomisMovementApplicationId
     ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
 
-  suspend fun occurrenceChanged(event: TapOccurrenceEvent) {
+  suspend fun occurrenceChanged(event: TemporaryAbsenceEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
-    val dpsOccurrenceId = event.additionalInformation.occurrenceId
+    val dpsOccurrenceId = event.additionalInformation.id
     val telemetryMap = mutableMapOf(
       "prisonerNumber" to prisonerNumber,
       "dpsOccurrenceId" to dpsOccurrenceId.toString(),
@@ -401,7 +401,7 @@ class ExternalMovementsService(
   }
 
   private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(prisonerNumber: String, applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertScheduledTemporaryAbsenceRequest {
-    val (status, returnStatus) = this.statusCode.toNomisOccurrenceStatus()
+    val (status, returnStatus) = this.statusCode.toNomisSchedulesStatus()
     return UpsertScheduledTemporaryAbsenceRequest(
       movementApplicationId = applicationId,
       eventId = existingMapping?.nomisEventId,
@@ -466,15 +466,15 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
 )
 
 private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
-  "PENDING" -> "PEN"
+  "EXPIRED", "PENDING" -> "PEN"
   "APPROVED" if (occurrenceCount == 0) -> "APP-UNSCH"
   "APPROVED" -> "APP-SCH"
   "DENIED" -> "DEN"
   "CANCELLED" -> "CAN"
-  else -> throw IllegalArgumentException("Unknown application status: $this")
+  else -> throw IllegalArgumentException("Unknown authorisation status: $this")
 }
 
-private fun String.toNomisOccurrenceStatus() = when (this) {
+private fun String.toNomisSchedulesStatus() = when (this) {
   "PENDING" -> "PEN" to null
   "CANCELLED" -> "CANC" to null
   "DENIED" -> "DEN" to null

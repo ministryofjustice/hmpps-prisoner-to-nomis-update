@@ -67,7 +67,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        publishAuthorisationApproved(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
+        publishAuthorisationDomainEvent(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -104,7 +104,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
         }
 
@@ -182,7 +182,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess()
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
 
         @Test
@@ -248,7 +248,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
 
         @Test
@@ -290,7 +290,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        publishAuthorisationApproved(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
+        publishAuthorisationDomainEvent(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -327,7 +327,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
         }
 
@@ -393,7 +393,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, HttpStatus.INTERNAL_SERVER_ERROR)
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete("temporary-absence-application-update-failed")
         }
 
@@ -1537,9 +1537,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishAuthorisationApproved(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS") {
+  private fun publishAuthorisationDomainEvent(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS") {
     with("person.temporary-absence-authorisation.approved") {
-      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, prisonerNumber = prisonerNumber, source = source))
+      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, id = dpsAuthorisationId, prisonerNumber = prisonerNumber, source = source))
     }
   }
 
@@ -1547,16 +1547,41 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     with("person.temporary-absence.scheduled") {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsOccurrenceId = dpsOccurrenceId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayload(eventType = this, id = dpsOccurrenceId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
+
+  fun messagePayload(
+    eventType: String,
+    prisonerNumber: String,
+    id: UUID,
+    source: String,
+  ) = //language=JSON
+    """
+    {
+      "description":"Some event", 
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "id": "$id",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "NOMS",
+            "value": "$prisonerNumber"
+          }
+        ]
+      }
+    }
+    """
 
   private fun publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId: UUID, dpsScheduledMovementId: UUID? = null, prisonerNumber: String, dpsAuthorisationId: UUID? = null, source: String = "DPS") {
     with("external-movements-api.temporary-absence-external-movement-out.created") {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementOutId = dpsScheduledMovementId, dpsExternalMovementOutId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayloadExternalMovements(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementOutId = dpsScheduledMovementId, dpsExternalMovementOutId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
@@ -1565,7 +1590,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     with("external-movements-api.temporary-absence-external-movement-in.created") {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementInId = dpsScheduledMovementId, dpsExternalMovementInId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayloadExternalMovements(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementInId = dpsScheduledMovementId, dpsExternalMovementInId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
@@ -1587,7 +1612,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
   }
 }
 
-fun messagePayload(
+fun messagePayloadExternalMovements(
   eventType: String,
   prisonerNumber: String,
   dpsAuthorisationId: UUID? = null,
