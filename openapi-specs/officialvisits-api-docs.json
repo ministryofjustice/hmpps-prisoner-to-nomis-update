@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-13.247.d8187a4"
+    "version" : "2026-01-14.253.5bd994d"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1139,7 +1139,7 @@
         "properties" : {
           "searchTerm" : {
             "type" : "string",
-            "description" : "The search term can be a prisoner number, name or partial name.",
+            "description" : "The search term can be a prisoner number, name or partial name.  Must be a minimum of 2 characters or not provided.",
             "example" : "Smith"
           },
           "startDate" : {
