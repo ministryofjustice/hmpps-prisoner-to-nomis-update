@@ -32,8 +32,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.util.UUID
 
-const val ADJUSTMENT_ID = "1234T"
+private val ADJUSTMENT_ID = UUID.randomUUID().toString()
 const val OFFENDER_NUMBER = "A1234TT"
 const val BOOKING_ID = 987651L
 

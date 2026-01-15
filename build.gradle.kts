@@ -187,7 +187,6 @@ val models = listOf(
     name = "sentencing-adjustments",
     packageName = "sentencing.adjustments",
     url = "https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-    models = "AdjustmentDto,AdditionalDaysAwardedDto,LawfullyAtLargeDto,LegacyAdjustment,RemandDto,SpecialRemissionDto,TaggedBailDto,TimeSpentAsAnAppealApplicantDto,TimeSpentInCustodyAbroadDto,UnlawfullyAtLargeDto",
   ),
   ModelConfiguration(
     name = "visit-balance",
