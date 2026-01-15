@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
@@ -94,7 +95,7 @@ class IncentivesService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
+fun IncentiveReviewDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
   comments = comments,
   iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
   userId = userId,

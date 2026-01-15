@@ -152,11 +152,15 @@ class IncentiveToNomisTest : SqsIntegrationTestBase() {
       "iepCode": "STD",
       "iepLevel": "Standard",
       "bookingId": 456,
+      "userId": "BILLYBOB",
       "prisonerNumber": "A1234AA",
       "sequence": 2,
       "iepDate": "2022-12-02",
       "iepTime": "2022-12-02T10:00:00",
-      "agencyId": "MDI"
+      "agencyId": "MDI",
+      "reviewType": "INITIAL",
+      "auditModuleName": "audit",
+      "isRealReview": true
     }
     """.trimIndent()
 }

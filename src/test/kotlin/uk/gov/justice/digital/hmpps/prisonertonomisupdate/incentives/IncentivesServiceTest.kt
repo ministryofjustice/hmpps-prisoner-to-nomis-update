@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.kotlin.any
+import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
@@ -16,6 +17,7 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
@@ -50,7 +52,7 @@ internal class IncentivesServiceTest {
 
       verify(telemetryClient).trackEvent(
         eq("incentive-create-success"),
-        org.mockito.kotlin.check {
+        check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["prisonId"]).isEqualTo("MDI")
           assertThat(it["id"]).isEqualTo("123")
@@ -113,7 +115,7 @@ internal class IncentivesServiceTest {
 
       verify(telemetryClient).trackEvent(
         eq("incentive-mapping-create-failed"),
-        org.mockito.kotlin.check {
+        check {
           assertThat(it["offenderNo"]).isEqualTo("AB123D")
           assertThat(it["prisonId"]).isEqualTo("MDI")
           assertThat(it["id"]).isEqualTo("123")
@@ -159,7 +161,7 @@ internal class IncentivesServiceTest {
 fun newIncentive(
   offenderNo: String = "AB123D",
   id: Long = 456,
-): IepDetail = IepDetail(
+): IncentiveReviewDetail = IncentiveReviewDetail(
   id = id,
   prisonerNumber = offenderNo,
   agencyId = "MDI",
@@ -169,4 +171,7 @@ fun newIncentive(
   iepCode = "STD",
   iepLevel = "Standard",
   userId = "me",
+  reviewType = IncentiveReviewDetail.ReviewType.REVIEW,
+  auditModuleName = "audit",
+  isRealReview = true,
 )

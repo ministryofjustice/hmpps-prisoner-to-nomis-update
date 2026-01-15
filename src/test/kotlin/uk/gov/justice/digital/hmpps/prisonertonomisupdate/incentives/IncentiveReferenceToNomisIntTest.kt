@@ -38,7 +38,7 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD?with-inactive=true") } matches { it == 1 }
+    await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes") } matches { it == 1 }
     nomisApi.verify(
       WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes"))
@@ -74,7 +74,7 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
 
     await untilCallTo { awsSqsIncentiveClient.countMessagesOnQueue(incentiveQueueUrl).get() } matches { it == 0 }
-    await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD?with-inactive=true") } matches { it == 1 }
+    await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD") } matches { it == 1 }
     await untilCallTo { nomisApi.putCountFor("/incentives/reference-codes/STD") } matches { it == 1 }
     nomisApi.verify(
       WireMock.putRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/STD"))
