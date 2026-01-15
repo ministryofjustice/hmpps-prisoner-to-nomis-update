@@ -38,9 +38,14 @@ internal class IncentivesApiServiceTest {
             "iepCode": "STD",
             "iepLevel": "Standard",
             "bookingId": 456,
+            "prisonerNumber": "A1234AA",
             "iepDate": "2022-12-02",
             "iepTime": "2022-12-02T10:00:00",
-            "agencyId": "MDI"
+            "agencyId": "MDI",
+            "userId": "BILLYBOB",
+            "reviewType": "INITIAL",
+            "auditModuleName": "audit",
+            "isRealReview": true
           }
         """.trimIndent(),
       )

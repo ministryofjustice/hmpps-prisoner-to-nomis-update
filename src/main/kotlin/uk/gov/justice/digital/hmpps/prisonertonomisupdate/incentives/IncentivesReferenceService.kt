@@ -2,6 +2,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.PrisonIncentiveLevel
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PrisonIncentiveLevelRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ReferenceCode
@@ -24,12 +26,12 @@ class IncentivesReferenceService(
     levelCode = levelCode,
     active = active,
     defaultOnAdmission = defaultOnAdmission,
-    visitOrderAllowance = visitOrders,
-    privilegedVisitOrderAllowance = privilegedVisitOrders,
-    remandTransferLimitInPence = remandTransferLimitInPence,
-    remandSpendLimitInPence = remandSpendLimitInPence,
-    convictedTransferLimitInPence = convictedTransferLimitInPence,
-    convictedSpendLimitInPence = convictedSpendLimitInPence,
+    visitOrderAllowance = visitOrders.toInt(),
+    privilegedVisitOrderAllowance = privilegedVisitOrders.toInt(),
+    remandTransferLimitInPence = remandTransferLimitInPence.toInt(),
+    remandSpendLimitInPence = remandSpendLimitInPence.toInt(),
+    convictedTransferLimitInPence = convictedTransferLimitInPence.toInt(),
+    convictedSpendLimitInPence = convictedSpendLimitInPence.toInt(),
   )
 
   suspend fun globalIncentiveLevelChange(event: GlobalIncentiveChangedEvent) {
