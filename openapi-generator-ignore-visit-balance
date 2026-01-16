@@ -15,6 +15,7 @@
 !**/ErrorResponse.kt
 !**/PrisonerBalanceDto.kt
 !**/PrisonerDetailedBalanceDto.kt
+!**/PrisonerBalanceAdjustmentDto.kt
 !**/VisitAllocationPrisonerAdjustmentResponseDto.kt
 !**/VisitAllocationPrisonerMigrationDto.kt
 !**/VisitAllocationPrisonerSyncDto.kt
