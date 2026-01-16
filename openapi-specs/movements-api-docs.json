@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-14"
+    "version" : "2026-01-15"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -470,31 +470,6 @@
       }
     },
     "/search/temporary-absence-occurrences" : {
-      "get" : {
-        "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
-        "operationId" : "findTapOccurrences",
-        "parameters" : [ {
-          "name" : "request",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/TapOccurrenceSearchRequest"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TapOccurrenceSearchResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "post" : {
         "tags" : [ "search-tap-controller" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
@@ -524,31 +499,6 @@
       }
     },
     "/search/temporary-absence-authorisations" : {
-      "get" : {
-        "tags" : [ "search-tap-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
-        "operationId" : "findTapAuthorisations",
-        "parameters" : [ {
-          "name" : "request",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "$ref" : "#/components/schemas/TapAuthorisationSearchRequest"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TapAuthorisationSearchResponse"
-                }
-              }
-            }
-          }
-        }
-      },
       "post" : {
         "tags" : [ "search-tap-controller" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
