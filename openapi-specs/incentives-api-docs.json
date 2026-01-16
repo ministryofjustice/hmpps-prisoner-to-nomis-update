@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2026-01-07.233.ee8bf91"
+    "version" : "2026-01-16.240.9d97f2c"
   },
   "servers" : [ {
     "url" : "/",
@@ -1836,42 +1836,42 @@
             "example" : false
           },
           "remandTransferLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a remand prisoner to use",
             "example" : 5500,
             "minimum" : 0
           },
           "remandSpendLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a remand prisoner",
             "example" : 55000,
             "minimum" : 0
           },
           "convictedTransferLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a convicted prisoner to use",
             "example" : 1800,
             "minimum" : 0
           },
           "convictedSpendLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a convicted prisoner",
             "example" : 18000,
             "minimum" : 0
           },
           "visitOrders" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The number of weekday visits for a convicted prisoner per fortnight",
             "example" : 2,
             "minimum" : 0
           },
           "privilegedVisitOrders" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The number of privileged/weekend visits for a convicted prisoner per 4 weeks",
             "example" : 1,
@@ -2046,42 +2046,42 @@
             "example" : true
           },
           "remandTransferLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a remand prisoner to use",
             "example" : 5500,
             "minimum" : 0
           },
           "remandSpendLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a remand prisoner",
             "example" : 55000,
             "minimum" : 0
           },
           "convictedTransferLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a convicted prisoner to use",
             "example" : 1800,
             "minimum" : 0
           },
           "convictedSpendLimitInPence" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a convicted prisoner",
             "example" : 18000,
             "minimum" : 0
           },
           "visitOrders" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The number of weekday visits for a convicted prisoner per fortnight",
             "example" : 2,
             "minimum" : 0
           },
           "privilegedVisitOrders" : {
-            "type" : "string",
+            "type" : "integer",
             "format" : "int32",
             "description" : "The number of privileged/weekend visits for a convicted prisoner per 4 weeks",
             "example" : 1,
