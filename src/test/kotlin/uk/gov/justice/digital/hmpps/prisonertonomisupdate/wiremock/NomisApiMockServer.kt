@@ -937,7 +937,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           ),
@@ -956,7 +957,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           )
@@ -976,7 +978,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           )
@@ -1186,7 +1189,21 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/incentives/booking-id/$bookingId/current").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{"iepLevel": { "code" : "$iepCode", "description" : "description for $iepCode" }}""")
+          .withBody(
+            """
+            {
+              "offenderNo": "A1234AA",
+              "bookingId": $bookingId,
+              "incentiveSequence": 1,
+              "iepDateTime": "2021-01-01T12:00:00",
+              "prisonId": "MDI",
+              "iepLevel": { "code": "$iepCode", "description": "description for $iepCode" },
+              "currentIep": true,
+              "auditModule": "PRISON_API",
+              "whenCreated": "2021-01-01T12:00:00"
+            }
+            """.trimIndent(),
+          )
           .withFixedDelay(500)
           .withStatus(200),
       ),

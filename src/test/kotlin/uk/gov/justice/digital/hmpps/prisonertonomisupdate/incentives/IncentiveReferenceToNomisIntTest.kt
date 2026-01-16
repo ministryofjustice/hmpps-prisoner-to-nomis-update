@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions
 import org.awaitility.kotlin.await
 import org.awaitility.kotlin.matches
@@ -41,9 +45,9 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes"))
-        .withRequestBody(WireMock.matchingJsonPath("code", WireMock.equalTo("STD")))
-        .withRequestBody(WireMock.matchingJsonPath("description", WireMock.equalTo("Description for STD"))),
+      WireMock.postRequestedFor(urlEqualTo("/incentives/reference-codes"))
+        .withRequestBody(matchingJsonPath("code", equalTo("STD")))
+        .withRequestBody(matchingJsonPath("description", equalTo("Description for STD"))),
     )
     verify(telemetryClient).trackEvent(
       eq("global-incentive-level-inserted"),
@@ -77,9 +81,9 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels/STD") } matches { it == 1 }
     await untilCallTo { nomisApi.putCountFor("/incentives/reference-codes/STD") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.putRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/STD"))
-        .withRequestBody(WireMock.matchingJsonPath("code", WireMock.equalTo("STD")))
-        .withRequestBody(WireMock.matchingJsonPath("description", WireMock.equalTo("Description for STD"))),
+      putRequestedFor(urlEqualTo("/incentives/reference-codes/STD"))
+        .withRequestBody(matchingJsonPath("active", equalTo("true")))
+        .withRequestBody(matchingJsonPath("description", equalTo("Description for STD"))),
     )
     verify(telemetryClient).trackEvent(
       eq("global-incentive-level-updated"),
@@ -112,7 +116,7 @@ class IncentiveReferenceToNomisIntTest : SqsIntegrationTestBase() {
     await untilCallTo { incentivesApi.getCountFor("/incentive/levels?with-inactive=true") } matches { it == 1 }
     await untilCallTo { nomisApi.postCountFor("/incentives/reference-codes/reorder") } matches { it == 1 }
     nomisApi.verify(
-      WireMock.postRequestedFor(WireMock.urlEqualTo("/incentives/reference-codes/reorder"))
+      WireMock.postRequestedFor(urlEqualTo("/incentives/reference-codes/reorder"))
         .withRequestBody(WireMock.equalToJson("{ \"codeList\": [\"BAS\",\"STD\",\"ENH\",\"EN2\",\"EN3\",\"ENT\"]}")),
     )
     verify(telemetryClient).trackEvent(

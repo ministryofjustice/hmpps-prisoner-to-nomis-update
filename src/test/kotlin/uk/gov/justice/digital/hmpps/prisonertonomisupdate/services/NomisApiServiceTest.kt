@@ -34,6 +34,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.OpenClosedStatus
@@ -1492,10 +1493,11 @@ fun updateVisit(): UpdateVisitDto = UpdateVisitDto(
   visitComment = "visit comment",
 )
 
-fun newIncentive() = CreateIncentiveDto(
+fun newIncentive() = CreateIncentiveRequest(
   iepDateTime = LocalDateTime.now(),
   prisonId = "MDI",
   iepLevel = "High",
+  userId = "BILLYBOB",
 )
 
 fun newActivity() = CreateActivityRequest(

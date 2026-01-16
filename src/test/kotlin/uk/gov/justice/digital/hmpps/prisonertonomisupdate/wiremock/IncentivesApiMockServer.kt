@@ -86,7 +86,8 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
               "code": "$incentiveCode",
               "name": "Description for $incentiveCode",
               "active": true,
-              "required": true
+              "required": true,
+              "systemDataFlag": false
             }
             """,
           )
