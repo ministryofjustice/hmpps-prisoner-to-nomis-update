@@ -2,7 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -46,7 +46,17 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       sentencingAdjustmentsApi.verify(
         getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 
@@ -122,7 +132,17 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       sentencingAdjustmentsApi.verify(
         getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 
@@ -148,7 +168,17 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       sentencingAdjustmentsApi.verify(
         getRequestedFor(urlEqualTo("/adjustments?person=A1234AA"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustments("A1234AA")
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/adjustments?person=A1234AA"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 
