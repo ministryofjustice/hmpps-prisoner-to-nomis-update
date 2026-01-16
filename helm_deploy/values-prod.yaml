@@ -95,9 +95,23 @@ generic-service:
     - name: casenote-active-recon
       type: CASE_NOTES_ACTIVE_RECON
       schedule: "30 19 * * SUN,MON,TUE,WED,THU"
+      resources:
+        requests:
+          cpu: 10m
+          memory: 640Mi
+        limits:
+          cpu: 2000m
+          memory: 2048Mi
     - name: casenote-full-recon
       type: CASE_NOTES_FULL_RECON
       schedule: "30 19 * * FRI"
+      resources:
+        requests:
+          cpu: 10m
+          memory: 640Mi
+        limits:
+          cpu: 2000m
+          memory: 2048Mi
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"

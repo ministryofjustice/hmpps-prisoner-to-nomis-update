@@ -730,14 +730,14 @@ The appointments reconciliation currently (Nov 2025) just looks 28 days ahead ra
 
 Mismatches are usually due to:
 - An appointment is in DPS only because the Nomis counterpart was deleted, probably very soon after the migration of that prison and
-before the P-Nomis screeen was disabled. In this case there will be a mapping table entry.
+before the P-Nomis screen was disabled. In this case there will be a mapping table entry.
 - An appointment is in Nomis only because it was created in Nomis, again very soon after the migration and
-  before the P-Nomis screeen was disabled. In this case there will NOT be a mapping table entry.
+  before the P-Nomis screen was disabled. In this case there will NOT be a mapping table entry.
 
 In both these cases it should be established whether an extra similar appointment has been created in the other system, if so the only action needed
 is to temporarily add the offending appointment ids to the exclude list.
 
-- An appointment is in Nomis only, and there is no mapping because a Nomis dupe has occurred when there was a timeout on the
+- An appointment is in Nomis only, and there is no mapping because a Nomis dupe has occurred when there was a timeout, 502 etc. on the
   client side when POSTing the nomis creation (yet it succeeded on the nomis-api side).
 
 In this case the dupe should be deleted. You can directly call the nomis-api endpoint for this.
