@@ -366,7 +366,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will update the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
+              .withRequestBodyJsonPath("escortCode", "U"),
+          )
         }
 
         @Test
