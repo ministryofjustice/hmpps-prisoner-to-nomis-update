@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.MappingType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.NomisAdjustmentCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
@@ -51,8 +54,9 @@ class SentencingAdjustmentsService(
             ?.let { adjustment ->
               SentencingAdjustmentMappingDto(
                 nomisAdjustmentId = createTransformedAdjustment(adjustment).id,
-                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
+                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) NomisAdjustmentCategory.KEYMinusDATE else NomisAdjustmentCategory.SENTENCE,
                 adjustmentId = adjustmentId,
+                mappingType = MappingType.SENTENCING_CREATED,
               )
             } ?: run {
             this@SentencingAdjustmentsService.telemetryClient.trackEvent(
@@ -205,9 +209,9 @@ class SentencingAdjustmentsService(
       runCatching {
         sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)?.also { mapping ->
           telemetryMap["nomisAdjustmentId"] = mapping.nomisAdjustmentId.toString()
-          telemetryMap["nomisAdjustmentCategory"] = mapping.nomisAdjustmentCategory
+          telemetryMap["nomisAdjustmentCategory"] = mapping.nomisAdjustmentCategory.value
 
-          if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+          if (mapping.nomisAdjustmentCategory == NomisAdjustmentCategory.SENTENCE) {
             nomisApiService.deleteSentenceAdjustment(
               mapping.nomisAdjustmentId,
             )
