@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-15"
+    "version" : "2026-01-16"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -791,7 +791,7 @@
       "get" : {
         "tags" : [ "Sync" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "getTemporaryAbsences",
+        "operationId" : "countTemporaryAbsences",
         "parameters" : [ {
           "name" : "personIdentifier",
           "in" : "path",
@@ -807,6 +807,33 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PersonTapCounts"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconciliation-detail/{personIdentifier}/temporary-absences" : {
+      "get" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "getTemporaryAbsences",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonTapDetail"
                 }
               }
             }
@@ -2766,6 +2793,38 @@
           }
         },
         "required" : [ "authorisations", "movements", "occurrences" ]
+      },
+      "Movement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          }
+        },
+        "required" : [ "direction", "id" ]
+      },
+      "PersonTapDetail" : {
+        "type" : "object",
+        "properties" : {
+          "scheduledAbsences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Authorisation"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Movement"
+            }
+          }
+        },
+        "required" : [ "scheduledAbsences", "unscheduledMovements" ]
       },
       "Configuration" : {
         "type" : "object",
