@@ -570,10 +570,10 @@ internal class SentencingReconciliationServiceTest {
     @Test
     fun `will call NOMIS for each bookingId`() = runTest {
       service.generateReconciliationReport(allPrisoners = false)
-      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/1/sentencing-adjustments")))
-      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/2/sentencing-adjustments")))
-      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/3/sentencing-adjustments")))
-      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/4/sentencing-adjustments")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/1/sentencing-adjustments?active-only=true")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/2/sentencing-adjustments?active-only=true")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/3/sentencing-adjustments?active-only=true")))
+      nomisApi.verify(getRequestedFor(urlEqualTo("/prisoners/booking-id/4/sentencing-adjustments?active-only=true")))
     }
 
     @Test

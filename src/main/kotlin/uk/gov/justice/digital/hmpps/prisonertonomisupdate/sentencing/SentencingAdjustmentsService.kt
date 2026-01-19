@@ -4,13 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.LegacyAdjustment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 
@@ -76,25 +78,29 @@ class SentencingAdjustmentsService(
 
   private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
-  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) = CreateSentencingAdjustmentRequest(
-    adjustmentTypeCode = adjustment.adjustmentType.value,
-    adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-    adjustmentFromDate = adjustment.adjustmentFromDate,
-    adjustmentDays = adjustment.adjustmentDays.toLong(),
-    comment = adjustment.comment,
-  ).run {
-    if (adjustment.sentenceSequence == null) {
-      nomisApiService.createKeyDateAdjustment(
-        adjustment.bookingId,
-        this,
-      )
-    } else {
-      nomisApiService.createSentenceAdjustment(
-        adjustment.bookingId,
-        adjustment.sentenceSequence.toLong(),
-        this,
-      )
-    }
+  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) = if (adjustment.sentenceSequence == null) {
+    nomisApiService.createKeyDateAdjustment(
+      adjustment.bookingId,
+      CreateKeyDateAdjustmentRequest(
+        adjustmentTypeCode = CreateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+        adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+        adjustmentFromDate = adjustment.adjustmentFromDate!!,
+        adjustmentDays = adjustment.adjustmentDays.toLong(),
+        comment = adjustment.comment,
+      ),
+    )
+  } else {
+    nomisApiService.createSentenceAdjustment(
+      adjustment.bookingId,
+      adjustment.sentenceSequence.toLong(),
+      CreateSentenceAdjustmentRequest(
+        adjustmentTypeCode = CreateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+        adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+        adjustmentFromDate = adjustment.adjustmentFromDate,
+        adjustmentDays = adjustment.adjustmentDays.toLong(),
+        comment = adjustment.comment,
+      ),
+    )
   }
 
   suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean, setActive: Boolean) {
@@ -153,31 +159,39 @@ class SentencingAdjustmentsService(
     }
   }
 
-  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean, setActive: Boolean) = UpdateSentencingAdjustmentRequest(
-    adjustmentTypeCode = adjustment.adjustmentType.value,
-    adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-    adjustmentFromDate = adjustment.adjustmentFromDate,
-    adjustmentDays = adjustment.adjustmentDays.toLong(),
-    comment = adjustment.comment,
-    sentenceSequence = adjustment.sentenceSequence,
-  ).let {
-    if (setActive) {
-      it.copy(active = true)
+  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean, setActive: Boolean) {
+    val active = if (setActive) {
+      true
     } else if (forceStatus) {
-      it.copy(active = adjustment.active)
+      adjustment.active
     } else {
-      it
+      null
     }
-  }.run {
+
     if (adjustment.sentenceSequence == null) {
       nomisApiService.updateKeyDateAdjustment(
         nomisAdjustmentId,
-        this,
+        UpdateKeyDateAdjustmentRequest(
+          adjustmentTypeCode = UpdateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+          adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+          adjustmentFromDate = adjustment.adjustmentFromDate!!,
+          adjustmentDays = adjustment.adjustmentDays.toLong(),
+          comment = adjustment.comment,
+          active = active,
+        ),
       )
     } else {
       nomisApiService.updateSentenceAdjustment(
         nomisAdjustmentId,
-        this,
+        UpdateSentenceAdjustmentRequest(
+          adjustmentTypeCode = UpdateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+          adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+          adjustmentFromDate = adjustment.adjustmentFromDate,
+          adjustmentDays = adjustment.adjustmentDays.toLong(),
+          comment = adjustment.comment,
+          sentenceSequence = adjustment.sentenceSequence.toLong(),
+          active = active,
+        ),
       )
     }
   }
