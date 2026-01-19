@@ -20,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndByWithPrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
@@ -27,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncRe
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.*
+import kotlin.collections.listOf
 
 class ExternalMovementsDpsApiExtension :
   BeforeAllCallback,
@@ -58,15 +60,21 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   private val now = LocalDateTime.now()
-  private val today = now.toLocalDate()
   private val tomorrow = now.plusDays(1)
 
-  fun tapAuthorisation(id: UUID = UUID.randomUUID()) = SyncReadTapAuthorisation(
+  fun tapAuthorisation(id: UUID = UUID.randomUUID(), occurrenceCount: Int = 0, startTime: LocalDateTime = now, endTime: LocalDateTime = tomorrow) = SyncReadTapAuthorisation(
     id = id,
     repeat = true,
-    start = today,
-    end = today,
-    occurrences = listOf(),
+    start = startTime.toLocalDate(),
+    end = endTime.toLocalDate(),
+    occurrences = when (occurrenceCount) {
+      0 -> listOf()
+      1 -> listOf(tapAuthorisationOccurrence(start = startTime, end = endTime))
+      else -> listOf(
+        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1)),
+        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime),
+      )
+    },
     personIdentifier = "USER1",
     statusCode = "PENDING",
     prisonCode = "LEI",
@@ -93,6 +101,23 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     start = now,
     end = tomorrow,
     location = location,
+    accompaniedByCode = "U",
+    transportCode = "TAX",
+    absenceReasonCode = "R2",
+    created = SyncAtAndBy(at = now, by = "USER1"),
+    comments = "Tap occurrence comment",
+  )
+
+  fun tapAuthorisationOccurrence(
+    id: UUID = UUID.randomUUID(),
+    start: LocalDateTime = now,
+    end: LocalDateTime = tomorrow,
+  ) = SyncReadTapAuthorisationOccurrence(
+    id = id,
+    statusCode = "SCHEDULED",
+    start = start,
+    end = end,
+    location = Location(address = "some address", postcode = "some postcode", uprn = 1, description = "some description"),
     accompaniedByCode = "U",
     transportCode = "TAX",
     absenceReasonCode = "R2",
