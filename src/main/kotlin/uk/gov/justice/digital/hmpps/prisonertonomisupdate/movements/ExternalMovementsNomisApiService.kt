@@ -3,8 +3,9 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
@@ -29,28 +30,28 @@ class ExternalMovementsNomisApiService(
     .uri("/movements/{offenderNo}/temporary-absences/application", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun upsertScheduledTemporaryAbsence(offenderNo: String, request: UpsertScheduledTemporaryAbsenceRequest): UpsertScheduledTemporaryAbsenceResponse = webClient.put()
     .uri("/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun createTemporaryAbsence(offenderNo: String, request: CreateTemporaryAbsenceRequest): CreateTemporaryAbsenceResponse = webClient.post()
     .uri("/movements/{offenderNo}/temporary-absences/temporary-absence", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun createTemporaryAbsenceReturn(offenderNo: String, request: CreateTemporaryAbsenceReturnRequest): CreateTemporaryAbsenceReturnResponse = webClient.post()
     .uri("/movements/{offenderNo}/temporary-absences/temporary-absence-return", offenderNo)
     .bodyValue(request)
     .retrieve()
-    .awaitBody()
+    .awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun getTemporaryAbsenceSummary(offenderNo: String): OffenderTemporaryAbsenceSummaryResponse = webClient.get()
     .uri("/movements/{offenderNo}/temporary-absences/summary", offenderNo)
     .retrieve()
-    .awaitBody()
+    .awaitBodyWithRetry(backoffSpec)
 }

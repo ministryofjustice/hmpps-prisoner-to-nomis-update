@@ -190,7 +190,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("temporary-absence-application-mapping-create-failed"),
-              any(),
+              check {
+                assertThat(it).containsEntry("reason", "500 Internal Server Error from POST http://localhost:8084/mapping/temporary-absence/application")
+              },
               isNull(),
             )
           }
@@ -412,6 +414,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
               assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/temporary-absences/application")
             },
             isNull(),
           )
@@ -801,6 +804,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
             },
             isNull(),
           )
@@ -1074,7 +1078,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("temporary-absence-schedule-update-mapping-create-failed"),
-              any(),
+              check {
+                assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8084/mapping/temporary-absence/scheduled-movement")
+              },
               isNull(),
             )
           }
@@ -1102,10 +1108,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when parent mapping does not exist")
       inner class ParentMappingNotFound {
+        private val dpsLocation = Location(uprn = 987, address = "unknown address", postcode = "SW1A 1AA")
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
@@ -1131,6 +1139,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             eq("temporary-absence-schedule-update-failed"),
             check {
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+              assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
+              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
             },
             isNull(),
           )
