@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-14.1976.1dfd493"
+    "version" : "2026-01-16.2006.aad260b"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -81,45 +81,6 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/syscon-sync/immigration-status/{cprImmigrationStatusId}" : {
-      "put" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "No-Op - To be removed",
-        "operationId" : "updateImmigrationStatus",
-        "parameters" : [ {
-          "name" : "cprImmigrationStatusId",
-          "in" : "path",
-          "description" : "The identifier of the prison immigration status",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonImmigrationStatus"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "Immigration status updated in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
                 }
               }
             }
@@ -274,7 +235,7 @@
     "/syscon-sync/religion/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Updates the prison religion records for the given prison number",
+        "description" : "Update the prison religion records for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "saveReligions",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -297,7 +258,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Religion saved in CPR",
+            "description" : "Religions saved in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -347,40 +308,11 @@
         }
       }
     },
-    "/syscon-sync/immigration-status" : {
-      "post" : {
-        "tags" : [ "Syscon Sync" ],
-        "description" : "No-Op - To be removed",
-        "operationId" : "createImmigrationStatus",
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/PrisonImmigrationStatus"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "201" : {
-            "description" : "Sexual Orientation created in CPR",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonImmigrationStatusResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/syscon-sync/immigration-status/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
         "description" : "Update the immigration status by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "updateImmigrationStatus_1",
+        "operationId" : "updateImmigrationStatus",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -974,28 +906,6 @@
         },
         "required" : [ "status" ]
       },
-      "PrisonImmigrationStatus" : {
-        "type" : "object",
-        "properties" : {
-          "interestToImmigration" : {
-            "type" : "boolean",
-            "description" : "Flag indicating whether data is an interest to immigration",
-            "example" : true
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The immigration status modify date and time",
-            "example" : "2000-01-01 12:00:00"
-          },
-          "modifyUserId" : {
-            "type" : "string",
-            "description" : "The immigration status modify user id",
-            "example" : 12345
-          }
-        },
-        "required" : [ "interestToImmigration", "modifyDateTime", "modifyUserId" ]
-      },
       "RetryDlqResult" : {
         "type" : "object",
         "properties" : {
@@ -1347,14 +1257,27 @@
         },
         "required" : [ "modifyDateTime", "modifyUserId" ]
       },
-      "PrisonImmigrationStatusResponse" : {
+      "PrisonImmigrationStatus" : {
         "type" : "object",
         "properties" : {
-          "cprImmigrationStatusId" : {
+          "interestToImmigration" : {
+            "type" : "boolean",
+            "description" : "Flag indicating whether data is an interest to immigration",
+            "example" : true
+          },
+          "modifyDateTime" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "date-time",
+            "description" : "The immigration status modify date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "modifyUserId" : {
+            "type" : "string",
+            "description" : "The immigration status modify user id",
+            "example" : 12345
           }
-        }
+        },
+        "required" : [ "interestToImmigration", "modifyDateTime", "modifyUserId" ]
       },
       "PrisonDisabilityStatus" : {
         "type" : "object",
