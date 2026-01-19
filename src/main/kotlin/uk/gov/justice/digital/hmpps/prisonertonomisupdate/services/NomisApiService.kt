@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonInclude
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
@@ -25,12 +24,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.IncentivesResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.SentencingAdjustmentResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjustmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateGlobalIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResponse
@@ -39,9 +40,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultAwardResponses
@@ -70,10 +73,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardResponses
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateSentenceAdjustmentRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -92,6 +97,7 @@ class NomisApiService(
 
   private val bookingApi = BookingsResourceApi(webClient)
   private val incentivesResourceApi = IncentivesResourceApi(webClient)
+  private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
 
   suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
     .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
@@ -214,54 +220,43 @@ class NomisApiService(
   suspend fun createSentenceAdjustment(
     bookingId: Long,
     sentenceSequence: Long,
-    request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse = webClient.post()
-    .uri("/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments", bookingId, sentenceSequence)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: CreateSentenceAdjustmentRequest,
+  ): CreateAdjustmentResponse = sentencingAdjustmentResourceApi
+    .createSentenceAdjustment(bookingId, sentenceSequence, request)
+    .awaitSingle()
 
   suspend fun updateSentenceAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest,
-  ): Unit = webClient.put()
-    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: UpdateSentenceAdjustmentRequest,
+  ): Unit = sentencingAdjustmentResourceApi
+    .updateSentenceAdjustment(adjustmentId, request)
+    .awaitSingle()
 
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
-    request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse = webClient.post()
-    .uri("/prisoners/booking-id/{bookingId}/adjustments", bookingId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: CreateKeyDateAdjustmentRequest,
+  ): CreateAdjustmentResponse = sentencingAdjustmentResourceApi
+    .createKeyDateAdjustment(bookingId, request)
+    .awaitSingle()
 
   suspend fun updateKeyDateAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest,
-  ): Unit = webClient.put()
-    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: UpdateKeyDateAdjustmentRequest,
+  ): Unit = sentencingAdjustmentResourceApi
+    .updateKeyDateAdjustment(adjustmentId, request)
+    .awaitSingle()
 
-  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit = webClient.delete()
-    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-    .retrieve()
-    .awaitBody()
+  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit = sentencingAdjustmentResourceApi
+    .deleteSentenceAdjustment(adjustmentId)
+    .awaitSingle()
 
-  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit = webClient.delete()
-    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-    .retrieve()
-    .awaitBody()
+  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit = sentencingAdjustmentResourceApi
+    .deleteKeyDateAdjustment(adjustmentId)
+    .awaitSingle()
 
-  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse = webClient.get()
-    .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
-    .retrieve()
-    .awaitBody()
+  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse = sentencingAdjustmentResourceApi
+    .getActiveAdjustments(bookingId, activeOnly = true)
+    .awaitSingle()
 
   // ////////// INCENTIVE LEVELS //////////////
 
@@ -758,31 +753,6 @@ data class UpdateAppointmentRequest(
   val eventSubType: String,
   val comment: String? = null,
 )
-
-data class CreateSentencingAdjustmentRequest(
-  val adjustmentTypeCode: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFromDate: LocalDate?,
-  val adjustmentDays: Long,
-  val comment: String?,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class UpdateSentencingAdjustmentRequest(
-  val adjustmentTypeCode: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFromDate: LocalDate?,
-  val adjustmentDays: Long,
-  val sentenceSequence: Int?,
-  val comment: String?,
-  val active: Boolean? = null,
-)
-
-data class CreateSentencingAdjustmentResponse(val id: Long)
 
 data class CreateVisitResponseDto(
   val visitId: String,
