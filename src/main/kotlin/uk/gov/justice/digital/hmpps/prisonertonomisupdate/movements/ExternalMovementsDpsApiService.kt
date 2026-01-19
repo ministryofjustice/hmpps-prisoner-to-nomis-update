@@ -36,7 +36,7 @@ class ExternalMovementsDpsApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getTapReconciliation(personIdentifier: String): PersonTapCounts = syncApi.getTemporaryAbsences(personIdentifier)
+  suspend fun getTapReconciliation(personIdentifier: String): PersonTapCounts = syncApi.countTemporaryAbsences(personIdentifier)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
