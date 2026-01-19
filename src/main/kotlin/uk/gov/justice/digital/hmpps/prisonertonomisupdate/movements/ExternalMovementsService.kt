@@ -109,16 +109,17 @@ class ExternalMovementsService(
       }
     }
       .onFailure {
+        telemetryMap["reason"] = it.message ?: "Unknown error"
         telemetryClient.trackEvent("${APPLICATION.entityName}-$updateType-failed", telemetryMap)
         throw it
       }
   }
 
   private suspend fun findParentApplicationIdOrThrow(
-    dpsMovementApplicationId: UUID,
-  ): Long = mappingApiService.getApplicationMapping(dpsMovementApplicationId)
+    dpsAuthorisationId: UUID,
+  ): Long = mappingApiService.getApplicationMapping(dpsAuthorisationId)
     ?.nomisMovementApplicationId
-    ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for $dpsMovementApplicationId")
+    ?: throw ParentEntityNotFoundRetry("Cannot find parent application mapping for $dpsAuthorisationId")
 
   suspend fun occurrenceChanged(event: TemporaryAbsenceEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
@@ -139,14 +140,13 @@ class ExternalMovementsService(
       if (existingMapping != null) updateType = SCHEDULED_MOVEMENT_UPDATE
       val dps = dpsApiService.getTapOccurrence(dpsOccurrenceId)
         .also { telemetryMap["dpsAuthorisationId"] = "${it.authorisation.id}" }
-      val applicationMapping = mappingApiService.getApplicationMapping(dps.authorisation.id)
-        ?.also { telemetryMap["nomisApplicationId"] = it.nomisMovementApplicationId.toString() }
-        ?: throw ParentEntityNotFoundRetry("Cannot find application mapping for ${dps.authorisation.id}")
+      val nomisApplicationId = findParentApplicationIdOrThrow(dps.authorisation.id)
+        .also { telemetryMap["nomisApplicationId"] = it.toString() }
 
       // perform the sync to NOMIS
       val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
         prisonerNumber,
-        dps.toNomisUpsertRequest(prisonerNumber, applicationMapping.nomisMovementApplicationId, existingMapping),
+        dps.toNomisUpsertRequest(prisonerNumber, nomisApplicationId, existingMapping),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisEventId"] = it.eventId.toString() }
@@ -159,6 +159,7 @@ class ExternalMovementsService(
       }
     }
       .onFailure {
+        telemetryMap["reason"] = it.message ?: "Unknown error"
         telemetryClient.trackEvent("${updateType.entityName}-failed", telemetryMap)
         throw it
       }
