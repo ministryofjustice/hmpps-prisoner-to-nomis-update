@@ -429,12 +429,30 @@ class CourtSentencingReconciliationService(
           differences = differenceList,
         )
       } else {
-        log.info("Excluding reconciliation mismatches for case id $nomisCaseId")
+        telemetryClient.trackEvent(
+          "$telemetryPrefix-excluded-case",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "nomisCaseId" to nomisCaseId.toString(),
+            "dpsCaseId" to dpsCaseId,
+            "reason" to ("Excluding reconciliation mismatches for case id $nomisCaseId"),
+          ),
+          null,
+        )
         null
       }
     } else {
       if (excludedCase) {
-        log.info("No reconciliation mismatches found for excluded case id $nomisCaseId. Remove from exclusion file.")
+        telemetryClient.trackEvent(
+          "$telemetryPrefix-excluded-case-resolved",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "nomisCaseId" to nomisCaseId.toString(),
+            "dpsCaseId" to dpsCaseId,
+            "reason" to ("No reconciliation mismatches found for excluded case id $nomisCaseId. Remove from exclusion file."),
+          ),
+          null,
+        )
       }
       null
     }
