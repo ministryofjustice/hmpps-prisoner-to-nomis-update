@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.equalToDateTime
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -101,7 +102,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
-          dpsApi.stubGetTapAuthorisation(dpsId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = tomorrow))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -152,7 +153,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", today.toLocalDate())
+              .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
@@ -326,7 +327,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
-          dpsApi.stubGetTapAuthorisation(dpsId)
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = today.plusHours(1)))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -381,9 +382,59 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
               .withRequestBodyJsonPath("toDate", today.toLocalDate())
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.toLocalDate().atStartOfDay()))
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok for a single schedule")
+      inner class HappyPathWithSingleSchedule {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 1, startTime = today, endTime = tomorrow))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times to match occurrences`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow)),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok for multiple schedules")
+      inner class HappyPathWithMultipleSchedules {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = today, endTime = tomorrow.plusDays(1)))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times to match occurrences`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.plusDays(2).toLocalDate().atStartOfDay())),
           )
         }
       }
@@ -1005,7 +1056,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok and address has changed to a new address")
       inner class HappyPathAddressChangedToUnknownAddress {
-        private val dpsLocation = Location(uprn = 987, address = "unknown address", postcode = "SW1A 1AA")
+        private val dpsLocation = Location(uprn = 987, address = "unknown address", postcode = "SW1A 1AA", description = "some description")
 
         @BeforeEach
         fun setUp() {
@@ -1026,7 +1077,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/addresses/by-dps-id"))
               .withRequestBodyJsonPath("offenderNo", "A1234BC")
-              .withRequestBodyJsonPath("ownerClass", "OFF")
+              .withRequestBodyJsonPath("ownerClass", "CORP")
               .withRequestBodyJsonPath("dpsAddressText", "unknown address")
               .withRequestBodyJsonPath("dpsUprn", "987"),
           )
@@ -1037,7 +1088,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence"))
               .withRequestBodyJsonPath("toAddress.id", absent())
-              .withRequestBodyJsonPath("toAddress.name", absent())
+              .withRequestBodyJsonPath("toAddress.name", "some description")
               .withRequestBodyJsonPath("toAddress.addressText", "unknown address")
               .withRequestBodyJsonPath("toAddress.postalCode", "SW1A 1AA"),
           )
@@ -1051,7 +1102,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisAddressId", "54321")
               .withRequestBodyJsonPath("nomisAddressOwnerClass", "OFF")
               .withRequestBodyJsonPath("dpsUprn", "987")
-              .withRequestBodyJsonPath("dpsDescription", absent())
+              .withRequestBodyJsonPath("dpsDescription", "some description")
               .withRequestBodyJsonPath("dpsPostcode", "SW1A 1AA"),
           )
         }
