@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
@@ -58,7 +58,7 @@ class CourtSentencingApiExtension :
   companion object {
     @JvmField
     val courtSentencingApi = CourtSentencingApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
 
     fun legacySentence(sentenceId: String, sentenceCalcType: String, sentenceCategory: String = "2020", active: Boolean = true) = LegacySentence(
       prisonerId = "A6160DZ",
@@ -150,7 +150,7 @@ class CourtSentencingApiExtension :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     courtSentencingApi.start()
   }
 
@@ -380,7 +380,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   ) {
     stubFor(
       WireMock.post(WireMock.urlPathMatching("/legacy/sentence/search"))
-        .withRequestBody(equalToJson(MappingExtension.objectMapper.writeValueAsString(request)))
+        .withRequestBody(equalToJson(MappingExtension.jsonMapper.writeValueAsString(request)))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -465,7 +465,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.Companion.objectMapper.writeValueAsString(body))
+    this.withBody(NomisApiExtension.Companion.jsonMapper.writeValueAsString(body))
     return this
   }
 

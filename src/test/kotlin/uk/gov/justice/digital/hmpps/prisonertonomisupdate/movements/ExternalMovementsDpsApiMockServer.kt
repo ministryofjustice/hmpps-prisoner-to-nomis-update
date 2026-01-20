@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -9,8 +8,9 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
@@ -37,12 +37,12 @@ class ExternalMovementsDpsApiExtension :
   companion object {
     @JvmField
     val dpsExternalMovementsServer = ExternalMovementsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
     dpsExternalMovementsServer.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -160,7 +160,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -172,7 +172,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }
@@ -189,7 +189,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -201,7 +201,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }
@@ -213,7 +213,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -225,7 +225,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }
@@ -237,7 +237,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -249,7 +249,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }

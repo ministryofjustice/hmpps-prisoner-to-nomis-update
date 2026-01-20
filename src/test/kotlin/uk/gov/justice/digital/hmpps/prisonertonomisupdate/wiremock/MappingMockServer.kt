@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -21,6 +20,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 
 class MappingExtension :
   BeforeAllCallback,
@@ -29,11 +29,11 @@ class MappingExtension :
   companion object {
     @JvmField
     val mappingServer = MappingMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     mappingServer.start()
   }
 
