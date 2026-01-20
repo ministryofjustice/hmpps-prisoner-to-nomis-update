@@ -8,7 +8,7 @@ import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.dpsContactPersonServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerDomesticStatusResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.model.SyncPrisonerNumberOfChildrenResponse
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -23,7 +23,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -34,7 +34,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
         .willReturn(
           aResponse()
             .withStatus(errorStatus.value())
-            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
         ),
     )
   }
@@ -57,7 +57,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ).willSetStateTo(Scenario.STARTED),
     )
   }
@@ -72,7 +72,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -83,7 +83,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
         .willReturn(
           aResponse()
             .withStatus(errorStatus.value())
-            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
         ),
     )
   }
@@ -108,7 +108,7 @@ class ContactPersonProfileDetailsDpsApiMockServer {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ).willSetStateTo(Scenario.STARTED),
     )
   }

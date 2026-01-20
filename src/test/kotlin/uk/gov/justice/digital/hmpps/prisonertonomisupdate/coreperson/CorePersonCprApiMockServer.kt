@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -11,7 +10,8 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension.Companion.objectMapper
+import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonCprApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalNationality
@@ -29,12 +29,12 @@ class CorePersonCprApiExtension :
   companion object {
     @JvmField
     val corePersonCprApi = CorePersonCprApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
     corePersonCprApi.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -68,13 +68,13 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(if (status == HttpStatus.OK) response else error)),
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error)),
       ),
     )
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(objectMapper.writeValueAsString(body))
+    this.withBody(jsonMapper.writeValueAsString(body))
     return this
   }
 }

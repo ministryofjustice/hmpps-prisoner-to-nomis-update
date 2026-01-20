@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
@@ -18,6 +17,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
@@ -45,11 +45,11 @@ class IncidentsDpsApiExtension :
   companion object {
     @JvmField
     val incidentsDpsApi = IncidentsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     incidentsDpsApi.start()
   }
 
@@ -149,7 +149,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun verifyGetIncidentDetail(times: Int = 1) = verify(exactly(times), getRequestedFor(urlMatching("/incident-reports/reference/[0-9]+/with-details")))
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(IncidentsDpsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(IncidentsDpsApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 }

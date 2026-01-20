@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -22,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType
 import org.springframework.web.reactive.function.BodyInserters
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_BOOKING_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
@@ -112,9 +112,9 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
   private lateinit var courtSentencingMappingApi: CourtSentencingMappingApiMockServer
 
   @Autowired
-  private lateinit var objectMapper: ObjectMapper
+  private lateinit var jsonMapper: JsonMapper
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 
   @DisplayName("GET /court-sentencing/court-cases/dps-case-id/{dpsCaseId}/reconciliation")
   @Nested
@@ -1091,7 +1091,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will call NOMIS API to repair the case`() {
-        val nomisRepairRequest: CourtCaseRepairRequest = nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId/repair")), objectMapper)
+        val nomisRepairRequest: CourtCaseRepairRequest = nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/prisoners/$offenderNo/sentencing/court-cases/$nomisCourtCaseId/repair")), jsonMapper)
 
         assertThat(nomisRepairRequest.courtId).isEqualTo("MDI")
         assertThat(nomisRepairRequest.courtAppearances).hasSize(1)

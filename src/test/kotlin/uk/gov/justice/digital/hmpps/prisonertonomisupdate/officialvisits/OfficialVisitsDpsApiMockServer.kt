@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension.Companion.dpsOfficialVisitsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.ErrorResponse
@@ -33,12 +33,12 @@ class OfficialVisitsDpsApiExtension :
   companion object {
     @JvmField
     val dpsOfficialVisitsServer = OfficialVisitsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
     dpsOfficialVisitsServer.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -116,7 +116,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
             .withBody(
-              OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(
+              OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(
                 pagedModelSyncOfficialVisitIdResponse(
                   content,
                   pageSize = pageSize,
@@ -140,7 +140,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               .withHeader("Content-Type", "application/json")
               .withStatus(HttpStatus.NOT_FOUND.value())
               .withBody(
-                OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(ErrorResponse(status = 404)),
+                OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(ErrorResponse(status = 404)),
               ),
           ),
       )
@@ -152,7 +152,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
               .withHeader("Content-Type", "application/json")
               .withStatus(HttpStatus.OK.value())
               .withBody(
-                OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(response),
+                OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(response),
               ),
           ),
       )
@@ -165,7 +165,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(OfficialVisitsDpsApiExtension.objectMapper.writeValueAsString(response)),
+          .withBody(OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(response)),
       ),
     )
   }

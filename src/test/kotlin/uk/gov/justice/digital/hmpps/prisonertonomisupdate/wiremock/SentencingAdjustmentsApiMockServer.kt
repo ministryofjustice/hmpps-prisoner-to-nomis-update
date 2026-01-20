@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -13,6 +12,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.AdjustmentDto
 
 class SentencingAdjustmentsApiExtension :
@@ -22,11 +22,11 @@ class SentencingAdjustmentsApiExtension :
   companion object {
     @JvmField
     val sentencingAdjustmentsApi = SentencingAdjustmentsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     sentencingAdjustmentsApi.start()
   }
 
@@ -459,7 +459,7 @@ class SentencingAdjustmentsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(NomisApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 }

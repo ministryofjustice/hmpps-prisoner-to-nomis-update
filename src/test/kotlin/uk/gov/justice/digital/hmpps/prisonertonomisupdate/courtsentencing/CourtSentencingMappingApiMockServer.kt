@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
@@ -13,6 +12,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
@@ -20,15 +20,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @Component
-class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
-    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, objectMapper = objectMapper)
+    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, jsonMapper = jsonMapper)
   }
 
   fun stubCreateCourtCase() {
@@ -99,7 +99,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 response,
               ),
             )
@@ -166,7 +166,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 CourtChargeMappingDto(
                   nomisCourtChargeId = nomisCourtChargeId,
                   dpsCourtChargeId = id,
@@ -214,11 +214,11 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
   fun stubGetMappingsGivenSentenceIds(request: List<String>, mappings: List<SentenceMappingDto>) {
     mappingServer.stubFor(
       post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list")
-        .withRequestBody(equalToJson(MappingExtension.objectMapper.writeValueAsString(request)))
+        .withRequestBody(equalToJson(MappingExtension.jsonMapper.writeValueAsString(request)))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(MappingExtension.objectMapper.writeValueAsString(mappings))
+            .withBody(MappingExtension.jsonMapper.writeValueAsString(mappings))
             .withStatus(200),
         ),
     )
@@ -351,7 +351,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               response,
             ),
           )

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.generalLedgerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetails
@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.jsonMapper
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
@@ -36,7 +36,7 @@ class FinanceDpsApiExtension :
 
     @JvmField
     val dpsFinanceServer = FinanceDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
 
     fun offenderTransaction(uuid: UUID = UUID.randomUUID()) = SyncOffenderTransactionResponse(
       synchronizedTransactionId = uuid,
@@ -100,7 +100,7 @@ class FinanceDpsApiExtension :
 
   override fun beforeAll(context: ExtensionContext) {
     dpsFinanceServer.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jackson2ObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -128,35 +128,35 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(FinanceDpsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(FinanceDpsApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 
   fun stubGetOffenderTransaction(transactionId: String, response: SyncOffenderTransactionResponse = offenderTransaction()) {
     stubFor(
       get("/sync/offender-transactions/$transactionId")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 
   fun stubGetGeneralLedgerTransaction(transactionId: String, response: SyncGeneralLedgerTransactionResponse = generalLedgerTransaction()) {
     stubFor(
       get("/sync/general-ledger-transactions/$transactionId")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 
   fun stubListPrisonerAccounts(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
     stubFor(
       get("/reconcile/prisoner-balances/$prisonNumber")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 
   fun stubGetPrisonerSubAccountDetails(prisonerNo: String, accountCode: Int, response: PrisonerSubAccountDetails) {
     stubFor(
       get("/prisoners/$prisonerNo/accounts/$accountCode")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
 
@@ -169,7 +169,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetPrisonBalance(prisonId: String = "MDI", response: GeneralLedgerBalanceDetailsList = prisonAccounts()) {
     stubFor(
       get("/reconcile/general-ledger-balances/$prisonId")
-        .willReturn(okJson(objectMapper.writeValueAsString(response))),
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
   fun stubGetPrisonBalance(prisonId: String = "MDI", status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
