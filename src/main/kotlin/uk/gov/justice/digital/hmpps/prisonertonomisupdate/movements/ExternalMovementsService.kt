@@ -208,6 +208,7 @@ class ExternalMovementsService(
     dpsAddressText = dps.location.address!!,
     dpsUprn = dps.location.uprn,
     dpsPostcode = dps.location.postcode,
+    dpsDescription = dps.location.description,
   )
     .also { mapping ->
       createMapping(
@@ -453,9 +454,19 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
   eventSubType = absenceReasonCode,
   fromDate = start,
   applicationDate = created.at.toLocalDate(),
-  releaseTime = start.atStartOfDay(),
+  releaseTime = when (occurrences.size) {
+    0 -> start.atStartOfDay()
+    // If a schedule in NOMIS is deleted and re-created its start time is taken from the application releaseTime - so save it on the application
+    1 -> occurrences.first().start
+    else -> occurrences.minOf { it.start }.toLocalDate().atStartOfDay()
+  },
   toDate = end,
-  returnTime = end.plusDays(1).atStartOfDay(),
+  returnTime = when (occurrences.size) {
+    0 -> end.plusDays(1).atStartOfDay()
+    // If a schedule in NOMIS is deleted and re-created its end time is taken from the application returnTime - so save it on the application
+    1 -> occurrences.first().end
+    else -> occurrences.maxOf { it.end }.toLocalDate().plusDays(1).atStartOfDay()
+  },
   applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
   applicationType = if (repeat) "REPEATING" else "SINGLE",
   escortCode = accompaniedByCode,
@@ -471,7 +482,7 @@ private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) 
   "APPROVED" if (occurrenceCount == 0) -> "APP-UNSCH"
   "APPROVED" -> "APP-SCH"
   "DENIED" -> "DEN"
-  "CANCELLED" -> "CAN"
+  "CANCELLED" -> "CANC"
   else -> throw IllegalArgumentException("Unknown authorisation status: $this")
 }
 
