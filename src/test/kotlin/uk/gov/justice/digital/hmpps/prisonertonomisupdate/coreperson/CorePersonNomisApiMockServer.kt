@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CorePerson
@@ -19,7 +19,7 @@ import java.time.LocalDateTime
 import kotlin.String
 
 @Component
-class CorePersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class CorePersonNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetCorePerson(
     prisonNumber: String = "AA1234A",
@@ -33,7 +33,7 @@ class CorePersonNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(if (status == HttpStatus.OK) response else error))
+          .withBody(jsonMapper.writeValueAsString(if (status == HttpStatus.OK) response else error))
           .withFixedDelay(fixedDelay),
       ),
     )

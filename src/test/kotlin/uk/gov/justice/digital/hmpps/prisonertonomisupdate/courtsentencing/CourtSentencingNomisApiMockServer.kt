@@ -9,7 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.stereotype.Component
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CaseIdentifierResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
@@ -231,7 +231,7 @@ class CourtSentencingNomisApiMockServer {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
-          .withBody(objectMapper().writeValueAsString(response)),
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -290,7 +290,7 @@ class CourtSentencingNomisApiMockServer {
     get(url).willReturn(
       aResponse()
         .withHeader("Content-Type", "application/json")
-        .withBody(objectMapper().writeValueAsString(response))
+        .withBody(jsonMapper.writeValueAsString(response))
         .withStatus(200),
     ),
   )
@@ -329,7 +329,7 @@ class CourtSentencingNomisApiMockServer {
     post(url).willReturn(
       aResponse()
         .withHeader("Content-Type", "application/json")
-        .withBody(objectMapper().writeValueAsString(response))
+        .withBody(jsonMapper.writeValueAsString(response))
         .withStatus(201),
     ),
   )
@@ -346,7 +346,7 @@ class CourtSentencingNomisApiMockServer {
     put(url).willReturn(
       aResponse()
         .withHeader("Content-Type", "application/json")
-        .withBody(objectMapper().writeValueAsString(response))
+        .withBody(jsonMapper.writeValueAsString(response))
         .withStatus(200),
     ),
   )

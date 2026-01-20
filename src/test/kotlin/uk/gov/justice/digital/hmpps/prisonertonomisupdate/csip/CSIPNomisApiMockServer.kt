@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
@@ -10,6 +9,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Actions
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Attendee
@@ -34,7 +34,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
-class CSIPNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class CSIPNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubPutCSIP(
     csipResponse: UpsertCSIPResponse = upsertCSIPResponse(),
   ) {
@@ -43,7 +43,7 @@ class CSIPNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
-          .withBody(objectMapper.writeValueAsString(csipResponse)),
+          .withBody(jsonMapper.writeValueAsString(csipResponse)),
       ),
     )
   }
@@ -69,7 +69,7 @@ class CSIPNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(response)),
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -84,7 +84,7 @@ class CSIPNomisApiMockServer(private val objectMapper: ObjectMapper) {
     )
   }
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(objectMapper.writeValueAsString(body))
+    this.withBody(jsonMapper.writeValueAsString(body))
     return this
   }
 

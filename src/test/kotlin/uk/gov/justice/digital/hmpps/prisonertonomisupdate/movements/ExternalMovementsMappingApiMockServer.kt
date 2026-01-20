@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -12,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
@@ -24,7 +24,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 @Component
-class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubCreateTemporaryAbsenceApplicationMapping() {
     mappingServer.stubFor(
@@ -47,7 +47,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -58,7 +58,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -71,7 +71,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(nomisMovementApplicationId, dpsId, prisonerNumber))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceApplicationMapping(nomisMovementApplicationId, dpsId, prisonerNumber))),
       ),
     )
   }
@@ -82,7 +82,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -104,7 +104,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -115,7 +115,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -139,7 +139,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -151,7 +151,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
       get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId, addressId = addressId))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId, addressId = addressId))),
       ),
     )
   }
@@ -162,7 +162,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -184,7 +184,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -195,7 +195,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -207,7 +207,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
       get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
       ),
     )
   }
@@ -218,7 +218,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -229,7 +229,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(temporaryAbsenceAddressMapping(nomisAddressId, dpsLocation))),
+            .withBody(jsonMapper.writeValueAsString(temporaryAbsenceAddressMapping(nomisAddressId, dpsLocation))),
         ),
     )
   }
@@ -241,7 +241,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }

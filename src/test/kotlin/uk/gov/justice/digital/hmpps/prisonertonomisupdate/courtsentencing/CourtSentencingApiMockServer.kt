@@ -28,7 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
@@ -187,7 +187,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCaseResponse),
+            jsonMapper.writeValueAsString(courtCaseResponse),
           )
           .withStatus(200),
       ),
@@ -270,7 +270,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtAppearance),
+            jsonMapper.writeValueAsString(courtAppearance),
           )
           .withStatus(200),
       ),
@@ -309,7 +309,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtAppearance),
+            jsonMapper.writeValueAsString(courtAppearance),
           )
           .withStatus(200),
       ),
@@ -331,7 +331,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCase),
+            jsonMapper.writeValueAsString(courtCase),
           )
           .withStatus(200),
       ),
@@ -367,7 +367,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(sentence),
+            jsonMapper.writeValueAsString(sentence),
           )
           .withStatus(200),
       ),
@@ -385,7 +385,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper().writeValueAsString(sentences),
+              jsonMapper.writeValueAsString(sentences),
             )
             .withStatus(200),
         ),
@@ -418,7 +418,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(periodLength),
+            jsonMapper.writeValueAsString(periodLength),
           )
           .withStatus(200),
       ),
@@ -431,7 +431,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCaseResponse),
+            jsonMapper.writeValueAsString(courtCaseResponse),
           )
           .withStatus(200),
       ),
@@ -444,7 +444,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(recall),
+            jsonMapper.writeValueAsString(recall),
           )
           .withStatus(200),
       ),
@@ -457,7 +457,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCaseUuids),
+            jsonMapper.writeValueAsString(courtCaseUuids),
           )
           .withStatus(200),
       ),
@@ -465,7 +465,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.Companion.jsonMapper.writeValueAsString(body))
+    this.withBody(NomisApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 
