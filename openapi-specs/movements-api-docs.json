@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-16"
+    "version" : "2026-01-20"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -2547,6 +2547,9 @@
           "accompaniedByCode" : {
             "type" : "string"
           },
+          "transportCode" : {
+            "type" : "string"
+          },
           "repeat" : {
             "type" : "boolean"
           },
@@ -2574,7 +2577,7 @@
             }
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
       },
       "SyncReadTapAuthorisationOccurrence" : {
         "type" : "object",
