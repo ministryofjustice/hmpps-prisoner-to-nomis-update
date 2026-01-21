@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -17,17 +16,19 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.activityRetryMessage
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 
-internal class ActivitiesDomainEventsListenerTest {
+@JsonTest
+internal class ActivitiesDomainEventsListenerTest(@Autowired private val jsonMapper: JsonMapper) {
   private val activitiesService: ActivitiesService = mock()
   private val allocationService: AllocationService = mock()
   private val attendanceService: AttendanceService = mock()
   private val schedulesService: SchedulesService = mock()
-  private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val telemetryClient: TelemetryClient = mock()
 
@@ -37,7 +38,7 @@ internal class ActivitiesDomainEventsListenerTest {
       allocationService,
       attendanceService,
       schedulesService,
-      objectMapper,
+      jsonMapper,
       eventFeatureSwitch,
       telemetryClient,
     )

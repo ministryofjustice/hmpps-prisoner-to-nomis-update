@@ -1,25 +1,25 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
 @Service
 class AlertsDomainEventListener(
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val alertsService: AlertsService,
   private val alertsReferenceDataService: AlertsReferenceDataService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = alertsService,
-  objectMapper = objectMapper,
+  jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
   domain = "alerts",

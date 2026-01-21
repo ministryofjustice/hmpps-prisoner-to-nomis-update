@@ -41,7 +41,7 @@ class SchedulesServiceTest {
 
     private fun aDomainEvent() = ScheduledInstanceDomainEvent(
       eventType = "activities.scheduled-instance.amended",
-      additionalInformation = ScheduledInstanceAdditionalInformation(ACTIVITY_SCHEDULE_ID, SCHEDULE_INSTANCE_ID),
+      additionalInformation = ScheduledInstanceAdditionalInformation(SCHEDULE_INSTANCE_ID),
       version = "1.0",
       description = "description",
     )

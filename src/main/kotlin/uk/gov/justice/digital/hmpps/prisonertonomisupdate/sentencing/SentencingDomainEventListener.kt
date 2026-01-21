@@ -1,24 +1,24 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
 
 @Service
 class SentencingDomainEventListener(
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val sentencingAdjustmentsService: SentencingAdjustmentsService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = sentencingAdjustmentsService,
-  objectMapper = objectMapper,
+  jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
   domain = "sentencing",

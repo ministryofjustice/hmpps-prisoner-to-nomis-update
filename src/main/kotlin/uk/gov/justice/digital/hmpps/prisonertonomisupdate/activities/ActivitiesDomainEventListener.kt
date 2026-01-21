@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.concurrent.CompletableFuture
@@ -16,12 +16,12 @@ class ActivitiesDomainEventListener(
   private val allocationService: AllocationService,
   private val attendanceService: AttendanceService,
   private val schedulesService: SchedulesService,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = activitiesService,
-  objectMapper = objectMapper,
+  jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
   domain = "activities",
