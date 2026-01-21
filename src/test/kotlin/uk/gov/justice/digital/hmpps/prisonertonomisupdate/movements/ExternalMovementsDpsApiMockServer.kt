@@ -84,6 +84,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     absenceSubTypeCode = "RDR",
     comments = "Some notes",
     accompaniedByCode = "U",
+    transportCode = "VAN",
   )
 
   fun tapOccurrence(

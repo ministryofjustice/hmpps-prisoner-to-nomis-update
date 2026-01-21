@@ -156,7 +156,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
+              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("transportType", "VAN"),
           )
         }
 
@@ -386,7 +387,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.toLocalDate().atStartOfDay()))
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
+              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("transportType", "VAN"),
           )
         }
       }
