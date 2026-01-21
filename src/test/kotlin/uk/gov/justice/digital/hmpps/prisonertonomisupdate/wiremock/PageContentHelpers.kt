@@ -1,6 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import tools.jackson.databind.json.JsonMapper
 import kotlin.text.trimIndent
 
 fun pageContent(
@@ -18,14 +18,14 @@ fun pageContent(
 )
 
 fun pageContent(
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   content: List<Any>,
   pageSize: Long,
   pageNumber: Long,
   totalElements: Long,
   size: Int,
 ) = pageContentWithContent(
-  outerContent = objectMapper.writeValueAsString(content),
+  outerContent = jsonMapper.writeValueAsString(content),
   pageSize = pageSize,
   pageNumber = pageNumber,
   totalElements = totalElements,
