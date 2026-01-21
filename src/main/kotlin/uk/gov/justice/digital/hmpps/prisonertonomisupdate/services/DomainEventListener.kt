@@ -1,7 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
@@ -10,6 +8,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.future.future
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.HMPPSDomainEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
@@ -18,7 +18,7 @@ import java.util.concurrent.CompletableFuture
 const val RETRY_CREATE_MAPPING = "RETRY_CREATE_MAPPING"
 
 abstract class DomainEventListenerNoMapping(
-  internal val objectMapper: ObjectMapper,
+  internal val jsonMapper: JsonMapper,
   internal val eventFeatureSwitch: EventFeatureSwitch,
   internal val telemetryClient: TelemetryClient,
   private val domain: String,
@@ -32,7 +32,7 @@ abstract class DomainEventListenerNoMapping(
     return asCompletableFuture {
       when (sqsMessage.Type) {
         "Notification" -> {
-          val (eventType) = objectMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
+          val (eventType) = jsonMapper.readValue<HMPPSDomainEvent>(sqsMessage.Message)
           if (eventFeatureSwitch.isEnabled(eventType, domain)) {
             processMessage(eventType, sqsMessage.Message)
           } else {
@@ -46,7 +46,7 @@ abstract class DomainEventListenerNoMapping(
 
   internal open suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {}
 
-  internal inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  internal inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -55,11 +55,11 @@ abstract class DomainEventListenerNoMapping(
 
 abstract class DomainEventListener(
   internal val service: CreateMappingRetryable,
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   telemetryClient: TelemetryClient,
   domain: String,
-) : DomainEventListenerNoMapping(objectMapper, eventFeatureSwitch, telemetryClient, domain) {
+) : DomainEventListenerNoMapping(jsonMapper, eventFeatureSwitch, telemetryClient, domain) {
 
   override suspend fun onNonDomainEvent(sqsMessage: SQSMessage) {
     when (sqsMessage.Type) {

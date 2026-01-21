@@ -2,7 +2,6 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
@@ -16,22 +15,24 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.prisonVisitCreatedMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.retryVisitsCreateMappingMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import java.time.LocalDate
 
-internal class VisitsDomainEventsListenerTest {
+@JsonTest
+internal class VisitsDomainEventsListenerTest(@Autowired private val jsonMapper: JsonMapper) {
   private val visitsService: VisitsService = mock()
-  private val objectMapper: ObjectMapper = objectMapper()
   private val eventFeatureSwitch: EventFeatureSwitch = mock()
   private val telemetryClient: TelemetryClient = mock()
 
   private val listener =
     VisitsDomainEventListener(
       visitsService,
-      objectMapper,
+      jsonMapper,
       eventFeatureSwitch,
       telemetryClient,
     )
