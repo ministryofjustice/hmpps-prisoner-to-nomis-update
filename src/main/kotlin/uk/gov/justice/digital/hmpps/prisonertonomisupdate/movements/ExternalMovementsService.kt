@@ -125,7 +125,7 @@ class ExternalMovementsService(
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsOccurrenceId = event.additionalInformation.id
     val telemetryMap = mutableMapOf(
-      "prisonerNumber" to prisonerNumber,
+      "offenderNo" to prisonerNumber,
       "dpsOccurrenceId" to dpsOccurrenceId.toString(),
     )
     var updateType: MappingTypes = SCHEDULED_MOVEMENT_CREATE

@@ -565,7 +565,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
-              assertThat(it).containsEntry("prisonerNumber", prisonerNumber)
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
               assertThat(it).containsEntry("bookingId", "12345")
             },
             isNull(),
@@ -938,7 +938,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
-              assertThat(it).containsEntry("prisonerNumber", prisonerNumber)
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
               assertThat(it).containsEntry("bookingId", "12345")
             },
             isNull(),
