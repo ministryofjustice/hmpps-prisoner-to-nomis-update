@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-20"
+    "version" : "2026-01-21"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -861,6 +861,33 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PrisonExternalMovementOverview"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisons/{prisonIdentifier}/absence-categorisations" : {
+      "get" : {
+        "tags" : [ "prison-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getPrisonAbsenceCategorisationDomain",
+        "parameters" : [ {
+          "name" : "prisonIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonAbsenceCategorisations"
                 }
               }
             }
@@ -2876,6 +2903,36 @@
           }
         },
         "required" : [ "approvalsRequired", "leavingToday", "returningToday" ]
+      },
+      "PrisonAbsenceCategorisations" : {
+        "type" : "object",
+        "properties" : {
+          "types" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodedDescription"
+            }
+          },
+          "subTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodedDescription"
+            }
+          },
+          "reasonCategories" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodedDescription"
+            }
+          },
+          "reasons" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CodedDescription"
+            }
+          }
+        },
+        "required" : [ "reasonCategories", "reasons", "subTypes", "types" ]
       },
       "AbsenceCategorisation" : {
         "type" : "object",

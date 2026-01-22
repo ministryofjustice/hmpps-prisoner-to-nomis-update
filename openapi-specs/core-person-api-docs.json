@@ -2,12 +2,12 @@
   "openapi" : "3.1.0",
   "info" : {
     "title" : "HMPPS Core Person Record",
-    "description" : "<div>\n  <h2 id=\"overview\">Overview</h2>\n  <p>This service provides an endpoint to retrieve a person by UUID.</p>\n  <h2 id=\"data-provided\">Data provided</h2>\n  <p>The vast majority of the data is sourced from the CPR Record which gets the data from Nomis, Delius & HMCTS source systems.</p>\n  <div>The data returned for each person record is essentially data that has been retrieved from Nomis, Delius or HMCTS. This includes the\n    following:\n    <ul>\n      <li>Identifiers from any of the following source systems : Nomis, Delius & HMCTS</li>\n      <li>Source System itself, so whether it from Nomis, Delius or HMCTS source system.</li>\n    </ul>\n    See the schema definition for the API for full details.\n  </div>\n  <h2 id=\"role-restrictions\">Role restrictions</h2>\n  <p>\n    Role restrictions in this service are applied by a `@PreAuthorize` annotation at either resource or service level.\n    Furthermore the annotation can be applied at individual method level or class level.\n  </p>\n  <p>\n    Each endpoint in this API documentation should normally include what restrictions are applied. If there is any doubt\n    then it is worth looking at the github repository\n    <a href = \"https://github.com/ministryofjustice/hmpps-person-record/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/personrecord/api/controller/SearchController.kt\"> here</a> and looking at the endpoint in question.\n  </p>\n\n  The following roles are currently in use in this service:\n  <ol>\n    <li>\n      ROLE_CORE_PERSON_RECORD_API__RO: Grants access to the Retrieve person record by UUID</li>\n  </ol>\n  <h2 id=\"types-of-endpoints\">Types of endpoints</h2>\n  <h3>Retrieve person record by UUID</h3>\n  <p>\n   This will give back a person record with data including Identifiers associated with that UUID.\n  </p>\n</div>",
+    "description" : "<div>\n  <h2 id=\"overview\">Overview</h2>\n  <p>This service provides an endpoint to retrieve a person by UUID.</p>\n  <h2 id=\"data-provided\">Data provided</h2>\n  <p>The vast majority of the data is sourced from the CPR Record which gets the data from Nomis, Delius & HMCTS source systems.</p>\n  <div>The data returned for each person record is essentially data that has been retrieved from Nomis, Delius or HMCTS. This includes the\n    following:\n    <ul>\n      <li>Identifiers from any of the following source systems : Nomis, Delius & HMCTS</li>\n      <li>Source System itself, so whether it from Nomis, Delius or HMCTS source system.</li>\n    </ul>\n    See the schema definition for the API for full details.\n  </div>\n  <h2 id=\"role-restrictions\">Role restrictions</h2>\n  <p>\n    Role restrictions in this service are applied by a `@PreAuthorize` annotation at either resource or service level.\n    Furthermore, the annotation can be applied at individual method level or class level.\n  </p>\n  <p>\n    Each endpoint in this API documentation should normally include what restrictions are applied. If there is any doubt\n    then it is worth looking at the GitHub repository\n    <a href = \"https://github.com/ministryofjustice/hmpps-person-record/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/personrecord/api/controller\"> here</a> and looking at the endpoint in question.\n  </p>\n\n  The following roles are currently in use in this service:\n  <ul>\n    <li>ROLE_CORE_PERSON_RECORD_API__RO: Grants access to HMPPS Person API endpoints to retrieve a person record by UUID, CRN, Prison Number or Defendant ID</li>\n    <li>ROLE_CORE_PERSON_RECORD_API__PROBATION_RW: Grants access to create a person record by CRN</li>\n    <li>ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW: Grants access to update a person record by Prison Number</li>\n  </ul>\n</div>",
     "contact" : {
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-16.2006.aad260b"
+    "version" : "2026-01-21.2057.f2d1736"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -273,7 +273,7 @@
     "/syscon-sync/nationality/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Creates a new prison nationality record, or updates the existing one if a record matching the prison number is found",
+        "description" : "Upserts a nationality record on a matching prison number",
         "operationId" : "saveNationality",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -552,99 +552,115 @@
       "Address" : {
         "type" : "object",
         "properties" : {
-          "id" : {
+          "fullAddress" : {
             "type" : "string",
-            "description" : "The address ID",
-            "example" : "9d35c1cb-e515-47fc-b6d1-c776d935a78c"
+            "description" : "The full address",
+            "example" : "Sub building 2, Main Building, 102 Petty France, Westminster, London, Greater London, SW1H 9AJ"
           },
-          "type" : {
-            "type" : "string",
-            "description" : "The address type",
-            "enum" : [ "BUS", "HOME", "WORK" ],
-            "example" : "HOME"
+          "noFixedAbode" : {
+            "type" : "boolean",
+            "description" : "Is the person without a permanent residence",
+            "example" : false
           },
-          "flat" : {
+          "startDate" : {
             "type" : "string",
-            "description" : "The address flat detail",
-            "example" : 12
+            "format" : "date",
+            "description" : "The address start date",
+            "example" : "2020-02-26"
           },
-          "premise" : {
+          "endDate" : {
             "type" : "string",
-            "description" : "The address premise",
-            "example" : "Brighton Courts"
-          },
-          "street" : {
-            "type" : "string",
-            "description" : "The address street",
-            "example" : "Petty France"
-          },
-          "locality" : {
-            "type" : "string",
-            "description" : "The address locality",
-            "example" : "Westminster"
-          },
-          "townCode" : {
-            "type" : "string",
-            "description" : "The address town code",
-            "example" : "LDN"
+            "description" : "The address end date",
+            "example" : "2023-07-15"
           },
           "postcode" : {
             "type" : "string",
             "description" : "The address postcode",
-            "example" : "LD1 1DN"
+            "example" : "SW1H 9AJ"
           },
-          "countyCode" : {
+          "subBuildingName" : {
             "type" : "string",
-            "description" : "The address county code",
-            "example" : "WY"
+            "description" : "The address sub building name",
+            "example" : "Sub building 2"
+          },
+          "buildingName" : {
+            "type" : "string",
+            "description" : "The address building name",
+            "example" : "Main Building"
+          },
+          "buildingNumber" : {
+            "type" : "string",
+            "description" : "The address building number",
+            "example" : 102
+          },
+          "thoroughfareName" : {
+            "type" : "string",
+            "description" : "The address thoroughfare name",
+            "example" : "Petty France"
+          },
+          "dependentLocality" : {
+            "type" : "string",
+            "description" : "The address dependent locality",
+            "example" : "Westminster"
+          },
+          "postTown" : {
+            "type" : "string",
+            "description" : "The address building number",
+            "example" : "London"
+          },
+          "county" : {
+            "type" : "string",
+            "description" : "The address building number",
+            "example" : "Greater London"
           },
           "countryCode" : {
             "type" : "string",
             "description" : "The address country code",
             "example" : "UK"
           },
-          "noFixedAddress" : {
-            "type" : "boolean",
-            "description" : "The address no fixed abode"
-          },
-          "startDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The address start date",
-            "example" : "1980-01-01"
-          },
-          "endDate" : {
-            "type" : "string",
-            "description" : "The address end date",
-            "example" : "1990-01-01"
-          },
           "comment" : {
             "type" : "string",
-            "description" : "The address comment"
+            "description" : "The address comment",
+            "example" : "String"
           },
           "isPrimary" : {
             "type" : "boolean",
-            "description" : "Is this the primary address"
+            "description" : "Is this the primary address",
+            "example" : true
           },
           "isMail" : {
             "type" : "boolean",
-            "description" : "Is this the mail address"
+            "description" : "Is this the mail address",
+            "example" : true
+          },
+          "addressUsage" : {
+            "type" : "array",
+            "description" : "List of address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressUsage"
+            }
+          }
+        }
+      },
+      "AddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "addressUsageCode" : {
+            "type" : "string",
+            "description" : "The address usage code",
+            "enum" : [ "CARE", "CURFEW", "DAP", "DBA", "DBH", "DNF", "DOH", "DPH", "DSH", "DST", "DUT", "HDC", "HDC2", "HOME", "HOSP", "HOST", "OTHER", "RECEP", "RELEASE", "RES", "ROTL" ],
+            "example" : "DSH"
           },
           "isActive" : {
             "type" : "boolean",
-            "description" : "Is this an active address"
+            "description" : "Is the address active",
+            "example" : true
           }
-        },
-        "required" : [ "isActive", "isMail", "isPrimary", "type" ]
+        }
       },
       "Alias" : {
         "type" : "object",
         "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "The alias ID",
-            "example" : "234026a3-5559-785b-c218-3bbaa283c944"
-          },
           "titleCode" : {
             "type" : "string",
             "description" : "The alias title code",
@@ -665,12 +681,6 @@
             "description" : "The alias last name",
             "example" : "Smythe"
           },
-          "type" : {
-            "type" : "string",
-            "description" : "The alias type",
-            "enum" : [ "A", "CN", "MAID", "NICK" ],
-            "example" : "NICK"
-          },
           "dateOfBirth" : {
             "type" : "string",
             "format" : "date",
@@ -679,27 +689,42 @@
           },
           "sexCode" : {
             "type" : "string",
-            "description" : "The alias sex code"
+            "description" : "The alias sex code",
+            "example" : "M"
           }
         }
       },
-      "ContactInfo" : {
+      "Contact" : {
         "type" : "object",
         "properties" : {
-          "phoneNumbers" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Phone"
-            }
+          "value" : {
+            "type" : "string",
+            "description" : "The contact value",
+            "example" : "01234567890"
           },
-          "emails" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Email"
-            }
+          "type" : {
+            "type" : "string",
+            "description" : "The contact type",
+            "enum" : [ "HOME", "MOBILE", "EMAIL" ],
+            "example" : "HOME"
+          },
+          "extension" : {
+            "type" : "string",
+            "description" : "The contact extension",
+            "example" : 235
+          },
+          "isPersonContact" : {
+            "type" : "boolean",
+            "description" : "Is the contact for a person",
+            "example" : false
+          },
+          "isAddressContact" : {
+            "type" : "boolean",
+            "description" : "Is the contact for an address",
+            "example" : true
           }
         },
-        "required" : [ "emails", "phoneNumbers" ]
+        "required" : [ "isAddressContact", "isPersonContact" ]
       },
       "DemographicAttributes" : {
         "type" : "object",
@@ -722,26 +747,43 @@
           },
           "ethnicityCode" : {
             "type" : "string",
-            "description" : "The person's ethnicity code"
+            "description" : "The person's ethnicity code",
+            "example" : "W1"
           },
           "sexCode" : {
             "type" : "string",
-            "description" : "The person's sex code"
-          }
-        }
-      },
-      "Email" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "The email ID",
-            "example" : "9be2496d-b253-4b1f-ab65-786d58acc629"
+            "description" : "The person's sex code",
+            "example" : "M"
           },
-          "value" : {
+          "sexualOrientation" : {
             "type" : "string",
-            "description" : "The email value",
-            "example" : "email@email.com"
+            "description" : "The person's sexual orientation code",
+            "example" : "HET"
+          },
+          "disability" : {
+            "type" : "boolean",
+            "description" : "Does the person have a disability",
+            "example" : false
+          },
+          "interestToImmigration" : {
+            "type" : "boolean",
+            "description" : "Is the person of interest to immigration",
+            "example" : false
+          },
+          "religionCode" : {
+            "type" : "string",
+            "description" : "The person's religion code",
+            "example" : "MOS"
+          },
+          "nationalityCode" : {
+            "type" : "string",
+            "description" : "The person's nationality code",
+            "example" : "GB"
+          },
+          "nationalityNote" : {
+            "type" : "string",
+            "description" : "The person's nationality notes",
+            "example" : "Possibly Finnish"
           }
         }
       },
@@ -756,11 +798,10 @@
           },
           "value" : {
             "type" : "string",
-            "description" : "The identifier example",
+            "description" : "The identifier value",
             "example" : "2000/1234567A"
           }
-        },
-        "required" : [ "type" ]
+        }
       },
       "Name" : {
         "type" : "object",
@@ -787,91 +828,54 @@
           }
         }
       },
-      "Phone" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "The phone ID",
-            "example" : "6be22c55-7572-4031-b5b0-2546bea6f6a1"
-          },
-          "value" : {
-            "type" : "string",
-            "description" : "The phone value",
-            "example" : "01234567890"
-          },
-          "type" : {
-            "type" : "string",
-            "description" : "The phone type",
-            "enum" : [ "BUS", "FAX", "HOME", "MOB", "ALTH" ],
-            "example" : "MOB"
-          },
-          "extension" : {
-            "type" : "string",
-            "description" : "The phone extension",
-            "example" : "+44"
-          }
-        },
-        "required" : [ "type" ]
-      },
       "Prisoner" : {
         "type" : "object",
         "properties" : {
           "name" : {
-            "$ref" : "#/components/schemas/Name"
+            "$ref" : "#/components/schemas/Name",
+            "description" : "The names of the person"
           },
           "demographicAttributes" : {
-            "$ref" : "#/components/schemas/DemographicAttributes"
-          },
-          "addresses" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Address"
-            }
-          },
-          "religions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Religion"
-            }
-          },
-          "contactInfo" : {
-            "$ref" : "#/components/schemas/ContactInfo"
+            "$ref" : "#/components/schemas/DemographicAttributes",
+            "description" : "The demographic attributes of the person"
           },
           "aliases" : {
             "type" : "array",
+            "description" : "The aliases of the person",
             "items" : {
               "$ref" : "#/components/schemas/Alias"
             }
           },
+          "addresses" : {
+            "type" : "array",
+            "description" : "The addresses of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/Address"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "The contacts of the person",
+            "items" : {
+              "$ref" : "#/components/schemas/Contact"
+            }
+          },
           "identifiers" : {
             "type" : "array",
+            "description" : "The identifiers of the person",
             "items" : {
               "$ref" : "#/components/schemas/Identifier"
             }
           },
           "sentences" : {
             "type" : "array",
+            "description" : "The sentence dates of the person",
             "items" : {
               "$ref" : "#/components/schemas/Sentence"
             }
           }
         },
-        "required" : [ "addresses", "aliases", "contactInfo", "demographicAttributes", "identifiers", "name", "religions", "sentences" ]
-      },
-      "Religion" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "description" : "The religion ID",
-            "example" : "7b0c9e8a-bca7-4bd1-890c-2f42e69d3bcf"
-          },
-          "religionCode" : {
-            "type" : "string",
-            "description" : "The religion code"
-          }
-        }
+        "required" : [ "addresses", "aliases", "contacts", "demographicAttributes", "identifiers", "name", "sentences" ]
       },
       "Sentence" : {
         "type" : "object",
