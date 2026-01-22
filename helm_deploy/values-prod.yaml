@@ -169,6 +169,9 @@ generic-service:
       type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
       schedule: "10 2 * * SUN,MON,TUE,WED,THU"
       suspend: true
+    - name: tap-all-prisoners-recon
+      type: TAP_ALL_PRISONERS_RECON
+      schedule: "00 1 * * *"
 
 generic-prometheus-alerts:
   sqsNumberAlertQueueMappings:
