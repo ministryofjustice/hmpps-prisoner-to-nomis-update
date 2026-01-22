@@ -43,11 +43,11 @@ class ContactPersonProfileDetailsSyncService(
 
   suspend fun syncNumberOfChildren(event: ContactNumberOfChildrenCreatedEvent) {
     val prisonerNumber = event.prisonerNumber()
-    val numberOfChildrenId = event.additionalInformation.numberOfChildrenId
+    val prisonerNumberOfChildrenId = event.additionalInformation.prisonerNumberOfChildrenId
     if (event.additionalInformation.source == "DPS") {
-      syncProfileDetail(prisonerNumber, numberOfChildrenId, CHILD)
+      syncProfileDetail(prisonerNumber, prisonerNumberOfChildrenId, CHILD)
     } else {
-      ignoreTelemetry(prisonerNumber, numberOfChildrenId, CHILD)
+      ignoreTelemetry(prisonerNumber, prisonerNumberOfChildrenId, CHILD)
     }
   }
 
@@ -63,11 +63,11 @@ class ContactPersonProfileDetailsSyncService(
 
   suspend fun deleteNumberOfChildren(event: ContactNumberOfChildrenDeletedEvent) {
     val prisonerNumber = event.prisonerNumber()
-    val numberOfChildrenId = event.additionalInformation.numberOfChildrenId
+    val prisonerNumberOfChildrenId = event.additionalInformation.prisonerNumberOfChildrenId
     if (event.additionalInformation.source == "DPS") {
-      syncProfileDetail(prisonerNumber, numberOfChildrenId, CHILD, deleted = true)
+      syncProfileDetail(prisonerNumber, prisonerNumberOfChildrenId, CHILD, deleted = true)
     } else {
-      ignoreTelemetry(prisonerNumber, numberOfChildrenId, CHILD)
+      ignoreTelemetry(prisonerNumber, prisonerNumberOfChildrenId, CHILD)
     }
   }
 

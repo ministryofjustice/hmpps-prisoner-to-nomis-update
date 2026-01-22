@@ -323,7 +323,7 @@ data class ContactNumberOfChildrenCreatedEvent(
   ContactIdReferencedEvent
 
 data class ContactNumberOfChildrenData(
-  val numberOfChildrenId: Long,
+  val prisonerNumberOfChildrenId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 
