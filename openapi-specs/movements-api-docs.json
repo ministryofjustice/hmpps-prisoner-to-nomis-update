@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-21"
+    "version" : "2026-01-22"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -868,33 +868,6 @@
         }
       }
     },
-    "/prisons/{prisonIdentifier}/absence-categorisations" : {
-      "get" : {
-        "tags" : [ "prison-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
-        "operationId" : "getPrisonAbsenceCategorisationDomain",
-        "parameters" : [ {
-          "name" : "prisonIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonAbsenceCategorisations"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/absence-categorisation/{domain}" : {
       "get" : {
         "tags" : [ "absence-categorisation-controller" ],
@@ -953,6 +926,25 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/AbsenceCategorisations"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/absence-categorisation/filters" : {
+      "get" : {
+        "tags" : [ "absence-categorisation-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getAbsenceCategorisationFilters",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AbsenceCategorisationFilters"
                 }
               }
             }
@@ -2904,36 +2896,6 @@
         },
         "required" : [ "approvalsRequired", "leavingToday", "returningToday" ]
       },
-      "PrisonAbsenceCategorisations" : {
-        "type" : "object",
-        "properties" : {
-          "types" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CodedDescription"
-            }
-          },
-          "subTypes" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CodedDescription"
-            }
-          },
-          "reasonCategories" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CodedDescription"
-            }
-          },
-          "reasons" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/CodedDescription"
-            }
-          }
-        },
-        "required" : [ "reasonCategories", "reasons", "subTypes", "types" ]
-      },
       "AbsenceCategorisation" : {
         "type" : "object",
         "properties" : {
@@ -2967,6 +2929,52 @@
           }
         },
         "required" : [ "domain", "items" ]
+      },
+      "AbsenceCategorisationFilters" : {
+        "type" : "object",
+        "properties" : {
+          "types" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Option"
+            }
+          },
+          "subTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Option"
+            }
+          },
+          "reasons" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Option"
+            }
+          },
+          "workTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Option"
+            }
+          }
+        },
+        "required" : [ "reasons", "subTypes", "types", "workTypes" ]
+      },
+      "Option" : {
+        "type" : "object",
+        "properties" : {
+          "domainCode" : {
+            "type" : "string",
+            "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
+          },
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "description", "domainCode" ]
       }
     },
     "securitySchemes" : {
