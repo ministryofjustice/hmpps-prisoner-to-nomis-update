@@ -503,8 +503,92 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   inner class Merge {
+    private fun mappingNA(nonAssociationId: Long, first: String, second: String, sequence: Int) = """{
+            "nonAssociationId": $nonAssociationId,
+            "firstOffenderNo": "$first",
+            "secondOffenderNo": "$second",
+            "nomisTypeSequence": $sequence,
+            "mappingType": "NON_ASSOCIATION_CREATED"
+          }"""
+    private fun dpsNA(nonAssociationId: Long, offender: String, other: String, effectiveDateTime: String) = """ {
+          "id": $nonAssociationId,
+          "offenderNo": "$offender",
+          "effectiveDate": "$effectiveDateTime",
+          "reasonCode": "VIC",
+          "reasonDescription": "Victim",
+          "typeCode": "WING",
+          "typeDescription": "Do Not Locate on Same Wing",
+          "comments": "comments",
+          "offenderNonAssociation": {
+            "offenderNo": "$other",
+            "reasonCode": "PER",
+            "reasonDescription": "Perpetrator"
+          }
+        }"""
+    private fun nomisNA(first: String, second: String, sequence: Int, effectiveDate: String) = """{
+          "offenderNo": "$first",
+          "nsOffenderNo": "$second",
+          "typeSequence": $sequence,
+          "effectiveDate": "$effectiveDate",
+          "reason": "VIC",
+          "recipReason": "PER",
+          "type": "LAND",
+          "updatedBy": "del_gen"
+        }"""
+
     @BeforeEach
     fun setUp() {
+      mappingServer.stubGetThirdParties(
+        OFFENDER_TO_REMOVE,
+        OFFENDER_TO_SURVIVE,
+        """
+        [
+          ${mappingNA(1001, OFFENDER_TO_REMOVE, "COMMON", 1)},
+          ${mappingNA(1002, "COMMON", OFFENDER_TO_SURVIVE, 1)},
+          ${mappingNA(1011, OFFENDER_TO_REMOVE, "COMMON2", 1)},
+          ${mappingNA(1012, "COMMON2", OFFENDER_TO_SURVIVE, 1)}
+        ]""",
+      )
+
+      nonAssociationsApiServer.stubGetNonAssociation(
+        1001,
+        dpsNA(1001, OFFENDER_TO_REMOVE, "COMMON", "2026-01-01T10:10:10"),
+      )
+      nonAssociationsApiServer.stubGetNonAssociation(
+        1002,
+        dpsNA(1002, "COMMON", OFFENDER_TO_SURVIVE, "2026-05-05T10:10:10"),
+      )
+      nonAssociationsApiServer.stubGetNonAssociation(
+        1011,
+        dpsNA(1011, OFFENDER_TO_REMOVE, "COMMON2", "2026-07-07T10:10:10"),
+      )
+      nonAssociationsApiServer.stubGetNonAssociation(
+        1012,
+        dpsNA(1012, "COMMON2", OFFENDER_TO_SURVIVE, "2026-09-09T10:10:10"),
+      )
+
+      nomisApi.stubGetNonAssociationsAll(
+        OFFENDER_TO_REMOVE,
+        "COMMON",
+        "[${nomisNA(OFFENDER_TO_REMOVE, "COMMON", 1, "2026-01-01")}]",
+      )
+      nomisApi.stubGetNonAssociationsAll(
+        "COMMON",
+        OFFENDER_TO_SURVIVE,
+        "[${nomisNA("COMMON", OFFENDER_TO_SURVIVE, 2, "2026-05-05")}]",
+      )
+      nomisApi.stubGetNonAssociationsAll(
+        OFFENDER_TO_REMOVE,
+        "COMMON2",
+        "[${nomisNA(OFFENDER_TO_REMOVE, "COMMON2", 1, "2026-09-09")}]",
+      )
+      nomisApi.stubGetNonAssociationsAll(
+        "COMMON2",
+        OFFENDER_TO_SURVIVE,
+        "[${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 2, "2026-07-07")}]",
+      )
+      mappingServer.stubSetSequence(1002, 2)
+      mappingServer.stubSetSequence(1011, 2)
       mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
       sendMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
     }
@@ -516,6 +600,12 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
           putRequestedFor(urlEqualTo("/mapping/non-associations/merge/from/$OFFENDER_TO_REMOVE/to/$OFFENDER_TO_SURVIVE")),
         )
       }
+      mappingServer.verify(
+        putRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/1002/sequence/2")),
+      )
+      mappingServer.verify(
+        putRequestedFor(urlEqualTo("/mapping/non-associations/non-association-id/1011/sequence/2")),
+      )
     }
 
     @Test
@@ -527,6 +617,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["removedNomsNumber"]).isEqualTo(OFFENDER_TO_REMOVE)
             assertThat(it["nomsNumber"]).isEqualTo(OFFENDER_TO_SURVIVE)
             assertThat(it["reason"]).isEqualTo("MERGE")
+            assertThat(it["COMMON"]).isEqualTo("1 reset nonAssociationId 1002 sequence from 1 to 2")
+            assertThat(it["COMMON2"]).isEqualTo("2 reset nonAssociationId 1011 sequence from 1 to 2")
           },
           isNull(),
         )
@@ -612,7 +704,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
+  fun nonAssociationMessagePayload(nonAssociationId: Long, eventType: String) = """
+    {"eventType":"$eventType", "additionalInformation": {"id":"$nonAssociationId"}, "version": "1.0", "description": "description", "occurredAt": "2023-09-01T17:09:56.199944267+01:00"}"""
 
   private fun sendMergeEvent(old: String, new: String) {
     awsSqsNonAssociationClient.sendMessage(
