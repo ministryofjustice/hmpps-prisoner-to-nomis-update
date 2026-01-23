@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-21.380.94290b6"
+    "version" : "2026-01-22.397.b952af5"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1276,7 +1276,7 @@
       "get" : {
         "tags" : [ "Audit" ],
         "summary" : "Get Audit History",
-        "description" : "Get a list of synced payloads, including Nomis' legacy IDs",
+        "description" : "Get a list of synced payloads, including NOMIS' legacy IDs",
         "operationId" : "getPayloadsByCaseloadAndDateRange",
         "parameters" : [ {
           "name" : "prisonId",
@@ -1354,6 +1354,88 @@
           },
           "403" : {
             "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__AUDIT__RO" ]
+        } ]
+      }
+    },
+    "/audit/history/{requestId}" : {
+      "get" : {
+        "tags" : [ "Audit" ],
+        "summary" : "Get Payloads Details",
+        "description" : "Get the full payload details (including the JSON body) for a specific request ID.",
+        "operationId" : "getPayloadByRequestId",
+        "parameters" : [ {
+          "name" : "requestId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the Payload matching the requestId provided.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NomisSyncPayloadDetail"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - No Payload found with requestId provided",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2478,15 +2560,15 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "unpaged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -2503,13 +2585,48 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
+      },
+      "NomisSyncPayloadDetail" : {
+        "type" : "object",
+        "properties" : {
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "caseloadId" : {
+            "type" : "string"
+          },
+          "requestTypeIdentifier" : {
+            "type" : "string"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "body" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "requestId", "synchronizedTransactionId", "timestamp" ]
       }
     },
     "securitySchemes" : {
