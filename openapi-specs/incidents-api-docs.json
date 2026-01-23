@@ -7,11 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "license" : {
-      "name" : "MIT",
-      "identifier" : "MIT"
-    },
-    "version" : "2026-01-19.473.6c370f1"
+    "version" : "2026-01-23.491.c9d85bc"
   },
   "servers" : [ {
     "url" : "/",
@@ -19,8 +15,6 @@
   } ],
   "security" : [ {
     "bearer-jwt" : [ "read", "write" ]
-  }, {
-    "hmpps-auth" : [ ]
   } ],
   "tags" : [ {
     "name" : "Constants",
@@ -37,6 +31,9 @@
   }, {
     "name" : "Migrate/Upsert NOMIS Incident Report",
     "description" : "Migrate or synchronise NOMIS incident report to Incident Report Service"
+  }, {
+    "name" : "hmpps-queue-resource-async",
+    "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
   } ],
   "paths" : {
     "/queue-admin/retry-dlq/{dlqName}" : {
@@ -700,7 +697,6 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Filter by given information source",
             "enum" : [ "DPS", "NOMIS" ],
             "example" : "DPS"
@@ -835,7 +831,6 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : null,
             "items" : {
               "type" : "string",
               "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
@@ -4138,7 +4133,6 @@
           "required" : false,
           "schema" : {
             "type" : "boolean",
-            "default" : false,
             "description" : "Include history"
           }
         } ],
@@ -4332,7 +4326,6 @@
           "required" : false,
           "schema" : {
             "type" : "boolean",
-            "default" : false,
             "description" : "Include history"
           }
         } ],
@@ -6970,7 +6963,6 @@
           },
           "userAction" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Action taken by the user on the report",
             "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
@@ -6983,7 +6975,6 @@
           },
           "userType" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Type of user that submitted this action on the report",
             "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
@@ -7137,14 +7128,12 @@
           },
           "originalReportReference" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Reference number of the original report of which this report is a duplicate of",
             "maxLength" : 25,
             "minLength" : 1
           },
           "userType" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Type of user that submitted this action on the report",
             "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
@@ -7198,7 +7187,6 @@
           "duplicatedReportId" : {
             "type" : "string",
             "format" : "uuid",
-            "default" : "null",
             "description" : "ID of the original report of which this report is a duplicate of"
           }
         },
@@ -7508,17 +7496,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
@@ -8268,28 +8256,11 @@
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "An HMPPS Auth access token.",
+        "name" : "Authorization",
+        "in" : "header",
         "scheme" : "bearer",
         "bearerFormat" : "JWT"
-      },
-      "hmpps-auth" : {
-        "type" : "oauth2",
-        "flows" : {
-          "clientCredentials" : {
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          },
-          "authorizationCode" : {
-            "authorizationUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/authorize",
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          }
-        }
       }
     }
   }

@@ -4,34 +4,32 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi.StatusGetBasicReports
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.SimplePageReportBasic
+import java.util.UUID
 
 @Service
 class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val webClient: WebClient) {
   companion object {
-    val openStatusValues = listOf("AWAITING_REVIEW", "NEEDS_UPDATING", "ON_HOLD", "UPDATED")
-    val closedStatusValues = listOf("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED")
+    val openStatusValues = listOf(StatusGetBasicReports.AWAITING_REVIEW, StatusGetBasicReports.NEEDS_UPDATING, StatusGetBasicReports.ON_HOLD, StatusGetBasicReports.UPDATED)
+    val closedStatusValues = listOf(StatusGetBasicReports.CLOSED, StatusGetBasicReports.DUPLICATE, StatusGetBasicReports.NOT_REPORTABLE, StatusGetBasicReports.REOPENED, StatusGetBasicReports.WAS_CLOSED)
   }
+  private val incidentsApi = IncidentReportsApi(webClient)
 
-  suspend fun getIncident(incidentId: String): ReportWithDetails = webClient.get()
-    .uri("/incident-reports/{incidentId}/with-details", incidentId)
+  suspend fun getIncident(incidentId: String): ReportWithDetails = incidentsApi
+    .prepare(incidentsApi.getReportWithDetailsByIdRequestConfig(UUID.fromString(incidentId)))
     .retrieve()
     .awaitBody()
 
-  suspend fun getIncidentsByAgencyAndStatus(agencyId: String, statusValues: List<String>): SimplePageReportBasic = webClient.get()
-    .uri {
-      it.path("/incident-reports")
-        .queryParam("location", agencyId)
-        .apply { statusValues.forEach { queryParam("status", it) } }
-        .queryParam("size", 1)
-        .build()
-    }
+  suspend fun getIncidentsByAgencyAndStatus(agencyId: String, statusValues: List<StatusGetBasicReports>): SimplePageReportBasic = incidentsApi
+    .prepare(incidentsApi.getBasicReportsRequestConfig(location = listOf(agencyId), status = statusValues, size = 1))
     .retrieve()
     .awaitBody()
 
-  suspend fun getIncidentDetailsByNomisId(nomisIncidentId: Long): ReportWithDetails = webClient.get()
-    .uri("/incident-reports/reference/{nomisIncidentId}/with-details", nomisIncidentId)
+  suspend fun getIncidentDetailsByNomisId(nomisIncidentId: Long): ReportWithDetails = incidentsApi
+    .prepare(incidentsApi.getReportWithDetailsByReferenceRequestConfig(nomisIncidentId.toString()))
     .retrieve()
     .awaitBody()
 
