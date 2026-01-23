@@ -12,9 +12,9 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.1"
   kotlin("plugin.spring") version "2.3.0"
-  id("org.openapi.generator") version "7.18.0"
+  id("org.openapi.generator") version "7.19.0"
 }
 
 configurations {
@@ -31,7 +31,7 @@ dependencies {
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.data:spring-data-commons")
   implementation("org.springframework.security:spring-security-access")
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.0")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.1")
   implementation("org.springframework.boot:spring-boot-jackson2")
 
   implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:6.0.0")
@@ -42,7 +42,7 @@ dependencies {
   // where <version> is the version of application insights pulled in by hmpps-gradle-spring-boot
   // at https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/gradle/configmanagers/AppInsightsConfigManager.kt#L7
   implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
-  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.56.0")
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.53.0")
   implementation("com.google.guava:guava:33.5.0-jre")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
