@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-20.356.ce1e751"
+    "version" : "2026-01-22.360.d46e810"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -564,6 +564,45 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "/mapping/non-associations/non-association-id/{nonAssociationId}/sequence/{newSequence}" : {
+      "put" : {
+        "tags" : [ "non-associations-mapping-resource" ],
+        "summary" : "Sets sequence of a non-association to a new value",
+        "description" : "This is used to avoid duplicate errors in merges where both the old and the new prisoner number have non-associations with a 3rd party. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "resetSequence",
+        "parameters" : [ {
+          "name" : "nonAssociationId",
+          "in" : "path",
+          "description" : "Non-association id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Non-association id",
+            "example" : 2345678
+          },
+          "example" : 2345678
+        }, {
+          "name" : "newSequence",
+          "in" : "path",
+          "description" : "Nomis type sequence to change it to",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Nomis type sequence to change it to",
+            "example" : 2
+          },
+          "example" : 2
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : { }
           }
         }
       }
@@ -8989,7 +9028,7 @@
                 "schema" : {
                   "type" : "array",
                   "items" : {
-                    "type" : "string"
+                    "$ref" : "#/components/schemas/NonAssociationMappingDto"
                   }
                 }
               }
