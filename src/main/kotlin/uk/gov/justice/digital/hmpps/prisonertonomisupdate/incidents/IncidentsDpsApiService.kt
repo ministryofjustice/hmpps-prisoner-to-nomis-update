@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
+import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import org.springframework.web.reactive.function.client.awaitBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi.StatusGetBasicReports
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
@@ -19,19 +19,16 @@ class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val web
   private val incidentsApi = IncidentReportsApi(webClient)
 
   suspend fun getIncident(incidentId: String): ReportWithDetails = incidentsApi
-    .prepare(incidentsApi.getReportWithDetailsByIdRequestConfig(UUID.fromString(incidentId)))
-    .retrieve()
-    .awaitBody()
+    .getReportWithDetailsById(UUID.fromString(incidentId))
+    .awaitSingle()
 
   suspend fun getIncidentsByAgencyAndStatus(agencyId: String, statusValues: List<StatusGetBasicReports>): SimplePageReportBasic = incidentsApi
-    .prepare(incidentsApi.getBasicReportsRequestConfig(location = listOf(agencyId), status = statusValues, size = 1))
-    .retrieve()
-    .awaitBody()
+    .getBasicReports(location = listOf(agencyId), status = statusValues, size = 1)
+    .awaitSingle()
 
   suspend fun getIncidentDetailsByNomisId(nomisIncidentId: Long): ReportWithDetails = incidentsApi
-    .prepare(incidentsApi.getReportWithDetailsByReferenceRequestConfig(nomisIncidentId.toString()))
-    .retrieve()
-    .awaitBody()
+    .getReportWithDetailsByReference(nomisIncidentId.toString())
+    .awaitSingle()
 
   suspend fun getOpenIncidentsCount(agencyId: String) = getIncidentsByAgencyAndStatus(agencyId, openStatusValues).totalElements
 
