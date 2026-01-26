@@ -215,6 +215,14 @@ hmpps.sqs:
         { "eventType":[
             "external-movements-api.temporary-absence-application.created"          
         ]}
+    officialvisits:
+      queueName: hmpps_prisoner_to_nomis_officialvisits_queue
+      dlqName: hmpps_prisoner_to_nomis_officialvisits_dlq
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "tbd"          
+        ]}
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:hmpps_domain_events

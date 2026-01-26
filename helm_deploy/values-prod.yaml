@@ -225,3 +225,6 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_dlq"
+    officialvisits:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_dlq"

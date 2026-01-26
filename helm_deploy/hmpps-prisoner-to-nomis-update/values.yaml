@@ -164,6 +164,10 @@ generic-service:
       HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-externalmovements-dlq:
       HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-officialvisits:
+      HMPPS_SQS_QUEUES_OFFICIALVISITS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-officialvisits-dlq:
+      HMPPS_SQS_QUEUES_OFFICIALVISITS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:
