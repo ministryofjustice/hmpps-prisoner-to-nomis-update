@@ -238,6 +238,8 @@ hmpps.sqs:
   queues:
     courtsentencing:
       errorVisibilityTimeout: 1, 1, 1, 10, 60
+    externalmovements:
+      errorVisibilityTimeout: 1, 1, 1, 10, 60, 600
     location:
       errorVisibilityTimeout: 1, 1, 1, 1, 5, 5, 10, 60, 600
     personalrelationships:
