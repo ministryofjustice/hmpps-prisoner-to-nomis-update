@@ -20,6 +20,7 @@ import org.mockito.Mockito.eq
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
@@ -157,7 +158,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
-              .withRequestBodyJsonPath("transportType", "VAN"),
+              .withRequestBodyJsonPath("transportType", "VAN")
+              // Address is only updated when the application update is triggered by synchronising the DPS occurrence
+              .withRequestBodyJsonPath("toAddress", absent()),
           )
         }
 
@@ -388,7 +391,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
-              .withRequestBodyJsonPath("transportType", "VAN"),
+              .withRequestBodyJsonPath("transportType", "VAN")
+              // Address is only updated when the application update is triggered by synchronising the DPS occurrence
+              .withRequestBodyJsonPath("toAddress", absent()),
           )
         }
       }
@@ -650,6 +655,15 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("dpsPostcode", "SW1A 1AA"),
           )
         }
+
+        @Test
+        fun `will NOT trigger an update of the parent authorisation`() {
+          verify(telemetryClient, never()).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            any(),
+            isNull(),
+          )
+        }
       }
 
       @Nested
@@ -701,6 +715,56 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("dpsUprn", "654")
               .withRequestBodyJsonPath("dpsDescription", absent())
               .withRequestBodyJsonPath("dpsPostcode", "SW1A 1AA"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok and the parent application needs synchronising too")
+      inner class HappyPathSynchroniseParentApplication {
+        private val dpsLocation = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA")
+        private val prisonerNumber = "A1234BC"
+
+        @BeforeEach
+        fun setUp() {
+          // stubs for the occurrence sync
+          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTemporaryAbsenceAddressMapping()
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
+          mappingApi.stubCreateScheduledMovementMapping()
+
+          // stubs for the authorisation sync
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          dpsApi.stubGetTapAuthorisation(dpsAuthorisationId, response = dpsApi.tapAuthorisation(id = dpsAuthorisationId))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          // publish an event that requires an authorisation sync
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", OCCURRENCE_EVENTS_UPDATE_AUTHORISATION.first())
+
+          // wait for the authorisation sync to complete
+          waitForAnyProcessingToComplete("temporary-absence-application-update-success")
+        }
+
+        @Test
+        fun `will upsert the schedule in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+        }
+
+        @Test
+        fun `will upsert the application in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+        }
+
+        @Test
+        fun `application telemetry will include source of update`() {
+          verify(telemetryClient).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            check {
+              assertThat(it).containsEntry("triggeredBy", "OCCURRENCE_CHANGED")
+            },
+            isNull(),
           )
         }
       }
@@ -996,6 +1060,56 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.verify(
             count = 0,
             putRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement")),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok and the parent application needs sycnhronising too")
+      inner class HappyPathSynchroniseParentApplication {
+        private val dpsLocation = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA")
+        private val prisonerNumber = "A1234BC"
+
+        @BeforeEach
+        fun setUp() {
+          // stubs for the occurrence sync
+          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTemporaryAbsenceAddressMapping()
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
+          mappingApi.stubCreateScheduledMovementMapping()
+
+          // stubs for the authorisation sync
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          dpsApi.stubGetTapAuthorisation(dpsAuthorisationId, response = dpsApi.tapAuthorisation(id = dpsAuthorisationId))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          // publish an event that requires an authorisation sync
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", OCCURRENCE_EVENTS_UPDATE_AUTHORISATION.first())
+
+          // wait for the authorisation sync to complete
+          waitForAnyProcessingToComplete("temporary-absence-application-update-success")
+        }
+
+        @Test
+        fun `will upsert the schedule in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+        }
+
+        @Test
+        fun `will upsert the application in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+        }
+
+        @Test
+        fun `application telemetry will include source of update`() {
+          verify(telemetryClient).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            check {
+              assertThat(it).containsEntry("triggeredBy", "OCCURRENCE_CHANGED")
+            },
+            isNull(),
           )
         }
       }
@@ -1609,8 +1723,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishTapOccurrenceDomainEvent(dpsOccurrenceId: UUID, prisonerNumber: String, source: String = "DPS") {
-    with("person.temporary-absence.scheduled") {
+  private fun publishTapOccurrenceDomainEvent(dpsOccurrenceId: UUID, prisonerNumber: String, source: String = "DPS", eventType: String = "person.temporary-absence.scheduled") {
+    with(eventType) {
       publishDomainEvent(
         eventType = this,
         payload = messagePayload(eventType = this, id = dpsOccurrenceId, prisonerNumber = prisonerNumber, source = source),
