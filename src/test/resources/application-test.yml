@@ -337,6 +337,16 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
+    officialvisits:
+      queueName: "officialvisits-${random.uuid}"
+      dlqName: "officialvisits-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+            "tbd"
+        ]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

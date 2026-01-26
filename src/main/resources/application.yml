@@ -243,6 +243,8 @@ hmpps.sqs:
     personalrelationships:
       eventErrorVisibilityTimeout:
         contacts-api.contact-address-phone.created: 3, 10, 60, 600
+    officialvisits:
+      errorVisibilityTimeout: 1, 1, 60, 600
 
   queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW
 api:
