@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-22.1178.3f2b0d1"
+    "version" : "2026-01-23.1189.c0abbc7"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4337,7 +4337,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                  "type" : "object"
                 }
               }
             }
@@ -4347,7 +4347,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                  "type" : "object"
                 }
               }
             }
@@ -4357,7 +4357,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                  "type" : "object"
                 }
               }
             }
@@ -4367,7 +4367,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                  "type" : "object"
                 }
               }
             }
@@ -5613,7 +5613,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5951,7 +5951,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "courtCode" : {
             "type" : "string"
@@ -8213,7 +8213,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "courtCode" : {
             "type" : "string"
@@ -8844,7 +8844,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8904,7 +8904,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "courtId" : {
             "type" : "string"
@@ -9044,7 +9044,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "charges" : {
             "type" : "array",
@@ -9071,7 +9071,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "courtId" : {
             "type" : "string"
@@ -9370,15 +9370,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "unpaged" : {
-            "type" : "boolean"
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "unpaged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -9675,7 +9675,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:41.741283938"
+            "example" : "06:23:39.896638214"
           },
           "courtCode" : {
             "type" : "string"
