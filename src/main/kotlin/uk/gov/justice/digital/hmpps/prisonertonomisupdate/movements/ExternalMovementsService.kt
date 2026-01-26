@@ -462,35 +462,39 @@ class ExternalMovementsService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?, toAddressId: Long? = null) = UpsertTemporaryAbsenceApplicationRequest(
-  movementApplicationId = nomisApplicationId,
-  eventSubType = absenceReasonCode,
-  fromDate = start,
-  applicationDate = created.at.toLocalDate(),
-  releaseTime = when (occurrences.size) {
+private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?, toAddressId: Long? = null): UpsertTemporaryAbsenceApplicationRequest {
+  val releaseTime = when (occurrences.size) {
     0 -> start.atStartOfDay()
     // If a schedule in NOMIS is deleted and re-created its start time is taken from the application releaseTime - so save it on the application
     1 -> occurrences.first().start
     else -> occurrences.minOf { it.start }.toLocalDate().atStartOfDay()
-  },
-  toDate = end,
-  returnTime = when (occurrences.size) {
+  }
+  val returnTime = when (occurrences.size) {
     0 -> end.plusDays(1).atStartOfDay()
     // If a schedule in NOMIS is deleted and re-created its end time is taken from the application returnTime - so save it on the application
     1 -> occurrences.first().end
     else -> occurrences.maxOf { it.end }.toLocalDate().plusDays(1).atStartOfDay()
-  },
-  applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
-  applicationType = if (repeat) "REPEATING" else "SINGLE",
-  escortCode = accompaniedByCode,
-  transportType = transportCode,
-  comment = comments,
-  prisonId = prisonCode,
-  temporaryAbsenceType = absenceTypeCode,
-  temporaryAbsenceSubType = absenceSubTypeCode,
-  // If we didn't receive an address to update, send null address telling nomis-api not to update it
-  toAddress = toAddressId?.let { UpsertTemporaryAbsenceAddress(id = toAddressId) },
-)
+  }
+  return UpsertTemporaryAbsenceApplicationRequest(
+    movementApplicationId = nomisApplicationId,
+    eventSubType = absenceReasonCode,
+    fromDate = releaseTime.toLocalDate(),
+    applicationDate = created.at.toLocalDate(),
+    releaseTime = releaseTime,
+    toDate = returnTime.toLocalDate(),
+    returnTime = returnTime,
+    applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
+    applicationType = if (repeat) "REPEATING" else "SINGLE",
+    escortCode = accompaniedByCode,
+    transportType = transportCode,
+    comment = comments,
+    prisonId = prisonCode,
+    temporaryAbsenceType = absenceTypeCode,
+    temporaryAbsenceSubType = absenceSubTypeCode,
+    // If we didn't receive an address to update, send null address telling nomis-api not to update it
+    toAddress = toAddressId?.let { UpsertTemporaryAbsenceAddress(id = toAddressId) },
+  )
+}
 
 private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
   "EXPIRED", "PENDING" -> "PEN"
