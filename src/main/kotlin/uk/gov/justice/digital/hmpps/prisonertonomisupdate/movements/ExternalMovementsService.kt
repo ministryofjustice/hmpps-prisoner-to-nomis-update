@@ -33,6 +33,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+val OCCURRENCE_EVENTS_UPDATE_AUTHORISATION: List<String> = listOf("person.temporary-absence.relocated", "person.temporary-absence.rescheduled")
+
 @Service
 class ExternalMovementsService(
   private val mappingApiService: ExternalMovementsMappingApiService,
@@ -62,13 +64,19 @@ class ExternalMovementsService(
   suspend fun authorisationChanged(event: TemporaryAbsenceEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsAuthorisationId = event.additionalInformation.id
+    val source = event.additionalInformation.source
+    authorisationChanged(prisonerNumber, dpsAuthorisationId, source)
+  }
+
+  private suspend fun authorisationChanged(prisonerNumber: String, dpsAuthorisationId: UUID, source: String, triggeredBy: String = "EVENT", toAddressId: Long? = null) {
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
       "dpsAuthorisationId" to dpsAuthorisationId.toString(),
+      "triggeredBy" to triggeredBy,
     )
     var updateType: String? = "create"
 
-    if (event.additionalInformation.source != "DPS") {
+    if (source != "DPS") {
       telemetryClient.trackEvent("${APPLICATION.entityName}-create-ignored", telemetryMap)
       return
     }
@@ -79,7 +87,7 @@ class ExternalMovementsService(
       val dps = dpsApiService.getTapAuthorisation(dpsAuthorisationId)
       val nomis = nomisApiService.upsertTemporaryAbsenceApplication(
         prisonerNumber,
-        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId),
+        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId, toAddressId),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisApplicationId"] = it.movementApplicationId.toString() }
@@ -156,6 +164,11 @@ class ExternalMovementsService(
         existingMapping == null -> createScheduledMovementMapping(prisonerNumber, nomis, dpsOccurrenceId, dps, telemetryMap)
         existingMapping.nomisAddressId != nomis.addressId -> updateScheduledMovementMapping(existingMapping, nomis, dps, telemetryMap)
         else -> telemetryClient.trackEvent("${updateType.entityName}-success", telemetryMap)
+      }
+
+      // Synchronise the authorisation if required
+      if (event.eventType in OCCURRENCE_EVENTS_UPDATE_AUTHORISATION) {
+        authorisationChanged(prisonerNumber, dps.authorisation.id, "DPS", "OCCURRENCE_CHANGED", nomis.addressId)
       }
     }
       .onFailure {
@@ -449,7 +462,7 @@ class ExternalMovementsService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?) = UpsertTemporaryAbsenceApplicationRequest(
+private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?, toAddressId: Long? = null) = UpsertTemporaryAbsenceApplicationRequest(
   movementApplicationId = nomisApplicationId,
   eventSubType = absenceReasonCode,
   fromDate = start,
@@ -475,6 +488,8 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
   prisonId = prisonCode,
   temporaryAbsenceType = absenceTypeCode,
   temporaryAbsenceSubType = absenceSubTypeCode,
+  // If we didn't receive an address to update, send null address telling nomis-api not to update it
+  toAddress = toAddressId?.let { UpsertTemporaryAbsenceAddress(id = toAddressId) },
 )
 
 private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
