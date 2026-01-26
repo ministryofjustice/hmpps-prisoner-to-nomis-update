@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-14.253.5bd994d"
+    "version" : "2026-01-23.260.59fcf5e"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1085,14 +1085,11 @@
       },
       "VisitorEquipment" : {
         "type" : "object",
-        "description" : "Represents details of any equipment the visitor will bring to the visit.",
         "properties" : {
           "description" : {
             "type" : "string",
             "description" : "A description of the equipment the visitor will bring",
-            "example" : "Laptop",
-            "maxLength" : 240,
-            "minLength" : 0
+            "example" : "Laptop"
           }
         },
         "required" : [ "description" ]
@@ -2569,6 +2566,15 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "The Official visitor offender visit visitor id"
+          },
+          "visitorEquipment" : {
+            "$ref" : "#/components/schemas/VisitorEquipment",
+            "description" : "Equipment the visitor may bring"
+          },
+          "assistanceNotes" : {
+            "type" : "string",
+            "description" : "Notes on whether the visitor requires any assistance",
+            "example" : "Wheelchair access required"
           }
         },
         "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "visitorTypeCode" ]
