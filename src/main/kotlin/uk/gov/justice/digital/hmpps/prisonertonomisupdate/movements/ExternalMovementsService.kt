@@ -33,7 +33,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
-val OCCURRENCE_EVENTS_UPDATE_AUTHORISATION: List<String> = listOf("person.temporary-absence.relocated", "person.temporary-absence.rescheduled")
+val OCCURRENCE_EVENTS_UPDATE_AUTHORISATION: List<String> = listOf("person.temporary-absence.scheduled", "person.temporary-absence.relocated", "person.temporary-absence.rescheduled")
 
 @Service
 class ExternalMovementsService(
