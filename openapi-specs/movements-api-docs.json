@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-22"
+    "version" : "2026-01-23"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -532,6 +532,62 @@
         "tags" : [ "tap-occurrence-controller" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RO\n* ROLE_EXTERNAL_MOVEMENTS__TEMPORARY_ABSENCE__RW",
         "operationId" : "getTapOccurrenceHistory",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AuditHistory"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temporary-absence-movements/{id}" : {
+      "get" : {
+        "tags" : [ "tap-movement-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getTapMovement",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapMovement"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/temporary-absence-movements/{id}/history" : {
+      "get" : {
+        "tags" : [ "tap-movement-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "getTapMovementHistory",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -2248,6 +2304,24 @@
         },
         "required" : [ "accompaniedBy", "id", "person", "repeat", "status" ]
       },
+      "Movement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          }
+        },
+        "required" : [ "direction", "id", "occurredAt" ]
+      },
       "TapOccurrence" : {
         "type" : "object",
         "properties" : {
@@ -2306,9 +2380,15 @@
           "totalOccurrences" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "movements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/Movement"
+            }
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "occurrencePosition", "start", "status", "totalOccurrences", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "start", "status", "totalOccurrences", "transport" ]
       },
       "Occurrence" : {
         "type" : "object",
@@ -2316,9 +2396,6 @@
           "id" : {
             "type" : "string",
             "format" : "uuid"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -2332,6 +2409,9 @@
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
           "start" : {
             "type" : "string",
             "format" : "date-time"
@@ -2339,6 +2419,33 @@
           "end" : {
             "type" : "string",
             "format" : "date-time"
+          }
+        },
+        "required" : [ "end", "id", "start", "status" ]
+      },
+      "TapMovement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "occurrence" : {
+            "$ref" : "#/components/schemas/Occurrence"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
           },
           "location" : {
             "$ref" : "#/components/schemas/Location"
@@ -2346,14 +2453,14 @@
           "accompaniedBy" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
-          "transport" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+          "accompaniedByComments" : {
+            "type" : "string"
           },
           "comments" : {
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "location", "start", "status", "transport" ]
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person" ]
       },
       "TapAuthorisation" : {
         "type" : "object",
@@ -2816,7 +2923,45 @@
         },
         "required" : [ "authorisations", "movements", "occurrences" ]
       },
-      "Movement" : {
+      "PersonTapDetail" : {
+        "type" : "object",
+        "properties" : {
+          "scheduledAbsences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationAuthorisation"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationMovement"
+            }
+          }
+        },
+        "required" : [ "scheduledAbsences", "unscheduledMovements" ]
+      },
+      "ReconciliationAuthorisation" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "statusCode" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
+          },
+          "occurrences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReconciliationOccurrence"
+            }
+          }
+        },
+        "required" : [ "id", "occurrences", "statusCode" ]
+      },
+      "ReconciliationMovement" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2830,23 +2975,25 @@
         },
         "required" : [ "direction", "id" ]
       },
-      "PersonTapDetail" : {
+      "ReconciliationOccurrence" : {
         "type" : "object",
         "properties" : {
-          "scheduledAbsences" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/Authorisation"
-            }
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
-          "unscheduledMovements" : {
+          "statusCode" : {
+            "type" : "string",
+            "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+          },
+          "movements" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Movement"
+              "$ref" : "#/components/schemas/ReconciliationMovement"
             }
           }
         },
-        "required" : [ "scheduledAbsences", "unscheduledMovements" ]
+        "required" : [ "id", "movements", "statusCode" ]
       },
       "Configuration" : {
         "type" : "object",

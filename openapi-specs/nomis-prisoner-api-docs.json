@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-19.934.8753807"
+    "version" : "2026-01-23.962.a18b785"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22989,6 +22989,10 @@
           "temporaryAbsenceSubType" : {
             "type" : "string",
             "description" : "Temporary absence sub type"
+          },
+          "toAddress" : {
+            "$ref" : "#/components/schemas/UpsertTemporaryAbsenceAddress",
+            "description" : "To address. If this is null, do not update the address. Otherwise use the addressId in the request."
           }
         },
         "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "prisonId", "releaseTime", "returnTime", "toDate" ]

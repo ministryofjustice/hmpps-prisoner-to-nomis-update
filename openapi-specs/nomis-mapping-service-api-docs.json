@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-22.360.d46e810"
+    "version" : "2026-01-23.369.05fb31e"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -8557,6 +8557,68 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "NOMIS visitor id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitorMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/official-visits/visitor/dps-id/{dpsVisitorId}" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Gets visitor mapping by DPS visitor id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getVisitorMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsVisitorId",
+          "in" : "path",
+          "description" : "DPS visitor id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS visitor id",
             "example" : 123
           },
           "example" : 123
@@ -17812,6 +17874,52 @@
         }
       }
     },
+    "/mapping/court-sentencing/cut-off-date/{cutoffDateTime}" : {
+      "delete" : {
+        "tags" : [ "court-sentencing-mapping-resource" ],
+        "summary" : "delete all mappings",
+        "description" : "Deletes all mappings created after the given date time. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAllMappingsAfterDate",
+        "parameters" : [ {
+          "name" : "cutoffDateTime",
+          "in" : "path",
+          "description" : "delete all mappings created after this time",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "delete all mappings created after this time",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/court-sentencing/court-charges/nomis-court-charge-id/{nomisCourtChargeId}" : {
       "delete" : {
         "tags" : [ "court-sentencing-mapping-resource" ],
@@ -21882,12 +21990,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
