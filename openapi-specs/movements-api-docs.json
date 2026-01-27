@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23"
+    "version" : "2026-01-26"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -1406,7 +1406,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "at", "by", "prisonCode" ]
+        "required" : [ "at", "by" ]
       },
       "SyncWriteTapMovement" : {
         "type" : "object",
@@ -1426,6 +1426,9 @@
           "direction" : {
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
+          },
+          "prisonCode" : {
+            "type" : "string"
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -1669,6 +1672,9 @@
           "direction" : {
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
+          },
+          "prisonCode" : {
+            "type" : "string"
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -2444,6 +2450,9 @@
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
           },
+          "prisonCode" : {
+            "type" : "string"
+          },
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
@@ -2460,7 +2469,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person" ]
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prisonCode" ]
       },
       "TapAuthorisation" : {
         "type" : "object",
@@ -2621,6 +2630,9 @@
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
           },
+          "prisonCode" : {
+            "type" : "string"
+          },
           "absenceReasonCode" : {
             "type" : "string"
           },
@@ -2643,7 +2655,7 @@
             "$ref" : "#/components/schemas/SyncAtAndBy"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "id", "location", "occurredAt", "personIdentifier" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "id", "location", "occurredAt", "personIdentifier", "prisonCode" ]
       },
       "SyncReadTapAuthorisation" : {
         "type" : "object",
@@ -2952,6 +2964,9 @@
             "type" : "string",
             "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
           },
+          "prisonCode" : {
+            "type" : "string"
+          },
           "occurrences" : {
             "type" : "array",
             "items" : {
@@ -2959,7 +2974,7 @@
             }
           }
         },
-        "required" : [ "id", "occurrences", "statusCode" ]
+        "required" : [ "id", "occurrences", "prisonCode", "statusCode" ]
       },
       "ReconciliationMovement" : {
         "type" : "object",
@@ -2971,9 +2986,12 @@
           "direction" : {
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
+          },
+          "directionPrisonCode" : {
+            "type" : "string"
           }
         },
-        "required" : [ "direction", "id" ]
+        "required" : [ "direction", "directionPrisonCode", "id" ]
       },
       "ReconciliationOccurrence" : {
         "type" : "object",
@@ -2986,6 +3004,9 @@
             "type" : "string",
             "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
           },
+          "prisonCode" : {
+            "type" : "string"
+          },
           "movements" : {
             "type" : "array",
             "items" : {
@@ -2993,7 +3014,7 @@
             }
           }
         },
-        "required" : [ "id", "movements", "statusCode" ]
+        "required" : [ "id", "movements", "prisonCode", "statusCode" ]
       },
       "Configuration" : {
         "type" : "object",

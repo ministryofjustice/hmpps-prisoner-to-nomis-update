@@ -142,7 +142,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     accompaniedByComments = "Unaccompanied movement notes",
     comments = "movement notes",
     personIdentifier = "A1234AA",
-    created = SyncAtAndByWithPrison(at = now, by = "USER1", prisonCode = "LEI"),
+    created = SyncAtAndByWithPrison(at = now, by = "USER1"),
+    prisonCode = "LEI",
   )
 
   fun personTapCounts() = PersonTapCounts(
