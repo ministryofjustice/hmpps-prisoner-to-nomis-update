@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23.491.c9d85bc"
+    "version" : "2026-01-27.500.d83b3d1"
   },
   "servers" : [ {
     "url" : "/",
@@ -666,7 +666,6 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Filter by given human-readable report reference",
             "example" : "11124143",
             "maxLength" : 25,
@@ -789,7 +788,6 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "default" : null,
             "description" : "Filter for incidents reported by username",
             "example" : "abc12a",
             "maxLength" : 2147483647,
@@ -803,7 +801,6 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "default" : null,
             "description" : "Filter for incidents involving staff identified by username",
             "example" : "abc12a",
             "maxLength" : 2147483647,
@@ -817,7 +814,6 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "default" : null,
             "description" : "Filter for incidents involving prisoners identified by prisoner number",
             "example" : "A1234AA",
             "maxLength" : 10,
