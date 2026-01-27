@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23.260.59fcf5e"
+    "version" : "2026-01-26.273.1a72751"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -26,6 +26,104 @@
     "bearer-jwt" : [ "read", "write" ]
   } ],
   "paths" : {
+    "/sync/time-slot/{prisonTimeSlotId}" : {
+      "get" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Returns the data for a prison time slot by ID",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to get the details for one prison time slot.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncGetTimeSlotById",
+        "parameters" : [ {
+          "name" : "prisonTimeSlotId",
+          "in" : "path",
+          "description" : "The internal ID for a prison time slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The prison time slot matching the ID provided in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prison time slot with this ID was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Updates a prison time slot with new or altered details",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to update a a prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncUpdateTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonTimeSlotId",
+          "in" : "path",
+          "description" : "The internal ID for the prison time slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncUpdateTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated a prison time slot",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison time slot ID was not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid data supplied in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/queue-admin/retry-dlq/{dlqName}" : {
       "put" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -94,6 +192,46 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/time-slot" : {
+      "post" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Creates a new prison time slot for official visits",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to create a new prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncCreateTimeSlot",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Successfully created a prison time slot for official visits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request was invalid or had missing fields",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -935,6 +1073,127 @@
   },
   "components" : {
     "schemas" : {
+      "DayType" : {
+        "type" : "string",
+        "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
+      },
+      "SyncUpdateTimeSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to update a prison time slot for official visits",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot will be active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time slot will no longer be considered active",
+            "example" : "2027-01-21"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime", "updatedBy", "updatedTime" ]
+      },
+      "SyncTimeSlot" : {
+        "type" : "object",
+        "description" : "Sync response for a prison time slot",
+        "properties" : {
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Time slot ID",
+            "example" : 18767
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot is active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time is no longer be considered active",
+            "example" : "2027-01-21"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who last updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was last updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "prisonTimeSlotId", "startTime" ]
+      },
       "RetryDlqResult" : {
         "type" : "object",
         "properties" : {
@@ -954,6 +1213,78 @@
           }
         },
         "required" : [ "messagesFoundCount" ]
+      },
+      "SyncCreateTimeSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to create a new prison time slot for official visits",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot will be active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time slot will no longer be considered active",
+            "example" : "2027-01-21"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
       },
       "CreateOfficialVisitRequest" : {
         "type" : "object",
@@ -1107,28 +1438,6 @@
           }
         },
         "required" : [ "officialVisitId" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : "string"
-          },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "status" ]
       },
       "OfficialVisitSummarySearchRequest" : {
         "type" : "object",
@@ -2575,6 +2884,14 @@
             "type" : "string",
             "description" : "Notes on whether the visitor requires any assistance",
             "example" : "Wheelchair access required"
+          },
+          "phoneNumber" : {
+            "type" : "string",
+            "description" : "The visitors phone number if present"
+          },
+          "emailAddress" : {
+            "type" : "string",
+            "description" : "The visitors email address if present"
           }
         },
         "required" : [ "assistedVisit", "createdBy", "createdTime", "leadVisitor", "visitorTypeCode" ]

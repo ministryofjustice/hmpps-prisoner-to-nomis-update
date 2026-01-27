@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23.369.05fb31e"
+    "version" : "2026-01-26.374.4e2589d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1603,6 +1603,60 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/visit-slots/time-slots" : {
+      "post" : {
+        "tags" : [ "visit-slots-resource" ],
+        "summary" : "Creates a visit time slots mapping",
+        "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createVisitTimeSlotMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VisitTimeSlotMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
                 }
               }
             }
@@ -18462,7 +18516,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           }
         },
-        "required" : [ "dpsTransactionId", "mappingType", "nomisBookingId", "nomisTransactionId", "offenderNo" ]
+        "required" : [ "dpsTransactionId", "mappingType", "nomisBookingId", "nomisTransactionId" ]
       },
       "ScheduledMovementSyncMappingDto" : {
         "type" : "object",
@@ -19574,6 +19628,37 @@
           }
         },
         "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
+      },
+      "VisitTimeSlotMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string"
+          },
+          "nomisPrisonId" : {
+            "type" : "string"
+          },
+          "nomisDayOfWeek" : {
+            "type" : "string"
+          },
+          "nomisSlotSequence" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisDayOfWeek", "nomisPrisonId", "nomisSlotSequence" ]
       },
       "VisitSlotMigrationMappingDto" : {
         "type" : "object",
@@ -21898,37 +21983,6 @@
           }
         },
         "required" : [ "dpsId", "mappingType", "nomisId" ]
-      },
-      "VisitTimeSlotMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string"
-          },
-          "nomisPrisonId" : {
-            "type" : "string"
-          },
-          "nomisDayOfWeek" : {
-            "type" : "string"
-          },
-          "nomisSlotSequence" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisDayOfWeek", "nomisPrisonId", "nomisSlotSequence" ]
       },
       "PageVisitTimeSlotMappingDto" : {
         "type" : "object",
