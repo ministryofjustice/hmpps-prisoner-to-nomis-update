@@ -36,15 +36,7 @@ class AppointmentsReconciliationService(
     // Ids that are in DPS only
     private val excludeDpsIds = (
       listOf<Long>(
-        // A repeating CHAP appointment at CWI deleted from nomis 10 Oct,
-        // and a repeating CHAP at BSI deleted from nomis 19 may
-        // last event date is 19 Dec so these exclusions can be removed after that
-        3991971, 3994037, 3994957, 3995802, 3997037, 3997213, 3998728, 3999944, 4003314, 4008202, 4015679, 4017433, 4018526, 4018536, 7898256, 7898257, 7898490, 7898599, 7898604, 7899533, 7899720, 7899727, 7899950, 7900288, 7900313, 7900807, 7900889, 7900921, 7900943, 7900977, 7901183, 7901281,
-      ) + listOf<Long>(
         7901394, 7901700, 7901764, 7902088, 7902095, 7902325, 7902483, 7902525, 7902592, 7902608, 7902772, 7903118, 7903323, 7903462, 7903660, 7903908, 7904195, 7904209, 7904257, 7904528, 7904557, 7904561, 7904564, 7904576, 7905016, 7905092, 7905176, 7905185, 7905866, 7905930, 7910332, 7910359, 7910431, 7910440, 9118422, 9120100, 9121264, 9122895, 9122946, 9123734,
-      ) + listOf<Long>(
-        // CWI CHAP 21-28 Dec
-        7910442, 7899954, 7898878, 7899092, 7897750, 7901367, 7905276, 7904347, 7903671, 7910442, 7905935, 7905479, 7905777, 7910443,
       ) + listOf<Long>(
         // CWI CHAP 31 Dec - 28 Jan
         7911068, 7906220, 7906234, 7910446, 7904390, 7900132, 7898266, 7904571, 7906221, 7905304, 7901850, 7904382, 7904207, 7901773, 7901539, 7899852, 7899834, 7905110, 7903421, 7903536, 7905922, 7900505, 7905334, 7903829, 7900011, 7904669, 7900888, 7903559, 7901855, 7903672, 7901236, 7903202, 7900053, 7900678, 7903774, 7902509, 7904287, 7902090, 7898045, 7905325, 7905085, 7899717, 7905508, 7898267, 7900374, 7903991, 7903461, 7901868, 7905023, 7901317, 7903285, 7901504, 7903913, 7904212, 7902900, 7905551, 7904808, 7906146, 7900838, 7905130, 7900208, 7903902, 7904490, 7900580, 7903490, 7901389, 7901150, 7904604, 7899683,
@@ -118,6 +110,8 @@ class AppointmentsReconciliationService(
                 ?: run {
                   val nomisDetails = nomisApiService.getAppointment(nomisId)
 
+                  checkForNomisDuplicateAndDelete(nomisDetails)
+
                   log.info("No mapping found for appointment $nomisId, prisoner ${nomisDetails.offenderNo}")
                   telemetryClient.trackEvent(
                     "appointments-reports-reconciliation-mismatch-missing-mapping",
@@ -140,6 +134,30 @@ class AppointmentsReconciliationService(
       }.awaitAll().filterNotNull()
     }
     return results + checkForMissingDpsRecords(allDpsIdsInNomisPrison, prisonId, startDate, endDate, nomisTotal - nomisExcludedCount)
+  }
+
+  internal suspend fun checkForNomisDuplicateAndDelete(nomisDetails: AppointmentResponse) {
+    if (nomisDetails.internalLocation == null || nomisDetails.startDateTime == null) {
+      return
+    }
+    val possibleDuplicates: List<AppointmentResponse> = nomisApiService
+      .getAppointmentsByFilter(nomisDetails.bookingId, nomisDetails.internalLocation, nomisDetails.startDateTime)
+
+    if (possibleDuplicates.size == 2) {
+      val d1 = possibleDuplicates.first()
+      val d2 = possibleDuplicates.last()
+      if (d1.subtype == d2.subtype) {
+        nomisApiService.deleteAppointment(nomisDetails.eventId)
+        telemetryClient.trackEvent(
+          "appointments-reports-reconciliation-mismatch-deleted",
+          mapOf(
+            "nomisId" to nomisDetails.eventId.toString(),
+            "offenderNo" to nomisDetails.offenderNo,
+            "duplicate-of" to (if (d1.eventId == nomisDetails.eventId) d2.eventId else d1.eventId),
+          ),
+        )
+      }
+    }
   }
 
   internal suspend fun getNomisAppointmentsForPage(prisonId: String, startDate: LocalDate, endDate: LocalDate, page: Pair<Int, Int>) = runCatching {

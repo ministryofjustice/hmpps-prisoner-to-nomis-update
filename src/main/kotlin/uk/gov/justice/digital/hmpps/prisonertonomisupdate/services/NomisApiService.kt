@@ -215,6 +215,32 @@ class NomisApiService(
     .retrieve()
     .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
 
+  suspend fun getAppointmentsByFilter(
+    bookingId: Long,
+    internalLocationId: Long,
+    startDateTime: LocalDateTime,
+  ): List<AppointmentResponse> = webClient
+    .get()
+    .uri(
+      "/appointments/booking/{bookingId}/location/{locationId}/start/{dateTime}",
+      bookingId,
+      internalLocationId,
+      startDateTime,
+    )
+    .retrieve()
+    .awaitBodyWithRetry(
+      backoffSpec.withRetryContext(
+        Context.of(
+          "api",
+          "nomis-prisoner-api",
+          "path", "/appointments/{bookingId}/location/{locationId}/start/{dateTime}",
+          "bookingId", bookingId,
+          "locationId", internalLocationId,
+          "dateTime", startDateTime,
+        ),
+      ),
+    )
+
   // //////////////////// SENTENCES ////////////////////////
 
   suspend fun createSentenceAdjustment(
