@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -140,7 +141,8 @@ class IncidentsDpsApiServiceTest {
           getRequestedFor(urlPathEqualTo("/incident-reports"))
             .withQueryParam("location", equalTo("ASI"))
             .withQueryParam("status", havingExactly("AWAITING_REVIEW", "NEEDS_UPDATING", "ON_HOLD", "UPDATED"))
-            .withQueryParam("size", equalTo("1")),
+            .withQueryParam("size", equalTo("1"))
+            .withQueryParam("^(?!location$|status$|size$).+", absent()),
         )
       }
 
@@ -178,7 +180,8 @@ class IncidentsDpsApiServiceTest {
         getRequestedFor(urlPathEqualTo("/incident-reports"))
           .withQueryParam("location", equalTo("ASI"))
           .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED"))
-          .withQueryParam("size", equalTo("1")),
+          .withQueryParam("size", equalTo("1"))
+          .withQueryParam("^(?!location$|status$|size$).+", absent()),
       )
     }
 

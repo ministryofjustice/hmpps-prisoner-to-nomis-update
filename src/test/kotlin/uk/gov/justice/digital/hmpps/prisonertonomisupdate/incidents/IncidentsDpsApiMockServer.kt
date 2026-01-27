@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matching
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
@@ -80,7 +81,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetIncident(incident: ReportWithDetails = dpsIncident()) {
     stubFor(
-      get(urlMatching("/incident-reports/${incident.id}/with-details"))
+      get(urlEqualTo("/incident-reports/${incident.id}/with-details"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
