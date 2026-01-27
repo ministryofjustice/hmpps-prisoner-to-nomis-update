@@ -12,7 +12,7 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.1"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.2"
   kotlin("plugin.spring") version "2.3.0"
   id("org.openapi.generator") version "7.19.0"
 }
@@ -41,8 +41,8 @@ dependencies {
   // Needs to match this version https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
   // where <version> is the version of application insights pulled in by hmpps-gradle-spring-boot
   // at https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/gradle/configmanagers/AppInsightsConfigManager.kt#L7
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.19.0")
-  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.53.0")
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.55.0")
   implementation("com.google.guava:guava:33.5.0-jre")
 
   testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
