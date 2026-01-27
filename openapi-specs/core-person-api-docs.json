@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-21.2057.f2d1736"
+    "version" : "2026-01-26.2106.b902abe"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -640,7 +640,8 @@
               "$ref" : "#/components/schemas/AddressUsage"
             }
           }
-        }
+        },
+        "required" : [ "addressUsage" ]
       },
       "AddressUsage" : {
         "type" : "object",
@@ -656,7 +657,8 @@
             "description" : "Is the address active",
             "example" : true
           }
-        }
+        },
+        "required" : [ "addressUsageCode", "isActive" ]
       },
       "Alias" : {
         "type" : "object",
@@ -801,7 +803,8 @@
             "description" : "The identifier value",
             "example" : "2000/1234567A"
           }
-        }
+        },
+        "required" : [ "type", "value" ]
       },
       "Name" : {
         "type" : "object",
