@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23.1189.c0abbc7"
+    "version" : "2026-01-27.1202.79a2985"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -4375,6 +4375,65 @@
         }
       }
     },
+    "/immigration-detention/court-appearance/{courtAppearanceUuid}" : {
+      "get" : {
+        "tags" : [ "immigration-detention-controller" ],
+        "summary" : "Retrieve immigration record by court appearance uuid",
+        "description" : "This endpoint will retrieve the court appearance and map it to the immigration detention dto",
+        "operationId" : "getImmigrationDetentionByCourtAppearanceUuid",
+        "parameters" : [ {
+          "name" : "courtAppearanceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Return court appearance as immigration detention dto",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No active records found for this person",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ImmigrationDetention"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/court-case/{prisonerId}/recallable-court-cases" : {
       "get" : {
         "tags" : [ "court-case-controller" ],
@@ -5613,7 +5672,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5785,6 +5844,10 @@
           },
           "createdByPrison" : {
             "type" : "string"
+          },
+          "courtAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
         "required" : [ "appearanceOutcomeUuid", "createdByPrison", "createdByUsername", "immigrationDetentionRecordType", "prisonerId", "recordDate" ]
@@ -5951,7 +6014,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "courtCode" : {
             "type" : "string"
@@ -8213,7 +8276,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "courtCode" : {
             "type" : "string"
@@ -8844,7 +8907,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8904,7 +8967,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "courtId" : {
             "type" : "string"
@@ -9044,7 +9107,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "charges" : {
             "type" : "array",
@@ -9071,7 +9134,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "courtId" : {
             "type" : "string"
@@ -9083,6 +9146,10 @@
         "type" : "object",
         "properties" : {
           "immigrationDetentionUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtAppearanceUuid" : {
             "type" : "string",
             "format" : "uuid"
           },
@@ -9116,7 +9183,7 @@
             "enum" : [ "NOMIS", "DPS" ]
           }
         },
-        "required" : [ "createdAt", "immigrationDetentionRecordType", "immigrationDetentionUuid", "prisonerId", "recordDate", "source" ]
+        "required" : [ "courtAppearanceUuid", "createdAt", "immigrationDetentionRecordType", "immigrationDetentionUuid", "prisonerId", "recordDate", "source" ]
       },
       "RecallableCourtCase" : {
         "type" : "object",
@@ -9370,15 +9437,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "unpaged" : {
+            "type" : "boolean"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "unpaged" : {
-            "type" : "boolean"
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -9675,7 +9742,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:39.896638214"
+            "example" : "07:19:35.610063408"
           },
           "courtCode" : {
             "type" : "string"
