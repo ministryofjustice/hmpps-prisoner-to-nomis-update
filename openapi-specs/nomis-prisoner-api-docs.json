@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-23.962.a18b785"
+    "version" : "2026-01-26.967.de18e6b"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -20130,8 +20130,8 @@
       "get" : {
         "tags" : [ "appointments-resource" ],
         "summary" : "Get an appointment",
-        "description" : "Get an appointment given the booking id, internal location, date and start time. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getAppointment",
+        "description" : "Get appointments given the booking id, internal location, date and start time. Returns empty list if none found. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getAppointments",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -20171,41 +20171,14 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Appointment information with created id",
+            "description" : "OK",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/AppointmentResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Booking, location and timestamp combination does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/AppointmentResponse"
+                  }
                 }
               }
             }
@@ -29024,15 +28997,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -29046,14 +29019,14 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
@@ -29914,15 +29887,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -31229,15 +31202,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -31303,15 +31276,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -31367,15 +31340,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -32306,15 +32279,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -32489,15 +32462,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -33793,15 +33766,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34330,15 +34303,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34440,15 +34413,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -34706,15 +34679,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -35012,15 +34985,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -35669,6 +35642,11 @@
         "type" : "object",
         "description" : "Appointment information",
         "properties" : {
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id"
+          },
           "bookingId" : {
             "type" : "integer",
             "format" : "int64",
@@ -35728,7 +35706,7 @@
             "description" : "Record modified by"
           }
         },
-        "required" : [ "bookingId", "createdBy", "createdDate", "offenderNo", "status", "subtype" ]
+        "required" : [ "bookingId", "createdBy", "createdDate", "eventId", "offenderNo", "status", "subtype" ]
       },
       "AppointmentIdResponse" : {
         "type" : "object",
@@ -35773,15 +35751,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -36070,15 +36048,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -36154,15 +36132,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -36452,15 +36430,15 @@
           "last" : {
             "type" : "boolean"
           },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
