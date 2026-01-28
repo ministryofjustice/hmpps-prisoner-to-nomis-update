@@ -55,8 +55,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PersonReferen
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.QueueService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import java.util.UUID
 import kotlin.collections.plus
 
@@ -181,6 +183,8 @@ class CourtSentencingService(
             }
 
           val courtAppearance = courtSentencingApiService.getCourtAppearance(dpsCourtAppearanceId)
+          courtAppearance.nomisOutcomeCode.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
+          telemetryMap["nextAppearanceDate"] = courtAppearance.nextCourtAppearance?.appearanceDate.asStringOrBlank()
 
           val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
           courtAppearance.charges.forEach { charge ->
@@ -402,6 +406,8 @@ class CourtSentencingService(
               }
 
           val charge = courtSentencingApiService.getCourtCharge(chargeId)
+          charge.nomisOutcomeCode.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
+          telemetryMap["nomisOffenceCode"] = charge.offenceCode
 
           val nomisChargeResponseDto =
             nomisApiService.createCourtCharge(
@@ -555,6 +561,7 @@ class CourtSentencingService(
             log = log,
           )
         }
+        dpsCourtAppearance.nomisOutcomeCode.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
 
         telemetryClient.trackEvent(
           "court-appearance-updated-success",
@@ -1934,3 +1941,5 @@ private fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentence
     }
   } ?: emptyList()
 }
+
+fun LocalDate?.asStringOrBlank(): String = this?.format(DateTimeFormatter.ISO_DATE) ?: ""

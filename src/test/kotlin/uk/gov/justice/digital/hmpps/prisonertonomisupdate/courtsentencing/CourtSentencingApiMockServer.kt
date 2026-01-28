@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCaseUuids
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
@@ -217,6 +218,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     courtCharge4Id: String,
     offenderNo: String = "A6160DZ",
     appearanceType: String = APPEARANCE_TYPE_CRT,
+    nextCourtAppearance: LegacyNextCourtAppearance? = null,
   ) {
     val courtAppearance = LegacyCourtAppearance(
       lifetimeUuid = UUID.fromString(courtAppearanceId),
@@ -225,6 +227,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       courtCode = "DDOC",
       appearanceDate = LocalDate.parse("2024-09-23"),
       appearanceTime = "10:00",
+      nextCourtAppearance = nextCourtAppearance,
       charges = listOf(
         LegacyCharge(
           lifetimeUuid = UUID.fromString(courtCharge1Id),
