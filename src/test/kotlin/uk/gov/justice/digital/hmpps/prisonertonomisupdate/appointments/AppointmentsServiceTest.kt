@@ -167,6 +167,8 @@ class AppointmentsServiceTest {
     createdTime = LocalDateTime.parse("2021-03-14T10:15:00"),
     createdBy = "user1",
     customName = customName,
-    extraInformation = extraInformation,
+    extraInformation = "staff information",
+
+    prisonerExtraInformation = extraInformation,
   )
 }
