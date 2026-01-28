@@ -29,6 +29,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
@@ -476,6 +477,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           offenderNo = OFFENDER_NO,
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          nextCourtAppearance = LegacyNextCourtAppearance(
+            appearanceDate = LocalDate.parse("2027-10-15"),
+            courtId = "DRBYYC",
+          ),
           courtCharge1Id = DPS_COURT_CHARGE_ID,
           courtCharge2Id = DPS_COURT_CHARGE_2_ID,
           courtCharge3Id = DPS_COURT_CHARGE_3_ID,
@@ -536,6 +541,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["courtEventCharges"])
                 .isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
               assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+              assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+              assertThat(it["nextAppearanceDate"]).isEqualTo("2027-10-15")
             },
             isNull(),
           )
@@ -1124,6 +1131,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
             assertThat(it["deletedCourtChargeMappings"])
               .contains("[nomisCourtChargeId: 15, nomisCourtChargeId: 16]")
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
           },
           isNull(),
         )
@@ -1327,6 +1335,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+            assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
           },
           isNull(),
         )
