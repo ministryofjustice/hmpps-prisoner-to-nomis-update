@@ -207,16 +207,16 @@ class AppointmentsService(
 
   private fun constructComment(instance: AppointmentInstance): String? {
     val comment = if (instance.customName.isNullOrBlank()) {
-      if (instance.extraInformation.isNullOrBlank()) {
+      if (instance.prisonerExtraInformation.isNullOrBlank()) {
         null
       } else {
-        instance.extraInformation
+        instance.prisonerExtraInformation
       }
     } else {
-      if (instance.extraInformation.isNullOrBlank()) {
+      if (instance.prisonerExtraInformation.isNullOrBlank()) {
         instance.customName
       } else {
-        "${instance.customName} - ${instance.extraInformation}"
+        "${instance.customName} - ${instance.prisonerExtraInformation}"
       }
     }
     return comment?.take(4000)
