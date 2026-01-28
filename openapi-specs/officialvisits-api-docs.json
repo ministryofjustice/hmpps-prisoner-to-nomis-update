@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-26.273.1a72751"
+    "version" : "2026-01-27.282.6e8900c"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -26,6 +26,104 @@
     "bearer-jwt" : [ "read", "write" ]
   } ],
   "paths" : {
+    "/sync/visit-slot/{prisonVisitSlotId}" : {
+      "get" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Returns the data for a prison visit slot by ID",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to get the details for one prison visit slot.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncGetVisitSlotById",
+        "parameters" : [ {
+          "name" : "prisonVisitSlotId",
+          "in" : "path",
+          "description" : "The internal ID for a prison visit slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The prison visit slot matching the ID provided in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prison visit slot with this ID was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Updates a prison visit slot with new or altered details",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to update a a prison visit slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncUpdateVisitSlot",
+        "parameters" : [ {
+          "name" : "prisonVisitSlotId",
+          "in" : "path",
+          "description" : "The internal ID for the prison visit slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncUpdateVisitSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated a prison visit slot",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison visit slot ID was not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid data supplied in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/time-slot/{prisonTimeSlotId}" : {
       "get" : {
         "tags" : [ "Synchronisation" ],
@@ -192,6 +290,46 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/visit-slot" : {
+      "post" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Creates a new prison visit slot for official visits",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to create a new prison visit slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncCreateVisitSlot",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateVisitSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Successfully created a prison visit slot for official visits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request was invalid or had missing fields",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -1073,6 +1211,99 @@
   },
   "components" : {
     "schemas" : {
+      "SyncUpdateVisitSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to Update a new prison visit slot for official visits",
+        "properties" : {
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum adults allowed in the visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum groups allowed in the visit slot"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who Updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was Updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "dpsLocationId", "updatedBy", "updatedTime" ]
+      },
+      "SyncVisitSlot" : {
+        "type" : "object",
+        "description" : "Sync response for a prison visit slot",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison visit slot Id"
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison Code"
+          },
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison time slot Id"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum adults allowed in the visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum groups allowed in the visit slot"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who Updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was Updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "updatedBy", "visitSlotId" ]
+      },
       "DayType" : {
         "type" : "string",
         "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
@@ -1214,6 +1445,67 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "SyncCreateVisitSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to create a new prison visit slot for official visits",
+        "properties" : {
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison time slot Id"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum adults allowed in the visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum groups allowed in the visit slot"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonTimeSlotId" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
       "SyncCreateTimeSlotRequest" : {
         "type" : "object",
         "description" : "Request to create a new prison time slot for official visits",
@@ -1263,28 +1555,6 @@
           }
         },
         "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : "string"
-          },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "status" ]
       },
       "CreateOfficialVisitRequest" : {
         "type" : "object",

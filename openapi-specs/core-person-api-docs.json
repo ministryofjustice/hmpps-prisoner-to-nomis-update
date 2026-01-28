@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-26.2106.b902abe"
+    "version" : "2026-01-27.2115.fbd81ec"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -639,9 +639,16 @@
             "items" : {
               "$ref" : "#/components/schemas/AddressUsage"
             }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "List of address contacts",
+            "items" : {
+              "$ref" : "#/components/schemas/Contact"
+            }
           }
         },
-        "required" : [ "addressUsage" ]
+        "required" : [ "addressUsage", "contacts" ]
       },
       "AddressUsage" : {
         "type" : "object",
@@ -714,19 +721,9 @@
             "type" : "string",
             "description" : "The contact extension",
             "example" : 235
-          },
-          "isPersonContact" : {
-            "type" : "boolean",
-            "description" : "Is the contact for a person",
-            "example" : false
-          },
-          "isAddressContact" : {
-            "type" : "boolean",
-            "description" : "Is the contact for an address",
-            "example" : true
           }
         },
-        "required" : [ "isAddressContact", "isPersonContact" ]
+        "required" : [ "type" ]
       },
       "DemographicAttributes" : {
         "type" : "object",
