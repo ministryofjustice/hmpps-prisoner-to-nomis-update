@@ -131,6 +131,49 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      inner class WhenTCAAdjustment {
+        private val sentenceSequence = 1L
+        private val nomisAdjustmentId = 98765L
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubSentenceAdjustmentCreate(
+            bookingId = BOOKING_ID,
+            sentenceSequence = sentenceSequence,
+            adjustmentId = nomisAdjustmentId,
+          )
+
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            active = true,
+            adjustmentDays = 99,
+            adjustmentDate = "2022-01-01",
+            adjustmentType = "TCA",
+            adjustmentFromDate = "2020-07-19",
+            comment = "Adjusted for remand",
+            bookingId = BOOKING_ID,
+          )
+          publishCreateAdjustmentDomainEvent()
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              check {
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
       inner class WhenSentenceSequenceIsNotProvided {
         private val nomisAdjustmentId = 98765L
 
