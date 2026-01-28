@@ -18,7 +18,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonOccurrenceCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndByWithPrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
@@ -28,7 +27,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncRe
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.*
-import kotlin.collections.listOf
 
 class ExternalMovementsDpsApiExtension :
   BeforeAllCallback,
@@ -142,7 +140,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     accompaniedByComments = "Unaccompanied movement notes",
     comments = "movement notes",
     personIdentifier = "A1234AA",
-    created = SyncAtAndByWithPrison(at = now, by = "USER1"),
+    created = SyncAtAndBy(at = now, by = "USER1"),
     prisonCode = "LEI",
   )
 
