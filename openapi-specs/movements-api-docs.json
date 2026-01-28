@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-26"
+    "version" : "2026-01-27"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -1392,22 +1392,6 @@
         },
         "required" : [ "at", "by" ]
       },
-      "SyncAtAndByWithPrison" : {
-        "type" : "object",
-        "properties" : {
-          "at" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "by" : {
-            "type" : "string"
-          },
-          "prisonCode" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "at", "by" ]
-      },
       "SyncWriteTapMovement" : {
         "type" : "object",
         "properties" : {
@@ -1446,7 +1430,7 @@
             "type" : "string"
           },
           "created" : {
-            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
@@ -1455,7 +1439,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ]
       },
       "SyncResponse" : {
         "type" : "object",
@@ -1692,7 +1676,7 @@
             "type" : "string"
           },
           "created" : {
-            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
@@ -1701,7 +1685,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ]
       },
       "MigrateTapOccurrence" : {
         "type" : "object",
@@ -2324,9 +2308,12 @@
           "direction" : {
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
           }
         },
-        "required" : [ "direction", "id", "occurredAt" ]
+        "required" : [ "direction", "id", "location", "occurredAt" ]
       },
       "TapOccurrence" : {
         "type" : "object",
@@ -2649,7 +2636,7 @@
             "type" : "string"
           },
           "created" : {
-            "$ref" : "#/components/schemas/SyncAtAndByWithPrison"
+            "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
