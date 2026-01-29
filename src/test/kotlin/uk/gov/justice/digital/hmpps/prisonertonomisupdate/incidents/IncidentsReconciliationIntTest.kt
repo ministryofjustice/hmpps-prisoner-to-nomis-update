@@ -18,6 +18,8 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StatusHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import java.time.LocalDateTime
 import kotlin.jvm.java
@@ -113,6 +115,107 @@ class IncidentsReconciliationIntTest(
 
         incidentsReconciliationService.incidentsReconciliation()
 
+        awaitReportFinished()
+
+        verify(telemetryClient, times(0)).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+
+        verify(telemetryClient, times(0)).trackEvent(
+          eq("incidents-reports-reconciliation-detail-mismatch"),
+          any(),
+          isNull(),
+        )
+
+        verify(telemetryClient, times(0)).trackEvent(
+          eq("incidents-reports-reconciliation-detail-mismatch-error"),
+          any(),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("Draft Counts Happy Path")
+    inner class DraftCountsHappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        incidentsDpsApi.stubGetIncidentCounts() // dps count needs to be less
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("ASI", open = 4)
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("BFI")
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("WWI")
+
+        incidentsDpsApi.stubGetIncidentByNomisId(33, response = dpsIncident().copy(status = ReportWithDetails.Status.DRAFT,
+          historyOfStatuses =  listOf(
+            StatusHistory(
+              status = StatusHistory.Status.AWAITING_REVIEW,
+              changedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+              changedBy = "JSMITH",
+            ),
+          ),
+        ))
+        incidentsDpsApi.stubGetIncidents(34, 41)
+      }
+
+      @Test
+      fun `will successfully finish report with no errors`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-requested"),
+          check { assertThat(it).containsEntry("prisonCount", "3") },
+          isNull(),
+        )
+
+        awaitReportFinished()
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("mismatch-count", "0")
+            assertThat(it).containsEntry("success", "true")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will output report requested telemetry`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+        awaitReportFinished()
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-requested"),
+          check { assertThat(it).containsEntry("prisonCount", "3") },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call incidents api for open and closed counts for each agency`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+
+        awaitReportFinished()
+        await untilAsserted {
+          incidentsDpsApi.verifyGetIncidentCounts(6)
+        }
+      }
+
+      @Test
+      fun `will call incidents api for each open incident details - 3 per agency`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+
+        waitForAnyProcessingToComplete("incidents-reports-reconciliation-report")
+        await untilAsserted {
+          incidentsDpsApi.verifyGetIncidentDetail(9)
+        }
+      }
+
+      @Test
+      fun `will not invoke mismatch telemetry`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
         awaitReportFinished()
 
         verify(telemetryClient, times(0)).trackEvent(
