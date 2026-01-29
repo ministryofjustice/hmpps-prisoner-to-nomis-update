@@ -26,7 +26,7 @@ class IncidentsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsIncidentsApiService: IncidentsDpsApiService,
   private val nomisIncidentsApiService: IncidentsNomisApiService,
-  @Value("\${reports.incidents.reconciliation.page-size:20}")
+  @Value($$"${reports.incidents.reconciliation.page-size:20}")
   private val pageSize: Long = 20,
 ) {
   private companion object {
@@ -147,7 +147,7 @@ class IncidentsReconciliationService(
     }
   }
 
-  private suspend fun getOpenIncidentsForPage(agencyId: String, page: Pair<Long, Long>) = runCatching { nomisIncidentsApiService.getOpenIncidentIds(agencyId, page.first, page.second).content }
+  private suspend fun getOpenIncidentsForPage(agencyId: String, page: Pair<Long, Long>) = runCatching { nomisIncidentsApiService.getOpenIncidentIds(agencyId, page.first, page.second) }
     .onFailure {
       telemetryClient.trackEvent(
         "incidents-reports-reconciliation-mismatch-page-error",
