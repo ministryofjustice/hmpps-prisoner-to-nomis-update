@@ -39,7 +39,7 @@ class IncidentsService(
     val dpsId = event.dpsId
     val nomisId = event.nomisId
     val telemetryMap = telemetryOf(
-      "dpsIncidentId" to dpsId.toString(),
+      "dpsIncidentId" to dpsId,
       "nomisIncidentId" to nomisId,
     )
 
@@ -67,7 +67,7 @@ class IncidentsService(
     val dpsId = event.dpsId
     val nomisId = event.nomisId
     val telemetryMap = mutableMapOf(
-      "dpsIncidentId" to dpsId.toString(),
+      "dpsIncidentId" to dpsId,
       "nomisIncidentId" to nomisId,
     )
 
