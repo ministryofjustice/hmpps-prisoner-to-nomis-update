@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService.Companion.dpsOpenValues
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentAgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentResponse
@@ -21,6 +23,7 @@ import java.time.LocalDateTime
 import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.String
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiService.Companion.openStatusValues as dpsOpenStatusValues
 
 @Service
 class IncidentsReconciliationService(
@@ -30,8 +33,9 @@ class IncidentsReconciliationService(
   @Value($$"${reports.incidents.reconciliation.page-size:20}")
   private val pageSize: Long = 20,
 ) {
-  private companion object {
+  companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+    val dpsOpenValues = dpsOpenStatusValues.map { it.value }
   }
 
   suspend fun incidentsReconciliation() {
@@ -82,7 +86,8 @@ class IncidentsReconciliationService(
         "DPS->open:$dpsOpenIncidentsCount;closed:$dpsClosedIncidentsCount",
     )
 
-    val result = if (nomisOpenIncidentsCount != dpsOpenIncidentsCount || nomisClosedIncidentsCount != dpsClosedIncidentsCount) {
+    // Only check for open mismatch count when dpsCount is greater than NomisCount to allow comparison of Nomis OPEN incidents against Dps DRAFT incidents
+    val result = if (nomisOpenIncidentsCount < dpsOpenIncidentsCount || nomisClosedIncidentsCount != dpsClosedIncidentsCount) {
       MismatchIncidents(
         agencyId = agencyId,
         dpsOpenIncidents = dpsOpenIncidentsCount,
@@ -181,7 +186,7 @@ class IncidentsReconciliationService(
         nomisId = nomisOpenIncident.incidentId,
         dpsId = dpsOpenIncident.id,
         nomisIncident = nomisOpenIncident.toReportDetail(),
-        dpsIncident = dpsOpenIncident.toReportDetail(),
+        dpsIncident = dpsOpenIncident.toReportDetail(allowDraft = true),
         verdict = verdict,
       )
         .also { mismatch ->
@@ -212,7 +217,7 @@ class IncidentsReconciliationService(
     if (nomis.offenderParties.size != dps.prisonersInvolved.size) return "Offender parties mismatch"
     if (nomis.staffParties.size != dps.nomisOnlyStaff().size) return "Staff parties mismatch"
     if (nomis.type != dps.type.mapDps()) return "type mismatch"
-    if (nomis.status.code != dps.status.mapDps()) return "status mismatch"
+    if (!dps.isValidStatus(nomis)) return "status mismatch"
     if (nomis.reportedDateTime != dps.reportedAt.truncatedTo(ChronoUnit.SECONDS)) {
       return "reported date mismatch"
     }
@@ -255,6 +260,14 @@ class IncidentsReconciliationService(
     return both.filterNot { this.contains(it) && otherList.contains(it) }
   }
 }
+
+// Safe to assume this is an open Nomis incident
+fun ReportWithDetails.isValidStatus(nomis: IncidentResponse) : Boolean =
+  if (status == Status.DRAFT) {
+      historyOfStatuses.any { it.status.value in dpsOpenValues }
+  } else {
+    nomis.status.code == status.mapDps()
+  }
 
 fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
@@ -299,9 +312,9 @@ fun IncidentResponse.toReportDetail() = IncidentReportDetail(
   questions.flatMap { it.answers }.size,
 )
 
-fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
+fun ReportWithDetails.toReportDetail(allowDraft: Boolean = false) = IncidentReportDetail(
   type.mapDps(),
-  status.mapDps(),
+  if (allowDraft && status == Status.DRAFT) "DRAFT" else status.mapDps(),
   reportedBy,
   reportedAt.truncatedTo(ChronoUnit.SECONDS),
   prisonersInvolved.map { it.prisonerNumber },

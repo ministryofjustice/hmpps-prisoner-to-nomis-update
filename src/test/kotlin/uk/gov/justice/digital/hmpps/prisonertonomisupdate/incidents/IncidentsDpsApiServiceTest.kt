@@ -116,12 +116,15 @@ class IncidentsDpsApiServiceTest {
   @DisplayName("GET /incident-reports")
   inner class GetIncidentsByAgencyAndStatus {
 
+    @BeforeEach
+    internal fun setUp() {
+      incidentsDpsApi.stubGetIncidentCounts(5, 5)
+    }
+
     @Nested
     inner class OpenIncidents {
       @BeforeEach
       internal fun setUp() {
-        incidentsDpsApi.stubGetIncidentCounts(5, 5)
-
         runBlocking {
           apiService.getOpenIncidentsCount(agencyId = "ASI")
         }
@@ -153,42 +156,40 @@ class IncidentsDpsApiServiceTest {
         }
       }
     }
-  }
 
-  @Nested
-  inner class ClosedIncidents {
-    @BeforeEach
-    internal fun setUp() {
-      incidentsDpsApi.stubGetIncidentCounts(5, 5)
-
-      runBlocking {
-        apiService.getClosedIncidentsCount(agencyId = "ASI")
+    @Nested
+    inner class ClosedIncidents {
+      @BeforeEach
+      internal fun setUp() {
+        runBlocking {
+          apiService.getClosedIncidentsCount(agencyId = "ASI")
+        }
       }
-    }
 
-    @Test
-    fun `should call api with OAuth2 token`() {
-      incidentsDpsApi.verify(
-        getRequestedFor(urlPathEqualTo("/incident-reports"))
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
+      @Test
+      fun `should call api with OAuth2 token`() {
+        incidentsDpsApi.verify(
+          getRequestedFor(urlPathEqualTo("/incident-reports"))
+            .withHeader("Authorization", equalTo("Bearer ABCDE")),
+        )
+      }
 
-    @Test
-    fun `should pass location, size and status`() {
-      incidentsDpsApi.verify(
-        getRequestedFor(urlPathEqualTo("/incident-reports"))
-          .withQueryParam("location", equalTo("ASI"))
-          .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED"))
-          .withQueryParam("size", equalTo("1"))
-          .withQueryParam("^(?!location$|status$|size$).+", absent()),
-      )
-    }
+      @Test
+      fun `should pass location, size and status`() {
+        incidentsDpsApi.verify(
+          getRequestedFor(urlPathEqualTo("/incident-reports"))
+            .withQueryParam("location", equalTo("ASI"))
+            .withQueryParam("status", havingExactly("CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED"))
+            .withQueryParam("size", equalTo("1"))
+            .withQueryParam("^(?!location$|status$|size$).+", absent()),
+        )
+      }
 
-    @Test
-    fun `will retrieve paged incidents from the api`() {
-      runBlocking {
-        assertThat(apiService.getClosedIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
+      @Test
+      fun `will retrieve paged incidents from the api`() {
+        runBlocking {
+          assertThat(apiService.getClosedIncidentsCount(agencyId = "ASI")).isEqualTo(5L)
+        }
       }
     }
   }
