@@ -470,10 +470,10 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
     else -> occurrences.minOf { it.start }.toLocalDate().atStartOfDay()
   }
   val returnTime = when (occurrences.size) {
-    0 -> end.plusDays(1).atStartOfDay()
+    0 -> end.plusDays(1).atStartOfDay().minusMinutes(1)
     // If a schedule in NOMIS is deleted and re-created its end time is taken from the application returnTime - so save it on the application
     1 -> occurrences.first().end
-    else -> occurrences.maxOf { it.end }.toLocalDate().plusDays(1).atStartOfDay()
+    else -> occurrences.maxOf { it.end }.toLocalDate().plusDays(1).atStartOfDay().minusMinutes(1)
   }
   return UpsertTemporaryAbsenceApplicationRequest(
     movementApplicationId = nomisApplicationId,

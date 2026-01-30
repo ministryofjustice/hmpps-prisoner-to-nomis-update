@@ -153,7 +153,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", tomorrow.plusDays(1).toLocalDate())
+              .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
@@ -384,9 +384,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
+              .withRequestBodyJsonPath("toDate", today.toLocalDate())
               .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
-              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.toLocalDate().atStartOfDay().minusMinutes(1)))
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
@@ -440,7 +440,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
-              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.plusDays(2).toLocalDate().atStartOfDay())),
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.plusDays(2).toLocalDate().atStartOfDay().minusMinutes(1))),
           )
         }
       }
