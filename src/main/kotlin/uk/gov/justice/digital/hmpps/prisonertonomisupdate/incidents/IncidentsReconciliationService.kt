@@ -261,13 +261,11 @@ class IncidentsReconciliationService(
   }
 }
 
-// Safe to assume this is an open Nomis incident
-fun ReportWithDetails.isValidStatus(nomis: IncidentResponse) : Boolean =
-  if (status == Status.DRAFT) {
-      historyOfStatuses.any { it.status.value in dpsOpenValues }
-  } else {
-    nomis.status.code == status.mapDps()
-  }
+fun ReportWithDetails.isValidStatus(nomis: IncidentResponse): Boolean = if (status == Status.DRAFT) {
+  historyOfStatuses.any { it.status.value in dpsOpenValues }
+} else {
+  nomis.status.code == status.mapDps()
+}
 
 fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
