@@ -152,16 +152,17 @@ class NonAssociationsService(
 
         Eg we might be merging A1234AA to A1234AB, there could be 2 third party offenders COMMON1 and COMMON2 and the mapping
         table might contain:
-          COMMON1, A1234AA, sequence 1
-          A1234AB, COMMON1, sequence 1
-          COMMON2, A1234AA, sequence 1
-          A1234AB, COMMON2, sequence 1
+          101,COMMON1, A1234AA, sequence 1
+          102,A1234AB, COMMON1, sequence 1
+          103,COMMON2, A1234AA, sequence 1
+          104,A1234AB, COMMON2, sequence 1
 
-        In Nomis these will look something like
+        In Nomis (already merged) these may look something like
           COMMON1, A1234AB, sequence 1
           A1234AB, COMMON1, sequence 2
           COMMON2, A1234AB, sequence 1
-          A1234AB, COMMON2, sequence 2
+          COMMON2, A1234AB, sequence 2 (a different NA, closed)
+          A1234AB, COMMON2, sequence 3
 
         So we need to set the 2 correct mapping table entries to sequence 2.
          */
@@ -177,26 +178,22 @@ class NonAssociationsService(
           // Find from Nomis & DPS which one needs a change of sequence
           val dpsRecord1 = nonAssociationsApiService.getNonAssociation(mappingRecord1.nonAssociationId)
           val dpsRecord2 = nonAssociationsApiService.getNonAssociation(mappingRecord2.nonAssociationId)
-          val nomisRecordMatchingSeq = nomisApiService.getNonAssociationDetails(mappingRecord1.firstOffenderNo, mappingRecord1.secondOffenderNo).find { it.typeSequence == mappingRecord1.nomisTypeSequence }
-          val nomisRecordNotMatching = nomisApiService.getNonAssociationDetails(mappingRecord2.firstOffenderNo, mappingRecord2.secondOffenderNo).find { it.typeSequence != mappingRecord1.nomisTypeSequence }
-          // Which DPS record corresponds with which Nomis record?
-          if (dpsRecord1.effectiveDate.toLocalDate() == nomisRecordMatchingSeq?.effectiveDate &&
-            dpsRecord2.effectiveDate.toLocalDate() == nomisRecordNotMatching?.effectiveDate
-          ) {
-            mappingService.setSequence(mappingRecord2.nonAssociationId, nomisRecordNotMatching.typeSequence)
-            sequenceReport[entry.key] = "1 reset nonAssociationId ${mappingRecord2.nonAssociationId} sequence from ${mappingRecord2.nomisTypeSequence} to ${nomisRecordNotMatching.typeSequence}"
-          } else {
-            // assert there is a match the other way round:
-            if (!(
-                dpsRecord1.effectiveDate.toLocalDate() == nomisRecordNotMatching?.effectiveDate &&
-                  dpsRecord2.effectiveDate.toLocalDate() == nomisRecordMatchingSeq?.effectiveDate
-                )
-            ) {
-              throw IllegalStateException("Cannot match up DPS and Nomis NAs:\nentry = $entry\ndpsRecord1 = $dpsRecord1\ndpsRecord2 = $dpsRecord2\nnomisRecordMatchingSeq = $nomisRecordMatchingSeq\nnomisRecordNotMatching = $nomisRecordNotMatching")
-            }
-            mappingService.setSequence(mappingRecord1.nonAssociationId, nomisRecordNotMatching.typeSequence)
-            sequenceReport[entry.key] = "2 reset nonAssociationId ${mappingRecord1.nonAssociationId} sequence from ${mappingRecord1.nomisTypeSequence} to ${nomisRecordNotMatching.typeSequence}"
+
+          val nomisData = nomisApiService.getNonAssociationDetails(entry.key, nomsNumber)
+          // NomisData may contain many NAs (e.g. old closed ones); we need the one with this sequence no,
+          // the DPS NA which corresponds with this,
+          // and then the Nomis NA which corresponds to the other DPS NA
+          val nomisRecordMatchingSeq = nomisData.find { it.typeSequence == mappingRecord1.nomisTypeSequence }
+          val otherDpsRecord = if (dpsRecord1.effectiveDate.toLocalDate() == nomisRecordMatchingSeq?.effectiveDate) dpsRecord2 else dpsRecord1
+
+          val nomisRecordNotMatching = nomisData.find {
+            it.typeSequence != mappingRecord1.nomisTypeSequence &&
+              otherDpsRecord.effectiveDate.toLocalDate() == it.effectiveDate
           }
+            ?: throw IllegalStateException("Cannot match up DPS and Nomis NAs:\nentry = $entry\ndpsRecord1 = $dpsRecord1\ndpsRecord2 = $dpsRecord2\nnomisRecordMatchingSeq = $nomisRecordMatchingSeq\notherDpsRecord = $otherDpsRecord")
+
+          mappingService.setSequence(otherDpsRecord.id, nomisRecordNotMatching.typeSequence)
+          sequenceReport[entry.key] = "Reset nonAssociationId ${otherDpsRecord.id} sequence from ${mappingRecord1.nomisTypeSequence} to ${nomisRecordNotMatching.typeSequence}"
         }
 
       mappingService.mergeNomsNumber(removedNomsNumber, nomsNumber)

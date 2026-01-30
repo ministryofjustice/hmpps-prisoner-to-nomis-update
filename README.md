@@ -744,6 +744,16 @@ In this case the dupe should be deleted. You can directly call the nomis-api end
 
 Troubleshooting approach should be to look at OFFENDER_IND_SCHEDULES in the Nomis database to find when the appointment was created, then check appinsights at this time.
 
+### Non-associations
+
+This is a one way sync to Nomis.
+
+One scenario that still may not be successfully handled automatically is a merge where both merge noms ids have a NA with a 3rd party.
+In this case there is merge code which tries to avoid a unique key constraint error which would otherwise occur
+in the mapping service because 2 NAs have both parties the same and also the same sequence (usually 1). If this doesn't work, manual intervention is required to identify which NA is open
+and set its sequence to 2. The open one can be identified as being set as such in DPS and has no expiry date in Nomis. If neither has an expiry date in Nomis, a sync from DPS can be forced
+by e.g. editing the comment in the DPS UI, or the NA can be closed by calling the /close nomis-api endpoint.
+
 ## Architecture
 
 Architecture decision records start [here](doc/architecture/decisions/0001-use-adr.md)
