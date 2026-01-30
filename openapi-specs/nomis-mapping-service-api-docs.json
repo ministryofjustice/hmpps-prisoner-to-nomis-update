@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-26.374.4e2589d"
+    "version" : "2026-01-29.386.3c3c9b3"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -1603,6 +1603,60 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/visit-slots/visit-slot" : {
+      "post" : {
+        "tags" : [ "visit-slots-resource" ],
+        "summary" : "Creates a visit slots mapping",
+        "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createVisitSlotMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/VisitSlotMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
                 }
               }
             }
@@ -19629,6 +19683,31 @@
         },
         "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
       },
+      "VisitSlotMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "dpsId" : {
+            "type" : "string"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsId", "mappingType", "nomisId" ]
+      },
       "VisitTimeSlotMappingDto" : {
         "type" : "object",
         "properties" : {
@@ -21958,31 +22037,6 @@
             }
           }
         }
-      },
-      "VisitSlotMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "dpsId" : {
-            "type" : "string"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "label" : {
-            "type" : "string"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "dpsId", "mappingType", "nomisId" ]
       },
       "PageVisitTimeSlotMappingDto" : {
         "type" : "object",
