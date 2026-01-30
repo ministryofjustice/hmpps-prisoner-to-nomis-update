@@ -326,11 +326,13 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
-          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = today.plusHours(1)))
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -383,10 +385,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
-              .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", today.toLocalDate())
-              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
-              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.toLocalDate().atStartOfDay().minusMinutes(1)))
+              .withRequestBodyJsonPath("fromDate", startTime.toLocalDate())
+              .withRequestBodyJsonPath("toDate", endTime.toLocalDate())
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1)))
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
@@ -400,11 +402,13 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok for a single schedule")
       inner class HappyPathWithSingleSchedule {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
-          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 1, startTime = today, endTime = tomorrow))
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 1, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -415,8 +419,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `the updated application's start and end times to match occurrences`() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
-              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today))
-              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow)),
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime)),
           )
         }
       }
@@ -424,11 +430,13 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok for multiple schedules")
       inner class HappyPathWithMultipleSchedules {
+        private val startTime = today
+        private val endTime = tomorrow.plusDays(1)
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
-          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = today, endTime = tomorrow.plusDays(1)))
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -439,8 +447,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `the updated application's start and end times to match occurrences`() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
-              .withRequestBodyJsonPath("releaseTime", equalToDateTime(today.toLocalDate().atStartOfDay()))
-              .withRequestBodyJsonPath("returnTime", equalToDateTime(tomorrow.plusDays(2).toLocalDate().atStartOfDay().minusMinutes(1))),
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
           )
         }
       }
