@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-29.304.fbf6bf6"
+    "version" : "2026-01-30.308.741312d"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1270,6 +1270,104 @@
           },
           "403" : {
             "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/visit-slot/{visitSlotId}" : {
+      "delete" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Delete prison Visit slot",
+        "description" : "Delete the visit slot. Only allowed if there are no official visits associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncDelete",
+        "parameters" : [ {
+          "name" : "visitSlotId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the visit slot successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncVisitSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find the prison visit slot ",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The prison visit slot has visits associated with it and cannot be deleted.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/time-slot/{timeSlotId}" : {
+      "delete" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Delete prison time slot",
+        "description" : "Delete the time slot. Only allowed if there are no visit slots associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncDelete_1",
+        "parameters" : [ {
+          "name" : "timeSlotId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the time slot successfully",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find the time slot ",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The prison time slot has one or more visit slots associated with it and cannot be deleted.",
             "content" : {
               "application/json" : {
                 "schema" : {
