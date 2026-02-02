@@ -186,7 +186,7 @@ class IncidentsReconciliationService(
         nomisId = nomisOpenIncident.incidentId,
         dpsId = dpsOpenIncident.id,
         nomisIncident = nomisOpenIncident.toReportDetail(),
-        dpsIncident = dpsOpenIncident.toReportDetail(allowDraft = true),
+        dpsIncident = dpsOpenIncident.toReportDetail(),
         verdict = verdict,
       )
         .also { mismatch ->
@@ -211,6 +211,11 @@ class IncidentsReconciliationService(
     nomis: IncidentResponse,
     dps: ReportWithDetails,
   ): String? {
+    // Check and ignore any draft incidents that have previously been open.  Any changes when in draft are not relayed back to Nomis.
+    if (dps.isInDraftButPreviouslyOpen()) {
+      return null
+    }
+
     // Note. lastModifiedDateTime should not be compared here as merge updates are not passed through to DPS,
     // and therefore the values will be out of sync
     if (nomis.reportingStaff.username != dps.reportedBy) return "Reporting Staff mismatch"
@@ -267,6 +272,7 @@ fun ReportWithDetails.isValidStatus(nomis: IncidentResponse): Boolean = if (stat
   nomis.status.code == status.mapDps()
 }
 
+fun ReportWithDetails.isInDraftButPreviouslyOpen(): Boolean = status == Status.DRAFT &&  historyOfStatuses.any { it.status.value in dpsOpenValues }
 fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
 data class MismatchIncidents(
@@ -310,9 +316,9 @@ fun IncidentResponse.toReportDetail() = IncidentReportDetail(
   questions.flatMap { it.answers }.size,
 )
 
-fun ReportWithDetails.toReportDetail(allowDraft: Boolean = false) = IncidentReportDetail(
+fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
   type.mapDps(),
-  if (allowDraft && status == Status.DRAFT) "DRAFT" else status.mapDps(),
+  if (status == Status.DRAFT) "DRAFT" else status.mapDps(),
   reportedBy,
   reportedAt.truncatedTo(ChronoUnit.SECONDS),
   prisonersInvolved.map { it.prisonerNumber },

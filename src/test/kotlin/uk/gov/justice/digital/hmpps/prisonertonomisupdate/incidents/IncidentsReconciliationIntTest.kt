@@ -152,6 +152,7 @@ class IncidentsReconciliationIntTest(
           incidentsDpsApi.stubGetIncidentByNomisId(
             33,
             response = dpsIncident().copy(
+              type = ReportWithDetails.Type.ABSCOND_1,
               status = ReportWithDetails.Status.DRAFT,
               historyOfStatuses = listOf(
                 StatusHistory(
