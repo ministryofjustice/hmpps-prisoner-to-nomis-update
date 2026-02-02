@@ -272,7 +272,7 @@ fun ReportWithDetails.isValidStatus(nomis: IncidentResponse): Boolean = if (stat
   nomis.status.code == status.mapDps()
 }
 
-fun ReportWithDetails.isInDraftButPreviouslyOpen(): Boolean = status == Status.DRAFT &&  historyOfStatuses.any { it.status.value in dpsOpenValues }
+fun ReportWithDetails.isInDraftButPreviouslyOpen(): Boolean = status == Status.DRAFT && historyOfStatuses.any { it.status.value in dpsOpenValues }
 fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
 data class MismatchIncidents(
