@@ -98,7 +98,7 @@ class IncidentsDpsApiServiceTest {
           assertThat(title).isEqualTo("There was an incident in the exercise yard")
           assertThat(description).isEqualTo("Fred and Jimmy were fighting outside.")
           assertThat(reportedBy).isEqualTo("FSTAFF_GEN")
-          assertThat(reportedAt).isEqualTo("2021-07-07T10:35:17")
+          assertThat(reportedAt).isEqualTo("2021-07-07T10:35:17.12345")
           assertThat(status).isEqualTo(ReportWithDetails.Status.AWAITING_REVIEW)
           assertThat(createdAt).isEqualTo("2021-07-05T10:35:17")
           assertThat(modifiedAt).isEqualTo("2021-07-15T10:35:17")
