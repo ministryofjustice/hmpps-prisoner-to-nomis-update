@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.String
 
@@ -212,8 +213,9 @@ class IncidentsReconciliationService(
     if (nomis.staffParties.size != dps.nomisOnlyStaff().size) return "Staff parties mismatch"
     if (nomis.type != dps.type.mapDps()) return "type mismatch"
     if (nomis.status.code != dps.status.mapDps()) return "status mismatch"
-    if (nomis.reportedDateTime != dps.reportedAt) return "reported date mismatch"
-
+    if (nomis.reportedDateTime != dps.reportedAt.truncatedTo(ChronoUnit.SECONDS)) {
+      return "reported date mismatch"
+    }
     val offendersDifference =
       nomis.offenderParties.map { it.offender.offenderNo }.compare(dps.prisonersInvolved.map { it.prisonerNumber })
     if (offendersDifference.isNotEmpty()) return "Offender parties mismatch $offendersDifference"
@@ -301,7 +303,7 @@ fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
   type.mapDps(),
   status.mapDps(),
   reportedBy,
-  reportedAt,
+  reportedAt.truncatedTo(ChronoUnit.SECONDS),
   prisonersInvolved.map { it.prisonerNumber },
   nomisOnlyStaff().size,
   questions.size,
