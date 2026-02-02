@@ -164,7 +164,7 @@ fun dpsBasicIncident(dpsIncidentId: String = "fb4b2e91-91e7-457b-aa17-797f8c5c2f
   title = "There was an incident in the exercise yard",
   description = "Fred and Jimmy were fighting outside.",
   reportedBy = "JSMITH",
-  reportedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+  reportedAt = LocalDateTime.parse("2021-07-05T10:35:17.12345"),
   status = ReportBasic.Status.DRAFT,
   createdAt = LocalDateTime.parse("2021-07-05T10:35:17"),
   modifiedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -185,7 +185,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   nomisStatus = "AWAN",
   status = ReportWithDetails.Status.AWAITING_REVIEW,
   reportedBy = "FSTAFF_GEN",
-  reportedAt = LocalDateTime.parse("2021-07-07T10:35:17"),
+  reportedAt = LocalDateTime.parse("2021-07-07T10:35:17.12345"),
   questions = listOf(
     Question(
       code = "1234",

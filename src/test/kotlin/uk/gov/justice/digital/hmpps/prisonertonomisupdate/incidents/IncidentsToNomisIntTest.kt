@@ -180,7 +180,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("statusCode", "AWAN")
                 .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
                 .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17")
+                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
@@ -474,7 +474,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("statusCode", "AWAN")
                 .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
                 .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17")
+                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
