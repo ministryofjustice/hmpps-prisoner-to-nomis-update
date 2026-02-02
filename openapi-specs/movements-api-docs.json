@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-27"
+    "version" : "2026-01-30"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -1039,8 +1039,7 @@
               "type" : "string"
             }
           }
-        } ],
-        "required" : [ "comments" ]
+        } ]
       },
       "ChangeOccurrenceContactInformation" : {
         "allOf" : [ {
@@ -1293,8 +1292,7 @@
               "type" : "string"
             }
           }
-        } ],
-        "required" : [ "comments" ]
+        } ]
       },
       "ChangeAuthorisationDateRange" : {
         "allOf" : [ {
