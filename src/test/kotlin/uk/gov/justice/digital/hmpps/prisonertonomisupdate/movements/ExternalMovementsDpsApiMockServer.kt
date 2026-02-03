@@ -76,8 +76,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       0 -> listOf()
       1 -> listOf(tapAuthorisationOccurrence(start = startTime, end = endTime))
       else -> listOf(
-        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1), location = Location(address = "some address 1", description = "Some description 1", postcode = "some postcode 1", uprn = 1)),
-        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime, location = Location(address = "some address 2", description = "Some description 2", postcode = "some postcode 2", uprn = 2)),
+        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1), location = Location(address = "some address 1", description = "some description 1", postcode = "some postcode 1", uprn = 1)),
+        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime, location = Location(address = "some address 2", description = "some description 2", postcode = "some postcode 2", uprn = 2)),
       )
     },
     personIdentifier = "USER1",
