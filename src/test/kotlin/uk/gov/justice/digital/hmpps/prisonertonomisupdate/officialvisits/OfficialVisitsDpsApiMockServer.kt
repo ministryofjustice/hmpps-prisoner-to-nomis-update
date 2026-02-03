@@ -23,7 +23,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.S
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitType
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.*
 
 class OfficialVisitsDpsApiExtension :
@@ -77,6 +79,9 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       completionCode = VisitCompletionType.NORMAL,
       offenderBookId = 20,
       offenderVisitId = 30,
+      visitType = VisitType.IN_PERSON,
+      createdBy = "T.SMITH",
+      createdTime = LocalDateTime.parse("2020-01-01T10:00"),
     )
 
     fun syncOfficialVisitor() = SyncOfficialVisitor(
@@ -87,6 +92,8 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       relationshipType = RelationshipType.OFFICIAL,
       relationshipCode = "POL",
       attendanceCode = AttendanceType.ATTENDED,
+      createdBy = "T.SMITH",
+      createdTime = LocalDateTime.parse("2020-01-01T10:00"),
     )
   }
 
