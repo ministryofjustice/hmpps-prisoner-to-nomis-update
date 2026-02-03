@@ -60,7 +60,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   private val now = LocalDateTime.now()
   private val tomorrow = now.plusDays(1)
 
-  fun tapAuthorisation(id: UUID = UUID.randomUUID(), occurrenceCount: Int = 0, startTime: LocalDateTime = now, endTime: LocalDateTime = tomorrow, repeat: Boolean = true) = SyncReadTapAuthorisation(
+  fun tapAuthorisation(id: UUID = UUID.randomUUID(), occurrenceCount: Int = 0, startTime: LocalDateTime = now, endTime: LocalDateTime = tomorrow, repeat: Boolean = true, statusCode: String = "PENDING") = SyncReadTapAuthorisation(
     id = id,
     repeat = repeat,
     start = startTime.toLocalDate(),
@@ -74,7 +74,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     },
     personIdentifier = "USER1",
-    statusCode = "PENDING",
+    statusCode = statusCode,
     prisonCode = "LEI",
     absenceReasonCode = "R2",
     created = SyncAtAndBy(now, "USER1"),
