@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-29.386.3c3c9b3"
+    "version" : "2026-02-02.390.770a861"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -6510,6 +6510,51 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "visit-slots-resource" ],
+        "summary" : "Deletes visit slot mapping by nomis visit slot id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteVisitSlotMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS visit slot id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS visit slot id",
+            "example" : 1234
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping deleted or does not exist",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/visit-slots/time-slots/nomis-prison-id/{nomisPrisonId}/nomis-day-of-week/{nomisDayOfWeek}/nomis-slot-sequence/{nomisSlotSequence}" : {
@@ -6596,6 +6641,83 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "visit-slots-resource" ],
+        "summary" : "Deletes visit time slot mapping by nomis prison id, day of week and sequence",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteVisitTimeSlotMappingByNomisIds",
+        "parameters" : [ {
+          "name" : "nomisPrisonId",
+          "in" : "path",
+          "description" : "NOMIS prison id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS prison id",
+            "example" : "WWI"
+          },
+          "example" : "WWI"
+        }, {
+          "name" : "nomisDayOfWeek",
+          "in" : "path",
+          "description" : "NOMIS day of the week",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS day of the week",
+            "example" : "MONDAY"
+          },
+          "example" : "MONDAY"
+        }, {
+          "name" : "nomisSlotSequence",
+          "in" : "path",
+          "description" : "NOMIS slot sequence",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS slot sequence",
+            "example" : 4
+          },
+          "example" : 4
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping deleted or no longer exists",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "Day of week not valid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -22098,12 +22220,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
