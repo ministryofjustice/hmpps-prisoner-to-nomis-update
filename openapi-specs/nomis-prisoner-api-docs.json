@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-28.979.e8ce9b7"
+    "version" : "2026-02-03.994.0463001"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -22965,10 +22965,18 @@
           },
           "toAddress" : {
             "$ref" : "#/components/schemas/UpsertTemporaryAbsenceAddress",
+            "deprecated" : true,
             "description" : "To address. If this is null, do not update the address. Otherwise use the addressId in the request."
+          },
+          "toAddresses" : {
+            "type" : "array",
+            "description" : "To addresses linked to schedules. Makes sure they all exist in NOMIS so are available when upserting schedules.",
+            "items" : {
+              "$ref" : "#/components/schemas/UpsertTemporaryAbsenceAddress"
+            }
           }
         },
-        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "prisonId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "applicationDate", "applicationStatus", "applicationType", "eventSubType", "fromDate", "prisonId", "releaseTime", "returnTime", "toAddresses", "toDate" ]
       },
       "UpsertTemporaryAbsenceApplicationResponse" : {
         "type" : "object",
@@ -29026,12 +29034,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"

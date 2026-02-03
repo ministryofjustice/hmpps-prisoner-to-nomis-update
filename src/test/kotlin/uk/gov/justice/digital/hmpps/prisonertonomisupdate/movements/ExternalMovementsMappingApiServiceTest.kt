@@ -25,7 +25,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.FindTemporaryAbsenceAddressByDpsIdRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -476,57 +475,6 @@ class ExternalMovementsMappingApiServiceTest {
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getExternalMovementMapping(dpsId)
       }
-    }
-  }
-
-  @Nested
-  inner class GetAddressMappings {
-    val request = FindTemporaryAbsenceAddressByDpsIdRequest("A1234BC", "OFF", "some address", 654)
-
-    @Test
-    internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceAddressMapping()
-
-      apiService.getAddressMapping(request)
-
-      mappingApi.verify(
-        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceAddressMapping(status = NOT_FOUND)
-
-      apiService.getAddressMapping(request)
-        .also { assertThat(it).isNull() }
-    }
-
-    @Test
-    fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceAddressMapping(status = INTERNAL_SERVER_ERROR)
-
-      assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getAddressMapping(request)
-      }
-    }
-
-    @Test
-    fun `should parse the response`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceAddressMapping()
-
-      apiService.getAddressMapping(request)
-
-      apiService.getAddressMapping(request)!!
-        .apply {
-          assertThat(ownerClass).isEqualTo("OFF")
-          assertThat(addressId).isEqualTo(12345)
-          assertThat(dpsAddressText).isEqualTo("some address")
-          assertThat(offenderNo).isEqualTo("A1234BC")
-          assertThat(dpsUprn).isEqualTo(654)
-          assertThat(dpsDescription).isNull()
-          assertThat(dpsPostcode).isEqualTo("SW1A 1AA")
-        }
     }
   }
 }

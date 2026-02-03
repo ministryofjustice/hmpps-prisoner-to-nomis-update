@@ -49,6 +49,7 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       contactPersonName = "Deek Sanderson",
       temporaryAbsenceType = "RR",
       temporaryAbsenceSubType = "RDR",
+      toAddresses = listOf(),
     )
 
     fun upsertTemporaryAbsenceApplicationResponse() = UpsertTemporaryAbsenceApplicationResponse(12345, 56789)

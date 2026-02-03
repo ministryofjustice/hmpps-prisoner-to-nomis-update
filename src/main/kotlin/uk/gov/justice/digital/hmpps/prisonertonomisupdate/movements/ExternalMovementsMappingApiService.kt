@@ -3,13 +3,10 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
-import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.FindTemporaryAbsenceAddressByDpsIdRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceAddressMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.*
@@ -20,9 +17,6 @@ class ExternalMovementsMappingApiService(
   retryApiService: RetryApiService,
 ) {
   private val domainUrl = "/mapping/temporary-absence"
-  private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "ExternalMovementsMappingApiService"),
-  )
 
   suspend fun createApplicationMapping(mapping: TemporaryAbsenceApplicationSyncMappingDto) = webClient.createMapping("$domainUrl/application", mapping)
 
@@ -48,12 +42,6 @@ class ExternalMovementsMappingApiService(
 
   suspend fun getExternalMovementMapping(dpsId: UUID): ExternalMovementSyncMappingDto? = webClient.get()
     .uri("$domainUrl/external-movement/dps-id/{dpsId}", dpsId)
-    .retrieve()
-    .awaitBodyOrNullForNotFound()
-
-  suspend fun getAddressMapping(request: FindTemporaryAbsenceAddressByDpsIdRequest): TemporaryAbsenceAddressMappingResponse? = webClient.post()
-    .uri("$domainUrl/addresses/by-dps-id")
-    .bodyValue(request)
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
