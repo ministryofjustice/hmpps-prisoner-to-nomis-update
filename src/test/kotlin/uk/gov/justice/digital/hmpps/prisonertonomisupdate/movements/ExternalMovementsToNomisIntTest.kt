@@ -158,8 +158,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
               .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
               .withRequestBodyJsonPath("transportType", "VAN")
-              // Address is only updated when the application update is triggered by synchronising the DPS occurrence
-              .withRequestBodyJsonPath("toAddress", absent()),
+              .withRequestBodyJsonPath("toAddresses[0].addressText", "some address")
+              .withRequestBodyJsonPath("toAddresses[0].name", "some description")
+              .withRequestBodyJsonPath("toAddresses[0].postalCode", "some postcode"),
           )
         }
 
@@ -451,6 +452,19 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
               .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
               .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
+          )
+        }
+
+        @Test
+        fun `all occurrence addresses are sent to NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("addresses[0].address", "some address 1")
+              .withRequestBodyJsonPath("addresses[0].description", "some description 1")
+              .withRequestBodyJsonPath("addresses[0].postalCode", "some postcode 1")
+              .withRequestBodyJsonPath("addresses[1].address", "some address 2")
+              .withRequestBodyJsonPath("addresses[1].description", "some description 2")
+              .withRequestBodyJsonPath("addresses[1].postalCode", "some postcode 2"),
           )
         }
       }

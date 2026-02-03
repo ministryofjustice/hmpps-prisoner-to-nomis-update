@@ -60,7 +60,14 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   private val now = LocalDateTime.now()
   private val tomorrow = now.plusDays(1)
 
-  fun tapAuthorisation(id: UUID = UUID.randomUUID(), occurrenceCount: Int = 0, startTime: LocalDateTime = now, endTime: LocalDateTime = tomorrow, repeat: Boolean = true, statusCode: String = "PENDING") = SyncReadTapAuthorisation(
+  fun tapAuthorisation(
+    id: UUID = UUID.randomUUID(),
+    occurrenceCount: Int = 0,
+    startTime: LocalDateTime = now,
+    endTime: LocalDateTime = tomorrow,
+    repeat: Boolean = true,
+    statusCode: String = "PENDING",
+  ) = SyncReadTapAuthorisation(
     id = id,
     repeat = repeat,
     start = startTime.toLocalDate(),
@@ -69,8 +76,8 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       0 -> listOf()
       1 -> listOf(tapAuthorisationOccurrence(start = startTime, end = endTime))
       else -> listOf(
-        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1)),
-        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime),
+        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1), location = Location(address = "some address 1", description = "Some description 1", postcode = "some postcode 1", uprn = 1)),
+        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime, location = Location(address = "some address 2", description = "Some description 2", postcode = "some postcode 2", uprn = 2)),
       )
     },
     personIdentifier = "USER1",
@@ -111,12 +118,13 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     id: UUID = UUID.randomUUID(),
     start: LocalDateTime = now,
     end: LocalDateTime = tomorrow,
+    location: Location = Location(address = "some address", postcode = "some postcode", uprn = 1, description = "some description"),
   ) = SyncReadTapAuthorisationOccurrence(
     id = id,
     statusCode = "SCHEDULED",
     start = start,
     end = end,
-    location = Location(address = "some address", postcode = "some postcode", uprn = 1, description = "some description"),
+    location = location,
     accompaniedByCode = "U",
     transportCode = "TAX",
     absenceReasonCode = "R2",
