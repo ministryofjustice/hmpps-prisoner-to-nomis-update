@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-30.308.741312d"
+    "version" : "2026-02-02.314.0e8f090"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -29,7 +29,7 @@
     "/sync/visit-slot/{prisonVisitSlotId}" : {
       "get" : {
         "tags" : [ "Synchronisation" ],
-        "summary" : "Returns the data for a prison visit slot by ID",
+        "summary" : "Return a prison visit slot by ID",
         "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to get the details for one prison visit slot.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncGetVisitSlotById",
         "parameters" : [ {
@@ -67,7 +67,7 @@
       },
       "put" : {
         "tags" : [ "Synchronisation" ],
-        "summary" : "Updates a prison visit slot with new or altered details",
+        "summary" : "Updates a prison visit slot",
         "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to update a a prison visit slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncUpdateVisitSlot",
         "parameters" : [ {
@@ -112,7 +112,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid data supplied in the request",
+            "description" : "The request was invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -165,7 +165,7 @@
       },
       "put" : {
         "tags" : [ "Synchronisation" ],
-        "summary" : "Updates a prison time slot with new or altered details",
+        "summary" : "Updates a prison time slot",
         "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to update a a prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncUpdateTimeSlot",
         "parameters" : [ {
@@ -210,7 +210,7 @@
             }
           },
           "400" : {
-            "description" : "Invalid data supplied in the request",
+            "description" : "The request was invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -315,7 +315,7 @@
         },
         "responses" : {
           "201" : {
-            "description" : "Successfully created a prison visit slot for official visits",
+            "description" : "Successfully created a prison visit slot",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -325,7 +325,7 @@
             }
           },
           "400" : {
-            "description" : "The request was invalid or had missing fields",
+            "description" : "The request was invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -365,7 +365,7 @@
             }
           },
           "400" : {
-            "description" : "The request was invalid or had missing fields",
+            "description" : "The request was invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -440,7 +440,7 @@
     "/official-visit/prison/{prisonCode}/id/{officialVisitId}/complete" : {
       "post" : {
         "tags" : [ "Official visits" ],
-        "summary" : "Endpoint to complete an official visit.",
+        "summary" : "Completes an official visit.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
         "operationId" : "complete",
         "parameters" : [ {
@@ -476,6 +476,79 @@
         "responses" : {
           "200" : {
             "description" : "Official visit completed successfully"
+          },
+          "404" : {
+            "description" : "No official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}/id/{officialVisitId}/cancel" : {
+      "post" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Cancels an official visit.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficialVisitCancellationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Official visit cancelled successfully"
           },
           "404" : {
             "description" : "No official visit found",
@@ -761,6 +834,55 @@
         }
       }
     },
+    "/sync/official-visit/id/{officialVisitId}" : {
+      "get" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Endpoint to return one official visit by ID",
+        "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getOfficialVisitById",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Official visit details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOfficialVisit"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reference-data/group/{groupCode}" : {
       "get" : {
         "tags" : [ "Reference data" ],
@@ -826,13 +948,13 @@
     "/reconcile/prisoner/{prisonerNumber}" : {
       "get" : {
         "tags" : [ "Reconciliation" ],
-        "summary" : "Endpoint to return all official visits for a prisoner between the specified  visit dates and  current term",
+        "summary" : "Return all official visits for a prisoner between two dates with optional current term flag",
         "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
         "operationId" : "getAllOfficialVisitForPrisoner",
         "parameters" : [ {
           "name" : "prisonerNumber",
           "in" : "path",
-          "description" : "The prisoner Number",
+          "description" : "Prisoner number",
           "required" : true,
           "schema" : {
             "type" : "string"
@@ -840,7 +962,7 @@
         }, {
           "name" : "currentTermOnly",
           "in" : "query",
-          "description" : "Is current term only?",
+          "description" : "Current term only, true of false. Defaults to true.",
           "required" : false,
           "schema" : {
             "type" : "boolean",
@@ -849,7 +971,7 @@
         }, {
           "name" : "fromDate",
           "in" : "query",
-          "description" : "The from date in ISO format (YYYY-MM-DD).",
+          "description" : "The from date in ISO format (YYYY-MM-DD)",
           "required" : false,
           "schema" : {
             "type" : "string",
@@ -858,7 +980,7 @@
         }, {
           "name" : "toDate",
           "in" : "query",
-          "description" : "The to date in ISO format (YYYY-MM-DD).",
+          "description" : "The to date in ISO format (YYYY-MM-DD)",
           "required" : false,
           "schema" : {
             "type" : "string",
@@ -867,7 +989,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "List of all Official visit details",
+            "description" : "List of official visits",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -905,7 +1027,7 @@
     "/reconcile/official-visits/identifiers" : {
       "get" : {
         "tags" : [ "Reconciliation" ],
-        "summary" : "Endpoint to return a paged list of all official visit IDs",
+        "summary" : "Return a paged list of all official visit IDs",
         "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
         "operationId" : "getAllOfficialVisitIds",
         "parameters" : [ {
@@ -980,9 +1102,9 @@
     "/reconcile/official-visit/id/{officialVisitId}" : {
       "get" : {
         "tags" : [ "Reconciliation" ],
-        "summary" : "Endpoint to return one official visit by ID for reconciliation",
+        "summary" : "Return one official visit by ID",
         "description" : "\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
-        "operationId" : "getOfficialVisitById",
+        "operationId" : "getOfficialVisitById_1",
         "parameters" : [ {
           "name" : "officialVisitId",
           "in" : "path",
@@ -1284,8 +1406,8 @@
     "/sync/visit-slot/{visitSlotId}" : {
       "delete" : {
         "tags" : [ "Synchronisation" ],
-        "summary" : "Delete prison Visit slot",
-        "description" : "Delete the visit slot. Only allowed if there are no official visits associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "summary" : "Delete a prison visit slot",
+        "description" : "Delete a visit slot if there are no official visits associated with it\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncDelete",
         "parameters" : [ {
           "name" : "visitSlotId",
@@ -1298,7 +1420,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "Deleted the visit slot successfully",
+            "description" : "Deleted the visit slot",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1308,7 +1430,7 @@
             }
           },
           "404" : {
-            "description" : "Could not find the prison visit slot ",
+            "description" : "The visit slot was not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1318,7 +1440,7 @@
             }
           },
           "409" : {
-            "description" : "The prison visit slot has visits associated with it and cannot be deleted.",
+            "description" : "The prison visit slot had visits associated so can not be deleted",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1333,8 +1455,8 @@
     "/sync/time-slot/{timeSlotId}" : {
       "delete" : {
         "tags" : [ "Synchronisation" ],
-        "summary" : "Delete prison time slot",
-        "description" : "Delete the time slot. Only allowed if there are no visit slots associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "summary" : "Delete a prison time slot",
+        "description" : "Delete a time slot if there are no visit slots associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
         "operationId" : "syncDelete_1",
         "parameters" : [ {
           "name" : "timeSlotId",
@@ -1347,7 +1469,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "Deleted the time slot successfully",
+            "description" : "Deleted the time slot",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1357,7 +1479,7 @@
             }
           },
           "404" : {
-            "description" : "Could not find the time slot ",
+            "description" : "The time slot was not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1367,7 +1489,7 @@
             }
           },
           "409" : {
-            "description" : "The prison time slot has one or more visit slots associated with it and cannot be deleted.",
+            "description" : "The prison time slot had visit slots associated with it and cannot be deleted.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1876,9 +1998,16 @@
           "officialVisitId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "officialVisitorIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
           }
         },
-        "required" : [ "officialVisitId" ]
+        "required" : [ "officialVisitId", "officialVisitorIds" ]
       },
       "AttendanceType" : {
         "type" : "string",
@@ -1889,7 +2018,10 @@
         "description" : "The request with the official visit completion details",
         "properties" : {
           "completionReason" : {
-            "$ref" : "#/components/schemas/VisitCompletionType"
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The reason for completion of the visit",
+            "enum" : [ "NORMAL", "PRISONER_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "VISITOR_DENIED", "VISITOR_EARLY", "VISITOR_NO_SHOW" ],
+            "example" : "NORMAL"
           },
           "prisonerAttendance" : {
             "$ref" : "#/components/schemas/AttendanceType"
@@ -1922,7 +2054,25 @@
       },
       "VisitCompletionType" : {
         "type" : "string",
-        "enum" : [ "NORMAL", "STAFF_CANCELLED", "VISITOR_CANCELLED", "VISITOR_DENIED", "PRISONER_EARLY", "VISITOR_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "PRISONER_CANCELLED", "VISITOR_NO_SHOW" ]
+        "enum" : [ "NORMAL", "PRISONER_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "VISITOR_DENIED", "VISITOR_EARLY", "VISITOR_NO_SHOW", "PRISONER_CANCELLED", "STAFF_CANCELLED", "VISITOR_CANCELLED" ]
+      },
+      "OfficialVisitCancellationRequest" : {
+        "type" : "object",
+        "description" : "The request with the official visit cancellation details",
+        "properties" : {
+          "cancellationReason" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The reason for cancellation of the visit",
+            "enum" : [ "PRISONER_CANCELLED", "STAFF_CANCELLED", "VISITOR_CANCELLED" ],
+            "example" : "PRISONER_CANCELLED"
+          },
+          "cancellationNotes" : {
+            "type" : "string",
+            "description" : "Optional notes containing details of the reason for cancellation",
+            "example" : "Prisoner in hospital"
+          }
+        },
+        "required" : [ "cancellationReason" ]
       },
       "OfficialVisitSummarySearchRequest" : {
         "type" : "object",
@@ -2715,6 +2865,207 @@
         },
         "required" : [ "dayCode", "dayDescription", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonTimeSlotId", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitTypeCode" ]
       },
+      "SyncOfficialVisit" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visit ID",
+            "example" : 1
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date that the visit takes place",
+            "example" : "2020-01-02"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time",
+            "example" : "09:15"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time",
+            "example" : "10:15"
+          },
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit slot identifier",
+            "example" : 12345
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code",
+            "example" : "MDI"
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1111AA"
+          },
+          "statusCode" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The visit status code",
+            "example" : "SCHEDULED"
+          },
+          "completionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The visit completion code",
+            "example" : "NORMAL"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender booking ID in NOMIS",
+            "example" : 12345
+          },
+          "offenderVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender visit ID in NOMIS (only present for migrated bookings)",
+            "example" : 12345
+          },
+          "visitType" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The type of visit. NOMIS assumes in person, but we may want to indicate others via notes",
+            "example" : "IN_PERSON"
+          },
+          "prisonerAttendance" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "Whether the prisoner attended or not",
+            "example" : "ATTENDED"
+          },
+          "searchType" : {
+            "$ref" : "#/components/schemas/SearchLevelType",
+            "description" : "The prisoner search type",
+            "example" : "FULL"
+          },
+          "visitComments" : {
+            "type" : "string",
+            "description" : "Comments provided for the prisoner",
+            "example" : "These are notes for the prisoner"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the visit",
+            "example" : "X8393"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visit was created",
+            "example" : "2024-12-01T03:05:00"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the visit",
+            "example" : "X8393"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visit was last updated",
+            "example" : "2024-12-01T03:05:00"
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "The visitor details",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncOfficialVisitor"
+            }
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitType", "visitors" ]
+      },
+      "SyncOfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The internal official visitor ID",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID of the person visiting",
+            "example" : 123
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The visitor first Name",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The visitor last Name",
+            "example" : "Smith"
+          },
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
+            "example" : "OFFICIAL"
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The visitor relationship code",
+            "example" : "POM"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
+            "example" : "ABSENT"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Set to true if this is the lead visitor",
+            "example" : false
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Set to true if this visitor requires an assisted visit. The equivalent of the AVPU flag in NOMIS",
+            "example" : false
+          },
+          "visitorNotes" : {
+            "type" : "string",
+            "description" : "Visitor specific notes",
+            "example" : "Wheelchair access required"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the visitor",
+            "example" : "X8393"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visitor was created",
+            "example" : "2024-12-01T03:05:00"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the visitor",
+            "example" : "X8393"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visitor was last updated",
+            "example" : "2024-12-01T03:05:00"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "officialVisitorId" ]
+      },
       "ReferenceDataGroup" : {
         "type" : "string",
         "enum" : [ "ATTENDANCE", "DAY", "RELATIONSHIP_TYPE", "SEARCH_LEVEL", "TEST_TYPE", "VIS_COMPLETION", "VIS_STATUS", "VIS_TYPE", "VISITOR_TYPE" ]
@@ -2757,128 +3108,6 @@
           }
         },
         "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
-      },
-      "SyncOfficialVisit" : {
-        "type" : "object",
-        "properties" : {
-          "officialVisitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The internal official visit ID",
-            "example" : 1
-          },
-          "visitDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The visit date",
-            "example" : "2020-01-02"
-          },
-          "startTime" : {
-            "type" : "string",
-            "description" : "The visit start time",
-            "example" : "09:15"
-          },
-          "endTime" : {
-            "type" : "string",
-            "description" : "The visit end time",
-            "example" : "10:15"
-          },
-          "prisonVisitSlotId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit slot ID",
-            "example" : 12345
-          },
-          "dpsLocationId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS location ID where the visit is taking place",
-            "example" : "aaa-ddd-bbb-123455632323"
-          },
-          "prisonCode" : {
-            "type" : "string",
-            "description" : "The prison establishment code",
-            "example" : "MDI"
-          },
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The prisoner number",
-            "example" : "A1111AA"
-          },
-          "statusCode" : {
-            "$ref" : "#/components/schemas/VisitStatusType",
-            "description" : "The visit status code",
-            "example" : "SCHEDULED"
-          },
-          "completionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The visit completion code",
-            "example" : "NORMAL"
-          },
-          "offenderBookId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender booking ID in NOMIS",
-            "example" : 12345
-          },
-          "offenderVisitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender visit ID in NOMIS (only present for migrated bookings)",
-            "example" : 12345
-          },
-          "visitors" : {
-            "type" : "array",
-            "description" : "The offender visitor details",
-            "items" : {
-              "$ref" : "#/components/schemas/SyncOfficialVisitor"
-            }
-          }
-        },
-        "required" : [ "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitors" ]
-      },
-      "SyncOfficialVisitor" : {
-        "type" : "object",
-        "properties" : {
-          "officialVisitorId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The internal official visitor ID",
-            "example" : 1
-          },
-          "contactId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The contact ID of the person visiting",
-            "example" : 123
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "The visitor first Name",
-            "example" : "John"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "The visitor last Name",
-            "example" : "Smith"
-          },
-          "relationshipType" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
-            "example" : "OFFICIAL"
-          },
-          "relationshipCode" : {
-            "type" : "string",
-            "description" : "The visitor relationship code",
-            "example" : "POM"
-          },
-          "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
-            "example" : "ABSENT"
-          }
-        },
-        "required" : [ "officialVisitorId" ]
       },
       "PagedModelSyncOfficialVisitId" : {
         "type" : "object",
