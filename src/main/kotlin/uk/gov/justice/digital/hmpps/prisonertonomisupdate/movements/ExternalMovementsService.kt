@@ -464,14 +464,14 @@ class ExternalMovementsService(
 
 private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?, toAddressId: Long? = null): UpsertTemporaryAbsenceApplicationRequest {
   val releaseTime = when (repeat) {
-    true -> start.atStartOfDay()
     // If a schedule in NOMIS is deleted and re-created its start time is taken from the application releaseTime - so save it on the application
-    false -> occurrences.first().start
+    false if (occurrences.size == 1) -> occurrences.first().start
+    else -> start.atStartOfDay()
   }
   val returnTime = when (repeat) {
-    true -> end.plusDays(1).atStartOfDay().minusMinutes(1)
     // If a schedule in NOMIS is deleted and re-created its end time is taken from the application returnTime - so save it on the application
-    false -> occurrences.first().end
+    false if (occurrences.size == 1) -> occurrences.first().end
+    else -> end.plusDays(1).atStartOfDay().minusMinutes(1)
   }
   return UpsertTemporaryAbsenceApplicationRequest(
     movementApplicationId = nomisApplicationId,

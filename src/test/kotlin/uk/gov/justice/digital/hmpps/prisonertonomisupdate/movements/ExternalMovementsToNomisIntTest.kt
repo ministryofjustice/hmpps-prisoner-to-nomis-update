@@ -456,6 +456,35 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      @DisplayName("when all goes ok for zero schedules")
+      inner class HappyPathWithZeroSchedules {
+        private val startTime = today
+        private val endTime = tomorrow.plusDays(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 0, startTime = startTime, endTime = endTime, statusCode = "EXPIRED"))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times match DPS`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("applicationStatus", "PEN")
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
+          )
+        }
+      }
+
+      @Nested
       inner class WhenNomisUpdateFails {
 
         @BeforeEach
