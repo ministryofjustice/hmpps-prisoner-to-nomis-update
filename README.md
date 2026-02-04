@@ -38,7 +38,7 @@ A better hybrid solution which gives better control messaging would be similar t
 
 The first 2 of the 3 steps is required but instead of step 3
 
-- `docker-compose up localstack` or `docker compose up localstack` (there is also docker-compose-localstack.yaml with just localstack defined )
+- `docker compose up localstack` or `docker compose up localstack` (there is also docker-compose-localstack.yaml with just localstack defined )
 
 Then run any of the `bash` scripts at the root of this project to send events to the local topic
 
