@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-02.314.0e8f090"
+    "version" : "2026-02-03.322.348e43d"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1407,8 +1407,8 @@
       "delete" : {
         "tags" : [ "Synchronisation" ],
         "summary" : "Delete a prison visit slot",
-        "description" : "Delete a visit slot if there are no official visits associated with it\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
-        "operationId" : "syncDelete",
+        "description" : "\n      Delete a visit slot if there are no official visits associated.\n      This endpoint is idempotent so if the visit slot does not exist it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncDeleteVisitSlot",
         "parameters" : [ {
           "name" : "visitSlotId",
           "in" : "path",
@@ -1420,24 +1420,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "Deleted the visit slot",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncVisitSlot"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The visit slot was not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "description" : "Deleted the visit slot"
           },
           "409" : {
             "description" : "The prison visit slot had visits associated so can not be deleted",
@@ -1456,8 +1439,8 @@
       "delete" : {
         "tags" : [ "Synchronisation" ],
         "summary" : "Delete a prison time slot",
-        "description" : "Delete a time slot if there are no visit slots associated with it.\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
-        "operationId" : "syncDelete_1",
+        "description" : "\n      Delete a time slot if there are no visit slots associated with it.\n      This endpoint is idempotent so if the time slot does not exist it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncDeleteTimeSlot",
         "parameters" : [ {
           "name" : "timeSlotId",
           "in" : "path",
@@ -1469,24 +1452,7 @@
         } ],
         "responses" : {
           "204" : {
-            "description" : "Deleted the time slot",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SyncTimeSlot"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "The time slot was not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+            "description" : "Deleted the time slot"
           },
           "409" : {
             "description" : "The prison time slot had visit slots associated with it and cannot be deleted.",
@@ -1574,28 +1540,28 @@
           },
           "createdBy" : {
             "type" : "string",
-            "description" : "User who created the entry",
+            "description" : "Username who created the visit slot",
             "example" : "admin"
           },
           "createdTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "The timestamp of when this slot was created",
+            "description" : "The timestamp of when this visit slot was created",
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
             "type" : "string",
-            "description" : "User who Updated the entry",
+            "description" : "Username who last updated the visit slot",
             "example" : "admin"
           },
           "updatedTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "The timestamp of when this slot was Updated",
+            "description" : "The timestamp of when this visit slot was last updated",
             "example" : "2024-01-01T00:00:00Z"
           }
         },
-        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "updatedBy", "visitSlotId" ]
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "visitSlotId" ]
       },
       "DayType" : {
         "type" : "string",
@@ -1658,7 +1624,7 @@
           "prisonTimeSlotId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "Time slot ID",
+            "description" : "Prison time slot ID",
             "example" : 18767
           },
           "prisonCode" : {
@@ -2893,7 +2859,7 @@
           "prisonVisitSlotId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The visit slot identifier",
+            "description" : "The visit slot ID",
             "example" : 12345
           },
           "dpsLocationId" : {
@@ -2992,7 +2958,7 @@
           "officialVisitorId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The internal official visitor ID",
+            "description" : "The official visitor ID",
             "example" : 1
           },
           "contactId" : {
@@ -3130,7 +3096,7 @@
           "officialVisitId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The ID for an Official visits",
+            "description" : "The official visit ID",
             "example" : 111111
           }
         },
@@ -3614,13 +3580,13 @@
           "visitSlotId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The prison visit slot identifier for the official visit slot",
+            "description" : "The prison visit slot ID",
             "example" : 1
           },
           "timeSlotId" : {
             "type" : "integer",
             "format" : "int64",
-            "description" : "The prison time slot identifier for the official visit slot",
+            "description" : "The prison time slot ID",
             "example" : 1
           },
           "prisonCode" : {
@@ -3630,12 +3596,12 @@
           },
           "dayCode" : {
             "type" : "string",
-            "description" : "The 3-letter day of the week code where this slot falls in this prison.",
+            "description" : "The day of the week code where this slot falls in this prison.",
             "example" : "TUE"
           },
           "dayDescription" : {
             "type" : "string",
-            "description" : "The day of the week code where this slot falls in this prison.",
+            "description" : "The day of the week description where this slot falls in this prison.",
             "example" : "Tuesday"
           },
           "visitDate" : {
@@ -3654,27 +3620,27 @@
           "dpsLocationId" : {
             "type" : "string",
             "format" : "uuid",
-            "description" : "The DPS location where the official visit takes place for the slot",
+            "description" : "The DPS location ID for this official visit slot",
             "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
           },
           "availableVideoSessions" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The available video sessions for official visit slot"
+            "description" : "The available video session capacity remaining for this official visit slot"
           },
           "availableAdults" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The available adults for official visit slot"
+            "description" : "The available adult capacity remaining for this official visit slot"
           },
           "availableGroups" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "The available groups for official visit slot"
+            "description" : "The available groups capacity remaining for this official visit slot"
           },
           "locationDescription" : {
             "type" : "string",
-            "description" : "The description of the location where this slot exists",
+            "description" : "The description of the prison location this visit slot is in",
             "example" : "Legal visits room 8"
           }
         },
