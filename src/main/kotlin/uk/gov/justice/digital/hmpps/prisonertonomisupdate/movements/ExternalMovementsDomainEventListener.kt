@@ -47,6 +47,7 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence-authorisation.comments-changed",
       "person.temporary-absence-authorisation.transport-changed",
       "person.temporary-absence-authorisation.deferred",
+      "person.temporary-absence-authorisation.relocated",
       -> externalMovementsService.authorisationChanged(message.fromJson())
 
       "person.temporary-absence.scheduled",
