@@ -12,11 +12,9 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceAddressMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
@@ -223,29 +221,6 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubGetTemporaryAbsenceAddressMapping(nomisAddressId: Long = 12345, dpsLocation: Location = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA", description = null)) {
-    mappingServer.stubFor(
-      post(urlPathMatching("/mapping/temporary-absence/addresses/by-dps-id"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(jsonMapper.writeValueAsString(temporaryAbsenceAddressMapping(nomisAddressId, dpsLocation))),
-        ),
-    )
-  }
-
-  fun stubGetTemporaryAbsenceAddressMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
-    mappingServer.stubFor(
-      post(urlPathMatching("/mapping/temporary-absence/addresses/by-dps-id"))
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(status.value())
-            .withBody(jsonMapper.writeValueAsString(error)),
-        ),
-    )
-  }
-
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
@@ -288,14 +263,4 @@ fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSe
   nomisAddressId = 0,
   nomisAddressOwnerClass = "",
   dpsAddressText = "",
-)
-
-fun temporaryAbsenceAddressMapping(nomisAddressId: Long = 1245, dpsLocation: Location = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA", description = null)) = TemporaryAbsenceAddressMappingResponse(
-  ownerClass = "OFF",
-  addressId = nomisAddressId,
-  dpsAddressText = dpsLocation.address!!,
-  offenderNo = "A1234BC",
-  dpsUprn = dpsLocation.uprn,
-  dpsDescription = dpsLocation.description,
-  dpsPostcode = dpsLocation.postcode,
 )
