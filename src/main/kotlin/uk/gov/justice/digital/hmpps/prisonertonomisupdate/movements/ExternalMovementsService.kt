@@ -475,7 +475,11 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
     prisonId = prisonCode,
     temporaryAbsenceType = absenceTypeCode,
     temporaryAbsenceSubType = absenceSubTypeCode,
-    toAddresses = occurrences.map { with(it.location) { UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode) } },
+    toAddresses = occurrences.map {
+      with(it.location) {
+        UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
+      }
+    }.toSet().toList(),
   )
 }
 
