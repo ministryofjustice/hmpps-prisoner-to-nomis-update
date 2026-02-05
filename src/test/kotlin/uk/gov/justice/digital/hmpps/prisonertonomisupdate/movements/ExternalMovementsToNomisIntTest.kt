@@ -456,6 +456,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `all occurrence addresses are sent to NOMIS`() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("toAddresses.length()", 2)
               .withRequestBodyJsonPath("toAddresses[0].addressText", "some address 1")
               .withRequestBodyJsonPath("toAddresses[0].name", "some description 1")
               .withRequestBodyJsonPath("toAddresses[0].postalCode", "some postcode 1")
