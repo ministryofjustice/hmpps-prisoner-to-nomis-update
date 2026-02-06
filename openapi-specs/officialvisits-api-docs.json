@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-03.322.348e43d"
+    "version" : "2026-02-05.336.4a293b4"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -918,6 +918,63 @@
                   "items" : {
                     "$ref" : "#/components/schemas/ReferenceDataItem"
                   }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/reconcile/time-slots/prison/{prisonCode}" : {
+      "get" : {
+        "tags" : [ "Reconciliation" ],
+        "summary" : "Return summary of prison time slot and associated visit slots based on the prison code",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to get the summary of prison time slot and associated visit slots based on the prison code.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "summariseTimeSlotsAndVisitSlots",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Summary of time slot and associated visit slots based on the prison code.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncTimeSlotSummary"
                 }
               }
             }
@@ -3074,6 +3131,42 @@
           }
         },
         "required" : [ "code", "description", "displaySequence", "enabled", "groupCode", "referenceDataId" ]
+      },
+      "SyncTimeSlotSummary" : {
+        "type" : "object",
+        "description" : "Sync response for Summary of time slots and associated visit slots for the prison",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "timeSlots" : {
+            "type" : "array",
+            "description" : "List of all time slots and associated visit lots for the prison",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncTimeSlotSummaryItem"
+            }
+          }
+        },
+        "required" : [ "prisonCode", "timeSlots" ]
+      },
+      "SyncTimeSlotSummaryItem" : {
+        "type" : "object",
+        "properties" : {
+          "timeSlot" : {
+            "$ref" : "#/components/schemas/SyncTimeSlot",
+            "description" : "Time Slot"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of visit slots associated with time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/SyncVisitSlot"
+            }
+          }
+        },
+        "required" : [ "timeSlot", "visitSlots" ]
       },
       "PagedModelSyncOfficialVisitId" : {
         "type" : "object",
