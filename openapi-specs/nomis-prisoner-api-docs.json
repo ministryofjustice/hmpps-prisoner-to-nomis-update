@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-04.1006.717aab5"
+    "version" : "2026-02-05.1022.d895741"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -12954,6 +12954,66 @@
         }
       }
     },
+    "/visits/configuration/time-slots/prison-id/{prisonId}" : {
+      "get" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Get a list of timeslots for specific prison",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonVisitTimeSlots",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "If supplied only return time slots that have not expired",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "If supplied only return time slots that have not expired",
+            "example" : true
+          },
+          "example" : true
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of timeslots",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitTimeSlotForPrisonResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}/time-slot-sequence/{timeSlotSequence}" : {
       "get" : {
         "tags" : [ "visits-configuration-resource" ],
@@ -13074,6 +13134,46 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PagedModelVisitTimeSlotIdResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/configuration/prisons" : {
+      "get" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Get a list of prisonIds that are active have timeslots configured",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getActivePrisonsWithTimeSlots",
+        "responses" : {
+          "200" : {
+            "description" : "List of prisons",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ActivePrisonWithTimeSlotResponse"
                 }
               }
             }
@@ -29034,12 +29134,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -29116,6 +29216,24 @@
           }
         },
         "required" : [ "audit", "id", "internalLocation" ]
+      },
+      "VisitTimeSlotForPrisonResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "timeSlots" : {
+            "type" : "array",
+            "description" : "The time slots for the prison",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitTimeSlotResponse"
+            }
+          }
+        },
+        "required" : [ "prisonId", "timeSlots" ]
       },
       "VisitTimeSlotResponse" : {
         "type" : "object",
@@ -29230,6 +29348,29 @@
           }
         },
         "required" : [ "dayOfWeek", "prisonId", "timeSlotSequence" ]
+      },
+      "ActivePrison" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          }
+        },
+        "required" : [ "prisonId" ]
+      },
+      "ActivePrisonWithTimeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisons" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ActivePrison"
+            }
+          }
+        },
+        "required" : [ "prisons" ]
       },
       "VisitBalanceDetailResponse" : {
         "type" : "object",
@@ -31479,6 +31620,23 @@
       "CsraGetDto" : {
         "type" : "object",
         "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoners booking id",
+            "example" : 3222111
+          },
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The assessment sequence number within the booking",
+            "example" : 4
+          },
+          "agencyId" : {
+            "type" : "string",
+            "description" : "The prisoner's prison",
+            "example" : "LEI"
+          },
           "assessmentDate" : {
             "type" : "string",
             "format" : "date",
@@ -31578,9 +31736,69 @@
           "reviewComment" : {
             "type" : "string",
             "description" : "Approval Comment text"
+          },
+          "sections" : {
+            "type" : "array",
+            "description" : "Question and answer details by section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraSectionDto"
+            }
           }
         },
-        "required" : [ "assessmentDate", "assessmentStaffId", "score", "status", "type" ]
+        "required" : [ "assessmentDate", "assessmentStaffId", "bookingId", "createdBy", "createdDateTime", "score", "sections", "sequence", "status", "type" ]
+      },
+      "CsraQuestionDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "responses" : {
+            "type" : "array",
+            "description" : "Answers to this question",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraResponseDto"
+            }
+          }
+        },
+        "required" : [ "code", "responses" ]
+      },
+      "CsraResponseDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "answer" : {
+            "type" : "string"
+          },
+          "comment" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code" ]
+      },
+      "CsraSectionDto" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "questions" : {
+            "type" : "array",
+            "description" : "Questions and answers in this section",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraQuestionDto"
+            }
+          }
+        },
+        "required" : [ "code", "questions" ]
       },
       "ADASummary" : {
         "type" : "object",
