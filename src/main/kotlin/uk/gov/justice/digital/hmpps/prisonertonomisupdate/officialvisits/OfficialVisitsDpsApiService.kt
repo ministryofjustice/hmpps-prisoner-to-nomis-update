@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.ReconciliationApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.PagedModelSyncOfficialVisitId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -48,4 +49,7 @@ class OfficialVisitsDpsApiService(
     toDate = toDate,
     currentTermOnly = currentTermOnly,
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun getTimeSlotsForPrison(prisonId: String, activeOnly: Boolean = false): SyncTimeSlotSummary = api.summariseTimeSlotsAndVisitSlots(prisonCode = prisonId, activeOnly = activeOnly)
+    .retryWhen(retrySpec).awaitSingle()
 }
