@@ -23,7 +23,7 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
 
     fun visitTimeSlotResponse() = VisitTimeSlotResponse(
-      prisonId = "LEI",
+      prisonId = "BXI",
       dayOfWeek = VisitTimeSlotResponse.DayOfWeek.MON,
       timeSlotSequence = 1,
       startTime = "10:00",
@@ -39,6 +39,8 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun visitSlotResponse() = VisitSlotResponse(
       id = 123,
       internalLocation = VisitInternalLocationResponse(id = 122, "LEI-VISIT-1"),
+      maxAdults = 9,
+      maxGroups = 9,
       audit = NomisAudit(
         createDatetime = LocalDateTime.parse("2020-01-01T10:00"),
         createUsername = "B.BOB",

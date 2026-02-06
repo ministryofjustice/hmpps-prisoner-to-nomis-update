@@ -92,6 +92,10 @@ generic-service:
       type: TAP_ALL_PRISONERS_RECON
       schedule: "30 2 * * *"
       suspend: true
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
 
 
 generic-prometheus-alerts:

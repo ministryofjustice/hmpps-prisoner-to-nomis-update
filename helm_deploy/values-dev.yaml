@@ -75,6 +75,10 @@ generic-service:
       type: COREPERSON_ACTIVE_RECON
       schedule: "30 14 * * *"
       suspend: true
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
