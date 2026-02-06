@@ -56,6 +56,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
@@ -93,6 +94,7 @@ class BatchManagerTest {
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
   private val temporaryAbsencesAllPrisonersReconciliationService = mock<TemporaryAbsencesAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
+  private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -406,6 +408,16 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the visit slots reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.VISIT_SLOTS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(visitSlotsReconciliationService).generateVisitSlotsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the TAP all prisoner reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.TAP_ALL_PRISONERS_RECON)
 
@@ -444,5 +456,6 @@ class BatchManagerTest {
     sentencingReconciliationService = sentencingReconciliationService,
     temporaryAbsencesAllPrisonersReconciliationService = temporaryAbsencesAllPrisonersReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
+    visitSlotsReconciliationService = visitSlotsReconciliationService,
   )
 }

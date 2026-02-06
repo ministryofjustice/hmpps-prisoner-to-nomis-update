@@ -121,6 +121,8 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonCode = "BXI",
       prisonTimeSlotId = 1,
       dpsLocationId = UUID.randomUUID(),
+      maxAdults = 9,
+      maxGroups = 9,
       createdBy = "T.SMITH",
       createdTime = LocalDateTime.parse("2020-01-01T10:00"),
     )

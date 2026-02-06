@@ -154,6 +154,10 @@ generic-service:
     - name: tap-all-prisoners-recon
       type: TAP_ALL_PRISONERS_RECON
       schedule: "00 1 * * *"
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   sqsNumberAlertQueueMappings:

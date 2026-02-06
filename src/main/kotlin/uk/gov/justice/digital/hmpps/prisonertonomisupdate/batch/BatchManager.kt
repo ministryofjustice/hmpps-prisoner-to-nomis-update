@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTEN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ALL_PRISONERS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_SLOTS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
@@ -60,6 +61,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAss
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
@@ -91,6 +93,7 @@ enum class BatchType {
   OFFICIAL_VISIT_ALL_RECON,
   OFFICIAL_VISIT_ALL_MISSING_RECON,
   OFFICIAL_VISIT_ACTIVE_SCH_RECON,
+  VISIT_SLOTS_RECON,
   ORGANISATIONS_RECON,
   PERSON_CONTACT_RECON,
   PRISON_BALANCE_RECON,
@@ -135,6 +138,7 @@ class BatchManager(
   private val sentencingReconciliationService: SentencingReconciliationService,
   private val temporaryAbsencesAllPrisonersReconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
+  private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
 ) {
 
   @EventListener
@@ -175,6 +179,7 @@ class BatchManager(
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
       TAP_ALL_PRISONERS_RECON -> temporaryAbsencesAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
+      VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()
     }
   }
 
