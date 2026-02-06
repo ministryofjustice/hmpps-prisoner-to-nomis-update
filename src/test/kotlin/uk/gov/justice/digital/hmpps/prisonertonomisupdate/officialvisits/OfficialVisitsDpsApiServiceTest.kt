@@ -164,4 +164,42 @@ class OfficialVisitsDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetTimeSlotsForPrison {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetTimeSlotsForPrison(prisonId = "BXI")
+
+      apiService.getTimeSlotsForPrison(prisonId = "BXI")
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get slots endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetTimeSlotsForPrison(prisonId = "BXI")
+
+      apiService.getTimeSlotsForPrison(prisonId = "BXI")
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconcile/time-slots/prison/BXI")),
+      )
+    }
+
+    @Test
+    fun `will call the get slots endpoint with parameters`() = runTest {
+      dpsOfficialVisitsServer.stubGetTimeSlotsForPrison(prisonId = "BXI")
+
+      apiService.getTimeSlotsForPrison(prisonId = "BXI", activeOnly = true)
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconcile/time-slots/prison/BXI"))
+          .withQueryParam("activeOnly", equalTo("true")),
+      )
+    }
+  }
 }

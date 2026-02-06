@@ -14,6 +14,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiExtension.Companion.dpsOfficialVisitsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.PagedModelSyncOfficialVisitId
@@ -21,6 +22,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.R
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitor
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummaryItem
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitType
@@ -92,6 +97,30 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       relationshipType = RelationshipType.OFFICIAL,
       relationshipCode = "POL",
       attendanceCode = AttendanceType.ATTENDED,
+      createdBy = "T.SMITH",
+      createdTime = LocalDateTime.parse("2020-01-01T10:00"),
+    )
+
+    fun syncTimeSlotSummaryItem() = SyncTimeSlotSummaryItem(
+      timeSlot = syncTimeSlot(),
+      visitSlots = listOf(syncVisitSlot()),
+    )
+    fun syncTimeSlot() = SyncTimeSlot(
+      prisonTimeSlotId = 1,
+      prisonCode = "BXI",
+      dayCode = DayType.MON,
+      startTime = "10:00",
+      endTime = "11:00",
+      effectiveDate = LocalDate.parse("2020-01-01"),
+      createdBy = "T.SMITH",
+      createdTime = LocalDateTime.parse("2020-01-01T10:00"),
+    )
+
+    fun syncVisitSlot() = SyncVisitSlot(
+      visitSlotId = 10,
+      prisonCode = "BXI",
+      prisonTimeSlotId = 1,
+      dpsLocationId = UUID.randomUUID(),
       createdBy = "T.SMITH",
       createdTime = LocalDateTime.parse("2020-01-01T10:00"),
     )
@@ -169,6 +198,23 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetOfficialVisitsForPrisoner(offenderNo: String, response: List<SyncOfficialVisit> = emptyList()) {
     dpsOfficialVisitsServer.stubFor(
       get(urlPathEqualTo("/reconcile/prisoner/$offenderNo")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetTimeSlotsForPrison(
+    prisonId: String,
+    response: SyncTimeSlotSummary = SyncTimeSlotSummary(
+      prisonCode = prisonId,
+      timeSlots = listOf(syncTimeSlotSummaryItem()),
+    ),
+  ) {
+    dpsOfficialVisitsServer.stubFor(
+      get(urlPathEqualTo("/reconcile/time-slots/prison/$prisonId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
