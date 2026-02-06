@@ -68,9 +68,31 @@ class VisitSlotsReconciliationService(
         async { dpsApiService.getTimeSlotsForPrison(prisonId) }
     }.awaitBoth()
 
-    log.info("Checking prison $prisonId for mismatches NOMIS count ${nomisTimeSlots.timeSlots.size} DPS count ${dpsTimeSlots.timeSlots.size}")
+    val nomisSlotPerDay = nomisTimeSlots.timeSlots.groupBy { it.dayOfWeek.toString() }
+    val dpsSlotPerDay = dpsTimeSlots.timeSlots.groupBy { it.timeSlot.dayCode.toString() }
 
-    return emptyList()
+    val mismatches = listOf("MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN").mapNotNull { dayOfWeek ->
+      val nomisSlots = nomisSlotPerDay[dayOfWeek] ?: emptyList()
+      val dpsSlots = dpsSlotPerDay[dayOfWeek] ?: emptyList()
+      if (nomisSlots.size != dpsSlots.size) {
+        MismatchTimeSlot(prisonId = prisonId, dayOfWeek = dayOfWeek, reason = "time-slot-count-mismatch").also {
+          telemetryClient.trackEvent(
+            "$TELEMETRY_VISIT_SLOTS_PREFIX-mismatch",
+            mapOf(
+              "prisonId" to prisonId,
+              "dayOfWeek" to dayOfWeek,
+              "nomisCount" to nomisSlots.size.toString(),
+              "dpsCount" to dpsSlots.size.toString(),
+              "reason" to "time-slot-count-mismatch",
+            ),
+          )
+        }
+      } else {
+        null
+      }
+    }
+
+    return mismatches
   }
 }
 
