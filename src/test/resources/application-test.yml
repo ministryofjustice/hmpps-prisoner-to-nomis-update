@@ -329,6 +329,7 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
           "person.temporary-absence-authorisation.approved",
+          "person.temporary-absence-authorisation.relocated",
           "external-movements-api.temporary-absence-outside-movement.created",
           "person.temporary-absence.scheduled",
           "person.temporary-absence.rescheduled",

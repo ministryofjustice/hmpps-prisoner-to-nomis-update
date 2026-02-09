@@ -279,6 +279,44 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
     }
+
+    @Nested
+    @DisplayName("when we receive a relocated event for a new authorisation")
+    inner class IgnoreRelocatedEventType {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+
+        publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will check if the application mapping exists`() {
+        mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the create was ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absence-application-create-ignored"),
+          check {
+            assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
+            assertThat(it).containsEntry("offenderNo", prisonerNumber)
+            assertThat(it).containsEntry("reason", "This event is applied to updates only")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will NOT create the application in NOMIS once`() {
+        await untilAsserted {
+          nomisApi.verify(0, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/application")))
+        }
+      }
+    }
   }
 
   @Nested
@@ -492,6 +530,39 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
               .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
               .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when we receive an update request for authorisation relocated")
+      inner class UpdateForRelocatedEventType {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the application in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")),
           )
         }
       }
@@ -1489,8 +1560,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishAuthorisationDomainEvent(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS") {
-    with("person.temporary-absence-authorisation.approved") {
+  private fun publishAuthorisationDomainEvent(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS", eventType: String = "person.temporary-absence-authorisation.approved") {
+    with(eventType) {
       publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, id = dpsAuthorisationId, prisonerNumber = prisonerNumber, source = source))
     }
   }
