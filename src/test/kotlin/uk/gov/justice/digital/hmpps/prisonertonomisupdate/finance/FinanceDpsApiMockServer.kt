@@ -73,26 +73,26 @@ class FinanceDpsApiExtension :
       ),
     )
 
-    fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID()) = SyncGeneralLedgerTransactionResponse(
+    fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(
+      legacyTransactionId = transactionId,
       synchronizedTransactionId = uuid,
       description = "General Ledger Account Transfer",
-      caseloadId = "GMI",
-      transactionType = "GJ",
-      transactionTimestamp = LocalDateTime.parse("2011-09-30T09:08"),
-      createdAt = LocalDateTime.parse("2024-06-18T14:50"),
-      createdBy = "JD12345",
-      createdByDisplayName = "J Doe",
-      legacyTransactionId = 123456,
-      lastModifiedAt = LocalDateTime.parse("2022-07-15T23:03:01"),
-      lastModifiedBy = "AB11DZ",
-      lastModifiedByDisplayName = "U Dated",
-      reference = "REF12345",
+      caseloadId = "SWI",
+      transactionType = "SPEN",
+      transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
+      createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
+      createdBy = "J_BROWN",
+      createdByDisplayName = "Jim Brown",
+      lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
+      lastModifiedBy = "T_SMITH",
+      lastModifiedByDisplayName = "Tim Smith",
+      reference = "ref 123",
       generalLedgerEntries = listOf(
         GeneralLedgerEntry(
           entrySequence = 1,
-          code = 2101,
-          postingType = GeneralLedgerEntry.PostingType.DR,
-          amount = 162.toDouble(),
+          code = 1501,
+          postingType = GeneralLedgerEntry.PostingType.CR,
+          amount = 5.4,
         ),
       ),
     )
@@ -139,9 +139,9 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetGeneralLedgerTransaction(transactionId: String, response: SyncGeneralLedgerTransactionResponse = generalLedgerTransaction()) {
+  fun stubGetGeneralLedgerTransaction(dpsTransactionId: String, response: SyncGeneralLedgerTransactionResponse = generalLedgerTransaction()) {
     stubFor(
-      get("/sync/general-ledger-transactions/$transactionId")
+      get("/sync/general-ledger-transactions/$dpsTransactionId")
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }

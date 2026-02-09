@@ -172,6 +172,43 @@ internal class NomisApiServiceTest {
   }
 
   @Nested
+  inner class GetActivePrisons {
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      nomisApiService.getActivePrisons()
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will call the service endpoint`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      nomisApiService.getActivePrisons()
+
+      nomisApi.verify(getRequestedFor(urlPathEqualTo("/prisons")))
+    }
+
+    @Test
+    fun `will return prison data`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      val prisons = nomisApiService.getActivePrisons()
+      assertThat(prisons[0].id).isEqualTo("ASI")
+      assertThat(prisons[0].description).isEqualTo("Ashfield")
+      assertThat(prisons[1].id).isEqualTo("LEI")
+      assertThat(prisons[1].description).isEqualTo("Leeds")
+      assertThat(prisons[2].id).isEqualTo("MDI")
+      assertThat(prisons[2].description).isEqualTo("Moorland")
+    }
+  }
+
+  @Nested
   inner class CreateVisit {
 
     @Test

@@ -23,12 +23,15 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import java.time.LocalDate
+import kotlin.String
+import kotlin.collections.List
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -105,6 +108,17 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NOT_FOUND.value()),
+      ),
+    )
+  }
+
+  fun stubGetActivePrisons(response: List<Prison> = activePrisons()) {
+    stubFor(
+      get(urlPathEqualTo("/prisons")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -2383,3 +2397,5 @@ private const val CREATE_INCENTIVE_RESPONSE = """
     """
 
 fun generateOffenderNo(prefix: String = "A", sequence: Long = 1, suffix: String = "TZ") = "$prefix${sequence.toString().padStart(4, '0')}$suffix"
+
+fun activePrisons() = listOf(Prison("ASI", "Ashfield"), Prison("LEI", "Leeds"), Prison("MDI", "Moorland"))

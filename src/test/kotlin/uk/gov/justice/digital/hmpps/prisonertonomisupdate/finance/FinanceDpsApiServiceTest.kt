@@ -32,7 +32,7 @@ class FinanceDpsApiServiceTest {
   private lateinit var apiService: FinanceDpsApiService
 
   @Nested
-  inner class GetSyncOffenderTransaction {
+  inner class GetSyncPrisonerTransaction {
     val transactionId: UUID = UUID.randomUUID()
 
     @Test
@@ -60,14 +60,14 @@ class FinanceDpsApiServiceTest {
   }
 
   @Nested
-  inner class GetSyncGeneralLedgerTransaction {
+  inner class GetSyncPrisonTransaction {
     val transactionId: UUID = UUID.randomUUID()
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
       dpsFinanceServer.stubGetGeneralLedgerTransaction(transactionId.toString())
 
-      apiService.getGeneralLedgerTransaction(transactionId)
+      apiService.getPrisonTransaction(transactionId)
 
       dpsFinanceServer.verify(
         getRequestedFor(anyUrl())
@@ -79,7 +79,7 @@ class FinanceDpsApiServiceTest {
     fun `will call the GET endpoint`() = runTest {
       dpsFinanceServer.stubGetGeneralLedgerTransaction(transactionId.toString())
 
-      apiService.getGeneralLedgerTransaction(transactionId)
+      apiService.getPrisonTransaction(transactionId)
 
       dpsFinanceServer.verify(
         getRequestedFor(urlPathEqualTo("/sync/general-ledger-transactions/$transactionId")),
@@ -125,6 +125,7 @@ class FinanceDpsApiServiceTest {
     }
   }
 
+  // TODO Check if we need this
   @Nested
   inner class GetPrisonerSubAccountDetails {
     val prisonerNo = "A1234AA"

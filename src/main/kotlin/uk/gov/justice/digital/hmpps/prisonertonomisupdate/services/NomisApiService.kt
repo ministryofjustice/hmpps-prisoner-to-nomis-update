@@ -24,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.IncentivesResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.SentencingAdjustmentResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
@@ -57,6 +58,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Lo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
@@ -98,6 +100,7 @@ class NomisApiService(
   private val bookingApi = BookingsResourceApi(webClient)
   private val incentivesResourceApi = IncentivesResourceApi(webClient)
   private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
+  private val prisonApi = PrisonResourceApi(webClient)
 
   suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
     .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
@@ -108,6 +111,11 @@ class NomisApiService(
     .uri("/agency-switches/{serviceCode}/agency/{agencyId}", serviceCode, agencyId)
     .retrieve()
     .awaitBodilessEntityAsTrueNotFoundAsFalse()
+
+  suspend fun getActivePrisons(): List<Prison> = prisonApi
+    .getActivePrisons()
+    .retryWhen(backoffSpec)
+    .awaitSingle()
 
   // ////////// VISITS //////////////
 
