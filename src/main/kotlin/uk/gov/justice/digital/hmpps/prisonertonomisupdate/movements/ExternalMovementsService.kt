@@ -32,6 +32,8 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+private val AUTHORISATION_EVENTS_UPDATES_ONLY = listOf("person.temporary-absence-authorisation.relocated")
+
 @Service
 class ExternalMovementsService(
   private val mappingApiService: ExternalMovementsMappingApiService,
@@ -62,14 +64,14 @@ class ExternalMovementsService(
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsAuthorisationId = event.additionalInformation.id
     val source = event.additionalInformation.source
-    authorisationChanged(prisonerNumber, dpsAuthorisationId, source)
+    val updatesOnly = event.eventType in AUTHORISATION_EVENTS_UPDATES_ONLY
+    authorisationChanged(prisonerNumber, dpsAuthorisationId, source, updatesOnly)
   }
 
-  private suspend fun authorisationChanged(prisonerNumber: String, dpsAuthorisationId: UUID, source: String, triggeredBy: String = "EVENT") {
+  private suspend fun authorisationChanged(prisonerNumber: String, dpsAuthorisationId: UUID, source: String, updatesOnly: Boolean) {
     val telemetryMap = mutableMapOf(
       "offenderNo" to prisonerNumber,
       "dpsAuthorisationId" to dpsAuthorisationId.toString(),
-      "triggeredBy" to triggeredBy,
     )
     var updateType: String? = "create"
 
@@ -81,6 +83,14 @@ class ExternalMovementsService(
     runCatching {
       val existingMapping = mappingApiService.getApplicationMapping(dpsAuthorisationId)
       if (existingMapping != null) updateType = "update"
+      if (existingMapping == null && updatesOnly) {
+        telemetryClient.trackEvent(
+          "${APPLICATION.entityName}-$updateType-ignored",
+          telemetryMap + mapOf("reason" to "This event is applied to updates only"),
+        )
+        return
+      }
+
       val dps = dpsApiService.getTapAuthorisation(dpsAuthorisationId)
       val nomis = nomisApiService.upsertTemporaryAbsenceApplication(
         prisonerNumber,
