@@ -92,6 +92,7 @@ class CourtSentencingApiExtension :
       appearances = appearances,
       courtCaseLegacyData = CourtCaseLegacyData(caseReferences),
       merged = false,
+      status = if (active) ReconciliationCourtCase.Status.ACTIVE else ReconciliationCourtCase.Status.INACTIVE,
     )
 
     fun reconciliationCourtAppearance(
