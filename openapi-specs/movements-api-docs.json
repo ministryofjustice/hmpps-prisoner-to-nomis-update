@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-02"
+    "version" : "2026-02-06"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -191,6 +191,8 @@
                   "$ref" : "#/components/schemas/ChangeAuthorisationComments"
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationDateRange"
+                }, {
+                  "$ref" : "#/components/schemas/ChangeAuthorisationLocations"
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationTransport"
                 }, {
@@ -1312,6 +1314,23 @@
         } ],
         "required" : [ "end", "start" ]
       },
+      "ChangeAuthorisationLocations" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "locations" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/Location"
+              },
+              "uniqueItems" : true
+            }
+          }
+        } ],
+        "required" : [ "locations" ]
+      },
       "ChangeAuthorisationTransport" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1487,6 +1506,9 @@
           "end" : {
             "type" : "string",
             "format" : "date"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
           },
           "comments" : {
             "type" : "string"
@@ -2510,7 +2532,8 @@
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/Location"
-            }
+            },
+            "uniqueItems" : true
           },
           "schedule" : {
             "$ref" : "#/components/schemas/JsonNode"
