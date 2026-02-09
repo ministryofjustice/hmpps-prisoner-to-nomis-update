@@ -323,8 +323,9 @@ class CourtSentencingReconciliationService(
       SentenceFields(
         // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
         sentencingAppearanceDate = it.sentenceStartDate,
-        sentenceCategory = it.sentenceCategory,
-        sentenceCalcType = it.sentenceCalcType,
+        // for recalls fallback to legacy data when DPS records a NOMIS recall as UNKNOWN
+        sentenceCategory = it.sentenceCategory.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCategory,
+        sentenceCalcType = it.sentenceCalcType.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCalcType,
         fine = it.fineAmount?.stripTrailingZeros(),
         status = if (it.active) {
           "A"
