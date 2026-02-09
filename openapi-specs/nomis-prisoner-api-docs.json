@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-05.1022.d895741"
+    "version" : "2026-02-09.1052.b49c8f0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -13329,9 +13329,9 @@
     },
     "/transactions/{transactionId}" : {
       "get" : {
-        "tags" : [ "transactions-resource" ],
-        "summary" : "get a transaction group by id",
-        "description" : "Retrieves transactions (all in sequence) identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "tags" : [ "prisoner-transactions-resource" ],
+        "summary" : "Get a prisoner transaction group by id",
+        "description" : "Retrieves prisoner transactions (all in sequence) identified by id. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getTransaction",
         "parameters" : [ {
           "name" : "transactionId",
@@ -13395,8 +13395,8 @@
     },
     "/transactions/{transactionId}/general-ledger" : {
       "get" : {
-        "tags" : [ "transactions-resource" ],
-        "summary" : "get a transaction by id and sequence number",
+        "tags" : [ "prison-transactions-resource" ],
+        "summary" : "Get a transaction by id and sequence number",
         "description" : "Retrieves a prisoner transaction. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getGLTransaction",
         "parameters" : [ {
@@ -13461,9 +13461,9 @@
     },
     "/transactions/{date}/first" : {
       "get" : {
-        "tags" : [ "transactions-resource" ],
-        "summary" : "get the first transaction on the given date",
-        "description" : "Intended to be used to start retrieval of transactions from this date. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "tags" : [ "prison-transactions-resource" ],
+        "summary" : "get the first general ledger transaction on the given date",
+        "description" : "\n      Intended to be used to start retrieval of transactions from this date. \n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "getFirstTransactionOn",
         "parameters" : [ {
           "name" : "date",
@@ -13523,10 +13523,87 @@
         }
       }
     },
+    "/transactions/prison/{prisonId}" : {
+      "get" : {
+        "tags" : [ "prison-transactions-resource" ],
+        "summary" : "Get all  general ledger (only) transactions for a prison on the given date",
+        "description" : "\n      Get all prison transactions on this date. It will also return transactions related\n      to the first transaction (from previous day) and end transaction of the day (from next day), to ensure full\n      transactions (ie for all sequence values) are returned.\n      Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getTransactionsOn",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "prisonId",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "prisonId",
+            "example" : "MDI"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "entryDate",
+          "in" : "query",
+          "description" : "Starting date",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Starting date",
+            "example" : "2025-08-11"
+          },
+          "example" : "2025-08-11"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Transaction list Returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/GeneralLedgerTransactionDto"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Transaction does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/transactions/from/{transactionId}/{transactionEntrySequence}" : {
       "get" : {
-        "tags" : [ "transactions-resource" ],
-        "summary" : "get a page of orphan GL transactions starting from an id,seq,glseq onwards",
+        "tags" : [ "prisoner-transactions-resource" ],
+        "summary" : "get a page of orphan (prison transactions with no offender) GL transactions starting from an id,seq,glseq onwards",
         "description" : "Retrieves transactions to be iterated over. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "findOffenderTransactionsFromId",
         "parameters" : [ {
@@ -13616,7 +13693,7 @@
     },
     "/transactions/from/{transactionId}/{transactionEntrySequence}/{generalLedgerEntrySequence}" : {
       "get" : {
-        "tags" : [ "transactions-resource" ],
+        "tags" : [ "prison-transactions-resource" ],
         "summary" : "get a transaction by id and sequence number",
         "description" : "Retrieves a prisoner transaction. Requires NOMIS_PRISONER_API__SYNCHRONISATION__RW",
         "operationId" : "findNonOffenderTransactionsFromId",
@@ -14124,6 +14201,49 @@
         }
       }
     },
+    "/prisons" : {
+      "get" : {
+        "tags" : [ "prison-resource" ],
+        "summary" : "Retrieve a list of active prisons.",
+        "description" : "\n      Retrieve a list of active prisons. It only returns prisons that are active and does not return \n      prisons with any of the \"special\" codes: \"*ALL*\", \"OUT\", \"TRN\" or \"ZZGHI\".\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW\n       ",
+        "operationId" : "getActivePrisons",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Prison"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisons/{prisonId}/incentive-levels" : {
       "get" : {
         "tags" : [ "prison-resource" ],
@@ -14154,16 +14274,6 @@
               }
             }
           },
-          "400" : {
-            "description" : "Bad request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -14176,16 +14286,6 @@
           },
           "403" : {
             "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prison not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -15037,6 +15137,38 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/{offenderNo}/csras" : {
+      "get" : {
+        "tags" : [ "csra-resource" ],
+        "summary" : "Gets all CSRAs for a prisoner",
+        "description" : "Retrieves all CSRAs for a specific prisoner, for migration. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCsrasForPrisoner",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender No AKA prisoner number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender No AKA prisoner number",
+            "example" : "A3745XD"
+          },
+          "example" : "A3745XD"
+        } ],
+        "responses" : {
+          "404" : {
+            "description" : "Prisoner does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -17755,6 +17887,71 @@
           },
           "404" : {
             "description" : "Offender or application not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Delete a temporary absence application for an offender.",
+        "description" : "Deletes a temporary absence application. This should only be required where we have duplicates! Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteTemporaryAbsenceApplication",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        }, {
+          "name" : "applicationId",
+          "in" : "path",
+          "description" : "TAP movement application ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "TAP movement application ID",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Temporary absence application deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Unable to delete the application. See error message for details",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -30118,6 +30315,23 @@
           }
         },
         "required" : [ "createDateTime", "createdBy", "type" ]
+      },
+      "Prison" : {
+        "type" : "object",
+        "description" : "Prison",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "description" : "The prison Id",
+            "example" : "MDI"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "The description for the prison",
+            "example" : "Moorland"
+          }
+        },
+        "required" : [ "description", "id" ]
       },
       "IncentiveLevel" : {
         "type" : "object",

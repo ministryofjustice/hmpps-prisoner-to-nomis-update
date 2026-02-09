@@ -6,7 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.TransactionsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonTransactionsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerTransactionsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -20,6 +21,8 @@ class TransactionNomisApiService(
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "TransactionNomisApiService"),
   )
+  private val prisonTransactionsApi = PrisonTransactionsResourceApi(webClient)
+  private val prisonerTransactionsApi = PrisonerTransactionsResourceApi(webClient)
 
   suspend fun getFirstTransactionIdFrom(fromDate: LocalDate): Long = webClient
     .get()
@@ -32,13 +35,11 @@ class TransactionNomisApiService(
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
-  private val transactionsApi = TransactionsResourceApi(webClient)
-
-  suspend fun getTransactions(transactionId: Long): List<OffenderTransactionDto> = transactionsApi
+  suspend fun getTransactions(transactionId: Long): List<OffenderTransactionDto> = prisonerTransactionsApi
     .getTransaction(transactionId)
     .awaitSingle()
 
-  suspend fun getGLTransactions(transactionId: Long): List<GeneralLedgerTransactionDto> = transactionsApi
+  suspend fun getGLTransactions(transactionId: Long): List<GeneralLedgerTransactionDto> = prisonTransactionsApi
     .getGLTransaction(transactionId)
     .awaitSingle()
 
