@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
@@ -338,8 +339,10 @@ class CourtSentencingReconciliationService(
       )
     }.distinctBy { it.id }
 
+    // when duplicate - do not compare status since DPS does not show case and can be inactive when active in NOMIS
+    val isClonedDuplicate = dpsResponse.status == ReconciliationCourtCase.Status.DUPLICATE
     val dpsFields = CaseFields(
-      active = dpsResponse.active,
+      active = dpsResponse.active.takeUnless { isClonedDuplicate },
       id = dpsCaseId,
       appearances = dpsResponse.appearances.map { appearanceResponse ->
         val charges = appearanceResponse.charges.map { appearanceChargeResponse ->
@@ -364,7 +367,7 @@ class CourtSentencingReconciliationService(
       caseReferences = dpsResponse.courtCaseLegacyData?.caseReferences?.map { it.offenderCaseReference } ?: emptyList(),
     )
     val nomisFields = CaseFields(
-      active = nomisResponse.caseStatus.code == "A",
+      active = (nomisResponse.caseStatus.code == "A").takeUnless { isClonedDuplicate },
       id = nomisResponse.id.toString(),
       appearances = nomisResponse.courtEvents.map { eventResponse ->
         val charges = eventResponse.courtEventCharges.map { chargeResponse ->
@@ -741,7 +744,7 @@ data class MismatchPrisonerCasesResponse(
 )
 
 data class CaseFields(
-  val active: Boolean,
+  val active: Boolean?,
   val id: String,
   val appearances: List<AppearanceFields> = emptyList(),
   val caseReferences: List<String> = emptyList(),

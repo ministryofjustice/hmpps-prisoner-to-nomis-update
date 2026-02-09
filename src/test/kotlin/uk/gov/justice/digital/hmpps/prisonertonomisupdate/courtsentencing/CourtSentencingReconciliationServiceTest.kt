@@ -154,6 +154,22 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will not report a case status mismatch when DPS case is a DUPLICATE`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(caseStatus = CodeDescription("A", "Active")),
+        dpsCase = dpsCourtCaseResponse().copy(active = false, status = ReconciliationCourtCase.Status.DUPLICATE),
+      )
+
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isNull()
+    }
+
+    @Test
     fun `will report an extra appearance in dps`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse(),
