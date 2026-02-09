@@ -8948,7 +8948,8 @@
           },
           "status" : {
             "type" : "string",
-            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ]
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ],
+            "default" : "ACTIVE"
           },
           "courtCaseLegacyData" : {
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
