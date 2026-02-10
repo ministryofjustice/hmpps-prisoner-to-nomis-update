@@ -260,6 +260,25 @@ class ContactPersonService(
     }
   }
 
+  suspend fun repairPrisonerContact(contactId: Long, prisonerContactId: Long) {
+    prisonerContactUpdated(
+      PrisonerContactUpdatedEvent(
+        additionalInformation = PrisonerContactAdditionalData(
+          prisonerContactId = prisonerContactId,
+          source = "DPS",
+        ),
+        personReference = ContactIdentifiers(
+          identifiers = listOf(
+            ContactPersonReference(
+              type = "DPS_CONTACT_ID",
+              value = contactId.toString(),
+            ),
+          ),
+        ),
+      ),
+    )
+  }
+
   suspend fun prisonerContactUpdated(event: PrisonerContactUpdatedEvent) {
     val entityName = CONTACT.entityName
 

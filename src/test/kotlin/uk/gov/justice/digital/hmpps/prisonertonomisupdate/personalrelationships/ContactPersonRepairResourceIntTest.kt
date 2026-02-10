@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -8,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.ArgumentMatchers
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -16,6 +18,7 @@ import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressDetails
@@ -33,6 +36,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonEmailResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonPhoneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonNomisApiMockServer.Companion.createPersonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDate
 
 class ContactPersonRepairResourceIntTest(
   @Autowired
@@ -271,6 +276,112 @@ class ContactPersonRepairResourceIntTest(
         verify(telemetryClient).trackEvent(
           eq("to-nomis-synch-contactperson-resynchronisation-repair"),
           check { assertThat(it["dpsContactId"]).isEqualTo(nomisPersonIdAndDpsContactId.toString()) },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @DisplayName("PUT /contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise")
+  @Nested
+  inner class RepairPrisonerContact {
+    val dpsPrisonerContactId = 786756L
+    private val nomisContactId = 974592L
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        reset(telemetryClient)
+        mappingApi.stubGetByDpsPrisonerContactId(dpsPrisonerContactId = dpsPrisonerContactId, PersonContactMappingDto(dpsId = dpsPrisonerContactId.toString(), nomisId = nomisContactId, mappingType = PersonContactMappingDto.MappingType.DPS_CREATED))
+        dpsApi.stubGetPrisonerContact(
+          dpsPrisonerContactId,
+          prisonerContact().copy(
+            id = dpsPrisonerContactId,
+            contactId = nomisPersonIdAndDpsContactId,
+            prisonerNumber = "A1234KT",
+            contactType = "S",
+            relationshipType = "BRO",
+            nextOfKin = true,
+            emergencyContact = true,
+            comments = "Big brother",
+            active = true,
+            approvedVisitor = true,
+            expiryDate = LocalDate.parse("2020-01-01"),
+          ),
+        )
+        nomisApi.stubUpdatePersonContact(personId = nomisPersonIdAndDpsContactId, contactId = nomisContactId)
+
+        webTestClient.put().uri("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise", nomisPersonIdAndDpsContactId, dpsPrisonerContactId)
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `telemetry will contain key facts about the contact updated`() {
+        verify(telemetryClient).trackEvent(
+          ArgumentMatchers.eq("contact-update-success"),
+          check {
+            assertThat(it).containsEntry("dpsContactId", nomisPersonIdAndDpsContactId.toString())
+            assertThat(it).containsEntry("nomisPersonId", nomisPersonIdAndDpsContactId.toString())
+            assertThat(it).containsEntry("dpsPrisonerContactId", dpsPrisonerContactId.toString())
+            assertThat(it).containsEntry("nomisContactId", nomisContactId.toString())
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will update the person contact in NOMIS`() {
+        nomisApi.verify(
+          putRequestedFor(urlEqualTo("/persons/$nomisPersonIdAndDpsContactId/contact/$nomisContactId"))
+            .withRequestBodyJsonPath("contactTypeCode", "S")
+            .withRequestBodyJsonPath("relationshipTypeCode", "BRO")
+            .withRequestBodyJsonPath("active", true)
+            .withRequestBodyJsonPath("expiryDate", "2020-01-01")
+            .withRequestBodyJsonPath("approvedVisitor", true)
+            .withRequestBodyJsonPath("nextOfKin", true)
+            .withRequestBodyJsonPath("emergencyContact", true)
+            .withRequestBodyJsonPath("comment", "Big brother"),
+        )
+      }
+
+      @Test
+      fun `will output repair telemetry`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("to-nomis-synch-contactperson-prisoner-contact-resynchronisation-repair"),
+          check {
+            assertThat(it["dpsContactId"]).isEqualTo(nomisPersonIdAndDpsContactId.toString())
+            assertThat(it["dpsPrisonerContactId"]).isEqualTo(dpsPrisonerContactId.toString())
+          },
           isNull(),
         )
       }
