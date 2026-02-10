@@ -467,7 +467,7 @@ class CourtSentencingService(
               telemetryMap["nomisChargeId"] = it.nomisCourtChargeId.toString()
             }
 
-        courtSentencingApiService.getCourtCharge(chargeId).let { dpsCharge ->
+        courtSentencingApiService.getCourtChargeByAppearance(appearanceId = courtAppearanceId, chargeId = chargeId).let { dpsCharge ->
 
           val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
           nomisApiService.updateCourtCharge(
