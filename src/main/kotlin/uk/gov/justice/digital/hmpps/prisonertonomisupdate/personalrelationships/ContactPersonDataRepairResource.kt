@@ -7,6 +7,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
 
@@ -31,6 +32,30 @@ class ContactPersonDataRepairResource(
       "to-nomis-synch-contactperson-resynchronisation-repair",
       mapOf(
         "dpsContactId" to contactId.toString(),
+      ),
+      null,
+    )
+  }
+
+  @PutMapping("/contacts/{contactId}/prisoner-contact/{prisonerContactId}/resynchronise")
+  @ResponseStatus(HttpStatus.OK)
+  @Operation(
+    summary = "Update prisoner contact aka contact data from DPS back to NOMIS. This will update the prisoner contact",
+    description = "Used when an unexpected event has happened in DPS, for instance no domain events published after a prisoner contact that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW",
+  )
+  suspend fun repairPrisonerContact(
+    @PathVariable contactId: Long,
+    @PathVariable prisonerContactId: Long,
+  ) {
+    contactPersonService.repairPrisonerContact(
+      contactId = contactId,
+      prisonerContactId = prisonerContactId,
+    )
+    telemetryClient.trackEvent(
+      "to-nomis-synch-contactperson-prisoner-contact-resynchronisation-repair",
+      mapOf(
+        "dpsContactId" to contactId.toString(),
+        "dpsPrisonerContactId" to prisonerContactId.toString(),
       ),
       null,
     )
