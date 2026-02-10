@@ -12,7 +12,6 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.generalLedgerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
@@ -72,32 +71,7 @@ class FinanceDpsApiExtension :
         ),
       ),
     )
-
-    fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(
-      legacyTransactionId = transactionId,
-      synchronizedTransactionId = uuid,
-      description = "General Ledger Account Transfer",
-      caseloadId = "SWI",
-      transactionType = "SPEN",
-      transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
-      createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
-      createdBy = "J_BROWN",
-      createdByDisplayName = "Jim Brown",
-      lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
-      lastModifiedBy = "T_SMITH",
-      lastModifiedByDisplayName = "Tim Smith",
-      reference = "ref 123",
-      generalLedgerEntries = listOf(
-        GeneralLedgerEntry(
-          entrySequence = 1,
-          code = 1501,
-          postingType = GeneralLedgerEntry.PostingType.CR,
-          amount = 5.4,
-        ),
-      ),
-    )
   }
-
   override fun beforeAll(context: ExtensionContext) {
     dpsFinanceServer.start()
     jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
@@ -190,4 +164,27 @@ fun prisonAccounts(): GeneralLedgerBalanceDetailsList = GeneralLedgerBalanceDeta
 fun prisonAccountDetails(accountCode: Int = 2101) = GeneralLedgerBalanceDetails(
   accountCode = accountCode,
   balance = BigDecimal.valueOf(23.45),
+)
+fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(
+  legacyTransactionId = transactionId,
+  synchronizedTransactionId = uuid,
+  description = "General Ledger Account Transfer",
+  caseloadId = "MDI",
+  transactionType = "SPEN",
+  transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
+  createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
+  createdBy = "J_BROWN",
+  createdByDisplayName = "Jim Brown",
+  lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
+  lastModifiedBy = "T_SMITH",
+  lastModifiedByDisplayName = "Tim Smith",
+  reference = "ref 123",
+  generalLedgerEntries = listOf(
+    GeneralLedgerEntry(
+      entrySequence = 1,
+      code = 1501,
+      postingType = GeneralLedgerEntry.PostingType.CR,
+      amount = 5.4,
+    ),
+  ),
 )

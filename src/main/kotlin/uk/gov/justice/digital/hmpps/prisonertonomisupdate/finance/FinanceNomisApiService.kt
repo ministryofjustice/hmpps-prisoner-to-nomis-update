@@ -21,26 +21,30 @@ class FinanceNomisApiService(
     Context.of("api", "FinanceNomisApiService"),
   )
 
-  private val prisonerApi = PrisonerBalanceResourceApi(webClient)
-  private val prisonApi = PrisonBalanceResourceApi(webClient)
+  private val prisonBalanceApi = PrisonBalanceResourceApi(webClient)
+  private val prisonerBalanceApi = PrisonerBalanceResourceApi(webClient)
 
-  suspend fun getPrisonerBalanceIdentifiersFromId(rootOffenderId: Long?, pageSize: Int?, prisonIds: List<String>? = null): RootOffenderIdsWithLast = prisonerApi
-    .getPrisonerBalanceIdentifiersFromId(rootOffenderId, pageSize, prisonIds)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonerAccountDetails(rootOffenderId: Long): PrisonerBalanceDto = prisonerApi
-    .getPrisonerAccountDetails(rootOffenderId)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
-
-  suspend fun getPrisonBalanceIds(): List<String> = prisonApi
+  suspend fun getPrisonBalanceIds(): List<String> = prisonBalanceApi
     .getPrisonIds()
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonBalance(prisonId: String): PrisonBalanceDto = prisonApi
+  suspend fun getPrisonBalance(prisonId: String): PrisonBalanceDto = prisonBalanceApi
     .getPrisonBalance(prisonId)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerBalanceIdentifiersFromId(
+    rootOffenderId: Long?,
+    pageSize: Int?,
+    prisonIds: List<String>? = null,
+  ): RootOffenderIdsWithLast = prisonerBalanceApi
+    .getPrisonerBalanceIdentifiersFromId(rootOffenderId, pageSize, prisonIds)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerAccountDetails(rootOffenderId: Long): PrisonerBalanceDto = prisonerBalanceApi
+    .getPrisonerAccountDetails(rootOffenderId)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
