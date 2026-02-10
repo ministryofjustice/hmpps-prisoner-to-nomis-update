@@ -19,11 +19,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Vi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse.DayOfWeek
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncTimeSlotSummaryItem
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncVisitSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.visitSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.visitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummaryItem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 
 @SpringAPIServiceTest
 @Import(
@@ -49,13 +52,30 @@ class VisitSlotsReconciliationServiceTest {
   @Nested
   inner class CheckPrisonForMismatches {
     @Nested
+    inner class WhenAllMatches {
+      @BeforeEach
+      fun setUp() {
+        stubSlots(
+          prisonId = "BXI",
+          nomisTimeSlots = listOf(visitTimeSlotResponse()),
+          dpsTimeSlots = listOf(syncTimeSlotSummaryItem()),
+        )
+      }
+
+      @Test
+      fun `will return no mismatch`() = runTest {
+        assertThat(service.checkPrisonForMismatches("BXI")).isEmpty()
+      }
+    }
+
+    @Nested
     inner class WhenNumberSlotsPerDayMismatch {
       @BeforeEach
       fun setUp() {
         stubSlots(
           prisonId = "BXI",
           nomisTimeSlots = listOf(visitTimeSlotResponse().copy(dayOfWeek = DayOfWeek.MON), visitTimeSlotResponse().copy(dayOfWeek = DayOfWeek.TUE)),
-          dsTimeSlots = listOf(syncTimeSlotSummaryItem().copy(timeSlot = syncTimeSlot().copy(dayCode = DayType.MON))),
+          dpsTimeSlots = listOf(syncTimeSlotSummaryItem().copy(timeSlot = syncTimeSlot().copy(dayCode = DayType.MON))),
         )
       }
 
@@ -81,8 +101,78 @@ class VisitSlotsReconciliationServiceTest {
         )
       }
     }
+
+    @Nested
+    inner class WhenTimeSlotDiffers {
+      @BeforeEach
+      fun setUp() {
+        stubSlots(
+          prisonId = "BXI",
+          nomisTimeSlots = listOf(visitTimeSlotResponse().copy(expiryDate = LocalDate.now().minusDays(1))),
+          dpsTimeSlots = listOf(syncTimeSlotSummaryItem().copy(timeSlot = syncTimeSlot().copy(expiryDate = LocalDate.now().plusDays(1)))),
+        )
+      }
+
+      @Test
+      fun `will return mismatch`() = runTest {
+        assertThat(service.checkPrisonForMismatches("BXI")).containsExactlyInAnyOrder(
+          MismatchTimeSlot(
+            prisonId = "BXI",
+            dayOfWeek = "MON",
+            reason = "matching-time-slot-not-found",
+          ),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("visit-slots-reconciliation-mismatch"),
+          check {
+            assertThat(it["prisonId"]).isEqualTo("BXI")
+            assertThat(it["dayOfWeek"]).isEqualTo("MON")
+            assertThat(it["startTime"]).isEqualTo("10:00")
+            assertThat(it["endTime"]).isEqualTo("11:00")
+            assertThat(it["nomisTimeSlotSequence"]).isEqualTo("1")
+            assertThat(it["reason"]).isEqualTo("matching-time-slot-not-found")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenVisitSlotDiffers {
+      @BeforeEach
+      fun setUp() {
+        stubSlots(
+          prisonId = "BXI",
+          nomisTimeSlots = listOf(visitTimeSlotResponse().copy(visitSlots = listOf(visitSlotResponse().copy(maxAdults = 9)))),
+          dpsTimeSlots = listOf(syncTimeSlotSummaryItem().copy(visitSlots = listOf(syncVisitSlot().copy(maxAdults = 1)))),
+        )
+      }
+
+      @Test
+      fun `will return mismatch`() = runTest {
+        assertThat(service.checkPrisonForMismatches("BXI")).containsExactlyInAnyOrder(
+          MismatchTimeSlot(
+            prisonId = "BXI",
+            dayOfWeek = "MON",
+            reason = "matching-time-slot-not-found",
+          ),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("visit-slots-reconciliation-mismatch"),
+          check {
+            assertThat(it["prisonId"]).isEqualTo("BXI")
+            assertThat(it["dayOfWeek"]).isEqualTo("MON")
+            assertThat(it["startTime"]).isEqualTo("10:00")
+            assertThat(it["endTime"]).isEqualTo("11:00")
+            assertThat(it["nomisTimeSlotSequence"]).isEqualTo("1")
+            assertThat(it["reason"]).isEqualTo("matching-time-slot-not-found")
+          },
+          isNull(),
+        )
+      }
+    }
   }
-  fun stubSlots(prisonId: String = "BXI", nomisTimeSlots: List<VisitTimeSlotResponse>, dsTimeSlots: List<SyncTimeSlotSummaryItem>) {
+  fun stubSlots(prisonId: String = "BXI", nomisTimeSlots: List<VisitTimeSlotResponse>, dpsTimeSlots: List<SyncTimeSlotSummaryItem>) {
     nomisApi.stubGetTimeSlotsForPrison(
       prisonId,
       response = VisitTimeSlotForPrisonResponse(
@@ -94,7 +184,7 @@ class VisitSlotsReconciliationServiceTest {
       prisonId,
       response = SyncTimeSlotSummary(
         prisonCode = prisonId,
-        timeSlots = dsTimeSlots,
+        timeSlots = dpsTimeSlots,
       ),
     )
   }
