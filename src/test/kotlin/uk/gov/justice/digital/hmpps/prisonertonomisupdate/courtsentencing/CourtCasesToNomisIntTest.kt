@@ -1512,8 +1512,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtChargeHasBeenUpdatedInDPS {
       @BeforeEach
       fun setUp() {
-        courtSentencingApi.stubGetCourtCharge(
-          DPS_COURT_CHARGE_ID,
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          courtChargeId = DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
@@ -1544,7 +1545,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test

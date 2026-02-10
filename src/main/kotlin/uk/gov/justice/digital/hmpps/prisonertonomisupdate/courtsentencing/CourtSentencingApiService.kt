@@ -49,6 +49,11 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .retrieve()
     .awaitBody()
 
+  suspend fun getCourtChargeByAppearance(appearanceId: String, chargeId: String): LegacyCharge = courtSentencingApiWebClient.get()
+    .uri("/legacy/court-appearance/{appearanceId}/charge/{chargeId}", appearanceId, chargeId)
+    .retrieve()
+    .awaitBody()
+
   suspend fun getSentence(id: String): LegacySentence = courtSentencingApiWebClient.get()
     .uri("/legacy/sentence/{id}", id)
     .retrieve()
