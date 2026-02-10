@@ -17,7 +17,7 @@ import java.util.UUID
 class TransactionMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetByNomisTransactionIdOrNull(
-    nomisTransactionId: Long = 123456,
+    nomisTransactionId: Long = 1234,
     dpsTransactionId: String = UUID.randomUUID().toString(),
     mapping: TransactionMappingDto? = TransactionMappingDto(
       offenderNo = "A1234KT",
