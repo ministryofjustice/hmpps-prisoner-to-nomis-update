@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-05.396.537fa8d"
+    "version" : "2026-02-10.402.5280924"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -249,6 +249,83 @@
           },
           "409" : {
             "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/move-booking/{bookingId}/from/{fromOffenderNo}/to/{toOffenderNo}" : {
+      "put" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Move all mappings for a booking from one offender to another",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "moveBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "fromOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "toOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Bookings moved",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "We were unable to move the bookings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "There are no mappings for the booking",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -7344,6 +7421,55 @@
           },
           "404" : {
             "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/temporary-absence/move-booking/{bookingId}" : {
+      "get" : {
+        "tags" : [ "temporary-absence-resource" ],
+        "summary" : "Get all mappings for a booking",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getMoveBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Temporary absence mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsenceMoveBookingMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -22052,6 +22178,62 @@
           }
         },
         "required" : [ "scheduleMappings" ]
+      },
+      "TemporaryAbsenceApplicationIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's applications",
+        "properties" : {
+          "applicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS application ID",
+            "example" : 12345
+          },
+          "authorisationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS authorisation ID"
+          }
+        },
+        "required" : [ "applicationId", "authorisationId" ]
+      },
+      "TemporaryAbsenceMoveBookingMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "applicationIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS application IDs to DPS authorisation IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationIdMapping"
+            }
+          },
+          "movementIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS movement sequence numbers to DPS movement IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceMovementIdMapping"
+            }
+          }
+        },
+        "required" : [ "applicationIds", "movementIds" ]
+      },
+      "TemporaryAbsenceMovementIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's movements",
+        "properties" : {
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The movement's movement sequence"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement ID"
+          }
+        },
+        "required" : [ "dpsMovementId", "movementSeq" ]
       },
       "PageTemporaryAbsenceMigrationDto" : {
         "type" : "object",
