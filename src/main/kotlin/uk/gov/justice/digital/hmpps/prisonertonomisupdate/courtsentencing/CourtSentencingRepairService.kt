@@ -179,6 +179,38 @@ class CourtSentencingRepairService(
     )
   }
 
+  suspend fun resynchroniseChargeUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, chargeId: String) {
+    courtSentencingService.updateCharge(
+      createEvent = CourtSentencingService.CourtChargeCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          courtChargeId = chargeId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-charge-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsChargeId" to chargeId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+
   private suspend fun getCaseIds(dpsOrNomisCaseId: String): Pair<String, Long> = dpsOrNomisCaseId.toLongOrNull()?.let {
     (courtCaseMappingService.getMappingGivenNomisCourtCaseIdOrNull(it)?.dpsCourtCaseId ?: throw BadRequestException("No mapping found for $dpsOrNomisCaseId")) to it
   } ?: let {

@@ -229,6 +229,54 @@ class CourtSentencingResource(
     courtAppearanceId = appearanceId,
     sentenceId = sentenceId,
   )
+
+  @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-charge/{chargeId}/repair")
+  @Operation(
+    summary = "Resynchronises a charge for an appearance from DPS to NOMIS",
+    description = "Used when a charge with an existing mapping needs resynchronising to nomis, so emergency use only. Mappings should all exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping not found for case/appearance/charge or case/appearance/sentence not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairCourtUpdateInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the charge to be re-synced to NOMIS")
+    @PathVariable
+    chargeId: String,
+  ) = courtSentencingRepairService.resynchroniseChargeUpdateToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    chargeId = chargeId,
+  )
 }
 
 @Schema(description = "Court Charge Request")
