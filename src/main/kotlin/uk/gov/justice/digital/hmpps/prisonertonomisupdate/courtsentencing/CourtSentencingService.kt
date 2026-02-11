@@ -1131,7 +1131,7 @@ class CourtSentencingService(
                 active = sentence.dpsSentence.active,
               )
             },
-            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                 enteredByStaffUsername = recall.recallBy,
@@ -1192,7 +1192,7 @@ class CourtSentencingService(
           UpdateRecallRequest(
             sentences = sentenceAndMappings.map { it.toRecallRelatedSentenceDetails() },
             sentencesRemoved = sentenceAndMappingsToRemove.map { it.toRecallRelatedSentenceDetails() },
-            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
               ReturnToCustodyRequest(
                 returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                 enteredByStaffUsername = recall.recallBy,
@@ -1259,7 +1259,7 @@ class CourtSentencingService(
                   active = sentence.dpsSentence.active,
                 )
               },
-              returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() }?.let {
+              returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
                 ReturnToCustodyRequest(
                   returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
                   enteredByStaffUsername = recall.recallBy,
@@ -1945,3 +1945,4 @@ private fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentence
 }
 
 fun LocalDate?.asStringOrBlank(): String = this?.format(DateTimeFormatter.ISO_DATE) ?: ""
+private fun LegacyRecall.hasReturnToCustodyDate() = returnToCustodyDate != null || revocationDate != null
