@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -4290,6 +4291,89 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenRevertingBackToPreviousNOMISFixedTermRecall {
+
+        @BeforeEach
+        fun setUp() {
+          courtSentencingApi.stubGetRecall(
+            "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+            LegacyRecall(
+              recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
+              recallType = LegacyRecall.RecallType.FTR_14,
+              recallBy = "T.SMITH",
+              returnToCustodyDate = null,
+              revocationDate = null,
+              prisonerId = OFFENDER_NO,
+              sentenceIds = listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              ),
+            ),
+          )
+          courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
+            request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+            mappings = listOf(
+              SentenceMappingDto(
+                dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+                nomisBookingId = BOOKING_ID,
+                nomisSentenceSequence = 1,
+              ),
+            ),
+          )
+
+          courtSentencingMappingApi.stubGetAppearanceRecallMappings(
+            "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+            mappings = listOf(
+              CourtAppearanceRecallMappingDto(
+                nomisCourtAppearanceId = 101,
+                dpsRecallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+              ),
+            ),
+          )
+          courtSentencingMappingApi.stubDeleteAppearanceRecallMappings("ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")
+
+          courtSentencingApi.stubGetSentences(
+            request = LegacySearchSentence(
+              listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              ),
+            ),
+            sentences = listOf(
+              legacySentence(
+                sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+                sentenceCalcType = "FTR_14",
+                sentenceCategory = "2020",
+                active = true,
+              ),
+            ),
+          )
+
+          courtSentencingNomisApi.stubRevertRecallSentences(OFFENDER_NO)
+          publishRecallDeletedDomainEvent(
+            source = "DPS",
+            previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+            recallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+            sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+          ).also {
+            waitForAnyProcessingToComplete()
+          }
+        }
+
+        @Test
+        fun `will update NOMIS sentence information with previous recall data but without return to custody data`() {
+          courtSentencingNomisApi.verify(
+            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall/restore-previous"))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+              .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
+              .withRequestBody(matchingJsonPath("returnToCustody", absent()))
+              .withRequestBody(matchingJsonPath("beachCourtEventIds[0]", equalTo("101"))),
           )
         }
       }
