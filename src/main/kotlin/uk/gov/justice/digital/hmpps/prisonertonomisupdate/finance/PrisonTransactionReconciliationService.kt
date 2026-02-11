@@ -78,7 +78,8 @@ class PrisonTransactionReconciliationService(
     return nomisTransactionsForTheDay.groupBy { it.transactionId }.values.mapNotNull { checkTransactionMatch(it) }
   }
 
-  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = transactionNomisApiService.getPrisonTransaction(nomisTransactionId)?.let { checkTransactionMatch(it) }
+  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? =
+    transactionNomisApiService.getPrisonTransaction(nomisTransactionId)?.let { checkTransactionMatch(it) }
 
   suspend fun checkTransactionMatch(nomis: List<GeneralLedgerTransactionDto>): MismatchPrisonTransaction? = runCatching {
     val nomisTransaction = nomis.toTransactionSummary()
@@ -123,12 +124,19 @@ class PrisonTransactionReconciliationService(
           )
         }
       }
+    } ?: run {
+      log.info("No mapping found for nomis transaction $nomisTransactionId")
+      telemetryClient.trackEvent(
+        "prison-transaction-reports-reconciliation-mismatch-missing-mapping",
+        mapOf("nomisTransactionId" to nomisTransactionId.toString()),
+      )
     }
+    null
   }.onFailure {
     telemetryClient.trackEvent(
       "prison-transaction-reports-reconciliation-mismatch-error",
       mapOf(
-        "transactionId" to nomis.first().transactionId.toString(),
+        "nomisTransactionId" to nomis.first().transactionId.toString(),
       ),
     )
   }.getOrNull()

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGene
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
@@ -113,11 +114,24 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetGeneralLedgerTransaction(dpsTransactionId: String, response: SyncGeneralLedgerTransactionResponse = generalLedgerTransaction()) {
-    stubFor(
-      get("/sync/general-ledger-transactions/$dpsTransactionId")
-        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
-    )
+  fun stubGetGeneralLedgerTransaction(dpsTransactionId: String, response: SyncGeneralLedgerTransactionResponse? = generalLedgerTransaction()) {
+    response?.apply {
+      stubFor(
+        get("/sync/general-ledger-transactions/$dpsTransactionId")
+          .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+      )
+    }
+      ?: run {
+        mappingServer.stubFor(
+          get("/sync/general-ledger-transactions/$dpsTransactionId")
+            .willReturn(
+              aResponse()
+                .withHeader("Content-Type", "application/json")
+                .withStatus(HttpStatus.NOT_FOUND.value())
+                .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = HttpStatus.NOT_FOUND.value()))),
+            ),
+        )
+      }
   }
 
   fun stubListPrisonerAccounts(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
