@@ -78,8 +78,7 @@ class PrisonTransactionReconciliationService(
     return nomisTransactionsForTheDay.groupBy { it.transactionId }.values.mapNotNull { checkTransactionMatch(it) }
   }
 
-  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? =
-    transactionNomisApiService.getPrisonTransaction(nomisTransactionId)?.let { checkTransactionMatch(it) }
+  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = transactionNomisApiService.getPrisonTransaction(nomisTransactionId)?.let { checkTransactionMatch(it) }
 
   suspend fun checkTransactionMatch(nomis: List<GeneralLedgerTransactionDto>): MismatchPrisonTransaction? = runCatching {
     val nomisTransaction = nomis.toTransactionSummary()
