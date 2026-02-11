@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-10.402.5280924"
+    "version" : "2026-02-11.404.e6b8cfd"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -161,13 +161,7 @@
         "responses" : {
           "200" : {
             "description" : "Scheduled movement mapping updated",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -219,13 +213,7 @@
         "responses" : {
           "201" : {
             "description" : "Scheduled movement mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ScheduledMovementSyncMappingDto"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -400,13 +388,7 @@
         "responses" : {
           "200" : {
             "description" : "External movement mapping updated",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -458,13 +440,7 @@
         "responses" : {
           "201" : {
             "description" : "External movement mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ExternalMovementSyncMappingDto"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -2124,13 +2100,7 @@
         "responses" : {
           "201" : {
             "description" : "Application mapping created",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TemporaryAbsenceApplicationSyncMappingDto"
-                }
-              }
-            }
+            "content" : { }
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
@@ -22125,15 +22095,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "unpaged" : {
+            "type" : "boolean"
           },
           "paged" : {
             "type" : "boolean"
           },
-          "unpaged" : {
-            "type" : "boolean"
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
