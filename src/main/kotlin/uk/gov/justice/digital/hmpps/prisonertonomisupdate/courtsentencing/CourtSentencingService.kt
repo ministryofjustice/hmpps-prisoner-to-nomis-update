@@ -1237,8 +1237,10 @@ class CourtSentencingService(
           val recall = courtSentencingApiService.getRecall(previousRecallId).also {
             telemetryMap["recallType"] = it.recallType.name
             telemetryMap["dpsSentenceIds"] = it.sentenceIds.joinToString()
+            telemetryMap["dpsOriginalSentenceIds"] = recallDeletedEvent.additionalInformation.sentenceIds.joinToString()
           }
-          val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
+          val dpsSentenceIdsOnPreviousRecall = recall.sentenceIds.map { it.toString() }
+          val dpsSentenceIds = (dpsSentenceIdsOnPreviousRecall + recallDeletedEvent.additionalInformation.sentenceIds).distinct()
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
           val breachCourtAppearanceIds =
             courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
