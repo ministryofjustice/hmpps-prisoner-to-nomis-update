@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-06.343.e30df18"
+    "version" : "2026-02-10.362.48d8bce"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -929,6 +929,46 @@
                 }
               }
             }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Delete an official visit by ID",
+        "description" : "\n      Delete an official visit including all related information. \n      This endpoint is idempotent, so if the visit is not present it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "syncDeleteOfficialVisit",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the official visit by ID"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token",
@@ -2445,6 +2485,13 @@
             "enum" : [ "NORMAL", "PRISONER_EARLY", "PRISONER_REFUSED", "STAFF_EARLY", "VISITOR_DENIED", "VISITOR_EARLY", "VISITOR_NO_SHOW" ],
             "example" : "NORMAL"
           },
+          "completionNotes" : {
+            "type" : "string",
+            "description" : "Optional notes containing details of the completion",
+            "example" : "The visitor was late arriving so the the prisoner may need another visit to be arranged.",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
           "prisonerAttendance" : {
             "$ref" : "#/components/schemas/AttendanceType"
           },
@@ -2487,7 +2534,9 @@
           "cancellationNotes" : {
             "type" : "string",
             "description" : "Optional notes containing details of the reason for cancellation",
-            "example" : "Prisoner in hospital"
+            "example" : "Prisoner in hospital",
+            "maxLength" : 240,
+            "minLength" : 0
           }
         },
         "required" : [ "cancellationReason" ]
@@ -3694,6 +3743,10 @@
           "completionCode" : {
             "$ref" : "#/components/schemas/VisitCompletionType",
             "description" : "The Official visit completion type"
+          },
+          "completionNotes" : {
+            "type" : "string",
+            "description" : "Optional notes captured when a visit is either cancelled or completed"
           },
           "completionDescription" : {
             "type" : "string",
