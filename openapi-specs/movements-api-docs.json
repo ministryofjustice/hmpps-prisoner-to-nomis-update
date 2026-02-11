@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-06"
+    "version" : "2026-02-10"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -1507,6 +1507,12 @@
             "type" : "string",
             "format" : "date"
           },
+          "startTime" : {
+            "type" : "string"
+          },
+          "endTime" : {
+            "type" : "string"
+          },
           "location" : {
             "$ref" : "#/components/schemas/Location"
           },
@@ -1643,6 +1649,15 @@
           "end" : {
             "type" : "string",
             "format" : "date"
+          },
+          "startTime" : {
+            "type" : "string"
+          },
+          "endTime" : {
+            "type" : "string"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
           },
           "comments" : {
             "type" : "string"
@@ -2275,64 +2290,6 @@
         },
         "required" : [ "content", "metadata" ]
       },
-      "Authorisation" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "person" : {
-            "$ref" : "#/components/schemas/Person"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "accompaniedBy" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "repeat" : {
-            "type" : "boolean"
-          },
-          "comments" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "accompaniedBy", "id", "person", "repeat", "status" ]
-      },
-      "Movement" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "occurredAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "direction" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT" ]
-          },
-          "location" : {
-            "$ref" : "#/components/schemas/Location"
-          }
-        },
-        "required" : [ "direction", "id", "location", "occurredAt" ]
-      },
       "TapOccurrence" : {
         "type" : "object",
         "properties" : {
@@ -2340,8 +2297,11 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "prisonCode" : {
+            "type" : "string"
+          },
           "authorisation" : {
-            "$ref" : "#/components/schemas/Authorisation"
+            "$ref" : "#/components/schemas/TapOccurrence.Authorisation"
           },
           "absenceType" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -2395,13 +2355,113 @@
           "movements" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Movement"
+              "$ref" : "#/components/schemas/TapOccurrence.Movement"
             }
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "start", "status", "totalOccurrences", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prisonCode", "start", "status", "totalOccurrences", "transport" ]
       },
-      "Occurrence" : {
+      "TapOccurrence.Authorisation" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "repeat" : {
+            "type" : "boolean"
+          },
+          "comments" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accompaniedBy", "id", "person", "repeat", "status" ]
+      },
+      "TapOccurrence.Movement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          }
+        },
+        "required" : [ "direction", "id", "location", "occurredAt" ]
+      },
+      "TapMovement" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "person" : {
+            "$ref" : "#/components/schemas/Person"
+          },
+          "occurrence" : {
+            "$ref" : "#/components/schemas/TapMovement.Occurrence"
+          },
+          "occurredAt" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "direction" : {
+            "type" : "string",
+            "enum" : [ "IN", "OUT" ]
+          },
+          "prisonCode" : {
+            "type" : "string"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "accompaniedByComments" : {
+            "type" : "string"
+          },
+          "comments" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prisonCode" ]
+      },
+      "TapMovement.Occurrence" : {
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2434,54 +2494,15 @@
         },
         "required" : [ "end", "id", "start", "status" ]
       },
-      "TapMovement" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "person" : {
-            "$ref" : "#/components/schemas/Person"
-          },
-          "occurrence" : {
-            "$ref" : "#/components/schemas/Occurrence"
-          },
-          "occurredAt" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "direction" : {
-            "type" : "string",
-            "enum" : [ "IN", "OUT" ]
-          },
-          "prisonCode" : {
-            "type" : "string"
-          },
-          "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "location" : {
-            "$ref" : "#/components/schemas/Location"
-          },
-          "accompaniedBy" : {
-            "$ref" : "#/components/schemas/CodedDescription"
-          },
-          "accompaniedByComments" : {
-            "type" : "string"
-          },
-          "comments" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prisonCode" ]
-      },
       "TapAuthorisation" : {
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "prisonCode" : {
+            "type" : "string"
           },
           "person" : {
             "$ref" : "#/components/schemas/Person"
@@ -2525,7 +2546,7 @@
           "occurrences" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/Occurrence"
+              "$ref" : "#/components/schemas/TapAuthorisation.Occurrence"
             }
           },
           "locations" : {
@@ -2542,7 +2563,52 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prisonCode", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
+      },
+      "TapAuthorisation.Occurrence" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "transport" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "comments" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "accompaniedBy", "end", "id", "location", "start", "status", "transport" ]
       },
       "SyncReadTapOccurrence" : {
         "type" : "object",
