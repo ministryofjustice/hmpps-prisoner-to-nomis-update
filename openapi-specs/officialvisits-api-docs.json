@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-10.362.48d8bce"
+    "version" : "2026-02-12.379.68d5203"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -382,7 +382,7 @@
         "tags" : [ "Synchronisation" ],
         "summary" : "Creates an official visit via synchronisation from NOMIS",
         "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to create an official visit in DPS as a result of synchronisation from NOMIS.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
-        "operationId" : "syncCreateVisitSlot_1",
+        "operationId" : "syncCreateOfficialVisit",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -416,6 +416,85 @@
           },
           "400" : {
             "description" : "The request was invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/official-visit/{officialVisitId}/visitor" : {
+      "post" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Creates a visitor on an existing official visit",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to add a visitor to an official visit in DPS as part of the synchronisation from NOMIS.\n      If the contactId or offenderVisitVisitorId already exists on the visit this request will be rejected.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncCreateOfficialVisitor",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncCreateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully added the visitor",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOfficialVisitor"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The the official visit was not found using the ID presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The visitor with the IDs presented already exists on this visit",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2323,6 +2402,81 @@
         },
         "required" : [ "createdBy", "createdTime", "officialVisitorId" ]
       },
+      "SyncCreateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderVisitVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit visitor ID",
+            "example" : 133232
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS person ID (same as contactId) for this visitor",
+            "example" : 13989898
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the visitor",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the visitor",
+            "example" : "Harris"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The visitors date of birth",
+            "example" : "2011-01-03"
+          },
+          "relationshipTypeCode" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL"
+          },
+          "relationshipToPrisoner" : {
+            "type" : "string",
+            "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
+            "example" : "POL"
+          },
+          "groupLeaderFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "assistedVisitFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visitor comment text from NOMIS",
+            "example" : "Some comments"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "createDateTime", "createUsername", "offenderVisitVisitorId", "personId" ]
+      },
       "CreateOfficialVisitRequest" : {
         "type" : "object",
         "description" : "The request with the official visit details",
@@ -2696,6 +2850,11 @@
           "completionDescription" : {
             "type" : "string",
             "description" : "The official visit completion description"
+          },
+          "completionNotes" : {
+            "type" : "string",
+            "description" : "Optional notes captured when a visit is either cancelled or completed",
+            "example" : "Cancelled due to prisoner in hospital"
           },
           "createdBy" : {
             "type" : "string",
