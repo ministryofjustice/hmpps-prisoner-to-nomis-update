@@ -69,5 +69,5 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
   suspend fun generateReconciliationReportForPrisonTransaction(
     @Schema(description = "Transaction Id", example = "12345", required = true)
     @PathVariable transactionId: Long,
-  ): PrisonTransactionReconciliationService.MismatchPrisonTransaction? = reconciliationService.checkTransactionMatch(transactionId)
+  ) = reconciliationService.checkTransactionMatch(transactionId)
 }
