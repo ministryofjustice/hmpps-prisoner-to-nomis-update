@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-10"
+    "version" : "2026-02-12"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -337,6 +337,43 @@
         }
       }
     },
+    "/resync/temporary-absences/{personIdentifier}" : {
+      "put" : {
+        "tags" : [ "Sync" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
+        "operationId" : "migrateTemporaryAbsences",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/MigrateTapRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/MigrateTapResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/move/temporary-absences" : {
       "put" : {
         "tags" : [ "Sync" ],
@@ -363,7 +400,7 @@
       "put" : {
         "tags" : [ "Sync" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "migrateTemporaryAbsences",
+        "operationId" : "migrateTemporaryAbsences_1",
         "parameters" : [ {
           "name" : "personIdentifier",
           "in" : "path",
@@ -1587,34 +1624,6 @@
         },
         "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "start", "transportCode" ]
       },
-      "MoveTemporaryAbsencesRequest" : {
-        "type" : "object",
-        "properties" : {
-          "fromPersonIdentifier" : {
-            "type" : "string"
-          },
-          "toPersonIdentifier" : {
-            "type" : "string"
-          },
-          "authorisationIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string",
-              "format" : "uuid"
-            },
-            "uniqueItems" : true
-          },
-          "unscheduledMovementIds" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string",
-              "format" : "uuid"
-            },
-            "uniqueItems" : true
-          }
-        },
-        "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ]
-      },
       "MigrateTapAuthorisation" : {
         "type" : "object",
         "properties" : {
@@ -1672,6 +1681,10 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "occurrences" : {
             "type" : "array",
             "items" : {
@@ -1718,6 +1731,10 @@
           },
           "legacyId" : {
             "type" : "string"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
         "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ]
@@ -1769,6 +1786,10 @@
           "legacyId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
           },
           "movements" : {
             "type" : "array",
@@ -1867,6 +1888,34 @@
           }
         },
         "required" : [ "id", "legacyId", "movements" ]
+      },
+      "MoveTemporaryAbsencesRequest" : {
+        "type" : "object",
+        "properties" : {
+          "fromPersonIdentifier" : {
+            "type" : "string"
+          },
+          "toPersonIdentifier" : {
+            "type" : "string"
+          },
+          "authorisationIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          },
+          "unscheduledMovementIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ]
       },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",

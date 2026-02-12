@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-10.1057.950c5d7"
+    "version" : "2026-02-11.1059.f43b5c0"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -29331,12 +29331,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -33281,6 +33281,18 @@
             "type" : "string",
             "description" : "To address owner class"
           },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "To address description"
+          },
+          "toFullAddress" : {
+            "type" : "string",
+            "description" : "To full address"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "To address postcode"
+          },
           "contactPersonName" : {
             "type" : "string",
             "description" : "Contact person name"
@@ -33972,6 +33984,18 @@
           "toAddressOwnerClass" : {
             "type" : "string",
             "description" : "To address owner class"
+          },
+          "toAddressDescription" : {
+            "type" : "string",
+            "description" : "To address description"
+          },
+          "toFullAddress" : {
+            "type" : "string",
+            "description" : "To full address"
+          },
+          "toAddressPostcode" : {
+            "type" : "string",
+            "description" : "To address postcode"
           },
           "contactPersonName" : {
             "type" : "string",
