@@ -85,7 +85,9 @@ class PrisonTransactionReconciliationService(
     val nomisTransactionId = nomisTransaction.nomisTransactionId
     mappingService.getByNomisTransactionIdOrNull(nomisTransactionId)?.let { mappingDto ->
       val dpsTransaction =
-        doApiCallWithRetries { dpsApiService.getPrisonTransaction(UUID.fromString(mappingDto.dpsTransactionId)).toTransactionSummary() }
+        doApiCallWithRetries {
+          dpsApiService.getPrisonTransaction(UUID.fromString(mappingDto.dpsTransactionId)).toTransactionSummary()
+        }
 
       val nomisTransactionEntryCount = nomisTransaction.entries.size
       val dpsTransactionEntryCount = dpsTransaction.entries.size
@@ -101,12 +103,23 @@ class PrisonTransactionReconciliationService(
 
       val differences = mutableMapOf<String, String>()
 
-      appendDifference(nomisTransactionEntryCount.toString(), dpsTransactionEntryCount.toString(), differences, "transactionEntryCount")
+      appendDifference(
+        nomisTransactionEntryCount.toString(),
+        dpsTransactionEntryCount.toString(),
+        differences,
+        "transactionEntryCount",
+      )
+
+      if (differences.isEmpty()) {
+        val (missingFromNomis, missingFromDps) =
+          findMissingTransactionEntries(nomisTransaction.entries, dpsTransaction.entries)
+        if (missingFromNomis.isNotEmpty() || missingFromDps.isNotEmpty()) {
+          differences["entries"] = "nomisOnly=$missingFromDps, dpsOnly=$missingFromNomis"
+        }
+      }
       appendDifference(nomisTransaction.prisonId, dpsTransaction.prisonId, differences, "prisonId")
       appendDifference(nomisTransaction.description, dpsTransaction.description, differences, "description")
       appendDifference(nomisTransaction.transactionType, dpsTransaction.transactionType, differences, "type")
-
-      // TODO check transaction entry fields
 
       return differences.takeIf { it.isNotEmpty() }?.let {
         MismatchPrisonTransaction(
@@ -139,63 +152,70 @@ class PrisonTransactionReconciliationService(
       ),
     )
   }.getOrNull()
+}
 
-  data class TransactionSummary(
-    val prisonId: String,
-    val nomisTransactionId: Long,
-    val description: String?,
-    val transactionType: String,
-    val entries: List<TransactionEntry>,
-  )
-  data class TransactionEntry(
-    val accountCode: Int,
-    val postingType: String,
-    val amount: BigDecimal,
-    val entrySequence: Int,
-  )
+private fun findMissingTransactionEntries(nomisAccountSummaries: List<TransactionEntry>, dpsAccountSummaries: List<TransactionEntry>): Pair<List<TransactionEntry>, List<TransactionEntry>> {
+  val missingFromDps = nomisAccountSummaries - dpsAccountSummaries
+  val missingFromNomis = dpsAccountSummaries - nomisAccountSummaries
 
-  fun List<GeneralLedgerTransactionDto>.toTransactionSummary(): TransactionSummary = first().run {
-    TransactionSummary(
-      nomisTransactionId = transactionId,
-      prisonId = caseloadId,
-      description = description,
-      transactionType = type,
-      entries = this@toTransactionSummary.map { it.toTransactionEntry() },
-    )
-  }
-  fun GeneralLedgerTransactionDto.toTransactionEntry() = TransactionEntry(
-    accountCode = accountCode,
-    postingType = postingType.value,
-    amount = amount.setScale(2, RoundingMode.HALF_UP),
-    entrySequence = generalLedgerEntrySequence,
-  )
+  return missingFromNomis to missingFromDps
+}
 
-  fun SyncGeneralLedgerTransactionResponse.toTransactionSummary() = TransactionSummary(
-    nomisTransactionId = legacyTransactionId!!,
+data class TransactionSummary(
+  val prisonId: String,
+  val nomisTransactionId: Long,
+  val description: String?,
+  val transactionType: String,
+  val entries: List<TransactionEntry>,
+)
+data class TransactionEntry(
+  val accountCode: Int,
+  val postingType: String,
+  val amount: BigDecimal,
+  val entrySequence: Int,
+)
+
+fun List<GeneralLedgerTransactionDto>.toTransactionSummary(): TransactionSummary = first().run {
+  TransactionSummary(
+    nomisTransactionId = transactionId,
     prisonId = caseloadId,
     description = description,
-    transactionType = transactionType,
-    entries = generalLedgerEntries.map { it.toTransactionEntry() },
+    transactionType = type,
+    entries = this@toTransactionSummary.map { it.toTransactionEntry() },
   )
-  fun GeneralLedgerEntry.toTransactionEntry() = TransactionEntry(
-    accountCode = code,
-    postingType = postingType.value,
-    amount = amount.toBigDecimal().setScale(2, RoundingMode.HALF_UP),
-    entrySequence = this.entrySequence,
-  )
+}
+fun GeneralLedgerTransactionDto.toTransactionEntry() = TransactionEntry(
+  accountCode = accountCode,
+  postingType = postingType.value,
+  amount = amount.setScale(2, RoundingMode.HALF_UP),
+  entrySequence = generalLedgerEntrySequence,
+)
 
-  data class MismatchPrisonTransaction(
-    val nomisTransactionId: Long,
-    val dpsTransactionId: String,
-    val differences: Map<String, String>,
-  )
+fun SyncGeneralLedgerTransactionResponse.toTransactionSummary() = TransactionSummary(
+  nomisTransactionId = legacyTransactionId!!,
+  prisonId = caseloadId,
+  description = description,
+  transactionType = transactionType,
+  entries = generalLedgerEntries.map { it.toTransactionEntry() },
+)
+fun GeneralLedgerEntry.toTransactionEntry() = TransactionEntry(
+  accountCode = code,
+  postingType = postingType.value,
+  amount = amount.toBigDecimal().setScale(2, RoundingMode.HALF_UP),
+  entrySequence = this.entrySequence,
+)
 
-  private fun appendDifference(
-    nomisField: String?,
-    dpsField: String?,
-    differences: MutableMap<String, String>,
-    fieldName: String,
-  ) {
-    if (nomisField != dpsField) differences[fieldName] = "nomis=$nomisField, dps=$dpsField"
-  }
+data class MismatchPrisonTransaction(
+  val nomisTransactionId: Long,
+  val dpsTransactionId: String,
+  val differences: Map<String, String>,
+)
+
+private fun appendDifference(
+  nomisField: String?,
+  dpsField: String?,
+  differences: MutableMap<String, String>,
+  fieldName: String,
+) {
+  if (nomisField != dpsField) differences[fieldName] = "nomis=$nomisField, dps=$dpsField"
 }

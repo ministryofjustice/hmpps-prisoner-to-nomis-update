@@ -22,8 +22,10 @@ import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.math.BigDecimal
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -328,6 +330,112 @@ class PrisonTransactionReconciliationServiceTest {
               "nomisTransactionEntryCount" to "2",
               "dpsTransactionEntryCount" to "1",
               "differences" to "transactionEntryCount",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class EntryMismatch {
+      val dpsId = UUID.randomUUID().toString()
+
+      @BeforeEach
+      fun beforeEach() {
+        nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(amount = BigDecimal(22.22))))
+        mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
+        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        val result = service.checkTransactionMatch(1234)
+        waitForEventProcessingToBeComplete()
+        with(result!!) {
+          assertThat(nomisTransactionId).isEqualTo(1234L)
+          assertThat(dpsTransactionId).isNotEmpty
+          assertThat(differences).isEqualTo(mapOf("entries" to "nomisOnly=[TransactionEntry(accountCode=1501, postingType=CR, amount=22.22, entrySequence=1)], dpsOnly=[TransactionEntry(accountCode=1501, postingType=CR, amount=5.40, entrySequence=1)]"))
+        }
+      }
+
+      @Test
+      fun `telemetry will show mismatch`() = runTest {
+        service.checkTransactionMatch(1234)
+        verify(telemetryClient).trackEvent(
+          eq("prison-transaction-reports-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "prisonId" to "MDI",
+              "nomisTransactionId" to "1234",
+              "dpsTransactionId" to dpsId,
+              "nomisTransactionEntryCount" to "1",
+              "dpsTransactionEntryCount" to "1",
+              "differences" to "entries",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class EntryMismatchAndEntryMatch {
+      val dpsId = UUID.randomUUID().toString()
+
+      @BeforeEach
+      fun beforeEach() {
+        nomisTransactionsApi.stubGetPrisonTransaction(
+          response =
+          listOf(
+            nomisPrisonTransaction(),
+            nomisPrisonTransaction().copy(generalLedgerEntrySequence = 2, postingType = GeneralLedgerTransactionDto.PostingType.DR),
+          ),
+        )
+        mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
+        dpsApi.stubGetGeneralLedgerTransaction(
+          dpsTransactionId = dpsId,
+          response =
+          generalLedgerTransaction().copy(
+            generalLedgerEntries =
+            listOf(
+              generalLedgerTransaction().generalLedgerEntries.first(),
+              generalLedgerTransaction().generalLedgerEntries.first().copy(entrySequence = 2),
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will report a mismatch`() = runTest {
+        val result = service.checkTransactionMatch(1234)
+        waitForEventProcessingToBeComplete()
+        with(result!!) {
+          assertThat(nomisTransactionId).isEqualTo(1234L)
+          assertThat(dpsTransactionId).isNotEmpty
+          assertThat(differences).isEqualTo(
+            mapOf(
+              "entries" to
+                "nomisOnly=[TransactionEntry(accountCode=1501, postingType=DR, amount=5.40, entrySequence=2)], " +
+                "dpsOnly=[TransactionEntry(accountCode=1501, postingType=CR, amount=5.40, entrySequence=2)]",
+            ),
+          )
+        }
+      }
+
+      @Test
+      fun `telemetry will show mismatch`() = runTest {
+        service.checkTransactionMatch(1234)
+        verify(telemetryClient).trackEvent(
+          eq("prison-transaction-reports-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "prisonId" to "MDI",
+              "nomisTransactionId" to "1234",
+              "dpsTransactionId" to dpsId,
+              "nomisTransactionEntryCount" to "2",
+              "dpsTransactionEntryCount" to "2",
+              "differences" to "entries",
             ),
           ),
           isNull(),
