@@ -23,7 +23,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGene
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsDpsApiExtension.Companion.jsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.UUID
@@ -122,7 +121,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       )
     }
       ?: run {
-        mappingServer.stubFor(
+        stubFor(
           get("/sync/general-ledger-transactions/$dpsTransactionId")
             .willReturn(
               aResponse()

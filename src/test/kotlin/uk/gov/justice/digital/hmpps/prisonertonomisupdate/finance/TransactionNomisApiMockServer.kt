@@ -11,7 +11,6 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -87,7 +86,7 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
       )
     }
       ?: run {
-        mappingServer.stubFor(
+        nomisApi.stubFor(
           get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
             aResponse()
               .withHeader("Content-Type", "application/json")
