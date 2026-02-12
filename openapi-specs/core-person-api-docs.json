@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-01-27.2115.fbd81ec"
+    "version" : "2026-02-11.2271.171e020"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -30,11 +30,11 @@
     "description" : "APIs for person search"
   } ],
   "paths" : {
-    "/syscon-sync/{prisonNumber}" : {
+    "/syscon-sync/person/{prisonNumber}" : {
       "put" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Create a prison record",
-        "operationId" : "create",
+        "description" : "Update a prison record by prison number",
+        "operationId" : "update",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -56,7 +56,7 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Data created in CPR",
+            "description" : "Data update in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -66,11 +66,11 @@
             }
           },
           "404" : {
-            "description" : "Requested resource not found.",
+            "description" : "Person not found",
             "content" : {
-              "application/json" : {
+              "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "string"
                 }
               }
             }
@@ -552,6 +552,12 @@
       "Address" : {
         "type" : "object",
         "properties" : {
+          "nomisAddressId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Is nomis address id",
+            "example" : 5678
+          },
           "fullAddress" : {
             "type" : "string",
             "description" : "The full address",
@@ -570,6 +576,7 @@
           },
           "endDate" : {
             "type" : "string",
+            "format" : "date",
             "description" : "The address end date",
             "example" : "2023-07-15"
           },
@@ -648,11 +655,17 @@
             }
           }
         },
-        "required" : [ "addressUsage", "contacts" ]
+        "required" : [ "addressUsage", "contacts", "isPrimary", "nomisAddressId" ]
       },
       "AddressUsage" : {
         "type" : "object",
         "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis address usage id",
+            "example" : 5678
+          },
           "addressUsageCode" : {
             "type" : "string",
             "description" : "The address usage code",
@@ -665,11 +678,17 @@
             "example" : true
           }
         },
-        "required" : [ "addressUsageCode", "isActive" ]
+        "required" : [ "addressUsageCode", "isActive", "nomisAddressUsageId" ]
       },
       "Alias" : {
         "type" : "object",
         "properties" : {
+          "nomisAliasId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis alias id",
+            "example" : 2378
+          },
           "titleCode" : {
             "type" : "string",
             "description" : "The alias title code",
@@ -699,13 +718,33 @@
           "sexCode" : {
             "type" : "string",
             "description" : "The alias sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
             "example" : "M"
+          },
+          "isPrimary" : {
+            "type" : "boolean",
+            "description" : "Indicates if this is a primary alias",
+            "example" : true
+          },
+          "identifiers" : {
+            "type" : "array",
+            "description" : "The identifiers for the prisoner alias",
+            "items" : {
+              "$ref" : "#/components/schemas/Identifier"
+            }
           }
-        }
+        },
+        "required" : [ "identifiers", "nomisAliasId" ]
       },
       "Contact" : {
         "type" : "object",
         "properties" : {
+          "nomisContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis contact id",
+            "example" : 1234
+          },
           "value" : {
             "type" : "string",
             "description" : "The contact value",
@@ -728,12 +767,6 @@
       "DemographicAttributes" : {
         "type" : "object",
         "properties" : {
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The person's date of birth",
-            "example" : "1980-01-01"
-          },
           "birthPlace" : {
             "type" : "string",
             "description" : "The person's birth place",
@@ -752,6 +785,7 @@
           "sexCode" : {
             "type" : "string",
             "description" : "The person's sex code",
+            "enum" : [ "M", "F", "N", "NS" ],
             "example" : "M"
           },
           "sexualOrientation" : {
@@ -789,6 +823,12 @@
       "Identifier" : {
         "type" : "object",
         "properties" : {
+          "nomisIdentifierId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The nomis identifier id",
+            "example" : 4567
+          },
           "type" : {
             "type" : "string",
             "description" : "The identifier type",
@@ -799,42 +839,18 @@
             "type" : "string",
             "description" : "The identifier value",
             "example" : "2000/1234567A"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "The identifier comment",
+            "example" : "Some comment"
           }
         },
-        "required" : [ "type", "value" ]
-      },
-      "Name" : {
-        "type" : "object",
-        "properties" : {
-          "titleCode" : {
-            "type" : "string",
-            "description" : "The title code of the person",
-            "example" : "MR"
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "The first name of the person",
-            "example" : "John"
-          },
-          "middleNames" : {
-            "type" : "string",
-            "description" : "The middle names of the person",
-            "example" : "Jimmy Jane"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "The last name of the person",
-            "example" : "Smith"
-          }
-        }
+        "required" : [ "nomisIdentifierId", "type", "value" ]
       },
       "Prisoner" : {
         "type" : "object",
         "properties" : {
-          "name" : {
-            "$ref" : "#/components/schemas/Name",
-            "description" : "The names of the person"
-          },
           "demographicAttributes" : {
             "$ref" : "#/components/schemas/DemographicAttributes",
             "description" : "The demographic attributes of the person"
@@ -853,18 +869,11 @@
               "$ref" : "#/components/schemas/Address"
             }
           },
-          "contacts" : {
+          "personContacts" : {
             "type" : "array",
             "description" : "The contacts of the person",
             "items" : {
               "$ref" : "#/components/schemas/Contact"
-            }
-          },
-          "identifiers" : {
-            "type" : "array",
-            "description" : "The identifiers of the person",
-            "items" : {
-              "$ref" : "#/components/schemas/Identifier"
             }
           },
           "sentences" : {
@@ -875,7 +884,7 @@
             }
           }
         },
-        "required" : [ "addresses", "aliases", "contacts", "demographicAttributes", "identifiers", "name", "sentences" ]
+        "required" : [ "addresses", "aliases", "demographicAttributes", "personContacts", "sentences" ]
       },
       "Sentence" : {
         "type" : "object",
