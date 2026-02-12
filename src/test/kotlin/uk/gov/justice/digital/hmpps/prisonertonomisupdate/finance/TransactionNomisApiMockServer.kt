@@ -8,8 +8,10 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -70,18 +72,30 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetPrisonTransaction(
     transactionId: Long = 1234,
-    response: List<GeneralLedgerTransactionDto> = listOf(nomisPrisonTransaction(transactionId)),
+    response: List<GeneralLedgerTransactionDto>? = listOf(nomisPrisonTransaction(transactionId)),
   ) {
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.OK.value())
-          .withBody(
-            jsonMapper.writeValueAsString(response),
+    response?.apply {
+      nomisApi.stubFor(
+        get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              jsonMapper.writeValueAsString(response),
+            ),
+        ),
+      )
+    }
+      ?: run {
+        mappingServer.stubFor(
+          get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
+            aResponse()
+              .withHeader("Content-Type", "application/json")
+              .withStatus(HttpStatus.NOT_FOUND.value())
+              .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = HttpStatus.NOT_FOUND.value()))),
           ),
-      ),
-    )
+        )
+      }
   }
 
   fun stubGetPrisonTransactionsOn(

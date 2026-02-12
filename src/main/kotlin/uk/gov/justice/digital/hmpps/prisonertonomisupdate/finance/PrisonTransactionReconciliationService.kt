@@ -123,12 +123,19 @@ class PrisonTransactionReconciliationService(
           )
         }
       }
+    } ?: run {
+      log.info("No mapping found for nomis transaction $nomisTransactionId")
+      telemetryClient.trackEvent(
+        "prison-transaction-reports-reconciliation-mismatch-missing-mapping",
+        mapOf("nomisTransactionId" to nomisTransactionId.toString()),
+      )
     }
+    null
   }.onFailure {
     telemetryClient.trackEvent(
       "prison-transaction-reports-reconciliation-mismatch-error",
       mapOf(
-        "transactionId" to nomis.first().transactionId.toString(),
+        "nomisTransactionId" to nomis.first().transactionId.toString(),
       ),
     )
   }.getOrNull()
