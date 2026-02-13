@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWith
 import java.math.BigDecimal
 import java.math.RoundingMode
 import java.time.LocalDate
+import java.time.LocalDateTime
 import java.util.UUID
 import kotlin.String
 import kotlin.collections.chunked
@@ -38,7 +39,7 @@ class PrisonTransactionReconciliationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReportBatch() {
+  suspend fun generateReconciliationReport(date: LocalDate? = null) {
     val prisonIds = nomisApiService.getActivePrisons().map { it.id }
 
     telemetryClient.trackEvent(
@@ -47,8 +48,8 @@ class PrisonTransactionReconciliationService(
     )
     log.info("Prison transaction reconciliation report requested for ${prisonIds.size} prisons")
 
-    val yesterday = LocalDate.now().minusDays(1)
-    runCatching { generateReconciliationReport(prisonIds, yesterday) }
+    val entryDate = date ?: LocalDate.now().minusDays(1)
+    runCatching { generateReconciliationReport(prisonIds, entryDate) }
       .onSuccess {
         log.info("Prison transaction reconciliation report completed with ${it.size} mismatches")
         telemetryClient.trackEvent(
@@ -78,7 +79,7 @@ class PrisonTransactionReconciliationService(
     return nomisTransactionsForTheDay.groupBy { it.transactionId }.values.mapNotNull { checkTransactionMatch(it) }
   }
 
-  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = transactionNomisApiService.getPrisonTransaction(nomisTransactionId)?.let { checkTransactionMatch(it) }
+  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = checkTransactionMatch(transactionNomisApiService.getPrisonTransaction(nomisTransactionId))
 
   suspend fun checkTransactionMatch(nomis: List<GeneralLedgerTransactionDto>): MismatchPrisonTransaction? = runCatching {
     val nomisTransaction = nomis.toTransactionSummary()
@@ -120,6 +121,8 @@ class PrisonTransactionReconciliationService(
       appendDifference(nomisTransaction.prisonId, dpsTransaction.prisonId, differences, "prisonId")
       appendDifference(nomisTransaction.description, dpsTransaction.description, differences, "description")
       appendDifference(nomisTransaction.transactionType, dpsTransaction.transactionType, differences, "type")
+      appendDifference(nomisTransaction.reference, dpsTransaction.reference, differences, "reference")
+      appendDifference(nomisTransaction.entryDateTime, dpsTransaction.entryDateTime, differences, "entryDate")
 
       return differences.takeIf { it.isNotEmpty() }?.let {
         MismatchPrisonTransaction(
@@ -166,6 +169,8 @@ data class TransactionSummary(
   val nomisTransactionId: Long,
   val description: String?,
   val transactionType: String,
+  val reference: String?,
+  val entryDateTime: LocalDateTime,
   val entries: List<TransactionEntry>,
 )
 data class TransactionEntry(
@@ -181,6 +186,8 @@ fun List<GeneralLedgerTransactionDto>.toTransactionSummary(): TransactionSummary
     prisonId = caseloadId,
     description = description,
     transactionType = type,
+    reference = reference,
+    entryDateTime = transactionTimestamp,
     entries = this@toTransactionSummary.map { it.toTransactionEntry() },
   )
 }
@@ -196,6 +203,8 @@ fun SyncGeneralLedgerTransactionResponse.toTransactionSummary() = TransactionSum
   prisonId = caseloadId,
   description = description,
   transactionType = transactionType,
+  reference = reference,
+  entryDateTime = transactionTimestamp,
   entries = generalLedgerEntries.map { it.toTransactionEntry() },
 )
 fun GeneralLedgerEntry.toTransactionEntry() = TransactionEntry(
@@ -212,8 +221,8 @@ data class MismatchPrisonTransaction(
 )
 
 private fun appendDifference(
-  nomisField: String?,
-  dpsField: String?,
+  nomisField: Any?,
+  dpsField: Any?,
   differences: MutableMap<String, String>,
   fieldName: String,
 ) {
