@@ -479,7 +479,7 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
     returnTime = returnTime,
     applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
     applicationType = if (repeat) "REPEATING" else "SINGLE",
-    escortCode = accompaniedByCode,
+    escortCode = if (accompaniedByCode == "NOT_PROVIDED") null else accompaniedByCode,
     transportType = transportCode,
     comment = comments,
     prisonId = prisonCode,
