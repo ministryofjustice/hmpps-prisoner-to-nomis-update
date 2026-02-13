@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-12.379.68d5203"
+    "version" : "2026-02-12.390.48e1d9d"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -290,6 +290,144 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/time-slot/{prisonTimeSlotId}" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Returns the data for a prison time slot by ID",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to get the details for one prison time slot.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "operationId" : "getPrisonTimeSlotById",
+        "parameters" : [ {
+          "name" : "prisonTimeSlotId",
+          "in" : "path",
+          "description" : "The internal ID for a prison time slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The prison time slot matching the ID provided in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prison time slot with this ID was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Updates a prison time slot",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to update a prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "operationId" : "updateTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonTimeSlotId",
+          "in" : "path",
+          "description" : "The internal ID for the prison time slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated a prison time slot",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The prison time slot ID was not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request was invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -899,6 +1037,66 @@
           },
           "400" : {
             "description" : "The request failed validation with invalid or missing data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/time-slot" : {
+      "post" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Creates a new prison time slot for official visits",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to create a new prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "operationId" : "createTimeSlot",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Successfully created a prison time slot for official visits",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request was invalid",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1649,6 +1847,54 @@
         }
       }
     },
+    "/admin/time-slots/prison/{prisonCode}" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Return summary of prison time slot and associated visit slots based on the prison code",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_ADMIN.\n      Used to get the summary of prison time slot and associated visit slots based on the prison code.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getAllTimeSlotsAndVisitSlots",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "activeOnly",
+          "in" : "query",
+          "description" : "If true, only returns active time slots and visit slots",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : true
+          }
+        } ],
+        "responses" : {
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/visit-slot/{visitSlotId}" : {
       "delete" : {
         "tags" : [ "Synchronisation" ],
@@ -1702,6 +1948,75 @@
           },
           "409" : {
             "description" : "The prison time slot had visit slots associated with it and cannot be deleted.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/time-slot/{timeSlotId}" : {
+      "delete" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Delete a prison time slot",
+        "description" : "\n      Delete a time slot if there are no visit slots associated with it.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "operationId" : "deleteTimeSlot",
+        "parameters" : [ {
+          "name" : "timeSlotId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the time slot",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlot"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The prison time slot had visit slots associated with it and cannot be deleted.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Could not find the time slot ",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1950,6 +2265,134 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "UpdateTimeSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to update a new prison visit slot for official visits",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot will be active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time slot will no longer be considered active",
+            "example" : "2027-01-21"
+          }
+        },
+        "required" : [ "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime" ]
+      },
+      "TimeSlot" : {
+        "type" : "object",
+        "description" : "Response for a prison time slot",
+        "properties" : {
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison time slot ID",
+            "example" : 18767
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot is active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time is no longer be considered active",
+            "example" : "2027-01-21"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who last updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was last updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "prisonTimeSlotId", "startTime" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
       "SyncCreateVisitSlotRequest" : {
         "type" : "object",
         "description" : "Request to create a new prison visit slot for official visits",
@@ -1988,28 +2431,6 @@
           }
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonTimeSlotId" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : "string"
-          },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "status" ]
       },
       "SyncCreateTimeSlotRequest" : {
         "type" : "object",
@@ -3413,6 +3834,45 @@
           }
         },
         "required" : [ "dayCode", "dpsTimeSlotId", "prisonCode", "timeSlotSeq", "visitSlots" ]
+      },
+      "CreateTimeSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to create a new prison time slot for official visits",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot will be active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time slot will no longer be considered active",
+            "example" : "2027-01-21"
+          }
+        },
+        "required" : [ "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime" ]
       },
       "VisitBookedEntity" : {
         "type" : "object",
