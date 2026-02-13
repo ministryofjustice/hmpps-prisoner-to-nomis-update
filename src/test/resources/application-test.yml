@@ -344,7 +344,14 @@ hmpps.sqs:
       subscribeTopicId: domainevents
       subscribeFilter: >-
         { "eventType":[
-            "tbd"
+          "official-visits-api.time-slot.created", 
+          "official-visits-api.time-slot.updated",
+          "official-visits-api.time-slot.deleted",
+          "official-visits-api.visit-slot.created",
+          "official-visits-api.visit-slot.updated",
+          "official-visits-api.visit-slot.deleted",
+          "official-visits-api.visit.created",
+          "official-visits-api.visitor.created"
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
