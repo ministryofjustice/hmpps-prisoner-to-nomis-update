@@ -344,7 +344,7 @@ class PrisonTransactionReconciliationServiceTest {
 
       @BeforeEach
       fun beforeEach() {
-        nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(transactionTimestamp =  LocalDateTime.parse("2026-01-27T23:30:00"),)))
+        nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(transactionTimestamp = LocalDateTime.parse("2026-01-27T23:30:00"))))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
         dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
       }
