@@ -190,7 +190,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
           .jsonPath("differences[0].nomis").isEqualTo(0)
 
         verify(telemetryClient).trackEvent(
-          eq("prisoner-balance-mismatch"),
+          eq("prisoner-balance-reports-reconciliation-mismatch"),
           check {
             assertThat(it["prisoner"]).isEqualTo(OFFENDER_NO)
             assertThat(it["prisoner-balances.accounts"]).isEqualTo("Difference(property=prisoner-balances.accounts, dps=1, nomis=0, id=null)")
@@ -342,7 +342,12 @@ class PrisonerBalanceReconciliationResourceIntTest(
     inner class HappyPath {
       @BeforeEach
       fun setup() {
-        financeNomisApi.stubGetRootOffenderIds(totalElements = 10, pageSize = 3, firstRootOffenderId = 1, prisonId = "ASI")
+        financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+          RootOffenderIdsWithLast(
+            rootOffenderIds = listOf(1, 2, 3),
+            lastOffenderId = 3L,
+          ),
+        )
 
         stubBalances(
           1,
@@ -394,7 +399,7 @@ class PrisonerBalanceReconciliationResourceIntTest(
 
         await untilAsserted {
           verify(telemetryClient).trackEvent(
-            eq("prisoner-balance-mismatch"),
+            eq("prisoner-balance-reports-reconciliation-mismatch"),
             check {
               assertThat(it["prisoner"]).isEqualTo("A0002NN")
               assertThat(it["prisoner-balances.accounts"]).isEqualTo("Difference(property=prisoner-balances.accounts, dps=1, nomis=0, id=null)")

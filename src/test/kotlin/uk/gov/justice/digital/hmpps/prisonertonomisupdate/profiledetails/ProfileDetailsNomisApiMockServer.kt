@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.profiledetails
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -12,6 +11,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerProfileDetailsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ProfileDetailsResponse
@@ -21,7 +21,7 @@ import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 
 @Component
-class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class ProfileDetailsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubPutProfileDetails(
     offenderNo: String = "A1234BC",
     created: Boolean = true,
@@ -32,7 +32,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(UpsertProfileDetailsResponse(created, bookingId))),
+          .withBody(jsonMapper.writeValueAsString(UpsertProfileDetailsResponse(created, bookingId))),
       ),
     )
   }
@@ -43,7 +43,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(errorStatus.value())
-          .withBody(objectMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
+          .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
       ),
     )
   }
@@ -58,7 +58,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(response))
+          .withBody(jsonMapper.writeValueAsString(response))
           .withFixedDelay(fixedDelay),
       ),
     )
@@ -70,7 +70,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(errorStatus.value())
-          .withBody(objectMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
+          .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = errorStatus, userMessage = "some error"))),
       ),
     )
   }
@@ -96,7 +96,7 @@ class ProfileDetailsNomisApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ).willSetStateTo(Scenario.STARTED),
     )
   }
@@ -114,6 +114,7 @@ fun booking(profileDetails: List<ProfileDetailsResponse> = listOf(profileDetails
   bookingId = 1,
   startDateTime = LocalDateTime.parse("2024-02-03T12:34:56"),
   latestBooking = true,
+  sequence = 1,
   profileDetails = profileDetails,
 )
 

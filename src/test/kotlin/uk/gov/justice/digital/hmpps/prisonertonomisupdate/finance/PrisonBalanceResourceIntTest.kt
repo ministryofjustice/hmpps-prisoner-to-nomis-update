@@ -11,8 +11,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -27,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralL
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import java.math.BigDecimal
 
+@ExtendWith(MockitoExtension::class)
 class PrisonBalanceResourceIntTest(
   @Autowired private val reconciliationService: PrisonBalanceReconciliationService,
   @Autowired private val nomisApi: FinanceNomisApiMockServer,

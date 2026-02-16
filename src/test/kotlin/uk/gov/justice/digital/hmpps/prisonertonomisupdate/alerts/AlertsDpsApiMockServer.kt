@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
@@ -15,6 +14,7 @@ import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.Pageable
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.Alert
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.model.AlertCodeSummary
@@ -32,11 +32,11 @@ class AlertsDpsApiExtension :
   companion object {
     @JvmField
     val alertsDpsApi = AlertsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     alertsDpsApi.start()
   }
 
@@ -66,7 +66,7 @@ class AlertsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(AlertsDpsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(AlertsDpsApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 

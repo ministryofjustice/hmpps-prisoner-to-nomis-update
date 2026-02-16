@@ -77,7 +77,7 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGlobalIncentiveLevelGet(incentiveCode: String? = "STD") {
     stubFor(
-      get("/incentive/levels/$incentiveCode?with-inactive=true").willReturn(
+      get("/incentive/levels/$incentiveCode").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
@@ -86,7 +86,8 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
               "code": "$incentiveCode",
               "name": "Description for $incentiveCode",
               "active": true,
-              "required": true
+              "required": true,
+              "systemDataFlag": false
             }
             """,
           )
@@ -155,9 +156,16 @@ class IncentivesApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withBody(
             """
               {
-                "iepCode": "$iepCode",
                 "id": $id,
-                "prisonerNumber": "$prisonerNumber"
+                "iepCode": "$iepCode",
+                "iepLevel": "5",
+                "prisonerNumber": "$prisonerNumber",
+                "bookingId": 12345,
+                "iepDate": "2023-02-12",
+                "iepTime": "2023-02-12T10:23:45",
+                "iepDetails": [],
+                "nextReviewDate": "2020-01-02",
+                "daysSinceReview": 23
               }
             """.trimMargin(),
           )

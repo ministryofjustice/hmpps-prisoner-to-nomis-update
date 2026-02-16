@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -20,15 +19,20 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
+import kotlin.String
+import kotlin.collections.List
 
 class NomisApiExtension :
   BeforeAllCallback,
@@ -37,11 +41,11 @@ class NomisApiExtension :
   companion object {
     @JvmField
     val nomisApi = NomisApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     nomisApi.start()
   }
 
@@ -57,7 +61,7 @@ class NomisApiExtension :
 class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8082
-    private const val ERROR_RESPONSE = """{ "error": "some error" }"""
+    private const val ERROR_RESPONSE = """{ "status": 500, "error": "some error" }"""
   }
 
   fun stubHealthPing(status: Int) {
@@ -106,6 +110,30 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.NOT_FOUND.value()),
       ),
+    )
+  }
+
+  fun stubGetActivePrisons(response: List<Prison> = activePrisons()) {
+    stubFor(
+      get(urlPathEqualTo("/prisons")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubGetActivePrisons(status: HttpStatus) {
+    nomisApi.stubFor(
+      get(
+        urlPathEqualTo("/prisons"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 
@@ -937,7 +965,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           ),
@@ -956,7 +985,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           )
@@ -976,7 +1006,8 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
                 "domain": "IEP_LEVEL",
                 "code": "$incentiveLevelCode",
                 "description": "description for $incentiveLevelCode",
-                "active": true
+                "active": true,
+                "systemDataFlag": false
               }
             """.trimIndent(),
           )
@@ -1132,6 +1163,27 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetAllPrisoners(prisoners: List<String>, offenderId: Long, pageSize: Long) {
+    stubFor(
+      get(urlPathEqualTo("/prisoners/ids/all-from-id"))
+        .withQueryParam("offenderId", equalTo("$offenderId"))
+        .withQueryParam("pageSize", equalTo("$pageSize"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              """
+              {
+                "prisonerIds": [${prisoners.joinToString { """{"offenderNo": "$it"}""" }}],
+                "lastOffenderId": ${prisoners.size}
+              }
+              """,
+            ),
+        ),
+    )
+  }
+
   fun stubGetAllPrisonersPageWithError(pageNumber: Long, pageSize: Long? = null, responseCode: Int) {
     stubFor(
       get(
@@ -1154,7 +1206,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         .willReturn(
           aResponse()
             .withHeader("Content-type", "application/json")
-            .withBody(objectMapper.writeValueAsString(details))
+            .withBody(jsonMapper.writeValueAsString(details))
             .withStatus(200),
         ),
     )
@@ -1165,7 +1217,21 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/incentives/booking-id/$bookingId/current").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody("""{"iepLevel": { "code" : "$iepCode", "description" : "description for $iepCode" }}""")
+          .withBody(
+            """
+            {
+              "offenderNo": "A1234AA",
+              "bookingId": $bookingId,
+              "incentiveSequence": 1,
+              "iepDateTime": "2021-01-01T12:00:00",
+              "prisonId": "MDI",
+              "iepLevel": { "code": "$iepCode", "description": "description for $iepCode" },
+              "currentIep": true,
+              "auditModule": "PRISON_API",
+              "whenCreated": "2021-01-01T12:00:00"
+            }
+            """.trimIndent(),
+          )
           .withFixedDelay(500)
           .withStatus(200),
       ),
@@ -2327,7 +2393,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun putCountFor(url: String) = this.findAll(WireMock.putRequestedFor(WireMock.urlEqualTo(url))).count()
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(objectMapper.writeValueAsString(body))
+    this.withBody(jsonMapper.writeValueAsString(body))
     return this
   }
 }
@@ -2345,3 +2411,5 @@ private const val CREATE_INCENTIVE_RESPONSE = """
     """
 
 fun generateOffenderNo(prefix: String = "A", sequence: Long = 1, suffix: String = "TZ") = "$prefix${sequence.toString().padStart(4, '0')}$suffix"
+
+fun activePrisons() = listOf(Prison("ASI", "Ashfield"), Prison("LEI", "Leeds"), Prison("MDI", "Moorland"))

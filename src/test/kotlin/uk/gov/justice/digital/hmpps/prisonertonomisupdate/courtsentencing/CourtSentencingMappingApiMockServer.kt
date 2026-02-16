@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
@@ -12,6 +12,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtAppearanceRecallMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CourtCaseMappingDto
@@ -19,15 +20,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentenceTermMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 
 @Component
-class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class CourtSentencingMappingApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
-    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, objectMapper = objectMapper)
+    inline fun <reified T> getRequestBody(pattern: RequestPatternBuilder): T = mappingServer.getRequestBody(pattern, jsonMapper = jsonMapper)
   }
 
   fun stubCreateCourtCase() {
@@ -93,12 +94,12 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     mappingServer.stubFor(
       post("/mapping/court-sentencing/court-cases/nomis-case-ids/get-list")
         // just check the first one to differentiate
-        .withRequestBodyJsonPath("[0]", WireMock.equalTo(ids.first().toString()))
+        .withRequestBodyJsonPath("[0]", equalTo(ids.first().toString()))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 response,
               ),
             )
@@ -165,7 +166,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withBody(
-              objectMapper.writeValueAsString(
+              jsonMapper.writeValueAsString(
                 CourtChargeMappingDto(
                   nomisCourtChargeId = nomisCourtChargeId,
                   dpsCourtChargeId = id,
@@ -210,14 +211,16 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
     stubGetWithError("/mapping/court-sentencing/sentences/dps-sentence-id/$id", status)
   }
 
-  fun stubGetMappingsGivenSentenceIds(mappings: List<SentenceMappingDto>) {
+  fun stubGetMappingsGivenSentenceIds(request: List<String>, mappings: List<SentenceMappingDto>) {
     mappingServer.stubFor(
-      post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(MappingExtension.Companion.objectMapper.writeValueAsString(mappings))
-          .withStatus(200),
-      ),
+      post("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list")
+        .withRequestBody(equalToJson(MappingExtension.jsonMapper.writeValueAsString(request)))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(MappingExtension.jsonMapper.writeValueAsString(mappings))
+            .withStatus(200),
+        ),
     )
   }
 
@@ -348,7 +351,7 @@ class CourtSentencingMappingApiMockServer(private val objectMapper: ObjectMapper
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper.writeValueAsString(
+            jsonMapper.writeValueAsString(
               response,
             ),
           )

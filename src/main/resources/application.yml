@@ -112,16 +112,28 @@ spring:
             client-id: ${visit.balance.client.id}
             client-secret: ${visit.balance.client.secret}
             authorization-grant-type: client_credentials
+          core-person-api:
+            provider: hmpps-auth
+            client-id: ${core.person.client.id}
+            client-secret: ${core.person.client.secret}
+            authorization-grant-type: client_credentials
           movements-api:
             provider: hmpps-auth
             client-id: ${ext.movements.client.id}
             client-secret: ${ext.movements.client.secret}
+            authorization-grant-type: client_credentials
+          official-visits-api:
+            provider: hmpps-auth
+            client-id: ${officialvisits.client.id}
+            client-secret: ${officialvisits.client.secret}
             authorization-grant-type: client_credentials
         provider:
           hmpps-auth:
             token-uri: ${api.base.url.hmpps-auth}/oauth/token
 
   jackson:
+    date-format: "yyyy-MM-dd HH:mm:ss"
+  jackson2:
     date-format: "yyyy-MM-dd HH:mm:ss"
     serialization:
       WRITE_DATES_AS_TIMESTAMPS: false
@@ -132,6 +144,9 @@ spring:
         - "localstack"
       test:
         - "stdout"
+  web:
+    error:
+      include-message: always
 
 server:
   port: 8080
@@ -144,8 +159,6 @@ server:
       protocol-header: x-forwarded-proto
       internal-proxies: 10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|169\.254\.\d{1,3}\.\d{1,3}|127\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.1[6-9]{1}\.\d{1,3}\.\d{1,3}|172\.2[0-9]{1}\.\d{1,3}\.\d{1,3}|172\.3[0-1]{1}\.\d{1,3}\.\d{1,3}|0:0:0:0:0:0:0:1|::1|100\.6[4-9]\.\d{1,3}\.\d{1,3}|100\.[7-9][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.1[0-1][0-9]{1}\.\d{1,3}\.\d{1,3}|100\.12[0-7]\.\d{1,3}\.\d{1,3}
   shutdown: graceful
-  error:
-    include-message: always
 
 management:
   endpoints:
@@ -176,8 +189,8 @@ reports:
   appointments:
     reconciliation:
       page-size: 50
-      # this is the lookahead limit for now as there is a bug in the activities repo
-      lookahead-days: 28
+      # this is the lookahead limit as there is a restriction of 1 month in the activities repo
+      lookahead-days: 26
   sentencing:
     reconciliation:
       page-size: 20
@@ -187,6 +200,7 @@ reports:
   casenotes:
     reconciliation:
       page-size: 30
+      retry-delay-ms: 5000
   non-associations:
     reconciliation:
       page-size: 40
@@ -199,18 +213,47 @@ reports:
   visit-balance:
     reconciliation:
       page-size: 40
+  core-person:
+    reconciliation:
+      page-size: 20
+  official-visits:
+    active-prisoners-visits:
+      reconciliation:
+        page-size: 30
+    all-visits:
+      reconciliation:
+        page-size: 30
+    all-missing-nomis-visits:
+      reconciliation:
+        page-size: 1000
+        thread-count: 30
+  temporary-absences:
+    all-prisoners:
+      reconciliation:
+        page-size: 100
+        thread-count: 15
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queues:
     courtsentencing:
-      errorVisibilityTimeout: 1, 1, 1, 10, 60
+      errorVisibilityTimeout: 1, 1, 1, 1, 1, 1, 5, 5, 60
+    externalmovements:
+      errorVisibilityTimeout: 1, 1, 1, 10, 60, 600
     location:
       errorVisibilityTimeout: 1, 1, 1, 1, 5, 5, 10, 60, 600
     personalrelationships:
       eventErrorVisibilityTimeout:
         contacts-api.contact-address-phone.created: 3, 10, 60, 600
+    officialvisits:
+      errorVisibilityTimeout: 1, 1, 60, 600
 
   queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW
 api:
   timeout: 60s
+
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false

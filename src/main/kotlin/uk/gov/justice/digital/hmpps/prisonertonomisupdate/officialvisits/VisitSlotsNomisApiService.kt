@@ -1,0 +1,28 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
+
+import kotlinx.coroutines.reactor.awaitSingle
+import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.stereotype.Service
+import org.springframework.web.reactive.function.client.WebClient
+import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActivePrisonWithTimeSlotResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotForPrisonResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+
+@Service
+class VisitSlotsNomisApiService(
+  @Qualifier("nomisApiWebClient") private val webClient: WebClient,
+  retryApiService: RetryApiService,
+) {
+  private val api = VisitsConfigurationResourceApi(webClient)
+  private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
+    Context.of("api", "VisitSlotsNomisApiService"),
+  )
+
+  suspend fun getTimeSlotsForPrison(prisonId: String, activeOnly: Boolean = false): VisitTimeSlotForPrisonResponse = api.getPrisonVisitTimeSlots(prisonId = prisonId, activeOnly = activeOnly)
+    .retryWhen(retrySpec).awaitSingle()
+
+  suspend fun getActivePrisonsWithTimeSlots(): ActivePrisonWithTimeSlotResponse = api.getActivePrisonsWithTimeSlots()
+    .retryWhen(retrySpec).awaitSingle()
+}

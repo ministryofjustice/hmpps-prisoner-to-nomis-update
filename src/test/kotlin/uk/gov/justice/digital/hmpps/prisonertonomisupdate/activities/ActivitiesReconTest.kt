@@ -508,4 +508,4 @@ class ActivitiesReconTest {
   }
 }
 
-internal data class BookingDetailsStub(val bookingId: Long, val offenderNo: String, val location: String, val nomisCount: Long?, val dpsCount: Long?)
+internal data class BookingDetailsStub(val bookingId: Long, val offenderNo: String, val location: String, val nomisCount: Long?, val dpsCount: Long?, val offenderId: Long = 1234, val active: Boolean = true)

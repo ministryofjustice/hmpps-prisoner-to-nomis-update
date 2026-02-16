@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -15,7 +16,6 @@ import org.springframework.context.annotation.Import
 import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceOutsideMovementRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceRequest
@@ -72,48 +72,6 @@ class ExternalMovementsNomisApiServiceTest {
 
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
-        }
-      }
-    }
-  }
-
-  @Nested
-  inner class TemporaryAbsenceOutsideMovement {
-
-    @Nested
-    inner class CreateTemporaryAbsenceOutsideMovement {
-      @Test
-      fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceOutsideMovement()
-
-        apiService.createTemporaryAbsenceOutsideMovement("A1234BC", createTemporaryAbsenceOutsideMovementRequest())
-
-        mockServer.verify(
-          postRequestedFor(anyUrl())
-            .withHeader("Authorization", equalTo("Bearer ABCDE")),
-        )
-      }
-
-      @Test
-      fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceOutsideMovement()
-
-        apiService.createTemporaryAbsenceOutsideMovement("A1234BC", createTemporaryAbsenceOutsideMovementRequest())
-
-        mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/outside-movement"))
-            .withRequestBody(
-              matchingJsonPath("eventSubType", equalTo("C5")),
-            ),
-        )
-      }
-
-      @Test
-      fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceOutsideMovement(status = HttpStatus.INTERNAL_SERVER_ERROR)
-
-        assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createTemporaryAbsenceOutsideMovement("A1234BC", createTemporaryAbsenceOutsideMovementRequest())
         }
       }
     }
@@ -241,6 +199,41 @@ class ExternalMovementsNomisApiServiceTest {
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
         }
+      }
+    }
+  }
+
+  @Nested
+  inner class TemporaryAbsencePrisonerSummary {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+
+      apiService.getTemporaryAbsenceSummary("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+
+      apiService.getTemporaryAbsenceSummary("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/summary")),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummary(status = HttpStatus.INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTemporaryAbsenceSummary("A1234BC")
       }
     }
   }

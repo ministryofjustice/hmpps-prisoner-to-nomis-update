@@ -125,7 +125,7 @@ class CSIPReconciliationService(
 
 fun CSIPResponse.toCSIPSummary() = CSIPReportSummary(
   incidentTypeCode = type.code,
-  incidentDate = incidentDate,
+  incidentDate = incidentDate.takeIf { it.validDate() },
   incidentTime = incidentTime,
   attendeeCount = reviews.flatMap { it.attendees }.size,
   factorCount = reportDetails.factors.size,
@@ -139,7 +139,7 @@ fun CSIPResponse.toCSIPSummary() = CSIPReportSummary(
 
 fun CsipRecord.toCSIPSummary() = CSIPReportSummary(
   incidentTypeCode = referral.incidentType.code,
-  incidentDate = referral.incidentDate,
+  incidentDate = referral.incidentDate.takeIf { it.validDate() },
   incidentTime = referral.incidentTime,
   attendeeCount = plan?.reviews?.flatMap { it.attendees }?.size ?: 0,
   factorCount = referral.contributoryFactors.size,
@@ -150,10 +150,11 @@ fun CsipRecord.toCSIPSummary() = CSIPReportSummary(
   decisionOutcomeCode = referral.decisionAndActions?.outcome?.code,
   csipClosedFlag = plan?.reviews?.any { it.actions.contains(Review.Actions.CLOSE_CSIP) } ?: false,
 )
+private fun LocalDate.validDate(): Boolean = this.isAfter(LocalDate.parse("1900-01-01"))
 
 data class CSIPReportSummary(
   val incidentTypeCode: String,
-  val incidentDate: LocalDate,
+  val incidentDate: LocalDate? = null,
   val incidentTime: String? = null,
   val attendeeCount: Int,
   val factorCount: Int,

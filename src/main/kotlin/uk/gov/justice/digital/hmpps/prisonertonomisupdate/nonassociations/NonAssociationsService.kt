@@ -15,6 +15,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSyste
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+
 @Service
 class NonAssociationsService(
   private val nonAssociationsApiService: NonAssociationsApiService,
@@ -133,15 +134,77 @@ class NonAssociationsService(
   }
 
   suspend fun processMerge(event: MergeEvent) {
-    if (event.additionalInformation.reason == "MERGE") {
-      mappingService.mergeNomsNumber(event.additionalInformation.removedNomsNumber, event.additionalInformation.nomsNumber)
+    val (reason, nomsNumber, removedNomsNumber) = event.additionalInformation
+
+    if (reason == "MERGE") {
+      val thirdParties = mappingService.findCommon(removedNomsNumber, nomsNumber)
+      val sequenceReport = mutableMapOf<String, String>()
+      thirdParties.groupBy { if (it.firstOffenderNo == nomsNumber || it.firstOffenderNo == removedNomsNumber) it.secondOffenderNo else it.firstOffenderNo }
+        /*
+         If thirdParties exist, the scenario is :
+        •  - a duplicate prisoner record exists and an NA is created with the same other prisoner as for the existing prisoner’s NA
+        •  - a mapping is therefore added for this NA (with seq 1, same as the old one)
+        •  - a merge event occurs, and the mapping update which tries to change the old to the new offenderno fails with duplicate key
+
+        The process is to identify which DPS NA corresponds to which Nomis NA, then update the relevant sequence no to 2 (usually, or
+        whatever the Nomis value is) in the mapping table. This will cause the merge event message to go through avoiding a mapping duplicate key error.
+        Note that in Nomis the NA of the merged FROM offender no has the sequence set to the next highest available no.
+
+        Eg we might be merging A1234AA to A1234AB, there could be 2 third party offenders COMMON1 and COMMON2 and the mapping
+        table might contain:
+          101,COMMON1, A1234AA, sequence 1
+          102,A1234AB, COMMON1, sequence 1
+          103,COMMON2, A1234AA, sequence 1
+          104,A1234AB, COMMON2, sequence 1
+
+        In Nomis (already merged) these may look something like
+          COMMON1, A1234AB, sequence 1
+          A1234AB, COMMON1, sequence 2
+          COMMON2, A1234AB, sequence 1
+          COMMON2, A1234AB, sequence 2 (a different NA, closed)
+          A1234AB, COMMON2, sequence 3
+
+        So we need to set the 2 correct mapping table entries to sequence 2.
+         */
+        .forEach { entry ->
+          if (entry.value.size != 2) {
+            throw IllegalStateException("Entry not size 2: $entry")
+          }
+          val mappingRecord1 = entry.value.first()
+          val mappingRecord2 = entry.value.last()
+          if (mappingRecord1.nomisTypeSequence != mappingRecord2.nomisTypeSequence) {
+            throw IllegalStateException("Entry sequences not equal: $entry")
+          }
+          // Find from Nomis & DPS which one needs a change of sequence
+          val dpsRecord1 = nonAssociationsApiService.getNonAssociation(mappingRecord1.nonAssociationId)
+          val dpsRecord2 = nonAssociationsApiService.getNonAssociation(mappingRecord2.nonAssociationId)
+
+          val nomisData = nomisApiService.getNonAssociationDetails(entry.key, nomsNumber)
+          // NomisData may contain many NAs (e.g. old closed ones); we need the one with this sequence no,
+          // the DPS NA which corresponds with this,
+          // and then the Nomis NA which corresponds to the other DPS NA
+          val nomisRecordMatchingSeq = nomisData.find { it.typeSequence == mappingRecord1.nomisTypeSequence }
+          val otherDpsRecord = if (dpsRecord1.effectiveDate.toLocalDate() == nomisRecordMatchingSeq?.effectiveDate) dpsRecord2 else dpsRecord1
+
+          val nomisRecordNotMatching = nomisData.find {
+            it.typeSequence != mappingRecord1.nomisTypeSequence &&
+              otherDpsRecord.effectiveDate.toLocalDate() == it.effectiveDate
+          }
+            ?: throw IllegalStateException("Cannot match up DPS and Nomis NAs:\nentry = $entry\ndpsRecord1 = $dpsRecord1\ndpsRecord2 = $dpsRecord2\nnomisRecordMatchingSeq = $nomisRecordMatchingSeq\notherDpsRecord = $otherDpsRecord")
+
+          mappingService.setSequence(otherDpsRecord.id, nomisRecordNotMatching.typeSequence)
+          sequenceReport[entry.key] = "Reset nonAssociationId ${otherDpsRecord.id} sequence from ${mappingRecord1.nomisTypeSequence} to ${nomisRecordNotMatching.typeSequence}"
+        }
+
+      mappingService.mergeNomsNumber(removedNomsNumber, nomsNumber)
+
       telemetryClient.trackEvent(
         "non-association-merge-success",
         mapOf(
-          "removedNomsNumber" to event.additionalInformation.removedNomsNumber,
-          "nomsNumber" to event.additionalInformation.nomsNumber,
-          "reason" to event.additionalInformation.reason,
-        ),
+          "removedNomsNumber" to removedNomsNumber,
+          "nomsNumber" to nomsNumber,
+          "reason" to reason,
+        ) + sequenceReport,
       )
     }
   }

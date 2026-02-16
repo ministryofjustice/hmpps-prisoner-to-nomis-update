@@ -114,6 +114,103 @@ class CourtSentencingRepairService(
     return CourtCaseRepairResponse(nomisCaseId = nomisCaseResponse.caseId)
   }
 
+  suspend fun resynchroniseSentenceInsertToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String) {
+    courtSentencingService.createSentence(
+      createEvent = CourtSentencingService.SentenceCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.SentenceAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          sentenceId = sentenceId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    // will need to use operation id in appinsights to see created nomis ids
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-sentence-inserted",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+        "dpsSentenceId" to sentenceId,
+      ),
+      null,
+    )
+  }
+
+  suspend fun resynchroniseSentenceUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, sentenceId: String) {
+    courtSentencingService.updateSentence(
+      createEvent = CourtSentencingService.SentenceCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.SentenceAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          sentenceId = sentenceId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-sentence-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsSentenceId" to sentenceId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+
+  suspend fun resynchroniseChargeUpdateToNomis(offenderNo: String, courtCaseId: String, courtAppearanceId: String, chargeId: String) {
+    courtSentencingService.updateCharge(
+      createEvent = CourtSentencingService.CourtChargeCreatedEvent(
+        personReference = PersonReferenceList(
+          identifiers = listOf(
+            PersonReference(
+              type = "NOMS",
+              value = offenderNo,
+            ),
+          ),
+        ),
+        additionalInformation = CourtSentencingService.CourtChargeAdditionalInformation(
+          courtCaseId = courtCaseId,
+          courtAppearanceId = courtAppearanceId,
+          courtChargeId = chargeId,
+          source = "DPS",
+        ),
+      ),
+    )
+
+    telemetryClient.trackEvent(
+      "court-sentencing-repair-charge-updated",
+      mapOf(
+        "offenderNo" to offenderNo,
+        "dpsCourtCaseId" to courtCaseId,
+        "dpsChargeId" to chargeId,
+        "dpsCourtAppearanceId" to courtAppearanceId,
+      ),
+      null,
+    )
+  }
+
   private suspend fun getCaseIds(dpsOrNomisCaseId: String): Pair<String, Long> = dpsOrNomisCaseId.toLongOrNull()?.let {
     (courtCaseMappingService.getMappingGivenNomisCourtCaseIdOrNull(it)?.dpsCourtCaseId ?: throw BadRequestException("No mapping found for $dpsOrNomisCaseId")) to it
   } ?: let {

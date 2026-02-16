@@ -5,32 +5,26 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
-import java.time.LocalDateTime
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.IncentiveMappingResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto
 
 @Service
 class IncentivesMappingService(
-  @Qualifier("mappingWebClient") private val webClient: WebClient,
+  @Qualifier("mappingWebClient") webClient: WebClient,
 ) {
+  private val incentiveMappingResourceApi = IncentiveMappingResourceApi(webClient)
 
   suspend fun createMapping(request: IncentiveMappingDto) {
-    webClient.post()
-      .uri("/mapping/incentives")
-      .bodyValue(request)
+    incentiveMappingResourceApi.prepare(
+      incentiveMappingResourceApi.createMapping8RequestConfig(request),
+    )
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
   }
 
-  suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? = webClient.get()
-    .uri("/mapping/incentives/incentive-id/{incentiveId}", incentiveId)
+  suspend fun getMappingGivenIncentiveIdOrNull(incentiveId: Long): IncentiveMappingDto? = incentiveMappingResourceApi.prepare(
+    incentiveMappingResourceApi.getIncentiveMappingGivenIncentiveIdRequestConfig(incentiveId),
+  )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 }
-
-data class IncentiveMappingDto(
-  val nomisBookingId: Long,
-  val nomisIncentiveSequence: Int,
-  val incentiveId: Long,
-  val label: String? = null,
-  val mappingType: String,
-  val whenCreated: LocalDateTime? = null,
-)

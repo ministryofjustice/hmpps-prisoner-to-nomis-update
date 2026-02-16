@@ -9,6 +9,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.mockito.kotlin.description
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.springframework.beans.factory.annotation.Autowired
@@ -21,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.SentenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.reconciliationCourtCase
@@ -151,6 +153,22 @@ internal class CourtSentencingReconciliationServiceTest {
           offenderNo = OFFENDER_NO,
         )?.differences,
       ).isEqualTo(listOf(Difference(property = "case.active", dps = true, nomis = false, id = DPS_COURT_CASE_ID)))
+    }
+
+    @Test
+    fun `will not report a case status mismatch when DPS case is a DUPLICATE`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(caseStatus = CodeDescription("A", "Active")),
+        dpsCase = dpsCourtCaseResponse().copy(active = false, status = ReconciliationCourtCase.Status.DUPLICATE),
+      )
+
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isNull()
     }
 
     @Test
@@ -654,6 +672,46 @@ internal class CourtSentencingReconciliationServiceTest {
           ),
         ),
       )
+    }
+
+    @Test
+    fun `will check DPS legacy sentence data for UNKNOWN recall sentences`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              calculationType = CodeDescription(code = "LR_ORA", description = "ORA Licence Recall"),
+              category = CodeDescription(code = "2020", description = "2020"),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(
+                    sentenceCalcType = "UNKNOWN",
+                    sentenceCategory = "UNKNOWN",
+                    legacyData = SentenceLegacyData(
+                      sentenceCalcType = "LR_ORA",
+                      sentenceCategory = "2020",
+                      postedDate = "2025/01/01",
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        ),
+      ).isNull()
     }
 
     @Test

@@ -238,7 +238,7 @@ class PrisonerBalanceReconciliationServiceTest {
           lastOffenderId = 8L,
         ),
       )
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID, filterPrisonId = null)
+      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
@@ -248,27 +248,33 @@ class PrisonerBalanceReconciliationServiceTest {
 
     @Test
     fun `will return id list when filtering by prison`() = runTest {
-      financeNomisApi.stubGetRootOffenderIds(totalElements = 4, prisonId = "MDI")
-      val actual = service.getPrisonerIdsForPage(0, filterPrisonId = listOf("MDI"))
+      financeNomisApi.stubGetPrisonerBalanceIdentifiersFromId(
+        RootOffenderIdsWithLast(
+          rootOffenderIds = listOf(10000, 10001, 10002, 10003),
+          lastOffenderId = 10003L,
+        ),
+      )
+
+      val actual = service.getPrisonerIdsForPage(0, filterPrisonIds = listOf("MDI"))
 
       assertThat(actual).isInstanceOf(ReconciliationSuccessPageResult::class.java)
       actual as ReconciliationSuccessPageResult
       assertThat(actual.ids).isEqualTo(listOf(10000L, 10001L, 10002L, 10003L))
-      assertThat(actual.last).isEqualTo(9999L)
+      assertThat(actual.last).isEqualTo(10003L)
     }
 
     @Test
     fun `will report telemetry on error`() = runTest {
       financeNomisApi.stubGetPrisonerBalanceIdentifiersFromIdError()
 
-      val actual = service.getPrisonerIdsForPage(OFFENDER_ID, filterPrisonId = null)
+      val actual = service.getPrisonerIdsForPage(OFFENDER_ID)
 
       assertThat(actual).isInstanceOf(ReconciliationErrorPageResult::class.java)
       actual as ReconciliationErrorPageResult
       assertThat(actual.error).isInstanceOf(WebClientResponseException.InternalServerError::class.java)
 
       verify(telemetryClient).trackEvent(
-        eq("prisoner-balance-mismatch-page-error"),
+        eq("prisoner-balance-reports-reconciliation-mismatch-page-error"),
         check {
           assertThat(it).containsEntry("lastOffenderId", OFFENDER_ID.toString())
           assertThat(it).containsKey("error")

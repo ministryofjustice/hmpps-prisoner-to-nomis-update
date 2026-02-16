@@ -182,4 +182,57 @@ class ExternalMovementsDpsApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetTapReconciliation {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+
+      apiService.getTapReconciliation(personIdentifier)
+
+      dpsExternalMovementsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+
+      apiService.getTapReconciliation(personIdentifier)
+
+      dpsExternalMovementsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconciliation/$personIdentifier/temporary-absences")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+
+      with(apiService.getTapReconciliation(personIdentifier)) {
+        assertThat(authorisations.count).isEqualTo(1)
+        assertThat(occurrences.count).isEqualTo(2)
+        assertThat(movements.scheduled.outCount).isEqualTo(3)
+        assertThat(movements.scheduled.inCount).isEqualTo(4)
+        assertThat(movements.unscheduled.outCount).isEqualTo(5)
+        assertThat(movements.unscheduled.inCount).isEqualTo(6)
+      }
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier, status = 500)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTapReconciliation(personIdentifier)
+      }
+    }
+  }
 }

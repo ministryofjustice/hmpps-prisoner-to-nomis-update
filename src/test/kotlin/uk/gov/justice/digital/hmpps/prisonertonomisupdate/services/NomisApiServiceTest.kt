@@ -34,7 +34,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.OpenClosedStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.VisitType
@@ -48,7 +51,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Un
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertAllocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
@@ -163,6 +168,43 @@ internal class NomisApiServiceTest {
           agencyId = "MDI",
         ),
       ).isFalse
+    }
+  }
+
+  @Nested
+  inner class GetActivePrisons {
+
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      nomisApiService.getActivePrisons()
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will call the service endpoint`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      nomisApiService.getActivePrisons()
+
+      nomisApi.verify(getRequestedFor(urlPathEqualTo("/prisons")))
+    }
+
+    @Test
+    fun `will return prison data`() = runTest {
+      nomisApi.stubGetActivePrisons()
+
+      val prisons = nomisApiService.getActivePrisons()
+      assertThat(prisons[0].id).isEqualTo("ASI")
+      assertThat(prisons[0].description).isEqualTo("Ashfield")
+      assertThat(prisons[1].id).isEqualTo("LEI")
+      assertThat(prisons[1].description).isEqualTo("Leeds")
+      assertThat(prisons[2].id).isEqualTo("MDI")
+      assertThat(prisons[2].description).isEqualTo("Moorland")
     }
   }
 
@@ -394,7 +436,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `should call nomis api with OAuth2 token`(): Unit = runTest {
-      nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+      nomisApi.stubAppointmentCreate("""{ "id": 12345, "eventId": 1234 }""")
 
       nomisApiService.createAppointment(newAppointment())
 
@@ -406,7 +448,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will post data to nomis api`(): Unit = runTest {
-      nomisApi.stubAppointmentCreate("""{ "id": 12345 }""")
+      nomisApi.stubAppointmentCreate("""{ "id": 12345, "eventId": 1234 }""")
 
       nomisApiService.createAppointment(newAppointment())
 
@@ -461,7 +503,7 @@ internal class NomisApiServiceTest {
           pageSize = 10,
         ),
       ).isEqualTo(
-        PageImpl<AppointmentIdResponse>(
+        PageImpl(
           listOf(AppointmentIdResponse(123456789)),
           Pageable.ofSize(10),
           41,
@@ -488,7 +530,7 @@ internal class NomisApiServiceTest {
       nomisApiService.getAdjustments(123456)
 
       nomisApi.verify(
-        getRequestedFor(urlEqualTo("/prisoners/booking-id/123456/sentencing-adjustments"))
+        getRequestedFor(urlEqualTo("/prisoners/booking-id/123456/sentencing-adjustments?active-only=true"))
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
@@ -696,7 +738,7 @@ internal class NomisApiServiceTest {
     fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       nomisApi.stubKeyDateAdjustmentCreate(bookingId = 12345)
 
-      nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
+      nomisApiService.createKeyDateAdjustment(12345, newKeyDateAdjustment())
 
       nomisApi.verify(
         postRequestedFor(urlEqualTo("/prisoners/booking-id/12345/adjustments"))
@@ -710,7 +752,7 @@ internal class NomisApiServiceTest {
 
       nomisApiService.createKeyDateAdjustment(
         bookingId = 12345,
-        request = newSentencingAdjustment(
+        request = newKeyDateAdjustment(
           adjustmentTypeCode = "ADA",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
@@ -733,7 +775,7 @@ internal class NomisApiServiceTest {
       )
 
       assertThrows<NotFound> {
-        nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
+        nomisApiService.createKeyDateAdjustment(12345, newKeyDateAdjustment())
       }
     }
 
@@ -745,7 +787,7 @@ internal class NomisApiServiceTest {
       )
 
       assertThrows<ServiceUnavailable> {
-        nomisApiService.createKeyDateAdjustment(12345, newSentencingAdjustment())
+        nomisApiService.createKeyDateAdjustment(12345, newKeyDateAdjustment())
       }
     }
   }
@@ -757,7 +799,7 @@ internal class NomisApiServiceTest {
     fun `should call nomis api with OAuth2 token`(): Unit = runTest {
       nomisApi.stubKeyDateAdjustmentUpdate(adjustmentId = 98765)
 
-      nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+      nomisApiService.updateKeyDateAdjustment(98765, updateKeyDateAdjustmentRequest())
 
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
@@ -771,8 +813,8 @@ internal class NomisApiServiceTest {
 
       nomisApiService.updateKeyDateAdjustment(
         98765,
-        request = updateSentencingAdjustment(
-          adjustmentTypeCode = "RX",
+        request = updateKeyDateAdjustmentRequest(
+          adjustmentTypeCode = "LAL",
           adjustmentDate = LocalDate.parse("2022-01-01"),
           adjustmentDays = 9,
           adjustmentFromDate = LocalDate.parse("2020-07-19"),
@@ -782,7 +824,7 @@ internal class NomisApiServiceTest {
 
       nomisApi.verify(
         putRequestedFor(urlEqualTo("/key-date-adjustments/98765"))
-          .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("RX")))
+          .withRequestBody(matchingJsonPath("adjustmentTypeCode", equalTo("LAL")))
           .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
           .withRequestBody(matchingJsonPath("adjustmentDays", equalTo("9")))
           .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2020-07-19")))
@@ -799,7 +841,7 @@ internal class NomisApiServiceTest {
       )
 
       assertThrows<NotFound> {
-        nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+        nomisApiService.updateKeyDateAdjustment(98765, updateKeyDateAdjustmentRequest())
       }
     }
 
@@ -811,7 +853,7 @@ internal class NomisApiServiceTest {
       )
 
       assertThrows<ServiceUnavailable> {
-        nomisApiService.updateKeyDateAdjustment(98765, updateSentencingAdjustment())
+        nomisApiService.updateKeyDateAdjustment(98765, updateKeyDateAdjustmentRequest())
       }
     }
   }
@@ -1492,10 +1534,11 @@ fun updateVisit(): UpdateVisitDto = UpdateVisitDto(
   visitComment = "visit comment",
 )
 
-fun newIncentive() = CreateIncentiveDto(
+fun newIncentive() = CreateIncentiveRequest(
   iepDateTime = LocalDateTime.now(),
   prisonId = "MDI",
   iepLevel = "High",
+  userId = "BILLYBOB",
 )
 
 fun newActivity() = CreateActivityRequest(
@@ -1561,10 +1604,23 @@ private fun newSentencingAdjustment(
   adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment",
-) = CreateSentencingAdjustmentRequest(
-  adjustmentTypeCode = adjustmentTypeCode,
+) = CreateSentenceAdjustmentRequest(
+  adjustmentTypeCode = CreateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustmentTypeCode),
   adjustmentDate = adjustmentDate,
   adjustmentFromDate = adjustmentFromDate,
+  adjustmentDays = adjustmentDays,
+  comment = comment,
+)
+private fun newKeyDateAdjustment(
+  adjustmentTypeCode: String = "LAL",
+  adjustmentDate: LocalDate = LocalDate.now(),
+  adjustmentFromDate: LocalDate? = LocalDate.now(),
+  adjustmentDays: Long = 99,
+  comment: String? = "Adjustment comment",
+) = CreateKeyDateAdjustmentRequest(
+  adjustmentTypeCode = CreateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustmentTypeCode),
+  adjustmentDate = adjustmentDate,
+  adjustmentFromDate = adjustmentFromDate!!,
   adjustmentDays = adjustmentDays,
   comment = comment,
 )
@@ -1575,14 +1631,28 @@ private fun updateSentencingAdjustment(
   adjustmentFromDate: LocalDate? = null,
   adjustmentDays: Long = 99,
   comment: String? = "Adjustment comment",
-  sentenceSequence: Int? = null,
-) = UpdateSentencingAdjustmentRequest(
-  adjustmentTypeCode = adjustmentTypeCode,
+  sentenceSequence: Int = 1,
+) = UpdateSentenceAdjustmentRequest(
+  adjustmentTypeCode = UpdateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustmentTypeCode),
   adjustmentDate = adjustmentDate,
   adjustmentFromDate = adjustmentFromDate,
   adjustmentDays = adjustmentDays,
   comment = comment,
-  sentenceSequence = sentenceSequence,
+  sentenceSequence = sentenceSequence.toLong(),
+)
+
+private fun updateKeyDateAdjustmentRequest(
+  adjustmentTypeCode: String = "LAL",
+  adjustmentDate: LocalDate = LocalDate.now(),
+  adjustmentFromDate: LocalDate? = LocalDate.now(),
+  adjustmentDays: Long = 99,
+  comment: String? = "Adjustment comment",
+) = UpdateKeyDateAdjustmentRequest(
+  adjustmentTypeCode = UpdateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustmentTypeCode),
+  adjustmentDate = adjustmentDate,
+  adjustmentFromDate = adjustmentFromDate!!,
+  adjustmentDays = adjustmentDays,
+  comment = comment,
 )
 
 private fun newAdjudication() = CreateAdjudicationRequest(

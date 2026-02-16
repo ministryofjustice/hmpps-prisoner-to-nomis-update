@@ -4,7 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateIncentiveDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveReviewDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto.MappingType.INCENTIVE_CREATED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -51,9 +54,9 @@ class IncentivesService(
             ).let { nomisResponse ->
               IncentiveMappingDto(
                 nomisBookingId = nomisResponse.bookingId,
-                nomisIncentiveSequence = nomisResponse.sequence.toInt(),
+                nomisIncentiveSequence = nomisResponse.sequence,
                 incentiveId = event.additionalInformation.id,
-                mappingType = "INCENTIVE_CREATED",
+                mappingType = INCENTIVE_CREATED,
               )
             }
           }
@@ -66,9 +69,9 @@ class IncentivesService(
     mappingService.createMapping(
       IncentiveMappingDto(
         nomisBookingId = context.mapping.nomisBookingId,
-        nomisIncentiveSequence = context.mapping.nomisIncentiveSequence,
+        nomisIncentiveSequence = context.mapping.nomisIncentiveSequence.toLong(),
         incentiveId = context.mapping.incentiveId,
-        mappingType = "INCENTIVE_CREATED",
+        mappingType = INCENTIVE_CREATED,
       ),
     ).also {
       telemetryClient.trackEvent(
@@ -94,7 +97,7 @@ class IncentivesService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-fun IepDetail.toNomisIncentive(): CreateIncentiveDto = CreateIncentiveDto(
+fun IncentiveReviewDetail.toNomisIncentive() = CreateIncentiveRequest(
   comments = comments,
   iepDateTime = iepDate.atTime(iepTime.toLocalTime()),
   userId = userId,

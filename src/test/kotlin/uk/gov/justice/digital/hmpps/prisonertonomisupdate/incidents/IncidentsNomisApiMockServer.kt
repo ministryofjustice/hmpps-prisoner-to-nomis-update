@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
@@ -12,6 +11,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.History
@@ -35,7 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.pageContent
 import java.time.LocalDate
 import java.time.LocalDateTime
 @Component
-class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class IncidentsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
     fun upsertIncidentRequest(): UpsertIncidentRequest = UpsertIncidentRequest(
       title = "An incident occurred",
@@ -123,6 +123,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
   }
+
   fun stubGetIncident(
     nomisIncidentId: Long = 1234,
     offenderParty: String = "A1234BC",
@@ -137,7 +138,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
             .withBody(
               incidentResponse(
                 nomisIncidentId = nomisIncidentId,
-                offenderParty = offenderParty,
+                offenderPartyPrisonNumber = offenderParty,
                 status = status,
                 reportedDateTime = reportedDateTime,
                 type = type,
@@ -146,6 +147,17 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
         ),
     )
   }
+
+  fun stubGetIncident(incidentResponse: IncidentResponse = incidentResponse()) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/incidents/${incidentResponse.incidentId}"))
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
+            .withBody(incidentResponse),
+        ),
+    )
+  }
+
   fun stubGetIncidents(startIncidentId: Long, endIncidentId: Long) {
     (startIncidentId..endIncidentId).forEach { nomisIncidentId ->
       stubGetIncident(nomisIncidentId)
@@ -159,7 +171,7 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
             .withBody(
               incidentResponse(
                 status = "INREQ",
-                offenderParty = "Z4321YX",
+                offenderPartyPrisonNumber = "Z4321YX",
                 nomisIncidentId = 33,
               )
                 .copy(
@@ -198,37 +210,21 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
                       questionId = 1234,
                       sequence = 1,
                       question = "Was anybody hurt?",
-                      answers = listOf(),
+                      answers = listOf(answer(), answer2),
                       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
                       createdBy = "JSMITH",
-                      hasMultipleAnswers = false,
+                      hasMultipleAnswers = true,
                     ),
                     Question(
                       questionId = 12345,
                       sequence = 2,
                       question = "Where was the drone?",
-                      answers = listOf(),
+                      answers = listOf(answer(3)),
                       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
                       createdBy = "JSMITH",
-                      hasMultipleAnswers = false,
+                      hasMultipleAnswers = true,
                     ),
                   ),
-                ),
-            ),
-        ),
-    )
-  }
-
-  fun stubGetIncidentWithInvalidNomisResponseData(incidentId: Long) {
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/incidents/$incidentId"))
-        .willReturn(
-          aResponse().withHeader("Content-Type", "application/json").withStatus(HttpStatus.OK.value())
-            .withBody(
-              incidentResponse()
-                .copy(
-                  incidentId = incidentId,
-                  questions = listOf(questionWithInvalidNomisData, question2),
                 ),
             ),
         ),
@@ -258,12 +254,12 @@ class IncidentsNomisApiMockServer(private val objectMapper: ObjectMapper) {
       ),
     )
   }
-  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder = this.withBody(objectMapper.writeValueAsString(body))
+  fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder = this.withBody(jsonMapper.writeValueAsString(body))
 }
 
-private fun incidentResponse(
+fun incidentResponse(
   nomisIncidentId: Long = 1234,
-  offenderParty: String = "A1234BC",
+  offenderPartyPrisonNumber: String = "A1234BC",
   status: String = "AWAN",
   reportedDateTime: LocalDateTime = LocalDateTime.parse("2021-07-07T10:35:17"),
   type: String = "ATT_ESC_E",
@@ -327,26 +323,7 @@ private fun incidentResponse(
       createdBy = "JIM SMITH",
     ),
   ),
-  offenderParties = listOf(
-    OffenderParty(
-      offender =
-      Offender(offenderParty, firstName = "Fred", lastName = "smith"),
-      sequence = 1,
-      role = CodeDescription("ABS", "Absconder"),
-      createDateTime = LocalDateTime.parse("2024-02-06T12:36:00"),
-      createdBy = "JIM",
-      comment = "This is a comment",
-      outcome = CodeDescription("AAA", "SOME OUTCOME"),
-    ),
-    OffenderParty(
-      offender =
-      Offender("A1234BD", firstName = "Fred", lastName = "smith"),
-      sequence = 2,
-      role = CodeDescription("ABS", "Absconder"),
-      createDateTime = LocalDateTime.parse("2024-02-06T12:46:00"),
-      createdBy = "JIM",
-    ),
-  ),
+  offenderParties = listOf(offenderParty(offenderPartyPrisonNumber), offenderParty("A1234BD", 2)),
   requirements = listOf(
     Requirement(
       agencyId = "ASI",
@@ -363,19 +340,14 @@ private fun incidentResponse(
       recordedDate = LocalDateTime.parse("2021-08-06T10:01:02"),
     ),
   ),
-  questions = listOf(question1, question2),
+  questions = listOf(questionWith1Answer, question2With2Answers),
   history = listOf(
     History(
       questionnaireId = 1234,
       type = "ATT_ESC_E",
       description = "Escape Attempt",
       incidentChangeDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-      incidentChangeStaff = Staff(
-        username = "JSMITH",
-        staffId = 485572,
-        firstName = "JIM",
-        lastName = "SMITH",
-      ),
+      incidentChangeStaff = jimSmithStaff,
       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
       createdBy = "JSMITH",
       questions = listOf(
@@ -386,12 +358,7 @@ private fun incidentResponse(
           answers = listOf(
             HistoryResponse(
               responseSequence = 1,
-              recordingStaff = Staff(
-                username = "JSMITH",
-                staffId = 485572,
-                firstName = "JIM",
-                lastName = "SMITH",
-              ),
+              recordingStaff = jimSmithStaff,
               questionResponseId = null,
               answer = "Yes",
               responseDate = null,
@@ -404,45 +371,71 @@ private fun incidentResponse(
   ),
 )
 
-val question1 = Question(
+val jimSmithStaff = Staff(
+  username = "JSMITH",
+  staffId = 485572,
+  firstName = "JIM",
+  lastName = "SMITH",
+)
+
+fun offenderParty(offenderNo: String = "A1234BC", sequence: Int = 1) = OffenderParty(
+  offender = Offender(offenderNo, firstName = "Fred", lastName = "smith"),
+  sequence = sequence,
+  role = CodeDescription("ABS", "Absconder"),
+  createDateTime = LocalDateTime.parse("2024-02-06T12:36:00"),
+  createdBy = "JIM",
+  comment = "This is a comment",
+  outcome = CodeDescription("AAA", "SOME OUTCOME"),
+)
+
+fun answer(sequence: Int = 1) = Response(
+  sequence = sequence,
+  recordingStaff = jimSmithStaff,
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
+  questionResponseId = 321,
+  answer = "Yes",
+  responseDate = null,
+  comment = null,
+)
+val answer2 = Response(
+  sequence = 2,
+  recordingStaff = jimSmithStaff,
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
+  questionResponseId = 432,
+  answer = "Outside",
+  responseDate = null,
+  comment = null,
+)
+
+val nomisQuestionWithNoAnswers = Question(
+  questionId = 5678,
+  sequence = 3,
+  question = "Was anybody hurt?",
+  hasMultipleAnswers = false,
+  answers = listOf(),
+  createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
+  createdBy = "JSMITH",
+)
+val questionWith1Answer = Question(
   questionId = 1234,
   sequence = 1,
   question = "Was anybody hurt?",
   hasMultipleAnswers = false,
-  answers = listOf(
-    Response(
-      sequence = 1,
-      recordingStaff = Staff(
-        username = "JSMITH",
-        staffId = 485572,
-        firstName = "JIM",
-        lastName = "SMITH",
-      ),
-      createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
-      createdBy = "JSMITH",
-      questionResponseId = 123,
-      answer = "Yes",
-      responseDate = null,
-      comment = null,
-    ),
-  ),
+  answers = listOf(answer()),
   createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
   createdBy = "JSMITH",
 )
 
-val question2 = Question(
+val question2With2Answers = Question(
   questionId = 12345,
   sequence = 2,
   question = "Where was the drone?",
   answers = listOf(
     Response(
       sequence = 2,
-      recordingStaff = Staff(
-        username = "JSMITH",
-        staffId = 485572,
-        firstName = "JIM",
-        lastName = "SMITH",
-      ),
+      recordingStaff = jimSmithStaff,
       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
       createdBy = "JSMITH",
       questionResponseId = 456,
@@ -452,12 +445,7 @@ val question2 = Question(
     ),
     Response(
       sequence = 3,
-      recordingStaff = Staff(
-        username = "JSMITH",
-        staffId = 485572,
-        firstName = "JIM",
-        lastName = "SMITH",
-      ),
+      recordingStaff = jimSmithStaff,
       createDateTime = LocalDateTime.parse("2021-07-05T10:35:17"),
       createdBy = "JSMITH",
       questionResponseId = 789,
@@ -471,7 +459,7 @@ val question2 = Question(
   hasMultipleAnswers = true,
 )
 
-val questionWithInvalidNomisData = Question(
+val question1WithInvalidAnswerCount = Question(
   questionId = 1234,
   sequence = 1,
   question = "Was anybody hurt?",

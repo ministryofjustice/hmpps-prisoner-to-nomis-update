@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.equalToDateTime
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
@@ -27,22 +28,22 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceOutsideMovementResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDateTime
 import java.util.*
 
 class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
+
   @Autowired
   private lateinit var nomisApi: ExternalMovementsNomisApiMockServer
 
@@ -67,7 +68,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        publishAuthorisationApproved(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
+        publishAuthorisationDomainEvent(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -101,10 +102,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
-          dpsApi.stubGetTapAuthorisation(dpsId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = tomorrow))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
         }
 
@@ -152,10 +153,11 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", today.toLocalDate())
+              .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
+              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("transportType", "VAN"),
           )
         }
 
@@ -182,7 +184,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess()
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
 
         @Test
@@ -190,7 +192,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
               eq("temporary-absence-application-mapping-create-failed"),
-              any(),
+              check {
+                assertThat(it).containsEntry("reason", "500 Internal Server Error from POST http://localhost:8084/mapping/temporary-absence/application")
+              },
               isNull(),
             )
           }
@@ -248,7 +252,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
 
         @Test
@@ -275,6 +279,44 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         }
       }
     }
+
+    @Nested
+    @DisplayName("when we receive a relocated event for a new authorisation")
+    inner class IgnoreRelocatedEventType {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+
+        publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will check if the application mapping exists`() {
+        mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the create was ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absence-application-create-ignored"),
+          check {
+            assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
+            assertThat(it).containsEntry("offenderNo", prisonerNumber)
+            assertThat(it).containsEntry("reason", "This event is applied to updates only")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will NOT create the application in NOMIS once`() {
+        await untilAsserted {
+          nomisApi.verify(0, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/application")))
+        }
+      }
+    }
   }
 
   @Nested
@@ -290,7 +332,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        publishAuthorisationApproved(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
+        publishAuthorisationDomainEvent(dpsAuthorisationId = dpsId, prisonerNumber = prisonerNumber, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
@@ -320,14 +362,16 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
-          dpsApi.stubGetTapAuthorisation(dpsId)
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
         }
 
@@ -366,7 +410,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will update the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
+              .withRequestBodyJsonPath("escortCode", "U"),
+          )
         }
 
         @Test
@@ -374,11 +421,148 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventSubType", "R2")
-              .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", today.toLocalDate())
+              .withRequestBodyJsonPath("fromDate", startTime.toLocalDate())
+              .withRequestBodyJsonPath("toDate", endTime.toLocalDate())
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1)))
               .withRequestBodyJsonPath("comment", "Some notes")
               .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
+              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("transportType", "VAN")
+              // Address is only updated when the application update is triggered by synchronising the DPS occurrence
+              .withRequestBodyJsonPath("toAddress", absent()),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok for a single schedule")
+      inner class HappyPathWithSingleSchedule {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 1, startTime = startTime, endTime = endTime))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times to match occurrences`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime)),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok for multiple schedules")
+      inner class HappyPathWithMultipleSchedules {
+        private val startTime = today
+        private val endTime = tomorrow.plusDays(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = startTime, endTime = endTime))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times to match occurrences`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
+          )
+        }
+
+        @Test
+        fun `all occurrence addresses are sent to NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("toAddresses.length()", 2)
+              .withRequestBodyJsonPath("toAddresses[0].addressText", "some address 1")
+              .withRequestBodyJsonPath("toAddresses[0].name", "some description 1")
+              .withRequestBodyJsonPath("toAddresses[0].postalCode", "some postcode 1")
+              .withRequestBodyJsonPath("toAddresses[1].addressText", "some address 2")
+              .withRequestBodyJsonPath("toAddresses[1].name", "some description 2")
+              .withRequestBodyJsonPath("toAddresses[1].postalCode", "some postcode 2"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when all goes ok for zero schedules")
+      inner class HappyPathWithZeroSchedules {
+        private val startTime = today
+        private val endTime = tomorrow.plusDays(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 0, startTime = startTime, endTime = endTime, statusCode = "EXPIRED"))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `the updated application's start and end times match DPS`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("applicationStatus", "PEN")
+              .withRequestBodyJsonPath("fromDate", "${startTime.toLocalDate()}")
+              .withRequestBodyJsonPath("toDate", "${endTime.toLocalDate()}")
+              .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
+              .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1))),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when we receive an update request for authorisation relocated")
+      inner class UpdateForRelocatedEventType {
+        private val startTime = today
+        private val endTime = today.plusHours(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the application in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")),
           )
         }
       }
@@ -393,7 +577,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, HttpStatus.INTERNAL_SERVER_ERROR)
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
 
-          publishAuthorisationApproved(dpsId, prisonerNumber, "DPS")
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete("temporary-absence-application-update-failed")
         }
 
@@ -409,6 +593,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
               assertThat(it).containsEntry("offenderNo", prisonerNumber)
+              assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/temporary-absences/application")
             },
             isNull(),
           )
@@ -427,264 +612,6 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will put the message on the DLQ`() {
           assertThat(movementsDlqClient!!.countAllMessagesOnQueue(movementsDlqUrl!!).get()).isEqualTo(1)
-        }
-      }
-    }
-  }
-
-  @Nested
-  @DisplayName("external-movements-api.temporary-absence-outside-movement.created")
-  inner class TemporaryAbsenceOutsideMovementCreated {
-    private val prisonerNumber = "A1234BC"
-    private val dpsOutsideMovementId = UUID.randomUUID()
-    private val dpsMovementApplicationId = UUID.randomUUID()
-    private val nomisMovementApplicationMultiId = 543L
-
-    @Nested
-    @DisplayName("when NOMIS is the origin of an outside movement create")
-    inner class WhenNomisCreated {
-
-      @BeforeEach
-      fun setUp() {
-        publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId = dpsOutsideMovementId, prisonerNumber = prisonerNumber, dpsAuthorisationId = dpsMovementApplicationId, source = "NOMIS")
-        waitForAnyProcessingToComplete()
-      }
-
-      @Test
-      fun `will send telemetry event showing the ignore`() {
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absence-outside-movement-create-ignored"),
-          any(),
-          isNull(),
-        )
-      }
-    }
-
-    @Nested
-    @DisplayName("when DPS is the origin of an outside movement create")
-    inner class WhenDpsCreated {
-      @Nested
-      @DisplayName("when all goes ok")
-      inner class HappyPath {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsOutsideMovementId, status = NOT_FOUND)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId)
-// TODO         dpsApi.stubGetTemporaryAbsenceApplication(dpsId, temporaryAbsenceApplication())
-          nomisApi.stubCreateTemporaryAbsenceOutsideMovement(prisonerNumber, createTemporaryAbsenceOutsideMovementResponse(applicationMultiId = nomisMovementApplicationMultiId))
-          mappingApi.stubCreateOutsideMovementMapping()
-          publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will send telemetry event showing the create`() {
-          verify(telemetryClient).trackEvent(
-            eq("temporary-absence-outside-movement-create-success"),
-            any(),
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `telemetry will contain key facts about the contact created`() {
-          verify(telemetryClient).trackEvent(
-            eq("temporary-absence-outside-movement-create-success"),
-            check {
-              assertThat(it).containsEntry("dpsMovementApplicationId", dpsMovementApplicationId.toString())
-              assertThat(it).containsEntry("dpsOutsideMovementId", dpsOutsideMovementId.toString())
-              assertThat(it).containsEntry("nomisMovementApplicationMultiId", nomisMovementApplicationMultiId.toString())
-              assertThat(it).containsEntry("prisonerNumber", prisonerNumber)
-              assertThat(it).containsEntry("bookingId", "12345")
-            },
-            isNull(),
-          )
-        }
-
-        @Test
-        fun `will check if the outside movement mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/outside-movement/dps-id/$dpsOutsideMovementId")))
-        }
-
-        @Test
-        fun `will check if the parent application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsMovementApplicationId")))
-        }
-
-        @Test
-        @Disabled("TODO waiting for DPS API")
-        fun `will call back to DPS to get application details`() {
-// TODO         dpsApi.verify(getRequestedFor(urlEqualTo("/sync/temporary-absence-outside-movement/$dpsId")))
-        }
-
-        @Test
-        fun `will create the application in NOMIS`() {
-          nomisApi.verify(postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/outside-movement")))
-        }
-
-        @Test
-        fun `the created application will contain correct details`() {
-          nomisApi.verify(
-            postRequestedFor(anyUrl())
-              .withRequestBodyJsonPath("eventSubType", "C5")
-              .withRequestBodyJsonPath("fromDate", today.toLocalDate())
-              .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
-              .withRequestBodyJsonPath("comment", "Outside Movement Create comment")
-              .withRequestBodyJsonPath("toAgencyId", "HAZLWD")
-              .withRequestBodyJsonPath("toAddressId", 3456)
-              .withRequestBodyJsonPath("contactPersonName", "Deek Sanderson")
-              .withRequestBodyJsonPath("temporaryAbsenceType", "RR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR"),
-          )
-        }
-
-        @Test
-        fun `will create a mapping between the NOMIS and DPS ids`() {
-          mappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/temporary-absence/outside-movement"))
-              .withRequestBodyJsonPath("dpsOutsideMovementId", "$dpsOutsideMovementId")
-              .withRequestBodyJsonPath("nomisMovementApplicationMultiId", "$nomisMovementApplicationMultiId")
-              .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
-              .withRequestBodyJsonPath("bookingId", "12345")
-              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
-          )
-        }
-      }
-
-      @Nested
-      @DisplayName("when mapping service fails once")
-      inner class MappingFailure {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsOutsideMovementId, status = NOT_FOUND)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId)
-// TODO         dpsApi.stubGetTemporaryAbsenceOutsideMovement(dpsOutsideMovementId, temporaryAbsenceOutsideMovement())
-          nomisApi.stubCreateTemporaryAbsenceOutsideMovement(prisonerNumber, createTemporaryAbsenceOutsideMovementResponse())
-          mappingApi.stubCreateOutsideMovementMappingFailureFollowedBySuccess()
-          publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-        }
-
-        @Test
-        fun `will send telemetry for initial failure`() {
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("temporary-absence-outside-movement-mapping-create-failed"),
-              any(),
-              isNull(),
-            )
-          }
-        }
-
-        @Test
-        fun `will eventually send telemetry for success`() {
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("temporary-absence-outside-movement-create-success"),
-              any(),
-              isNull(),
-            )
-          }
-        }
-
-        @Test
-        fun `will create the outside movement in NOMIS once`() {
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("temporary-absence-outside-movement-create-success"),
-              any(),
-              isNull(),
-            )
-            nomisApi.verify(1, postRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/outside-movement")))
-          }
-        }
-      }
-
-      @Nested
-      @DisplayName("when mapping service detects a duplicate mapping")
-      inner class DuplicateMappingFailure {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsOutsideMovementId, status = NOT_FOUND)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId)
-// TODO         dpsApi.stubGetTemporaryAbsenceOutsideMovement(dpsOutsideMovementId, temporaryAbsenceOutsideMovement())
-          nomisApi.stubCreateTemporaryAbsenceOutsideMovement(prisonerNumber, createTemporaryAbsenceOutsideMovementResponse())
-          mappingApi.stubCreateOutsideMovementMappingConflict(
-            error = DuplicateMappingErrorResponse(
-              moreInfo = DuplicateErrorContentObject(
-                existing = TemporaryAbsenceOutsideMovementSyncMappingDto(
-                  prisonerNumber = "A1234BC",
-                  bookingId = 12345L,
-                  nomisMovementApplicationMultiId = nomisMovementApplicationMultiId,
-                  dpsOutsideMovementId = dpsOutsideMovementId,
-                  mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-                ),
-                duplicate = TemporaryAbsenceOutsideMovementSyncMappingDto(
-                  prisonerNumber = "A1234BC",
-                  bookingId = 12345L,
-                  nomisMovementApplicationMultiId = nomisMovementApplicationMultiId + 1,
-                  dpsOutsideMovementId = dpsOutsideMovementId,
-                  mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-                ),
-              ),
-              errorCode = 1409,
-              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
-              userMessage = "Duplicate mapping",
-            ),
-          )
-
-          publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-        }
-
-        @Test
-        fun `will send telemetry for duplicate`() {
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("to-nomis-synch-temporary-absence-outside-movement-duplicate"),
-              any(),
-              isNull(),
-            )
-          }
-        }
-
-        @Test
-        fun `will create the person in NOMIS once`() {
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("to-nomis-synch-temporary-absence-outside-movement-duplicate"),
-              any(),
-              isNull(),
-            )
-            nomisApi.verify(1, postRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/outside-movement")))
-          }
-        }
-      }
-
-      @Nested
-      @DisplayName("when parent mapping does not exist")
-      inner class ParentMappingNotFound {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsOutsideMovementId, status = NOT_FOUND)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId, status = NOT_FOUND)
-
-          publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-        }
-
-        @Test
-        fun `will not create the application in NOMIS`() {
-          nomisApi.verify(count = 0, postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/outside-movement")))
-        }
-
-        @Test
-        fun `will not create a mapping between the NOMIS and DPS ids`() {
-          mappingApi.verify(
-            count = 0,
-            postRequestedFor(urlEqualTo("/mapping/temporary-absence/outside-movement")),
-          )
         }
       }
     }
@@ -717,6 +644,14 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
       }
+
+      @Test
+      fun `will NOT check if the scheduled movement mapping exists`() {
+        mappingApi.verify(
+          count = 0,
+          getRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsOccurrenceId")),
+        )
+      }
     }
 
     @Nested
@@ -725,16 +660,18 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
+        private val dpsLocation = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA")
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
-          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
           mappingApi.stubCreateScheduledMovementMapping()
-          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
-          waitForAnyProcessingToComplete()
+
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-create-success")
         }
 
         @Test
@@ -754,7 +691,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
-              assertThat(it).containsEntry("prisonerNumber", prisonerNumber)
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
               assertThat(it).containsEntry("bookingId", "12345")
             },
             isNull(),
@@ -777,7 +714,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        fun `will upsert the application in NOMIS`() {
+        fun `will upsert the schedule in NOMIS`() {
           nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
         }
 
@@ -800,6 +737,16 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
+        fun `the created scheduled movement will send address details`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("toAddress.id", absent())
+              .withRequestBodyJsonPath("toAddress.addressText", "some address")
+              .withRequestBodyJsonPath("toAddress.postalCode", "SW1A 1AA"),
+          )
+        }
+
+        @Test
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement"))
@@ -807,8 +754,13 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("nomisEventId", "$nomisEventId")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "12345")
-              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
-            // TODO check address mappings
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
+              .withRequestBodyJsonPath("dpsAddressText", "some address")
+              .withRequestBodyJsonPath("nomisAddressId", "54321")
+              .withRequestBodyJsonPath("nomisAddressOwnerClass", "OFF")
+              .withRequestBodyJsonPath("dpsUprn", "654")
+              .withRequestBodyJsonPath("dpsDescription", absent())
+              .withRequestBodyJsonPath("dpsPostcode", "SW1A 1AA"),
           )
         }
       }
@@ -824,14 +776,16 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
           nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
           mappingApi.stubCreateScheduledMovementMappingFailureFollowedBySuccess()
-          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
+
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-create-success")
         }
 
         @Test
         fun `will send telemetry for initial failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-schedule-mapping-create-failed"),
+              eq("temporary-absence-schedule-create-mapping-create-failed"),
               any(),
               isNull(),
             )
@@ -881,11 +835,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   nomisEventId = nomisEventId,
                   dpsOccurrenceId = dpsOccurrenceId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-                  // TODO add address mapping details
-                  nomisAddressId = 0,
-                  nomisAddressOwnerClass = "",
-                  dpsAddressText = "",
-                  eventTime = "",
+                  nomisAddressId = 54312,
+                  nomisAddressOwnerClass = "any",
+                  dpsAddressText = "any",
+                  eventTime = "any",
                 ),
                 duplicate = ScheduledMovementSyncMappingDto(
                   prisonerNumber = "A1234BC",
@@ -893,11 +846,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
                   nomisEventId = nomisEventId + 1,
                   dpsOccurrenceId = dpsOccurrenceId,
                   mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-                  // TODO add address mapping details
-                  nomisAddressId = 0,
-                  nomisAddressOwnerClass = "",
-                  dpsAddressText = "",
-                  eventTime = "",
+                  nomisAddressId = 54312,
+                  nomisAddressOwnerClass = "any",
+                  dpsAddressText = "any",
+                  eventTime = "any",
                 ),
               ),
               errorCode = 1409,
@@ -906,14 +858,15 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
 
-          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-create-mapping-create-failed")
         }
 
         @Test
         fun `will send telemetry for duplicate`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("to-nomis-synch-temporary-absence-schedule-duplicate"),
+              eq("to-nomis-synch-temporary-absence-schedule-create-duplicate"),
               any(),
               isNull(),
             )
@@ -924,7 +877,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will upsert the person in NOMIS once`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("to-nomis-synch-temporary-absence-schedule-duplicate"),
+              eq("to-nomis-synch-temporary-absence-schedule-create-duplicate"),
               any(),
               isNull(),
             )
@@ -967,6 +920,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
             },
             isNull(),
           )
@@ -1002,6 +956,14 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           isNull(),
         )
       }
+
+      @Test
+      fun `will NOT check if the scheduled movement mapping exists`() {
+        mappingApi.verify(
+          count = 0,
+          getRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsOccurrenceId")),
+        )
+      }
     }
 
     @Nested
@@ -1010,16 +972,18 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
+        private val dpsLocation = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA")
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId)
-          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
+          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
-          // TODO update address mapping - mappingApi.stubUpdateScheduledMovementMapping()
-          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
-          waitForAnyProcessingToComplete()
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321))
+
+          // publish an update event
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.rescheduled")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-update-success")
         }
 
         @Test
@@ -1039,7 +1003,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
-              assertThat(it).containsEntry("prisonerNumber", prisonerNumber)
+              assertThat(it).containsEntry("offenderNo", prisonerNumber)
               assertThat(it).containsEntry("bookingId", "12345")
             },
             isNull(),
@@ -1059,6 +1023,14 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will call back to DPS to get schedule details`() {
           dpsApi.verify(getRequestedFor(urlEqualTo("/sync/temporary-absence-occurrences/$dpsOccurrenceId")))
+        }
+
+        @Test
+        fun `will NOT get the existing address mapping - address not changed`() {
+          mappingApi.verify(
+            count = 0,
+            postRequestedFor(urlEqualTo("/mapping/temporary-absence/addresses/by-dps-id")),
+          )
         }
 
         @Test
@@ -1085,41 +1057,40 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         }
 
         @Test
-        @Disabled("TODO address mappings might be updated")
-        fun `will update a mapping between the NOMIS and DPS ids`() {
+        fun `will NOT update mapping - address not changed`() {
           mappingApi.verify(
-            putRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement"))
-              .withRequestBodyJsonPath("dpsOccurrenceId", "$dpsOccurrenceId")
-              .withRequestBodyJsonPath("nomisEventId", "$nomisEventId")
-              .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
-              .withRequestBodyJsonPath("bookingId", "12345")
-              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
-            // TODO check address mappings
+            count = 0,
+            putRequestedFor(urlEqualTo("/mapping/temporary-absence/scheduled-movement")),
           )
         }
       }
 
       @Nested
-      @DisplayName("when mapping service fails once")
-      @Disabled("TODO test this when we update address mappings after calling NOMIS")
+      @DisplayName("when mapping service fails to update mapping due to address change")
       inner class MappingFailure {
+        private val dpsLocation = Location(uprn = 987, address = "unknown address", postcode = "SW1A 1AA")
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId)
-          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
-          mappingApi.stubCreateScheduledMovementMappingFailureFollowedBySuccess()
-          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
+          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 55555)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321))
+          mappingApi.stubUpdateScheduledMovementMappingFailureFollowedBySuccess()
+
+          // publish an update event
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.rescheduled")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-update-success")
         }
 
         @Test
         fun `will send telemetry for initial failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-schedule-mapping-update-failed"),
-              any(),
+              eq("temporary-absence-schedule-update-mapping-create-failed"),
+              check {
+                assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8084/mapping/temporary-absence/scheduled-movement")
+              },
               isNull(),
             )
           }
@@ -1147,10 +1118,12 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @Nested
       @DisplayName("when parent mapping does not exist")
       inner class ParentMappingNotFound {
+        private val dpsLocation = Location(uprn = 987, address = "unknown address", postcode = "SW1A 1AA")
 
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
@@ -1176,6 +1149,8 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             eq("temporary-absence-schedule-update-failed"),
             check {
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+              assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
+              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
             },
             isNull(),
           )
@@ -1203,7 +1178,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId = dpsExternalMovementId, dpsScheduledMovementId = dpsScheduledMovementId, prisonerNumber = prisonerNumber, dpsAuthorisationId = dpsMovementApplicationId, source = "NOMIS")
-        waitForAnyProcessingToComplete()
+        waitForAnyProcessingToComplete("temporary-absence-external-movement-create-ignored")
       }
 
       @Test
@@ -1450,6 +1425,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId, status = NOT_FOUND)
 
           publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId, dpsScheduledMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
+          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-failed")
         }
 
         @Test
@@ -1477,6 +1453,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsScheduledMovementId, status = NOT_FOUND)
 
           publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId, dpsScheduledMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
+          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-failed")
         }
 
         @Test
@@ -1583,35 +1560,51 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  private fun publishAuthorisationApproved(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS") {
-    with("person.temporary-absence-authorisation.approved") {
-      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, prisonerNumber = prisonerNumber, source = source))
+  private fun publishAuthorisationDomainEvent(dpsAuthorisationId: UUID, prisonerNumber: String, source: String = "DPS", eventType: String = "person.temporary-absence-authorisation.approved") {
+    with(eventType) {
+      publishDomainEvent(eventType = this, payload = messagePayload(eventType = this, id = dpsAuthorisationId, prisonerNumber = prisonerNumber, source = source))
     }
   }
 
-  private fun publishTemporaryAbsenceOutsideMovementDomainEvent(dpsOutsideMovementId: UUID, prisonerNumber: String, dpsAuthorisationId: UUID, source: String = "DPS") {
-    with("external-movements-api.temporary-absence-outside-movement.created") {
+  private fun publishTapOccurrenceDomainEvent(dpsOccurrenceId: UUID, prisonerNumber: String, source: String = "DPS", eventType: String = "person.temporary-absence.scheduled") {
+    with(eventType) {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsOutsideMovementId = dpsOutsideMovementId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayload(eventType = this, id = dpsOccurrenceId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
 
-  private fun publishTapOccurrenceDomainEvent(dpsOccurrenceId: UUID, prisonerNumber: String, source: String = "DPS") {
-    with("person.temporary-absence.scheduled") {
-      publishDomainEvent(
-        eventType = this,
-        payload = messagePayload(eventType = this, dpsOccurrenceId = dpsOccurrenceId, prisonerNumber = prisonerNumber, source = source),
-      )
+  fun messagePayload(
+    eventType: String,
+    prisonerNumber: String,
+    id: UUID,
+    source: String,
+  ) = //language=JSON
+    """
+    {
+      "description":"Some event", 
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "id": "$id",
+        "source": "$source"
+      },
+      "personReference": {
+        "identifiers": [
+          {
+            "type": "NOMS",
+            "value": "$prisonerNumber"
+          }
+        ]
+      }
     }
-  }
+    """
 
   private fun publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId: UUID, dpsScheduledMovementId: UUID? = null, prisonerNumber: String, dpsAuthorisationId: UUID? = null, source: String = "DPS") {
     with("external-movements-api.temporary-absence-external-movement-out.created") {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementOutId = dpsScheduledMovementId, dpsExternalMovementOutId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayloadExternalMovements(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementOutId = dpsScheduledMovementId, dpsExternalMovementOutId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
@@ -1620,7 +1613,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
     with("external-movements-api.temporary-absence-external-movement-in.created") {
       publishDomainEvent(
         eventType = this,
-        payload = messagePayload(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementInId = dpsScheduledMovementId, dpsExternalMovementInId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
+        payload = messagePayloadExternalMovements(eventType = this, dpsAuthorisationId = dpsAuthorisationId, dpsScheduledMovementInId = dpsScheduledMovementId, dpsExternalMovementInId = dpsExternalMovementId, prisonerNumber = prisonerNumber, source = source),
       )
     }
   }
@@ -1642,11 +1635,10 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
   }
 }
 
-fun messagePayload(
+fun messagePayloadExternalMovements(
   eventType: String,
   prisonerNumber: String,
   dpsAuthorisationId: UUID? = null,
-  dpsOutsideMovementId: UUID? = null,
   dpsScheduledMovementOutId: UUID? = null,
   dpsScheduledMovementInId: UUID? = null,
   dpsOccurrenceId: UUID? = null,
@@ -1660,7 +1652,6 @@ fun messagePayload(
       "eventType":"$eventType", 
       "additionalInformation": {
         ${dpsAuthorisationId?.let { """"authorisationId": "$dpsAuthorisationId",""" } ?: ""}
-        ${dpsOutsideMovementId?.let { """"outsideMovementId": "$dpsOutsideMovementId",""" } ?: ""}
         ${dpsOccurrenceId?.let { """"occurrenceId": "$dpsOccurrenceId",""" } ?: ""}
         ${dpsScheduledMovementOutId?.let { """"scheduledMovementOutId": "$dpsScheduledMovementOutId",""" } ?: ""}
         ${dpsScheduledMovementInId?.let { """"scheduledMovementInId": "$dpsScheduledMovementInId",""" } ?: ""}

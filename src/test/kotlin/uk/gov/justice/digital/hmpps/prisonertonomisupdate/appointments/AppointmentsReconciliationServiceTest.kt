@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.kotlin.any
@@ -12,6 +13,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.data.domain.PageImpl
@@ -88,9 +90,28 @@ class AppointmentsReconciliationServiceTest {
   }
 
   @Test
+  fun `will skip appointments in Nomis in the exclude list`() = runTest {
+    whenever(nomisApiService.getAppointmentIds(listOf(PRISON_CODE), LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 0, 5))
+      .thenReturn(
+        PageImpl(
+          listOf(AppointmentIdResponse(676842281), AppointmentIdResponse(681900464)),
+          Pageable.ofSize(5),
+          2,
+        ),
+      )
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(emptyList())
+
+    val results = appointmentsReconciliationService.generateReconciliationReportForPrison(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE), 2)
+    assertThat(results).isEmpty()
+
+    verifyNoInteractions(telemetryClient)
+  }
+
+  @Test
   fun `will not report mismatch where details match`() = runTest {
     whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID)).thenReturn(nomisResponse())
-    whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
+    whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
     assertThat(appointmentsReconciliationService.checkMatch(appointmentMappingDto)).isNull()
   }
@@ -98,7 +119,7 @@ class AppointmentsReconciliationServiceTest {
   @Test
   fun `will report mismatch where appointments have a different offender`() = runTest {
     whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID)).thenReturn(nomisResponse(offenderNo = "A9876ZZ"))
-    whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
+    whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID)).thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
     val actual = appointmentsReconciliationService.checkMatch(appointmentMappingDto)
     assertThat(actual?.nomisId).isEqualTo(NOMIS_EVENT_ID)
@@ -125,7 +146,7 @@ class AppointmentsReconciliationServiceTest {
 
       whenever(nomisApiService.getAppointment(NOMIS_EVENT_ID))
         .thenReturn(nomisResponse().copy(offenderNo = "A9876ZZ"))
-      whenever(appointmentsApiService.getAppointmentInstance(APPOINTMENT_ATTENDEE_ID))
+      whenever(appointmentsApiService.getAppointmentInstanceWithRetries(APPOINTMENT_ATTENDEE_ID))
         .thenReturn(dpsResponse(APPOINTMENT_ATTENDEE_ID))
 
       // Total of 2 => no missing dps records
@@ -233,7 +254,7 @@ class AppointmentsReconciliationServiceTest {
       eq("appointments-reports-reconciliation-dps-only"),
       eq(
         mapOf(
-          "dpsId" to "10003",
+          "prisonId" to PRISON_CODE,
           "details" to "AppointmentAttendeeSearchResult(appointmentAttendeeId=10003, prisonerNumber=B2345ZZ, bookingId=1002)",
         ),
       ),
@@ -241,7 +262,128 @@ class AppointmentsReconciliationServiceTest {
     )
   }
 
-  private fun nomisResponse(offenderNo: String = OFFENDER_NO, comment: String? = null) = AppointmentResponse(
+  @Test
+  fun `will skip appointments in DPS only in the exclude list`() = runTest {
+    whenever(appointmentsApiService.searchAppointments(PRISON_CODE, LocalDate.parse(START_DATE), LocalDate.parse(END_DATE)))
+      .thenReturn(
+        appointmentSearchResults(
+          2345L,
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 7906234,
+              prisonerNumber = OFFENDER_NO,
+              bookingId = 1001,
+            ),
+          ),
+          listOf(
+            AppointmentAttendeeSearchResult(
+              appointmentAttendeeId = 7910446,
+              prisonerNumber = "B2345ZZ",
+              bookingId = 1002,
+            ),
+          ),
+        ),
+      )
+
+    val results = appointmentsReconciliationService.checkForMissingDpsRecords(
+      emptySet(),
+      PRISON_CODE,
+      LocalDate.parse(START_DATE),
+      LocalDate.parse(END_DATE),
+      3,
+    )
+
+    assertThat(results).isEmpty()
+
+    verifyNoInteractions(telemetryClient)
+  }
+
+  @Nested
+  inner class CheckForDuplicateAndDelete {
+    val startDateTime = LocalDateTime.parse("2022-03-04T15:16")
+
+    @Test
+    fun `will delete a duplicate case note in Nomis`() = runTest {
+      val matching = AppointmentResponse(
+        eventId = 2,
+        bookingId = BOOKING_ID,
+        internalLocation = 100,
+        startDateTime = startDateTime,
+        offenderNo = OFFENDER_NO,
+        subtype = "subtype",
+        status = "SCH",
+        createdDate = LocalDateTime.now(),
+        createdBy = "me",
+      )
+      val dupe = matching.copy(eventId = 1) // in reality dupe would have been created first
+
+      whenever(nomisApiService.getAppointmentsByFilter(BOOKING_ID, 100, startDateTime))
+        .thenReturn(listOf(dupe, matching))
+
+      appointmentsReconciliationService.checkForNomisDuplicateAndDelete(dupe)
+
+      verify(nomisApiService).deleteAppointment(1)
+      verify(telemetryClient).trackEvent(
+        "appointments-reports-reconciliation-mismatch-deleted",
+        mapOf(
+          "nomisId" to "1",
+          "offenderNo" to OFFENDER_NO,
+          "duplicate-of" to "2",
+        ),
+        null,
+      )
+    }
+
+    @Test
+    fun `will not delete a duplicate case note with different subtypes`() = runTest {
+      val matching = AppointmentResponse(
+        eventId = 2,
+        bookingId = BOOKING_ID,
+        internalLocation = 100,
+        startDateTime = startDateTime,
+        offenderNo = OFFENDER_NO,
+        subtype = "subtype",
+        status = "SCH",
+        createdDate = LocalDateTime.now(),
+        createdBy = "me",
+      )
+      val dupe = matching.copy(eventId = 1, subtype = "other")
+
+      whenever(nomisApiService.getAppointmentsByFilter(BOOKING_ID, 100, startDateTime))
+        .thenReturn(listOf(dupe, matching))
+
+      appointmentsReconciliationService.checkForNomisDuplicateAndDelete(dupe)
+
+      verify(nomisApiService, times(0)).deleteAppointment(any())
+      verify(telemetryClient, times(0)).trackEvent(eq("appointments-reports-reconciliation-mismatch-deleted"), any(), any())
+    }
+
+    @Test
+    fun `will not delete a non-duplicate case note in Nomis`() = runTest {
+      val candidate = AppointmentResponse(
+        eventId = 1,
+        bookingId = BOOKING_ID,
+        internalLocation = 100,
+        startDateTime = startDateTime,
+        offenderNo = OFFENDER_NO,
+        subtype = "subtype",
+        status = "SCH",
+        createdDate = LocalDateTime.now(),
+        createdBy = "me",
+      )
+
+      whenever(nomisApiService.getAppointmentsByFilter(BOOKING_ID, 100, startDateTime))
+        .thenReturn(listOf(candidate))
+
+      appointmentsReconciliationService.checkForNomisDuplicateAndDelete(candidate)
+
+      verify(nomisApiService, times(0)).deleteAppointment(any())
+      verify(telemetryClient, times(0)).trackEvent(eq("appointments-reports-reconciliation-mismatch-deleted"), any(), any())
+    }
+  }
+
+  private fun nomisResponse(eventId: Long = 0, offenderNo: String = OFFENDER_NO, comment: String? = null) = AppointmentResponse(
+    eventId = eventId,
     bookingId = 123,
     offenderNo = offenderNo,
     prisonId = PRISON_CODE,

@@ -4,13 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.MappingType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.NomisAdjustmentCategory
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing.adjustments.model.LegacyAdjustment
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.UpdateSentencingAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import java.time.LocalDate
 
@@ -23,12 +28,18 @@ class SentencingAdjustmentsService(
   private val telemetryClient: TelemetryClient,
   private val objectMapper: ObjectMapper,
 ) : CreateMappingRetryable {
-  suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) {
+  suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) = createAdjustment(
+    offenderNo = createEvent.additionalInformation.offenderNo,
+    adjustmentId = createEvent.additionalInformation.id,
+    source = createEvent.additionalInformation.source,
+  )
+
+  suspend fun createAdjustment(offenderNo: String, adjustmentId: String, source: String) {
     val telemetryMap = mapOf(
-      "adjustmentId" to createEvent.additionalInformation.id,
-      "offenderNo" to createEvent.additionalInformation.offenderNo,
+      "adjustmentId" to adjustmentId,
+      "offenderNo" to offenderNo,
     )
-    if (isDpsCreated(createEvent.additionalInformation)) {
+    if (isDpsCreated(source)) {
       synchronise {
         name = "sentencing-adjustment"
         telemetryClient = this@SentencingAdjustmentsService.telemetryClient
@@ -36,15 +47,16 @@ class SentencingAdjustmentsService(
         eventTelemetry = telemetryMap
 
         checkMappingDoesNotExist {
-          sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(createEvent.additionalInformation.id)
+          sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)
         }
         transform {
-          sentencingAdjustmentsApiService.getAdjustmentOrNull(createEvent.additionalInformation.id)
+          sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
             ?.let { adjustment ->
               SentencingAdjustmentMappingDto(
                 nomisAdjustmentId = createTransformedAdjustment(adjustment).id,
-                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) "KEY-DATE" else "SENTENCE",
-                adjustmentId = createEvent.additionalInformation.id,
+                nomisAdjustmentCategory = if (adjustment.sentenceSequence == null) NomisAdjustmentCategory.KEYMinusDATE else NomisAdjustmentCategory.SENTENCE,
+                adjustmentId = adjustmentId,
+                mappingType = MappingType.SENTENCING_CREATED,
               )
             } ?: run {
             this@SentencingAdjustmentsService.telemetryClient.trackEvent(
@@ -70,42 +82,58 @@ class SentencingAdjustmentsService(
 
   private fun isDpsCreated(source: String) = source != CreatingSystem.NOMIS.name
 
-  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) = CreateSentencingAdjustmentRequest(
-    adjustmentTypeCode = adjustment.adjustmentType.value,
-    adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-    adjustmentFromDate = adjustment.adjustmentFromDate,
-    adjustmentDays = adjustment.adjustmentDays.toLong(),
-    comment = adjustment.comment,
-  ).run {
-    if (adjustment.sentenceSequence == null) {
-      nomisApiService.createKeyDateAdjustment(
-        adjustment.bookingId,
-        this,
+  private suspend fun createTransformedAdjustment(adjustment: LegacyAdjustment) = if (adjustment.sentenceSequence == null) {
+    nomisApiService.createKeyDateAdjustment(
+      adjustment.bookingId,
+      CreateKeyDateAdjustmentRequest(
+        adjustmentTypeCode = CreateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+        adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+        adjustmentFromDate = adjustment.adjustmentFromDate!!,
+        adjustmentDays = adjustment.adjustmentDays.toLong(),
+        comment = adjustment.comment,
+      ),
+    )
+  } else {
+    nomisApiService.createSentenceAdjustment(
+      adjustment.bookingId,
+      adjustment.sentenceSequence.toLong(),
+      CreateSentenceAdjustmentRequest(
+        adjustmentTypeCode = CreateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+        adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+        adjustmentFromDate = adjustment.adjustmentFromDate,
+        adjustmentDays = adjustment.adjustmentDays.toLong(),
+        comment = adjustment.comment,
+      ),
+    )
+  }
+
+  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean, setActive: Boolean) {
+    if (sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId) == null) {
+      createAdjustment(
+        offenderNo = offenderNo,
+        adjustmentId = adjustmentId,
+        source = "DPS",
       )
     } else {
-      nomisApiService.createSentenceAdjustment(
-        adjustment.bookingId,
-        adjustment.sentenceSequence!!.toLong(),
-        this,
+      updateAdjustment(
+        offenderNo = offenderNo,
+        adjustmentId = adjustmentId,
+        source = "DPS",
+        forceStatus = forceStatus,
+        setActive = setActive,
       )
     }
   }
 
-  suspend fun repairAdjustment(offenderNo: String, adjustmentId: String, forceStatus: Boolean) = updateAdjustment(
-    offenderNo = offenderNo,
-    adjustmentId = adjustmentId,
-    source = "DPS",
-    forceStatus = forceStatus,
-  )
-
-  suspend fun updateAdjustment(createEvent: AdjustmentUpdatedEvent) = updateAdjustment(
-    offenderNo = createEvent.additionalInformation.offenderNo,
-    adjustmentId = createEvent.additionalInformation.id,
-    source = createEvent.additionalInformation.source,
+  suspend fun updateAdjustment(updateEvent: AdjustmentUpdatedEvent) = updateAdjustment(
+    offenderNo = updateEvent.additionalInformation.offenderNo,
+    adjustmentId = updateEvent.additionalInformation.id,
+    source = updateEvent.additionalInformation.source,
     forceStatus = false,
+    setActive = false,
   )
 
-  suspend fun updateAdjustment(offenderNo: String, adjustmentId: String, source: String, forceStatus: Boolean) {
+  suspend fun updateAdjustment(offenderNo: String, adjustmentId: String, source: String, forceStatus: Boolean, setActive: Boolean) {
     val telemetryMap = mutableMapOf("adjustmentId" to adjustmentId, "offenderNo" to offenderNo)
     if (isDpsCreated(source)) {
       runCatching {
@@ -123,7 +151,7 @@ class SentencingAdjustmentsService(
             .also { telemetryMap["nomisAdjustmentId"] = it.toString() }
 
         sentencingAdjustmentsApiService.getAdjustment(adjustmentId).let { adjustment ->
-          updateTransformedAdjustment(nomisAdjustmentId, adjustment, forceStatus)
+          updateTransformedAdjustment(nomisAdjustmentId, adjustment, forceStatus, setActive = setActive)
           telemetryClient.trackEvent("sentencing-adjustment-updated-success", telemetryMap, null)
         }
       }.onFailure { e ->
@@ -135,29 +163,39 @@ class SentencingAdjustmentsService(
     }
   }
 
-  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean) = UpdateSentencingAdjustmentRequest(
-    adjustmentTypeCode = adjustment.adjustmentType.value,
-    adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-    adjustmentFromDate = adjustment.adjustmentFromDate,
-    adjustmentDays = adjustment.adjustmentDays.toLong(),
-    comment = adjustment.comment,
-    sentenceSequence = adjustment.sentenceSequence,
-  ).let {
-    if (forceStatus) {
-      it.copy(active = adjustment.active)
+  private suspend fun updateTransformedAdjustment(nomisAdjustmentId: Long, adjustment: LegacyAdjustment, forceStatus: Boolean, setActive: Boolean) {
+    val active = if (setActive) {
+      true
+    } else if (forceStatus) {
+      adjustment.active
     } else {
-      it
+      null
     }
-  }.run {
+
     if (adjustment.sentenceSequence == null) {
       nomisApiService.updateKeyDateAdjustment(
         nomisAdjustmentId,
-        this,
+        UpdateKeyDateAdjustmentRequest(
+          adjustmentTypeCode = UpdateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+          adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+          adjustmentFromDate = adjustment.adjustmentFromDate!!,
+          adjustmentDays = adjustment.adjustmentDays.toLong(),
+          comment = adjustment.comment,
+          active = active,
+        ),
       )
     } else {
       nomisApiService.updateSentenceAdjustment(
         nomisAdjustmentId,
-        this,
+        UpdateSentenceAdjustmentRequest(
+          adjustmentTypeCode = UpdateSentenceAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
+          adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
+          adjustmentFromDate = adjustment.adjustmentFromDate,
+          adjustmentDays = adjustment.adjustmentDays.toLong(),
+          comment = adjustment.comment,
+          sentenceSequence = adjustment.sentenceSequence.toLong(),
+          active = active,
+        ),
       )
     }
   }
@@ -171,9 +209,9 @@ class SentencingAdjustmentsService(
       runCatching {
         sentencingAdjustmentsMappingService.getMappingGivenAdjustmentIdOrNull(adjustmentId)?.also { mapping ->
           telemetryMap["nomisAdjustmentId"] = mapping.nomisAdjustmentId.toString()
-          telemetryMap["nomisAdjustmentCategory"] = mapping.nomisAdjustmentCategory
+          telemetryMap["nomisAdjustmentCategory"] = mapping.nomisAdjustmentCategory.value
 
-          if (mapping.nomisAdjustmentCategory == "SENTENCE") {
+          if (mapping.nomisAdjustmentCategory == NomisAdjustmentCategory.SENTENCE) {
             nomisApiService.deleteSentenceAdjustment(
               mapping.nomisAdjustmentId,
             )

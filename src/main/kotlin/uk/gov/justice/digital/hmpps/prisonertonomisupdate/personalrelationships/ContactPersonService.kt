@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonContactMappingDto
@@ -88,6 +89,54 @@ class ContactPersonService(
     }
   }
 
+  suspend fun createContactForRepair(contactId: Long) {
+    val contactDetails =
+      dpsApiService.getContactDetails(contactId) ?: throw BadRequestException("Contact $contactId not found in DPS")
+
+    contactCreated(contactCreatedEvent(contactId))
+    contactDetails.emails.forEach {
+      contactEmailCreated(
+        contactEmailCreatedEvent(
+          contactId = contactId,
+          contactEmailId = it.contactEmailId,
+        ),
+      )
+    }
+    contactDetails.addresses.forEach {
+      contactAddressCreated(
+        contactAddressCreatedEvent(
+          contactId = contactId,
+          contactAddressId = it.contactAddressId,
+        ),
+      )
+      it.addressPhones.forEach { addressPhone ->
+        contactAddressPhoneCreated(
+          contactAddressPhoneCreatedEvent(
+            contactId = contactId,
+            contactAddressId = it.contactAddressId,
+            contactAddressPhoneId = addressPhone.contactAddressPhoneId,
+          ),
+        )
+      }
+    }
+    contactDetails.phones.forEach {
+      contactPhoneCreated(
+        contactPhoneCreatedEvent(
+          contactId = contactId,
+          contactPhoneId = it.contactPhoneId,
+        ),
+      )
+    }
+    contactDetails.relationships.forEach {
+      prisonerContactCreated(
+        prisonerContactCreatedEvent(
+          contactId = contactId,
+          prisonerContactId = it.prisonerContactId,
+        ),
+      )
+    }
+  }
+
   suspend fun contactCreated(event: ContactCreatedEvent) {
     val entityName = CONTACT_PERSON.entityName
 
@@ -139,7 +188,7 @@ class ContactPersonService(
           telemetryMap,
           null,
         )
-      } ?: kotlin.run {
+      } ?: run {
         telemetryClient.trackEvent("$entityName-delete-skipped", telemetryMap)
       }
     } else {
@@ -209,6 +258,25 @@ class ContactPersonService(
     } else {
       telemetryClient.trackEvent("$entityName-create-ignored", telemetryMap)
     }
+  }
+
+  suspend fun repairPrisonerContact(contactId: Long, prisonerContactId: Long) {
+    prisonerContactUpdated(
+      PrisonerContactUpdatedEvent(
+        additionalInformation = PrisonerContactAdditionalData(
+          prisonerContactId = prisonerContactId,
+          source = "DPS",
+        ),
+        personReference = ContactIdentifiers(
+          identifiers = listOf(
+            ContactPersonReference(
+              type = "DPS_CONTACT_ID",
+              value = contactId.toString(),
+            ),
+          ),
+        ),
+      ),
+    )
   }
 
   suspend fun prisonerContactUpdated(event: PrisonerContactUpdatedEvent) {
@@ -1122,6 +1190,48 @@ class ContactPersonService(
 
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
+
+private fun contactCreatedEvent(contactId: Long) = ContactCreatedEvent(
+  additionalInformation = ContactAdditionalData(contactId = contactId),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun contactEmailCreatedEvent(contactId: Long, contactEmailId: Long) = ContactEmailCreatedEvent(
+  additionalInformation = ContactEmailAdditionalData(contactEmailId = contactEmailId),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun contactAddressCreatedEvent(contactId: Long, contactAddressId: Long) = ContactAddressCreatedEvent(
+  additionalInformation = ContactAddressAdditionalData(contactAddressId = contactAddressId),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun contactPhoneCreatedEvent(contactId: Long, contactPhoneId: Long) = ContactPhoneCreatedEvent(
+  additionalInformation = ContactPhoneAdditionalData(contactPhoneId = contactPhoneId),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun prisonerContactCreatedEvent(contactId: Long, prisonerContactId: Long) = PrisonerContactCreatedEvent(
+  additionalInformation = PrisonerContactAdditionalData(prisonerContactId = prisonerContactId),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun contactAddressPhoneCreatedEvent(contactId: Long, contactAddressId: Long, contactAddressPhoneId: Long) = ContactAddressPhoneCreatedEvent(
+  additionalInformation = ContactAddressPhoneAdditionalData(
+    contactAddressId = contactAddressId,
+    contactAddressPhoneId = contactAddressPhoneId,
+  ),
+  personReference = contactIdentifiers(contactId),
+)
+
+private fun contactIdentifiers(contactId: Long) = ContactIdentifiers(
+  identifiers = listOf(
+    ContactPersonReference(
+      type = "DPS_CONTACT_ID",
+      value = contactId.toString(),
+    ),
+  ),
+)
 
 private fun SyncContact.toNomisCreateRequest(): CreatePersonRequest = CreatePersonRequest(
   personId = this.id,

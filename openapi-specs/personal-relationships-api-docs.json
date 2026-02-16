@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-19.3340.d855e46"
+    "version" : "2025-12-19.3579.b265353"
   },
   "servers" : [ {
     "url" : "/",
@@ -5075,6 +5075,56 @@
         }
       }
     },
+    "/prisoner-contact/restrictions" : {
+      "post" : {
+        "tags" : [ "Restrictions" ],
+        "summary" : "Get the prisoner contact restrictions for one or more prisoner contacts where matches are found",
+        "description" : "\n      Get the restrictions that apply for this relationship.\n      \n      This includes prisoner-contact restrictions for this specific relationship only and any global (estate-wide) restrictions for the contact.\n      \n      If the prisoner and contact have multiple relationships, the prisoner-contact restrictions for the other relationships will not be returned. \n    ",
+        "operationId" : "getPrisonerContactRestrictionsByPrisonerContactIds",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerContactIdsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The prisoner contact restrictions for the specified prisoner contact(s)",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerContactsRestrictionsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/migrate/prisoner-restrictions" : {
       "post" : {
         "tags" : [ "Migrate and sync" ],
@@ -7764,6 +7814,67 @@
           },
           "404" : {
             "description" : "Could not find the the contact",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/contact/{contactId}/history" : {
+      "get" : {
+        "tags" : [ "Contacts" ],
+        "summary" : "Get contact change history",
+        "description" : "Gets the full change history for a contact by id. Returns Envers snapshot per revision with metadata.",
+        "operationId" : "getContactHistory",
+        "parameters" : [ {
+          "name" : "contactId",
+          "in" : "path",
+          "description" : "The id of the contact",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123456
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Found the contact history",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ContactAuditEntry"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No contact with that id could be found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -11842,6 +11953,173 @@
         },
         "required" : [ "restrictionType", "startDate" ]
       },
+      "PrisonerContactIdsRequest" : {
+        "type" : "object",
+        "description" : "The ids of the prisoner contacts to search for",
+        "properties" : {
+          "prisonerContactIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "prisonerContactIds" ]
+      },
+      "GlobalContactRestriction" : {
+        "type" : "object",
+        "description" : "Global restriction related to a contact, a.k.a estate-wide restrictions",
+        "properties" : {
+          "contactRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique identifier for the contact restriction",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Unique identifier for the contact",
+            "example" : 123
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "\n    The coded type of restriction that applies to this contact.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example" : "BAN"
+          },
+          "restrictionTypeDescription" : {
+            "type" : "string",
+            "description" : "The description of restrictionType",
+            "example" : "Banned"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the restriction starts",
+            "example" : "2024-01-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the restriction expires",
+            "example" : "2024-01-01"
+          },
+          "comments" : {
+            "type" : "string",
+            "description" : "Any comments for the restriction",
+            "example" : "N/A"
+          },
+          "enteredByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of either the person who created the restriction or the last person to update it if it has been modified.",
+            "example" : "John Smith"
+          }
+        },
+        "required" : [ "contactId", "contactRestrictionId", "enteredByDisplayName", "restrictionType", "restrictionTypeDescription" ]
+      },
+      "PrisonerContactRestriction" : {
+        "type" : "object",
+        "description" : "Restriction related to a prisoner and contacts relationship",
+        "properties" : {
+          "prisonerContactRestrictionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact restriction",
+            "example" : 123456
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact",
+            "example" : 123456
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the contact",
+            "example" : 123456
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234BC"
+          },
+          "restrictionType" : {
+            "type" : "string",
+            "description" : "\n    The coded type of restriction that applies to this relationship.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
+            "example" : "BAN"
+          },
+          "restrictionTypeDescription" : {
+            "type" : "string",
+            "description" : "The description of restriction type",
+            "example" : "Banned"
+          },
+          "startDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the restriction starts",
+            "example" : "2024-01-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the restriction expires",
+            "example" : "2024-01-01"
+          },
+          "comments" : {
+            "type" : "string",
+            "description" : "Any comments for the restriction",
+            "example" : "N/A"
+          },
+          "enteredByDisplayName" : {
+            "type" : "string",
+            "description" : "The display name of either the person who created the restriction or the last person to update it if it has been modified.",
+            "example" : "John Smith"
+          }
+        },
+        "required" : [ "contactId", "enteredByDisplayName", "prisonerContactId", "prisonerContactRestrictionId", "prisonerNumber", "restrictionType", "restrictionTypeDescription" ]
+      },
+      "PrisonerContactRestrictions" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact",
+            "example" : 123456
+          },
+          "prisonerContactRestrictions" : {
+            "type" : "array",
+            "description" : "Relationship specific restrictions for the prisoner contact",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerContactRestriction"
+            }
+          },
+          "globalContactRestrictions" : {
+            "type" : "array",
+            "description" : "Global (estate-wide) restrictions for the prisoner contact",
+            "items" : {
+              "$ref" : "#/components/schemas/GlobalContactRestriction"
+            }
+          }
+        },
+        "required" : [ "globalContactRestrictions", "prisonerContactId", "prisonerContactRestrictions" ]
+      },
+      "PrisonerContactsRestrictionsResponse" : {
+        "type" : "object",
+        "description" : "Restrictions related to specific relationships between prisoners and contacts",
+        "properties" : {
+          "prisonerContactRestrictions" : {
+            "type" : "array",
+            "description" : "The list of prisoner contact restrictions for each prisoner contact where found",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerContactRestrictions"
+            }
+          }
+        },
+        "required" : [ "prisonerContactRestrictions" ]
+      },
       "MigratePrisonerRestrictionsRequest" : {
         "type" : "object",
         "description" : "Request to migrate a prisoner's restrictions",
@@ -15316,6 +15594,109 @@
             "$ref" : "#/components/schemas/PageMetadata"
           }
         }
+      },
+      "ContactAuditEntry" : {
+        "type" : "object",
+        "description" : "An audit history entry for a contact",
+        "properties" : {
+          "revisionId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Revision id",
+            "example" : 101
+          },
+          "revisionType" : {
+            "type" : "string",
+            "description" : "Revision type",
+            "enum" : [ "ADD", "MOD", "DEL" ],
+            "example" : "ADD"
+          },
+          "revisionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Revision timestamp"
+          },
+          "username" : {
+            "type" : "string",
+            "description" : "User who performed the change",
+            "example" : "read_write_user"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The id of the contact",
+            "example" : 123456
+          },
+          "titleCode" : {
+            "type" : "string",
+            "description" : "Title code"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "Last name"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "First name"
+          },
+          "middleNames" : {
+            "type" : "string",
+            "description" : "Middle names"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date of birth"
+          },
+          "deceasedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Deceased date"
+          },
+          "isStaff" : {
+            "type" : "boolean",
+            "description" : "Staff flag"
+          },
+          "isRemitter" : {
+            "type" : "boolean",
+            "description" : "Remitter flag"
+          },
+          "genderCode" : {
+            "type" : "string",
+            "description" : "Gender code"
+          },
+          "domesticStatusCode" : {
+            "type" : "string",
+            "description" : "Domestic status code"
+          },
+          "languageCode" : {
+            "type" : "string",
+            "description" : "Language code"
+          },
+          "interpreterRequired" : {
+            "type" : "boolean",
+            "description" : "Interpreter required"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Created by"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Created time"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Updated by"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Updated time"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "firstName", "id", "interpreterRequired", "isRemitter", "isStaff", "lastName", "revisionId", "revisionTimestamp", "revisionType" ]
       },
       "ContactSearchResultItem" : {
         "type" : "object",

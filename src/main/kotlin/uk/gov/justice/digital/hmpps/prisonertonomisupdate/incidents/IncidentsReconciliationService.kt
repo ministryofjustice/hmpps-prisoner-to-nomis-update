@@ -10,7 +10,9 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService.Companion.dpsOpenValues
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails.Status
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StaffInvolvement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentAgencyId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentResponse
@@ -18,19 +20,22 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.asPages
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.doApiCallWithRetries
 import java.time.LocalDateTime
+import java.time.temporal.ChronoUnit
 import java.util.UUID
 import kotlin.String
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiService.Companion.openStatusValues as dpsOpenStatusValues
 
 @Service
 class IncidentsReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val dpsIncidentsApiService: IncidentsDpsApiService,
   private val nomisIncidentsApiService: IncidentsNomisApiService,
-  @Value("\${reports.incidents.reconciliation.page-size:20}")
+  @Value($$"${reports.incidents.reconciliation.page-size:20}")
   private val pageSize: Long = 20,
 ) {
-  private companion object {
+  companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
+    val dpsOpenValues = dpsOpenStatusValues.map { it.value }
   }
 
   suspend fun incidentsReconciliation() {
@@ -81,7 +86,8 @@ class IncidentsReconciliationService(
         "DPS->open:$dpsOpenIncidentsCount;closed:$dpsClosedIncidentsCount",
     )
 
-    val result = if (nomisOpenIncidentsCount != dpsOpenIncidentsCount || nomisClosedIncidentsCount != dpsClosedIncidentsCount) {
+    // Only check for open mismatch count when dpsCount is greater than NomisCount to allow comparison of Nomis OPEN incidents against Dps DRAFT incidents
+    val result = if (nomisOpenIncidentsCount < dpsOpenIncidentsCount || nomisClosedIncidentsCount != dpsClosedIncidentsCount) {
       MismatchIncidents(
         agencyId = agencyId,
         dpsOpenIncidents = dpsOpenIncidentsCount,
@@ -147,7 +153,7 @@ class IncidentsReconciliationService(
     }
   }
 
-  private suspend fun getOpenIncidentsForPage(agencyId: String, page: Pair<Long, Long>) = runCatching { nomisIncidentsApiService.getOpenIncidentIds(agencyId, page.first, page.second).content }
+  private suspend fun getOpenIncidentsForPage(agencyId: String, page: Pair<Long, Long>) = runCatching { nomisIncidentsApiService.getOpenIncidentIds(agencyId, page.first, page.second) }
     .onFailure {
       telemetryClient.trackEvent(
         "incidents-reports-reconciliation-mismatch-page-error",
@@ -205,15 +211,21 @@ class IncidentsReconciliationService(
     nomis: IncidentResponse,
     dps: ReportWithDetails,
   ): String? {
+    // Check and ignore any draft incidents that have previously been open.  Any changes when in draft are not relayed back to Nomis.
+    if (dps.isInDraftButPreviouslyOpen()) {
+      return null
+    }
+
     // Note. lastModifiedDateTime should not be compared here as merge updates are not passed through to DPS,
     // and therefore the values will be out of sync
     if (nomis.reportingStaff.username != dps.reportedBy) return "Reporting Staff mismatch"
     if (nomis.offenderParties.size != dps.prisonersInvolved.size) return "Offender parties mismatch"
     if (nomis.staffParties.size != dps.nomisOnlyStaff().size) return "Staff parties mismatch"
     if (nomis.type != dps.type.mapDps()) return "type mismatch"
-    if (nomis.status.code != dps.status.mapDps()) return "status mismatch"
-    if (nomis.reportedDateTime != dps.reportedAt) return "reported date mismatch"
-
+    if (!dps.isValidStatus(nomis)) return "status mismatch"
+    if (nomis.reportedDateTime != dps.reportedAt.truncatedTo(ChronoUnit.SECONDS)) {
+      return "reported date mismatch"
+    }
     val offendersDifference =
       nomis.offenderParties.map { it.offender.offenderNo }.compare(dps.prisonersInvolved.map { it.prisonerNumber })
     if (offendersDifference.isNotEmpty()) return "Offender parties mismatch $offendersDifference"
@@ -231,7 +243,7 @@ class IncidentsReconciliationService(
         // Ignore and log any dodgy Nomis data
         if (!nomisQuestion.hasMultipleAnswers && nomisQuestion.answers.size > 1) {
           telemetryClient.trackEvent(
-            "incidents-reports-reconciliation-mismatch-ignored",
+            "incidents-reports-reconciliation-mismatch-multiple-answers-ignored",
             mapOf(
               "nomisIncidentId" to nomis.incidentId,
               "dpsIncidentId" to dps.id,
@@ -245,7 +257,6 @@ class IncidentsReconciliationService(
         }
       }
     }
-
     return null
   }
 
@@ -255,6 +266,13 @@ class IncidentsReconciliationService(
   }
 }
 
+fun ReportWithDetails.isValidStatus(nomis: IncidentResponse): Boolean = if (status == Status.DRAFT) {
+  historyOfStatuses.any { it.status.value in dpsOpenValues }
+} else {
+  nomis.status.code == status.mapDps()
+}
+
+fun ReportWithDetails.isInDraftButPreviouslyOpen(): Boolean = status == Status.DRAFT && historyOfStatuses.any { it.status.value in dpsOpenValues }
 fun ReportWithDetails.nomisOnlyStaff(): List<StaffInvolvement> = staffInvolved.filter { it.staffUsername != null }
 
 data class MismatchIncidents(
@@ -300,9 +318,9 @@ fun IncidentResponse.toReportDetail() = IncidentReportDetail(
 
 fun ReportWithDetails.toReportDetail() = IncidentReportDetail(
   type.mapDps(),
-  status.mapDps(),
+  if (status == Status.DRAFT) "DRAFT" else status.mapDps(),
   reportedBy,
-  reportedAt,
+  reportedAt.truncatedTo(ChronoUnit.SECONDS),
   prisonersInvolved.map { it.prisonerNumber },
   nomisOnlyStaff().size,
   questions.size,

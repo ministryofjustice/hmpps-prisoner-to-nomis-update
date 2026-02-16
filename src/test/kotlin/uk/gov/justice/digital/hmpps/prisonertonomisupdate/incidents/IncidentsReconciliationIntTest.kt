@@ -18,6 +18,8 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StatusHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import java.time.LocalDateTime
 import kotlin.jvm.java
@@ -132,6 +134,177 @@ class IncidentsReconciliationIntTest(
           any(),
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    @DisplayName("DPS Draft Status")
+    inner class Draft {
+      @Nested
+      inner class DraftHappyPath {
+        @BeforeEach
+        fun setUp() {
+          incidentsDpsApi.stubGetIncidentCounts() // dps count needs to be less
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("ASI", open = 4)
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("BFI")
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("WWI")
+
+          incidentsDpsApi.stubGetIncidentByNomisId(
+            33,
+            response = dpsIncident().copy(
+              type = ReportWithDetails.Type.ABSCOND_1,
+              status = ReportWithDetails.Status.DRAFT,
+              historyOfStatuses = listOf(
+                StatusHistory(
+                  status = StatusHistory.Status.AWAITING_REVIEW,
+                  changedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+                  changedBy = "JSMITH",
+                ),
+              ),
+            ),
+          )
+          incidentsDpsApi.stubGetIncidents(34, 41)
+        }
+
+        @Test
+        fun `will successfully finish report with no errors`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+          awaitReportFinished()
+
+          verify(telemetryClient).trackEvent(
+            eq("incidents-reports-reconciliation-requested"),
+            check { assertThat(it).containsEntry("prisonCount", "3") },
+            isNull(),
+          )
+
+          awaitReportFinished()
+          verify(telemetryClient).trackEvent(
+            eq("incidents-reports-reconciliation-report"),
+            check {
+              assertThat(it).containsEntry("mismatch-count", "0")
+              assertThat(it).containsEntry("success", "true")
+            },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will output report requested telemetry`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+          awaitReportFinished()
+          verify(telemetryClient).trackEvent(
+            eq("incidents-reports-reconciliation-requested"),
+            check { assertThat(it).containsEntry("prisonCount", "3") },
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will call incidents api for open and closed counts for each agency`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+
+          awaitReportFinished()
+          await untilAsserted {
+            incidentsDpsApi.verifyGetIncidentCounts(6)
+          }
+        }
+
+        @Test
+        fun `will call incidents api for each open incident details - 3 per agency`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+
+          waitForAnyProcessingToComplete("incidents-reports-reconciliation-report")
+          await untilAsserted {
+            incidentsDpsApi.verifyGetIncidentDetail(9)
+          }
+        }
+
+        @Test
+        fun `will not invoke mismatch telemetry`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+          awaitReportFinished()
+
+          verify(telemetryClient, times(0)).trackEvent(
+            eq("incidents-reports-reconciliation-mismatch"),
+            any(),
+            isNull(),
+          )
+
+          verify(telemetryClient, times(0)).trackEvent(
+            eq("incidents-reports-reconciliation-detail-mismatch"),
+            any(),
+            isNull(),
+          )
+
+          verify(telemetryClient, times(0)).trackEvent(
+            eq("incidents-reports-reconciliation-detail-mismatch-error"),
+            any(),
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class DraftWithNoOpenStatusInHistory {
+        @BeforeEach
+        fun setUp() {
+          incidentsDpsApi.stubGetIncidentCounts() // dps count needs to be less
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("ASI", open = 4)
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("BFI")
+          incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("WWI")
+
+          incidentsDpsApi.stubGetIncidentByNomisId(
+            33,
+            response = dpsIncident().copy(
+              status = ReportWithDetails.Status.DRAFT,
+              historyOfStatuses = listOf(),
+            ),
+          )
+          incidentsDpsApi.stubGetIncidents(34, 41)
+          incidentsNomisApi.stubGetIncident(33)
+        }
+
+        @Test
+        fun `will show status mismatch differences in report`() = runTest {
+          incidentsReconciliationService.incidentsReconciliation()
+
+          awaitReportFinished()
+          verify(telemetryClient).trackEvent(
+            eq("incidents-reports-reconciliation-report"),
+            check {
+              assertThat(it).containsEntry("mismatch-count", "1")
+              assertThat(it).containsEntry("success", "true")
+              assertThat(it).containsEntry("ASI", "open-dps=3:open-nomis=4; closed-dps=3:closed-nomis=3")
+              assertThat(it).doesNotContainKeys("WWI")
+            },
+            isNull(),
+          )
+
+          // No count mismatch
+          verify(telemetryClient, times(0)).trackEvent(
+            eq("incidents-reports-reconciliation-mismatch"),
+            any(),
+            isNull(),
+          )
+
+          verify(telemetryClient).trackEvent(
+            eq("incidents-reports-reconciliation-detail-mismatch"),
+            check {
+              assertThat(it).containsEntry("nomisId", "33")
+              assertThat(it).containsKey("dpsId")
+              assertThat(it).containsEntry("verdict", "status mismatch")
+              assertThat(it).containsEntry(
+                "nomis",
+                "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=3)",
+              )
+              assertThat(it).containsEntry(
+                "dps",
+                "IncidentReportDetail(type=ATT_ESC_E, status=DRAFT, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=3)",
+              )
+            },
+            isNull(),
+          )
+        }
       }
     }
 
@@ -422,7 +595,7 @@ class IncidentsReconciliationIntTest(
             assertThat(it).containsEntry("verdict", "responses mismatch for question: 1234")
             assertThat(it).containsEntry(
               "nomis",
-              "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=0)",
+              "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=3)",
             )
             assertThat(it).containsEntry(
               "dps",
@@ -467,7 +640,7 @@ class IncidentsReconciliationIntTest(
             assertThat(it).containsEntry("verdict", "responses mismatch for question: 1234")
             assertThat(it).containsEntry(
               "nomis",
-              "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=0)",
+              "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=3)",
             )
             assertThat(it).containsEntry(
               "dps",
@@ -556,12 +729,13 @@ class IncidentsReconciliationIntTest(
 
       @BeforeEach
       fun setup() {
-        incidentsNomisApi.stubGetIncident()
-        incidentsDpsApi.stubGetIncidentByNomisId(nomisIncidentId = 1234)
+        incidentsDpsApi.stubGetIncidentByNomisId()
       }
 
       @Test
       fun `will return no differences`() {
+        incidentsNomisApi.stubGetIncident()
+
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
@@ -586,7 +760,7 @@ class IncidentsReconciliationIntTest(
           .returnResult()
           .responseBody!!
 
-        assertThat(mismatch.nomisIncident!!.totalResponses).isEqualTo(0)
+        assertThat(mismatch.nomisIncident!!.totalResponses).isEqualTo(3)
         assertThat(mismatch.dpsIncident!!.totalResponses).isEqualTo(3)
         assertThat(mismatch.verdict).isEqualTo("responses mismatch for question: 1234")
 
@@ -599,7 +773,11 @@ class IncidentsReconciliationIntTest(
 
       @Test
       fun `will pass reconciliation if invalid Nomis data - multipleAnswers for a single answer question`() {
-        incidentsNomisApi.stubGetIncidentWithInvalidNomisResponseData(incidentId = nomisIncidentId)
+        incidentsNomisApi.stubGetIncident(
+          incidentResponse().copy(
+            questions = listOf(question1WithInvalidAnswerCount, question2With2Answers),
+          ),
+        )
 
         webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -609,7 +787,7 @@ class IncidentsReconciliationIntTest(
           .expectBody().isEmpty
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-mismatch-ignored"),
+          eq("incidents-reports-reconciliation-mismatch-multiple-answers-ignored"),
           check {
             assertThat(it).containsEntry("nomisIncidentId", "$nomisIncidentId")
             assertThat(it).containsKey("dpsIncidentId")
@@ -619,6 +797,32 @@ class IncidentsReconciliationIntTest(
           },
           isNull(),
         )
+      }
+
+      @Test
+      fun `will pass reconciliation if questions with no answers for both Nomis and Dps`() {
+        val dpsResponse = dpsIncident()
+        incidentsDpsApi.stubGetIncidentByNomisId(
+          response = dpsResponse.copy(
+            questions = dpsResponse.questions + dpsQuestionWithNoAnswers,
+          ),
+        )
+
+        val nomisResponse = incidentResponse()
+        incidentsNomisApi.stubGetIncident(
+          nomisResponse.copy(
+            questions = nomisResponse.questions + nomisQuestionWithNoAnswers,
+          ),
+        )
+
+        webTestClient.get().uri("/incidents/reconciliation/$nomisIncidentId")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+
+        verifyNoInteractions(telemetryClient)
       }
     }
   }

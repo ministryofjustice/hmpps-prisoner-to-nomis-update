@@ -22,6 +22,9 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.MappingType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.NomisAdjustmentCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
 @SpringAPIServiceTest
@@ -54,7 +57,7 @@ internal class SentencingAdjustmentMappingServiceTest {
       mappingService.createMapping(
         newMapping(
           nomisAdjustmentId = 123,
-          nomisAdjustmentCategory = "KEY-DATE",
+          nomisAdjustmentCategory = NomisAdjustmentCategory.KEYMinusDATE,
           adjustmentId = "9876",
         ),
       )
@@ -106,7 +109,7 @@ internal class SentencingAdjustmentMappingServiceTest {
       val mapping = mappingService.getMappingGivenAdjustmentIdOrNull("1234")
 
       assertThat(mapping?.nomisAdjustmentId).isEqualTo(123)
-      assertThat(mapping?.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
+      assertThat(mapping?.nomisAdjustmentCategory?.value).isEqualTo("KEY-DATE")
     }
 
     @Test
@@ -154,7 +157,7 @@ internal class SentencingAdjustmentMappingServiceTest {
       val mapping = mappingService.getMappingGivenAdjustmentId("1234")
 
       assertThat(mapping.nomisAdjustmentId).isEqualTo(123)
-      assertThat(mapping.nomisAdjustmentCategory).isEqualTo("KEY-DATE")
+      assertThat(mapping.nomisAdjustmentCategory.value).isEqualTo("KEY-DATE")
     }
 
     @Test
@@ -214,11 +217,12 @@ internal class SentencingAdjustmentMappingServiceTest {
 
   private fun newMapping(
     nomisAdjustmentId: Long = 456L,
-    nomisAdjustmentCategory: String = "SENTENCE",
+    nomisAdjustmentCategory: NomisAdjustmentCategory = NomisAdjustmentCategory.SENTENCE,
     adjustmentId: String = "1234",
   ) = SentencingAdjustmentMappingDto(
     nomisAdjustmentId = nomisAdjustmentId,
     nomisAdjustmentCategory = nomisAdjustmentCategory,
     adjustmentId = adjustmentId,
+    mappingType = MappingType.SENTENCING_CREATED,
   )
 }

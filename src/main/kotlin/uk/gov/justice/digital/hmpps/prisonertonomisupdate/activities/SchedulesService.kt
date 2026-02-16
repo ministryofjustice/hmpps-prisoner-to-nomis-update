@@ -87,6 +87,5 @@ data class ScheduledInstanceDomainEvent(
 )
 
 data class ScheduledInstanceAdditionalInformation(
-  val activityScheduleId: Long,
   val scheduledInstanceId: Long,
 )

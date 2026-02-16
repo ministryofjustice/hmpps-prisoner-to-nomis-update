@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
@@ -14,6 +13,7 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AllPrisonerCaseNoteMappingsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
@@ -21,7 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import java.util.UUID
 
 @Component
-class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class CaseNotesMappingApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubGetByDpsId(
     dpsCaseNoteId: String = UUID.randomUUID().toString(),
     mappings: List<CaseNoteMappingDto> = listOf(
@@ -39,7 +39,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(mappings)),
+          .withBody(jsonMapper.writeValueAsString(mappings)),
       ),
     )
   }
@@ -50,7 +50,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -58,7 +58,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
   fun stubGetByPrisoner(offenderNo: String, mappings: AllPrisonerCaseNoteMappingsDto = AllPrisonerCaseNoteMappingsDto(listOf())) {
     mappingServer.stubFor(
       get(urlEqualTo("/mapping/casenotes/$offenderNo/all")).willReturn(
-        okJson(objectMapper.writeValueAsString(mappings)),
+        okJson(jsonMapper.writeValueAsString(mappings)),
       ),
     )
   }
@@ -69,7 +69,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -90,7 +90,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -104,7 +104,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ).willSetStateTo("Cause Mapping CaseNotes Success"),
     )
 
@@ -126,7 +126,7 @@ class CaseNotesMappingApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }

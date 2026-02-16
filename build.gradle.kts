@@ -1,9 +1,9 @@
-import com.fasterxml.jackson.databind.ObjectMapper
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jlleitschuh.gradle.ktlint.KtlintExtension
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintCheckTask
 import org.jlleitschuh.gradle.ktlint.tasks.KtLintFormatTask
 import org.openapitools.generator.gradle.plugin.tasks.GenerateTask
+import tools.jackson.databind.json.JsonMapper
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -12,57 +12,59 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "9.1.4"
-  kotlin("plugin.spring") version "2.2.20"
-  id("org.openapi.generator") version "7.16.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.0.3"
+  kotlin("plugin.spring") version "2.3.0"
+  id("org.openapi.generator") version "7.19.0"
 }
 
 configurations {
   implementation {
     exclude(module = "spring-boot-starter-web")
     exclude(module = "spring-boot-starter-tomcat")
-    exclude(module = "commons-logging")
   }
-  testImplementation { exclude(group = "org.junit.vintage") }
 }
 
 dependencies {
-  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:1.7.0")
+  implementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter:2.0.0")
+  implementation("org.springframework.boot:spring-boot-starter-security")
+  implementation("org.springframework.boot:spring-boot-starter-webclient")
   implementation("org.springframework.boot:spring-boot-starter-webflux")
-  implementation("org.springframework.data:spring-data-commons:3.5.4")
-  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:5.6.0")
+  implementation("org.springframework.data:spring-data-commons")
+  implementation("org.springframework.security:spring-security-access")
+  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:3.0.1")
+  implementation("org.springframework.boot:spring-boot-jackson2")
 
-  implementation("org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.13")
+  implementation("uk.gov.justice.service.hmpps:hmpps-sqs-spring-boot-starter:7.0.0-beta2")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-reactor")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk8")
   implementation("org.jetbrains.kotlinx:kotlinx-coroutines-jdk9")
-  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.18.1")
-  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.52.0")
+  // Needs to match this version https://github.com/microsoft/ApplicationInsights-Java/blob/<version>/dependencyManagement/build.gradle.kts#L16
+  // where <version> is the version of application insights pulled in by hmpps-gradle-spring-boot
+  // at https://github.com/ministryofjustice/hmpps-gradle-spring-boot/blob/main/src/main/kotlin/uk/gov/justice/digital/hmpps/gradle/configmanagers/AppInsightsConfigManager.kt#L7
+  implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations:2.21.0")
+  implementation("io.opentelemetry:opentelemetry-extension-kotlin:1.55.0")
   implementation("com.google.guava:guava:33.5.0-jre")
 
-  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:1.7.0")
-  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.35") {
+  testImplementation("uk.gov.justice.service.hmpps:hmpps-kotlin-spring-boot-starter-test:2.0.0")
+  testImplementation("org.springframework.boot:spring-boot-starter-webflux-test")
+  testImplementation("io.swagger.parser.v3:swagger-parser:2.1.37") {
     exclude(group = "io.swagger.core.v3")
   }
-  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.39")
+  testImplementation("io.swagger.core.v3:swagger-core-jakarta:2.2.41")
 
-  testImplementation("org.wiremock:wiremock-standalone:3.13.1")
+  testImplementation("org.wiremock:wiremock-standalone:3.13.2")
   testImplementation("org.mockito:mockito-inline:5.2.0")
-  testImplementation("org.testcontainers:localstack:1.21.3")
-  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.792")
+  testImplementation("org.testcontainers:localstack:1.21.4")
+  testImplementation("com.amazonaws:aws-java-sdk-core:1.12.796")
   testImplementation("org.awaitility:awaitility-kotlin:4.3.0")
   testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test")
 }
 
 kotlin {
+  jvmToolchain(25)
   compilerOptions {
-    freeCompilerArgs.addAll("-Xjvm-default=all", "-Xwhen-guards", "-Xannotation-default-target=param-property")
+    freeCompilerArgs.addAll("-Xwhen-guards", "-Xannotation-default-target=param-property")
   }
-}
-
-java {
-  sourceCompatibility = JavaVersion.VERSION_24
-  targetCompatibility = JavaVersion.VERSION_24
 }
 
 data class ModelConfiguration(val name: String, val packageName: String, val testPackageName: String? = null, val url: String, val models: String = "") {
@@ -108,6 +110,11 @@ val models = listOf(
     models = "CaseNote,CaseNoteAmendment",
   ),
   ModelConfiguration(
+    name = "core-person",
+    packageName = "coreperson",
+    url = "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
+  ModelConfiguration(
     name = "court-sentencing",
     packageName = "court.sentencing",
     testPackageName = "courtsentencing",
@@ -123,13 +130,18 @@ val models = listOf(
     name = "finance",
     packageName = "finance",
     testPackageName = "finance",
-    url = "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+    url = "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
     name = "incidents",
     packageName = "incidents",
     url = "https://incident-reporting-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "CorrectionRequest,DescriptionAddendum,HistoricalQuestion,HistoricalResponse,History,IncidentTypeHistory,NomisCode,NomisHistory,NomisHistoryQuestion,NomisHistoryResponse,NomisOffender,NomisOffenderParty,NomisQuestion,NomisReport,NomisRequirement,NomisResponse,NomisStaff,NomisStaffParty,NomisStatus,NomisSyncReportId,NomisSyncRequest,PairStringListDescriptionAddendum,PrisonerInvolvement,Question,ReportBasic,ReportWithDetails,Response,SimplePageReportBasic,StaffInvolvement,StatusHistory",
+  ),
+  ModelConfiguration(
+    name = "incentives",
+    packageName = "incentives",
+    url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
     name = "movements",
@@ -175,19 +187,24 @@ val models = listOf(
     name = "sentencing-adjustments",
     packageName = "sentencing.adjustments",
     url = "https://adjustments-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
-    models = "AdjustmentDto,AdditionalDaysAwardedDto,LawfullyAtLargeDto,LegacyAdjustment,RemandDto,SpecialRemissionDto,TaggedBailDto,TimeSpentAsAnAppealApplicantDto,TimeSpentInCustodyAbroadDto,UnlawfullyAtLargeDto",
   ),
   ModelConfiguration(
     name = "visit-balance",
     packageName = "visit.balance",
     url = "https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk/v3/api-docs",
   ),
+  ModelConfiguration(
+    name = "officialvisits",
+    packageName = "officialvisits",
+    testPackageName = "officialvisits",
+    url = "https://official-visits-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
+  ),
 )
 
 tasks {
   withType<KotlinCompile> {
     dependsOn(models.map { it.toBuildModelTaskName() })
-    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_24
+    compilerOptions.jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_25
   }
   withType<KtLintCheckTask> {
     // Under gradle 8 we must declare the dependency here, even if we're not going to be linting the model
@@ -222,7 +239,7 @@ models.forEach {
     description = "Write JSON for ${it.name}"
     doLast {
       val json = URI.create(it.url).toURL().readText()
-      val formattedJson = ObjectMapper().let { mapper ->
+      val formattedJson = JsonMapper().let { mapper ->
         mapper.writerWithDefaultPrettyPrinter().writeValueAsString(mapper.readTree(json))
       }
       Files.write(Paths.get(it.input), formattedJson.toByteArray())
@@ -237,7 +254,7 @@ models.forEach {
           .replace("dev.".toRegex(), "")
           .replace("/v3/api-docs".toRegex(), "/info")
         val json = URI.create(productionUrl).toURL().readText()
-        val version = ObjectMapper().readTree(json).at("/build/version").asText()
+        val version = JsonMapper().readTree(json).at("/build/version").asString()
         println(version)
       }
     }
@@ -274,6 +291,7 @@ tasks.test {
       excludeTestsMatching("uk.gov.justice.digital.hmpps.prisonertonomisupdate.$it.*")
     }
   }
+  maxHeapSize = "1024m"
 }
 
 val buildDirectory: Directory = layout.buildDirectory.get()

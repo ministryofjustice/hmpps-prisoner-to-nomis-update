@@ -2,11 +2,13 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.not
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -25,8 +27,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import java.time.LocalDate
 import java.util.*
 
 @SpringAPIServiceTest
@@ -176,121 +178,6 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
-  inner class CreateOutsideMovementMappings {
-    @Test
-    internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubCreateOutsideMovementMapping()
-
-      apiService.createOutsideMovementMapping(
-        temporaryAbsenceOutsideMovementMapping(),
-      )
-
-      mappingApi.verify(
-        postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    internal fun `should pass data to service`() = runTest {
-      mappingApi.stubCreateOutsideMovementMapping()
-
-      apiService.createOutsideMovementMapping(
-        temporaryAbsenceOutsideMovementMapping(),
-      )
-
-      mappingApi.verify(
-        postRequestedFor(anyUrl())
-          .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC")))
-          .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
-          .withRequestBody(matchingJsonPath("nomisMovementApplicationMultiId", equalTo("1")))
-          .withRequestBody(matchingJsonPath("dpsOutsideMovementId", not(absent())))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED"))),
-      )
-    }
-
-    @Test
-    fun `should return error for 409 conflict`() = runTest {
-      val dpsOutsideMovementId = UUID.randomUUID()
-      mappingApi.stubCreateOutsideMovementMappingConflict(
-        error = DuplicateMappingErrorResponse(
-          moreInfo = DuplicateErrorContentObject(
-            existing = TemporaryAbsenceOutsideMovementSyncMappingDto(
-              prisonerNumber = "A1234BC",
-              bookingId = 12345L,
-              nomisMovementApplicationMultiId = 1L,
-              dpsOutsideMovementId = dpsOutsideMovementId,
-              mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-            ),
-            duplicate = TemporaryAbsenceOutsideMovementSyncMappingDto(
-              prisonerNumber = "A1234BC",
-              bookingId = 12345L,
-              nomisMovementApplicationMultiId = 2L,
-              dpsOutsideMovementId = dpsOutsideMovementId,
-              mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.NOMIS_CREATED,
-            ),
-          ),
-          errorCode = 1409,
-          status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
-          userMessage = "Duplicate mapping",
-        ),
-      )
-
-      assertThrows<DuplicateMappingException> {
-        apiService.createOutsideMovementMapping(
-          temporaryAbsenceOutsideMovementMapping(),
-        )
-      }.error.apply {
-        assertThat(moreInfo.existing!!["nomisMovementApplicationMultiId"]).isEqualTo(1)
-        assertThat(moreInfo.duplicate["nomisMovementApplicationMultiId"]).isEqualTo(2)
-      }
-    }
-
-    @Test
-    fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateOutsideMovementMapping(status = INTERNAL_SERVER_ERROR)
-
-      assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.createOutsideMovementMapping(
-          temporaryAbsenceOutsideMovementMapping(),
-        )
-      }
-    }
-  }
-
-  @Nested
-  inner class GetOutsideMovementMappings {
-    private val dpsId = UUID.randomUUID()
-
-    @Test
-    internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId)
-
-      apiService.getOutsideMovementMapping(dpsId)
-
-      mappingApi.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId, status = NOT_FOUND)
-
-      apiService.getOutsideMovementMapping(dpsId)
-        .also { assertThat(it).isNull() }
-    }
-
-    @Test
-    fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceOutsideMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
-
-      assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getOutsideMovementMapping(dpsId)
-      }
-    }
-  }
-
-  @Nested
   inner class CreateScheduledMovementMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
@@ -319,8 +206,15 @@ class ExternalMovementsMappingApiServiceTest {
           .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
           .withRequestBody(matchingJsonPath("nomisEventId", equalTo("1")))
           .withRequestBody(matchingJsonPath("dpsOccurrenceId", not(absent())))
-          .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED"))),
-        // TODO check address mapping details
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED")))
+          .withRequestBody(matchingJsonPath("dpsAddressText", equalTo("some address")))
+          .withRequestBody(matchingJsonPath("eventTime", containing("${LocalDate.now()}")))
+          .withRequestBody(matchingJsonPath("nomisAddressId", equalTo("54321")))
+          .withRequestBody(matchingJsonPath("nomisAddressOwnerClass", equalTo("OFF")))
+          .withRequestBody(matchingJsonPath("dpsUprn", equalTo("654")))
+          .withRequestBody(matchingJsonPath("dpsDescription", absent()))
+          .withRequestBody(matchingJsonPath("dpsPostcode", equalTo("SW1A 1AA"))),
+
       )
     }
 
@@ -377,6 +271,58 @@ class ExternalMovementsMappingApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createScheduledMovementMapping(
+          temporaryAbsenceScheduledMovementMapping(),
+        )
+      }
+    }
+  }
+
+  @Nested
+  inner class UpdateScheduledMovementMappings {
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubUpdateScheduledMovementMapping()
+
+      apiService.updateScheduledMovementMapping(
+        temporaryAbsenceScheduledMovementMapping(),
+      )
+
+      mappingApi.verify(
+        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `should pass data to service`() = runTest {
+      mappingApi.stubUpdateScheduledMovementMapping()
+
+      apiService.updateScheduledMovementMapping(
+        temporaryAbsenceScheduledMovementMapping(),
+      )
+
+      mappingApi.verify(
+        putRequestedFor(anyUrl())
+          .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC")))
+          .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
+          .withRequestBody(matchingJsonPath("nomisEventId", equalTo("1")))
+          .withRequestBody(matchingJsonPath("dpsOccurrenceId", not(absent())))
+          .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED")))
+          .withRequestBody(matchingJsonPath("dpsAddressText", equalTo("some address")))
+          .withRequestBody(matchingJsonPath("eventTime", containing("${LocalDate.now()}")))
+          .withRequestBody(matchingJsonPath("nomisAddressId", equalTo("54321")))
+          .withRequestBody(matchingJsonPath("nomisAddressOwnerClass", equalTo("OFF")))
+          .withRequestBody(matchingJsonPath("dpsUprn", equalTo("654")))
+          .withRequestBody(matchingJsonPath("dpsDescription", absent()))
+          .withRequestBody(matchingJsonPath("dpsPostcode", equalTo("SW1A 1AA"))),
+      )
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubUpdateScheduledMovementMapping(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.updateScheduledMovementMapping(
           temporaryAbsenceScheduledMovementMapping(),
         )
       }

@@ -335,6 +335,16 @@ class CaseNotesReconciliationServiceTest {
         null,
       )
     }
+
+    @Test
+    fun `will not report a temporary error due to case note being created at the same time`() = runTest {
+      whenever(caseNotesApiService.getCaseNotesForPrisoner(OFFENDER_NO))
+        .thenReturn(emptyList())
+        .thenReturn(dpsPrisoner())
+      whenever(caseNotesNomisApiService.getCaseNotesForPrisoner(OFFENDER_NO)).thenReturn(nomisPrisoner())
+
+      assertThat(caseNotesReconciliationService.checkMatch(PrisonerId(OFFENDER_NO))).isNull()
+    }
   }
 
   @Nested

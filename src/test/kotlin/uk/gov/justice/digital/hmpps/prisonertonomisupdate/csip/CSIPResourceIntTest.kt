@@ -11,8 +11,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -31,7 +33,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerCSIPsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.time.LocalDate
 
+@ExtendWith(MockitoExtension::class)
 class CSIPResourceIntTest(
   @Autowired private val csipReconciliationService: CSIPReconciliationService,
   @Autowired private val csipNomisApi: CSIPNomisApiMockServer,
@@ -310,57 +314,156 @@ class CSIPResourceIntTest(
 
     @Nested
     inner class HappyPath {
-      @BeforeEach
-      fun setup() {
-        csipNomisApi.stubGetCSIPsForReconciliation(prisonNumber)
-        csipDpsApi.stubGetCSIPsForPrisoner(prisonNumber)
+      @Nested
+      inner class OffenderWithNoCSIPEntries {
+        @BeforeEach
+        fun setup() {
+          csipNomisApi.stubGetCSIPsForReconciliation(prisonNumber)
+          csipDpsApi.stubGetCSIPsForPrisoner(prisonNumber)
+        }
+
+        @Test
+        fun `will return no differences`() {
+          webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody().isEmpty
+
+          verifyNoInteractions(telemetryClient)
+        }
       }
 
-      @Test
-      fun `will return no differences`() {
-        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody().isEmpty
-
-        verifyNoInteractions(telemetryClient)
-      }
-
-      @Test
-      fun `will return mismatch with nomis`() {
-        csipDpsApi.stubGetCSIPsForPrisoner(
-          prisonNumber,
-          dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentType = ReferenceData(code = "VIP"))),
-          dpsCsipRecord(reviewOutcome = setOf(Review.Actions.REMAIN_ON_CSIP)),
-        )
-
-        webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
-          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
-          .exchange()
-          .expectStatus()
-          .isOk
-          .expectBody()
-          .jsonPath("offenderNo").isEqualTo(prisonNumber)
-          .jsonPath("nomisCSIPCount").isEqualTo(0)
-          .jsonPath("dpsCSIPCount").isEqualTo(2)
-          .jsonPath("missingFromNomis[0].incidentTypeCode").isEqualTo("VIP")
-          .jsonPath("missingFromNomis[1].incidentTypeCode").isEqualTo("INT")
-          .jsonPath("missingFromDps.size()").isEqualTo(0)
-
-        verify(telemetryClient).trackEvent(
-          eq("csip-reports-reconciliation-mismatch"),
-          telemetryCaptor.capture(),
-          isNull(),
-        )
-
-        with(telemetryCaptor.allValues[0]) {
-          assertThat(this).containsEntry(
-            "missingFromNomis",
-            "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true), " +
-              "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=false)",
+      @Nested
+      inner class OffenderWithCSIPEntries {
+        @BeforeEach
+        fun setup() {
+          csipNomisApi.stubGetCSIPsForReconciliation(
+            prisonNumber,
+            response = PrisonerCSIPsResponse(
+              offenderCSIPs = listOf(nomisCSIPResponse()),
+            ),
           )
+          csipDpsApi.stubGetCSIPsForPrisoner(prisonNumber, dpsCsipRecord())
+        }
+
+        @Test
+        fun `will return no differences`() {
+          webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody().isEmpty
+
+          verifyNoInteractions(telemetryClient)
+        }
+
+        @Test
+        fun `will return mismatch with nomis`() {
+          csipDpsApi.stubGetCSIPsForPrisoner(
+            prisonNumber,
+            dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentType = ReferenceData(code = "VIP"))),
+            dpsCsipRecord(reviewOutcome = setOf(Review.Actions.REMAIN_ON_CSIP)),
+          )
+
+          webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("offenderNo").isEqualTo(prisonNumber)
+            .jsonPath("nomisCSIPCount").isEqualTo(1)
+            .jsonPath("dpsCSIPCount").isEqualTo(2)
+            .jsonPath("missingFromNomis[0].incidentTypeCode").isEqualTo("VIP")
+            .jsonPath("missingFromNomis[1].incidentTypeCode").isEqualTo("INT")
+            .jsonPath("missingFromDps.size()").isEqualTo(1)
+
+          verify(telemetryClient).trackEvent(
+            eq("csip-reports-reconciliation-mismatch"),
+            telemetryCaptor.capture(),
+            isNull(),
+          )
+
+          with(telemetryCaptor.allValues[0]) {
+            assertThat(this).containsEntry(
+              "missingFromNomis",
+              "CSIPReportSummary(incidentTypeCode=VIP, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true), " +
+                "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=false)",
+            )
+            assertThat(this).containsEntry(
+              "missingFromDps",
+              "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+            )
+          }
+        }
+
+        @Test
+        fun `will return mismatch if one invalid date`() {
+          csipNomisApi.stubGetCSIPsForReconciliation(
+            prisonNumber,
+            response = PrisonerCSIPsResponse(
+              offenderCSIPs = listOf(nomisCSIPResponse()),
+            ),
+          )
+          csipDpsApi.stubGetCSIPsForPrisoner(
+            prisonNumber,
+            dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentDate = LocalDate.parse("0919-09-14"))),
+          )
+
+          webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody()
+            .jsonPath("offenderNo").isEqualTo(prisonNumber)
+            .jsonPath("nomisCSIPCount").isEqualTo(1)
+            .jsonPath("dpsCSIPCount").isEqualTo(1)
+            .jsonPath("missingFromNomis.size()").isEqualTo(1)
+            .jsonPath("missingFromDps.size()").isEqualTo(1)
+
+          verify(telemetryClient).trackEvent(
+            eq("csip-reports-reconciliation-mismatch"),
+            telemetryCaptor.capture(),
+            isNull(),
+          )
+
+          with(telemetryCaptor.allValues[0]) {
+            assertThat(this).containsEntry(
+              "missingFromNomis",
+              "CSIPReportSummary(incidentTypeCode=INT, incidentDate=null, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+            )
+            assertThat(this).containsEntry(
+              "missingFromDps",
+              "CSIPReportSummary(incidentTypeCode=INT, incidentDate=2024-06-12, incidentTime=10:32:12, attendeeCount=1, factorCount=1, interviewCount=1, planCount=1, reviewCount=1, scsOutcomeCode=CUR, decisionOutcomeCode=OPE, csipClosedFlag=true)",
+            )
+          }
+        }
+
+        @Test
+        fun `will not return mismatch if Nomis and Dps invalid incident dates`() {
+          csipNomisApi.stubGetCSIPsForReconciliation(
+            prisonNumber,
+            response = PrisonerCSIPsResponse(
+              offenderCSIPs = listOf(nomisCSIPResponse().copy(incidentDate = LocalDate.parse("0919-09-19"))),
+            ),
+          )
+          csipDpsApi.stubGetCSIPsForPrisoner(
+            prisonNumber,
+            dpsCsipRecord().copy(referral = dpsCsipRecord().referral.copy(incidentDate = LocalDate.parse("0919-09-14"))),
+          )
+
+          webTestClient.get().uri("/csip/reconciliation/$prisonNumber")
+            .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+            .exchange()
+            .expectStatus()
+            .isOk
+            .expectBody().isEmpty
+
+          verifyNoInteractions(telemetryClient)
         }
       }
     }

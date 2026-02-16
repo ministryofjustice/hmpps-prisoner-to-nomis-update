@@ -38,7 +38,7 @@ A better hybrid solution which gives better control messaging would be similar t
 
 The first 2 of the 3 steps is required but instead of step 3
 
-- `docker-compose up localstack` or `docker compose up localstack` (there is also docker-compose-localstack.yaml with just localstack defined )
+- `docker compose up localstack` or `docker compose up localstack` (there is also docker-compose-localstack.yaml with just localstack defined )
 
 Then run any of the `bash` scripts at the root of this project to send events to the local topic
 
@@ -127,7 +127,7 @@ Then we delete any conflicting mappings from the mappings preprod database:
 * `delete from activity_schedule_mapping where nomis_course_schedule_id > <max(crs_sch_id)>;`
 * `delete from activity_schedule_mapping where scheduled_instance_id > <max(scheduled_instance_id)>;`
 
-There may still be some discrepancies between NOMIS and DPS, e.g. a new schedule or allocation could have been created in DPS between the NOMIS and DPS refreshes. These can probably be fixed by calling the manual sync endpoints, but it's messy - see advise on the [reconciliation report](activities-reconciliation-report-alerts-allocations-and-attendances) if you really want to try this. It's probably better to advise people to create new test data in DPS, which will be possible now that the bad mappings have been deleted.
+There may still be some discrepancies between NOMIS and DPS, e.g. a new schedule or allocation could have been created in DPS between the NOMIS and DPS refreshes. These can probably be fixed by calling the manual sync endpoints, but it's messy - see advice on the [reconciliation report](activities-reconciliation-report-alerts-allocations-and-attendances) if you really want to try this. It's probably better to advise people to create new test data in DPS, which will be possible now that the bad mappings have been deleted.
 
 TODO: we normally need to purge the DLQ after a preprod refresh because of bad data - next time do the above first and see if that's enough to avoid the need to purge the DLQ.
 
@@ -179,11 +179,35 @@ A duplicate scheduled instance won't receive a `To NOMIS synchronisation duplica
 
 A duplicate activity schedule update won't receive a `To NOMIS synchronisation duplicate activity detected` alert but will end up with a DLQ message. See [duplicate activity schedule update errors](#duplicate-activity-schedule-update-errors) for more details.
 
-#### Incentives
+## Incentives
 
 Duplicate incentives have no business impact in NOMIS but can cause confusion to users. That confusion is only the case so long as the NOMIS IEP page is still in use. This screen is currently being phased out. The only way to delete an IEP is to ask `#dps-appsupport` and supply them with the prisoner number and sequence. *For now it advised to take no action unless there is a complaint from the prison* since the impact on the business is negligible.
 
-#### Visits
+## Adjudications
+
+### Punishment Repair
+
+A rare scenario happens where the NOMIS punishment is deleted as a result of a DPS synchronisation. This is for old historic Adjudications that have multiple charges. In DPS these are represented with multiple adjudications whereas NOMIS represents these as a single Adjudication with multiple charges. In NOMIS the hearing can therefore be shared between multiple DPS adjudications. If that hearing is deleted in DPS it was also delete the NOMIS hearing which might also cascade to the outcomes and punishments or multiple charges.
+
+In this situation the following has been deleted in NOMIS:
+* The hearing
+* The outcome result
+* The punishments
+
+The mapping for the punishments and the hearings will remain that complicates the repair.
+
+To repair, the mappings need deleting and the hearing, outcome and punishments all need resynchronisation.
+
+1. Find the hearing and punishments in DPS that need synchronising
+2. Delete the hearing mapping DELETE https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk/mapping/hearings/dps/{dps-hearing-id}
+3. Delete each of the punishments mappings DELETE https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk/mapping/punishments/{dps-punishment-id}
+4. Repair hearing POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/hearing/dps-hearing-id/{dps-hearingid}
+5. Repair hearing outcome POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/hearing/dps-hearing-id/{dps-hearingid}/outcome
+6. Repair hearing punishments POST https://prisoner-to-nomis-update.hmpps.service.justice.gov.uk/prisons/{prison-id}/prisoners/{offender-no}/adjudication/dps-charge-number/{dps-charge-id}/punishments/repair
+
+TODO - if this becomes common add new endpoint to do all of the above programmatically
+
+## Visits
 
 A duplicate visit is serious since for sentenced prisoners they will have one less visit for that week. Therefore the visit should be cancelled. This could be done by #dps-appsupport or by us using the cancel endpoint. The cancel endpoint is the quickest solution.
 
@@ -201,7 +225,7 @@ curl --location --request PUT 'https://nomis-prisoner-api.prison.service.justice
 * Check in Nomis again and the duplicate visit should have been cancelled
 
 ```
-#### Sentencing adjustments
+## Sentencing adjustments
 
 A duplicate sentencing adjustment is serious since it will result in the prisoner being released early/late. Therefore the sentencing adjustment should be cancelled. This could be dome by #dps-appsupport or by us using the delete endpoint. The delete endpoint is the quickest solution.
 
@@ -358,39 +382,70 @@ If the prisoner has been released or transferred to a different prison then ther
 
 For attendances a failure indicates that some bookings have a different number of attendances to pay in NOMIS and DPS. By "attendances to pay" we mean the pay flag is true - not related to the results of the NOMIS payroll for which the rules are many and complex. However, this is a problem that might cause NOMIS to miss payments to the prisoner.
 
-To try and work out what's different start with the following queries:
+To try and work out what's different start with the following DB queries (adjusting date for older reconciliation failures):
 
 NOMIS:
 ```sql
-select * from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES 
-where OFFENDER_BOOK_ID=<insert offender book id here> 
-and event_date=to_date('<insert report date here>', 'YYYY-MM-DD') 
-and PAY_FLAG='Y';
+select ca.DESCRIPTION, ca.crs_acty_id,oca.* from OMS_OWNER.OFFENDER_COURSE_ATTENDANCES oca
+  join oms_owner.COURSE_ACTIVITIES ca on oca.CRS_ACTY_ID=ca.CRS_ACTY_ID
+  join oms_owner.OFFENDER_BOOKINGS ob on oca.OFFENDER_BOOK_ID=ob.OFFENDER_BOOK_ID
+  join oms_owner.offenders o on ob.ROOT_OFFENDER_ID=o.OFFENDER_ID
+where OFFENDER_ID_DISPLAY='<prisoner number>' and EVENT_DATE = to_date(current_date-1);
 ```
 
 DPS:
 ```sql
-select att.* from attendance att
-join scheduled_instance si on att.scheduled_instance_id = si.scheduled_instance_id
-join allocation al on al.activity_schedule_id = si.activity_schedule_id and att.prisoner_number = al.prisoner_number
-where si.session_date = '<insert report date here>'
-and att.prisoner_number = '<insert offenderNo here>';
+select a.description, si.time_slot, att.*  from attendance att
+  join scheduled_instance si on att.scheduled_instance_id=si.scheduled_instance_id
+  join activity_schedule asch on si.activity_schedule_id=asch.activity_schedule_id
+  join activity a on asch.activity_id=a.activity_id
+where att.prisoner_number='<prisoner number>' and si.session_date = current_date-1;
 ```
 
-To get an overview of what's been happening with the synchronisation events for this offender run the following query in App Insights:
+You should be able to compare the attendances in both systems to work out what's different. Then it's a case of trying to work out why they are different.
+
+To get an overview of what's been happening with the synchronisation events for this offender run the following Log Analytics query in App Insights:
 ```ksql
-customEvents
-| where name startswith "activity"
-| where customDimensions.bookingId == '<insert booking id here>'
+AppEvents
+| where Name startswith "activity"
+| where Properties.bookingId == '<insert booking id here>'
 ```
 
-To get a broader overview of what's been happening with the prisoner run the following query in App Insights:
+To get a broader overview of what's been happening with the prisoner run the following Log Analytics query in App Insights:
 ```ksql
-customEvents
-| where (customDimensions.bookingId == '<insert booking id>' or customDimensions.offenderNo == '<insert offenderNo>' or customDimensions.nomsNumber == '<insert offenderNo>' or customDimensions.prisonerNumber == '<insert offenderNo>')
+AppEvents
+| where (Properties has '<insert booking id>' or Properties has '<insert offenderNo>')
 ```
 
-Often the fix involves re-synchronising the DPS attendances which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/activities-resource/synchroniseUpsertAttendance).
+##### Resynchronising attendances from DPS to NOMIS
+
+Often the fix involves grabbing the `attendance_id` from DPS and re-synchronising the DPS attendance which can be done with an [endpoint in the synchronisation service](https://prisoner-to-nomis-update-dev.hmpps.service.justice.gov.uk/swagger-ui/index.html#/Activities%20Update%20Resource/synchroniseUpsertAttendance).
+
+##### Known issues with attendance reconciliation
+
+###### Synchronisation to NOMIS failed
+
+You can spot this issue because either the NOMIS attendances are missing entirely, or the audit fields indicate the NOMIS attendances weren't updated when the attendance was marked in DPS.
+
+The reasons for the synchronisation failure are varied. You can usually work out what happened with the above App Insights queries and some further digging. The most interesting scenario is where DPS failed to generate the `activities.prisoner.attendance-*` domain event, in which case we need to raise with the DPS team. Another interesting failure is where the call to nomis-prisoner-api failed with a 400/500 - though this very rarely happens. If the failure reason is that NOMIS payroll has already run so we rejected the update, it looks like DPS updated the attendance record too late and this might be worth raising with the DPS team. 
+
+Most often the fix is to re-synchronise to NOMIS.
+
+###### Synchronisation to NOMIS failed as already paid in NOMIS (OTDDSBAL)
+
+There is a feature in NOMIS where a prisoner can be paid on the same day as an attendance when they're preparing to be released (instead of waiting for the overnight payroll job). Later in DPS the attendance is either paid or cancelled - but we reject the sync because the attendance is alrady paid in NOMIS. These can be identified because the NOMIS `AUDIT_MODULE_NAME` is `OTDDSBAL`, the NOMIS module that allows early pay.
+
+There's nothing to be done here so this issue can be ignored.
+
+This situation will go away once prisoner finance has been migrated to DPS. (We did look at ignoring these in the reconciliation but it's a bit complicated, and they're easy to spot).
+
+###### Prisoner switched to old booking
+
+We've seen a couple of cases recently where a prisoner was admitted, allocated to an activity and then attended. Later that day the prisoner is switched to an old booking because they've actually returned on a recall.
+
+This means that the prisoner is paid on the wrong booking in NOMIS (i.e. not the active booking) and this confuses the reconciliation.
+
+These can be ignored because the prisoner does actually get paid in NOMIS so there's not much to be done.
 
 ##### Re-running old attendance reconciliation errors
 
@@ -497,7 +552,7 @@ An activity update (event type `activities.activity-schedule.amended`) could inv
 * the activity details have changed
 * pay rates have been updated and/or deleted and/or created
 * schedule rules have been deleted and/or created
-* scheduled instances have been delete and/or created
+* scheduled instances have been deleted and/or created
 
 Normally the error will represent a validation failure which should appear in the traces. In theory this should not happen but if it does then either the validation in the Activities service or the validation in this service is wrong. Work out which is wrong and fix - when fixed the message will eventually be retried and succeed.
 
@@ -600,9 +655,10 @@ Action to take is:
 * Clear the message from the DLQ - it will never succeed
 * Inform DPS on `#collab-connect-dps-syscon` to delete the duplicate alert; i.e. the one that was failing to sync with no mapping record.
 
-## Contacts a.k.a Personal Relationships
+### Contacts a.k.a Personal Relationships
 
 DPS has different terminology for the 2 key entities to NOMIS:
+
 ---
 * NOMIS: Person
 * DPS: Contact
@@ -651,6 +707,52 @@ Authorization: Bearer {{$auth.token("hmpps-auth")}}
 }
 ```
 
+### Case notes
+
+#### Reconciliation mismatches
+
+There are 2 types of mismatch event - size differences and specific diffs in a case note which contains details of what fields are different.
+
+Watch out for size difference reconciliation errors due to :
+- A creation happening at the same time as the recon check;
+- Dupes caused by NULL audit_module_name column value;
+- Dupes caused by a timeout
+
+The reconciliation process can detect and automatically delete duplicates in some circumstances, though it will still report these.
+
+### Appointments
+
+This is a one way sync to Nomis.
+
+#### Reconciliation mismatches
+
+The appointments reconciliation currently (Nov 2025) just looks 28 days ahead rather than doing all.
+
+Mismatches are usually due to:
+- An appointment is in DPS only because the Nomis counterpart was deleted, probably very soon after the migration of that prison and
+before the P-Nomis screen was disabled. In this case there will be a mapping table entry.
+- An appointment is in Nomis only because it was created in Nomis, again very soon after the migration and
+  before the P-Nomis screen was disabled. In this case there will NOT be a mapping table entry.
+
+In both these cases it should be established whether an extra similar appointment has been created in the other system, if so the only action needed
+is to temporarily add the offending appointment ids to the exclude list.
+
+- An appointment is in Nomis only, and there is no mapping because a Nomis dupe has occurred when there was a timeout, 502 etc. on the
+  client side when POSTing the nomis creation (yet it succeeded on the nomis-api side).
+
+In this case the dupe should be deleted. You can directly call the nomis-api endpoint for this.
+
+Troubleshooting approach should be to look at OFFENDER_IND_SCHEDULES in the Nomis database to find when the appointment was created, then check appinsights at this time.
+
+### Non-associations
+
+This is a one way sync to Nomis.
+
+One scenario that still may not be successfully handled automatically is a merge where both merge noms ids have a NA with a 3rd party.
+In this case there is merge code which tries to avoid a unique key constraint error which would otherwise occur
+in the mapping service because 2 NAs have both parties the same and also the same sequence (usually 1). If this doesn't work, manual intervention is required to identify which NA is open
+and set its sequence to 2. The open one can be identified as being set as such in DPS and has no expiry date in Nomis. If neither has an expiry date in Nomis, a sync from DPS can be forced
+by e.g. editing the comment in the DPS UI, or the NA can be closed by calling the /close nomis-api endpoint.
 
 ## Architecture
 

@@ -38,19 +38,27 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_CONTACT_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISONER_RESTRICTION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_BALANCE_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON_TRANSACTIONS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes.CaseNotesReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonBalanceReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.organisations.OrganisationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.PrisonerRestrictionsReconciliationService
@@ -69,6 +77,7 @@ class BatchManagerTest {
   private val caseNotesReconciliationService = mock<CaseNotesReconciliationService>()
   private val contactPersonProfileDetailsReconService = mock<ContactPersonProfileDetailsReconciliationService>()
   private val contactPersonReconService = mock<ContactPersonReconciliationService>()
+  private val corePersonReconciliationService = mock<CorePersonReconciliationService>()
   private val courtSentencingReconciliationService = mock<CourtSentencingReconciliationService>()
   private val csipReconciliationService = mock<CSIPReconciliationService>()
   private val hmppsQueueService = mock<HmppsQueueService>()
@@ -76,13 +85,19 @@ class BatchManagerTest {
   private val incidentsReconciliationService = mock<IncidentsReconciliationService>()
   private val locationsReconciliationService = mock<LocationsReconciliationService>()
   private val nonAssociationsReconciliationService = mock<NonAssociationsReconciliationService>()
+  private val officialVisitsAllReconciliationService = mock<OfficialVisitsAllReconciliationService>()
+  private val officialVisitsAllMissingFromNOMISReconciliationService = mock<OfficialVisitsAllMissingFromNOMISReconciliationService>()
+  private val officialVisitsActiveScheduledReconciliationService = mock<OfficialVisitsActiveScheduledReconciliationService>()
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
+  private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
+  private val prisonTransactionsReconciliationService = mock<PrisonTransactionReconciliationService>()
+  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
+  private val temporaryAbsencesAllPrisonersReconciliationService = mock<TemporaryAbsencesAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
-  private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
-  private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
+  private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
   private val event = mock<ContextRefreshedEvent>()
   private val context = mock<ConfigurableApplicationContext>()
@@ -345,29 +360,116 @@ class BatchManagerTest {
     verify(context).close()
   }
 
+  @Test
+  fun `should call the prison transactions reconciliation service`() = runTest {
+    val batchManager = batchManager(PRISON_TRANSACTIONS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonTransactionsReconciliationService).generateReconciliationReport()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the core person reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.CORE_PERSON_ACTIVE_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(corePersonReconciliationService).generateReconciliationReport(true)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the core person full reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.CORE_PERSON_FULL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(corePersonReconciliationService).generateReconciliationReport(false)
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the official visits full reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsAllReconciliationService).generateAllVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the official visits full nomis missing reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ALL_MISSING_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsAllMissingFromNOMISReconciliationService).generateAllVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the official visits active scheduled reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.OFFICIAL_VISIT_ACTIVE_SCH_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(officialVisitsActiveScheduledReconciliationService).generateActiveScheduledVisitsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the visit slots reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.VISIT_SLOTS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(visitSlotsReconciliationService).generateVisitSlotsReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
+  fun `should call the TAP all prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.TAP_ALL_PRISONERS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(temporaryAbsencesAllPrisonersReconciliationService).generateTapAllPrisonersReconciliationReportBatch()
+    verify(context).close()
+  }
+
   private fun batchManager(batchType: BatchType) = BatchManager(
-    batchType,
-    activityDlqName,
-    activitiesReconService,
-    adjudicationsReconService,
-    alertsReconService,
-    appointmentsReconService,
-    caseNotesReconciliationService,
-    contactPersonProfileDetailsReconService,
-    contactPersonReconService,
-    courtSentencingReconciliationService,
-    csipReconciliationService,
-    hmppsQueueService,
-    incentivesReconciliationService,
-    incidentsReconciliationService,
-    locationsReconciliationService,
-    nonAssociationsReconciliationService,
-    organisationsReconciliationService,
-    prisonBalanceReconciliationService,
-    prisonerBalanceReconciliationService,
-    prisonerRestrictionsReconciliationService,
-    schedulesService,
-    sentencingReconciliationService,
-    visitBalanceReconciliationService,
+    batchType = batchType,
+    activitiesDlqName = activityDlqName,
+    activitiesReconService = activitiesReconService,
+    adjudicationsReconService = adjudicationsReconService,
+    alertsReconciliationService = alertsReconService,
+    appointmentsReconciliationService = appointmentsReconService,
+    caseNotesReconciliationService = caseNotesReconciliationService,
+    contactPersonProfileDetailsReconService = contactPersonProfileDetailsReconService,
+    contactPersonReconciliationService = contactPersonReconService,
+    corePersonReconciliationService = corePersonReconciliationService,
+    courtSentencingReconciliationService = courtSentencingReconciliationService,
+    csipReconciliationService = csipReconciliationService,
+    hmppsQueueService = hmppsQueueService,
+    incentivesReconciliationService = incentivesReconciliationService,
+    incidentsReconciliationService = incidentsReconciliationService,
+    locationsReconciliationService = locationsReconciliationService,
+    nonAssociationsReconciliationService = nonAssociationsReconciliationService,
+    officialVisitsAllReconciliationService = officialVisitsAllReconciliationService,
+    officialVisitsAllMissingFromNOMISReconciliationService = officialVisitsAllMissingFromNOMISReconciliationService,
+    officialVisitsActiveScheduledReconciliationService = officialVisitsActiveScheduledReconciliationService,
+    organisationReconciliationService = organisationsReconciliationService,
+    prisonBalanceReconciliationService = prisonBalanceReconciliationService,
+    prisonTransactionsReconciliationService = prisonTransactionsReconciliationService,
+    prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
+    prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
+    schedulesService = schedulesService,
+    sentencingReconciliationService = sentencingReconciliationService,
+    temporaryAbsencesAllPrisonersReconciliationService = temporaryAbsencesAllPrisonersReconciliationService,
+    visitBalancesReconciliationService = visitBalanceReconciliationService,
+    visitSlotsReconciliationService = visitSlotsReconciliationService,
   )
 }

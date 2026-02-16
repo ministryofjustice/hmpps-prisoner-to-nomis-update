@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-19.892.c21920a"
+    "version" : "2026-02-13.1297.b200786"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -834,6 +834,43 @@
         }
       }
     },
+    "/legacy/court-case/{courtCaseUuid}/case-references/refresh" : {
+      "put" : {
+        "tags" : [ "legacy-court-case-controller" ],
+        "summary" : "Refresh case references",
+        "description" : "This endpoint will refresh case references",
+        "operationId" : "refreshCaseReferences",
+        "parameters" : [ {
+          "name" : "courtCaseUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RefreshCaseReferences"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No content"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role"
+          }
+        }
+      }
+    },
     "/legacy/court-appearance/{lifetimeUuid}" : {
       "get" : {
         "tags" : [ "legacy-court-appearance-controller" ],
@@ -1604,7 +1641,7 @@
         "tags" : [ "court-case-controller" ],
         "summary" : "Refresh case references",
         "description" : "This endpoint will refresh case references",
-        "operationId" : "refreshCaseReferences",
+        "operationId" : "refreshCaseReferences_1",
         "parameters" : [ {
           "name" : "courtCaseUuid",
           "in" : "path",
@@ -1781,6 +1818,122 @@
         }
       }
     },
+    "/charge/{chargeUuid}" : {
+      "get" : {
+        "tags" : [ "charge-controller" ],
+        "summary" : "Retrieve charge details",
+        "description" : "This endpoint will retrieve charge details",
+        "operationId" : "getChargeDetails",
+        "parameters" : [ {
+          "name" : "chargeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns charge details",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Charge"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Charge"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Charge"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no charge at uuid",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Charge"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "charge-controller" ],
+        "summary" : "Create/ Update Charge",
+        "description" : "This endpoint will create/ update a charge in a given court appearance",
+        "operationId" : "updateCharge",
+        "parameters" : [ {
+          "name" : "chargeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateCharge"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns charge UUID",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateChargeResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateChargeResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CreateChargeResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/uploaded-documents" : {
       "post" : {
         "tags" : [ "uploaded-documents-controller" ],
@@ -1913,6 +2066,56 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SaveRecallResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/recall/is-possible" : {
+      "post" : {
+        "tags" : [ "recall-controller" ],
+        "summary" : "Check if recall is possible",
+        "description" : "check if recall is possible for given sentneces and recall type",
+        "operationId" : "isRecallPossible",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/IsRecallPossibleRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Returns if recall is possible.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/IsRecallPossibleResponse"
                 }
               }
             }
@@ -2731,6 +2934,67 @@
         }
       }
     },
+    "/sentence/unknown-recall-type" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Returns a list of sentences with the unknown recall type grouped by appearance",
+        "description" : "Returns a list of sentences with the unknown recall type grouped by appearance",
+        "operationId" : "getSentencesWithUnknownRecallType",
+        "parameters" : [ {
+          "name" : "sentenceUuids",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns a list of sentences with an unknown recall type grouped by appearance",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MissingSentenceAppearance"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MissingSentenceAppearance"
+                  }
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/MissingSentenceAppearance"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sentence/sentences-after-on-other-court-appearance-details" : {
       "get" : {
         "tags" : [ "sentence-controller" ],
@@ -2776,6 +3040,54 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SentencesAfterOnOtherCourtAppearanceDetailsResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence/has-sentences/{prisonerId}" : {
+      "get" : {
+        "tags" : [ "sentence-controller" ],
+        "summary" : "Check if prisoner has any sentences (non-deleted)",
+        "description" : "Returns true if the prisoner has at least one sentence, could be on any Court Case",
+        "operationId" : "hasSentences",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns true or false",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "boolean"
                 }
               }
             }
@@ -4025,6 +4337,65 @@
             "content" : {
               "application/json" : {
                 "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No active records found for this person",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/immigration-detention/court-appearance/{courtAppearanceUuid}" : {
+      "get" : {
+        "tags" : [ "immigration-detention-controller" ],
+        "summary" : "Retrieve immigration record by court appearance uuid",
+        "description" : "This endpoint will retrieve the court appearance and map it to the immigration detention dto",
+        "operationId" : "getImmigrationDetentionByCourtAppearanceUuid",
+        "parameters" : [ {
+          "name" : "courtAppearanceUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Return court appearance as immigration detention dto",
+            "content" : {
+              "application/json" : {
+                "schema" : {
                   "$ref" : "#/components/schemas/ImmigrationDetention"
                 }
               }
@@ -4473,65 +4844,6 @@
         }
       }
     },
-    "/charge/{chargeUuid}" : {
-      "get" : {
-        "tags" : [ "charge-controller" ],
-        "summary" : "Retrieve charge details",
-        "description" : "This endpoint will retrieve charge details",
-        "operationId" : "getChargeDetails",
-        "parameters" : [ {
-          "name" : "chargeUuid",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns charge details",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Charge"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Charge"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Charge"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found if no charge at uuid",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Charge"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/charge-outcome/{outcomeUuid}" : {
       "get" : {
         "tags" : [ "charge-outcome-controller" ],
@@ -4953,17 +5265,14 @@
           }
         } ],
         "responses" : {
-          "200" : {
-            "description" : "OK"
+          "204" : {
+            "description" : "No Content"
           },
           "401" : {
             "description" : "Unauthorised, requires a valid Oauth2 token"
           },
           "403" : {
             "description" : "Forbidden, requires an appropriate role"
-          },
-          "204" : {
-            "description" : "No Content"
           }
         }
       }
@@ -5003,7 +5312,7 @@
           },
           "recallTypeCode" : {
             "type" : "string",
-            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_56", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
           },
           "createdByUsername" : {
             "type" : "string"
@@ -5317,11 +5626,30 @@
           "legacyData" : {
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
           },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "performedByUser" : {
             "type" : "string"
           }
         },
         "required" : [ "active", "legacyData", "prisonerId" ]
+      },
+      "RefreshCaseReferences" : {
+        "type" : "object",
+        "properties" : {
+          "caseReferences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/CaseReferenceLegacyData"
+            }
+          },
+          "performedByUser" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "caseReferences" ]
       },
       "CourtAppearanceLegacyData" : {
         "type" : "object",
@@ -5341,7 +5669,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -5416,6 +5744,9 @@
           },
           "performedByUser" : {
             "type" : "string"
+          },
+          "offenceCode" : {
+            "type" : "string"
           }
         },
         "required" : [ "legacyData" ]
@@ -5483,9 +5814,13 @@
           "prisonerId" : {
             "type" : "string"
           },
+          "appearanceOutcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "immigrationDetentionRecordType" : {
             "type" : "string",
-            "enum" : [ "IS91", "DEPORTATION_ORDER", "NO_LONGER_OF_INTEREST" ]
+            "enum" : [ "IS91", "DEPORTATION_ORDER", "NO_LONGER_OF_INTEREST", "IMMIGRATION_BAIL", "UNKNOWN" ]
           },
           "recordDate" : {
             "type" : "string",
@@ -5506,14 +5841,22 @@
           },
           "createdByPrison" : {
             "type" : "string"
+          },
+          "courtAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
           }
         },
-        "required" : [ "createdByPrison", "createdByUsername", "immigrationDetentionRecordType", "prisonerId", "recordDate" ]
+        "required" : [ "appearanceOutcomeUuid", "createdByPrison", "createdByUsername", "immigrationDetentionRecordType", "prisonerId", "recordDate" ]
       },
       "SaveImmigrationDetentionResponse" : {
         "type" : "object",
         "properties" : {
           "immigrationDetentionUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "courtAppearanceUuid" : {
             "type" : "string",
             "format" : "uuid"
           }
@@ -5547,6 +5890,12 @@
             "format" : "uuid"
           },
           "terrorRelated" : {
+            "type" : "boolean"
+          },
+          "foreignPowerRelated" : {
+            "type" : "boolean"
+          },
+          "domesticViolenceRelated" : {
             "type" : "boolean"
           },
           "sentence" : {
@@ -5662,7 +6011,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "courtCode" : {
             "type" : "string"
@@ -5872,6 +6221,40 @@
           }
         },
         "required" : [ "sentenceUuid" ]
+      },
+      "IsRecallPossibleRequest" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "recallType" : {
+            "type" : "string",
+            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_56", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+          }
+        },
+        "required" : [ "recallType", "sentenceIds" ]
+      },
+      "IsRecallPossibleResponse" : {
+        "type" : "object",
+        "properties" : {
+          "isRecallPossible" : {
+            "type" : "string",
+            "enum" : [ "YES", "UNKNOWN_PRE_RECALL_MAPPING", "RECALL_TYPE_AND_SENTENCE_MAPPING_NOT_POSSIBLE" ]
+          },
+          "sentenceIds" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "isRecallPossible", "sentenceIds" ]
       },
       "LegacySentenceCreatedResponse" : {
         "type" : "object",
@@ -7142,9 +7525,13 @@
           },
           "dispositionCode" : {
             "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
           }
         },
-        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid" ]
+        "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "status" ]
       },
       "MergedFromCase" : {
         "type" : "object",
@@ -7240,6 +7627,71 @@
           }
         },
         "required" : [ "chargeUuid", "offenceCode" ]
+      },
+      "MissingSentenceAppearance" : {
+        "type" : "object",
+        "properties" : {
+          "appearanceUuid" : {
+            "type" : "string"
+          },
+          "courtCode" : {
+            "type" : "string"
+          },
+          "courtCaseReference" : {
+            "type" : "string"
+          },
+          "appearanceDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentences" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceCardDetails"
+            }
+          }
+        },
+        "required" : [ "appearanceDate", "appearanceUuid", "courtCode", "sentences" ]
+      },
+      "SentenceCardDetails" : {
+        "type" : "object",
+        "properties" : {
+          "offenceCode" : {
+            "type" : "string"
+          },
+          "offenceStartDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "sentenceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "countNumber" : {
+            "type" : "string"
+          },
+          "sentenceType" : {
+            "type" : "string"
+          },
+          "periodLengths" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PeriodLength"
+            }
+          },
+          "sentenceServeType" : {
+            "type" : "string"
+          },
+          "convictedDate" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        },
+        "required" : [ "chargeUuid", "offenceCode", "periodLengths", "sentenceServeType", "sentenceType", "sentenceUuid" ]
       },
       "CourtAppearanceAfterSentence" : {
         "type" : "object",
@@ -7363,7 +7815,7 @@
           },
           "recallType" : {
             "type" : "string",
-            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_56", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
           },
           "createdAt" : {
             "type" : "string",
@@ -7403,6 +7855,9 @@
         "type" : "object",
         "properties" : {
           "courtCaseReference" : {
+            "type" : "string"
+          },
+          "courtCaseUuid" : {
             "type" : "string"
           },
           "courtCode" : {
@@ -7554,6 +8009,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "sentences" : {
             "type" : "array",
             "items" : {
@@ -7561,7 +8020,7 @@
             }
           }
         },
-        "required" : [ "appearanceDate", "courtCode", "sentences" ]
+        "required" : [ "appearanceDate", "appearanceUuid", "courtCode", "sentences" ]
       },
       "SentenceToChainTo" : {
         "type" : "object",
@@ -7577,6 +8036,10 @@
             "type" : "string",
             "format" : "date"
           },
+          "chargeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "sentenceUuid" : {
             "type" : "string",
             "format" : "uuid"
@@ -7588,7 +8051,7 @@
             "$ref" : "#/components/schemas/ChargeLegacyData"
           }
         },
-        "required" : [ "offenceCode", "sentenceUuid" ]
+        "required" : [ "chargeUuid", "offenceCode", "sentenceUuid" ]
       },
       "SentencesToChainToResponse" : {
         "type" : "object",
@@ -7736,9 +8199,12 @@
           },
           "isSubList" : {
             "type" : "boolean"
+          },
+          "dispositionCode" : {
+            "type" : "string"
           }
         },
-        "required" : [ "displayOrder", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
+        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid" ]
       },
       "CourtCase" : {
         "type" : "object",
@@ -7811,7 +8277,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "courtCode" : {
             "type" : "string"
@@ -8295,7 +8761,7 @@
           },
           "recallType" : {
             "type" : "string",
-            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
+            "enum" : [ "LR", "FTR_14", "FTR_28", "FTR_56", "FTR_HDC_14", "FTR_HDC_28", "CUR_HDC", "IN_HDC" ]
           },
           "recallBy" : {
             "type" : "string"
@@ -8442,7 +8908,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -8481,6 +8947,10 @@
           "merged" : {
             "type" : "boolean"
           },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ]
+          },
           "courtCaseLegacyData" : {
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
           },
@@ -8491,7 +8961,7 @@
             }
           }
         },
-        "required" : [ "active", "appearances", "courtCaseUuid", "merged", "prisonerId" ]
+        "required" : [ "active", "appearances", "courtCaseUuid", "merged", "prisonerId", "status" ]
       },
       "ReconciliationNextCourtAppearance" : {
         "type" : "object",
@@ -8502,7 +8972,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "courtId" : {
             "type" : "string"
@@ -8642,7 +9112,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "charges" : {
             "type" : "array",
@@ -8669,7 +9139,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "courtId" : {
             "type" : "string"
@@ -8684,12 +9154,16 @@
             "type" : "string",
             "format" : "uuid"
           },
+          "courtAppearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "prisonerId" : {
             "type" : "string"
           },
           "immigrationDetentionRecordType" : {
             "type" : "string",
-            "enum" : [ "IS91", "DEPORTATION_ORDER", "NO_LONGER_OF_INTEREST" ]
+            "enum" : [ "IS91", "DEPORTATION_ORDER", "NO_LONGER_OF_INTEREST", "IMMIGRATION_BAIL", "UNKNOWN" ]
           },
           "recordDate" : {
             "type" : "string",
@@ -8714,7 +9188,7 @@
             "enum" : [ "NOMIS", "DPS" ]
           }
         },
-        "required" : [ "createdAt", "immigrationDetentionRecordType", "immigrationDetentionUuid", "prisonerId", "recordDate", "source" ]
+        "required" : [ "courtAppearanceUuid", "createdAt", "immigrationDetentionRecordType", "immigrationDetentionUuid", "prisonerId", "recordDate", "source" ]
       },
       "RecallableCourtCase" : {
         "type" : "object",
@@ -8919,12 +9393,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -8939,15 +9407,21 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -8968,12 +9442,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -9005,12 +9479,6 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
           "size" : {
             "type" : "integer",
             "format" : "int32"
@@ -9025,15 +9493,21 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
           },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
           },
           "empty" : {
             "type" : "boolean"
@@ -9043,6 +9517,10 @@
       "PagedAppearancePeriodLength" : {
         "type" : "object",
         "properties" : {
+          "periodLengthUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "years" : {
             "type" : "integer",
             "format" : "int32"
@@ -9067,7 +9545,7 @@
             "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
           }
         },
-        "required" : [ "order", "type" ]
+        "required" : [ "order", "periodLengthUuid", "type" ]
       },
       "PagedCharge" : {
         "type" : "object",
@@ -9086,6 +9564,9 @@
           "offenceEndDate" : {
             "type" : "string",
             "format" : "date"
+          },
+          "terrorRelated" : {
+            "type" : "boolean"
           },
           "outcome" : {
             "$ref" : "#/components/schemas/PagedChargeOutcome"
@@ -9173,6 +9654,10 @@
       "PagedLatestCourtAppearance" : {
         "type" : "object",
         "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "caseReference" : {
             "type" : "string"
           },
@@ -9206,11 +9691,15 @@
             }
           }
         },
-        "required" : [ "charges", "courtCode", "warrantDate", "warrantType" ]
+        "required" : [ "appearanceUuid", "charges", "courtCode", "warrantDate", "warrantType" ]
       },
       "PagedMergedFromCase" : {
         "type" : "object",
         "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "caseReference" : {
             "type" : "string"
           },
@@ -9226,11 +9715,15 @@
             "format" : "date"
           }
         },
-        "required" : [ "courtCode", "mergedFromDate", "warrantDate" ]
+        "required" : [ "appearanceUuid", "courtCode", "mergedFromDate", "warrantDate" ]
       },
       "PagedMergedToCase" : {
         "type" : "object",
         "properties" : {
+          "appearanceUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
           "caseReference" : {
             "type" : "string"
           },
@@ -9246,7 +9739,7 @@
             "format" : "date"
           }
         },
-        "required" : [ "courtCode", "mergedToDate", "warrantDate" ]
+        "required" : [ "appearanceUuid", "courtCode", "mergedToDate", "warrantDate" ]
       },
       "PagedNextCourtAppearance" : {
         "type" : "object",
@@ -9257,7 +9750,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:28.324118608"
+            "example" : "06:23:48.105763443"
           },
           "courtCode" : {
             "type" : "string"

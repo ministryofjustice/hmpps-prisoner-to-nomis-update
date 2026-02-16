@@ -19,6 +19,8 @@ import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException.BadRequest
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto.MappingType.INCENTIVE_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 
 @SpringAPIServiceTest
@@ -76,7 +78,7 @@ internal class IncentivesMappingServiceTest {
           "nomisBookingId": 456,
           "nomisIncentiveSequence": 3,
           "incentiveId": 1234,
-          "mappingType": "TYPE"
+          "mappingType": "NOMIS_CREATED"
         }
         """.trimMargin(),
       )
@@ -97,7 +99,7 @@ internal class IncentivesMappingServiceTest {
           "nomisBookingId": 456,
           "nomisIncentiveSequence": 3,
           "incentiveId": 1234,
-          "mappingType": "A_TYPE"
+          "mappingType": "INCENTIVE_CREATED"
         }
         """.trimMargin(),
       )
@@ -124,5 +126,5 @@ internal class IncentivesMappingServiceTest {
     }
   }
 
-  private fun newMapping() = IncentiveMappingDto(nomisBookingId = 456L, nomisIncentiveSequence = 3, incentiveId = 1234L, mappingType = "A_TYPE")
+  private fun newMapping() = IncentiveMappingDto(nomisBookingId = 456L, nomisIncentiveSequence = 3, incentiveId = 1234L, mappingType = INCENTIVE_CREATED)
 }

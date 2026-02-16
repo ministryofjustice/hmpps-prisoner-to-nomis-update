@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -8,16 +7,17 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TransactionMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import java.util.UUID
 
 @Component
-class TransactionMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class TransactionMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetByNomisTransactionIdOrNull(
-    nomisTransactionId: Long = 123456,
+    nomisTransactionId: Long = 1234,
     dpsTransactionId: String = UUID.randomUUID().toString(),
     mapping: TransactionMappingDto? = TransactionMappingDto(
       offenderNo = "A1234KT",
@@ -33,7 +33,7 @@ class TransactionMappingApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
-            .withBody(objectMapper.writeValueAsString(mapping)),
+            .withBody(jsonMapper.writeValueAsString(mapping)),
         ),
       )
     } ?: run {
@@ -42,7 +42,7 @@ class TransactionMappingApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.NOT_FOUND.value())
-            .withBody(objectMapper.writeValueAsString(ErrorResponse(status = 404))),
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = 404))),
         ),
       )
     }

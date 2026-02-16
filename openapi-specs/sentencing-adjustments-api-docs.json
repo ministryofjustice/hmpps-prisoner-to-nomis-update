@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-05.76.d4cbdd2"
+    "version" : "2026-01-12.146.22c17d3"
   },
   "servers" : [ {
     "url" : "https://adjustments-api-dev.hmpps.service.justice.gov.uk",

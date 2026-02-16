@@ -27,12 +27,9 @@ class FinanceDpsApiService(
   private val syncApi = NOMISSyncApi(webClient)
   private val prisonerApi = PrisonerTrustAccountsApi(webClient)
 
-  suspend fun getOffenderTransaction(id: UUID): SyncOffenderTransactionResponse = syncApi
-    .getOffenderTransactionById(id)
-    .awaitSingle()
-
-  suspend fun getGeneralLedgerTransaction(id: UUID): SyncGeneralLedgerTransactionResponse = syncApi
-    .getGeneralLedgerTransactionById(id)
+  suspend fun getPrisonAccounts(prisonId: String): GeneralLedgerBalanceDetailsList = syncApi
+    .listGeneralLedgerBalances(prisonId)
+    .retryWhen(backoffSpec)
     .awaitSingle()
 
   suspend fun getPrisonerAccounts(prisonNumber: String): PrisonerEstablishmentBalanceDetailsList = syncApi
@@ -40,13 +37,17 @@ class FinanceDpsApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonerSubAccountDetails(prisonerNo: String, account: Int): PrisonerSubAccountDetails = prisonerApi
-    .getPrisonerSubAccountDetails(prisonerNo, account)
-    .retryWhen(backoffSpec)
+  suspend fun getPrisonTransaction(id: UUID): SyncGeneralLedgerTransactionResponse = syncApi
+    .getGeneralLedgerTransactionById(id)
     .awaitSingle()
 
-  suspend fun getPrisonAccounts(prisonId: String): GeneralLedgerBalanceDetailsList = syncApi
-    .listGeneralLedgerBalances(prisonId)
+  suspend fun getOffenderTransaction(id: UUID): SyncOffenderTransactionResponse = syncApi
+    .getOffenderTransactionById(id)
+    .awaitSingle()
+
+  // TODO check if this is still needed
+  suspend fun getPrisonerSubAccountDetails(prisonerNo: String, account: Int): PrisonerSubAccountDetails = prisonerApi
+    .getPrisonerSubAccountDetails(prisonerNo, account)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }

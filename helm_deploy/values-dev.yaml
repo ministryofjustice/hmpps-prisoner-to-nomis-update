@@ -19,7 +19,7 @@ generic-service:
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_COURT_SENTENCING: https://remand-and-sentencing-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ADJUDICATIONS: https://manage-adjudications-api-dev.hmpps.service.justice.gov.uk
-    API_BASE_URL_FINANCE: https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_FINANCE: https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_NON_ASSOCIATIONS: https://non-associations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_LOCATIONS: https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ALERTS: https://alerts-api-dev.hmpps.service.justice.gov.uk
@@ -29,7 +29,9 @@ generic-service:
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-dev.prison.service.justice.gov.uk
+    API_BASE_URL_CORE_PERSON: https://hmpps-person-record-dev.hmpps.service.justice.gov.uk
     API_BASE_URL_EXT_MOVEMENTS: https://external-movements-api-dev.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api-dev.hmpps.service.justice.gov.uk
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -52,6 +54,8 @@ generic-service:
     REPORTS_CONTACT-PERSON_PRISONER-CONTACT_RECONCILIATION_PAGE-SIZE: 5
     REPORTS_CONTACT-PERSON_PERSON-CONTACT_RECONCILIATION_PAGE-SIZE: 10
     REPORTS_PRISONER_BALANCE_RECONCILIATION_FILTER_PRISON: ASI,BWI,LEI
+    SPRINGDOC_API-DOCS_ENABLED: "true"
+    SPRINGDOC_SWAGGER-UI_ENABLED: "true"
 
   # The name has max length of 21 chars (Cronjob name max length is 52 chars, including prefix "hmpps-prisoner-to-nomis-update-")
   # The type must exist in enum BatchType
@@ -63,6 +67,18 @@ generic-service:
     - name: prisoner-bal-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
+    - name: core-person-recon
+      type: CORE_PERSON_FULL_RECON
+      schedule: "30 12 * * *"
+      suspend: true
+    - name: core-person-ac-recon
+      type: COREPERSON_ACTIVE_RECON
+      schedule: "30 14 * * *"
+      suspend: true
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   businessHoursOnly: true
@@ -118,5 +134,8 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-dev-hmpps_prisoner_to_nomis_externalmovements_dlq"
+    officialvisits:
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_officialvisits_queue"
+      - "syscon-devs-dev-hmpps_prisoner_to_nomis_officialvisits_dlq"
 
 

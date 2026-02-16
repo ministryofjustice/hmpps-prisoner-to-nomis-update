@@ -11,8 +11,10 @@ import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
 import org.mockito.Captor
+import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
@@ -26,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
+@ExtendWith(MockitoExtension::class)
 class LocationsResourceIntTest(
   @Autowired private val locationsReconciliationService: LocationsReconciliationService,
 ) : IntegrationTestBase() {
@@ -142,7 +145,8 @@ class LocationsResourceIntTest(
     },
     "certification": {
       "certified": true,
-      "certifiedNormalAccommodation": 1
+      "certifiedNormalAccommodation": 1,
+      "capacityOfCertifiedCell": 3
     },
     "orderWithinParentLocation": 1,
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",

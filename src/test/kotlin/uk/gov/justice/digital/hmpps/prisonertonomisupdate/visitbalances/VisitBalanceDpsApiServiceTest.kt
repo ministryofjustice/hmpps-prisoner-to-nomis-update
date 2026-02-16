@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances.VisitBalanceDpsApiExtension.Companion.visitBalanceDpsApi
 import java.util.UUID
 
@@ -18,6 +19,7 @@ import java.util.UUID
   VisitBalanceDpsApiService::class,
   VisitBalanceConfiguration::class,
   VisitBalanceDpsApiMockServer::class,
+  RetryApiService::class,
 )
 class VisitBalanceDpsApiServiceTest {
   @Autowired

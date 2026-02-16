@@ -31,25 +31,9 @@ generic-service:
     API_BASE_URL_SENTENCE_ADJUSTMENTS: https://adjustments-api.hmpps.service.justice.gov.uk
     API_BASE_URL_VISITS: https://visit-scheduler.prison.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api.prison.service.justice.gov.uk
+    API_BASE_URL_CORE_PERSON: https://hmpps-person-record.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
-    FEATURE_EVENT_COURT_CASE_INSERTED: false
-    FEATURE_EVENT_COURT_CASE_DELETED: false
-    FEATURE_EVENT_COURT_APPEARANCE_INSERTED: false
-    FEATURE_EVENT_COURT_APPEARANCE_DELETED: false
-    FEATURE_EVENT_CHARGE_INSERTED: false
-    FEATURE_EVENT_CHARGE_UPDATED: false
-    FEATURE_EVENT_SENTENCE_INSERTED: false
-    FEATURE_EVENT_SENTENCE_UPDATED: false
-    FEATURE_EVENT_SENTENCE_DELETED: false
-    FEATURE_EVENT_SENTENCE_PERIOD_LENGTH_INSERTED: false
-    FEATURE_EVENT_SENTENCE_PERIOD_LENGTH_UPDATED: false
-    FEATURE_EVENT_SENTENCE_PERIOD_LENGTH_DELETED: false
-    FEATURE_EVENT_COURT_APPEARANCE_UPDATED: false
-    FEATURE_EVENT_LEGACY_COURT_CASE_REFERENCES_UPDATED: false
-    FEATURE_EVENT_SENTENCE_FIX_SINGLE_CHARGE_INSERTED: false
-    FEATURE_EVENT_RECALL_INSERTED: false
-    FEATURE_EVENT_RECALL_UPDATED: false
-    FEATURE_EVENT_RECALL_DELETED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -93,16 +77,29 @@ generic-service:
     - name: casenote-active-recon
       type: CASE_NOTES_ACTIVE_RECON
       schedule: "30 19 * * SUN,MON,TUE,WED,THU"
+      resources:
+        requests:
+          cpu: 10m
+          memory: 640Mi
+        limits:
+          cpu: 2000m
+          memory: 2048Mi
     - name: casenote-full-recon
       type: CASE_NOTES_FULL_RECON
       schedule: "30 19 * * FRI"
+      resources:
+        requests:
+          cpu: 10m
+          memory: 640Mi
+        limits:
+          cpu: 2000m
+          memory: 2048Mi
     - name: con-per-prf-det-recon
       type: CONTACT_PERSON_PROFILE_DETAILS_RECON
       schedule: "30 3 * * *"
     - name: court-case-recon
       type: COURT_CASE_PRISONER_RECON
-      schedule: "10 3 * * *"
-      suspend: true
+      schedule: "0 19 * * SAT"
     - name: court-case-a-recon
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "10 3 * * *"
@@ -142,6 +139,25 @@ generic-service:
     - name: visit-balance-recon
       type: VISIT_BALANCE_RECON
       schedule: "45 4 * * *"
+    - name: official-visits-all-recon
+      type: OFFICIAL_VISIT_ALL_RECON
+      schedule: "30 5 * * SAT"
+      suspend: true
+    - name: official-visits-all-missing-recon
+      type: OFFICIAL_VISIT_ALL_MISSING_RECON
+      schedule: "30 3 * * SAT"
+      suspend: true
+    - name: official-visits-active-sch-recon
+      type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
+      schedule: "10 2 * * SUN,MON,TUE,WED,THU"
+      suspend: true
+    - name: tap-all-prisoners-recon
+      type: TAP_ALL_PRISONERS_RECON
+      schedule: "00 1 * * *"
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
 
 generic-prometheus-alerts:
   sqsNumberAlertQueueMappings:
@@ -195,3 +211,6 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-prod-hmpps_prisoner_to_nomis_externalmovements_dlq"
+    officialvisits:
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_queue"
+      - "syscon-devs-prod-hmpps_prisoner_to_nomis_officialvisits_dlq"

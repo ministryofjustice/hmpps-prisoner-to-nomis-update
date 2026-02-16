@@ -248,10 +248,8 @@ class IncidentsNomisApiServiceTest {
         mockServer.stubGetReconciliationOpenIncidentIds("ASI", 33, 35)
 
         val incidentIds = apiService.getOpenIncidentIds("ASI", 2, 5)
-
-        assertThat(incidentIds.totalElements).isEqualTo(40)
-        assertThat(incidentIds.content.size).isEqualTo(3)
-        assertThat(incidentIds.content).extracting<Long>(IncidentIdResponse::incidentId).containsExactly(33, 34, 35)
+        assertThat(incidentIds.size).isEqualTo(3)
+        assertThat(incidentIds).extracting<Long>(IncidentIdResponse::incidentId).containsExactly(33, 34, 35)
       }
     }
   }

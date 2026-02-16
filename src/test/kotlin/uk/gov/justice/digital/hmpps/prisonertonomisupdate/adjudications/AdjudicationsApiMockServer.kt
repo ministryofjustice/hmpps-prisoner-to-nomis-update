@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -12,6 +11,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
@@ -37,11 +37,11 @@ class AdjudicationsApiExtension :
   companion object {
     @JvmField
     val adjudicationsApiServer = AdjudicationsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     adjudicationsApiServer.start()
   }
 
@@ -145,7 +145,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       get("/reported-adjudications/$chargeNumber/v2").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(AdjudicationsApiExtension.objectMapper.writeValueAsString(ReportedAdjudicationResponse(reportedAdjudication = adjudicationDto)))
+          .withBody(AdjudicationsApiExtension.jsonMapper.writeValueAsString(ReportedAdjudicationResponse(reportedAdjudication = adjudicationDto)))
           .withStatus(200),
       ),
     )
@@ -451,7 +451,7 @@ class AdjudicationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun getCountFor(url: String) = this.findAll(WireMock.getRequestedFor(WireMock.urlEqualTo(url))).count()
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(AdjudicationsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(AdjudicationsApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 }

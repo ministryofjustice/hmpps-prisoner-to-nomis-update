@@ -2,7 +2,7 @@
 
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -21,10 +21,13 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import java.time.LocalDate
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(SentencingAdjustmentsApiService::class, SentencingConfiguration::class)
 internal class SentencingAdjustmentsApiServiceTest {
+
+  val adjustmentId = UUID.randomUUID().toString()
 
   @Autowired
   private lateinit var sentencingAdjustmentsApiService: SentencingAdjustmentsApiService
@@ -34,23 +37,33 @@ internal class SentencingAdjustmentsApiServiceTest {
   inner class GetAdjustment {
     @BeforeEach
     internal fun setUp() {
-      sentencingAdjustmentsApi.stubAdjustmentGet(adjustmentId = "1234")
+      sentencingAdjustmentsApi.stubAdjustmentGet(adjustmentId = adjustmentId)
     }
 
     @Test
     fun `should call api with OAuth2 token`(): Unit = runTest {
-      sentencingAdjustmentsApiService.getAdjustment("1234")
+      sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
 
       sentencingAdjustmentsApi.verify(
-        getRequestedFor(urlEqualTo("/legacy/adjustments/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 
     @Test
     internal fun `will parse data for a sentence adjustment`(): Unit = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGet(
-        adjustmentId = "1234",
+        adjustmentId = adjustmentId,
         adjustmentType = "RX",
         adjustmentDate = "2022-01-01",
         adjustmentDays = 1,
@@ -59,7 +72,7 @@ internal class SentencingAdjustmentsApiServiceTest {
         comment = "Remand added",
         active = true,
       )
-      val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
+      val adjustment = sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
 
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
       assertThat(adjustment.adjustmentType.value).isEqualTo("RX")
@@ -72,12 +85,12 @@ internal class SentencingAdjustmentsApiServiceTest {
     @Test
     internal fun `will parse data for a key date adjustment`() = runTest {
       sentencingAdjustmentsApi.stubAdjustmentGet(
-        adjustmentId = "1234",
+        adjustmentId = adjustmentId,
         adjustmentType = "ADA",
         adjustmentDate = "2022-01-01",
         adjustmentDays = 1,
       )
-      val adjustment = sentencingAdjustmentsApiService.getAdjustment("1234")
+      val adjustment = sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
 
       assertThat(adjustment.adjustmentDate).isEqualTo(LocalDate.parse("2022-01-01"))
       assertThat(adjustment.adjustmentType.value).isEqualTo("ADA")
@@ -89,19 +102,19 @@ internal class SentencingAdjustmentsApiServiceTest {
 
     @Test
     internal fun `when adjustment is not found an exception is thrown`() = runTest {
-      sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 404)
+      sentencingAdjustmentsApi.stubAdjustmentGetWithError(adjustmentId, status = 404)
 
       assertThrows<NotFound> {
-        sentencingAdjustmentsApiService.getAdjustment("1234")
+        sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
       }
     }
 
     @Test
     internal fun `when any bad response is received an exception is thrown`() = runTest {
-      sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 503)
+      sentencingAdjustmentsApi.stubAdjustmentGetWithError(adjustmentId, status = 503)
 
       assertThrows<ServiceUnavailable> {
-        sentencingAdjustmentsApiService.getAdjustment("1234")
+        sentencingAdjustmentsApiService.getAdjustment(adjustmentId)
       }
     }
   }
@@ -110,24 +123,34 @@ internal class SentencingAdjustmentsApiServiceTest {
   inner class GetAdjustmentOrNull {
     @BeforeEach
     internal fun setUp() {
-      sentencingAdjustmentsApi.stubAdjustmentGet(adjustmentId = "1234")
+      sentencingAdjustmentsApi.stubAdjustmentGet(adjustmentId = adjustmentId)
     }
 
     @Test
     fun `should call api with OAuth2 token`(): Unit = runTest {
-      sentencingAdjustmentsApiService.getAdjustmentOrNull("1234")
+      sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
 
       sentencingAdjustmentsApi.verify(
-        getRequestedFor(urlEqualTo("/legacy/adjustments/1234"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/legacy/adjustments/$adjustmentId"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 
     @Test
     internal fun `when adjustment is not found it will return null`() = runTest {
-      sentencingAdjustmentsApi.stubAdjustmentGetWithError("1234", status = 404)
+      sentencingAdjustmentsApi.stubAdjustmentGetWithError(adjustmentId, status = 404)
 
-      assertThat(sentencingAdjustmentsApiService.getAdjustmentOrNull("1234")).isNull()
+      assertThat(sentencingAdjustmentsApiService.getAdjustmentOrNull(adjustmentId)).isNull()
     }
   }
 
@@ -145,7 +168,17 @@ internal class SentencingAdjustmentsApiServiceTest {
 
       sentencingAdjustmentsApi.verify(
         getRequestedFor(urlEqualTo("/adjustments?person=A1234AA"))
-          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should call api with legacy content header`(): Unit = runTest {
+      sentencingAdjustmentsApiService.getAdjustments("A1234AA")
+
+      sentencingAdjustmentsApi.verify(
+        getRequestedFor(urlEqualTo("/adjustments?person=A1234AA"))
+          .withHeader("Content-Type", equalTo("application/vnd.nomis-offence+json")),
       )
     }
 

@@ -100,7 +100,7 @@ suspend fun <MAPPING_DTO> createMapping(
     .onFailure { e ->
       telemetryClient?.trackEvent(
         "$name-mapping-create-failed",
-        telemetryAttributes,
+        mutableMapOf("reason" to (e.message ?: "Unknown error")) + telemetryAttributes,
         null,
       )
       when (e) {

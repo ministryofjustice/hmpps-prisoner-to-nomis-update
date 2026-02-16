@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -11,6 +10,7 @@ import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contact
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.ContactPersonDpsApiExtension.Companion.contactAddressPhone
@@ -61,7 +61,7 @@ class ContactPersonDpsApiExtension :
   companion object {
     @JvmField
     val dpsContactPersonServer = ContactPersonDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
 
     fun contact() = SyncContact(
       id = 12345,
@@ -285,7 +285,7 @@ class ContactPersonDpsApiExtension :
 
   override fun beforeAll(context: ExtensionContext) {
     dpsContactPersonServer.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -320,7 +320,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -331,7 +331,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -343,7 +343,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -355,7 +355,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -366,7 +366,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -377,7 +377,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -389,7 +389,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -400,7 +400,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -411,7 +411,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -426,7 +426,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             aResponse()
               .withStatus(200)
               .withHeader("Content-Type", "application/json")
-              .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+              .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
           ),
       )
     } else {
@@ -448,7 +448,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+            .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -459,7 +459,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+          .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -470,7 +470,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = totalElements), content = contactIds.map { SyncContactId(it) }))),
+          .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(PagedModelSyncContactId(page = PageMetadata(totalElements = totalElements), content = contactIds.map { SyncContactId(it) }))),
       ),
     )
   }
@@ -481,7 +481,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(PagedModelPrisonerRestrictionId(page = PageMetadata(totalElements = totalElements), content = prisonerRestrictionsIds.map { PrisonerRestrictionId(it) }))),
+          .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(PagedModelPrisonerRestrictionId(page = PageMetadata(totalElements = totalElements), content = prisonerRestrictionsIds.map { PrisonerRestrictionId(it) }))),
       ),
     )
   }
@@ -504,7 +504,7 @@ class ContactPersonDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
             aResponse()
               .withStatus(200)
               .withHeader("Content-Type", "application/json")
-              .withBody(ContactPersonDpsApiExtension.objectMapper.writeValueAsString(response)),
+              .withBody(ContactPersonDpsApiExtension.jsonMapper.writeValueAsString(response)),
           ),
       )
     }

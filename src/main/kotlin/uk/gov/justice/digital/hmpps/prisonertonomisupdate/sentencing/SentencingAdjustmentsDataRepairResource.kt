@@ -30,8 +30,10 @@ class SentencingAdjustmentsDataRepairResource(
     @PathVariable adjustmentId: String,
     @Schema(description = "Whether status of the DPS should be propagated to NOMIS", required = false, defaultValue = "false")
     @RequestParam(name = "force-status", defaultValue = "false") forceStatus: Boolean,
+    @Schema(description = "Whether status of the NOMIS adjustment should be set to true", required = false, defaultValue = "false")
+    @RequestParam(name = "set-active", defaultValue = "false") setActive: Boolean,
   ) {
-    sentencingAdjustmentsService.repairAdjustment(offenderNo = offenderNo, adjustmentId = adjustmentId, forceStatus = forceStatus)
+    sentencingAdjustmentsService.repairAdjustment(offenderNo = offenderNo, adjustmentId = adjustmentId, forceStatus = forceStatus, setActive = setActive)
     telemetryClient.trackEvent(
       "to-nomis-synch-adjustment-repair",
       mapOf(

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
@@ -9,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.exactly
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matching
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import org.junit.jupiter.api.extension.AfterAllCallback
@@ -18,6 +18,7 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.http.MediaType.APPLICATION_JSON_VALUE
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.DescriptionAddendum
@@ -45,11 +46,11 @@ class IncidentsDpsApiExtension :
   companion object {
     @JvmField
     val incidentsDpsApi = IncidentsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     incidentsDpsApi.start()
   }
 
@@ -80,7 +81,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetIncident(incident: ReportWithDetails = dpsIncident()) {
     stubFor(
-      get(urlMatching("/incident-reports/${incident.id}/with-details"))
+      get(urlEqualTo("/incident-reports/${incident.id}/with-details"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -90,13 +91,13 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetIncidentByNomisId(nomisIncidentId: Long) {
+  fun stubGetIncidentByNomisId(nomisIncidentId: Long = 1234, response: ReportWithDetails = dpsIncident().copy(reportReference = nomisIncidentId.toString())) {
     stubFor(
       get(urlMatching("/incident-reports/reference/$nomisIncidentId/with-details")).willReturn(
         aResponse()
           .withStatus(HttpStatus.OK.value())
           .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-          .withBody(dpsIncident().copy(reportReference = nomisIncidentId.toString())),
+          .withBody(response),
       ),
     )
   }
@@ -149,7 +150,7 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun verifyGetIncidentDetail(times: Int = 1) = verify(exactly(times), getRequestedFor(urlMatching("/incident-reports/reference/[0-9]+/with-details")))
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(IncidentsDpsApiExtension.objectMapper.writeValueAsString(body))
+    this.withBody(IncidentsDpsApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 }
@@ -163,7 +164,7 @@ fun dpsBasicIncident(dpsIncidentId: String = "fb4b2e91-91e7-457b-aa17-797f8c5c2f
   title = "There was an incident in the exercise yard",
   description = "Fred and Jimmy were fighting outside.",
   reportedBy = "JSMITH",
-  reportedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
+  reportedAt = LocalDateTime.parse("2021-07-05T10:35:17.12345"),
   status = ReportBasic.Status.DRAFT,
   createdAt = LocalDateTime.parse("2021-07-05T10:35:17"),
   modifiedAt = LocalDateTime.parse("2021-07-05T10:35:17"),
@@ -184,7 +185,7 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
   nomisStatus = "AWAN",
   status = ReportWithDetails.Status.AWAITING_REVIEW,
   reportedBy = "FSTAFF_GEN",
-  reportedAt = LocalDateTime.parse("2021-07-07T10:35:17"),
+  reportedAt = LocalDateTime.parse("2021-07-07T10:35:17.12345"),
   questions = listOf(
     Question(
       code = "1234",
@@ -360,4 +361,13 @@ fun dpsIncident(): ReportWithDetails = ReportWithDetails(
       changedBy = "JSMITH",
     ),
   ),
+)
+
+val dpsQuestionWithNoAnswers = Question(
+  code = "5678",
+  question = "Was anybody hurt?",
+  additionalInformation = null,
+  sequence = 3,
+  responses = listOf(),
+  label = "Was anybody hurt?",
 )

@@ -1,23 +1,23 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListenerNoMapping
 import java.util.concurrent.CompletableFuture
 
 @Service
 class VisitBalanceDomainEventListener(
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   private val service: VisitBalanceService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListenerNoMapping(
-  objectMapper = objectMapper,
+  jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
   domain = "visitbalance",

@@ -1,12 +1,12 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.fasterxml.jackson.databind.JsonNode
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
 import org.springframework.data.domain.PageImpl
 import org.springframework.data.domain.PageRequest
+import tools.jackson.databind.JsonNode
 
 val log: Logger = LoggerFactory.getLogger("HelperApi")
 
@@ -20,7 +20,7 @@ suspend fun <T> doApiCallWithRetries(api: suspend () -> T) = runCatching {
   api()
 }.getOrThrow()
 
-class RestResponsePage<T>(
+class RestResponsePage<T : Any>(
   @JsonProperty("content") content: List<T>,
   @JsonProperty("number") number: Int,
   @JsonProperty("size") size: Int,
@@ -30,4 +30,4 @@ class RestResponsePage<T>(
   pageable: JsonNode,
 ) : PageImpl<T>(content, PageRequest.of(number, size), totalElements)
 
-inline fun <reified T> typeReference() = object : ParameterizedTypeReference<T>() {}
+inline fun <reified T : Any> typeReference() = object : ParameterizedTypeReference<T>() {}

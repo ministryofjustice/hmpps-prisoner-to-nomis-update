@@ -512,12 +512,16 @@ class ActivitiesNomisApiServiceTest {
         {
           "bookingId": 1,
           "offenderNo": "A1234AA",
-          "location": "BXI"
+          "location": "BXI",
+          "offenderId": 1234,
+          "active": true
         },
         {
           "bookingId": 2,
           "offenderNo": "A1234BB",
-          "location": "OUT"
+          "location": "OUT",
+          "offenderId": 1232,
+          "active": false
         }
       ]
     """.trimIndent()

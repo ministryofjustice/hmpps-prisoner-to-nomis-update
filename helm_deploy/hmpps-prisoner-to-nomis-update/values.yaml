@@ -62,6 +62,8 @@ generic-service:
       APPOINTMENTS_CLIENT_SECRET: "APPOINTMENTS_CLIENT_SECRET"
       CASENOTES_CLIENT_ID: "CASENOTES_CLIENT_ID"
       CASENOTES_CLIENT_SECRET: "CASENOTES_CLIENT_SECRET"
+      CORE_PERSON_CLIENT_ID: "CORE_PERSON_CLIENT_ID"
+      CORE_PERSON_CLIENT_SECRET: "CORE_PERSON_CLIENT_SECRET"
       COURT_SENTENCING_CLIENT_ID: "COURT_SENTENCING_CLIENT_ID"
       COURT_SENTENCING_CLIENT_SECRET: "COURT_SENTENCING_CLIENT_SECRET"
       CSIP_CLIENT_ID: "CSIP_CLIENT_ID"
@@ -90,6 +92,8 @@ generic-service:
       VISIT_BALANCE_CLIENT_SECRET: "VISIT_BALANCE_CLIENT_SECRET"
       VISITS_CLIENT_ID: "VISITS_CLIENT_ID"
       VISITS_CLIENT_SECRET: "VISITS_CLIENT_SECRET"
+      OFFICIALVISITS_CLIENT_ID: "OFFICIALVISITS_CLIENT_ID"
+      OFFICIALVISITS_CLIENT_SECRET: "OFFICIALVISITS_CLIENT_SECRET"
     domain-events-sqs-nomis-update-visit:
       HMPPS_SQS_QUEUES_VISIT_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-visit-dlq:
@@ -160,6 +164,10 @@ generic-service:
       HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_QUEUE_NAME: "sqs_queue_name"
     domain-events-sqs-nomis-update-externalmovements-dlq:
       HMPPS_SQS_QUEUES_EXTERNALMOVEMENTS_DLQ_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-officialvisits:
+      HMPPS_SQS_QUEUES_OFFICIALVISITS_QUEUE_NAME: "sqs_queue_name"
+    domain-events-sqs-nomis-update-officialvisits-dlq:
+      HMPPS_SQS_QUEUES_OFFICIALVISITS_DLQ_NAME: "sqs_queue_name"
 
   allowlist:
     groups:

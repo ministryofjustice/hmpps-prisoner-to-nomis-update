@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visitbalances
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
@@ -9,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitBalanceAdjustmentResponse
@@ -18,7 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import java.time.LocalDate
 
 @Component
-class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
+class VisitBalanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetVisitBalance(
     prisonNumber: String = "A1234KT",
@@ -29,7 +29,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
-          .withBody(objectMapper.writeValueAsString(response)),
+          .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )
   }
@@ -39,7 +39,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -51,7 +51,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withStatus(201)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(createVisitBalanceAdjResponse())),
+            .withBody(jsonMapper.writeValueAsString(createVisitBalanceAdjResponse())),
         ),
     )
   }
@@ -62,7 +62,7 @@ class VisitBalanceNomisApiMockServer(private val objectMapper: ObjectMapper) {
           aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }

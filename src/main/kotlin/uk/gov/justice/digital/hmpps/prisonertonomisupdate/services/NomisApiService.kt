@@ -1,7 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.fasterxml.jackson.annotation.JsonFormat
-import com.fasterxml.jackson.annotation.JsonInclude
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.slf4j.Logger
@@ -23,48 +22,65 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.IncentivesResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.SentencingAdjustmentResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjudicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAdjustmentResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateGlobalIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateHearingResultRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateIncentiveResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeactivateRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultAwardResponses
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DeleteHearingResultResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Hearing
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncentiveResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.LocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerNosWithLast
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReferenceCode
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ReorderRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCapacityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateCertificationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateGlobalIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateHearingResultAwardResponses
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateKeyDateAdjustmentRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateRepairsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateSentenceAdjustmentRequest
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
@@ -72,15 +88,19 @@ import java.time.LocalTime
 @Service
 class NomisApiService(
   @Qualifier("nomisApiWebClient") private val webClient: WebClient,
-  @Value("\${hmpps.web-client.nomis.max-retries:#{null}}") private val maxRetryAttempts: Long?,
-  @Value("\${hmpps.web-client.nomis.backoff-millis:#{null}}") private val backoffMillis: Long?,
+  @Value($$"${hmpps.web-client.nomis.max-retries:#{null}}") private val maxRetryAttempts: Long?,
+  @Value($$"${hmpps.web-client.nomis.backoff-millis:#{null}}") private val backoffMillis: Long?,
   retryApiService: RetryApiService,
 ) {
   private companion object {
-    val log: Logger = LoggerFactory.getLogger(this::class.java)
+    private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
-
   private val backoffSpec = retryApiService.getBackoffSpec(maxRetryAttempts, backoffMillis)
+
+  private val bookingApi = BookingsResourceApi(webClient)
+  private val incentivesResourceApi = IncentivesResourceApi(webClient)
+  private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
+  private val prisonApi = PrisonResourceApi(webClient)
 
   suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
     .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
@@ -91,6 +111,11 @@ class NomisApiService(
     .uri("/agency-switches/{serviceCode}/agency/{agencyId}", serviceCode, agencyId)
     .retrieve()
     .awaitBodilessEntityAsTrueNotFoundAsFalse()
+
+  suspend fun getActivePrisons(): List<Prison> = prisonApi
+    .getActivePrisons()
+    .retryWhen(backoffSpec)
+    .awaitSingle()
 
   // ////////// VISITS //////////////
 
@@ -130,14 +155,12 @@ class NomisApiService(
 
   // ////////// INCENTIVES //////////////
 
-  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveDto): CreateIncentiveResponseDto = webClient.post()
-    .uri("/prisoners/booking-id/{bookingId}/incentives", bookingId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+  suspend fun createIncentive(bookingId: Long, request: CreateIncentiveRequest): CreateIncentiveResponse = incentivesResourceApi
+    .createIncentive(bookingId, request).awaitSingle()
 
-  suspend fun getCurrentIncentive(bookingId: Long): NomisIncentive? = webClient.get()
-    .uri("/incentives/booking-id/{bookingId}/current", bookingId)
+  suspend fun getCurrentIncentive(bookingId: Long): IncentiveResponse? = incentivesResourceApi.prepare(
+    incentivesResourceApi.getCurrentIncentiveRequestConfig(bookingId),
+  )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
@@ -180,9 +203,11 @@ class NomisApiService(
     .get()
     .uri {
       it.path("/appointments/ids")
-        .queryParam("prisonIds", prisonIds)
-        .queryParam("fromDate", fromDate)
-        .queryParam("toDate", toDate)
+        .apply {
+          prisonIds.forEach { queryParam("prisonIds", it) }
+          fromDate?.let { queryParam("fromDate", it) }
+          toDate?.let { queryParam("toDate", it) }
+        }
         .queryParam("page", pageNumber)
         .queryParam("size", pageSize)
         .build()
@@ -198,86 +223,92 @@ class NomisApiService(
     .retrieve()
     .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/appointments/{nomisEventId}", "nomisEventId", nomisEventId)))
 
+  suspend fun getAppointmentsByFilter(
+    bookingId: Long,
+    internalLocationId: Long,
+    startDateTime: LocalDateTime,
+  ): List<AppointmentResponse> = webClient
+    .get()
+    .uri(
+      "/appointments/booking/{bookingId}/location/{locationId}/start/{dateTime}",
+      bookingId,
+      internalLocationId,
+      startDateTime,
+    )
+    .retrieve()
+    .awaitBodyWithRetry(
+      backoffSpec.withRetryContext(
+        Context.of(
+          "api",
+          "nomis-prisoner-api",
+          "path", "/appointments/{bookingId}/location/{locationId}/start/{dateTime}",
+          "bookingId", bookingId,
+          "locationId", internalLocationId,
+          "dateTime", startDateTime,
+        ),
+      ),
+    )
+
   // //////////////////// SENTENCES ////////////////////////
 
   suspend fun createSentenceAdjustment(
     bookingId: Long,
     sentenceSequence: Long,
-    request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse = webClient.post()
-    .uri("/prisoners/booking-id/{bookingId}/sentences/{sentenceSequence}/adjustments", bookingId, sentenceSequence)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: CreateSentenceAdjustmentRequest,
+  ): CreateAdjustmentResponse = sentencingAdjustmentResourceApi
+    .createSentenceAdjustment(bookingId, sentenceSequence, request)
+    .awaitSingle()
 
   suspend fun updateSentenceAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest,
-  ): Unit = webClient.put()
-    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: UpdateSentenceAdjustmentRequest,
+  ): Unit = sentencingAdjustmentResourceApi
+    .updateSentenceAdjustment(adjustmentId, request)
+    .awaitSingle()
 
   suspend fun createKeyDateAdjustment(
     bookingId: Long,
-    request: CreateSentencingAdjustmentRequest,
-  ): CreateSentencingAdjustmentResponse = webClient.post()
-    .uri("/prisoners/booking-id/{bookingId}/adjustments", bookingId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: CreateKeyDateAdjustmentRequest,
+  ): CreateAdjustmentResponse = sentencingAdjustmentResourceApi
+    .createKeyDateAdjustment(bookingId, request)
+    .awaitSingle()
 
   suspend fun updateKeyDateAdjustment(
     adjustmentId: Long,
-    request: UpdateSentencingAdjustmentRequest,
-  ): Unit = webClient.put()
-    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-    .bodyValue(request)
-    .retrieve()
-    .awaitBody()
+    request: UpdateKeyDateAdjustmentRequest,
+  ): Unit = sentencingAdjustmentResourceApi
+    .updateKeyDateAdjustment(adjustmentId, request)
+    .awaitSingle()
 
-  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit = webClient.delete()
-    .uri("/sentence-adjustments/{adjustmentId}", adjustmentId)
-    .retrieve()
-    .awaitBody()
+  suspend fun deleteSentenceAdjustment(adjustmentId: Long): Unit = sentencingAdjustmentResourceApi
+    .deleteSentenceAdjustment(adjustmentId)
+    .awaitSingle()
 
-  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit = webClient.delete()
-    .uri("/key-date-adjustments/{adjustmentId}", adjustmentId)
-    .retrieve()
-    .awaitBody()
+  suspend fun deleteKeyDateAdjustment(adjustmentId: Long): Unit = sentencingAdjustmentResourceApi
+    .deleteKeyDateAdjustment(adjustmentId)
+    .awaitSingle()
 
-  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse = webClient.get()
-    .uri("/prisoners/booking-id/{bookingId}/sentencing-adjustments", bookingId)
-    .retrieve()
-    .awaitBody()
+  suspend fun getAdjustments(bookingId: Long): SentencingAdjustmentsResponse = sentencingAdjustmentResourceApi
+    .getActiveAdjustments(bookingId, activeOnly = true)
+    .awaitSingle()
 
   // ////////// INCENTIVE LEVELS //////////////
 
-  suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? = webClient.get()
-    .uri("/incentives/reference-codes/{incentiveLevel}", incentiveLevel)
+  suspend fun getGlobalIncentiveLevel(incentiveLevel: String): ReferenceCode? = incentivesResourceApi.prepare(
+    incentivesResourceApi.getGlobalIncentiveLevelRequestConfig(incentiveLevel),
+  )
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun updateGlobalIncentiveLevel(incentiveLevel: ReferenceCode) {
-    webClient.put()
-      .uri("/incentives/reference-codes/{code}", incentiveLevel.code)
-      .bodyValue(incentiveLevel)
-      .retrieve()
-      .awaitBodilessEntity()
+  suspend fun updateGlobalIncentiveLevel(code: String, incentiveLevel: UpdateGlobalIncentiveRequest) = incentivesResourceApi
+    .updateGlobalIncentiveLevel(code, incentiveLevel).awaitSingle()
+
+  suspend fun createGlobalIncentiveLevel(incentiveLevel: CreateGlobalIncentiveRequest): ReferenceCode = incentivesResourceApi
+    .createGlobalIncentiveLevel(incentiveLevel).awaitSingle()
+
+  suspend fun globalIncentiveLevelReorder(levels: List<String>) {
+    incentivesResourceApi.reorderGlobalIncentiveLevels(ReorderRequest(levels)).awaitSingle()
   }
-
-  suspend fun createGlobalIncentiveLevel(incentiveLevel: ReferenceCode): ResponseEntity<Void> = webClient.post()
-    .uri("/incentives/reference-codes")
-    .bodyValue(incentiveLevel)
-    .retrieve()
-    .awaitBodilessEntity()
-
-  suspend fun globalIncentiveLevelReorder(levels: List<String>): ResponseEntity<Void> = webClient.post()
-    .uri("/incentives/reference-codes/reorder")
-    .bodyValue(ReorderRequest(levels))
-    .retrieve()
-    .awaitBodilessEntity()
 
   suspend fun getActivePrisoners(
     pageNumber: Long,
@@ -333,14 +364,14 @@ class NomisApiService(
     activeOnly: Boolean,
     lastBookingId: Long,
     pageSize: Int,
-  ): BookingIdsWithLast = webClient.get()
-    .uri {
-      it.path("/bookings/ids/latest-from-id")
-        .queryParam("activeOnly", activeOnly)
-        .queryParam("bookingId", lastBookingId)
-        .queryParam("pageSize", pageSize)
-        .build()
-    }
+  ): BookingIdsWithLast = bookingApi
+    .prepare(
+      bookingApi.getAllLatestBookingsFromIdRequestConfig(
+        bookingId = lastBookingId,
+        activeOnly = activeOnly,
+        pageSize = pageSize,
+      ),
+    )
     .retrieve()
     .bodyToMono(BookingIdsWithLast::class.java)
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
@@ -726,20 +757,6 @@ data class UpdateVisitDto(
   val visitComment: String? = null,
 )
 
-data class CreateIncentiveDto(
-  val comments: String? = null,
-  @JsonFormat(pattern = "yyyy-MM-dd'T'HH:mm:ss")
-  val iepDateTime: LocalDateTime,
-  val prisonId: String,
-  val iepLevel: String,
-  val userId: String? = null,
-)
-
-data class CreateIncentiveResponseDto(
-  val bookingId: Long,
-  val sequence: Long,
-)
-
 data class CreateAppointmentRequest(
   val bookingId: Long,
   @JsonFormat(pattern = "yyyy-MM-dd")
@@ -771,51 +788,9 @@ data class UpdateAppointmentRequest(
   val comment: String? = null,
 )
 
-data class CreateSentencingAdjustmentRequest(
-  val adjustmentTypeCode: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFromDate: LocalDate?,
-  val adjustmentDays: Long,
-  val comment: String?,
-)
-
-@JsonInclude(JsonInclude.Include.NON_NULL)
-data class UpdateSentencingAdjustmentRequest(
-  val adjustmentTypeCode: String,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentDate: LocalDate,
-  @JsonFormat(pattern = "yyyy-MM-dd")
-  val adjustmentFromDate: LocalDate?,
-  val adjustmentDays: Long,
-  val sentenceSequence: Int?,
-  val comment: String?,
-  val active: Boolean? = null,
-)
-
-data class CreateSentencingAdjustmentResponse(val id: Long)
-
 data class CreateVisitResponseDto(
   val visitId: String,
 )
-
-data class ReorderRequest(
-  val codeList: List<String>,
-)
-
-data class ReferenceCode(
-  val code: String,
-  val domain: String,
-  val description: String,
-  val active: Boolean,
-)
-
-data class NomisIncentive(
-  val iepLevel: NomisCodeDescription,
-)
-
-data class NomisCodeDescription(val code: String, val description: String)
 
 data class PrisonIncentiveLevelRequest(
   val levelCode: String,

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-06.242.20c2778"
+    "version" : "2026-02-10.507.49710bd"
   },
   "servers" : [ {
     "url" : "/",
@@ -15,8 +15,6 @@
   } ],
   "security" : [ {
     "bearer-jwt" : [ "read", "write" ]
-  }, {
-    "hmpps-auth" : [ ]
   } ],
   "tags" : [ {
     "name" : "Prison Configuration",
@@ -45,6 +43,9 @@
   }, {
     "name" : "Certification",
     "description" : "Functionality to manage certification of residential locations"
+  }, {
+    "name" : "hmpps-queue-resource-async",
+    "description" : "Endpoints that are to be used by administrators only for managing SQS queues. All endpoints require the <b>QUEUE_ADMIN</b> role further information can be found in the <a href=\"https://github.com/ministryofjustice/hmpps-spring-boot-sqs\">hmpps-spring-boot-sqs</a> project"
   }, {
     "name" : "Prisoner locations",
     "description" : "Returns the locations prisoners"
@@ -1797,6 +1798,232 @@
         }
       }
     },
+    "/locations/residential/{id}/cell-sanitation-change" : {
+      "put" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Update the cell sanitation and optionally provide a reason for change for certification approval",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "updateCellSanitation",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellSanitationChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns updated location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/residential/{id}/cell-mark-change" : {
+      "put" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Update the cell mark and optionally provide a reason for change for certification approval",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "updateCellMark",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The location Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The location Id",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellMarkChangeRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns updated location",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Data not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/locations/non-residential/{id}" : {
       "get" : {
         "tags" : [ "Non-residential functions" ],
@@ -2105,6 +2332,106 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/edit-cells" : {
+      "put" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Updates a list of DRAFT cells below a parent DRAFT location",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "updateCells",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CellDraftUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Returns updates locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
                 }
               }
             }
@@ -2670,9 +2997,9 @@
     "/certification/location/request-approval" : {
       "put" : {
         "tags" : [ "Certification" ],
-        "summary" : "Requests approval for a location currently either LOCKED or in DRAFT status, locations below this will be included in the request",
+        "summary" : "Requests approval for a DRAFT location, locations below this will be included in the request",
         "description" : "Requires role LOCATION_CERTIFICATION",
-        "operationId" : "requestApproval",
+        "operationId" : "draftRequestApproval",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3441,6 +3768,94 @@
           },
           "409" : {
             "description" : "Location already exists",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/non-residential/prison/{prisonId}/generate-missing-children" : {
+      "post" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Generates missing child locations for services with parent",
+        "description" : "Requires role MAINTAIN_LOCATIONS and write scope",
+        "operationId" : "generateMissingChildren",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_LOCATIONS role with write scope.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Returns created locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Location"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4571,8 +4986,7 @@
           "description" : "The name of the schema field which will be used as a dynamic filter.",
           "required" : true,
           "schema" : {
-            "type" : "string",
-            "minLength" : 1
+            "type" : "string"
           },
           "example" : "name"
         }, {
@@ -4767,6 +5181,156 @@
         } ]
       }
     },
+    "/reports/{reportId}/dashboards/{dashboardId}" : {
+      "get" : {
+        "tags" : [ "Data API - Synchronous" ],
+        "description" : "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
+        "operationId" : "configuredApiDatasetForDashboard",
+        "parameters" : [ {
+          "name" : "selectedPage",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 1,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "pageSize",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "default" : 10,
+            "minimum" : 1
+          }
+        }, {
+          "name" : "sortColumn",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sortedAsc",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
+        }, {
+          "name" : "reportId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dashboardId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dataProductDefinitionsPath",
+          "in" : "query",
+          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "definitions/prisons/orphanage"
+          },
+          "example" : "definitions/prisons/orphanage"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "default" : {
+            "description" : "default response",
+            "headers" : {
+              "x-no-data-warning" : {
+                "description" : "Provides additional information about why no data has been returned.",
+                "style" : "simple",
+                "schema" : {
+                  "type" : "string"
+                }
+              }
+            },
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : { }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
       "get" : {
         "tags" : [ "hmpps-queue-resource" ],
@@ -4842,6 +5406,143 @@
         }
       }
     },
+    "/productCollections" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets all product collections",
+        "operationId" : "getCollections",
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/ProductCollectionSummary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/productCollections/{id}" : {
+      "get" : {
+        "tags" : [ "Product Collection API" ],
+        "description" : "Gets product collection by id",
+        "operationId" : "getCollections_1",
+        "parameters" : [ {
+          "name" : "id",
+          "in" : "path",
+          "description" : "The ID of the product collection.",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "72c22579-3f77-4e23-8d16-1e5aadcc88c9"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ProductCollectionDTO"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
     "/prisoner-locations/prison/{prisonId}" : {
       "get" : {
         "tags" : [ "Prisoner locations" ],
@@ -4857,7 +5558,6 @@
             "type" : "string",
             "description" : "Prison ID",
             "examples" : [ "MDI", "LEI", "PVI" ],
-            "minLength" : 1,
             "pattern" : "^[A-Z]{2}I|ZZGHI$"
           }
         } ],
@@ -5479,7 +6179,7 @@
     "/locations/{prisonId}/local-name/{localName}" : {
       "get" : {
         "tags" : [ "Locations" ],
-        "summary" : "Finds a location matching the local name for a given prison",
+        "summary" : "Finds a location matching the local name for a given prison (residential only)",
         "description" : "Requires role VIEW_LOCATIONS",
         "operationId" : "findLocationByLocalName",
         "parameters" : [ {
@@ -5569,6 +6269,129 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/{prisonId}/cell-mark/{cellMark}" : {
+      "get" : {
+        "tags" : [ "Locations" ],
+        "summary" : "Finds locations matching the cell mark name for a given prison (residential only)",
+        "description" : "Requires role VIEW_LOCATIONS",
+        "operationId" : "findLocationsByCellMark",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID where the location is situated",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID where the location is situated",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "cellMark",
+          "in" : "path",
+          "description" : "Cell mark / cell door number",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Cell mark / cell door number",
+            "example" : "DR-01",
+            "maxLength" : 12,
+            "minLength" : 0
+          },
+          "example" : "DR-01"
+        }, {
+          "name" : "parentLocationId",
+          "in" : "query",
+          "description" : "The level above in this hierarchy to look below, empty will check prison level",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The level above in this hierarchy to look below, empty will check prison level",
+            "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+          },
+          "example" : "de91dfa7-821f-4552-a427-bf2f32eafeb0"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns cell location matching",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Location"
+                  }
                 }
               }
             }
@@ -7395,6 +8218,17 @@
           },
           "example" : "[ACTIVE,INACTIVE]"
         }, {
+          "name" : "localName",
+          "in" : "query",
+          "description" : "Filter by the local name",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "description" : "Filter by the local name, wildcarded and case insensitive",
+            "example" : "Work"
+          },
+          "example" : "Work"
+        }, {
           "name" : "locationType",
           "in" : "query",
           "description" : "Filter by given types",
@@ -7416,7 +8250,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Service Type",
-            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
             "example" : "APPOINTMENT"
           },
           "example" : "APPOINTMENT"
@@ -7545,7 +8379,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Service",
-            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ],
             "example" : "HEARING_LOCATION"
           },
           "example" : "HEARING_LOCATION"
@@ -7630,6 +8464,114 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/locations/non-residential/prison/{prisonId}/local-name/{localName}" : {
+      "get" : {
+        "tags" : [ "Non-residential functions" ],
+        "summary" : "Finds a non-residential location matching the local name for a given prison - returning ONLY the first one found",
+        "description" : "Requires role VIEW_LOCATIONS",
+        "operationId" : "findLocationByLocalName_1",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison ID where the location is situated",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison ID where the location is situated",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "localName",
+          "in" : "path",
+          "description" : "Alternative description to display for location",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Alternative description to display for location",
+            "example" : "Wing A",
+            "maxLength" : 30,
+            "minLength" : 0
+          },
+          "example" : "Wing A"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_LOCATIONS role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns location matching local name",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/Location"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Non residential location not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8199,6 +9141,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -8290,6 +9248,22 @@
             "default" : "definitions/prisons/orphanage"
           },
           "example" : "definitions/prisons/orphanage"
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
         } ],
         "responses" : {
           "403" : {
@@ -9887,14 +10861,21 @@
           "maxCapacity" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Max capacity of the location",
+            "description" : "Max capacity of the cell",
             "example" : 2,
             "maximum" : 99
           },
           "workingCapacity" : {
             "type" : "integer",
             "format" : "int32",
-            "description" : "Working capacity of the location",
+            "description" : "Working capacity of the cell",
+            "example" : 1,
+            "maximum" : 99
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "CNA of the cell",
             "example" : 2,
             "maximum" : 99
           }
@@ -9920,6 +10901,7 @@
           "certifiedNormalAccommodation" : {
             "type" : "integer",
             "format" : "int32",
+            "deprecated" : true,
             "description" : "CNA (Certified normal accommodation)",
             "example" : 1
           }
@@ -10054,8 +11036,14 @@
             "format" : "int32",
             "description" : "When a cell is inactive, show the active working capacity value"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a cell",
+            "example" : true
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
+            "deprecated" : true,
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "usage" : {
@@ -10200,6 +11188,11 @@
             "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
             "example" : "57818979-573c-433a-9e51-2d83f087c11c"
           },
+          "lastDeactivationReasonForChange" : {
+            "type" : "string",
+            "description" : "Reason for the last deactivation change",
+            "example" : "Cell damaged"
+          },
           "parentId" : {
             "type" : "string",
             "format" : "uuid",
@@ -10224,291 +11217,7 @@
             "type" : "array",
             "description" : "Child Locations",
             "items" : {
-              "type" : "object",
-              "description" : "Location Information",
-              "properties" : {
-                "id" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Location Id",
-                  "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
-                },
-                "prisonId" : {
-                  "type" : "string",
-                  "description" : "Prison ID",
-                  "example" : "MDI"
-                },
-                "code" : {
-                  "type" : "string",
-                  "description" : "Location Code",
-                  "example" : "001"
-                },
-                "cellMark" : {
-                  "type" : "string",
-                  "description" : "Cell mark",
-                  "example" : "A1"
-                },
-                "pathHierarchy" : {
-                  "type" : "string",
-                  "description" : "Full path of the location within the prison",
-                  "example" : "A-1-001"
-                },
-                "locationType" : {
-                  "type" : "string",
-                  "description" : "Location Type",
-                  "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
-                  "example" : "CELL"
-                },
-                "localName" : {
-                  "type" : "string",
-                  "description" : "Alternative description to display for location, (Not Cells)",
-                  "example" : "Wing A"
-                },
-                "wingStructure" : {
-                  "type" : "array",
-                  "description" : "The structure of the wing",
-                  "items" : {
-                    "type" : "string",
-                    "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
-                  }
-                },
-                "comments" : {
-                  "type" : "string",
-                  "description" : "Additional comments that can be made about this location",
-                  "example" : "Not to be used"
-                },
-                "permanentlyInactive" : {
-                  "type" : "boolean",
-                  "description" : "Indicates if the location is permanently inactive",
-                  "example" : false
-                },
-                "permanentlyInactiveReason" : {
-                  "type" : "string",
-                  "description" : "Reason for permanently deactivating",
-                  "example" : "Demolished"
-                },
-                "capacity" : {
-                  "$ref" : "#/components/schemas/Capacity",
-                  "description" : "Capacity details of the location"
-                },
-                "pendingChanges" : {
-                  "$ref" : "#/components/schemas/PendingChangeDto",
-                  "description" : "Pending changes of draft or pending approval location"
-                },
-                "oldWorkingCapacity" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "When a cell is inactive, show the active working capacity value"
-                },
-                "certification" : {
-                  "$ref" : "#/components/schemas/Certification",
-                  "description" : "Indicates that this location is certified for use as a residential location"
-                },
-                "usage" : {
-                  "type" : "array",
-                  "description" : "Location Usage",
-                  "items" : {
-                    "$ref" : "#/components/schemas/NonResidentialUsageDto"
-                  }
-                },
-                "servicesUsingLocation" : {
-                  "type" : "array",
-                  "description" : "Services that use this location",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ServiceUsingLocationDto"
-                  }
-                },
-                "internalMovementAllowed" : {
-                  "type" : "boolean",
-                  "description" : "Indicates that this location can used for internal movements"
-                },
-                "accommodationTypes" : {
-                  "type" : "array",
-                  "description" : "Accommodation Types",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Accommodation Types",
-                    "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ]
-                  }
-                },
-                "specialistCellTypes" : {
-                  "type" : "array",
-                  "description" : "Specialist Cell Types",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Specialist Cell Types",
-                    "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
-                  }
-                },
-                "usedFor" : {
-                  "type" : "array",
-                  "description" : "Usage For",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Used For Types",
-                    "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
-                  }
-                },
-                "status" : {
-                  "type" : "string",
-                  "description" : "Status of the location",
-                  "enum" : [ "ACTIVE", "INACTIVE", "ARCHIVED", "DRAFT", "NON_RESIDENTIAL", "LOCKED_ACTIVE", "LOCKED_INACTIVE", "LOCKED_DRAFT", "LOCKED_NON_RESIDENTIAL" ],
-                  "example" : "ACTIVE"
-                },
-                "locked" : {
-                  "type" : "boolean",
-                  "description" : "Location is locked",
-                  "example" : false
-                },
-                "convertedCellType" : {
-                  "type" : "string",
-                  "description" : "Convert Cell Type",
-                  "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
-                },
-                "otherConvertedCellType" : {
-                  "type" : "string",
-                  "description" : "Convert Cell Type (Other)"
-                },
-                "active" : {
-                  "type" : "boolean",
-                  "deprecated" : true,
-                  "description" : "Indicates the location is enabled",
-                  "example" : true
-                },
-                "inCellSanitation" : {
-                  "type" : "boolean",
-                  "description" : "In-cell sanitation",
-                  "example" : true
-                },
-                "deactivatedByParent" : {
-                  "type" : "boolean",
-                  "description" : "Indicates the location in inactive as a parent is deactivated",
-                  "example" : false
-                },
-                "deactivatedDate" : {
-                  "type" : "string",
-                  "format" : "date-time",
-                  "description" : "Date the location was deactivated",
-                  "example" : "2023-01-23T12:23:00"
-                },
-                "deactivatedReason" : {
-                  "type" : "string",
-                  "description" : "Reason for deactivation",
-                  "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
-                  "example" : "DAMAGED"
-                },
-                "deactivationReasonDescription" : {
-                  "type" : "string",
-                  "description" : "For OTHER deactivation reason, a free text comment is provided",
-                  "example" : "Window damage"
-                },
-                "deactivatedBy" : {
-                  "type" : "string",
-                  "description" : "Staff username who deactivated the location"
-                },
-                "proposedReactivationDate" : {
-                  "type" : "string",
-                  "format" : "date",
-                  "description" : "Estimated reactivation date for location reactivation",
-                  "example" : "2026-01-24"
-                },
-                "planetFmReference" : {
-                  "type" : "string",
-                  "description" : "Planet FM reference number",
-                  "example" : "2323/45M"
-                },
-                "topLevelId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Top Level Location Id",
-                  "example" : "57718979-573c-433a-9e51-2d83f887c11c"
-                },
-                "level" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-                  "examples" : [ "1", "2", "3" ]
-                },
-                "leafLevel" : {
-                  "type" : "boolean",
-                  "description" : "Indicates this is the lowest level, often a cell",
-                  "example" : false
-                },
-                "topLevelApprovalLocationId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
-                  "example" : "57718979-573c-433a-9e51-2d83f087c11c"
-                },
-                "pendingApprovalRequestId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
-                  "example" : "57818979-573c-433a-9e51-2d83f087c11c"
-                },
-                "parentId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Parent Location Id",
-                  "example" : "57718979-573c-433a-9e51-2d83f887c11c"
-                },
-                "parentLocation" : {
-                  "description" : "Parent Location",
-                  "required" : [ "active", "code", "deactivatedByParent", "id", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
-                },
-                "inactiveCells" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Number of inactive cells below this location"
-                },
-                "numberOfCellLocations" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Total number of non-structural locations are below this level, e.g. cells and rooms"
-                },
-                "childLocations" : {
-                  "type" : "array",
-                  "description" : "Child Locations",
-                  "items" : {
-                    "description" : "Location Information",
-                    "required" : [ "active", "code", "deactivatedByParent", "id", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
-                  }
-                },
-                "changeHistory" : {
-                  "type" : "array",
-                  "description" : "History of changes",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ChangeHistory"
-                  }
-                },
-                "transactionHistory" : {
-                  "type" : "array",
-                  "description" : "A list of transactions applied to this location",
-                  "items" : {
-                    "$ref" : "#/components/schemas/TransactionHistory"
-                  }
-                },
-                "lastModifiedBy" : {
-                  "type" : "string",
-                  "description" : "Staff username who last changed the location"
-                },
-                "lastModifiedDate" : {
-                  "type" : "string",
-                  "format" : "date-time",
-                  "description" : "Date and time of the last change"
-                },
-                "key" : {
-                  "type" : "string",
-                  "description" : "Business Key for a location",
-                  "example" : "MDI-A-1-001"
-                },
-                "isResidential" : {
-                  "type" : "boolean",
-                  "description" : "Indicates if the location is a residential location",
-                  "example" : true
-                }
-              },
-              "required" : [ "active", "code", "deactivatedByParent", "id", "isResidential", "key", "lastModifiedBy", "lastModifiedDate", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
+              "$ref" : "#/components/schemas/Location"
             }
           },
           "changeHistory" : {
@@ -10587,6 +11296,17 @@
             "format" : "int32",
             "description" : "Pending CNA",
             "example" : 2
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Pending cell mark of the location",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Pending in-cell sanitation",
+            "example" : true
           }
         }
       },
@@ -10596,11 +11316,11 @@
         "properties" : {
           "serviceType" : {
             "type" : "string",
-            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
           },
           "serviceFamilyType" : {
             "type" : "string",
-            "enum" : [ "ACTIVITIES_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+            "enum" : [ "ACTIVITIES_APPOINTMENTS", "VIDEO_LINK_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
           }
         },
         "required" : [ "serviceFamilyType", "serviceType" ]
@@ -10623,7 +11343,7 @@
           "attributeCode" : {
             "type" : "string",
             "description" : "Attribute Code",
-            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "CERTIFIED_CAPACITY", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
+            "enum" : [ "STATUS", "CERTIFICATION", "ACCOMMODATION_TYPE", "USED_FOR", "SPECIALIST_CELL_TYPE", "CONVERTED_CELL_TYPE", "WORKING_CAPACITY", "MAX_CAPACITY", "CERTIFIED_CAPACITY", "DEACTIVATION_REASON", "PROPOSED_REACTIVATION_DATE", "PLANET_FM_NUMBER", "LOCAL_NAME", "USAGE", "NON_RESIDENTIAL_CAPACITY", "INTERNAL_MOVEMENT_ALLOWED", "USED_BY_SERVICE", "CODE", "LOCATION_TYPE", "RESIDENTIAL_HOUSING_TYPE", "PARENT_LOCATION", "ORDER_WITHIN_PARENT_LOCATION", "COMMENTS", "ATTRIBUTES", "PERMANENT_DEACTIVATION", "LOCATION_CREATED", "CELL_MARK", "IN_CELL_SANITATION", "ACTIVE", "DEACTIVATED_DATE", "DEACTIVATED_REASON", "DEACTIVATED_REASON_DESCRIPTION" ]
           },
           "attribute" : {
             "type" : "string",
@@ -10713,7 +11433,7 @@
       },
       "TemporaryDeactivationLocationRequest" : {
         "type" : "object",
-        "description" : "Request to temporarily deactivate a location",
+        "description" : "Request to temporarily deactivate a location, optionally indicating certification approval required",
         "properties" : {
           "deactivationReason" : {
             "type" : "string",
@@ -10740,9 +11460,19 @@
             "example" : "23423TH/5",
             "maxLength" : 60,
             "minLength" : 0
+          },
+          "requiresApproval" : {
+            "type" : "boolean",
+            "description" : "The deactivation needs to be approved, if false (default) it will be classed as a short term temporary deactivation",
+            "example" : false
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "Explanation of why the capacity need to be decreased",
+            "example" : "The cell is damaged and will be take 6 months to repair"
           }
         },
-        "required" : [ "deactivationReason" ]
+        "required" : [ "deactivationReason", "requiresApproval" ]
       },
       "UpdateNonResCellTypeRequest" : {
         "type" : "object",
@@ -10863,13 +11593,48 @@
           }
         }
       },
+      "CellSanitationChangeRequest" : {
+        "type" : "object",
+        "description" : "Request change of cell sanitation and add the reason for change is certification is required",
+        "properties" : {
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Whether the cell has in-cell sanitation",
+            "example" : true
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "The reason why the approval was requested, mandatory if the cell change must be approved",
+            "example" : "The toilet is broken"
+          }
+        },
+        "required" : [ "inCellSanitation" ]
+      },
+      "CellMarkChangeRequest" : {
+        "type" : "object",
+        "description" : "Request change of cell mark and add the reason for change is certification is required",
+        "properties" : {
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark of the location",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "The reason why the approval was requested, mandatory if the cell change must be approved",
+            "example" : "The door mark has been updated"
+          }
+        },
+        "required" : [ "cellMark" ]
+      },
       "CreateOrUpdateNonResidentialLocationRequest" : {
         "type" : "object",
         "description" : "Request to create or update non-residential location",
         "properties" : {
           "localName" : {
             "type" : "string",
-            "description" : "Description of the non-residential locations",
+            "description" : "Description of the non-residential locations, mandatory for create",
             "example" : "Adj Room",
             "maxLength" : 80,
             "minLength" : 1
@@ -10879,12 +11644,17 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             },
             "uniqueItems" : true
+          },
+          "active" : {
+            "type" : "boolean",
+            "description" : "Status, if false will be marked as inactive, true will make active or null untouched",
+            "example" : true
           }
         },
-        "required" : [ "localName", "servicesUsingLocation" ]
+        "required" : [ "servicesUsingLocation" ]
       },
       "NonResidentialLocationDTO" : {
         "type" : "object",
@@ -10937,7 +11707,7 @@
             "description" : "Collections of services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "ACTIVITIES_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "ACTIVITIES_APPOINTMENTS", "VIDEO_LINK_APPOINTMENTS", "ADJUDICATIONS", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             }
           },
           "usedByServices" : {
@@ -10945,7 +11715,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             }
           },
           "status" : {
@@ -10995,6 +11765,114 @@
         },
         "required" : [ "code", "id", "key", "level", "localName", "locationType", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "usedByGroupedServices", "usedByServices" ]
       },
+      "CellDraftUpdateRequest" : {
+        "type" : "object",
+        "description" : "Request to a create location and cell locations below it",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "Prison ID where the location is situated",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "parentLocation" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "Parent location under which cells is to be updated, this location must be DRAFT"
+          },
+          "cellsUsedFor" : {
+            "type" : "array",
+            "description" : "Used for types for all cells",
+            "items" : {
+              "type" : "string",
+              "description" : "Used For Types",
+              "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
+            },
+            "uniqueItems" : true
+          },
+          "accommodationType" : {
+            "type" : "string",
+            "default" : "NORMAL_ACCOMMODATION",
+            "description" : "Accommodation type for all cells",
+            "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ],
+            "example" : "NORMAL_ACCOMMODATION"
+          },
+          "cells" : {
+            "type" : "array",
+            "description" : "Set of cells that are to be created or amended, if the location is for update then missing cells will be removed",
+            "items" : {
+              "$ref" : "#/components/schemas/CellInformation"
+            },
+            "uniqueItems" : true
+          }
+        },
+        "required" : [ "cells", "parentLocation", "prisonId" ]
+      },
+      "CellInformation" : {
+        "type" : "object",
+        "description" : "Information about cells to be created or updated",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "ID of the location, update only",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "code" : {
+            "type" : "string",
+            "description" : "Code of the location",
+            "example" : "001",
+            "minLength" : 1
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark of the location",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "CNA value",
+            "maximum" : 99
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "Max capacity of the location",
+            "example" : 2,
+            "maximum" : 99
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 0,
+            "description" : "Working capacity of the location",
+            "example" : 2,
+            "maximum" : 99
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist cell types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "In-cell sanitation for cell"
+          }
+        },
+        "required" : [ "code" ]
+      },
       "ReactivateLocationsRequest" : {
         "type" : "object",
         "description" : "Reactivate Locations Request",
@@ -11039,6 +11917,39 @@
         },
         "required" : [ "cascadeReactivation" ]
       },
+      "BasicTemporaryDeactivationRequest" : {
+        "type" : "object",
+        "description" : "Request to temporarily deactivate a location - used in bulk updates",
+        "properties" : {
+          "deactivationReason" : {
+            "type" : "string",
+            "description" : "Reason for temporary deactivation",
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "example" : "MOTHBALLED"
+          },
+          "deactivationReasonDescription" : {
+            "type" : "string",
+            "description" : "Additional information on deactivation, for OTHER DeactivatedReason must be provided",
+            "example" : "Window broken",
+            "maxLength" : 255,
+            "minLength" : 0
+          },
+          "proposedReactivationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Estimated reactivation date",
+            "example" : "2025-01-05"
+          },
+          "planetFmReference" : {
+            "type" : "string",
+            "description" : "Planet FM reference number",
+            "example" : "23423TH/5",
+            "maxLength" : 60,
+            "minLength" : 0
+          }
+        },
+        "required" : [ "deactivationReason" ]
+      },
       "DeactivateLocationsRequest" : {
         "type" : "object",
         "description" : "Deactivate Locations Request",
@@ -11046,7 +11957,7 @@
           "locations" : {
             "type" : "object",
             "additionalProperties" : {
-              "$ref" : "#/components/schemas/TemporaryDeactivationLocationRequest"
+              "$ref" : "#/components/schemas/BasicTemporaryDeactivationRequest"
             },
             "description" : "List of locations to deactivate",
             "example" : {
@@ -11054,6 +11965,16 @@
                 "deactivationReason" : "DAMAGED"
               }
             }
+          },
+          "requiresApproval" : {
+            "type" : "boolean",
+            "description" : "The deactivation needs to be approved, if false (default) it will be classed as a short term temporary deactivation",
+            "example" : false
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "Explanation of why the capacity need to be decreased",
+            "example" : "The cell is damaged and will be take 6 months to repair"
           },
           "updatedBy" : {
             "type" : "string",
@@ -11063,7 +11984,7 @@
             "minLength" : 0
           }
         },
-        "required" : [ "locations" ]
+        "required" : [ "locations", "requiresApproval" ]
       },
       "BulkPermanentDeactivationRequest" : {
         "type" : "object",
@@ -11082,8 +12003,7 @@
             "example" : [ "TCI-A-1-001", "TCI-B-1-001", "TCI-A-2-001" ],
             "items" : {
               "type" : "string"
-            },
-            "minItems" : 1
+            }
           }
         },
         "required" : [ "locations", "reason" ]
@@ -11230,7 +12150,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "REACTIVATION", "CAPACITY_CHANGE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -11305,7 +12225,13 @@
           },
           "reasonForSignedOpChange" : {
             "type" : "string",
+            "deprecated" : true,
             "description" : "The reason why the signed op cap was changed",
+            "example" : "Change in number of cells"
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "The reason why the approval was requested",
             "example" : "Change in number of cells"
           },
           "locations" : {
@@ -11314,9 +12240,57 @@
             "items" : {
               "$ref" : "#/components/schemas/CertificationApprovalRequestLocationDto"
             }
+          },
+          "certificateId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The ID of the certificate once approved"
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark of the location",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "currentCellMark" : {
+            "type" : "string",
+            "description" : "Current cell mark",
+            "example" : "A1-001"
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Whether the cell has in-cell sanitation",
+            "example" : true
+          },
+          "currentInCellSanitation" : {
+            "type" : "boolean",
+            "description" : "Whether the current cell has in-cell sanitation",
+            "example" : false
+          },
+          "deactivatedReason" : {
+            "type" : "string",
+            "description" : "Reason for deactivation",
+            "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
+            "example" : "DAMAGED"
+          },
+          "deactivationReasonDescription" : {
+            "type" : "string",
+            "description" : "For OTHER deactivation reason, a free text comment is provided",
+            "example" : "Window damage"
+          },
+          "proposedReactivationDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Estimated reactivation date for location reactivation",
+            "example" : "2026-01-24"
+          },
+          "planetFmReference" : {
+            "type" : "string",
+            "description" : "Planet FM reference number",
+            "example" : "2323/45M"
           }
         },
-        "required" : [ "approvalType", "certifiedNormalAccommodationChange", "currentSignedOperationCapacity", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
+        "required" : [ "approvalType", "certifiedNormalAccommodationChange", "currentCellMark", "currentSignedOperationCapacity", "id", "maxCapacityChange", "prisonId", "requestedBy", "requestedDate", "signedOperationCapacityChange", "status", "workingCapacityChange" ]
       },
       "CertificationApprovalRequestLocationDto" : {
         "type" : "object",
@@ -11372,6 +12346,24 @@
             "description" : "Maximum capacity",
             "example" : 2
           },
+          "currentCertifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Current capacity of certified cell",
+            "example" : 2
+          },
+          "currentWorkingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Current working capacity",
+            "example" : 2
+          },
+          "currentMaxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Current maximum capacity",
+            "example" : 2
+          },
           "inCellSanitation" : {
             "type" : "boolean",
             "description" : "In-cell sanitation",
@@ -11417,7 +12409,11 @@
             "example" : "OFFICE"
           },
           "subLocations" : {
-            "description" : "Sub-locations"
+            "type" : "array",
+            "description" : "Sub-locations",
+            "items" : {
+              "$ref" : "#/components/schemas/CertificationApprovalRequestLocationDto"
+            }
           }
         },
         "required" : [ "id", "level", "locationCode", "locationType", "pathHierarchy" ]
@@ -11452,7 +12448,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval request",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "REACTIVATION", "CAPACITY_CHANGE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE" ],
             "example" : "DRAFT"
           }
         },
@@ -11577,9 +12573,14 @@
             "$ref" : "#/components/schemas/Capacity",
             "description" : "Capacity details of the location"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a residential location"
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
-            "description" : "Indicates that this location is certified for use as a residential location"
+            "deprecated" : true,
+            "description" : "Deprecated mechanism for displaying and updating CNA and certified status"
           },
           "attributes" : {
             "type" : "array",
@@ -11678,8 +12679,14 @@
             "$ref" : "#/components/schemas/Capacity",
             "description" : "Capacity details of the location"
           },
+          "certifiedCell" : {
+            "type" : "boolean",
+            "description" : "Indicates that this location is certified for use as a cell",
+            "example" : true
+          },
           "certification" : {
             "$ref" : "#/components/schemas/Certification",
+            "deprecated" : true,
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "attributes" : {
@@ -11911,6 +12918,7 @@
             "type" : "integer",
             "format" : "int32",
             "default" : 0,
+            "deprecated" : true,
             "description" : "CNA value",
             "maximum" : 99
           },
@@ -11967,9 +12975,15 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             },
             "uniqueItems" : true
+          },
+          "active" : {
+            "type" : "boolean",
+            "default" : true,
+            "description" : "Non residential location active, if false will be marked as inactive",
+            "example" : true
           }
         },
         "required" : [ "code", "locationType", "prisonId" ]
@@ -12051,8 +13065,9 @@
           },
           "cells" : {
             "type" : "array",
+            "description" : "Set of cells that are to be created",
             "items" : {
-              "$ref" : "#/components/schemas/NewCellRequest"
+              "$ref" : "#/components/schemas/CellInformation"
             },
             "uniqueItems" : true
           }
@@ -12061,6 +13076,7 @@
       },
       "LevelAboveCells" : {
         "type" : "object",
+        "description" : "Holds information about the level above which the cells should be created",
         "properties" : {
           "levelCode" : {
             "type" : "string",
@@ -12085,62 +13101,6 @@
           }
         },
         "required" : [ "levelCode" ]
-      },
-      "NewCellRequest" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Code of the location",
-            "example" : "001",
-            "minLength" : 1
-          },
-          "cellMark" : {
-            "type" : "string",
-            "description" : "Cell mark of the location",
-            "example" : "A1",
-            "minLength" : 1
-          },
-          "certifiedNormalAccommodation" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "CNA value",
-            "maximum" : 99
-          },
-          "maxCapacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "Max capacity of the location",
-            "example" : 2,
-            "maximum" : 99
-          },
-          "workingCapacity" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0,
-            "description" : "Working capacity of the location",
-            "example" : 2,
-            "maximum" : 99
-          },
-          "specialistCellTypes" : {
-            "type" : "array",
-            "description" : "Specialist Cell Types",
-            "items" : {
-              "type" : "string",
-              "description" : "Specialist Cell Types",
-              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
-            },
-            "uniqueItems" : true
-          },
-          "inCellSanitation" : {
-            "type" : "boolean",
-            "default" : true,
-            "description" : "In-cell sanitation for cell"
-          }
-        },
-        "required" : [ "code" ]
       },
       "PatchResidentialLocationRequest" : {
         "type" : "object",
@@ -12203,6 +13163,17 @@
             "type" : "string",
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
+          },
+          "cellMark" : {
+            "type" : "string",
+            "description" : "Cell mark of the location, this can only be used in Draft or a prison that does not require approval to change the certificate",
+            "example" : "A1",
+            "minLength" : 1
+          },
+          "inCellSanitation" : {
+            "type" : "boolean",
+            "description" : "In-cell sanitation, this can only be used in Draft or a prison that does not require approval to change the certificate",
+            "example" : true
           }
         }
       },
@@ -12243,7 +13214,7 @@
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
-              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
+              "enum" : [ "APPOINTMENT", "PROGRAMMES_AND_ACTIVITIES", "VIDEO_LINK", "HEARING_LOCATION", "LOCATION_OF_INCIDENT", "INTERNAL_MOVEMENTS", "OFFICIAL_VISITS", "USE_OF_FORCE" ]
             },
             "uniqueItems" : true
           },
@@ -12305,6 +13276,57 @@
           }
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+      },
+      "ProductCollectionSummary" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "version" ]
+      },
+      "ProductCollectionDTO" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          },
+          "version" : {
+            "type" : "string"
+          },
+          "ownerName" : {
+            "type" : "string"
+          },
+          "products" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ProductCollectionProduct"
+            }
+          }
+        },
+        "required" : [ "id", "name", "ownerName", "products", "version" ]
+      },
+      "ProductCollectionProduct" : {
+        "type" : "object",
+        "properties" : {
+          "productId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "productId" ]
       },
       "Alert" : {
         "type" : "object",
@@ -12570,7 +13592,11 @@
             "description" : "Roll count details"
           },
           "subLocations" : {
-            "description" : "Sub Locations"
+            "type" : "array",
+            "description" : "Sub Locations",
+            "items" : {
+              "$ref" : "#/components/schemas/ResidentialLocationRollCount"
+            }
           }
         },
         "required" : [ "certified", "fullLocationPath", "key", "locationCode", "locationId", "locationType", "rollCount" ]
@@ -12709,12 +13735,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -12823,291 +13849,7 @@
             "type" : "array",
             "description" : "All residential locations under this parent",
             "items" : {
-              "type" : "object",
-              "description" : "Location Information",
-              "properties" : {
-                "id" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Location Id",
-                  "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
-                },
-                "prisonId" : {
-                  "type" : "string",
-                  "description" : "Prison ID",
-                  "example" : "MDI"
-                },
-                "code" : {
-                  "type" : "string",
-                  "description" : "Location Code",
-                  "example" : "001"
-                },
-                "cellMark" : {
-                  "type" : "string",
-                  "description" : "Cell mark",
-                  "example" : "A1"
-                },
-                "pathHierarchy" : {
-                  "type" : "string",
-                  "description" : "Full path of the location within the prison",
-                  "example" : "A-1-001"
-                },
-                "locationType" : {
-                  "type" : "string",
-                  "description" : "Location Type",
-                  "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "HOLDING_AREA", "MOVEMENT_AREA", "RESIDENTIAL_UNIT", "EXTERNAL_GROUNDS", "HOLDING_CELL", "MEDICAL", "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
-                  "example" : "CELL"
-                },
-                "localName" : {
-                  "type" : "string",
-                  "description" : "Alternative description to display for location, (Not Cells)",
-                  "example" : "Wing A"
-                },
-                "wingStructure" : {
-                  "type" : "array",
-                  "description" : "The structure of the wing",
-                  "items" : {
-                    "type" : "string",
-                    "enum" : [ "CELL", "LANDING", "SPUR", "WING" ]
-                  }
-                },
-                "comments" : {
-                  "type" : "string",
-                  "description" : "Additional comments that can be made about this location",
-                  "example" : "Not to be used"
-                },
-                "permanentlyInactive" : {
-                  "type" : "boolean",
-                  "description" : "Indicates if the location is permanently inactive",
-                  "example" : false
-                },
-                "permanentlyInactiveReason" : {
-                  "type" : "string",
-                  "description" : "Reason for permanently deactivating",
-                  "example" : "Demolished"
-                },
-                "capacity" : {
-                  "$ref" : "#/components/schemas/Capacity",
-                  "description" : "Capacity details of the location"
-                },
-                "pendingChanges" : {
-                  "$ref" : "#/components/schemas/PendingChangeDto",
-                  "description" : "Pending changes of draft or pending approval location"
-                },
-                "oldWorkingCapacity" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "When a cell is inactive, show the active working capacity value"
-                },
-                "certification" : {
-                  "$ref" : "#/components/schemas/Certification",
-                  "description" : "Indicates that this location is certified for use as a residential location"
-                },
-                "usage" : {
-                  "type" : "array",
-                  "description" : "Location Usage",
-                  "items" : {
-                    "$ref" : "#/components/schemas/NonResidentialUsageDto"
-                  }
-                },
-                "servicesUsingLocation" : {
-                  "type" : "array",
-                  "description" : "Services that use this location",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ServiceUsingLocationDto"
-                  }
-                },
-                "internalMovementAllowed" : {
-                  "type" : "boolean",
-                  "description" : "Indicates that this location can used for internal movements"
-                },
-                "accommodationTypes" : {
-                  "type" : "array",
-                  "description" : "Accommodation Types",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Accommodation Types",
-                    "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ]
-                  }
-                },
-                "specialistCellTypes" : {
-                  "type" : "array",
-                  "description" : "Specialist Cell Types",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Specialist Cell Types",
-                    "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
-                  }
-                },
-                "usedFor" : {
-                  "type" : "array",
-                  "description" : "Usage For",
-                  "items" : {
-                    "type" : "string",
-                    "description" : "Used For Types",
-                    "enum" : [ "CLOSE_SUPERVISION_CENTRE", "SUB_MISUSE_DRUG_RECOVERY", "FIRST_NIGHT_CENTRE", "HIGH_SECURITY", "IPP_LONG_TERM_SENTENCES", "MOTHER_AND_BABY", "OPEN_UNIT", "PATHWAY_TO_PROG", "PERINATAL_UNIT", "PERSONALITY_DISORDER", "PIPE", "REMAND", "SEPARATION_CENTRE", "STANDARD_ACCOMMODATION", "THERAPEUTIC_COMMUNITY", "VULNERABLE_PRISONERS", "YOUNG_PERSONS" ]
-                  }
-                },
-                "status" : {
-                  "type" : "string",
-                  "description" : "Status of the location",
-                  "enum" : [ "ACTIVE", "INACTIVE", "ARCHIVED", "DRAFT", "NON_RESIDENTIAL", "LOCKED_ACTIVE", "LOCKED_INACTIVE", "LOCKED_DRAFT", "LOCKED_NON_RESIDENTIAL" ],
-                  "example" : "ACTIVE"
-                },
-                "locked" : {
-                  "type" : "boolean",
-                  "description" : "Location is locked",
-                  "example" : false
-                },
-                "convertedCellType" : {
-                  "type" : "string",
-                  "description" : "Convert Cell Type",
-                  "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
-                },
-                "otherConvertedCellType" : {
-                  "type" : "string",
-                  "description" : "Convert Cell Type (Other)"
-                },
-                "active" : {
-                  "type" : "boolean",
-                  "deprecated" : true,
-                  "description" : "Indicates the location is enabled",
-                  "example" : true
-                },
-                "inCellSanitation" : {
-                  "type" : "boolean",
-                  "description" : "In-cell sanitation",
-                  "example" : true
-                },
-                "deactivatedByParent" : {
-                  "type" : "boolean",
-                  "description" : "Indicates the location in inactive as a parent is deactivated",
-                  "example" : false
-                },
-                "deactivatedDate" : {
-                  "type" : "string",
-                  "format" : "date-time",
-                  "description" : "Date the location was deactivated",
-                  "example" : "2023-01-23T12:23:00"
-                },
-                "deactivatedReason" : {
-                  "type" : "string",
-                  "description" : "Reason for deactivation",
-                  "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
-                  "example" : "DAMAGED"
-                },
-                "deactivationReasonDescription" : {
-                  "type" : "string",
-                  "description" : "For OTHER deactivation reason, a free text comment is provided",
-                  "example" : "Window damage"
-                },
-                "deactivatedBy" : {
-                  "type" : "string",
-                  "description" : "Staff username who deactivated the location"
-                },
-                "proposedReactivationDate" : {
-                  "type" : "string",
-                  "format" : "date",
-                  "description" : "Estimated reactivation date for location reactivation",
-                  "example" : "2026-01-24"
-                },
-                "planetFmReference" : {
-                  "type" : "string",
-                  "description" : "Planet FM reference number",
-                  "example" : "2323/45M"
-                },
-                "topLevelId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Top Level Location Id",
-                  "example" : "57718979-573c-433a-9e51-2d83f887c11c"
-                },
-                "level" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-                  "examples" : [ "1", "2", "3" ]
-                },
-                "leafLevel" : {
-                  "type" : "boolean",
-                  "description" : "Indicates this is the lowest level, often a cell",
-                  "example" : false
-                },
-                "topLevelApprovalLocationId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
-                  "example" : "57718979-573c-433a-9e51-2d83f087c11c"
-                },
-                "pendingApprovalRequestId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
-                  "example" : "57818979-573c-433a-9e51-2d83f087c11c"
-                },
-                "parentId" : {
-                  "type" : "string",
-                  "format" : "uuid",
-                  "description" : "Parent Location Id",
-                  "example" : "57718979-573c-433a-9e51-2d83f887c11c"
-                },
-                "parentLocation" : {
-                  "description" : "Parent Location",
-                  "required" : [ "active", "code", "deactivatedByParent", "id", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
-                },
-                "inactiveCells" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Number of inactive cells below this location"
-                },
-                "numberOfCellLocations" : {
-                  "type" : "integer",
-                  "format" : "int32",
-                  "description" : "Total number of non-structural locations are below this level, e.g. cells and rooms"
-                },
-                "childLocations" : {
-                  "type" : "array",
-                  "description" : "Child Locations",
-                  "items" : {
-                    "description" : "Location Information",
-                    "required" : [ "active", "code", "deactivatedByParent", "id", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
-                  }
-                },
-                "changeHistory" : {
-                  "type" : "array",
-                  "description" : "History of changes",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ChangeHistory"
-                  }
-                },
-                "transactionHistory" : {
-                  "type" : "array",
-                  "description" : "A list of transactions applied to this location",
-                  "items" : {
-                    "$ref" : "#/components/schemas/TransactionHistory"
-                  }
-                },
-                "lastModifiedBy" : {
-                  "type" : "string",
-                  "description" : "Staff username who last changed the location"
-                },
-                "lastModifiedDate" : {
-                  "type" : "string",
-                  "format" : "date-time",
-                  "description" : "Date and time of the last change"
-                },
-                "key" : {
-                  "type" : "string",
-                  "description" : "Business Key for a location",
-                  "example" : "MDI-A-1-001"
-                },
-                "isResidential" : {
-                  "type" : "boolean",
-                  "description" : "Indicates if the location is a residential location",
-                  "example" : true
-                }
-              },
-              "required" : [ "active", "code", "deactivatedByParent", "id", "isResidential", "key", "lastModifiedBy", "lastModifiedDate", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
+              "$ref" : "#/components/schemas/Location"
             }
           }
         },
@@ -13160,8 +13902,7 @@
             "type" : "array",
             "description" : "Sub residential locations",
             "items" : {
-              "description" : "Prison hierarchy",
-              "required" : [ "fullLocationPath", "level", "locationCode", "locationId", "locationType", "status" ]
+              "$ref" : "#/components/schemas/PrisonHierarchyDto"
             }
           }
         },
@@ -13191,7 +13932,7 @@
               "key" : "2"
             } ],
             "items" : {
-              "required" : [ "key", "name" ]
+              "$ref" : "#/components/schemas/LocationGroupDto"
             }
           }
         },
@@ -13704,6 +14445,22 @@
         },
         "required" : [ "id", "name", "resourceName" ]
       },
+      "DashboardBucketDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "min" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "max" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "hexColour" : {
+            "type" : "string"
+          }
+        }
+      },
       "DashboardDefinition" : {
         "type" : "object",
         "properties" : {
@@ -13730,6 +14487,46 @@
           }
         },
         "required" : [ "id", "name", "sections" ]
+      },
+      "DashboardOptionDefinition" : {
+        "type" : "object",
+        "properties" : {
+          "useRagColour" : {
+            "type" : "boolean"
+          },
+          "baseColour" : {
+            "type" : "string"
+          },
+          "buckets" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DashboardBucketDefinition"
+            }
+          },
+          "showLatest" : {
+            "type" : "boolean"
+          },
+          "columnsAsList" : {
+            "type" : "boolean"
+          },
+          "horizontal" : {
+            "type" : "boolean"
+          },
+          "xStacked" : {
+            "type" : "boolean",
+            "writeOnly" : true
+          },
+          "yStacked" : {
+            "type" : "boolean",
+            "writeOnly" : true
+          },
+          "xstacked" : {
+            "type" : "boolean"
+          },
+          "ystacked" : {
+            "type" : "boolean"
+          }
+        }
       },
       "DashboardSectionDefinition" : {
         "type" : "object",
@@ -13774,9 +14571,12 @@
           },
           "axis" : {
             "type" : "string"
+          },
+          "optional" : {
+            "type" : "boolean"
           }
         },
-        "required" : [ "display", "id" ]
+        "required" : [ "id" ]
       },
       "DashboardVisualisationColumnsDefinition" : {
         "type" : "object",
@@ -13813,7 +14613,7 @@
           },
           "type" : {
             "type" : "string",
-            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group" ]
+            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group", "matrix-timeseries", "line-timeseries" ]
           },
           "display" : {
             "type" : "string"
@@ -13823,6 +14623,9 @@
           },
           "columns" : {
             "$ref" : "#/components/schemas/DashboardVisualisationColumnsDefinition"
+          },
+          "options" : {
+            "$ref" : "#/components/schemas/DashboardOptionDefinition"
           }
         },
         "required" : [ "columns", "id", "type" ]
@@ -13837,7 +14640,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "equals", "id" ]
+        "required" : [ "id" ]
       },
       "Constant" : {
         "type" : "object",
@@ -14056,7 +14859,11 @@
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
           },
           "subLocations" : {
-            "description" : "Sub locations within this cell certificate location"
+            "type" : "array",
+            "description" : "Sub locations within this cell certificate location",
+            "items" : {
+              "$ref" : "#/components/schemas/CellCertificateLocationDto"
+            }
           }
         },
         "required" : [ "level", "locationCode", "locationType", "pathHierarchy" ]
@@ -14065,31 +14872,11 @@
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "An HMPPS Auth access token.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
         "bearerFormat" : "JWT"
-      },
-      "hmpps-auth" : {
-        "type" : "oauth2",
-        "flows" : {
-          "clientCredentials" : {
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          },
-          "authorizationCode" : {
-            "authorizationUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/authorize",
-            "tokenUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/oauth/token",
-            "scopes" : {
-              "read" : "Allows read of data",
-              "write" : "Allows write of data"
-            }
-          }
-        },
-        "openIdConnectUrl" : "https://sign-in-dev.hmpps.service.justice.gov.uk/auth/.well-known/openid-configuration"
       }
     }
   }

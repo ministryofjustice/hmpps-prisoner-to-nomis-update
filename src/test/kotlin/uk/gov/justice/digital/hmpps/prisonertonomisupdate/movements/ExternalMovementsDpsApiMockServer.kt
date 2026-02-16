@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -9,12 +8,18 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonOccurrenceCount
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndByWithPrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
@@ -30,12 +35,12 @@ class ExternalMovementsDpsApiExtension :
   companion object {
     @JvmField
     val dpsExternalMovementsServer = ExternalMovementsDpsApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
     dpsExternalMovementsServer.start()
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
@@ -53,27 +58,46 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   private val now = LocalDateTime.now()
-  private val today = now.toLocalDate()
   private val tomorrow = now.plusDays(1)
 
-  fun tapAuthorisation(id: UUID = UUID.randomUUID()) = SyncReadTapAuthorisation(
+  fun tapAuthorisation(
+    id: UUID = UUID.randomUUID(),
+    occurrenceCount: Int = 0,
+    startTime: LocalDateTime = now,
+    endTime: LocalDateTime = tomorrow,
+    repeat: Boolean = true,
+    statusCode: String = "PENDING",
+  ) = SyncReadTapAuthorisation(
     id = id,
-    repeat = true,
-    fromDate = today,
-    toDate = today,
-    occurrences = listOf(),
+    repeat = repeat,
+    start = startTime.toLocalDate(),
+    end = endTime.toLocalDate(),
+    occurrences = when (occurrenceCount) {
+      0 -> listOf()
+      1 -> listOf(tapAuthorisationOccurrence(start = startTime, end = endTime))
+      else -> listOf(
+        tapAuthorisationOccurrence(start = startTime, end = startTime.plusHours(1), location = Location(address = "some address 1", description = "some description 1", postcode = "some postcode 1", uprn = 1)),
+        tapAuthorisationOccurrence(start = endTime.minusHours(6), end = endTime.minusHours(5), location = Location(address = "some address 2", description = "some description 2", postcode = "some postcode 2", uprn = 2)),
+        tapAuthorisationOccurrence(start = endTime.minusHours(1), end = endTime, location = Location(address = "some address 1", description = "some description 1", postcode = "some postcode 1", uprn = 1)),
+      )
+    },
     personIdentifier = "USER1",
-    statusCode = "PENDING",
+    statusCode = statusCode,
     prisonCode = "LEI",
     absenceReasonCode = "R2",
     created = SyncAtAndBy(now, "USER1"),
     absenceTypeCode = "SR",
     absenceSubTypeCode = "RDR",
-    notes = "Some notes",
+    comments = "Some notes",
     accompaniedByCode = "U",
+    transportCode = "VAN",
   )
 
-  fun tapOccurrence(id: UUID = UUID.randomUUID(), authorisationId: UUID) = SyncReadTapOccurrence(
+  fun tapOccurrence(
+    id: UUID = UUID.randomUUID(),
+    authorisationId: UUID,
+    location: Location,
+  ) = SyncReadTapOccurrence(
     id = id,
     authorisation = SyncReadTapOccurrenceAuthorisation(
       id = authorisationId,
@@ -81,19 +105,32 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       prisonCode = "LEI",
     ),
     statusCode = "SCHEDULED",
-    releaseAt = now,
-    returnBy = tomorrow,
-    location = Location(
-      description = "Agency name",
-      address = "agency address",
-      postcode = "agency postcode",
-      uprn = "uprn",
-    ),
+    start = now,
+    end = tomorrow,
+    location = location,
     accompaniedByCode = "U",
     transportCode = "TAX",
     absenceReasonCode = "R2",
     created = SyncAtAndBy(at = now, by = "USER1"),
-    notes = "Tap occurrence comment",
+    comments = "Tap occurrence comment",
+  )
+
+  fun tapAuthorisationOccurrence(
+    id: UUID = UUID.randomUUID(),
+    start: LocalDateTime = now,
+    end: LocalDateTime = tomorrow,
+    location: Location = Location(address = "some address", postcode = "some postcode", uprn = 1, description = "some description"),
+  ) = SyncReadTapAuthorisationOccurrence(
+    id = id,
+    statusCode = "SCHEDULED",
+    start = start,
+    end = end,
+    location = location,
+    accompaniedByCode = "U",
+    transportCode = "TAX",
+    absenceReasonCode = "R2",
+    created = SyncAtAndBy(at = now, by = "USER1"),
+    comments = "Tap occurrence comment",
   )
 
   fun tapMovement(id: UUID = UUID.randomUUID(), occurrenceId: UUID = UUID.randomUUID()) = SyncReadTapMovement(
@@ -106,13 +143,23 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       description = "Agency name",
       address = "agency address",
       postcode = "agency postcode",
-      uprn = "uprn",
+      uprn = 1,
     ),
     accompaniedByCode = "U",
-    accompaniedByNotes = "Unaccompanied movement notes",
-    notes = "movement notes",
+    accompaniedByComments = "Unaccompanied movement notes",
+    comments = "movement notes",
     personIdentifier = "A1234AA",
-    created = SyncAtAndByWithPrison(at = now, by = "USER1", prisonCode = "LEI"),
+    created = SyncAtAndBy(at = now, by = "USER1"),
+    prisonCode = "LEI",
+  )
+
+  fun personTapCounts() = PersonTapCounts(
+    authorisations = PersonAuthorisationCount(count = 1),
+    occurrences = PersonOccurrenceCount(count = 2),
+    movements = PersonMovementsCount(
+      scheduled = MovementInOutCount(outCount = 3, inCount = 4),
+      unscheduled = MovementInOutCount(outCount = 5, inCount = 6),
+    ),
   )
 
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {
@@ -122,7 +169,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -134,19 +181,24 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }
 
-  fun stubGetTapOccurrence(id: UUID, authorisationId: UUID, response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId)) {
+  fun stubGetTapOccurrence(
+    id: UUID,
+    authorisationId: UUID,
+    location: Location = Location(description = "Agency name", address = "agency address", postcode = "agency postcode", uprn = 1),
+    response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId, location),
+  ) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-occurrences/$id")
         .willReturn(
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -158,7 +210,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }
@@ -170,7 +222,7 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(200)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(response)),
+            .withBody(jsonMapper.writeValueAsString(response)),
         ),
     )
   }
@@ -182,7 +234,31 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
           aResponse()
             .withStatus(status)
             .withHeader("Content-Type", "application/json")
-            .withBody(objectMapper.writeValueAsString(error)),
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliation(personIdentifier: String, response: PersonTapCounts = personTapCounts()) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation/$personIdentifier/temporary-absences")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation/$personIdentifier/temporary-absences")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(error)),
         ),
     )
   }

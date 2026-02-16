@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-11-14.547.ff100a4"
+    "version" : "2025-11-26.625.832f6cb"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -9175,12 +9175,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -9190,13 +9190,13 @@
       "PagedWaitingListApplication" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -11772,6 +11772,11 @@
             "type" : "string",
             "description" : "\n    The username of the user authenticated via HMPPS auth that cancelled this appointment.\n    Will be null if this appointment has not been cancelled\n    ",
             "example" : "AAA01U"
+          },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
           }
         },
         "required" : [ "appointmentId", "appointmentName", "appointmentSeriesId", "appointmentType", "attendees", "category", "createdTime", "inCell", "isCancelled", "isDeleted", "isEdited", "isExpired", "isRepeat", "maxSequenceNumber", "prisonCode", "sequenceNumber", "startDate", "startTime", "timeSlot" ]
@@ -12243,7 +12248,7 @@
             "type" : "string",
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
-            "maxLength" : 400,
+            "maxLength" : 800,
             "minLength" : 0
           }
         },
@@ -12493,7 +12498,7 @@
             "type" : "string",
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
-            "maxLength" : 400,
+            "maxLength" : 800,
             "minLength" : 0
           },
           "originalAppointmentId" : {
@@ -13554,7 +13559,7 @@
             "type" : "string",
             "description" : "\n    Updated prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
-            "maxLength" : 400,
+            "maxLength" : 800,
             "minLength" : 0
           },
           "removePrisonerNumbers" : {
@@ -14474,13 +14479,13 @@
       "PageActivityCandidate" : {
         "type" : "object",
         "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
           },
           "size" : {
             "type" : "integer",
@@ -15643,6 +15648,11 @@
             "type" : "string",
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
+          },
+          "prisonerExtraInformation" : {
+            "type" : "string",
+            "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
+            "example" : "Please arrive 10 minutes early"
           },
           "createdTime" : {
             "type" : "string",

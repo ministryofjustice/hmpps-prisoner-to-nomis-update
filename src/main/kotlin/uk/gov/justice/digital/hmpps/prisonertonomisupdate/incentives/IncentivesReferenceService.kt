@@ -2,9 +2,12 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.PrisonIncentiveLevel
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateGlobalIncentiveRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateGlobalIncentiveRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.PrisonIncentiveLevelRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.ReferenceCode
 
 @Service
 class IncentivesReferenceService(
@@ -13,9 +16,12 @@ class IncentivesReferenceService(
   private val telemetryClient: TelemetryClient,
 ) {
 
-  private fun IncentiveLevel.toNomisIncentiveLevel(): ReferenceCode = ReferenceCode(
+  private fun IncentiveLevel.toCreateGlobalIncentiveRequest(): CreateGlobalIncentiveRequest = CreateGlobalIncentiveRequest(
     code = code,
-    domain = "IEP_LEVEL",
+    description = name,
+    active = active,
+  )
+  private fun IncentiveLevel.toUpdateGlobalIncentiveRequest(): UpdateGlobalIncentiveRequest = UpdateGlobalIncentiveRequest(
     description = name,
     active = active,
   )
@@ -37,13 +43,13 @@ class IncentivesReferenceService(
     nomisApiService.getGlobalIncentiveLevel(incentiveLevelCode)?.also {
       incentivesApiService.getGlobalIncentiveLevel(incentiveLevelCode)
         .also { incentiveLevel ->
-          nomisApiService.updateGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel())
+          nomisApiService.updateGlobalIncentiveLevel(incentiveLevelCode, incentiveLevel.toUpdateGlobalIncentiveRequest())
           trackEvent("global-incentive-level-updated", incentiveLevel)
         }
     } ?: also {
       incentivesApiService.getGlobalIncentiveLevel(incentiveLevelCode)
         .also { incentiveLevel ->
-          nomisApiService.createGlobalIncentiveLevel(incentiveLevel.toNomisIncentiveLevel())
+          nomisApiService.createGlobalIncentiveLevel(incentiveLevel.toCreateGlobalIncentiveRequest())
           trackEvent("global-incentive-level-inserted", incentiveLevel)
         }
     }
@@ -69,12 +75,12 @@ class IncentivesReferenceService(
         "prison" to incentiveLevel.prisonId,
         "defaultOnAdmission" to incentiveLevel.defaultOnAdmission.toString(),
         "active" to incentiveLevel.active.toString(),
-        "visitOrders" to incentiveLevel.visitOrders?.toString(),
-        "privilegedVisitOrders" to incentiveLevel.privilegedVisitOrders?.toString(),
-        "remandTransferLimitInPence" to incentiveLevel.remandTransferLimitInPence?.toString(),
-        "remandSpendLimitInPence" to incentiveLevel.remandSpendLimitInPence?.toString(),
-        "convictedSpendLimitInPence" to incentiveLevel.convictedSpendLimitInPence?.toString(),
-        "convictedTransferLimitInPence" to incentiveLevel.convictedTransferLimitInPence?.toString(),
+        "visitOrders" to incentiveLevel.visitOrders.toString(),
+        "privilegedVisitOrders" to incentiveLevel.privilegedVisitOrders.toString(),
+        "remandTransferLimitInPence" to incentiveLevel.remandTransferLimitInPence.toString(),
+        "remandSpendLimitInPence" to incentiveLevel.remandSpendLimitInPence.toString(),
+        "convictedSpendLimitInPence" to incentiveLevel.convictedSpendLimitInPence.toString(),
+        "convictedTransferLimitInPence" to incentiveLevel.convictedTransferLimitInPence.toString(),
       ),
       null,
     )

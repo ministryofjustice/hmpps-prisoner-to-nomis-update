@@ -1,27 +1,28 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceOutsideMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
+import java.time.LocalDateTime
 import java.util.*
 
 @Component
-class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapper) {
+class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubCreateTemporaryAbsenceApplicationMapping() {
     mappingServer.stubFor(
@@ -44,7 +45,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -55,7 +56,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -68,7 +69,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(200)
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceApplicationMapping(nomisMovementApplicationId, dpsId, prisonerNumber))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceApplicationMapping(nomisMovementApplicationId, dpsId, prisonerNumber))),
       ),
     )
   }
@@ -79,63 +80,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
-      ),
-    )
-  }
-
-  fun stubCreateOutsideMovementMapping() {
-    mappingServer.stubFor(
-      post("/mapping/temporary-absence/outside-movement")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(201),
-        ),
-    )
-  }
-
-  fun stubCreateOutsideMovementMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
-    mappingServer.stubFor(
-      post("/mapping/temporary-absence/outside-movement").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
-      ),
-    )
-  }
-
-  fun stubCreateOutsideMovementMappingConflict(error: DuplicateMappingErrorResponse) {
-    mappingServer.stubFor(
-      post("/mapping/temporary-absence/outside-movement").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
-      ),
-    )
-  }
-
-  fun stubCreateOutsideMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/outside-movement")
-
-  fun stubGetTemporaryAbsenceOutsideMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
-    mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/outside-movement/dps-id/$dpsId")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceOutsideMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
-      ),
-    )
-  }
-
-  fun stubGetTemporaryAbsenceOutsideMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
-    mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/outside-movement/dps-id/$dpsId")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -157,7 +102,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -168,19 +113,43 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
 
   fun stubCreateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement")
 
-  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisEventId: Long = 1) {
+  fun stubUpdateScheduledMovementMapping() {
+    mappingServer.stubFor(
+      put("/mapping/temporary-absence/scheduled-movement")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(200),
+        ),
+    )
+  }
+
+  fun stubUpdateScheduledMovementMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      put("/mapping/temporary-absence/scheduled-movement").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubUpdateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement", ::put)
+
+  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisEventId: Long = 1, addressId: Long = 54321) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId, addressId = addressId))),
       ),
     )
   }
@@ -191,7 +160,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -213,7 +182,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -224,7 +193,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -236,7 +205,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
       get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(objectMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
       ),
     )
   }
@@ -247,7 +216,7 @@ class ExternalMovementsMappingApiMockServer(private val objectMapper: ObjectMapp
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
-          .withBody(objectMapper.writeValueAsString(error)),
+          .withBody(jsonMapper.writeValueAsString(error)),
       ),
     )
   }
@@ -269,25 +238,19 @@ fun temporaryAbsenceApplicationMapping(
   mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.MIGRATED,
 )
 
-fun temporaryAbsenceOutsideMovementMapping(nomisMovementApplicationMultiId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = TemporaryAbsenceOutsideMovementSyncMappingDto(
-  prisonerNumber = prisonerNumber,
-  bookingId = 12345,
-  nomisMovementApplicationMultiId = nomisMovementApplicationMultiId,
-  dpsOutsideMovementId = dpsId,
-  mappingType = TemporaryAbsenceOutsideMovementSyncMappingDto.MappingType.MIGRATED,
-)
-
-fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ScheduledMovementSyncMappingDto(
+fun temporaryAbsenceScheduledMovementMapping(nomisEventId: Long = 1L, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), addressId: Long = 54321) = ScheduledMovementSyncMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = 12345,
   nomisEventId = nomisEventId,
   dpsOccurrenceId = dpsId,
   mappingType = ScheduledMovementSyncMappingDto.MappingType.MIGRATED,
-  // TODO add address mapping details
-  nomisAddressId = 0,
-  nomisAddressOwnerClass = "",
-  dpsAddressText = "",
-  eventTime = "",
+  dpsAddressText = "some address",
+  eventTime = "${LocalDateTime.now()}",
+  nomisAddressId = addressId,
+  nomisAddressOwnerClass = "OFF",
+  dpsUprn = 654,
+  dpsDescription = null,
+  dpsPostcode = "SW1A 1AA",
 )
 
 fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ExternalMovementSyncMappingDto(

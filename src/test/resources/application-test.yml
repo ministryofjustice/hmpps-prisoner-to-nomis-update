@@ -27,6 +27,8 @@ api.base.url:
   organisations: http://localhost:8100
   visit.balance: http://localhost:8101
   ext.movements: http://localhost:8102
+  core.person: http://localhost:8103
+  officialvisits: http://localhost:8104
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 0
@@ -327,10 +329,31 @@ hmpps.sqs:
       subscribeFilter: >-
         { "eventType":[
           "person.temporary-absence-authorisation.approved",
+          "person.temporary-absence-authorisation.relocated",
           "external-movements-api.temporary-absence-outside-movement.created",
           "person.temporary-absence.scheduled",
+          "person.temporary-absence.rescheduled",
           "external-movements-api.temporary-absence-external-movement-out.created",
           "external-movements-api.temporary-absence-external-movement-in.created"
+        ]}
+      dlqMaxReceiveCount: 1
+      visibilityTimeout: 120
+    officialvisits:
+      queueName: "officialvisits-${random.uuid}"
+      dlqName: "officialvisits-dlq-${random.uuid}"
+      subscribeTopicId: domainevents
+      subscribeFilter: >-
+        { "eventType":[
+          "official-visits-api.time-slot.created", 
+          "official-visits-api.time-slot.updated",
+          "official-visits-api.time-slot.deleted",
+          "official-visits-api.visit-slot.created",
+          "official-visits-api.visit-slot.updated",
+          "official-visits-api.visit-slot.deleted",
+          "official-visits-api.visit.created",
+          "official-visits-api.visit.deleted",
+          "official-visits-api.visitor.created",
+          "official-visits-api.visitor.deleted"
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
@@ -355,6 +378,7 @@ reports:
   casenotes:
     reconciliation:
       page-size: 5
+      retry-delay-ms: 10
   sentencing:
     reconciliation:
       page-size: 10
@@ -378,4 +402,18 @@ reports:
   visit-balance:
     reconciliation:
       page-size: 10
+  core-person:
+    reconciliation:
+      page-size: 10
+  official-visits:
+    all-missing-nomis-visits:
+      reconciliation:
+        page-size: 2
+        thread-count: 10
 api.locations.timeout: 1s
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

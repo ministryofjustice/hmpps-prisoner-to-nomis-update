@@ -1,23 +1,27 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalToJson
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import org.junit.jupiter.api.extension.AfterAllCallback
 import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CourtCaseLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCaseUuids
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCharge
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtAppearance
@@ -25,7 +29,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationPeriodLength
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationSentence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -54,7 +59,7 @@ class CourtSentencingApiExtension :
   companion object {
     @JvmField
     val courtSentencingApi = CourtSentencingApiMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
 
     fun legacySentence(sentenceId: String, sentenceCalcType: String, sentenceCategory: String = "2020", active: Boolean = true) = LegacySentence(
       prisonerId = "A6160DZ",
@@ -87,6 +92,7 @@ class CourtSentencingApiExtension :
       appearances = appearances,
       courtCaseLegacyData = CourtCaseLegacyData(caseReferences),
       merged = false,
+      status = if (active) ReconciliationCourtCase.Status.ACTIVE else ReconciliationCourtCase.Status.INACTIVE,
     )
 
     fun reconciliationCourtAppearance(
@@ -146,7 +152,7 @@ class CourtSentencingApiExtension :
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     courtSentencingApi.start()
   }
 
@@ -183,7 +189,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCaseResponse),
+            jsonMapper.writeValueAsString(courtCaseResponse),
           )
           .withStatus(200),
       ),
@@ -213,6 +219,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     courtCharge4Id: String,
     offenderNo: String = "A6160DZ",
     appearanceType: String = APPEARANCE_TYPE_CRT,
+    nextCourtAppearance: LegacyNextCourtAppearance? = null,
   ) {
     val courtAppearance = LegacyCourtAppearance(
       lifetimeUuid = UUID.fromString(courtAppearanceId),
@@ -221,6 +228,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       courtCode = "DDOC",
       appearanceDate = LocalDate.parse("2024-09-23"),
       appearanceTime = "10:00",
+      nextCourtAppearance = nextCourtAppearance,
       charges = listOf(
         LegacyCharge(
           lifetimeUuid = UUID.fromString(courtCharge1Id),
@@ -266,7 +274,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtAppearance),
+            jsonMapper.writeValueAsString(courtAppearance),
           )
           .withStatus(200),
       ),
@@ -305,7 +313,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtAppearance),
+            jsonMapper.writeValueAsString(courtAppearance),
           )
           .withStatus(200),
       ),
@@ -327,7 +335,29 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCase),
+            jsonMapper.writeValueAsString(courtCase),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetCourtChargeByAppearance(courtChargeId: String, courtAppearanceId: String, caseID: String, offenderNo: String = "A6160DZ") {
+    val courtCase = LegacyCharge(
+      lifetimeUuid = UUID.fromString(courtChargeId),
+      courtCaseUuid = caseID,
+      offenceCode = COURT_CHARGE_1_OFFENCE_CODE,
+      offenceStartDate = LocalDate.parse(COURT_CHARGE_1_OFFENCE_DATE),
+      offenceEndDate = LocalDate.parse(COURT_CHARGE_1_OFFENCE_END_DATE),
+      prisonerId = offenderNo,
+      nomisOutcomeCode = COURT_CHARGE_1_RESULT_CODE,
+    )
+    stubFor(
+      get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId/charge/$courtChargeId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            jsonMapper.writeValueAsString(courtCase),
           )
           .withStatus(200),
       ),
@@ -363,7 +393,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(sentence),
+            jsonMapper.writeValueAsString(sentence),
           )
           .withStatus(200),
       ),
@@ -371,17 +401,20 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetSentences(
+    request: LegacySearchSentence,
     sentences: List<LegacySentence>,
   ) {
     stubFor(
-      WireMock.post(WireMock.urlPathMatching("/legacy/sentence/search")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(
-            objectMapper().writeValueAsString(sentences),
-          )
-          .withStatus(200),
-      ),
+      WireMock.post(WireMock.urlPathMatching("/legacy/sentence/search"))
+        .withRequestBody(equalToJson(MappingExtension.jsonMapper.writeValueAsString(request)))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withBody(
+              jsonMapper.writeValueAsString(sentences),
+            )
+            .withStatus(200),
+        ),
     )
   }
 
@@ -411,7 +444,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(periodLength),
+            jsonMapper.writeValueAsString(periodLength),
           )
           .withStatus(200),
       ),
@@ -424,7 +457,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(courtCaseResponse),
+            jsonMapper.writeValueAsString(courtCaseResponse),
           )
           .withStatus(200),
       ),
@@ -437,7 +470,20 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(
-            objectMapper().writeValueAsString(recall),
+            jsonMapper.writeValueAsString(recall),
+          )
+          .withStatus(200),
+      ),
+    )
+  }
+
+  fun stubGetCourtCaseIdsForReconciliation(offenderNo: String, courtCaseUuids: LegacyCourtCaseUuids) {
+    stubFor(
+      get(WireMock.urlPathMatching("/legacy/prisoner/$offenderNo/court-case-uuids")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(
+            jsonMapper.writeValueAsString(courtCaseUuids),
           )
           .withStatus(200),
       ),
@@ -445,7 +491,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder {
-    this.withBody(NomisApiExtension.Companion.objectMapper.writeValueAsString(body))
+    this.withBody(NomisApiExtension.jsonMapper.writeValueAsString(body))
     return this
   }
 

@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships.profiledetails.ContactPersonProfileDetailsSyncService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
@@ -13,7 +13,7 @@ import java.util.concurrent.CompletableFuture
 
 @Service
 class ContactPersonDomainEventListener(
-  objectMapper: ObjectMapper,
+  jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
   val contactPersonService: ContactPersonService,
   val profileDetailsService: ContactPersonProfileDetailsSyncService,
@@ -21,7 +21,7 @@ class ContactPersonDomainEventListener(
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
   service = contactPersonService,
-  objectMapper = objectMapper,
+  jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
   domain = "personcontacts",
@@ -323,7 +323,7 @@ data class ContactNumberOfChildrenCreatedEvent(
   ContactIdReferencedEvent
 
 data class ContactNumberOfChildrenData(
-  val numberOfChildrenId: Long,
+  val prisonerNumberOfChildrenId: Long,
   override val source: String = "DPS",
 ) : SourcedAdditionalData
 

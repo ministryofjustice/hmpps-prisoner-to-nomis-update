@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.github.tomakehurst.wiremock.WireMockServer
 import com.github.tomakehurst.wiremock.client.MappingBuilder
 import com.github.tomakehurst.wiremock.client.WireMock
@@ -21,6 +20,7 @@ import org.junit.jupiter.api.extension.BeforeAllCallback
 import org.junit.jupiter.api.extension.BeforeEachCallback
 import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.test.context.junit.jupiter.SpringExtension
+import tools.jackson.databind.json.JsonMapper
 
 class MappingExtension :
   BeforeAllCallback,
@@ -29,11 +29,11 @@ class MappingExtension :
   companion object {
     @JvmField
     val mappingServer = MappingMockServer()
-    lateinit var objectMapper: ObjectMapper
+    lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    objectMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonObjectMapper") as ObjectMapper)
+    jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
     mappingServer.start()
   }
 
@@ -401,16 +401,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubDeleteActivityMapping(activityScheduleId: Long) {
-    stubFor(
-      delete("/mapping/activities/activity-schedule-id/$activityScheduleId").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(204),
-      ),
-    )
-  }
-
   fun stubDeleteMappingsGreaterThan(maxCourseScheduleId: Long) {
     stubFor(
       delete("/mapping/schedules/max-nomis-schedule-id/$maxCourseScheduleId").willReturn(
@@ -428,17 +418,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
           .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubGetAllActivityMappings(response: String) {
-    stubFor(
-      get("/mapping/activities").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
       ),
     )
   }
@@ -550,17 +529,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
             .withFixedDelay(1500),
 
         ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
-  fun stubGetAllAppointmentMappings(response: String) {
-    stubFor(
-      get("/mapping/appointments").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
-      ),
     )
   }
 
@@ -1211,6 +1179,20 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetThirdParties(oldOffenderNo: String, newOffenderNo: String, response: String) {
+    stubFor(
+      get("/mapping/non-associations/find/common-between/$oldOffenderNo/and/$newOffenderNo")
+        .willReturn(okJson(response)),
+    )
+  }
+
+  fun stubSetSequence(id: Long, sequence: Int) {
+    stubFor(
+      put("/mapping/non-associations/non-association-id/$id/sequence/$sequence")
+        .willReturn(ok()),
+    )
+  }
+
   fun stubCreateNonAssociationWithErrorFollowedBySlowSuccess() {
     stubFor(
       post("/mapping/non-associations")
@@ -1276,51 +1258,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubCreateLocationWithError(status: Int = 500) {
-    stubFor(
-      post("/mapping/locations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody("""{ "status": $status, "userMessage": "id already exists" }""")
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubCreateLocationWithDuplicateError(
-    dpsId: String,
-    nomisId: Long,
-    duplicateNomisId: Long,
-  ) {
-    stubFor(
-      post("/mapping/locations")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(
-              """
-            { 
-              "status": 409,
-              "errorCode": 1409,
-              "userMessage": "Conflict: Location mapping already exists",
-               "moreInfo": {
-                "existing": {
-                  "dpsLocationId": $dpsId,
-                  "nomisLocationId": "$nomisId"
-                  },
-                "duplicate": {
-                  "dpsLocationId": $dpsId,
-                  "nomisLocationId": "$duplicateNomisId"
-                }
-              }
-            }
-              """.trimMargin(),
-            )
-            .withStatus(409),
-        ),
-    )
-  }
-
   fun stubCreateLocationWithErrorFollowedBySlowSuccess() {
     stubFor(
       post("/mapping/locations")
@@ -1367,17 +1304,6 @@ class MappingMockServer : WireMockServer(WIREMOCK_PORT) {
           .withHeader("Content-Type", "application/json")
           .withBody("""{ "status": $status, "userMessage": "id does not exist" }""")
           .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubGetAllLocationMappings(response: String) {
-    stubFor(
-      get("/mapping/locations").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(response)
-          .withStatus(200),
       ),
     )
   }

@@ -25,28 +25,30 @@ internal class AppointmentApiServiceTest {
   @Autowired
   private lateinit var appointmentsApiService: AppointmentsApiService
 
+  private val appointmentInstanceResponse = """{
+    "id": 1234,
+    "appointmentSeriesId": 1234,
+    "appointmentId": 1234,
+    "appointmentAttendeeId": 1234,
+    "appointmentType": "INDIVIDUAL",
+    "bookingId": 12345,
+    "internalLocationId": 34567,
+    "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f",
+    "appointmentDate": "2023-03-14",
+    "startTime": "10:15",
+    "endTime":  "11:42",
+    "categoryCode": "DUFF",
+    "prisonCode": "SKI",
+    "inCell": false,
+    "prisonerNumber": "A1234BC",
+    "cancelled": false,
+    "createdTime": "2021-03-14T10:15:00",
+    "createdBy": "user1"
+  }
+  """.trimIndent()
+
   @Nested
   inner class GetAppointmentInstance {
-
-    private val appointmentInstanceResponse = """{
-      "id": 1234,
-      "appointmentType": "INDIVIDUAL",
-      "bookingId": 12345,
-      "internalLocationId": 34567,
-      "dpsLocationId": "17f5a650-f82b-444d-aed3-aef1719cfa8f",
-      "appointmentDate": "2023-03-14",
-      "startTime": "10:15",
-      "endTime":  "11:42",
-      "categoryCode": "DUFF",
-      "prisonCode": "SKI",
-      "inCell": false,
-      "prisonerNumber": "A1234BC",
-      "cancelled": false,
-      "createdTime": "2021-03-14T10:15:00",
-      "createdBy": "user1"
-    }
-    """.trimIndent()
-
     @BeforeEach
     internal fun setUp() {
       AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstance(1234, appointmentInstanceResponse)
@@ -90,6 +92,37 @@ internal class AppointmentApiServiceTest {
       assertThrows<ServiceUnavailable> {
         appointmentsApiService.getAppointmentInstance(1234)
       }
+    }
+  }
+
+  @Nested
+  inner class GetAppointmentInstanceWithRetries {
+    @Test
+    fun `should call api with OAuth2 token`() = runTest {
+      AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstance(1234, appointmentInstanceResponse)
+
+      appointmentsApiService.getAppointmentInstanceWithRetries(1234)
+
+      AppointmentsApiExtension.appointmentsApi.verify(
+        WireMock.getRequestedFor(WireMock.urlEqualTo("/appointment-instances/1234"))
+          .withHeader("Authorization", WireMock.equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `when a repeated transient error occurs retries are attempted but fail`() = runTest {
+      AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstanceWithError(1234, status = 502)
+
+      assertThrows<IllegalStateException> {
+        appointmentsApiService.getAppointmentInstanceWithRetries(1234)
+      }
+    }
+
+    @Test
+    fun `when a temporary transient error occurs retries are attempted and succeed`() = runTest {
+      AppointmentsApiExtension.appointmentsApi.stubGetAppointmentInstanceWithErrorFollowedBySlowSuccess(1234, appointmentInstanceResponse, status = 502)
+
+      assertThat(appointmentsApiService.getAppointmentInstanceWithRetries(1234).id).isEqualTo(1234)
     }
   }
 }

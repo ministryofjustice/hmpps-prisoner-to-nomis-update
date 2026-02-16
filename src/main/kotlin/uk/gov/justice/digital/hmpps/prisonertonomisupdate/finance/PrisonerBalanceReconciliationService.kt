@@ -12,7 +12,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.math.BigDecimal
 
@@ -111,7 +110,7 @@ class PrisonerBalanceReconciliationService(
     if (differenceList.isNotEmpty()) {
       // log.info("Differences: ${objectMapper.writeValueAsString(differenceList)}")
       telemetryClient.trackEvent(
-        "prisoner-balance-mismatch",
+        "prisoner-balance-reports-reconciliation-mismatch",
         mapOf(
           "prisoner" to nomisResponse.prisonNumber,
         ) + differenceList.associate { it.property to it.toString() },
@@ -195,19 +194,12 @@ class PrisonerBalanceReconciliationService(
     return differences
   }
 
-  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long, filterPrisonId: List<String>?): ReconciliationPageResult<Long> = runCatching {
-    if (filterPrisonId == null) {
-      financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
-        rootOffenderId = lastOffenderId,
-        pageSize = pageSize,
-      )
-    } else {
-      if (lastOffenderId > 0) {
-        RootOffenderIdsWithLast(emptyList(), 0L)
-      } else {
-        RootOffenderIdsWithLast(financeNomisApiService.getRootOffenderIds(filterPrisonId, 0, 3000).content, 9999L)
-      }
-    }
+  internal suspend fun getPrisonerIdsForPage(lastOffenderId: Long, filterPrisonIds: List<String>? = null): ReconciliationPageResult<Long> = runCatching {
+    financeNomisApiService.getPrisonerBalanceIdentifiersFromId(
+      rootOffenderId = lastOffenderId,
+      pageSize = pageSize,
+      prisonIds = filterPrisonIds,
+    )
   }.fold(
     onSuccess = { rootOffenderIdsWithLast ->
       ReconciliationSuccessPageResult(
@@ -218,7 +210,7 @@ class PrisonerBalanceReconciliationService(
     },
     onFailure = {
       telemetryClient.trackEvent(
-        "prisoner-balance-mismatch-page-error",
+        "prisoner-balance-reports-reconciliation-mismatch-page-error",
         mapOf(
           "lastOffenderId" to lastOffenderId.toString(),
           "error" to (it.message ?: ""),

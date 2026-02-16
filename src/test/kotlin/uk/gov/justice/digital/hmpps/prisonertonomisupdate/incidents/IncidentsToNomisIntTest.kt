@@ -32,8 +32,8 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
   private lateinit var incidentsNomisApi: IncidentsNomisApiMockServer
 
-  private val nomisApi = NomisApiExtension.Companion.nomisApi
-  private val dpsApi = IncidentsDpsApiExtension.Companion.incidentsDpsApi
+  private val nomisApi = NomisApiExtension.nomisApi
+  private val dpsApi = IncidentsDpsApiExtension.incidentsDpsApi
 
   @Nested
   inner class Incident {
@@ -47,6 +47,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
+          nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
           publishCreateIncidentDomainEvent(dpsId = "12345", nomisId = 1234L, source = "NOMIS")
           waitForAnyProcessingToComplete()
         }
@@ -179,7 +180,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("statusCode", "AWAN")
                 .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
                 .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17")
+                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
@@ -473,7 +474,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 .withRequestBodyJsonPath("statusCode", "AWAN")
                 .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
                 .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17")
+                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
                 .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
                 .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
                 .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),

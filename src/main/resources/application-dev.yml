@@ -21,3 +21,10 @@ api.base.url:
   personal.relationships: http://localhost:8080
   organisations: http://localhost:8080
   visit.balance: http://localhost:8080
+  core.person: http://localhost:8080
+
+springdoc:
+  api-docs:
+    enabled: true
+  swagger-ui:
+    enabled: true

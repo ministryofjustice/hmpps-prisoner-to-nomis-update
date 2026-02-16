@@ -51,7 +51,8 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       },
       "certification": {
         "certified": true,
-        "certifiedNormalAccommodation": 1
+        "certifiedNormalAccommodation": 1,
+        "capacityOfCertifiedCell": 3
       },
       "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
       "usage": [

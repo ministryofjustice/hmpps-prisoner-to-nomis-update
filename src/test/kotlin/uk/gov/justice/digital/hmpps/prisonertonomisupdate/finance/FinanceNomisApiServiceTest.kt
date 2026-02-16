@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.havingExactly
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -53,6 +54,20 @@ class FinanceNomisApiServiceTest {
         getRequestedFor(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
           .withQueryParam("rootOffenderId", equalTo("12345678"))
           .withQueryParam("pageSize", equalTo("5")),
+      )
+    }
+
+    @Test
+    fun `can pass prisonIds to filter by`() = runTest {
+      mockServer.stubGetPrisonerBalanceIdentifiersFromId(rootOffenderIdsWithLast)
+
+      apiService.getPrisonerBalanceIdentifiersFromId(12345678L, 5, prisonIds = listOf("MDI", "LEI"))
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/ids/all-from-id"))
+          .withQueryParam("rootOffenderId", equalTo("12345678"))
+          .withQueryParam("pageSize", equalTo("5"))
+          .withQueryParam("prisonId", havingExactly("LEI", "MDI")),
       )
     }
 

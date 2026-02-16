@@ -205,7 +205,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           eventType = "personal-relationships-api.number-of-children.created",
           payload = numberOfChildrenCreatedEvent(
             prisonerNumber = "A1234BC",
-            numberOfChildrenId = 123,
+            prisonerNumberOfChildrenId = 123,
             source = "DPS",
           ),
         ).also { waitForAnyProcessingToComplete() }
@@ -429,7 +429,7 @@ class ContactPersonProfileDetailsSyncIntTest(
           eventType = "personal-relationships-api.number-of-children.deleted",
           payload = numberOfChildrenDeletedEvent(
             prisonerNumber = "A1234BC",
-            numberOfChildrenId = 123,
+            prisonerNumberOfChildrenId = 123,
             source = "DPS",
           ),
         ).also { waitForAnyProcessingToComplete() }
@@ -790,14 +790,14 @@ fun domesticStatusCreatedEvent(
 
 fun numberOfChildrenCreatedEvent(
   prisonerNumber: String = "A1234BC",
-  numberOfChildrenId: Long = 123,
+  prisonerNumberOfChildrenId: Long = 123,
   source: String = "DPS",
 ) = //language=JSON
   """
     {
       "eventType":"personal-relationships-api.number-of-children.created", 
       "additionalInformation": {
-        "numberOfChildrenId": $numberOfChildrenId,
+        "prisonerNumberOfChildrenId": $prisonerNumberOfChildrenId,
         "source": "$source"
       },
       "personReference": {
@@ -836,14 +836,14 @@ fun domesticStatusDeletedEvent(
 
 fun numberOfChildrenDeletedEvent(
   prisonerNumber: String = "A1234BC",
-  numberOfChildrenId: Long = 123,
+  prisonerNumberOfChildrenId: Long = 123,
   source: String = "DPS",
 ) = //language=JSON
   """
     {
       "eventType":"personal-relationships-api.number-of-children.deleted", 
       "additionalInformation": {
-        "numberOfChildrenId": $numberOfChildrenId,
+        "prisonerNumberOfChildrenId": $prisonerNumberOfChildrenId,
         "source": "$source"
       },
       "personReference": {

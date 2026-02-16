@@ -39,10 +39,10 @@ fi
 # and compare
 if ! diff -r build/model_copy "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
   echo "Found differences between old ($OLD_VERSION) and new ($NEW_VERSION) models"
-  {
-    printf "differences=true\nproduction_version="
-    ./gradlew -q "$PROD_VERSION_TASK"
-  } >>"$GITHUB_OUTPUT"
+  echo "differences=true" >>"$GITHUB_OUTPUT"
+  PROD_VERSION=$(./gradlew -q "$PROD_VERSION_TASK" | grep -v 'Ignoring init script')
+  echo "Found production version of $PROD_VERSION, writing to github output"
+  echo "production_version=$PROD_VERSION" >>"$GITHUB_OUTPUT"
 else
   echo "No differences found"
   echo "differences=false" >>"$GITHUB_OUTPUT"

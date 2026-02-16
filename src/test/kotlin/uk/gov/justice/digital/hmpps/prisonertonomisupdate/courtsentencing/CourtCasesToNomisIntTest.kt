@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
@@ -29,7 +30,9 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCourtCase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyNextCourtAppearance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyRecall
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacySearchSentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.courtSentencingApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing.CourtSentencingApiExtension.Companion.legacySentence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
@@ -90,7 +93,6 @@ private const val NOMIS_TERM_SEQ = 32L
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val CASE_REFERENCE = "ABC4999"
-public const val APPEARANCE_CRT = "63e8fce0-033c-46ad-9edf-391b802d547a"
 private const val APPEARANCE_VL = "1da09b6e-55cb-4838-a157-ee6944f2094c"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
@@ -476,6 +478,10 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           COURT_CASE_ID_FOR_CREATION,
           offenderNo = OFFENDER_NO,
           courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          nextCourtAppearance = LegacyNextCourtAppearance(
+            appearanceDate = LocalDate.parse("2027-10-15"),
+            courtId = "DRBYYC",
+          ),
           courtCharge1Id = DPS_COURT_CHARGE_ID,
           courtCharge2Id = DPS_COURT_CHARGE_2_ID,
           courtCharge3Id = DPS_COURT_CHARGE_3_ID,
@@ -536,6 +542,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["courtEventCharges"])
                 .isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
               assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+              assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+              assertThat(it["nextAppearanceDate"]).isEqualTo("2027-10-15")
             },
             isNull(),
           )
@@ -1124,6 +1132,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
             assertThat(it["deletedCourtChargeMappings"])
               .contains("[nomisCourtChargeId: 15, nomisCourtChargeId: 16]")
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
           },
           isNull(),
         )
@@ -1327,6 +1336,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
             assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
             assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+            assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
           },
           isNull(),
         )
@@ -1502,8 +1513,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     inner class WhenCourtChargeHasBeenUpdatedInDPS {
       @BeforeEach
       fun setUp() {
-        courtSentencingApi.stubGetCourtCharge(
-          DPS_COURT_CHARGE_ID,
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          courtChargeId = DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
           offenderNo = OFFENDER_NO,
           caseID = COURT_CASE_ID_FOR_CREATION,
         )
@@ -1534,7 +1546,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will callback back to court sentencing service to get more details`() {
         waitForAnyProcessingToComplete()
-        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/charge/${DPS_COURT_CHARGE_ID}")))
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
       }
 
       @Test
@@ -3281,7 +3293,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
         courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
-          listOf(
+          request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+          mappings = listOf(
             SentenceMappingDto(
               dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
               nomisBookingId = BOOKING_ID,
@@ -3296,6 +3309,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         )
 
         courtSentencingApi.stubGetSentences(
+          request = LegacySearchSentence(
+            listOf(
+              UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            ),
+          ),
           sentences = listOf(
             legacySentence(
               sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
@@ -3893,7 +3912,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
         courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
-          listOf(
+          request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+          mappings = listOf(
             SentenceMappingDto(
               dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
               nomisBookingId = BOOKING_ID,
@@ -3903,6 +3923,17 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               dpsSentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
               nomisBookingId = BOOKING_ID,
               nomisSentenceSequence = 2,
+            ),
+          ),
+        )
+
+        courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
+          request = listOf("654212d8-4b58-4499-b465-73f9936999d9"),
+          mappings = listOf(
+            SentenceMappingDto(
+              dpsSentenceId = "654212d8-4b58-4499-b465-73f9936999d9",
+              nomisBookingId = BOOKING_ID,
+              nomisSentenceSequence = 3,
             ),
           ),
         )
@@ -3921,9 +3952,22 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           ),
         )
         courtSentencingApi.stubGetSentences(
+          request = LegacySearchSentence(
+            listOf(
+              UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            ),
+          ),
           sentences = listOf(
             legacySentence(sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", sentenceCalcType = "FTR_14", sentenceCategory = "2020", active = true),
             legacySentence(sentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", sentenceCalcType = "FTR_14", sentenceCategory = "2013", active = false),
+          ),
+        )
+
+        courtSentencingApi.stubGetSentences(
+          request = LegacySearchSentence(listOf(UUID.fromString("654212d8-4b58-4499-b465-73f9936999d9"))),
+          sentences = listOf(
+            legacySentence(sentenceId = "654212d8-4b58-4499-b465-73f9936999d9", sentenceCalcType = "IMP", sentenceCategory = "2020", active = false),
           ),
         )
 
@@ -3932,6 +3976,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           source = "DPS",
           recallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
           sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+          previousSentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "654212d8-4b58-4499-b465-73f9936999d9"),
         ).also {
           waitForAnyProcessingToComplete()
         }
@@ -3943,6 +3988,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list"))
             .withRequestBody(matchingJsonPath("$[0]", equalTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc")))
             .withRequestBody(matchingJsonPath("$[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"))),
+        )
+      }
+
+      @Test
+      fun `will get the NOMIS sentenceIds for each DPS sentence removed from the recall`() {
+        courtSentencingMappingApi.verify(
+          postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list"))
+            .withRequestBody(matchingJsonPath("$[0]", equalTo("654212d8-4b58-4499-b465-73f9936999d9"))),
         )
       }
 
@@ -3968,6 +4021,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
+      fun `will retrieve DPS sentence information for removed sentences`() {
+        courtSentencingApi.verify(
+          postRequestedFor(urlEqualTo("/legacy/sentence/search"))
+            .withRequestBody(matchingJsonPath("lifetimeUuids[0]", equalTo("654212d8-4b58-4499-b465-73f9936999d9"))),
+        )
+      }
+
+      @Test
       fun `will update NOMIS sentence information`() {
         courtSentencingNomisApi.verify(
           putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall"))
@@ -3980,8 +4041,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             .withRequestBody(matchingJsonPath("sentences[1].sentenceId.sentenceSequence", equalTo("2")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
             .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
-            // always set to active despite original sentence status
-            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
+            .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("false")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved.size()", equalTo("1")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved[0].sentenceId.sentenceSequence", equalTo("3")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved[0].sentenceCategory", equalTo("2020")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved[0].sentenceCalcType", equalTo("IMP")))
+            .withRequestBody(matchingJsonPath("sentencesRemoved[0].active", equalTo("false")))
             .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("recallRevocationDate", equalTo("2025-04-01")))
             .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
@@ -4002,6 +4068,9 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
             assertThat(it["nomisSentenceSeq"]).isEqualTo("1, 2")
             assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
+            assertThat(it["removedNomisSentenceSeq"]).isEqualTo("3")
+            assertThat(it["removedNomisBookingId"]).isEqualTo("$BOOKING_ID")
+            assertThat(it["removedDpsSentenceIds"]).isEqualTo("654212d8-4b58-4499-b465-73f9936999d9")
           },
           isNull(),
         )
@@ -4056,6 +4125,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               returnToCustodyDate = LocalDate.parse("2025-04-23"),
               revocationDate = LocalDate.parse("2025-04-01"),
               prisonerId = OFFENDER_NO,
+              // previous recall only contains 2 of the recalls being reverted
+              // so expect 2 sentences to become previous recall and the 3rd back to original state
               sentenceIds = listOf(
                 UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
                 UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
@@ -4063,7 +4134,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             ),
           )
           courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
-            listOf(
+            request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", "503b24ef-a33a-433f-bfc0-602b97ebf2d3"),
+            mappings = listOf(
               SentenceMappingDto(
                 dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
                 nomisBookingId = BOOKING_ID,
@@ -4073,6 +4145,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 dpsSentenceId = "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1",
                 nomisBookingId = BOOKING_ID,
                 nomisSentenceSequence = 2,
+              ),
+              SentenceMappingDto(
+                dpsSentenceId = "503b24ef-a33a-433f-bfc0-602b97ebf2d3",
+                nomisBookingId = BOOKING_ID,
+                nomisSentenceSequence = 3,
               ),
             ),
           )
@@ -4093,6 +4170,13 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtSentencingMappingApi.stubDeleteAppearanceRecallMappings("ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")
 
           courtSentencingApi.stubGetSentences(
+            request = LegacySearchSentence(
+              listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+                UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+                UUID.fromString("503b24ef-a33a-433f-bfc0-602b97ebf2d3"),
+              ),
+            ),
             sentences = listOf(
               legacySentence(
                 sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
@@ -4106,6 +4190,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                 sentenceCategory = "2013",
                 active = true,
               ),
+              legacySentence(
+                sentenceId = "503b24ef-a33a-433f-bfc0-602b97ebf2d3",
+                sentenceCalcType = "ADIMP",
+                sentenceCategory = "2013",
+                active = false,
+              ),
             ),
           )
 
@@ -4114,7 +4204,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             source = "DPS",
             previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
             recallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
-            sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1", "503b24ef-a33a-433f-bfc0-602b97ebf2d3"),
           ).also {
             waitForAnyProcessingToComplete()
           }
@@ -4125,7 +4215,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtSentencingMappingApi.verify(
             postRequestedFor(urlEqualTo("/mapping/court-sentencing/sentences/dps-sentence-ids/get-list"))
               .withRequestBody(matchingJsonPath("$[0]", equalTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc")))
-              .withRequestBody(matchingJsonPath("$[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"))),
+              .withRequestBody(matchingJsonPath("$[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")))
+              .withRequestBody(matchingJsonPath("$[2]", equalTo("503b24ef-a33a-433f-bfc0-602b97ebf2d3"))),
           )
         }
 
@@ -4146,7 +4237,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           courtSentencingApi.verify(
             postRequestedFor(urlEqualTo("/legacy/sentence/search"))
               .withRequestBody(matchingJsonPath("lifetimeUuids[0]", equalTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc")))
-              .withRequestBody(matchingJsonPath("lifetimeUuids[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"))),
+              .withRequestBody(matchingJsonPath("lifetimeUuids[1]", equalTo("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")))
+              .withRequestBody(matchingJsonPath("lifetimeUuids[2]", equalTo("503b24ef-a33a-433f-bfc0-602b97ebf2d3"))),
           )
         }
 
@@ -4164,6 +4256,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCategory", equalTo("2013")))
               .withRequestBody(matchingJsonPath("sentences[1].sentenceCalcType", equalTo("FTR_14")))
               .withRequestBody(matchingJsonPath("sentences[1].active", equalTo("true")))
+              .withRequestBody(matchingJsonPath("sentences[2].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+              .withRequestBody(matchingJsonPath("sentences[2].sentenceId.sentenceSequence", equalTo("3")))
+              .withRequestBody(matchingJsonPath("sentences[2].sentenceCategory", equalTo("2013")))
+              .withRequestBody(matchingJsonPath("sentences[2].sentenceCalcType", equalTo("ADIMP")))
+              .withRequestBody(matchingJsonPath("sentences[2].active", equalTo("false")))
               .withRequestBody(matchingJsonPath("returnToCustody.returnToCustodyDate", equalTo("2025-04-23")))
               .withRequestBody(matchingJsonPath("returnToCustody.recallLength", equalTo("14")))
               .withRequestBody(matchingJsonPath("returnToCustody.enteredByStaffUsername", equalTo("T.SMITH")))
@@ -4189,10 +4286,94 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["dpsPreviousRecallId"]).isEqualTo("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714")
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               assertThat(it["dpsSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1")
-              assertThat(it["nomisSentenceSeq"]).isEqualTo("1, 2")
+              assertThat(it["dpsOriginalSentenceIds"]).isEqualTo("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc, 7ed5c261-9644-4516-9ab5-1b2cd48e6ca1, 503b24ef-a33a-433f-bfc0-602b97ebf2d3")
+              assertThat(it["nomisSentenceSeq"]).isEqualTo("1, 2, 3")
               assertThat(it["nomisBookingId"]).isEqualTo("$BOOKING_ID")
             },
             isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenRevertingBackToPreviousNOMISFixedTermRecall {
+
+        @BeforeEach
+        fun setUp() {
+          courtSentencingApi.stubGetRecall(
+            "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+            LegacyRecall(
+              recallUuid = UUID.fromString("dc71f3c5-70d4-4faf-a4a5-ff9662d5f714"),
+              recallType = LegacyRecall.RecallType.FTR_14,
+              recallBy = "T.SMITH",
+              returnToCustodyDate = null,
+              revocationDate = null,
+              prisonerId = OFFENDER_NO,
+              sentenceIds = listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              ),
+            ),
+          )
+          courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
+            request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+            mappings = listOf(
+              SentenceMappingDto(
+                dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+                nomisBookingId = BOOKING_ID,
+                nomisSentenceSequence = 1,
+              ),
+            ),
+          )
+
+          courtSentencingMappingApi.stubGetAppearanceRecallMappings(
+            "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+            mappings = listOf(
+              CourtAppearanceRecallMappingDto(
+                nomisCourtAppearanceId = 101,
+                dpsRecallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+              ),
+            ),
+          )
+          courtSentencingMappingApi.stubDeleteAppearanceRecallMappings("ee1c3e64-3e5d-441b-98c6-c4449d94fd9c")
+
+          courtSentencingApi.stubGetSentences(
+            request = LegacySearchSentence(
+              listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+              ),
+            ),
+            sentences = listOf(
+              legacySentence(
+                sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
+                sentenceCalcType = "FTR_14",
+                sentenceCategory = "2020",
+                active = true,
+              ),
+            ),
+          )
+
+          courtSentencingNomisApi.stubRevertRecallSentences(OFFENDER_NO)
+          publishRecallDeletedDomainEvent(
+            source = "DPS",
+            previousRecallId = "dc71f3c5-70d4-4faf-a4a5-ff9662d5f714",
+            recallId = "ee1c3e64-3e5d-441b-98c6-c4449d94fd9c",
+            sentenceIds = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+          ).also {
+            waitForAnyProcessingToComplete()
+          }
+        }
+
+        @Test
+        fun `will update NOMIS sentence information with previous recall data but without return to custody data`() {
+          courtSentencingNomisApi.verify(
+            putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentences/recall/restore-previous"))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceId.offenderBookingId", equalTo("$BOOKING_ID")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceId.sentenceSequence", equalTo("1")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceCategory", equalTo("2020")))
+              .withRequestBody(matchingJsonPath("sentences[0].sentenceCalcType", equalTo("FTR_14")))
+              .withRequestBody(matchingJsonPath("sentences[0].active", equalTo("true")))
+              .withRequestBody(matchingJsonPath("returnToCustody", absent()))
+              .withRequestBody(matchingJsonPath("beachCourtEventIds[0]", equalTo("101"))),
           )
         }
       }
@@ -4203,7 +4384,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           courtSentencingMappingApi.stubGetMappingsGivenSentenceIds(
-            listOf(
+            request = listOf("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc", "7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+            mappings = listOf(
               SentenceMappingDto(
                 dpsSentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
                 nomisBookingId = BOOKING_ID,
@@ -4218,6 +4400,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           )
 
           courtSentencingApi.stubGetSentences(
+            request = LegacySearchSentence(
+              listOf(
+                UUID.fromString("9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc"),
+                UUID.fromString("7ed5c261-9644-4516-9ab5-1b2cd48e6ca1"),
+              ),
+            ),
             sentences = listOf(
               legacySentence(
                 sentenceId = "9ee21616-bbe4-4adc-b05e-c6e2a6a67cfc",
@@ -4704,6 +4892,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
   private fun publishRecallUpdatedDomainEvent(
     @Suppress("SameParameterValue") recallId: String = UUID.randomUUID().toString(),
     sentenceIds: List<String> = listOf(UUID.randomUUID().toString()),
+    previousSentenceIds: List<String>? = null,
     source: String = "DPS",
   ) {
     val eventType = "recall.updated"
@@ -4714,6 +4903,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             offenderNo = OFFENDER_NO,
             recallId = recallId,
             sentenceIds = sentenceIds,
+            previousSentenceIds = previousSentenceIds,
             eventType = eventType,
             source = source,
           ),
@@ -4797,10 +4987,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     recallId: String,
     previousRecallId: String? = null,
     sentenceIds: List<String>,
+    previousSentenceIds: List<String>? = null,
     offenderNo: String,
     eventType: String,
     source: String = "DPS",
-  ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "previousRecallId": ${previousRecallId?.let { "\"$it\"" }},  "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
+  ) = """{"eventType":"$eventType", "additionalInformation": {"recallId":"$recallId", "previousRecallId": ${previousRecallId?.let { "\"$it\"" }},  "sentenceIds":[${sentenceIds.joinToString { "\"$it\"" }}], ${if (previousSentenceIds != null) """"previousSentenceIds":[${previousSentenceIds.joinToString { "\"$it\"" }}],""" else ""}  "source": "$source"}, "personReference": {"identifiers":[{"type":"NOMS", "value":"$offenderNo"}]}}"""
 
   fun nomisCourtAppearanceCreateResponse(): CreateCourtAppearanceResponse = CreateCourtAppearanceResponse(id = NOMIS_COURT_APPEARANCE_ID, courtEventChargesIds = emptyList())
 

@@ -14,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
@@ -131,6 +132,150 @@ class CourtSentencingResource(
   ): CourtCaseRepairResponse = courtSentencingRepairService.resynchroniseCourtCaseInNomis(
     offenderNo = offenderNo,
     courtCaseId = courtCaseId,
+  )
+
+  @PostMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/repair")
+  @Operation(
+    summary = "Resynchronises a sentence insert from DPS to NOMIS",
+    description = "Used when a sentence insert needs resynchronising to NOMIS which failed previously, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping found for case/appearance or case/appearance/sentence not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairSentenceInsertInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the sentence to be re-synced to NOMIS")
+    @PathVariable
+    sentenceId: String,
+  ) = courtSentencingRepairService.resynchroniseSentenceInsertToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    sentenceId = sentenceId,
+  )
+
+  @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-sentence/{sentenceId}/repair")
+  @Operation(
+    summary = "Resynchronises a sentence from DPS to NOMIS",
+    description = "Used when a sentence with an existing mapping needs resynchronising to nomis, so emergency use only. Mappings should all exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping found for case/appearance/sentence or case/appearance/sentence not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairSentenceUpdateInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the sentence to be re-synced to NOMIS")
+    @PathVariable
+    sentenceId: String,
+  ) = courtSentencingRepairService.resynchroniseSentenceUpdateToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    sentenceId = sentenceId,
+  )
+
+  @PutMapping("/prisoners/{offenderNo}/court-sentencing/dps-court-case/{courtCaseId}/dps-appearance/{appearanceId}/dps-charge/{chargeId}/repair")
+  @Operation(
+    summary = "Resynchronises a charge for an appearance from DPS to NOMIS",
+    description = "Used when a charge with an existing mapping needs resynchronising to nomis, so emergency use only. Mappings should all exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+    responses = [
+      ApiResponse(
+        responseCode = "200",
+        description = "repair successful",
+        content = [
+          Content(
+            mediaType = "application/json",
+            schema = Schema(implementation = CourtCaseRepairResponse::class),
+          ),
+        ],
+      ),
+      ApiResponse(
+        responseCode = "401",
+        description = "Unauthorized to access this endpoint",
+      ),
+      ApiResponse(
+        responseCode = "403",
+        description = "Incorrect permissions to call endpoint",
+      ),
+      ApiResponse(
+        responseCode = "404",
+        description = "Either mapping not found for case/appearance/charge or case/appearance/sentence not found in DPS",
+      ),
+    ],
+  )
+  suspend fun repairCourtUpdateInNomis(
+    @PathVariable
+    offenderNo: String,
+    @Schema(description = "The DPS ID of the related court case")
+    @PathVariable
+    courtCaseId: String,
+    @Schema(description = "The DPS ID of the related appearance")
+    @PathVariable
+    appearanceId: String,
+    @Schema(description = "The DPS ID of the charge to be re-synced to NOMIS")
+    @PathVariable
+    chargeId: String,
+  ) = courtSentencingRepairService.resynchroniseChargeUpdateToNomis(
+    offenderNo = offenderNo,
+    courtCaseId = courtCaseId,
+    courtAppearanceId = appearanceId,
+    chargeId = chargeId,
   )
 }
 

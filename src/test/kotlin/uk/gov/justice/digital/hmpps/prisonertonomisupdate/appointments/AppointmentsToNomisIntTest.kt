@@ -48,6 +48,9 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
 
   private val appointmentResponse = """{
       "id": $APPOINTMENT_INSTANCE_ID,
+      "appointmentSeriesId": 1234,
+      "appointmentId": 1234,
+      "appointmentAttendeeId": 1234,
       "appointmentType": "INDIVIDUAL",
       "bookingId": $BOOKING_ID,
       "internalLocationId": $APPOINTMENT_NOMIS_LOCATION_ID,
@@ -60,7 +63,8 @@ class AppointmentsToNomisIntTest : SqsIntegrationTestBase() {
       "inCell": false,
       "prisonerNumber": "A1234BC",
       "cancelled": false,
-      "extraInformation": "Some comment",
+      "extraInformation": "Sensitive notes",
+      "prisonerExtraInformation": "Some comment",
       "createdTime": "2021-03-14T10:15:00",
       "createdBy": "user1"
     }

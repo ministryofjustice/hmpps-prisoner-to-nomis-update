@@ -32,8 +32,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.SentencingAdjustmentsApiExtension.Companion.sentencingAdjustmentsApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
+import java.util.UUID
 
-const val ADJUSTMENT_ID = "1234T"
+private val ADJUSTMENT_ID = UUID.randomUUID().toString()
 const val OFFENDER_NUMBER = "A1234TT"
 const val BOOKING_ID = 987651L
 
@@ -111,6 +112,49 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
             )
           }
           await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+        }
+
+        @Test
+        fun `will create success telemetry`() {
+          await untilAsserted {
+            verify(telemetryClient).trackEvent(
+              eq("sentencing-adjustment-create-success"),
+              check {
+                assertThat(it["adjustmentId"]).isEqualTo(ADJUSTMENT_ID)
+                assertThat(it["nomisAdjustmentId"]).isEqualTo(nomisAdjustmentId.toString())
+                assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NUMBER)
+              },
+              isNull(),
+            )
+          }
+        }
+      }
+
+      @Nested
+      inner class WhenTCAAdjustment {
+        private val sentenceSequence = 1L
+        private val nomisAdjustmentId = 98765L
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubSentenceAdjustmentCreate(
+            bookingId = BOOKING_ID,
+            sentenceSequence = sentenceSequence,
+            adjustmentId = nomisAdjustmentId,
+          )
+
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = sentenceSequence,
+            active = true,
+            adjustmentDays = 99,
+            adjustmentDate = "2022-01-01",
+            adjustmentType = "TCA",
+            adjustmentFromDate = "2020-07-19",
+            comment = "Adjusted for remand",
+            bookingId = BOOKING_ID,
+          )
+          publishCreateAdjustmentDomainEvent()
         }
 
         @Test

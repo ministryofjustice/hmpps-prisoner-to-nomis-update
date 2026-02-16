@@ -30,9 +30,10 @@ generic-service:
     API_BASE_URL_PERSONAL_RELATIONSHIPS: https://personal-relationships-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_ORGANISATIONS: https://organisations-api-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_VISIT_BALANCE: https://hmpps-visit-allocation-api-preprod.prison.service.justice.gov.uk
+    API_BASE_URL_CORE_PERSON: https://hmpps-person-record-preprod.hmpps.service.justice.gov.uk
     API_BASE_URL_EXT_MOVEMENTS: https://external-movements-api-preprod.hmpps.service.justice.gov.uk
+    API_BASE_URL_OFFICIALVISITS: https://official-visits-api-preprod.hmpps.service.justice.gov.uk
     REPORTS_SENTENCING_RECONCILIATION_ALL_PRISONERS: true
-    FEATURE_EVENT_CONTACTS-API_CONTACT_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_CREATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_UPDATED: false
     FEATURE_EVENT_ORGANISATIONS-API_ORGANISATION_DELETED: false
@@ -75,6 +76,31 @@ generic-service:
       type: COURT_CASE_ACTIVE_PRISONER_RECON
       schedule: "0 18 * * 1-5"
       suspend: true
+    - name: official-visits-all-recon
+      type: OFFICIAL_VISIT_ALL_RECON
+      schedule: "30 5 * * SAT"
+      suspend: true
+    - name: official-visits-all-missing-recon
+      type: OFFICIAL_VISIT_ALL_MISSING_RECON
+      schedule: "30 3 * * SAT"
+      suspend: true
+    - name: official-visits-active-sch-recon
+      type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
+      schedule: "30 2 * * *"
+      suspend: true
+    - name: prison-transactions-recon
+      type: PRISON_TRANSACTIONS_RECON
+      schedule: "00 2 * * *"
+      suspend: true
+    - name: tap-all-prisoners-recon
+      type: TAP_ALL_PRISONERS_RECON
+      schedule: "30 2 * * *"
+      suspend: true
+    - name: visit-slots-recon
+      type: VISIT_SLOTS_RECON
+      schedule: "45 2 * * *"
+      suspend: true
+
 
 generic-prometheus-alerts:
   businessHoursOnly: true
@@ -130,3 +156,6 @@ generic-prometheus-alerts:
     externalmovements:
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_externalmovements_queue"
       - "syscon-devs-preprod-hmpps_prisoner_to_nomis_externalmovements_dlq"
+    officialvisits:
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_officialvisits_queue"
+      - "syscon-devs-preprod-hmpps_prisoner_to_nomis_officialvisits_dlq"

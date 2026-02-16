@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.ReconciliationCourtCase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
@@ -41,6 +42,7 @@ class CourtSentencingReconciliationService(
       .split(",")
       .mapNotNull { it.trim().toLongOrNull() }
   }
+
   suspend fun generateCourtCasePrisonerReconciliationReportBatch() {
     telemetryClient.trackEvent(
       "$TELEMETRY_COURT_CASE_PRISONER_PREFIX-requested",
@@ -129,8 +131,17 @@ class CourtSentencingReconciliationService(
     )
   }
 
-  suspend fun checkCasesNomis(offenderNo: String, nomisCaseIds: List<Long>, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
-    val caseResult = checkCase(dpsCaseId = it.dpsCourtCaseId, nomisCaseId = it.nomisCourtCaseId, offenderNo = offenderNo, telemetryPrefix = telemetryPrefix)
+  suspend fun checkCasesNomis(
+    offenderNo: String,
+    nomisCaseIds: List<Long>,
+    telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX,
+  ): List<MismatchCaseResponse> = mappingService.getMappingsGivenNomisCourtCaseIds(nomisCourtCaseIds = nomisCaseIds).map {
+    val caseResult = checkCase(
+      dpsCaseId = it.dpsCourtCaseId,
+      nomisCaseId = it.nomisCourtCaseId,
+      offenderNo = offenderNo,
+      telemetryPrefix = telemetryPrefix,
+    )
     MismatchCaseResponse(
       offenderNo = offenderNo,
       nomisCaseId = it.nomisCourtCaseId,
@@ -138,6 +149,35 @@ class CourtSentencingReconciliationService(
       nomisBookingId = caseResult?.nomisBookingId,
       mismatch = caseResult,
     )
+  }
+
+  suspend fun checkCaseCount(
+    dpsCaseIds: List<String>,
+    nomisCaseIds: List<Long>,
+    offenderNo: String,
+    telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX,
+  ): MismatchCaseResponse? = if (nomisCaseIds.size != dpsCaseIds.size) {
+    val nomisCount = nomisCaseIds.size.toLong()
+    val dpsCount = dpsCaseIds.size.toString()
+    telemetryClient.trackEvent(
+      "$telemetryPrefix-mismatch",
+      mapOf(
+        "nomisCaseCount" to nomisCount.toString(),
+        "dpsCaseCount" to dpsCount,
+        "caseCountMismatch" to "true",
+        "offenderNo" to offenderNo,
+      ),
+      null,
+    )
+    MismatchCaseResponse(
+      offenderNo = offenderNo,
+      caseCountMismatch = true,
+      dpsCaseId = dpsCount,
+      nomisCaseId = nomisCount,
+      mismatch = null,
+    )
+  } else {
+    null
   }
 
   suspend fun checkActivePrisonerCasesMatch(prisonerId: PrisonerIds): MismatchPrisonerCasesResponse? = checkPrisonerCasesMatch(
@@ -182,24 +222,47 @@ class CourtSentencingReconciliationService(
 
   suspend fun manualCheckCaseOffenderNo(offenderNo: String, telemetryPrefix: String? = TELEMETRY_COURT_CASE_PRISONER_PREFIX): List<MismatchCaseResponse> {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(offenderNo)
-    return if (caseIds.isNotEmpty()) checkCasesNomis(offenderNo = offenderNo, nomisCaseIds = caseIds, telemetryPrefix = telemetryPrefix) else emptyList()
+    val dpsCaseIds = dpsApiService.getCourtCaseIdsForOffender(offenderNo).courtCaseUuids
+    val checkCaseCount =
+      checkCaseCount(dpsCaseIds, caseIds, offenderNo = offenderNo, telemetryPrefix = TELEMETRY_COURT_CASE_PRISONER_PREFIX)
+    return if (checkCaseCount != null) {
+      listOf(checkCaseCount)
+    } else {
+      if (caseIds.isNotEmpty()) {
+        checkCasesNomis(
+          offenderNo = offenderNo,
+          nomisCaseIds = caseIds,
+          telemetryPrefix = telemetryPrefix,
+        )
+      } else {
+        emptyList()
+      }
+    }
   }
 
   suspend fun manualCheckCaseOffenderNoList(offenderNoList: List<String>): List<List<MismatchCaseResponse>> = offenderNoList.map {
     val caseIds = nomisApiService.getCourtCaseIdsByOffender(it)
-    if (caseIds.isNotEmpty()) {
-      checkCasesNomis(
-        offenderNo = it,
-        nomisCaseIds = caseIds,
-      ).filter { caseResponse -> caseResponse.mismatch != null }
+    val dpsCaseIds = dpsApiService.getCourtCaseIdsForOffender(it).courtCaseUuids
+    val checkCaseCount =
+      checkCaseCount(dpsCaseIds, caseIds, offenderNo = it, telemetryPrefix = TELEMETRY_COURT_CASE_PRISONER_PREFIX)
+    if (checkCaseCount != null) {
+      listOf(checkCaseCount)
     } else {
-      emptyList()
+      if (caseIds.isNotEmpty()) {
+        checkCasesNomis(
+          offenderNo = it,
+          nomisCaseIds = caseIds,
+        ).filter { caseResponse -> caseResponse.mismatch != null }
+      } else {
+        emptyList()
+      }
     }
   }.also {
     log.info(it.toString())
   }
 
   private suspend fun getNextBookingsForPageActiveOnly(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = true)
+
   private suspend fun getNextBookingsForPageAll(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = getNextBookingsForPage(lastBookingId, activeOnly = false)
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long, activeOnly: Boolean = false): ReconciliationPageResult<PrisonerIds> = runCatching {
@@ -260,8 +323,9 @@ class CourtSentencingReconciliationService(
       SentenceFields(
         // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
         sentencingAppearanceDate = it.sentenceStartDate,
-        sentenceCategory = it.sentenceCategory,
-        sentenceCalcType = it.sentenceCalcType,
+        // for recalls fallback to legacy data when DPS records a NOMIS recall as UNKNOWN
+        sentenceCategory = it.sentenceCategory.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCategory,
+        sentenceCalcType = it.sentenceCalcType.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCalcType,
         fine = it.fineAmount?.stripTrailingZeros(),
         status = if (it.active) {
           "A"
@@ -276,8 +340,10 @@ class CourtSentencingReconciliationService(
       )
     }.distinctBy { it.id }
 
+    // when duplicate - do not compare status since DPS does not show case and can be inactive when active in NOMIS
+    val isClonedDuplicate = dpsResponse.status == ReconciliationCourtCase.Status.DUPLICATE
     val dpsFields = CaseFields(
-      active = dpsResponse.active,
+      active = dpsResponse.active.takeUnless { isClonedDuplicate },
       id = dpsCaseId,
       appearances = dpsResponse.appearances.map { appearanceResponse ->
         val charges = appearanceResponse.charges.map { appearanceChargeResponse ->
@@ -302,7 +368,7 @@ class CourtSentencingReconciliationService(
       caseReferences = dpsResponse.courtCaseLegacyData?.caseReferences?.map { it.offenderCaseReference } ?: emptyList(),
     )
     val nomisFields = CaseFields(
-      active = nomisResponse.caseStatus.code == "A",
+      active = (nomisResponse.caseStatus.code == "A").takeUnless { isClonedDuplicate },
       id = nomisResponse.id.toString(),
       appearances = nomisResponse.courtEvents.map { eventResponse ->
         val charges = eventResponse.courtEventCharges.map { chargeResponse ->
@@ -367,12 +433,30 @@ class CourtSentencingReconciliationService(
           differences = differenceList,
         )
       } else {
-        log.info("Excluding reconciliation mismatches for case id $nomisCaseId")
+        telemetryClient.trackEvent(
+          "$telemetryPrefix-excluded-case",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "nomisCaseId" to nomisCaseId.toString(),
+            "dpsCaseId" to dpsCaseId,
+            "reason" to ("Excluding reconciliation mismatches for case id $nomisCaseId"),
+          ),
+          null,
+        )
         null
       }
     } else {
       if (excludedCase) {
-        log.info("No reconciliation mismatches found for excluded case id $nomisCaseId. Remove from exclusion file.")
+        telemetryClient.trackEvent(
+          "$telemetryPrefix-excluded-case-resolved",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "nomisCaseId" to nomisCaseId.toString(),
+            "dpsCaseId" to dpsCaseId,
+            "reason" to ("No reconciliation mismatches found for excluded case id $nomisCaseId. Remove from exclusion file."),
+          ),
+          null,
+        )
       }
       null
     }
@@ -651,6 +735,7 @@ data class MismatchCaseResponse(
   val dpsCaseId: String,
   val nomisCaseId: Long,
   val nomisBookingId: Long? = null,
+  val caseCountMismatch: Boolean = false,
   val mismatch: MismatchCase?,
 )
 
@@ -660,7 +745,7 @@ data class MismatchPrisonerCasesResponse(
 )
 
 data class CaseFields(
-  val active: Boolean,
+  val active: Boolean?,
   val id: String,
   val appearances: List<AppearanceFields> = emptyList(),
   val caseReferences: List<String> = emptyList(),
@@ -762,10 +847,10 @@ data class SentenceTermFields(
 }
 
 data class MismatchCase(
+  val differences: List<Difference> = emptyList(),
   val nomisCase: CaseFields,
   val dpsCase: CaseFields,
   val nomisBookingId: Long,
-  val differences: List<Difference> = emptyList(),
 )
 
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)
