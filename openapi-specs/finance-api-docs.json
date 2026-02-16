@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-11.528.43bb4c8"
+    "version" : "2026-02-13.541.7e25a6e"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1311,13 +1311,11 @@
             "format" : "date"
           }
         }, {
-          "name" : "page",
+          "name" : "cursor",
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "integer",
-            "format" : "int32",
-            "default" : 0
+            "type" : "string"
           }
         }, {
           "name" : "size",
@@ -1335,7 +1333,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PageNomisSyncPayloadSummary"
+                  "$ref" : "#/components/schemas/CursorPageNomisSyncPayloadSummary"
                 }
               }
             }
@@ -2483,20 +2481,39 @@
         },
         "required" : [ "items" ]
       },
+      "CursorPageNomisSyncPayloadSummary" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NomisSyncPayloadSummary"
+            }
+          },
+          "nextCursor" : {
+            "type" : "string"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "content", "size", "totalElements" ]
+      },
       "NomisSyncPayloadSummary" : {
         "type" : "object",
         "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
           "timestamp" : {
             "type" : "string",
             "format" : "date-time"
-          },
-          "synchronizedTransactionId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "legacyTransactionId" : {
-            "type" : "integer",
-            "format" : "int64"
           },
           "requestId" : {
             "type" : "string",
@@ -2511,95 +2528,17 @@
           },
           "requestTypeIdentifier" : {
             "type" : "string"
+          },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         },
-        "required" : [ "requestId", "synchronizedTransactionId", "timestamp" ]
-      },
-      "PageNomisSyncPayloadSummary" : {
-        "type" : "object",
-        "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/NomisSyncPayloadSummary"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "PageableObject" : {
-        "type" : "object",
-        "properties" : {
-          "offset" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
-          },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "SortObject" : {
-        "type" : "object",
-        "properties" : {
-          "empty" : {
-            "type" : "boolean"
-          },
-          "sorted" : {
-            "type" : "boolean"
-          },
-          "unsorted" : {
-            "type" : "boolean"
-          }
-        }
+        "required" : [ "id", "requestId", "synchronizedTransactionId", "timestamp" ]
       },
       "NomisSyncPayloadDetail" : {
         "type" : "object",
