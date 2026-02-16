@@ -44,6 +44,35 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("official-visits-api.visit.deleted")
+  inner class OfficialVisitDeleted {
+
+    @Nested
+    @DisplayName("when mapping exists")
+    inner class WhenMappingExists {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeleteOfficialVisitDomainEvent(officialVisitId = "12345", prisonId = "MDI", offenderNo = "A1234KT", source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visit-delete-success"),
+          check {
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
+            assertThat(it["offenderNo"]).isEqualTo("A1234KT")
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("official-visits-api.visitor.created")
   inner class VisitorSlotCreated {
 
@@ -73,6 +102,35 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
+  @Nested
+  @DisplayName("official-visits-api.visitor.deleted")
+  inner class VisitorSlotDeleted {
+
+    @Nested
+    @DisplayName("when mapping exists")
+    inner class WhenMappingExists {
+
+      @BeforeEach
+      fun setUp() {
+        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = "7765", officialVisitId = "12345", prisonId = "MDI", source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-delete-success"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo("7765")
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+      }
+    }
+  }
+
   @Suppress("SameParameterValue")
   private fun publishCreateOfficialVisitDomainEvent(
     officialVisitId: String,
@@ -81,6 +139,18 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
     offenderNo: String,
   ) {
     with("official-visits-api.visit.created") {
+      publishDomainEvent(eventType = this, payload = visitMessagePayload(eventType = this, officialVisitId = officialVisitId, source = source, prisonId = prisonId, offenderNo = offenderNo))
+    }
+  }
+
+  @Suppress("SameParameterValue")
+  private fun publishDeleteOfficialVisitDomainEvent(
+    officialVisitId: String,
+    source: String = "DPS",
+    prisonId: String,
+    offenderNo: String,
+  ) {
+    with("official-visits-api.visit.deleted") {
       publishDomainEvent(eventType = this, payload = visitMessagePayload(eventType = this, officialVisitId = officialVisitId, source = source, prisonId = prisonId, offenderNo = offenderNo))
     }
   }
@@ -95,6 +165,18 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
   ) {
     with("official-visits-api.visitor.created") {
       publishDomainEvent(eventType = this, payload = visitorMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId, contactId = contactId))
+    }
+  }
+
+  @Suppress("SameParameterValue")
+  private fun publishDeleteOfficialVisitorDomainEvent(
+    officialVisitorId: String,
+    officialVisitId: String,
+    source: String = "DPS",
+    prisonId: String,
+  ) {
+    with("official-visits-api.visitor.deleted") {
+      publishDomainEvent(eventType = this, payload = visitorDeletedMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId))
     }
   }
 
@@ -165,5 +247,24 @@ fun visitorMessagePayload(
           }
         ]
       }
+    }
+    """
+fun visitorDeletedMessagePayload(
+  eventType: String,
+  officialVisitorId: String,
+  officialVisitId: String,
+  prisonId: String = "MDI",
+  source: String = "DPS",
+) = //language=JSON
+  """
+    {
+      "eventType":"$eventType", 
+      "additionalInformation": {
+        "officialVisitorId": "$officialVisitorId",
+        "officialVisitId": "$officialVisitId",
+        "prisonId": "$prisonId",
+        "source": "$source"
+      },
+      "personReference": null
     }
     """

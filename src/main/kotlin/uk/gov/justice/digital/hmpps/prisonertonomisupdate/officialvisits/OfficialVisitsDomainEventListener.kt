@@ -44,7 +44,9 @@ class OfficialVisitsDomainEventListener(
       "official-visits-api.visit-slot.updated" -> visitSlotsService.visitSlotUpdated(message.fromJson())
       "official-visits-api.visit-slot.deleted" -> visitSlotsService.visitSlotDeleted(message.fromJson())
       "official-visits-api.visit.created" -> officialVisitsService.visitCreated(message.fromJson())
+      "official-visits-api.visit.deleted" -> officialVisitsService.visitDeleted(message.fromJson())
       "official-visits-api.visitor.created" -> officialVisitsService.visitorCreated(message.fromJson())
+      "official-visits-api.visitor.deleted" -> officialVisitsService.visitorDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
   }
@@ -130,6 +132,10 @@ data class VisitorEvent(
   override val personReference: ContactIdentifiers,
 ) : SourcedEvent,
   ContactIdReferencedEvent
+
+data class VisitorDeletedEvent(
+  override val additionalInformation: VisitorAdditionalData,
+) : SourcedEvent
 
 interface PrisonerReferencedEvent {
   val personReference: PrisonerIdentifiers
