@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-11.406.e29fa79"
+    "version" : "2026-02-13.410.fc1d5e0"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -3049,11 +3049,87 @@
         }
       }
     },
+    "/mapping/csras/{offenderNo}/all" : {
+      "get" : {
+        "tags" : [ "csra-mapping-resource" ],
+        "summary" : "Gets all CSRA mappings for a prisoner",
+        "description" : "Gets all the mappings between Nomis CSRAs and DPS CSRAs related to specific prisoner created either via migration or synchronisation. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getMappingsForPrisoner_1",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "NOMIS offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS offender no",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mappings for prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AllPrisonerCsraMappingsDto"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post" : {
+        "tags" : [ "csra-mapping-resource" ],
+        "summary" : "Creates a set of new CSRA mappings for a prisoner",
+        "description" : "Creates a mapping between all the nomis CSRA ids and dps CSRA ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createMappingsForPrisoner_1",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "NOMIS offender no",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "NOMIS offender no",
+            "example" : "A1234KT"
+          },
+          "example" : "A1234KT"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerCsraMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mapping created",
+            "content" : { }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/csras/batch" : {
       "post" : {
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Creates a batch of new CSRA mappings",
-        "description" : "Creates a mapping between a batch of nomis CSRA ids and dps CSRA id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "description" : "Creates a mapping between a batch of nomis CSRA ids and dps CSRA ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "createMappings_2",
         "requestBody" : {
           "content" : {
@@ -7047,7 +7123,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Gets all transaction mappings for a prisoner",
         "description" : "Gets all the mappings between nomis transaction ids and dps transaction ids related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner_1",
+        "operationId" : "getMappingsForPrisoner_2",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -9089,6 +9165,51 @@
             }
           }
         }
+      },
+      "delete" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Delete an official visit mapping by NOMIS ID",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOfficialVisitMapping",
+        "parameters" : [ {
+          "name" : "nomisVisitId",
+          "in" : "path",
+          "description" : "NOMIS visit id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS visit id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Official visit mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/mapping/official-visits/visit/dps-id/{dpsVisitId}" : {
@@ -10305,38 +10426,6 @@
         }
       }
     },
-    "/mapping/csras/{offenderNo}/all" : {
-      "get" : {
-        "tags" : [ "csra-mapping-resource" ],
-        "summary" : "Gets all CSRA mappings for a prisoner",
-        "description" : "Gets all the mappings between Nomis CSRAs and DPS CSRAs related to specific prisoner created either via migration or synchronisation. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner_2",
-        "parameters" : [ {
-          "name" : "offenderNo",
-          "in" : "path",
-          "description" : "NOMIS offender no",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "NOMIS offender no",
-            "example" : "A1234KT"
-          },
-          "example" : "A1234KT"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Mappings for prisoner",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/AllPrisonerCsraMappingsDto"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/csras/migration-id/{migrationId}/count-by-prisoner" : {
       "get" : {
         "tags" : [ "csra-mapping-resource" ],
@@ -10409,9 +10498,9 @@
     "/mapping/csras/dps-csra-id/{dpsCsraId}" : {
       "get" : {
         "tags" : [ "csra-mapping-resource" ],
-        "summary" : "get multiple mappings",
+        "summary" : "get mapping given DPS id",
         "description" : "Retrieves mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByDpsId_1",
+        "operationId" : "getMappingByDpsId_1",
         "parameters" : [ {
           "name" : "dpsCsraId",
           "in" : "path",
@@ -12304,7 +12393,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId_1",
+        "operationId" : "getMappingByDpsId_2",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -16601,7 +16690,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get multiple mappings",
         "description" : "Retrieves mappings by DPS id. In case of past merges, there could be > 1 nomis id per dps id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByDpsId_2",
+        "operationId" : "getMappingsByDpsId_1",
         "parameters" : [ {
           "name" : "dpsCaseNoteId",
           "in" : "path",
@@ -17155,7 +17244,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId_2",
+        "operationId" : "getMappingByDpsId_3",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -20871,6 +20960,56 @@
           }
         },
         "required" : [ "dpsHearingId", "nomisHearingId" ]
+      },
+      "CsraMappingIdDto" : {
+        "type" : "object",
+        "description" : "NOMIS to Case note mapping IDs",
+        "properties" : {
+          "dpsCsraId" : {
+            "type" : "string",
+            "description" : "DPS case note id"
+          },
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS booking id"
+          },
+          "nomisSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "NOMIS sequence within booking"
+          }
+        },
+        "required" : [ "dpsCsraId", "nomisBookingId", "nomisSequence" ]
+      },
+      "PrisonerCsraMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner created during migration",
+        "properties" : {
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          },
+          "mappings" : {
+            "type" : "array",
+            "description" : "Mapping IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/CsraMappingIdDto"
+            }
+          }
+        },
+        "required" : [ "mappingType", "mappings" ]
       },
       "CSIPChildMappingDto" : {
         "type" : "object",
