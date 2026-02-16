@@ -33,6 +33,7 @@ import java.time.LocalDateTime
 import java.util.*
 
 private val AUTHORISATION_EVENTS_UPDATES_ONLY = listOf("person.temporary-absence-authorisation.relocated")
+private val NULL_NOMIS_ESCORT_CODE = "NOT_PROVIDED"
 
 @Service
 class ExternalMovementsService(
@@ -427,7 +428,7 @@ class ExternalMovementsService(
       eventSubType = this.absenceReasonCode,
       eventStatus = status,
       returnEventStatus = returnStatus,
-      escort = accompaniedByCode,
+      escort = if (accompaniedByCode == NULL_NOMIS_ESCORT_CODE) null else accompaniedByCode,
       fromPrison = authorisation.prisonCode,
       returnDate = this.end.toLocalDate(),
       returnTime = this.end,
@@ -479,7 +480,7 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
     returnTime = returnTime,
     applicationStatus = statusCode.toNomisApplicationStatus(occurrences.size),
     applicationType = if (repeat) "REPEATING" else "SINGLE",
-    escortCode = accompaniedByCode,
+    escortCode = if (accompaniedByCode == NULL_NOMIS_ESCORT_CODE) null else accompaniedByCode,
     transportType = transportCode,
     comment = comments,
     prisonId = prisonCode,
