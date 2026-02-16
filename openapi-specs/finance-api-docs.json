@@ -1,17 +1,23 @@
 {
   "openapi" : "3.1.0",
   "info" : {
-    "title" : "HMPPS Prisoner Finance API - ALPHA",
-    "description" : "API for retrieving and managing transactions and balance information related to prisoner finance.\n\n## Authentication\nThis API uses **OAuth2 with JWTs**. Pass your JWT in the `Authorization` header using the `Bearer` scheme.\n**Important:** This service is designed for client tokens only; user tokens should not be used.\n\n## Authorization\nAccess to API endpoints is controlled by roles. The required roles are documented with each endpoint.\nIntegrations should request one of the following roles based on their needs:\n\n* `ROLE_PRISONER_FINANCE__RO`: Grants **read-only access** (e.g., retrieving transactions, balances).\n* `ROLE_PRISONER_FINANCE__RW`: Grants **read/write access** (e.g., creating transactions, adding amendments).\n* `ROLE_PRISONER_FINANCE_SYNC__RW`: Grants **read/write access** to the NOMIS sync endpoints.",
+    "title" : "HMPPS Prisoner Finance Sync API",
+    "description" : "API for synchronising NOMIS transactions with the Prisoner Finance Ledger.\n\n## Authentication\nThis API uses **OAuth2 with JWTs**. Pass your JWT in the `Authorization` header using the `Bearer` scheme.\n**Important:** This service is designed for client tokens only; user tokens should not be used.\n\n## Authorization\nAccess to API endpoints is controlled by roles. The required roles are documented with each endpoint.\nIntegrations should request one of the following roles based on their needs:\n\n* `ROLE_PRISONER_FINANCE_SYNC__RW`: Grants **read/write access** to the NOMIS sync endpoints.\n* `ROLE_PRISONER_FINANCE_SYNC__AUDIT__RO`: Grants **read only access** to the Sync audit endpoints.",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-10-13.142.3a7cc54"
+    "version" : "2026-02-16"
   },
   "servers" : [ {
-    "url" : "https://prisoner-finance-poc-api-dev.hmpps.service.justice.gov.uk/",
+    "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
     "description" : "Development"
+  }, {
+    "url" : "https://prisoner-finance-sync-api-preprod.hmpps.service.justice.gov.uk/",
+    "description" : "Pre-Production"
+  }, {
+    "url" : "https://prisoner-finance-sync-api.hmpps.service.justice.gov.uk/",
+    "description" : "Production"
   }, {
     "url" : "http://localhost:8080",
     "description" : "Local"
@@ -24,6 +30,79 @@
     "description" : "Endpoints exclusively for NOMIS synchronization. Do not use for other client integrations."
   } ],
   "paths" : {
+    "/queue-admin/retry-dlq/{dlqName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryDlq",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RetryDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/retry-all-dlqs" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "retryAllDlqs",
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RetryDlqResult"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/queue-admin/purge-queue/{queueName}" : {
+      "put" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "purgeQueue",
+        "parameters" : [ {
+          "name" : "queueName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PurgeQueueResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sync/offender-transactions" : {
       "get" : {
         "tags" : [ "NOMIS Sync" ],
@@ -734,6 +813,41 @@
         } ]
       }
     },
+    "/queue-admin/get-dlq-messages/{dlqName}" : {
+      "get" : {
+        "tags" : [ "hmpps-queue-resource" ],
+        "operationId" : "getDlqMessages",
+        "parameters" : [ {
+          "name" : "dlqName",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "maxMessages",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 100
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/GetDlqResult"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisons/{prisonId}/reports/summary-of-payments-and-receipts" : {
       "get" : {
         "tags" : [ "Prison reports" ],
@@ -792,7 +906,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           }
         } ],
         "responses" : {
@@ -822,7 +937,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           }
         }, {
           "name" : "accountCode",
@@ -870,7 +986,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           }
         }, {
           "name" : "accountCode",
@@ -928,7 +1045,8 @@
           "in" : "path",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           }
         }, {
           "name" : "accountCode",
@@ -1153,10 +1271,224 @@
           "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
         } ]
       }
+    },
+    "/audit/history" : {
+      "get" : {
+        "tags" : [ "Audit" ],
+        "summary" : "Get Audit History",
+        "description" : "Get a list of synced payloads, including NOMIS' legacy IDs",
+        "operationId" : "getMatchingPayloads",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "^[A-Za-z0-9]{3}$"
+          }
+        }, {
+          "name" : "legacyTransactionId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "startDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "endDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        }, {
+          "name" : "cursor",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "size",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 20
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns list of captured sync payloads.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CursorPageNomisSyncPayloadSummary"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__AUDIT__RO" ]
+        } ]
+      }
+    },
+    "/audit/history/{requestId}" : {
+      "get" : {
+        "tags" : [ "Audit" ],
+        "summary" : "Get Payloads Details",
+        "description" : "Get the full payload details (including the JSON body) for a specific request ID.",
+        "operationId" : "getPayloadByRequestId",
+        "parameters" : [ {
+          "name" : "requestId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns the Payload matching the requestId provided.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/NomisSyncPayloadDetail"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - No Payload found with requestId provided",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__AUDIT__RO" ]
+        } ]
+      }
     }
   },
   "components" : {
     "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
       "GeneralLedgerEntry" : {
         "type" : "object",
         "description" : "Represents a general ledger entry.",
@@ -1181,7 +1513,7 @@
           },
           "amount" : {
             "type" : "number",
-            "format" : "double",
+            "format" : "decimal",
             "description" : "The monetary amount of the general ledger entry.",
             "example" : 162.0
           }
@@ -1238,7 +1570,6 @@
           },
           "amount" : {
             "type" : "number",
-            "format" : "double",
             "description" : "The monetary amount of the transaction entry.",
             "example" : 162.0
           },
@@ -1248,7 +1579,9 @@
           },
           "generalLedgerEntries" : {
             "type" : "array",
+            "format" : "decimal",
             "description" : "A list of general ledger entries associated with this offender transaction.",
+            "example" : 162.0,
             "items" : {
               "$ref" : "#/components/schemas/GeneralLedgerEntry"
             }
@@ -1493,6 +1826,7 @@
           },
           "holdBalance" : {
             "type" : "number",
+            "format" : "decimal",
             "description" : "The amount on hold for the sub-account.",
             "example" : 10.0
           },
@@ -1645,8 +1979,10 @@
         "properties" : {
           "offenderTransactions" : {
             "type" : "array",
+            "description" : "The list of offender transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
+              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse",
+              "description" : "The list of offender transactions on the current page"
             }
           },
           "page" : {
@@ -1769,8 +2105,10 @@
         "properties" : {
           "transactions" : {
             "type" : "array",
+            "description" : "The list of general ledger transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
+              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse",
+              "description" : "The list of general ledger transactions on the current page"
             }
           },
           "page" : {
@@ -1817,6 +2155,7 @@
           },
           "holdBalance" : {
             "type" : "number",
+            "format" : "decimal",
             "description" : "The total amount on hold for this sub account at this establishment.",
             "example" : 8.0
           }
@@ -1866,6 +2205,39 @@
           }
         },
         "required" : [ "items" ]
+      },
+      "DlqMessage" : {
+        "type" : "object",
+        "properties" : {
+          "body" : {
+            "type" : "object",
+            "additionalProperties" : { }
+          },
+          "messageId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "messageId" ]
+      },
+      "GetDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messagesReturnedCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "messages" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/DlqMessage"
+            }
+          }
+        },
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
       "PostingReportEntry" : {
         "type" : "object",
@@ -2111,11 +2483,106 @@
           }
         },
         "required" : [ "items" ]
+      },
+      "CursorPageNomisSyncPayloadSummary" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/NomisSyncPayloadSummary"
+            }
+          },
+          "nextCursor" : {
+            "type" : "string"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "content", "size", "totalElements" ]
+      },
+      "NomisSyncPayloadSummary" : {
+        "type" : "object",
+        "properties" : {
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "requestTypeIdentifier" : {
+            "type" : "string"
+          },
+          "caseloadId" : {
+            "type" : "string"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          }
+        },
+        "required" : [ "id", "requestId", "synchronizedTransactionId", "timestamp" ]
+      },
+      "NomisSyncPayloadDetail" : {
+        "type" : "object",
+        "properties" : {
+          "timestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "legacyTransactionId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "synchronizedTransactionId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "caseloadId" : {
+            "type" : "string"
+          },
+          "requestTypeIdentifier" : {
+            "type" : "string"
+          },
+          "transactionTimestamp" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "body" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "body", "requestId", "synchronizedTransactionId", "timestamp" ]
       }
     },
     "securitySchemes" : {
       "bearer-jwt" : {
         "type" : "http",
+        "description" : "A HMPPS Auth access token with the `ROLE_PRISONER_FINANCE_SYNC__RW` role.",
         "name" : "Authorization",
         "in" : "header",
         "scheme" : "bearer",
