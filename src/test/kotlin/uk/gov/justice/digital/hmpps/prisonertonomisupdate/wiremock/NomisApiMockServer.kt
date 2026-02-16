@@ -29,6 +29,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.time.LocalDate
 import kotlin.String
 import kotlin.collections.List
@@ -120,6 +121,19 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
+    )
+  }
+  fun stubGetActivePrisons(status: HttpStatus) {
+    nomisApi.stubFor(
+      get(
+        urlPathEqualTo("/prisons"),
+      )
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody("""{"message":"Error"}"""),
+        ),
     )
   }
 

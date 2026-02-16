@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-12.390.48e1d9d"
+    "version" : "2026-02-13.401.1c2120d"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1237,6 +1237,7 @@
         "parameters" : [ {
           "name" : "officialVisitId",
           "in" : "path",
+          "description" : "The official visit ID to remove",
           "required" : true,
           "schema" : {
             "type" : "integer",
@@ -2393,6 +2394,134 @@
         },
         "required" : [ "status" ]
       },
+      "UpdateTimeSlotRequest" : {
+        "type" : "object",
+        "description" : "Request to update a new prison visit slot for official visits",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot will be active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time slot will no longer be considered active",
+            "example" : "2027-01-21"
+          }
+        },
+        "required" : [ "dayCode", "effectiveDate", "endTime", "prisonCode", "startTime" ]
+      },
+      "TimeSlot" : {
+        "type" : "object",
+        "description" : "Response for a prison time slot",
+        "properties" : {
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison time slot ID",
+            "example" : 18767
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "dayCode" : {
+            "$ref" : "#/components/schemas/DayType",
+            "description" : "Day code MON-SUN",
+            "example" : "MON"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Start time",
+            "example" : "09:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "End time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Effective date. The date from which this time slot is active",
+            "example" : "2026-01-21"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Expiry date. The date from which this time is no longer be considered active",
+            "example" : "2027-01-21"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "User who created the entry",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "User who last updated the entry",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this slot was last updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "prisonTimeSlotId", "startTime" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
       "SyncCreateVisitSlotRequest" : {
         "type" : "object",
         "description" : "Request to create a new prison visit slot for official visits",
@@ -2739,6 +2868,19 @@
             "items" : {
               "$ref" : "#/components/schemas/SyncOfficialVisitor"
             }
+          },
+          "visitorConcernNotes" : {
+            "type" : "string",
+            "description" : "The visitor concern notes if present"
+          },
+          "visitOrderNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visitor oder number if present"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "The staff username who authorised an override for a ban for this visit"
           }
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitType", "visitors" ]
@@ -4596,6 +4738,128 @@
           }
         },
         "required" : [ "availableAdults", "availableGroups", "availableVideoSessions", "dayCode", "dayDescription", "dpsLocationId", "endTime", "prisonCode", "startTime", "timeSlotId", "visitDate", "visitSlotId" ]
+      },
+      "TimeSlotSummary" : {
+        "type" : "object",
+        "description" : "Admin response for Summary of time slots and associated visit slots for the prison",
+        "properties" : {
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison code",
+            "example" : "MDI"
+          },
+          "prisonName" : {
+            "type" : "string",
+            "description" : "Prison name",
+            "example" : "Moorland (HMP & YOI)"
+          },
+          "timeSlots" : {
+            "type" : "array",
+            "description" : "List of all time slots and associated visit slots for the prison",
+            "items" : {
+              "$ref" : "#/components/schemas/TimeSlotSummaryItem"
+            }
+          }
+        },
+        "required" : [ "prisonCode", "prisonName", "timeSlots" ]
+      },
+      "TimeSlotSummaryItem" : {
+        "type" : "object",
+        "description" : "Item containing a time slot and its associated visit slots",
+        "properties" : {
+          "timeSlot" : {
+            "$ref" : "#/components/schemas/TimeSlot",
+            "description" : "Time Slot"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of visit slots associated with time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitSlot"
+            }
+          }
+        },
+        "required" : [ "timeSlot", "visitSlots" ]
+      },
+      "VisitSlot" : {
+        "type" : "object",
+        "description" : "Response for a prison visit slot",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison visit slot Id"
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "Prison Code"
+          },
+          "prisonTimeSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Prison time slot Id"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the visit is taking place",
+            "example" : "aaa-ddd-bbb-123455632323"
+          },
+          "locationDescription" : {
+            "type" : "string",
+            "description" : "The description of the prison location this visit slot is in",
+            "example" : "Legal visits room 8"
+          },
+          "locationType" : {
+            "type" : "string",
+            "description" : "The type of the prison location this visit slot is in, e.g. 'VISITS', 'VIDEO_LINK', 'INTERVIEW'",
+            "example" : "VISITS"
+          },
+          "locationMaxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The max capacity of the prison location this visit slot is in, if known",
+            "example" : 12
+          },
+          "maxVideo" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum video link allowed in the visit slot"
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum adults allowed in the visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Maximum groups allowed in the visit slot"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "Username who created the visit slot",
+            "example" : "admin"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this visit slot was created",
+            "example" : "2024-01-01T00:00:00Z"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "Username who last updated the visit slot",
+            "example" : "admin"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The timestamp of when this visit slot was last updated",
+            "example" : "2024-01-01T00:00:00Z"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "visitSlotId" ]
       }
     },
     "securitySchemes" : {

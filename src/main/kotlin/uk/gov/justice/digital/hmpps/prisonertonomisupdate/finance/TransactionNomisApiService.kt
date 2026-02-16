@@ -29,7 +29,7 @@ class TransactionNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
-  suspend fun getPrisonTransaction(transactionId: Long): List<GeneralLedgerTransactionDto>? = prisonTransactionsApi
+  suspend fun getPrisonTransaction(transactionId: Long): List<GeneralLedgerTransactionDto> = prisonTransactionsApi
     .getGLTransaction(transactionId)
     .awaitSingle()
 
