@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-13.411.ad4a0f1"
+    "version" : "2026-02-16.414.d08ee86"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -215,6 +215,133 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SyncTimeSlot"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sync/official-visit/{officialVisitId}/visitor/{officialVisitorId}" : {
+      "put" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Updates a visitor on an existing official visit",
+        "description" : "\n      Requires role: OFFICIAL_VISITS_MIGRATION.\n      Used to update a visitor on an official visit in DPS as part of the synchronisation from NOMIS.      \n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncUpdateOfficialVisitor",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "officialVisitorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/SyncUpdateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Successfully updated the visitor",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SyncOfficialVisitor"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The the official visit or visitor was not found using the IDs presented",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "Synchronisation" ],
+        "summary" : "Delete an official visitor from a visit",
+        "description" : "\n      Delete an official visitor from a visit. \n      This endpoint is idempotent, so if the visit or visitor is not present it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
+        "operationId" : "syncDeleteOfficialVisitor",
+        "parameters" : [ {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "officialVisitorId",
+          "in" : "path",
+          "description" : "The official visitor ID to remove",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Deleted the official visitor"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
@@ -2191,58 +2318,6 @@
         }
       }
     },
-    "/sync/official-visit/{officialVisitId}/visitor/{officialVisitorId}" : {
-      "delete" : {
-        "tags" : [ "Synchronisation" ],
-        "summary" : "Delete an official visitor from a visit",
-        "description" : "\n      Delete an official visitor from a visit. \n      This endpoint is idempotent, so if the visit or visitor is not present it will silently succeed.\n      \n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION",
-        "operationId" : "syncDeleteOfficialVisitor",
-        "parameters" : [ {
-          "name" : "officialVisitId",
-          "in" : "path",
-          "description" : "The official visit ID",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "officialVisitorId",
-          "in" : "path",
-          "description" : "The official visitor ID to remove",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Deleted the official visitor"
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/admin/time-slot/{timeSlotId}" : {
       "delete" : {
         "tags" : [ "Admin" ],
@@ -2529,6 +2604,185 @@
         },
         "required" : [ "createdBy", "createdTime", "dayCode", "effectiveDate", "endTime", "prisonCode", "prisonTimeSlotId", "startTime" ]
       },
+      "AttendanceType" : {
+        "type" : "string",
+        "enum" : [ "ATTENDED", "ABSENT" ]
+      },
+      "RelationshipType" : {
+        "type" : "string",
+        "enum" : [ "OFFICIAL", "SOCIAL" ]
+      },
+      "SyncUpdateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderVisitVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit visitor ID",
+            "example" : 133232
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS person ID (same as contactId) for this visitor",
+            "example" : 13989898
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the visitor",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the visitor",
+            "example" : "Harris"
+          },
+          "relationshipTypeCode" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL"
+          },
+          "relationshipToPrisoner" : {
+            "type" : "string",
+            "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
+            "example" : "POL"
+          },
+          "groupLeaderFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "assistedVisitFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visitor comment text from NOMIS. Propagates into visitor assistance notes on DPS",
+            "example" : "Some comments"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED"
+          },
+          "updateDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visitor was updated",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "updateUsername" : {
+            "type" : "string",
+            "description" : "The username who updated the visitor",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "offenderVisitVisitorId", "personId", "updateDateTime", "updateUsername" ]
+      },
+      "SyncOfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The official visitor ID",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID of the person visiting",
+            "example" : 123
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The visitor first Name",
+            "example" : "John"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The visitor last Name",
+            "example" : "Smith"
+          },
+          "relationshipType" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
+            "example" : "OFFICIAL"
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The visitor relationship code",
+            "example" : "POM"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
+            "example" : "ABSENT"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Set to true if this is the lead visitor",
+            "example" : false
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Set to true if this visitor requires an assisted visit. The equivalent of the AVPU flag in NOMIS",
+            "example" : false
+          },
+          "visitorNotes" : {
+            "type" : "string",
+            "description" : "Visitor specific notes",
+            "example" : "Wheelchair access required"
+          },
+          "createdBy" : {
+            "type" : "string",
+            "description" : "The username of the person who created the visitor",
+            "example" : "X8393"
+          },
+          "createdTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visitor was created",
+            "example" : "2024-12-01T03:05:00"
+          },
+          "updatedBy" : {
+            "type" : "string",
+            "description" : "The username of the person who last updated the visitor",
+            "example" : "X8393"
+          },
+          "updatedTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the visitor was last updated",
+            "example" : "2024-12-01T03:05:00"
+          }
+        },
+        "required" : [ "createdBy", "createdTime", "officialVisitorId" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "status" ]
+      },
       "RetryDlqResult" : {
         "type" : "object",
         "properties" : {
@@ -2654,28 +2908,6 @@
           }
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "visitSlotId" ]
-      },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : "string"
-          },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "status" ]
       },
       "UpdateTimeSlotRequest" : {
         "type" : "object",
@@ -3004,14 +3236,6 @@
         "type" : "string",
         "enum" : [ "IN_PERSON", "TELEPHONE", "VIDEO", "UNKNOWN" ]
       },
-      "AttendanceType" : {
-        "type" : "string",
-        "enum" : [ "ATTENDED", "ABSENT" ]
-      },
-      "RelationshipType" : {
-        "type" : "string",
-        "enum" : [ "OFFICIAL", "SOCIAL" ]
-      },
       "SyncOfficialVisit" : {
         "type" : "object",
         "properties" : {
@@ -3146,86 +3370,6 @@
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitType", "visitors" ]
       },
-      "SyncOfficialVisitor" : {
-        "type" : "object",
-        "properties" : {
-          "officialVisitorId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The official visitor ID",
-            "example" : 1
-          },
-          "contactId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The contact ID of the person visiting",
-            "example" : 123
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "The visitor first Name",
-            "example" : "John"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "The visitor last Name",
-            "example" : "Smith"
-          },
-          "relationshipType" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type for this visitor (OFFICIAL or SOCIAL)",
-            "example" : "OFFICIAL"
-          },
-          "relationshipCode" : {
-            "type" : "string",
-            "description" : "The visitor relationship code",
-            "example" : "POM"
-          },
-          "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code, either ABSENT, ATTENDED or null if not recorded.",
-            "example" : "ABSENT"
-          },
-          "leadVisitor" : {
-            "type" : "boolean",
-            "description" : "Set to true if this is the lead visitor",
-            "example" : false
-          },
-          "assistedVisit" : {
-            "type" : "boolean",
-            "description" : "Set to true if this visitor requires an assisted visit. The equivalent of the AVPU flag in NOMIS",
-            "example" : false
-          },
-          "visitorNotes" : {
-            "type" : "string",
-            "description" : "Visitor specific notes",
-            "example" : "Wheelchair access required"
-          },
-          "createdBy" : {
-            "type" : "string",
-            "description" : "The username of the person who created the visitor",
-            "example" : "X8393"
-          },
-          "createdTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the visitor was created",
-            "example" : "2024-12-01T03:05:00"
-          },
-          "updatedBy" : {
-            "type" : "string",
-            "description" : "The username of the person who last updated the visitor",
-            "example" : "X8393"
-          },
-          "updatedTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the visitor was last updated",
-            "example" : "2024-12-01T03:05:00"
-          }
-        },
-        "required" : [ "createdBy", "createdTime", "officialVisitorId" ]
-      },
       "SyncCreateOfficialVisitorRequest" : {
         "type" : "object",
         "properties" : {
@@ -3250,12 +3394,6 @@
             "type" : "string",
             "description" : "The last name of the visitor",
             "example" : "Harris"
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The visitors date of birth",
-            "example" : "2011-01-03"
           },
           "relationshipTypeCode" : {
             "$ref" : "#/components/schemas/RelationshipType",
@@ -3951,12 +4089,6 @@
             "type" : "string",
             "description" : "The last name of the visitor",
             "example" : "Harris"
-          },
-          "dateOfBirth" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The visitors date of birth",
-            "example" : "2011-01-03"
           },
           "relationshipTypeCode" : {
             "$ref" : "#/components/schemas/RelationshipType",
