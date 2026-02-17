@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-13.410.fc1d5e0"
+    "version" : "2026-02-16.412.6dbd7a9"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -9031,6 +9031,51 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Delete an official visitor mapping by NOMIS ID",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOfficialVisitorMapping",
+        "parameters" : [ {
+          "name" : "nomisVisitorId",
+          "in" : "path",
+          "description" : "NOMIS visitor id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS visitor id",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Official visitor mapping deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
