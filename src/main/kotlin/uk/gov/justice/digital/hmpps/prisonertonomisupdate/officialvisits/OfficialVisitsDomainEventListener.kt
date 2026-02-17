@@ -46,6 +46,7 @@ class OfficialVisitsDomainEventListener(
       "official-visits-api.visit.created" -> officialVisitsService.visitCreated(message.fromJson())
       "official-visits-api.visit.deleted" -> officialVisitsService.visitDeleted(message.fromJson())
       "official-visits-api.visitor.created" -> officialVisitsService.visitorCreated(message.fromJson())
+      "official-visits-api.visitor.updated" -> officialVisitsService.visitorUpdated(message.fromJson())
       "official-visits-api.visitor.deleted" -> officialVisitsService.visitorDeleted(message.fromJson())
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }

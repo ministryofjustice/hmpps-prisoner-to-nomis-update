@@ -13,6 +13,7 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 
+@Suppress("SameParameterValue")
 class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
   @Nested
   @DisplayName("official-visits-api.visit.created")
@@ -74,7 +75,7 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
 
   @Nested
   @DisplayName("official-visits-api.visitor.created")
-  inner class VisitorSlotCreated {
+  inner class OfficialVisitorCreated {
 
     @Nested
     @DisplayName("when DPS is the origin of a visitor create")
@@ -103,8 +104,38 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
   }
 
   @Nested
+  @DisplayName("official-visits-api.visitor.updated")
+  inner class OfficialVisitorUpdated {
+
+    @Nested
+    @DisplayName("when DPS is the origin of a visitor update")
+    inner class WhenDpsCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateOfficialVisitorDomainEvent(officialVisitorId = "7765", officialVisitId = "12345", contactId = "9855", prisonId = "MDI", source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-update-success"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo("7765")
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
+            assertThat(it["dpsContactId"]).isEqualTo("9855")
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @Nested
   @DisplayName("official-visits-api.visitor.deleted")
-  inner class VisitorSlotDeleted {
+  inner class OfficialVisitorDeleted {
 
     @Nested
     @DisplayName("when mapping exists")
@@ -131,7 +162,6 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @Suppress("SameParameterValue")
   private fun publishCreateOfficialVisitDomainEvent(
     officialVisitId: String,
     source: String = "DPS",
@@ -143,7 +173,6 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @Suppress("SameParameterValue")
   private fun publishDeleteOfficialVisitDomainEvent(
     officialVisitId: String,
     source: String = "DPS",
@@ -155,7 +184,6 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
     }
   }
 
-  @Suppress("SameParameterValue")
   private fun publishCreateOfficialVisitorDomainEvent(
     officialVisitorId: String,
     officialVisitId: String,
@@ -167,8 +195,18 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
       publishDomainEvent(eventType = this, payload = visitorMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId, contactId = contactId))
     }
   }
+  private fun publishUpdateOfficialVisitorDomainEvent(
+    officialVisitorId: String,
+    officialVisitId: String,
+    contactId: String,
+    source: String = "DPS",
+    prisonId: String,
+  ) {
+    with("official-visits-api.visitor.updated") {
+      publishDomainEvent(eventType = this, payload = visitorMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId, contactId = contactId))
+    }
+  }
 
-  @Suppress("SameParameterValue")
   private fun publishDeleteOfficialVisitorDomainEvent(
     officialVisitorId: String,
     officialVisitId: String,
