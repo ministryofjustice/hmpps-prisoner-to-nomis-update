@@ -197,7 +197,7 @@ fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long
       entrySequence = 1,
       code = 1501,
       postingType = GeneralLedgerEntry.PostingType.CR,
-      amount = 5.4,
+      amount = BigDecimal(5.4),
     ),
   ),
 )
