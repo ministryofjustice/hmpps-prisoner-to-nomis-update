@@ -8,8 +8,10 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.ReconciliationApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.api.SynchronisationApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.PagedModelSyncOfficialVisitId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlotSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
@@ -21,6 +23,7 @@ class OfficialVisitsDpsApiService(
   retryApiService: RetryApiService,
 ) {
   private val api = ReconciliationApi(webClient)
+  private val syncApi = SynchronisationApi(webClient)
   private val retrySpec = retryApiService.getBackoffSpec().withRetryContext(
     Context.of("api", "OfficialVisitsDpsApiService"),
   )
@@ -52,4 +55,7 @@ class OfficialVisitsDpsApiService(
 
   suspend fun getTimeSlotsForPrison(prisonId: String, activeOnly: Boolean = false): SyncTimeSlotSummary = api.summariseTimeSlotsAndVisitSlots(prisonCode = prisonId, activeOnly = activeOnly)
     .retryWhen(retrySpec).awaitSingle()
+
+  suspend fun getTimeSlot(prisonTimeSlotId: Long): SyncTimeSlot = syncApi.syncGetTimeSlotById(prisonTimeSlotId = prisonTimeSlotId)
+    .awaitSingle()
 }

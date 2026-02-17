@@ -224,4 +224,18 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
     )
   }
+
+  fun stubGetTimeSlot(
+    prisonTimeSlotId: Long,
+    response: SyncTimeSlot = syncTimeSlot(),
+  ) {
+    dpsOfficialVisitsServer.stubFor(
+      get(urlPathEqualTo("/sync/time-slot/$prisonTimeSlotId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(OfficialVisitsDpsApiExtension.jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
 }

@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-16.1064.a1ce464"
+    "version" : "2026-02-17.1066.2044f29"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -8231,6 +8231,72 @@
           },
           "404" : {
             "description" : "Not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/visits/configuration/time-slots/prison-id/{prisonId}/day-of-week/{dayOfWeek}" : {
+      "post" : {
+        "tags" : [ "visits-configuration-resource" ],
+        "summary" : "Create a visit time slot",
+        "description" : "Requires ROLE_NOMIS_VISITS",
+        "operationId" : "createVisitTimeSlot",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dayOfWeek",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ]
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateVisitTimeSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visit time slot created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitTimeSlotResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_VISITS",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -25462,6 +25528,135 @@
         },
         "required" : [ "courseActivityIds" ]
       },
+      "CreateVisitTimeSlotRequest" : {
+        "type" : "object",
+        "properties" : {
+          "startTime" : {
+            "type" : "string",
+            "description" : "Slot start time",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "Slot end time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can first be used",
+            "example" : "2022-09-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can no longer be used",
+            "example" : "2032-09-01"
+          }
+        },
+        "required" : [ "effectiveDate", "endTime", "startTime" ]
+      },
+      "VisitInternalLocationResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "code" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "id" ]
+      },
+      "VisitSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Slot ID",
+            "example" : 1
+          },
+          "internalLocation" : {
+            "$ref" : "#/components/schemas/VisitInternalLocationResponse",
+            "description" : "Room location of  visit slot"
+          },
+          "maxGroups" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max groups allowed in slot",
+            "example" : 1
+          },
+          "maxAdults" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Optional max adults allowed in slot",
+            "example" : 1
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "id", "internalLocation" ]
+      },
+      "VisitTimeSlotResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison id",
+            "example" : "MDI"
+          },
+          "dayOfWeek" : {
+            "type" : "string",
+            "description" : "Day of the week time slot is for",
+            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
+            "example" : "MON"
+          },
+          "timeSlotSequence" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The time slot sequence",
+            "example" : 1
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "Slot start time",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "Slot end time",
+            "example" : "11:00"
+          },
+          "effectiveDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can first be used",
+            "example" : "2022-09-01"
+          },
+          "expiryDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Date slot can no longer be used",
+            "example" : "2032-09-01"
+          },
+          "visitSlots" : {
+            "type" : "array",
+            "description" : "List of slots at this time slot",
+            "items" : {
+              "$ref" : "#/components/schemas/VisitSlotResponse"
+            }
+          },
+          "audit" : {
+            "$ref" : "#/components/schemas/NomisAudit",
+            "description" : "Audit information"
+          }
+        },
+        "required" : [ "audit", "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
+      },
       "CreateVisitBalanceAdjustmentRequest" : {
         "type" : "object",
         "properties" : {
@@ -29371,12 +29566,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -29409,51 +29604,6 @@
         },
         "required" : [ "visitId" ]
       },
-      "VisitInternalLocationResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "code" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "code", "id" ]
-      },
-      "VisitSlotResponse" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "Slot ID",
-            "example" : 1
-          },
-          "internalLocation" : {
-            "$ref" : "#/components/schemas/VisitInternalLocationResponse",
-            "description" : "Room location of  visit slot"
-          },
-          "maxGroups" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Optional max groups allowed in slot",
-            "example" : 1
-          },
-          "maxAdults" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Optional max adults allowed in slot",
-            "example" : 1
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "id", "internalLocation" ]
-      },
       "VisitTimeSlotForPrisonResponse" : {
         "type" : "object",
         "properties" : {
@@ -29471,62 +29621,6 @@
           }
         },
         "required" : [ "prisonId", "timeSlots" ]
-      },
-      "VisitTimeSlotResponse" : {
-        "type" : "object",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prison id",
-            "example" : "MDI"
-          },
-          "dayOfWeek" : {
-            "type" : "string",
-            "description" : "Day of the week time slot is for",
-            "enum" : [ "MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN" ],
-            "example" : "MON"
-          },
-          "timeSlotSequence" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The time slot sequence",
-            "example" : 1
-          },
-          "startTime" : {
-            "type" : "string",
-            "description" : "Slot start time",
-            "example" : "10:00"
-          },
-          "endTime" : {
-            "type" : "string",
-            "description" : "Slot end time",
-            "example" : "11:00"
-          },
-          "effectiveDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date slot can first be used",
-            "example" : "2022-09-01"
-          },
-          "expiryDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "Date slot can no longer be used",
-            "example" : "2032-09-01"
-          },
-          "visitSlots" : {
-            "type" : "array",
-            "description" : "List of slots at this time slot",
-            "items" : {
-              "$ref" : "#/components/schemas/VisitSlotResponse"
-            }
-          },
-          "audit" : {
-            "$ref" : "#/components/schemas/NomisAudit",
-            "description" : "Audit information"
-          }
-        },
-        "required" : [ "audit", "dayOfWeek", "effectiveDate", "endTime", "prisonId", "startTime", "timeSlotSequence", "visitSlots" ]
       },
       "PageMetadata" : {
         "type" : "object",

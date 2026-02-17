@@ -1,0 +1,75 @@
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
+
+import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import org.springframework.http.HttpStatus
+import org.springframework.stereotype.Component
+import tools.jackson.databind.json.JsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
+
+@Component
+class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
+
+  fun stubGetTimeSlotByDpsIdOrNull(
+    dpsId: String = "123456",
+    mapping: VisitTimeSlotMappingDto? = VisitTimeSlotMappingDto(
+      dpsId = "123456",
+      nomisPrisonId = "MDI",
+      nomisDayOfWeek = "MON",
+      nomisSlotSequence = 1,
+      mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/visit-slots/time-slots/dps-id/$dpsId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/visit-slots/time-slots/dps-id/$dpsId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubCreateTimeSlotMapping() {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/time-slots").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateTimeSlotMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/time-slots").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
+  fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
+}
