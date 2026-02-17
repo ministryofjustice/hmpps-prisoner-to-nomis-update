@@ -58,14 +58,14 @@ class FinanceDpsApiExtension :
           postingType = OffenderTransaction.PostingType.DR,
           type = "OT",
           description = "Sub-Account Transfer",
-          amount = 162.toDouble(),
+          amount = BigDecimal("162"),
           reference = "string",
           generalLedgerEntries = listOf(
             GeneralLedgerEntry(
               entrySequence = 1,
               code = 2101,
               postingType = GeneralLedgerEntry.PostingType.DR,
-              amount = 162.toDouble(),
+              amount = BigDecimal("162"),
             ),
           ),
         ),
@@ -197,7 +197,7 @@ fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long
       entrySequence = 1,
       code = 1501,
       postingType = GeneralLedgerEntry.PostingType.CR,
-      amount = 5.4,
+      amount = BigDecimal(5.4),
     ),
   ),
 )

@@ -210,7 +210,7 @@ fun SyncGeneralLedgerTransactionResponse.toTransactionSummary() = TransactionSum
 fun GeneralLedgerEntry.toTransactionEntry() = TransactionEntry(
   accountCode = code,
   postingType = postingType.value,
-  amount = amount.toBigDecimal().setScale(2, RoundingMode.HALF_UP),
+  amount = amount.setScale(2, RoundingMode.HALF_UP),
   entrySequence = this.entrySequence,
 )
 

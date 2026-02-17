@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-13.541.7e25a6e"
+    "version" : "2026-02-17.563.30557a3"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1513,7 +1513,7 @@
           },
           "amount" : {
             "type" : "number",
-            "format" : "double",
+            "format" : "decimal",
             "description" : "The monetary amount of the general ledger entry.",
             "example" : 162.0
           }
@@ -1570,7 +1570,6 @@
           },
           "amount" : {
             "type" : "number",
-            "format" : "double",
             "description" : "The monetary amount of the transaction entry.",
             "example" : 162.0
           },
@@ -1580,7 +1579,9 @@
           },
           "generalLedgerEntries" : {
             "type" : "array",
+            "format" : "decimal",
             "description" : "A list of general ledger entries associated with this offender transaction.",
+            "example" : 162.0,
             "items" : {
               "$ref" : "#/components/schemas/GeneralLedgerEntry"
             }
@@ -1825,6 +1826,7 @@
           },
           "holdBalance" : {
             "type" : "number",
+            "format" : "decimal",
             "description" : "The amount on hold for the sub-account.",
             "example" : 10.0
           },
@@ -2153,6 +2155,7 @@
           },
           "holdBalance" : {
             "type" : "number",
+            "format" : "decimal",
             "description" : "The total amount on hold for this sub account at this establishment.",
             "example" : 8.0
           }
