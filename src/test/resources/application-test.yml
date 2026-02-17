@@ -353,6 +353,7 @@ hmpps.sqs:
           "official-visits-api.visit.created",
           "official-visits-api.visit.deleted",
           "official-visits-api.visitor.created",
+          "official-visits-api.visitor.updated",
           "official-visits-api.visitor.deleted"
         ]}
       dlqMaxReceiveCount: 1

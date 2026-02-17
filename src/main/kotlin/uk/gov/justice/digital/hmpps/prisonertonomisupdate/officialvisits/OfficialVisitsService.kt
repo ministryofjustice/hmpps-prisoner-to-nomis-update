@@ -14,6 +14,7 @@ class OfficialVisitsService(private val telemetryClient: TelemetryClient) {
   suspend fun visitCreated(event: VisitEvent) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-success", event.asTelemetry())
   suspend fun visitDeleted(event: VisitEvent) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-success", event.asTelemetry())
   suspend fun visitorCreated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", event.asTelemetry())
+  suspend fun visitorUpdated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-success", event.asTelemetry())
   suspend fun visitorDeleted(event: VisitorDeletedEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-success", event.asTelemetry())
   suspend fun createVisitMapping(message: CreateMappingRetryMessage<OfficialVisitMappingDto>) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-success", message.telemetryAttributes)
   suspend fun createVisitorMapping(message: CreateMappingRetryMessage<OfficialVisitorMappingDto>) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", message.telemetryAttributes)
