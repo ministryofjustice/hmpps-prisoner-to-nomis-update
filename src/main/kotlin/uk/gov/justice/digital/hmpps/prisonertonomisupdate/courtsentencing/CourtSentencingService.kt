@@ -378,10 +378,12 @@ class CourtSentencingService(
     val chargeId = createEvent.additionalInformation.courtChargeId
     val source = createEvent.additionalInformation.source
     val courtCaseId = createEvent.additionalInformation.courtCaseId
+    val courtAppearanceId = createEvent.additionalInformation.courtAppearanceId
     val offenderNo: String = createEvent.personReference.identifiers.first { it.type == "NOMS" }.value
     val telemetryMap = mutableMapOf(
       "dpsChargeId" to chargeId,
       "dpsCourtCaseId" to courtCaseId,
+      "dpsCourtAppearanceId" to courtCaseId,
       "offenderNo" to offenderNo,
     )
     if (isDpsCreated(source)) {
@@ -405,7 +407,7 @@ class CourtSentencingService(
                 )
               }
 
-          val charge = courtSentencingApiService.getCourtCharge(chargeId)
+          val charge = courtAppearanceId?.let { courtSentencingApiService.getCourtChargeByAppearance(appearanceId = it, chargeId = chargeId) } ?: courtSentencingApiService.getCourtCharge(chargeId)
           charge.nomisOutcomeCode.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
           telemetryMap["nomisOffenceCode"] = charge.offenceCode
 

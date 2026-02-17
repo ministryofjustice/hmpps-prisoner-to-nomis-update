@@ -322,7 +322,7 @@ class CourtSentencingReconciliationService(
       }
       SentenceFields(
         // sentence start date is actually the sentence appearance date which can be different to the start date eg consecutive sentences
-        sentencingAppearanceDate = it.sentenceStartDate,
+        sentencingAppearanceDate = it.sentenceStartDate.takeIf { it.validDate() },
         // for recalls fallback to legacy data when DPS records a NOMIS recall as UNKNOWN
         sentenceCategory = it.sentenceCategory.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCategory,
         sentenceCalcType = it.sentenceCalcType.takeUnless { it == "UNKNOWN" } ?: it.legacyData?.sentenceCalcType,
@@ -356,7 +356,7 @@ class CourtSentencingReconciliationService(
           )
         }
         AppearanceFields(
-          date = appearanceResponse.appearanceDate,
+          date = appearanceResponse.appearanceDate.takeIf { it.validDate() },
           court = appearanceResponse.courtCode,
           outcome = appearanceResponse.nomisOutcomeCode,
           id = appearanceResponse.appearanceUuid.toString(),
@@ -381,7 +381,7 @@ class CourtSentencingReconciliationService(
           )
         }
         AppearanceFields(
-          date = eventResponse.eventDateTime.toLocalDate(),
+          date = eventResponse.eventDateTime.toLocalDate().takeIf { it.validDate() },
           court = eventResponse.courtId,
           outcome = eventResponse.outcomeReasonCode?.code,
           id = eventResponse.id.toString(),
@@ -405,9 +405,10 @@ class CourtSentencingReconciliationService(
           )
         }
         // All sentences in prod with a case_id have a court order, all orders have an event id, all appearances have an event date
+        val appearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime?.toLocalDate()
+          ?: LocalDate.MIN
         SentenceFields(
-          sentencingAppearanceDate = nomisResponse.courtEvents.find { appearance -> appearance.id == sentenceResponse.courtOrder?.eventId }?.eventDateTime?.toLocalDate()
-            ?: LocalDate.MIN,
+          sentencingAppearanceDate = appearanceDate.takeIf { it.validDate() },
           sentenceCategory = sentenceResponse.category.code,
           sentenceCalcType = sentenceResponse.calculationType.code,
           fine = sentenceResponse.fineAmount?.stripTrailingZeros(),
@@ -801,7 +802,7 @@ data class ChargeFields(
 }
 
 data class SentenceFields(
-  val sentencingAppearanceDate: LocalDate,
+  val sentencingAppearanceDate: LocalDate?,
   val sentenceCategory: String?,
   val sentenceCalcType: String?,
   val fine: BigDecimal?,
@@ -852,5 +853,5 @@ data class MismatchCase(
   val dpsCase: CaseFields,
   val nomisBookingId: Long,
 )
-
+private fun LocalDate.validDate(): Boolean = this.isAfter(LocalDate.parse("1800-01-01"))
 data class Difference(val property: String, val dps: Any?, val nomis: Any?, val id: String? = null)

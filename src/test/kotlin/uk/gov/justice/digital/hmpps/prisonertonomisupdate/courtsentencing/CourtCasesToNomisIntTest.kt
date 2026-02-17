@@ -1293,7 +1293,92 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenCourtChargeHasBeenCreatedInDPS {
+    inner class WhenCourtChargeHasBeenCreatedInDPSAppearanceIdProvided {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingNomisApi.stubCourtChargeCreate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          nomisCourtChargeCreateResponse(),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
+        courtSentencingMappingApi.stubCreateCourtCharge()
+
+        publishCreateCourtChargeDomainEvent(courtAppearanceId = DPS_COURT_APPEARANCE_ID)
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/${DPS_COURT_CHARGE_ID}")))
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("charge-create-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["mappingType"]).isEqualTo(CourtChargeMappingDto.MappingType.DPS_CREATED.toString())
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["nomisChargeId"]).isEqualTo(NOMIS_COURT_CHARGE_ID.toString())
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+            assertThat(it["nomisOffenceCode"]).isEqualTo(COURT_CHARGE_1_OFFENCE_CODE)
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to create the Charge`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingNomisApi.verify(postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/charges")))
+      }
+
+      @Test
+      fun `will create a mapping between the two charges`() {
+        waitForAnyProcessingToComplete()
+
+        await untilAsserted {
+          courtSentencingMappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/court-sentencing/court-charges"))
+              .withRequestBody(
+                matchingJsonPath(
+                  "dpsCourtChargeId",
+                  equalTo(DPS_COURT_CHARGE_ID),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "nomisCourtChargeId",
+                  equalTo(
+                    NOMIS_COURT_CHARGE_ID.toString(),
+                  ),
+                ),
+              ),
+          )
+        }
+        await untilAsserted { verify(telemetryClient).trackEvent(any(), any(), isNull()) }
+      }
+    }
+
+    @Nested
+    inner class WhenCourtChargeHasBeenCreatedInDPSAppearanceIdNotProvided {
       @BeforeEach
       fun setUp() {
         courtSentencingApi.stubGetCourtCharge(
@@ -1314,7 +1399,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(DPS_COURT_CHARGE_ID, 404)
         courtSentencingMappingApi.stubCreateCourtCharge()
 
-        publishCreateCourtChargeDomainEvent()
+        publishCreateCourtChargeDomainEvent(courtAppearanceId = null)
       }
 
       @Test
@@ -1431,7 +1516,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         courtSentencingMappingApi.stubCreateCourtChargeWithErrorFollowedBySuccess()
         publishCreateCourtChargeDomainEvent()
 
-        await untilCallTo { courtSentencingApi.getCountFor("/legacy/charge/$DPS_COURT_CHARGE_ID") } matches { it == 1 }
+        await untilCallTo { courtSentencingApi.getCountFor("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}/charge/$DPS_COURT_CHARGE_ID") } matches { it == 1 }
         await untilCallTo { courtSentencingNomisApi.postCountFor("/prisoners/$OFFENDER_NO/sentencing/court-cases/$NOMIS_COURT_CASE_ID_FOR_CREATION/charges") } matches { it == 1 }
       }
 
@@ -4634,13 +4719,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     ).get()
   }
 
-  private fun publishCreateCourtChargeDomainEvent(source: String = "DPS") {
+  private fun publishCreateCourtChargeDomainEvent(courtAppearanceId: String? = DPS_COURT_APPEARANCE_ID, source: String = "DPS") {
     val eventType = "charge.inserted"
     awsSnsClient.publish(
       PublishRequest.builder().topicArn(topicArn)
         .message(
           courtChargeMessagePayload(
             courtChargeId = DPS_COURT_CHARGE_ID,
+            courtAppearanceId = courtAppearanceId,
             courtCaseId = COURT_CASE_ID_FOR_CREATION,
             offenderNo = OFFENDER_NO,
             eventType = eventType,

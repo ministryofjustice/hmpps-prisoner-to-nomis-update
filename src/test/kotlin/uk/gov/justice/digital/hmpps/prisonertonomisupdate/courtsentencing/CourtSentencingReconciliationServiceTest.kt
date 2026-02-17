@@ -351,6 +351,40 @@ internal class CourtSentencingReconciliationServiceTest {
     }
 
     @Test
+    fun `will handle dodgy appearance dates`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          courtEvents = listOf(
+            nomisAppearanceResponse().copy(
+              eventDateTime = LocalDateTime.of(9, 1, 1, 10, 10, 0),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse(
+              appearanceDate = LocalDate.of(10, 1, 1),
+              charges = listOf(
+                dpsChargeResponse(
+                  sentenceResponse = reconciliationSentence().copy(
+                    sentenceStartDate = LocalDate.of(10, 1, 1),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        ),
+      ).isNull()
+    }
+
+    @Test
     fun `will report an extra charge in dps`() = runTest {
       stubCase(
         nomisCase = nomisCaseResponse(),
