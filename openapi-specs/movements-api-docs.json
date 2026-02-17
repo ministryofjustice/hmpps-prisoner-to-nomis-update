@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-12"
+    "version" : "2026-02-16"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -2339,6 +2339,18 @@
         },
         "required" : [ "content", "metadata" ]
       },
+      "Prison" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string"
+          },
+          "name" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "code", "name" ]
+      },
       "TapOccurrence" : {
         "type" : "object",
         "properties" : {
@@ -2348,6 +2360,9 @@
           },
           "prisonCode" : {
             "type" : "string"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
           },
           "authorisation" : {
             "$ref" : "#/components/schemas/TapOccurrence.Authorisation"
@@ -2408,7 +2423,7 @@
             }
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prisonCode", "start", "status", "totalOccurrences", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prison", "prisonCode", "start", "status", "totalOccurrences", "transport" ]
       },
       "TapOccurrence.Authorisation" : {
         "type" : "object",
@@ -2492,6 +2507,9 @@
           "prisonCode" : {
             "type" : "string"
           },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
           "absenceReason" : {
             "$ref" : "#/components/schemas/CodedDescription"
           },
@@ -2508,7 +2526,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prisonCode" ]
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prison", "prisonCode" ]
       },
       "TapMovement.Occurrence" : {
         "type" : "object",
@@ -2552,6 +2570,9 @@
           },
           "prisonCode" : {
             "type" : "string"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
           },
           "person" : {
             "$ref" : "#/components/schemas/Person"
@@ -2612,7 +2633,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prisonCode", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prison", "prisonCode", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
       },
       "TapAuthorisation.Occurrence" : {
         "type" : "object",
