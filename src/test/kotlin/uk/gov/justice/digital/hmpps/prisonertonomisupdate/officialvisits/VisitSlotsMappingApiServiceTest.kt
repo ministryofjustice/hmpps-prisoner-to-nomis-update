@@ -9,8 +9,10 @@ import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
@@ -135,7 +137,7 @@ class VisitSlotsMappingApiServiceTest {
     fun `will return success when OK response`() = runTest {
       mockServer.stubCreateTimeSlotMapping()
 
-      val result = apiService.createTimeSlotMapping(
+      apiService.createTimeSlotMapping(
         VisitTimeSlotMappingDto(
           mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
           label = "2020-01-01T10:00",
@@ -145,8 +147,6 @@ class VisitSlotsMappingApiServiceTest {
           nomisSlotSequence = 2,
         ),
       )
-
-      assertThat(result.isError).isFalse()
     }
 
     @Test
@@ -178,20 +178,23 @@ class VisitSlotsMappingApiServiceTest {
         ),
       )
 
-      val result = apiService.createTimeSlotMapping(
-        VisitTimeSlotMappingDto(
-          mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
-          label = "2020-01-01T10:00",
-          dpsId = "1233",
-          nomisPrisonId = "WWI",
-          nomisDayOfWeek = "MON",
-          nomisSlotSequence = 2,
-        ),
-      )
+      val error = assertThrows<DuplicateMappingException> {
+        apiService.createTimeSlotMapping(
+          VisitTimeSlotMappingDto(
+            mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+            label = "2020-01-01T10:00",
+            dpsId = "1233",
+            nomisPrisonId = "WWI",
+            nomisDayOfWeek = "MON",
+            nomisSlotSequence = 2,
+          ),
+        )
+      }.error
 
-      assertThat(result.isError).isTrue()
-      assertThat(result.errorResponse!!.moreInfo.duplicate.dpsId).isEqualTo(dpsId)
-      assertThat(result.errorResponse.moreInfo.existing?.dpsId).isEqualTo(existingDpsId)
+      assertThat(error.moreInfo.existing!!["dpsId"]).isEqualTo(existingDpsId)
+      assertThat(error.moreInfo.existing["nomisSlotSequence"]).isEqualTo(2)
+      assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
+      assertThat(error.moreInfo.duplicate["nomisSlotSequence"]).isEqualTo(2)
     }
   }
 }

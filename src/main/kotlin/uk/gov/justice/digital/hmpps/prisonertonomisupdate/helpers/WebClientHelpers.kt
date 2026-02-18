@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
-import kotlinx.coroutines.reactive.awaitFirstOrDefault
 import kotlinx.coroutines.reactor.awaitSingle
 import kotlinx.coroutines.reactor.awaitSingleOrNull
 import org.springframework.core.ParameterizedTypeReference
@@ -90,27 +89,4 @@ class DuplicateErrorResponse(
 data class DuplicateErrorContent(
   val duplicate: Map<String, *>,
   val existing: Map<String, *>? = null,
-)
-
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitSuccessOrDuplicate(): SuccessOrDuplicate<T> = this.bodyToMono<Unit>()
-  .map { SuccessOrDuplicate<T>() }
-  .onErrorResume(WebClientResponseException.Conflict::class.java) {
-    Mono.just(SuccessOrDuplicate(it.getResponseBodyAs(object : ParameterizedTypeReference<DuplicateError<T>>() {})))
-  }
-  .awaitFirstOrDefault(SuccessOrDuplicate())
-
-data class SuccessOrDuplicate<T>(
-  val errorResponse: DuplicateError<T>? = null,
-) {
-  val isError
-    get() = errorResponse != null
-}
-
-class DuplicateError<T>(
-  val moreInfo: DuplicateDetails<T>,
-)
-
-data class DuplicateDetails<MAPPING>(
-  val duplicate: MAPPING,
-  val existing: MAPPING?,
 )
