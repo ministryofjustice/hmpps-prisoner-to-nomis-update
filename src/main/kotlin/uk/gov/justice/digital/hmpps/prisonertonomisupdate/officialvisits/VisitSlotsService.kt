@@ -69,7 +69,10 @@ class VisitSlotsService(
   suspend fun visitSlotCreated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-success", event.asTelemetry())
   suspend fun visitSlotUpdated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-update-success", event.asTelemetry())
   suspend fun visitSlotDeleted(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-delete-success", event.asTelemetry())
-  suspend fun createTimeSlotMapping(message: CreateMappingRetryMessage<VisitTimeSlotMappingDto>) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-create-success", message.telemetryAttributes)
+  suspend fun createTimeSlotMapping(message: CreateMappingRetryMessage<VisitTimeSlotMappingDto>) {
+    mappingApiService.createTimeSlotMapping(message.mapping)
+    telemetryClient.trackEvent("${TIME_SLOT.entityName}-create-success", message.telemetryAttributes)
+  }
   suspend fun createVisitSlotMapping(message: CreateMappingRetryMessage<VisitSlotMappingDto>) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-success", message.telemetryAttributes)
 }
 

@@ -15,6 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse
@@ -132,6 +135,116 @@ class VisitSlotsToNomisIntTest(
             },
             isNull(),
           )
+        }
+      }
+
+      @Nested
+      inner class MappingFailureAndRecovery {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTimeSlotByDpsIdOrNull(
+            dpsId = dpsTimeSlotId,
+            mapping = null,
+          )
+          dpsApi.stubGetTimeSlot(
+            prisonTimeSlotId = dpsTimeSlotId.toLong(),
+            response = syncTimeSlot().copy(
+              prisonCode = prisonId,
+              dayCode = DayType.MON,
+              startTime = "10:00",
+              endTime = "11:00",
+              effectiveDate = LocalDate.parse("2020-01-01"),
+              expiryDate = LocalDate.parse("2030-01-01"),
+            ),
+          )
+          nomisApi.stubCreateTimeSlot(
+            prisonId = prisonId,
+            dayOfWeek = DayOfWeekCreateVisitTimeSlot.MON,
+            response = visitTimeSlotResponse().copy(prisonId = prisonId, dayOfWeek = VisitTimeSlotResponse.DayOfWeek.MON, timeSlotSequence = nomisTimeSlotSequence),
+          )
+        }
+
+        @Nested
+        inner class MappingRetry {
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubCreateTimeSlotMappingFollowedBySuccess()
+            publishCreateTimeSlotDomainEvent(timeSlotId = dpsTimeSlotId, prisonId = prisonId, source = "DPS")
+            waitForAnyProcessingToComplete("time-slot-create-success")
+          }
+
+          @Test
+          fun `will create time slot in NOMIS once`() {
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON")))
+          }
+
+          @Test
+          fun `will try to create mapping until it succeeds`() {
+            mappingApi.verify(
+              2,
+              postRequestedFor(urlEqualTo("/mapping/visit-slots/time-slots")),
+            )
+          }
+        }
+
+        @Nested
+        inner class MappingDuplicate {
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubCreateTimeSlotMapping(
+              DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = VisitTimeSlotMappingDto(
+                    dpsId = dpsTimeSlotId,
+                    nomisPrisonId = "MDO",
+                    nomisDayOfWeek = "MON",
+                    nomisSlotSequence = 1,
+                    mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+                  ),
+                  existing = VisitTimeSlotMappingDto(
+                    dpsId = "93938593",
+                    nomisPrisonId = "WWI",
+                    nomisDayOfWeek = "MON",
+                    nomisSlotSequence = 2,
+                    mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateTimeSlotDomainEvent(timeSlotId = dpsTimeSlotId, prisonId = prisonId, source = "DPS")
+            waitForAnyProcessingToComplete("to-nomis-synch-time-slot-duplicate")
+          }
+
+          @Test
+          fun `will create time slot in NOMIS once`() {
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON")))
+          }
+
+          @Test
+          fun `will try to create mapping once`() {
+            mappingApi.verify(
+              1,
+              postRequestedFor(urlEqualTo("/mapping/visit-slots/time-slots")),
+            )
+          }
+
+          @Test
+          fun `will send telemetry event showing the create and the duplicate mapping`() {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-time-slot-duplicate"),
+              check {
+                assertThat(it["dpsTimeSlotId"]).isEqualTo(dpsTimeSlotId)
+                assertThat(it["dayOfWeek"]).isEqualTo("MON")
+                assertThat(it["nomisTimeSlotSequence"]).isEqualTo(nomisTimeSlotSequence.toString())
+                assertThat(it["prisonId"]).isEqualTo(prisonId)
+              },
+              isNull(),
+            )
+          }
         }
       }
     }

@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
@@ -66,6 +67,32 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
           .withStatus(409)
           .withBody(jsonMapper.writeValueAsString(error)),
       ),
+    )
+  }
+
+  fun stubCreateTimeSlotMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/time-slots")
+        .inScenario("Retry CreateTimeSlot Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause CreateTimeSlot Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/time-slots")
+        .inScenario("Retry CreateTimeSlot Scenario")
+        .whenScenarioStateIs("Cause CreateTimeSlot Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
     )
   }
 
