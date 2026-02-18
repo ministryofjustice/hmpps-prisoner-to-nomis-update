@@ -228,4 +228,30 @@ class OfficialVisitsDpsApiServiceTest {
       )
     }
   }
+
+  @Nested
+  inner class GetVisitSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetVisitSlot(prisonVisitSlotId = 1234L)
+
+      apiService.getVisitSlot(1234)
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get slot endpoint`() = runTest {
+      dpsOfficialVisitsServer.stubGetVisitSlot(prisonVisitSlotId = 1234L)
+
+      apiService.getVisitSlot(1234)
+
+      dpsOfficialVisitsServer.verify(
+        getRequestedFor(urlPathEqualTo("/sync/visit-slot/1234")),
+      )
+    }
+  }
 }

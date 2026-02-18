@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActivePrisonWithTimeSlotResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotForPrisonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -31,5 +32,12 @@ class VisitSlotsNomisApiService(
     prisonId = prisonId,
     dayOfWeek = dayOfWeek,
     createVisitTimeSlotRequest = request,
+  ).awaitSingle()
+
+  suspend fun createVisitSlot(prisonId: String, dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot, timeSlotSequence: Int, request: CreateVisitSlotRequest) = api.createVisitSlot(
+    prisonId = prisonId,
+    dayOfWeek = dayOfWeek,
+    timeSlotSequence = timeSlotSequence,
+    createVisitSlotRequest = request,
   ).awaitSingle()
 }

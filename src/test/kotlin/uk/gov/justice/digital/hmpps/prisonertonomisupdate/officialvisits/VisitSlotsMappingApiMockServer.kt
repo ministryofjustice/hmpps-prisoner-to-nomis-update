@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -147,6 +148,7 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  @Suppress("unused")
   fun stubCreateVisitSlotMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
       post("/mapping/visit-slots/visit-slot")
@@ -170,6 +172,24 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
             .withStatus(201),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetInternalLocationByDpsId(
+    dpsLocationId: String,
+    mapping: LocationMappingDto = LocationMappingDto(
+      dpsLocationId = dpsLocationId,
+      nomisLocationId = 82828,
+      mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+    ),
+  ) {
+    mappingServer.stubFor(
+      get(urlEqualTo("/mapping/locations/dps/$dpsLocationId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(mapping)),
+      ),
     )
   }
 

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Du
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
+import java.util.UUID
 
 @SpringAPIServiceTest
 @Import(VisitSlotsMappingService::class, VisitSlotsMappingApiMockServer::class)
@@ -336,6 +337,41 @@ class VisitSlotsMappingApiServiceTest {
       assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(3321)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(3321)
+    }
+  }
+
+  @Nested
+  inner class GetInternalLocationByDpsId {
+    val dpsLocationId = UUID.randomUUID().toString()
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetInternalLocationByDpsId(
+        dpsLocationId = dpsLocationId,
+      )
+
+      apiService.getInternalLocationByDpsId(
+        dpsLocationId = dpsLocationId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetInternalLocationByDpsId(
+        dpsLocationId = dpsLocationId,
+      )
+
+      apiService.getInternalLocationByDpsId(
+        dpsLocationId = dpsLocationId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/locations/dps/$dpsLocationId")),
+      )
     }
   }
 }
