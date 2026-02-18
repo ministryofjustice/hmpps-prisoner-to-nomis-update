@@ -90,15 +90,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     .also { log.info("Page requested from offender ID: $lastOffenderId, with $pageSize offenders") }
 
   suspend fun checkPrisonerTapsMatch(prisonerId: PrisonerId): PrisonerId? = runCatching {
-    val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getTemporaryAbsenceSummary(prisonerId.offenderNo) } to
-        async { dpsApiService.getTapReconciliation(prisonerId.offenderNo) }
-    }.awaitBoth()
-    checkTapsMatch(
-      offenderNo = prisonerId.offenderNo,
-      dpsTaps = dpsTaps,
-      nomisTaps = nomisTaps,
-    ).takeIf { it.isNotEmpty() }?.let { prisonerId }
+    checkPrisonerTapsMatch(prisonerId.offenderNo).takeIf { it.isNotEmpty() }?.let { prisonerId }
   }.onFailure {
     log.error("Unable to match temporary absences for prisoner with ${prisonerId.offenderNo}", it)
     telemetryClient.trackEvent(
@@ -108,6 +100,18 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
       ),
     )
   }.getOrNull()
+
+  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTaps> {
+    val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getTemporaryAbsenceSummary(offenderNo) } to
+        async { dpsApiService.getTapReconciliation(offenderNo) }
+    }.awaitBoth()
+    return checkTapsMatch(
+      offenderNo = offenderNo,
+      dpsTaps = dpsTaps,
+      nomisTaps = nomisTaps,
+    )
+  }
 
   private fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse): List<MismatchPrisonerTaps> {
     val mismatches = mutableListOf<MismatchPrisonerTaps>()
