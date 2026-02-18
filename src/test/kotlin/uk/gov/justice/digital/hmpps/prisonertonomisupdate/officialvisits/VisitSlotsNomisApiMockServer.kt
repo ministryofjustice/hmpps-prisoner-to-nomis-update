@@ -11,6 +11,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActivePrison
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActivePrisonWithTimeSlotResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitInternalLocationResponse
@@ -55,6 +56,12 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       endTime = "11:00",
       effectiveDate = LocalDate.parse("2020-01-01"),
     )
+
+    fun createVisitSlotRequest() = CreateVisitSlotRequest(
+      maxAdults = 10,
+      maxGroups = 5,
+      internalLocationId = 123,
+    )
   }
   fun stubGetTimeSlotsForPrison(
     prisonId: String,
@@ -94,6 +101,21 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       post(urlPathEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubCreateVisitSlot(
+    prisonId: String,
+    dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot,
+    timeSlotSequence: Int,
+    response: VisitSlotResponse = visitSlotResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$timeSlotSequence")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())

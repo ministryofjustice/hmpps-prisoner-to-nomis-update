@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.createVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.createVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -110,7 +111,7 @@ class VisitSlotsNomisApiServiceTest {
     }
 
     @Test
-    fun `will call the get prisons endpoint`() = runTest {
+    fun `will call the post time slot endpoint`() = runTest {
       mockServer.stubCreateTimeSlot(
         prisonId = "MDI",
         dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot.MON,
@@ -124,6 +125,50 @@ class VisitSlotsNomisApiServiceTest {
 
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateVisitSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubCreateVisitSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.createVisitSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+        timeSlotSequence = 1,
+        request = createVisitSlotRequest(),
+      )
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the post visit slot endpoint`() = runTest {
+      mockServer.stubCreateVisitSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.createVisitSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+        timeSlotSequence = 1,
+        request = createVisitSlotRequest(),
+      )
+
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON/time-slot-sequence/1")),
       )
     }
   }
