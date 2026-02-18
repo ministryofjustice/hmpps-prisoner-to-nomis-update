@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 
@@ -87,6 +88,82 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       post("/mapping/visit-slots/time-slots")
         .inScenario("Retry CreateTimeSlot Scenario")
         .whenScenarioStateIs("Cause CreateTimeSlot Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubGetVisitSlotByDpsIdOrNull(
+    dpsId: String = "123456",
+    mapping: VisitSlotMappingDto? = VisitSlotMappingDto(
+      dpsId = "123456",
+      nomisId = 6543231,
+      mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    mapping?.apply {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/visit-slots/visit-slot/dps-id/$dpsId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(mapping)),
+        ),
+      )
+    } ?: run {
+      mappingServer.stubFor(
+        get(urlEqualTo("/mapping/visit-slots/visit-slot/dps-id/$dpsId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NOT_FOUND.value())
+            .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = 404))),
+        ),
+      )
+    }
+  }
+
+  fun stubCreateVisitSlotMapping() {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/visit-slot").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(201),
+      ),
+    )
+  }
+
+  fun stubCreateVisitSlotMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/visit-slot").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
+  fun stubCreateVisitSlotMappingFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/visit-slot")
+        .inScenario("Retry CreateVisitSlot Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause CreateVisitSlot Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/visit-slots/visit-slots")
+        .inScenario("Retry CreateVisitSlot Scenario")
+        .whenScenarioStateIs("Cause CreateVisitSlot Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

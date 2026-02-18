@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-17.414.1968278"
+    "version" : "2026-02-18.416.f392380"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -6704,6 +6704,68 @@
           },
           "403" : {
             "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/visit-slots/visit-slot/dps-id/{dpsId}" : {
+      "get" : {
+        "tags" : [ "visit-slots-resource" ],
+        "summary" : "Get visit slot mapping by dps id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getVisitSlotMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsId",
+          "in" : "path",
+          "description" : "DPS id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "DPS id",
+            "example" : 1234
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitSlotMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
             "content" : {
               "application/json" : {
                 "schema" : {

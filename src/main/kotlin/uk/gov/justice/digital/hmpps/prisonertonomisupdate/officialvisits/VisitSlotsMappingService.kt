@@ -6,6 +6,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.VisitSlotsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
 
 @Service
@@ -22,6 +23,16 @@ class VisitSlotsMappingService(
     .awaitBodyOrNullForNotFound()
 
   suspend fun createTimeSlotMapping(mapping: VisitTimeSlotMappingDto) = api.prepare(api.createVisitTimeSlotMappingRequestConfig(mapping))
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getVisitSlotByDpsIdOrNull(dpsId: String): VisitSlotMappingDto? = api.prepare(
+    api.getVisitSlotMappingByDpsIdRequestConfig(dpsId = dpsId),
+  )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun createVisitSlotMapping(mapping: VisitSlotMappingDto) = api.prepare(api.createVisitSlotMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 }
