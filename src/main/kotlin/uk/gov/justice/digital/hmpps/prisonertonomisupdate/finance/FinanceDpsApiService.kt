@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.Prisoner
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.UUID
 
@@ -41,9 +42,10 @@ class FinanceDpsApiService(
     .getGeneralLedgerTransactionById(id)
     .awaitSingle()
 
-  suspend fun getOffenderTransaction(id: UUID): SyncOffenderTransactionResponse = syncApi
-    .getOffenderTransactionById(id)
-    .awaitSingle()
+  suspend fun getPrisonerTransactionOrNull(id: UUID): SyncOffenderTransactionResponse? = syncApi
+    .prepare(syncApi.getOffenderTransactionByIdRequestConfig(id))
+    .retrieve()
+    .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
 
   // TODO check if this is still needed
   suspend fun getPrisonerSubAccountDetails(prisonerNo: String, account: Int): PrisonerSubAccountDetails = prisonerApi
