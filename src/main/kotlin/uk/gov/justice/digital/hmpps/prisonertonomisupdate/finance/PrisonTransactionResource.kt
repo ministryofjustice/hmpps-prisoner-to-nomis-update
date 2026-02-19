@@ -58,20 +58,6 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
           ),
         ],
       ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Either no mapping found for case or case not found for prisoner",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Prison (GL) Transaction Id does not exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
-        content = [
-          Content(
-            mediaType = "application/json",
-            schema = Schema(implementation = ErrorResponse::class),
-          ),
-        ],
-      ),
     ],
   )
   suspend fun generateReconciliationReportForPrison(
@@ -115,11 +101,7 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
       ),
       ApiResponse(
         responseCode = "404",
-        description = "Either no mapping found for prison or not found for transaction",
-      ),
-      ApiResponse(
-        responseCode = "404",
-        description = "Prison (GL) Transaction Id does not exist. Requires ROLE_PRISONER_TO_NOMIS__UPDATE__RW",
+        description = "Prison (GL) Transaction Id does not exist.",
         content = [
           Content(
             mediaType = "application/json",

@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
 import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -53,7 +54,6 @@ class PrisonTransactionResourceIntTest(
       @BeforeEach
       fun setUp() {
         val nomisTransactionId1 = 1111L
-        val nomisTransactionId2 = 1234L
         val nomisTransactionId3 = 3333L
         val dpsId1 = UUID.randomUUID().toString()
         val dpsId2 = UUID.randomUUID().toString()
@@ -287,6 +287,174 @@ class PrisonTransactionResourceIntTest(
           eq("prison-transaction-reports-reconciliation-report"),
           check {
             assertThat(it).containsEntry("mismatch-count", "2")
+          },
+          isNull(),
+        )
+      }
+    }
+  }
+
+  @DisplayName("GET /prison-transactions/reports/reconciliation/{prisonId}")
+  @Nested
+  inner class GenerateReconciliationReportForPrison {
+    @Nested
+    inner class Match {
+      val entryDate = LocalDate.parse("2026-01-25")
+      val prisonId = "MDI"
+      val dpsId = UUID.randomUUID().toString()
+
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubGetPrisonTransactionsOn(date = entryDate)
+        mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
+        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+      }
+
+      @Test
+      fun `will not report any mismatches`() = runTest {
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody().isEmpty
+      }
+
+      @Test
+      fun `should call to nomis to get the transactions on a date`() = runTest {
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        nomisApi.verify(
+          WireMock.getRequestedFor(urlEqualTo("/transactions/prison/$prisonId?entryDate=$entryDate")),
+        )
+      }
+
+      @Test
+      fun `should call to the mapping service`() = runTest {
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        mappingApi.verify(
+          WireMock.getRequestedFor(urlEqualTo("/mapping/transactions/nomis-transaction-id/1234")),
+        )
+      }
+
+      @Test
+      fun `should call to the dps finance service`() = runTest {
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+
+        dpsFinanceServer.verify(
+          WireMock.getRequestedFor(urlEqualTo("/sync/general-ledger-transactions/$dpsId")),
+        )
+      }
+    }
+
+    @Nested
+    inner class Mismatch {
+      val entryDate: LocalDate = LocalDate.parse("2026-01-25")
+      val prisonId = "MDI"
+      val nomisId2 = 5678L
+      val dpsId = UUID.randomUUID().toString()
+      val dpsId2 = UUID.randomUUID().toString()
+
+      @BeforeEach
+      fun setUp() {
+        nomisApi.stubGetPrisonTransactionsOn(
+          date = entryDate,
+          response = listOf(
+            nomisPrisonTransaction().copy(type = "CRED"),
+            nomisPrisonTransaction().copy(generalLedgerEntrySequence = 2),
+            nomisPrisonTransaction().copy(transactionId = nomisId2),
+          ),
+        )
+
+        mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
+        mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = nomisId2, dpsTransactionId = dpsId2)
+        val dpsEntry = generalLedgerTransaction().generalLedgerEntries.first()
+
+        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+          dpsTransactionId = dpsId,
+          response =
+          generalLedgerTransaction().copy(generalLedgerEntries = listOf(dpsEntry, dpsEntry.copy(entrySequence = 2))),
+        )
+        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+          dpsTransactionId = dpsId2,
+          response = generalLedgerTransaction().copy(legacyTransactionId = nomisId2),
+        )
+      }
+
+      @Test
+      fun `should emit a mismatched custom event for each mismatch along with a summary`() = runTest {
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .jsonPath("[0].nomisTransactionId").isEqualTo("1234")
+          .jsonPath("[0].dpsTransactionId").isEqualTo(dpsId)
+          .jsonPath("[0].differences").isEqualTo(mapOf("type" to "nomis=CRED, dps=SPEN"))
+
+        verify(telemetryClient).trackEvent(
+          eq("prison-transaction-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsAllEntriesOf(
+              mapOf(
+                "prisonId" to "MDI",
+                "nomisTransactionId" to "1234",
+                "dpsTransactionId" to dpsId,
+                "nomisTransactionEntryCount" to "2",
+                "dpsTransactionEntryCount" to "2",
+                "differences" to "type",
+              ),
+            )
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will attempt to complete a report even if some of the checks fail`() = runTest {
+        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId, response = null)
+        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+          dpsTransactionId = dpsId2,
+          response = generalLedgerTransaction().copy(legacyTransactionId = nomisId2, reference = "REF1"),
+        )
+        webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody()
+          .consumeWith(System.out::println)
+          .jsonPath("[0].nomisTransactionId").isEqualTo(nomisId2)
+          .jsonPath("[0].dpsTransactionId").isEqualTo(dpsId2)
+          .jsonPath("[0].differences").isEqualTo(mapOf("reference" to "nomis=ref 123, dps=REF1"))
+
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("prison-transaction-reports-reconciliation-mismatch-error"),
+          check {
+            assertThat(it).containsEntry("nomisTransactionId", "1234")
+          },
+          isNull(),
+        )
+        verify(telemetryClient, times(1)).trackEvent(
+          eq("prison-transaction-reports-reconciliation-mismatch"),
+          check {
+            assertThat(it).containsEntry("nomisTransactionId", nomisId2.toString())
+            assertThat(it).containsEntry("dpsTransactionId", dpsId2)
+            assertThat(it).containsEntry("differences", "reference")
           },
           isNull(),
         )
