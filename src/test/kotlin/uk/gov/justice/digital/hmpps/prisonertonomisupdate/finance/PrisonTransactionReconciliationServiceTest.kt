@@ -20,7 +20,6 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
-import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
