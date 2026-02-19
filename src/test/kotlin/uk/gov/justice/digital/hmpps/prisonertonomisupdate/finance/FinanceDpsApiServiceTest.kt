@@ -37,7 +37,7 @@ class FinanceDpsApiServiceTest {
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetOffenderTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonerTransaction(transactionId.toString())
 
       apiService.getPrisonerTransactionOrNull(transactionId)
 
@@ -49,7 +49,7 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetOffenderTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonerTransaction(transactionId.toString())
 
       apiService.getPrisonerTransactionOrNull(transactionId)
 
@@ -65,7 +65,7 @@ class FinanceDpsApiServiceTest {
 
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetGeneralLedgerTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonTransaction(transactionId.toString())
 
       apiService.getPrisonTransaction(transactionId)
 
@@ -77,7 +77,7 @@ class FinanceDpsApiServiceTest {
 
     @Test
     fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetGeneralLedgerTransaction(transactionId.toString())
+      dpsFinanceServer.stubGetPrisonTransaction(transactionId.toString())
 
       apiService.getPrisonTransaction(transactionId)
 

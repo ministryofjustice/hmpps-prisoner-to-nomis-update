@@ -29,19 +29,20 @@ class TransactionNomisApiService(
     .retryWhen(backoffSpec)
     .awaitSingle()
 
+  // returns empty list if it does not exist
   suspend fun getPrisonTransaction(transactionId: Long): List<GeneralLedgerTransactionDto> = prisonTransactionsApi
     .getGLTransaction(transactionId)
     .awaitSingle()
 
-  suspend fun getTransactionsForPrisoner(offenderNo: String): PrisonerTransactionLists = webClient
-    .get()
-    .uri("/transactions/prisoners/{offenderNo}", offenderNo)
-    .retrieve()
-    .awaitBodyWithRetry(retrySpec = backoffSpec)
-
+  // returns empty list if it does not exist
   suspend fun getPrisonerTransaction(transactionId: Long): List<OffenderTransactionDto> = prisonerTransactionsApi
     .getTransaction(transactionId)
     .awaitSingle()
+
+  suspend fun getPrisonerTransactions(prisonNumber: String): List<OffenderTransactionDto> = webClient.get()
+    .uri("/transactions/prisoners/{prisonNumber}", prisonNumber)
+    .retrieve()
+    .awaitBodyWithRetry(retrySpec = backoffSpec)
 
   // TODO check if still needed
   suspend fun getTransactions(lastTransactionId: Long = 0, transactionEntrySequence: Int = 1, pageSize: Int = 20): List<OffenderTransactionDto> = webClient.get()

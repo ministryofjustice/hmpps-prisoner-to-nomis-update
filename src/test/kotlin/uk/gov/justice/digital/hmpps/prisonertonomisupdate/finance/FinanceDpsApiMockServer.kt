@@ -12,7 +12,8 @@ import org.junit.jupiter.api.extension.ExtensionContext
 import org.springframework.http.HttpStatus
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
@@ -37,14 +38,38 @@ class FinanceDpsApiExtension :
     val dpsFinanceServer = FinanceDpsApiMockServer()
     lateinit var jsonMapper: JsonMapper
 
-    fun offenderTransaction(uuid: UUID = UUID.randomUUID()) = SyncOffenderTransactionResponse(
+    val prisonEntry = GeneralLedgerEntry(
+      entrySequence = 1,
+      code = 1501,
+      postingType = GeneralLedgerEntry.PostingType.CR,
+      amount = BigDecimal(5.4),
+    )
+
+    fun prisonTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(
+      legacyTransactionId = transactionId,
       synchronizedTransactionId = uuid,
-      caseloadId = "GMI",
+      description = "General Ledger Account Transfer",
+      caseloadId = "MDI",
+      transactionType = "SPEN",
+      transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
+      createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
+      createdBy = "J_BROWN",
+      createdByDisplayName = "Jim Brown",
+      lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
+      lastModifiedBy = "T_SMITH",
+      lastModifiedByDisplayName = "Tim Smith",
+      reference = "ref 123",
+      generalLedgerEntries = listOf(prisonEntry),
+    )
+
+    fun prisonerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 2345) = SyncOffenderTransactionResponse(
+      synchronizedTransactionId = uuid,
+      caseloadId = "MDI",
       transactionTimestamp = LocalDateTime.parse("2024-06-18T14:30"),
       createdAt = LocalDateTime.parse("2024-06-18T14:50"),
       createdBy = "JD12345",
       createdByDisplayName = "J Doe",
-      legacyTransactionId = 123456,
+      legacyTransactionId = transactionId,
       lastModifiedAt = LocalDateTime.parse("2022-07-15T23:03:01"),
       lastModifiedBy = "AB11DZ",
       lastModifiedByDisplayName = "U Dated",
@@ -55,19 +80,12 @@ class FinanceDpsApiExtension :
           offenderDisplayId = "AA001AA",
           offenderBookingId = 455987,
           subAccountType = "REG",
-          postingType = OffenderTransaction.PostingType.DR,
+          postingType = OffenderTransaction.PostingType.CR,
           type = "OT",
           description = "Sub-Account Transfer",
           amount = BigDecimal("162"),
           reference = "string",
-          generalLedgerEntries = listOf(
-            GeneralLedgerEntry(
-              entrySequence = 1,
-              code = 2101,
-              postingType = GeneralLedgerEntry.PostingType.DR,
-              amount = BigDecimal("162"),
-            ),
-          ),
+          generalLedgerEntries = listOf(prisonEntry),
         ),
       ),
     )
@@ -106,14 +124,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     return this
   }
 
-  fun stubGetOffenderTransaction(transactionId: String, response: SyncOffenderTransactionResponse = offenderTransaction()) {
-    stubFor(
-      get("/sync/offender-transactions/$transactionId")
-        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
-    )
-  }
-
-  fun stubGetGeneralLedgerTransaction(dpsTransactionId: String, response: SyncGeneralLedgerTransactionResponse? = generalLedgerTransaction()) {
+  fun stubGetPrisonTransaction(dpsTransactionId: String, response: SyncGeneralLedgerTransactionResponse? = prisonTransaction()) {
     response?.apply {
       stubFor(
         get("/sync/general-ledger-transactions/$dpsTransactionId")
@@ -133,18 +144,24 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       }
   }
 
-  fun stubListPrisonerAccounts(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
-    stubFor(
-      get("/reconcile/prisoner-balances/$prisonNumber")
-        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
-    )
-  }
-
-  fun stubGetPrisonerSubAccountDetails(prisonerNo: String, accountCode: Int, response: PrisonerSubAccountDetails) {
-    stubFor(
-      get("/prisoners/$prisonerNo/accounts/$accountCode")
-        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
-    )
+  fun stubGetPrisonerTransaction(dpsTransactionId: String, response: SyncOffenderTransactionResponse? = prisonerTransaction()) {
+    response?.apply {
+      stubFor(
+        get("/sync/offender-transactions/$dpsTransactionId")
+          .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+      )
+    }
+      ?: run {
+        stubFor(
+          get("/sync/general-ledger-transactions/$dpsTransactionId")
+            .willReturn(
+              aResponse()
+                .withHeader("Content-Type", "application/json")
+                .withStatus(HttpStatus.NOT_FOUND.value())
+                .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = HttpStatus.NOT_FOUND.value()))),
+            ),
+        )
+      }
   }
 
   fun stubGetPrisonBalance(prisonId: String = "MDI", response: String) {
@@ -170,6 +187,20 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
+
+  fun stubListPrisonerAccounts(prisonNumber: String, response: PrisonerEstablishmentBalanceDetailsList) {
+    stubFor(
+      get("/reconcile/prisoner-balances/$prisonNumber")
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonerSubAccountDetails(prisonerNo: String, accountCode: Int, response: PrisonerSubAccountDetails) {
+    stubFor(
+      get("/prisoners/$prisonerNo/accounts/$accountCode")
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
 }
 
 fun prisonAccounts(): GeneralLedgerBalanceDetailsList = GeneralLedgerBalanceDetailsList(items = listOf(prisonAccountDetails()))
@@ -177,27 +208,4 @@ fun prisonAccounts(): GeneralLedgerBalanceDetailsList = GeneralLedgerBalanceDeta
 fun prisonAccountDetails(accountCode: Int = 2101) = GeneralLedgerBalanceDetails(
   accountCode = accountCode,
   balance = BigDecimal.valueOf(23.45),
-)
-fun generalLedgerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(
-  legacyTransactionId = transactionId,
-  synchronizedTransactionId = uuid,
-  description = "General Ledger Account Transfer",
-  caseloadId = "MDI",
-  transactionType = "SPEN",
-  transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
-  createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
-  createdBy = "J_BROWN",
-  createdByDisplayName = "Jim Brown",
-  lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
-  lastModifiedBy = "T_SMITH",
-  lastModifiedByDisplayName = "Tim Smith",
-  reference = "ref 123",
-  generalLedgerEntries = listOf(
-    GeneralLedgerEntry(
-      entrySequence = 1,
-      code = 1501,
-      postingType = GeneralLedgerEntry.PostingType.CR,
-      amount = BigDecimal(5.4),
-    ),
-  ),
 )

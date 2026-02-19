@@ -21,6 +21,8 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -67,7 +69,7 @@ class PrisonTransactionReconciliationServiceTest {
         val dpsId = UUID.randomUUID().toString()
         nomisTransactionsApi.stubGetPrisonTransaction()
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -148,7 +150,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction()
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId, response = null)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId, response = null)
       }
 
       @Test
@@ -178,7 +180,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(caseloadId = "ASI")))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -220,7 +222,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(description = "CREDIT")))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -262,7 +264,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(type = "CR")))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -304,7 +306,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(reference = "Changed")))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -346,7 +348,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(transactionTimestamp = LocalDateTime.parse("2026-01-27T23:30:00"))))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -388,7 +390,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction(), nomisPrisonTransaction()))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -430,7 +432,7 @@ class PrisonTransactionReconciliationServiceTest {
       fun beforeEach() {
         nomisTransactionsApi.stubGetPrisonTransaction(response = listOf(nomisPrisonTransaction().copy(amount = BigDecimal(22.22))))
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -478,14 +480,14 @@ class PrisonTransactionReconciliationServiceTest {
           ),
         )
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(
+        dpsApi.stubGetPrisonTransaction(
           dpsTransactionId = dpsId,
           response =
-          generalLedgerTransaction().copy(
+          prisonTransaction().copy(
             generalLedgerEntries =
             listOf(
-              generalLedgerTransaction().generalLedgerEntries.first(),
-              generalLedgerTransaction().generalLedgerEntries.first().copy(entrySequence = 2),
+              prisonTransaction().generalLedgerEntries.first(),
+              prisonTransaction().generalLedgerEntries.first().copy(entrySequence = 2),
             ),
           ),
         )
@@ -543,7 +545,7 @@ class PrisonTransactionReconciliationServiceTest {
           ),
         )
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsApi.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsApi.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test

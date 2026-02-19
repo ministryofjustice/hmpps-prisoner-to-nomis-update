@@ -8,7 +8,6 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -19,7 +18,27 @@ import java.time.LocalDateTime
 @Component
 class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
-    fun offenderTransactionDto(transactionId: Long = 1001, bookingId: Long = 123456): OffenderTransactionDto = OffenderTransactionDto(
+    fun nomisPrisonTransaction(transactionId: Long = 1234) = GeneralLedgerTransactionDto(
+      transactionId = transactionId,
+      transactionEntrySequence = 1,
+      generalLedgerEntrySequence = 1,
+      caseloadId = "MDI",
+      amount = BigDecimal(5.4),
+      type = "SPEN",
+      postingType = GeneralLedgerTransactionDto.PostingType.CR,
+      accountCode = 1501,
+      description = "General Ledger Account Transfer",
+      transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
+      reference = "ref 123",
+      createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
+      createdBy = "J_BROWN",
+      createdByDisplayName = "Jim Brown",
+      lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
+      lastModifiedBy = "T_SMITH",
+      lastModifiedByDisplayName = "Tim Smith",
+    )
+
+    fun nomisPrisonerTransaction(transactionId: Long = 1001, bookingId: Long = 2345) = OffenderTransactionDto(
       transactionId = transactionId,
       transactionEntrySequence = 1,
       offenderId = 1234,
@@ -32,20 +51,20 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
       clientReference = "clientUniqueRef",
       entryDate = LocalDate.parse("2025-06-01"),
       description = "entryDescription",
-      amount = BigDecimal.valueOf(2.34),
-      createdAt = LocalDateTime.now(),
+      amount = BigDecimal.valueOf(162.00),
+      createdAt = LocalDateTime.parse("2024-06-18T14:30"),
       postingType = OffenderTransactionDto.PostingType.CR,
       createdBy = "me",
       createdByDisplayName = "Me",
       lastModifiedAt = LocalDateTime.now(),
       lastModifiedBy = "you",
       lastModifiedByDisplayName = "You",
-      generalLedgerTransactions = listOf(),
+      generalLedgerTransactions = listOf(nomisPrisonTransaction()),
     )
   }
 
   // TODO - for testing, do we need to set up method to return multiple OffenderTransactionDto
-  fun stubGetTransactions(lastTransactionId: Long = 0, transactionEntrySequence: Int = 1, response: List<OffenderTransactionDto> = listOf(offenderTransactionDto())) {
+  fun stubGetPrisonerTransactions(lastTransactionId: Long = 0, transactionEntrySequence: Int = 1, response: List<OffenderTransactionDto> = listOf(nomisPrisonerTransaction())) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/transactions/from/$lastTransactionId/$transactionEntrySequence"))
         .willReturn(
@@ -85,16 +104,6 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
         ),
       )
     }
-      ?: run {
-        nomisApi.stubFor(
-          get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
-            aResponse()
-              .withHeader("Content-Type", "application/json")
-              .withStatus(HttpStatus.NOT_FOUND.value())
-              .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = HttpStatus.NOT_FOUND.value()))),
-          ),
-        )
-      }
   }
 
   fun stubGetPrisonTransactionsOn(
@@ -114,26 +123,24 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubGetPrisonerTransaction(
+    transactionId: Long = 2345,
+    response: List<OffenderTransactionDto>? = listOf(nomisPrisonerTransaction(transactionId)),
+  ) {
+    response?.apply {
+      nomisApi.stubFor(
+        get(urlPathEqualTo("/transactions/$transactionId")).willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(
+              jsonMapper.writeValueAsString(response),
+            ),
+        ),
+      )
+    }
+  }
+
   fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
 }
-
-fun nomisPrisonTransaction(transactionId: Long = 1234) = GeneralLedgerTransactionDto(
-  transactionId = transactionId,
-  transactionEntrySequence = 1,
-  generalLedgerEntrySequence = 1,
-  caseloadId = "MDI",
-  amount = BigDecimal(5.4),
-  type = "SPEN",
-  postingType = GeneralLedgerTransactionDto.PostingType.CR,
-  accountCode = 1501,
-  description = "General Ledger Account Transfer",
-  transactionTimestamp = LocalDateTime.parse("2021-02-03T04:05:09"),
-  reference = "ref 123",
-  createdAt = LocalDateTime.parse("2021-02-03T04:05:07"),
-  createdBy = "J_BROWN",
-  createdByDisplayName = "Jim Brown",
-  lastModifiedAt = LocalDateTime.parse("2021-02-03T04:05:59"),
-  lastModifiedBy = "T_SMITH",
-  lastModifiedByDisplayName = "Tim Smith",
-)

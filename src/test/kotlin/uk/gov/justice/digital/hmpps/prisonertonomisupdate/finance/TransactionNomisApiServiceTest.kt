@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -71,7 +72,7 @@ class TransactionNomisApiServiceTest {
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetTransactions()
+      mockServer.stubGetPrisonerTransactions()
 
       apiService.getTransactions()
 
@@ -82,7 +83,7 @@ class TransactionNomisApiServiceTest {
 
     @Test
     fun `will call the get endpoint`() = runTest {
-      mockServer.stubGetTransactions()
+      mockServer.stubGetPrisonerTransactions()
 
       apiService.getTransactions()
 
@@ -93,7 +94,7 @@ class TransactionNomisApiServiceTest {
 
     @Test
     fun `will request just a page of transactions from specified transaction`() = runTest {
-      mockServer.stubGetTransactions(lastTransactionId = 1234)
+      mockServer.stubGetPrisonerTransactions(lastTransactionId = 1234)
 
       apiService.getTransactions(lastTransactionId = 1234, pageSize = 100)
 
@@ -105,7 +106,7 @@ class TransactionNomisApiServiceTest {
 
     @Test
     fun `will return a list of transactions`() = runTest {
-      mockServer.stubGetTransactions(lastTransactionId = 1234)
+      mockServer.stubGetPrisonerTransactions(lastTransactionId = 1234)
 
       val transactions = apiService.getTransactions(lastTransactionId = 1234, pageSize = 100)
 
