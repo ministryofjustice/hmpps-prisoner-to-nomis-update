@@ -114,9 +114,5 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
   suspend fun manualCheckPrisonTransaction(
     @Schema(description = "Transaction Id", example = "12345", required = true)
     @PathVariable transactionId: Long,
-  ) = try {
-    reconciliationService.checkTransactionMatch(transactionId)
-  } catch (_: WebClientResponseException.NotFound) {
-    throw NotFoundException("Transaction not found $transactionId")
-  }
+  ) = reconciliationService.checkTransactionMatch(transactionId)
 }

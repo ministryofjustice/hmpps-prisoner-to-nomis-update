@@ -42,7 +42,7 @@ class FinanceDpsApiExtension :
       entrySequence = 1,
       code = 1501,
       postingType = GeneralLedgerEntry.PostingType.CR,
-      amount = BigDecimal(5.4),
+      amount = BigDecimal.valueOf(5.4),
     )
 
     fun prisonTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 1234) = SyncGeneralLedgerTransactionResponse(

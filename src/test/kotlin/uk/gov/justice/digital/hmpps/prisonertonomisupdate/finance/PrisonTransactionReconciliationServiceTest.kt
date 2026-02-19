@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
@@ -96,19 +97,19 @@ class PrisonTransactionReconciliationServiceTest {
 
       @BeforeEach
       fun beforeEach() {
-        nomisTransactionsApi.stubGetPrisonTransaction(transactionId = 4343, response = null)
+        nomisTransactionsApi.stubGetPrisonTransaction(transactionId = 4343, response = emptyList())
       }
 
       @Test
       fun `will throw not found exception`() = runTest {
-        assertThrows<NotFound> {
+        assertThrows<NotFoundException> {
           service.checkTransactionMatch(4343)
         }
       }
 
       @Test
       fun `will produce no telemetry`() = runTest {
-        assertThrows<NotFound> {
+        assertThrows<NotFoundException> {
           service.checkTransactionMatch(4343)
         }
         verifyNoInteractions(telemetryClient)

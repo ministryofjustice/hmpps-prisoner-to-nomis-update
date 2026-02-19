@@ -90,9 +90,9 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetPrisonTransaction(
     transactionId: Long = 1234,
-    response: List<GeneralLedgerTransactionDto>? = listOf(nomisPrisonTransaction(transactionId)),
+    response: List<GeneralLedgerTransactionDto> = listOf(nomisPrisonTransaction(transactionId)),
   ) {
-    response?.apply {
+    response.apply {
       nomisApi.stubFor(
         get(urlPathEqualTo("/transactions/$transactionId/general-ledger")).willReturn(
           aResponse()

@@ -439,7 +439,6 @@ class PrisonTransactionResourceIntTest(
           .expectStatus()
           .isOk
           .expectBody()
-          .consumeWith(System.out::println)
           .jsonPath("[0].nomisTransactionId").isEqualTo(nomisId2)
           .jsonPath("[0].dpsTransactionId").isEqualTo(dpsId2)
           .jsonPath("[0].differences").isEqualTo(mapOf("reference" to "nomis=ref 123, dps=REF1"))
@@ -562,8 +561,8 @@ class PrisonTransactionResourceIntTest(
     @Nested
     inner class UnhappyPath {
       @Test
-      fun `when no transaction exists`() {
-        nomisApi.stubGetPrisonTransaction(response = null)
+      fun `when no transaction exists in Nomis`() {
+        nomisApi.stubGetPrisonTransaction(response = emptyList())
 
         webTestClient.get().uri("/prison-transactions/reconciliation/transaction/$nomisTransactionId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -571,7 +570,7 @@ class PrisonTransactionResourceIntTest(
           .expectStatus()
           .isNotFound
           .expectBody()
-          .jsonPath("userMessage").isEqualTo("Not Found: Transaction not found 1234")
+          .jsonPath("userMessage").isEqualTo("Not Found: Prison Transaction 1234 not found")
 
         verifyNoInteractions(telemetryClient)
       }
