@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -19,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Vi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotForPrisonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import java.nio.file.Files.delete
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -108,6 +110,20 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+  fun stubDeleteTimeSlot(
+    prisonId: String,
+    dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot,
+    timeSlotSequence: Int,
+  ) {
+    nomisApi.stubFor(
+      delete(urlPathEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$timeSlotSequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubCreateVisitSlot(
     prisonId: String,
     dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot,
@@ -120,6 +136,15 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubDeleteVisitSlot(visitSlotId: Long) {
+    nomisApi.stubFor(
+      delete(urlPathEqualTo("/visits/configuration/visit-slots/$visitSlotId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
       ),
     )
   }

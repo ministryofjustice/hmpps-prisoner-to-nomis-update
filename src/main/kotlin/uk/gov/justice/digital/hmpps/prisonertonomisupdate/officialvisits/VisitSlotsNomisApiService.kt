@@ -34,10 +34,18 @@ class VisitSlotsNomisApiService(
     createVisitTimeSlotRequest = request,
   ).awaitSingle()
 
+  suspend fun deleteTimeSlot(prisonId: String, dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot, timeSlotSequence: Int) = api.deleteVisitTimeSlot(
+    prisonId = prisonId,
+    dayOfWeek = dayOfWeek,
+    timeSlotSequence = timeSlotSequence,
+  ).awaitSingle()
+
   suspend fun createVisitSlot(prisonId: String, dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot, timeSlotSequence: Int, request: CreateVisitSlotRequest) = api.createVisitSlot(
     prisonId = prisonId,
     dayOfWeek = dayOfWeek,
     timeSlotSequence = timeSlotSequence,
     createVisitSlotRequest = request,
   ).awaitSingle()
+
+  suspend fun deleteVisitSlot(visitSlotId: Long) = api.deleteVisitSlot(visitSlotId = visitSlotId).awaitSingle()
 }

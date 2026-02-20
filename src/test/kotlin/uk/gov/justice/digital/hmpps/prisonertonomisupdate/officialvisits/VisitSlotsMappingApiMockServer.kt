@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -109,6 +110,21 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubDeleteTimeSlotByNomisIds(
+    nomisPrisonId: String = "WWI",
+    nomisDayOfWeek: String = "MON",
+    nomisSlotSequence: Int = 2,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/visit-slots/time-slots/nomis-prison-id/$nomisPrisonId/nomis-day-of-week/$nomisDayOfWeek/nomis-slot-sequence/$nomisSlotSequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value())
+          .withBody(jsonMapper.writeValueAsString(ErrorResponse(status = 404))),
+      ),
+    )
+  }
+
   fun stubGetVisitSlotByDpsIdOrNull(
     dpsId: String = "123456",
     mapping: VisitSlotMappingDto? = VisitSlotMappingDto(
@@ -183,6 +199,18 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
             .withStatus(201),
 
         ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+
+  fun stubDeleteVisitSlotByNomisId(
+    nomisId: Long = 123456,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
     )
   }
 
