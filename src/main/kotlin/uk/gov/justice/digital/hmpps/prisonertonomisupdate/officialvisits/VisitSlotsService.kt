@@ -5,7 +5,9 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.TIME_SLOT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.VISIT_SLOT
@@ -18,6 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.D
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType.TUE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType.WED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 
@@ -66,14 +69,60 @@ class VisitSlotsService(
   }
   suspend fun timeSlotUpdated(event: TimeSlotEvent) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-update-success", event.asTelemetry())
   suspend fun timeSlotDeleted(event: TimeSlotEvent) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-delete-success", event.asTelemetry())
-  suspend fun visitSlotCreated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-success", event.asTelemetry())
+  suspend fun visitSlotCreated(event: VisitSlotEvent) {
+    val telemetryMap = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = VISIT_SLOT.entityName
+        telemetryClient = this@VisitSlotsService.telemetryClient
+        retryQueueService = officialVisitsRetryQueueService
+        eventTelemetry = telemetryMap
+
+        checkMappingDoesNotExist {
+          mappingApiService.getVisitSlotByDpsIdOrNull(event.additionalInformation.visitSlotId.toString())
+        }
+        transform {
+          val dpsVisitSlot = dpsApiService.getVisitSlot(event.additionalInformation.visitSlotId).also {
+            telemetryMap["dpsTimeSlotId"] = it.prisonTimeSlotId.toString()
+          }
+          val timeSlotMapping = mappingApiService.getTimeSlotByDpsId(dpsVisitSlot.prisonTimeSlotId.toString()).also {
+            telemetryMap["nomisDayOfWeek"] = it.nomisDayOfWeek
+            telemetryMap["nomisTimeSlotSequence"] = it.nomisSlotSequence.toString()
+          }
+          val locationMapping = mappingApiService.getInternalLocationByDpsId(dpsVisitSlot.dpsLocationId.toString()).also {
+            telemetryMap["nomisLocationId"] = it.nomisLocationId.toString()
+          }
+          nomisApiService.createVisitSlot(
+            prisonId = timeSlotMapping.nomisPrisonId,
+            dayOfWeek = timeSlotMapping.nomisDayOfWeek.toDayOfWeekCreateVisitSlot(),
+            timeSlotSequence = timeSlotMapping.nomisSlotSequence,
+            request = dpsVisitSlot.toCreateVisitSlotRequest(locationMapping.nomisLocationId),
+          ).also {
+            telemetryMap["nomisVisitSlotId"] = it.id.toString()
+          }.let {
+            VisitSlotMappingDto(
+              dpsId = event.additionalInformation.visitSlotId.toString(),
+              nomisId = it.id,
+              mappingType = VisitSlotMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createVisitSlotMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-ignored", telemetryMap)
+    }
+  }
   suspend fun visitSlotUpdated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-update-success", event.asTelemetry())
   suspend fun visitSlotDeleted(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-delete-success", event.asTelemetry())
   suspend fun createTimeSlotMapping(message: CreateMappingRetryMessage<VisitTimeSlotMappingDto>) {
     mappingApiService.createTimeSlotMapping(message.mapping)
     telemetryClient.trackEvent("${TIME_SLOT.entityName}-create-success", message.telemetryAttributes)
   }
-  suspend fun createVisitSlotMapping(message: CreateMappingRetryMessage<VisitSlotMappingDto>) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-success", message.telemetryAttributes)
+  suspend fun createVisitSlotMapping(message: CreateMappingRetryMessage<VisitSlotMappingDto>) {
+    mappingApiService.createVisitSlotMapping(message.mapping)
+    telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-success", message.telemetryAttributes)
+  }
 }
 
 fun TimeSlotEvent.asTelemetry() = mutableMapOf(
@@ -98,10 +147,26 @@ private fun DayType.toDayOfWeekCreateVisitTimeSlot(): DayOfWeekCreateVisitTimeSl
   SAT -> DayOfWeekCreateVisitTimeSlot.SAT
   SUN -> DayOfWeekCreateVisitTimeSlot.SUN
 }
+private fun String.toDayOfWeekCreateVisitSlot(): DayOfWeekCreateVisitSlot = when (this) {
+  "MON" -> DayOfWeekCreateVisitSlot.MON
+  "TUE" -> DayOfWeekCreateVisitSlot.TUE
+  "WED" -> DayOfWeekCreateVisitSlot.WED
+  "THU" -> DayOfWeekCreateVisitSlot.THU
+  "FRI" -> DayOfWeekCreateVisitSlot.FRI
+  "SAT" -> DayOfWeekCreateVisitSlot.SAT
+  "SUN" -> DayOfWeekCreateVisitSlot.SUN
+  else -> throw IllegalArgumentException("Unknown day of week: $this")
+}
 
 private fun SyncTimeSlot.toCreateVisitTimeSlotRequest(): CreateVisitTimeSlotRequest = CreateVisitTimeSlotRequest(
   startTime = startTime,
   endTime = endTime,
   effectiveDate = effectiveDate,
   expiryDate = expiryDate,
+)
+
+private fun SyncVisitSlot.toCreateVisitSlotRequest(nomisLocationId: Long): CreateVisitSlotRequest = CreateVisitSlotRequest(
+  maxAdults = maxAdults,
+  maxGroups = maxGroups,
+  internalLocationId = nomisLocationId,
 )

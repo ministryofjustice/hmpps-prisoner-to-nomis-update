@@ -51,6 +51,17 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     }
   }
 
+  fun stubGetTimeSlotByDpsId(
+    dpsId: String = "123456",
+    mapping: VisitTimeSlotMappingDto = VisitTimeSlotMappingDto(
+      dpsId = "123456",
+      nomisPrisonId = "MDI",
+      nomisDayOfWeek = "MON",
+      nomisSlotSequence = 1,
+      mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetTimeSlotByDpsIdOrNull(dpsId, mapping)
+
   fun stubCreateTimeSlotMapping() {
     mappingServer.stubFor(
       post("/mapping/visit-slots/time-slots").willReturn(
@@ -163,7 +174,7 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
 
     mappingServer.stubFor(
-      post("/mapping/visit-slots/visit-slots")
+      post("/mapping/visit-slots/visit-slot")
         .inScenario("Retry CreateVisitSlot Scenario")
         .whenScenarioStateIs("Cause CreateVisitSlot Success")
         .willReturn(

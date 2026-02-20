@@ -114,6 +114,55 @@ class VisitSlotsMappingApiServiceTest {
   }
 
   @Nested
+  inner class GetTimeSlotByDpsId {
+    val dpsTimeSlotId = "12345"
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetTimeSlotByDpsId(
+        dpsId = dpsTimeSlotId,
+        mapping = VisitTimeSlotMappingDto(
+          dpsId = "123456",
+          nomisPrisonId = "MDI",
+          nomisDayOfWeek = "MON",
+          nomisSlotSequence = 1,
+          mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getTimeSlotByDpsId(
+        dpsId = dpsTimeSlotId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetTimeSlotByDpsId(
+        dpsId = dpsTimeSlotId,
+        mapping = VisitTimeSlotMappingDto(
+          dpsId = dpsTimeSlotId,
+          nomisPrisonId = "MDI",
+          nomisDayOfWeek = "MON",
+          nomisSlotSequence = 1,
+          mappingType = VisitTimeSlotMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getTimeSlotByDpsId(
+        dpsId = dpsTimeSlotId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/visit-slots/time-slots/dps-id/$dpsTimeSlotId")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateTimeSlotMapping {
     @Test
     fun `will pass oath2 token to migrate endpoint`() = runTest {

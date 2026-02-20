@@ -26,6 +26,8 @@ class VisitSlotsMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun getTimeSlotByDpsId(dpsId: String): VisitTimeSlotMappingDto = api.getVisitTimeSlotMappingByDpsId(dpsId = dpsId).awaitSingle()
+
   suspend fun createTimeSlotMapping(mapping: VisitTimeSlotMappingDto) = api.prepare(api.createVisitTimeSlotMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
