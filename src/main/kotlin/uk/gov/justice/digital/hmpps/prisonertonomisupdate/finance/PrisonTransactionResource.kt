@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestController
-import org.springframework.web.reactive.function.client.WebClientResponseException
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 
@@ -114,9 +112,5 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
   suspend fun manualCheckPrisonTransaction(
     @Schema(description = "Transaction Id", example = "12345", required = true)
     @PathVariable transactionId: Long,
-  ) = try {
-    reconciliationService.checkTransactionMatch(transactionId)
-  } catch (_: WebClientResponseException.NotFound) {
-    throw NotFoundException("Transaction not found $transactionId")
-  }
+  ) = reconciliationService.checkTransactionMatch(transactionId)
 }

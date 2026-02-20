@@ -25,6 +25,8 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonTransaction
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.TransactionNomisApiMockServer.Companion.nomisPrisonTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.math.BigDecimal
@@ -83,14 +85,14 @@ class PrisonTransactionResourceIntTest(
           dpsTransactionId = dpsId3,
         )
 
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId1,
-          response = generalLedgerTransaction().copy(caseloadId = "ASI"),
+          response = prisonTransaction().copy(caseloadId = "ASI"),
         )
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId2)
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId = dpsId2)
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId3,
-          response = generalLedgerTransaction().copy(caseloadId = "LEI"),
+          response = prisonTransaction().copy(caseloadId = "LEI"),
         )
       }
 
@@ -182,14 +184,14 @@ class PrisonTransactionResourceIntTest(
           dpsTransactionId = dpsId3,
         )
 
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId1,
-          response = generalLedgerTransaction().copy(caseloadId = "ASI"),
+          response = prisonTransaction().copy(caseloadId = "ASI"),
         )
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId2)
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId = dpsId2)
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId3,
-          response = generalLedgerTransaction().copy(caseloadId = "LEI"),
+          response = prisonTransaction().copy(caseloadId = "LEI"),
         )
       }
 
@@ -259,7 +261,7 @@ class PrisonTransactionResourceIntTest(
 
       @Test
       fun `will attempt to complete a report even if some of the checks fail`() = runTest {
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId2, response = null)
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId = dpsId2, response = null)
 
         reconciliationService.generateReconciliationReport(entryDate)
 
@@ -307,7 +309,7 @@ class PrisonTransactionResourceIntTest(
       fun setUp() {
         nomisApi.stubGetPrisonTransactionsOn(date = entryDate)
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId)
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId = dpsId)
       }
 
       @Test
@@ -381,16 +383,16 @@ class PrisonTransactionResourceIntTest(
 
         mappingApi.stubGetByNomisTransactionIdOrNull(dpsTransactionId = dpsId)
         mappingApi.stubGetByNomisTransactionIdOrNull(nomisTransactionId = nomisId2, dpsTransactionId = dpsId2)
-        val dpsEntry = generalLedgerTransaction().generalLedgerEntries.first()
+        val dpsEntry = prisonTransaction().generalLedgerEntries.first()
 
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId,
           response =
-          generalLedgerTransaction().copy(generalLedgerEntries = listOf(dpsEntry, dpsEntry.copy(entrySequence = 2))),
+          prisonTransaction().copy(generalLedgerEntries = listOf(dpsEntry, dpsEntry.copy(entrySequence = 2))),
         )
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId2,
-          response = generalLedgerTransaction().copy(legacyTransactionId = nomisId2),
+          response = prisonTransaction().copy(legacyTransactionId = nomisId2),
         )
       }
 
@@ -426,10 +428,10 @@ class PrisonTransactionResourceIntTest(
 
       @Test
       fun `will attempt to complete a report even if some of the checks fail`() = runTest {
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId = dpsId, response = null)
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId = dpsId, response = null)
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId = dpsId2,
-          response = generalLedgerTransaction().copy(legacyTransactionId = nomisId2, reference = "REF1"),
+          response = prisonTransaction().copy(legacyTransactionId = nomisId2, reference = "REF1"),
         )
         webTestClient.get().uri("/prison-transactions/reconciliation/$prisonId?date=$entryDate")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -437,7 +439,6 @@ class PrisonTransactionResourceIntTest(
           .expectStatus()
           .isOk
           .expectBody()
-          .consumeWith(System.out::println)
           .jsonPath("[0].nomisTransactionId").isEqualTo(nomisId2)
           .jsonPath("[0].dpsTransactionId").isEqualTo(dpsId2)
           .jsonPath("[0].differences").isEqualTo(mapOf("reference" to "nomis=ref 123, dps=REF1"))
@@ -504,7 +505,7 @@ class PrisonTransactionResourceIntTest(
           nomisTransactionId = nomisTransactionId,
           dpsTransactionId = dpsTransactionId,
         )
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(dpsTransactionId)
+        dpsFinanceServer.stubGetPrisonTransaction(dpsTransactionId)
       }
 
       @Test
@@ -521,9 +522,9 @@ class PrisonTransactionResourceIntTest(
 
       @Test
       fun `will return mismatch data`() {
-        dpsFinanceServer.stubGetGeneralLedgerTransaction(
+        dpsFinanceServer.stubGetPrisonTransaction(
           dpsTransactionId,
-          response = generalLedgerTransaction().copy(transactionType = "CR"),
+          response = prisonTransaction().copy(transactionType = "CR"),
         )
 
         webTestClient.get().uri("/prison-transactions/reconciliation/transaction/$nomisTransactionId")
@@ -560,8 +561,8 @@ class PrisonTransactionResourceIntTest(
     @Nested
     inner class UnhappyPath {
       @Test
-      fun `when no transaction exists`() {
-        nomisApi.stubGetPrisonTransaction(response = null)
+      fun `when no transaction exists in Nomis`() {
+        nomisApi.stubGetPrisonTransaction(response = emptyList())
 
         webTestClient.get().uri("/prison-transactions/reconciliation/transaction/$nomisTransactionId")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -569,7 +570,7 @@ class PrisonTransactionResourceIntTest(
           .expectStatus()
           .isNotFound
           .expectBody()
-          .jsonPath("userMessage").isEqualTo("Not Found: Transaction not found 1234")
+          .jsonPath("userMessage").isEqualTo("Not Found: Prison Transaction 1234 not found")
 
         verifyNoInteractions(telemetryClient)
       }
