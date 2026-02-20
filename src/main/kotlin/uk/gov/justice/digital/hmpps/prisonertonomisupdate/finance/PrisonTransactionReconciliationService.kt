@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerEntry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
@@ -79,7 +80,11 @@ class PrisonTransactionReconciliationService(
     return nomisTransactionsForTheDay.groupBy { it.transactionId }.values.mapNotNull { checkTransactionMatch(it) }
   }
 
-  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = checkTransactionMatch(transactionNomisApiService.getPrisonTransaction(nomisTransactionId))
+  suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonTransaction? = transactionNomisApiService.getPrisonTransaction(nomisTransactionId)
+    .ifEmpty {
+      throw NotFoundException("Prison Transaction $nomisTransactionId not found")
+    }
+    .let { checkTransactionMatch(it) }
 
   suspend fun checkTransactionMatch(nomis: List<GeneralLedgerTransactionDto>): MismatchPrisonTransaction? = runCatching {
     val nomisTransaction = nomis.toTransactionSummary()
