@@ -32,6 +32,15 @@ class VisitSlotsMappingService(
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
+  suspend fun deleteTimeSlotByNomisIds(nomisPrisonId: String, nomisDayOfWeek: String, nomisSlotSequence: Int) {
+    api.deleteVisitTimeSlotMappingByNomisIds(
+      nomisPrisonId = nomisPrisonId,
+      nomisDayOfWeek = nomisDayOfWeek,
+      nomisSlotSequence = nomisSlotSequence,
+    )
+      .awaitSingle()
+  }
+
   suspend fun getVisitSlotByDpsIdOrNull(dpsId: String): VisitSlotMappingDto? = api.prepare(
     api.getVisitSlotMappingByDpsIdRequestConfig(dpsId = dpsId),
   )
@@ -41,6 +50,10 @@ class VisitSlotsMappingService(
   suspend fun createVisitSlotMapping(mapping: VisitSlotMappingDto) = api.prepare(api.createVisitSlotMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun deleteVisitSlotByNomisId(nomisVisitSlotId: Long) {
+    api.deleteVisitSlotMappingByNomisId(nomisId = nomisVisitSlotId).awaitSingle()
+  }
 
   suspend fun getInternalLocationByDpsId(dpsLocationId: String): LocationMappingDto = locationApi.getMappingGivenDpsId1(dpsLocationId = dpsLocationId).awaitSingle()
 }

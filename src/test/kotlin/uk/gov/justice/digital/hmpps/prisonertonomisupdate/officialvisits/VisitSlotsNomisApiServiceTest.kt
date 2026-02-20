@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -130,6 +131,48 @@ class VisitSlotsNomisApiServiceTest {
   }
 
   @Nested
+  inner class DeleteTimeSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubDeleteTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.deleteTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the delete time slot endpoint`() = runTest {
+      mockServer.stubDeleteTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.deleteTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON/time-slot-sequence/1")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateVisitSlot {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
@@ -169,6 +212,32 @@ class VisitSlotsNomisApiServiceTest {
 
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON/time-slot-sequence/1")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeleteVisitSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubDeleteVisitSlot(visitSlotId = 1616)
+
+      apiService.deleteVisitSlot(visitSlotId = 1616)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the delete visit slot endpoint`() = runTest {
+      mockServer.stubDeleteVisitSlot(visitSlotId = 1616)
+
+      apiService.deleteVisitSlot(visitSlotId = 1616)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/visits/configuration/visit-slots/1616")),
       )
     }
   }

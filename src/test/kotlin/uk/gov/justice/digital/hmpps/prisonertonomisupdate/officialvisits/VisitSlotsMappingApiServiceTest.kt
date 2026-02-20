@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -250,6 +251,51 @@ class VisitSlotsMappingApiServiceTest {
   }
 
   @Nested
+  inner class DeleteTimeSlotByNomisIds {
+    val nomisPrisonId = "WWI"
+    val nomisDayOfWeek = "MON"
+    val nomisSlotSequence = 2
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteTimeSlotByNomisIds(
+        nomisPrisonId = nomisPrisonId,
+        nomisDayOfWeek = nomisDayOfWeek,
+        nomisSlotSequence = nomisSlotSequence,
+      )
+
+      apiService.deleteTimeSlotByNomisIds(
+        nomisPrisonId = nomisPrisonId,
+        nomisDayOfWeek = nomisDayOfWeek,
+        nomisSlotSequence = nomisSlotSequence,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubDeleteTimeSlotByNomisIds(
+        nomisPrisonId = nomisPrisonId,
+        nomisDayOfWeek = nomisDayOfWeek,
+        nomisSlotSequence = nomisSlotSequence,
+      )
+
+      apiService.deleteTimeSlotByNomisIds(
+        nomisPrisonId = nomisPrisonId,
+        nomisDayOfWeek = nomisDayOfWeek,
+        nomisSlotSequence = nomisSlotSequence,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/visit-slots/time-slots/nomis-prison-id/$nomisPrisonId/nomis-day-of-week/$nomisDayOfWeek/nomis-slot-sequence/$nomisSlotSequence")),
+      )
+    }
+  }
+
+  @Nested
   inner class GetVisitSlotByDpsIdOrNull {
     val dpsVisitSlotId = "12345"
 
@@ -386,6 +432,41 @@ class VisitSlotsMappingApiServiceTest {
       assertThat(error.moreInfo.existing["nomisId"]).isEqualTo(3321)
       assertThat(error.moreInfo.duplicate["dpsId"]).isEqualTo(dpsId)
       assertThat(error.moreInfo.duplicate["nomisId"]).isEqualTo(3321)
+    }
+  }
+
+  @Nested
+  inner class DeleteVisitSlotByNomisId {
+    val nomisId = 123456L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteVisitSlotByNomisId(
+        nomisId = nomisId,
+      )
+
+      apiService.deleteVisitSlotByNomisId(
+        nomisVisitSlotId = nomisId,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass NOMIS id to service`() = runTest {
+      mockServer.stubDeleteVisitSlotByNomisId(
+        nomisId = nomisId,
+      )
+
+      apiService.deleteVisitSlotByNomisId(
+        nomisVisitSlotId = nomisId,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisId")),
+      )
     }
   }
 
