@@ -17,11 +17,17 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncVisitSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.visitSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.visitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
@@ -29,6 +35,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import java.time.LocalDate
+import java.util.UUID
 
 class VisitSlotsToNomisIntTest(
   @Autowired
@@ -309,27 +316,259 @@ class VisitSlotsToNomisIntTest(
   @Nested
   @DisplayName("official-visits-api.visit-slot.created")
   inner class VisitSlotCreated {
+    val dpsTimeSlotId = "12345"
+    val nomisTimeSlotSequence: Int = 2
+    val dpsVisitSlotId = "56789"
+    val nomisVisitSlotId = 987654L
+    val dayOfWeek = "MON"
+    val prisonId = "MDI"
+    val nomisLocationId = 123456L
+    val dpsLocationId: UUID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000")
 
     @Nested
-    @DisplayName("when DPS is the origin of a visit slot create")
-    inner class WhenDpsCreated {
+    @DisplayName("when NOMIS is the origin of a visit slot create")
+    inner class WhenNomisCreated {
 
       @BeforeEach
       fun setUp() {
-        publishCreateVisitSlotDomainEvent(visitSlotId = "12345", prisonId = "MDI", source = "DPS")
+        publishCreateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "NOMIS")
         waitForAnyProcessingToComplete()
       }
 
       @Test
-      fun `will send telemetry event showing the create`() {
+      fun `will send telemetry event showing the create is skipped`() {
         verify(telemetryClient).trackEvent(
-          eq("visit-slot-create-success"),
+          eq("visit-slot-create-ignored"),
           check {
-            assertThat(it["dpsVisitSlotId"]).isEqualTo("12345")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
           },
           isNull(),
         )
+      }
+    }
+
+    @Nested
+    @DisplayName("when DPS is the origin of a visit slot create")
+    inner class WhenDpsCreated {
+      @Nested
+      inner class HappyPath {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+            dpsId = dpsVisitSlotId,
+            mapping = null,
+          )
+
+          dpsApi.stubGetVisitSlot(
+            prisonVisitSlotId = dpsVisitSlotId.toLong(),
+            response = syncVisitSlot().copy(
+              visitSlotId = dpsVisitSlotId.toLong(),
+              prisonCode = prisonId,
+              prisonTimeSlotId = dpsTimeSlotId.toLong(),
+              dpsLocationId = dpsLocationId,
+              maxAdults = 10,
+              maxGroups = 5,
+            ),
+          )
+
+          mappingApi.stubGetTimeSlotByDpsId(
+            dpsId = dpsTimeSlotId,
+            mapping = VisitTimeSlotMappingDto(
+              dpsId = dpsTimeSlotId,
+              nomisPrisonId = prisonId,
+              nomisDayOfWeek = dayOfWeek,
+              nomisSlotSequence = nomisTimeSlotSequence,
+              mappingType = VisitTimeSlotMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+
+          mappingApi.stubGetInternalLocationByDpsId(
+            dpsLocationId = dpsLocationId.toString(),
+            mapping = LocationMappingDto(
+              dpsLocationId = dpsLocationId.toString(),
+              nomisLocationId = nomisLocationId,
+              mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+            ),
+          )
+
+          nomisApi.stubCreateVisitSlot(
+            prisonId = prisonId,
+            dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+            timeSlotSequence = nomisTimeSlotSequence,
+            response = visitSlotResponse().copy(id = nomisVisitSlotId),
+          )
+
+          mappingApi.stubCreateVisitSlotMapping()
+
+          publishCreateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create visit slot in NOMIS`() {
+          val request: CreateVisitSlotRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$nomisTimeSlotSequence")), jsonMapper)
+          assertThat(request.maxGroups).isEqualTo(5)
+          assertThat(request.maxAdults).isEqualTo(10)
+          assertThat(request.internalLocationId).isEqualTo(nomisLocationId)
+        }
+
+        @Test
+        fun `will create mapping`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot"))
+              .withRequestBodyJsonPath("dpsId", dpsVisitSlotId)
+              .withRequestBodyJsonPath("nomisId", nomisVisitSlotId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("visit-slot-create-success"),
+            check {
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+              assertThat(it["dpsTimeSlotId"]).isEqualTo(dpsTimeSlotId)
+              assertThat(it["nomisTimeSlotSequence"]).isEqualTo(nomisTimeSlotSequence.toString())
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["nomisDayOfWeek"]).isEqualTo("MON")
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+              assertThat(it["nomisLocationId"]).isEqualTo(nomisLocationId.toString())
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class MappingFailureAndRecovery {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+            dpsId = dpsVisitSlotId,
+            mapping = null,
+          )
+
+          dpsApi.stubGetVisitSlot(
+            prisonVisitSlotId = dpsVisitSlotId.toLong(),
+            response = syncVisitSlot().copy(
+              visitSlotId = dpsVisitSlotId.toLong(),
+              prisonCode = prisonId,
+              prisonTimeSlotId = dpsTimeSlotId.toLong(),
+              dpsLocationId = dpsLocationId,
+            ),
+          )
+
+          mappingApi.stubGetTimeSlotByDpsId(
+            dpsId = dpsTimeSlotId,
+            mapping = VisitTimeSlotMappingDto(
+              dpsId = dpsTimeSlotId,
+              nomisPrisonId = prisonId,
+              nomisDayOfWeek = dayOfWeek,
+              nomisSlotSequence = nomisTimeSlotSequence,
+              mappingType = VisitTimeSlotMappingDto.MappingType.DPS_CREATED,
+            ),
+          )
+
+          mappingApi.stubGetInternalLocationByDpsId(
+            dpsLocationId = dpsLocationId.toString(),
+            mapping = LocationMappingDto(
+              dpsLocationId = dpsLocationId.toString(),
+              nomisLocationId = nomisLocationId,
+              mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+            ),
+          )
+
+          nomisApi.stubCreateVisitSlot(
+            prisonId = prisonId,
+            dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot.MON,
+            timeSlotSequence = nomisTimeSlotSequence,
+            response = visitSlotResponse().copy(id = nomisVisitSlotId),
+          )
+        }
+
+        @Nested
+        inner class MappingRetry {
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubCreateVisitSlotMappingFollowedBySuccess()
+            publishCreateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "DPS")
+            waitForAnyProcessingToComplete("visit-slot-create-success")
+          }
+
+          @Test
+          fun `will create visit slot in NOMIS once`() {
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$nomisTimeSlotSequence")))
+          }
+
+          @Test
+          fun `will try to create mapping until it succeeds`() {
+            mappingApi.verify(
+              2,
+              postRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot")),
+            )
+          }
+        }
+
+        @Nested
+        inner class MappingDuplicate {
+          @BeforeEach
+          fun setUp() {
+            mappingApi.stubCreateVisitSlotMapping(
+              DuplicateMappingErrorResponse(
+                moreInfo = DuplicateErrorContentObject(
+                  duplicate = VisitSlotMappingDto(
+                    dpsId = dpsTimeSlotId,
+                    nomisId = nomisVisitSlotId,
+                    mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+                  ),
+                  existing = VisitSlotMappingDto(
+                    dpsId = "93938593",
+                    nomisId = nomisVisitSlotId,
+                    mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+                  ),
+                ),
+                errorCode = 1409,
+                status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+                userMessage = "Duplicate mapping",
+              ),
+            )
+            publishCreateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "DPS")
+            waitForAnyProcessingToComplete("to-nomis-synch-visit-slot-duplicate")
+          }
+
+          @Test
+          fun `will create visit slot in NOMIS once`() {
+            nomisApi.verify(1, postRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$nomisTimeSlotSequence")))
+          }
+
+          @Test
+          fun `will try to create mapping once`() {
+            mappingApi.verify(
+              1,
+              postRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot")),
+            )
+          }
+
+          @Test
+          fun `will send telemetry event showing the create and the duplicate mapping`() {
+            verify(telemetryClient).trackEvent(
+              eq("to-nomis-synch-visit-slot-duplicate"),
+              check {
+                assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+                assertThat(it["dpsTimeSlotId"]).isEqualTo(dpsTimeSlotId)
+                assertThat(it["nomisTimeSlotSequence"]).isEqualTo(nomisTimeSlotSequence.toString())
+                assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+                assertThat(it["nomisDayOfWeek"]).isEqualTo("MON")
+                assertThat(it["prisonId"]).isEqualTo(prisonId)
+                assertThat(it["nomisLocationId"]).isEqualTo(nomisLocationId.toString())
+              },
+              isNull(),
+            )
+          }
+        }
       }
     }
   }
