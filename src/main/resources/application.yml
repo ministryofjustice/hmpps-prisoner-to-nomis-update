@@ -237,7 +237,7 @@ hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
   queues:
     courtsentencing:
-      errorVisibilityTimeout: 1, 1, 1, 1, 1, 1, 5, 5, 60
+      errorVisibilityTimeout: 1, 1, 1, 1, 1, 1, 5, 5, 60, 1, 1, 1, 1, 1, 1, 5, 5, 60
     externalmovements:
       errorVisibilityTimeout: 1, 1, 1, 10, 60, 600
     location:
