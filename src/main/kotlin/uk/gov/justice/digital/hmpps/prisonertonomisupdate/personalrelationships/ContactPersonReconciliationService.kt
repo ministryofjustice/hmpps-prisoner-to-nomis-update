@@ -379,8 +379,8 @@ class ContactPersonReconciliationService(
   }
   private fun ReconcilePrisonerRelationship.asSummary() = ContactSummary(
     contactId = this.contactId,
-    firstName = this.firstName?.uppercase() ?: "UNKNOWN",
-    lastName = this.lastName?.uppercase() ?: "UNKNOWN",
+    firstName = this.firstName?.uppercase()?.trim() ?: "UNKNOWN",
+    lastName = this.lastName?.uppercase()?.trim() ?: "UNKNOWN",
     relationshipCode = this.relationshipToPrisoner,
     contactType = this.relationshipTypeCode,
     emergencyContact = this.emergencyContact,
@@ -391,8 +391,8 @@ class ContactPersonReconciliationService(
 
   private fun PrisonerContact.asSummary() = ContactSummary(
     contactId = this.person.personId,
-    firstName = this.person.firstName.uppercase(),
-    lastName = this.person.lastName.uppercase(),
+    firstName = this.person.firstName.uppercase().trim(),
+    lastName = this.person.lastName.uppercase().trim(),
     relationshipCode = this.relationshipType.code,
     contactType = this.contactType.code,
     emergencyContact = this.emergencyContact,
@@ -403,8 +403,8 @@ class ContactPersonReconciliationService(
 
   private fun ContactPerson.asSummary() = PersonSummary(
     personId = this.personId,
-    firstName = this.firstName.uppercase(),
-    lastName = this.lastName.uppercase(),
+    firstName = this.firstName.uppercase().trim(),
+    lastName = this.lastName.uppercase().trim(),
     dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phoneNumbers.map { it.number }.toSortedSet(),
@@ -417,8 +417,8 @@ class ContactPersonReconciliationService(
   )
   private fun SyncContactReconcile.asSummary() = PersonSummary(
     personId = this.contactId,
-    firstName = this.firstName.uppercase(),
-    lastName = this.lastName.uppercase(),
+    firstName = this.firstName.uppercase().trim(),
+    lastName = this.lastName.uppercase().trim(),
     dateOfBirth = this.dateOfBirth?.takeIf { it.validDateOfBirth() },
     addressCount = this.addresses.size,
     phoneNumbers = this.phones.map { it.phoneNumber }.toSortedSet(),

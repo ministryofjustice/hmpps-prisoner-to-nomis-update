@@ -155,6 +155,34 @@ internal class ContactPersonReconciliationServiceTest {
     }
 
     @Nested
+    inner class WhenPrisonerHasSameContactsButWithSpaces {
+      @BeforeEach
+      fun beforeEach() {
+        stubContact(
+          dpsContact = prisonerContactRelationshipDetails().copy(
+            contactId = 99,
+            firstName = "Jane",
+            lastName = "Smith",
+          ),
+          nomisContact = prisonerContact().copy(
+            person = ContactForPerson(
+              personId = 99,
+              firstName = " JANE",
+              lastName = "SMITH ",
+            ),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkPrisonerContactsMatch(prisonerId),
+        ).isNull()
+      }
+    }
+
+    @Nested
     inner class WhenPrisonerHasSameDuplicateContactsButInDifferentOrder {
       @BeforeEach
       fun beforeEach() {
@@ -914,6 +942,31 @@ internal class ContactPersonReconciliationServiceTest {
           dpsContact.copy(
             firstName = "Kweku",
             lastName = "Kofi",
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(service.checkPersonContactMatch(personId)).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenNamesHaveSpaces {
+
+      @BeforeEach
+      fun setUp() {
+        stubPersonContact(
+          nomisPerson.copy(
+            firstName = "KWEKU",
+            lastName = "KOFI ",
+            middleName = "HARRY ",
+          ),
+          dpsContact.copy(
+            firstName = "Kweku",
+            lastName = "Kofi",
+            middleNames = "Harry",
           ),
         )
       }
