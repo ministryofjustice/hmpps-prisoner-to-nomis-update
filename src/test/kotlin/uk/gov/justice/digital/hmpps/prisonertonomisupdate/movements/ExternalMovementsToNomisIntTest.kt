@@ -766,6 +766,40 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      @DisplayName("an occurrence rescheduled event also updates the authorisation")
+      inner class HappyPathEventTriggersAuthorisationSync {
+        private val dpsLocation = Location(uprn = 654, address = "some address", postcode = "SW1A 1AA")
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
+          dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
+          mappingApi.stubCreateScheduledMovementMapping()
+
+          // stubs for the authorisation sync
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          dpsApi.stubGetTapAuthorisation(dpsAuthorisationId, response = dpsApi.tapAuthorisation(id = dpsAuthorisationId))
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+
+          // publish event that triggers authorisation sync
+          publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.rescheduled")
+          waitForAnyProcessingToComplete("temporary-absence-application-update-success")
+        }
+
+        @Test
+        fun `will upsert the schedule in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+        }
+
+        @Test
+        fun `will upsert the application in NOMIS`() {
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+        }
+      }
+
+      @Nested
       @DisplayName("when mapping service fails once")
       inner class MappingFailure {
 
