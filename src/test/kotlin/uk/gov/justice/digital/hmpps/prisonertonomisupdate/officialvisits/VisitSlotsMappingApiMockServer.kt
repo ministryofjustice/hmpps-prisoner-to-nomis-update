@@ -213,6 +213,35 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+  fun stubDeleteVisitSlotByNomisIdFailureFollowedBySuccess(
+    nomisId: Long = 123456,
+    status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisId"))
+        .inScenario("Retry stubDeleteVisitSlotByNomisId Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause stubDeleteVisitSlotByNomisId Success"),
+    )
+
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisId"))
+        .inScenario("Retry stubDeleteVisitSlotByNomisId Scenario")
+        .whenScenarioStateIs("Cause stubDeleteVisitSlotByNomisId Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
 
   fun stubGetInternalLocationByDpsId(
     dpsLocationId: String,

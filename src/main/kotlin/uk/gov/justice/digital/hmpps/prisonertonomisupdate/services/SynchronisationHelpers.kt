@@ -6,6 +6,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateErrorContent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
 import kotlin.reflect.full.memberProperties
 
 class SynchroniseBuilder<MAPPING_DTO>(
@@ -144,3 +145,32 @@ enum class CreatingSystem {
   NOMIS,
   DPS,
 }
+
+interface TelemetryEnabled {
+  val telemetryClient: TelemetryClient
+}
+
+class AwaitParentEntityRetry(message: String) : ParentEntityNotFoundRetry(message)
+
+inline fun TelemetryEnabled.track(name: String, telemetry: MutableMap<String, String>, transform: () -> Unit) {
+  try {
+    transform()
+    telemetryClient.trackEvent("$name-success", telemetry)
+  } catch (e: AwaitParentEntityRetry) {
+    telemetry["error"] = e.message.toString()
+    telemetryClient.trackEvent("$name-awaiting-parent", telemetry)
+    throw e
+  } catch (e: Exception) {
+    telemetry["error"] = e.message.toString()
+    telemetryClient.trackEvent("$name-error", telemetry)
+    throw e
+  }
+}
+
+fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = this.trackEvent(
+  name,
+  properties.valuesAsStrings(),
+  null,
+)
+
+fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }

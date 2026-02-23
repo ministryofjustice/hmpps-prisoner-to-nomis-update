@@ -356,8 +356,9 @@ hmpps.sqs:
           "official-visits-api.visitor.updated",
           "official-visits-api.visitor.deleted"
         ]}
-      dlqMaxReceiveCount: 1
+      dlqMaxReceiveCount: 2
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
   topics:
     domainevents:
       arn: arn:aws:sns:eu-west-2:000000000000:${random.uuid}

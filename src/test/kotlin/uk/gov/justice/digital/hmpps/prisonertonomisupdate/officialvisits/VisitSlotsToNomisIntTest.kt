@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
@@ -608,23 +609,128 @@ class VisitSlotsToNomisIntTest(
     @Nested
     @DisplayName("when DPS is the origin of a visit slot delete")
     inner class WhenDpsDeleted {
+      val dpsVisitSlotId = "56789"
+      val nomisVisitSlotId = 987654L
 
-      @BeforeEach
-      fun setUp() {
-        publishDeleteVisitSlotDomainEvent(visitSlotId = "12345", prisonId = "MDI", source = "NOMIS")
-        waitForAnyProcessingToComplete()
+      @Nested
+      inner class WhenNoMappingExists {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+            dpsId = dpsVisitSlotId,
+            mapping = null,
+          )
+          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete was skipped`() {
+          verify(telemetryClient).trackEvent(
+            eq("visit-slot-delete-skipped"),
+            check {
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+              assertThat(it["prisonId"]).isEqualTo("MDI")
+            },
+            isNull(),
+          )
+        }
       }
 
-      @Test
-      fun `will send telemetry event showing the delete`() {
-        verify(telemetryClient).trackEvent(
-          eq("visit-slot-delete-success"),
-          check {
-            assertThat(it["dpsVisitSlotId"]).isEqualTo("12345")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
-          },
-          isNull(),
-        )
+      @Nested
+      inner class WhenMappingExists {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+            dpsId = dpsVisitSlotId,
+            mapping = VisitSlotMappingDto(
+              dpsId = dpsVisitSlotId,
+              nomisId = nomisVisitSlotId,
+              mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
+          mappingApi.stubDeleteVisitSlotByNomisId(nomisVisitSlotId)
+          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will delete the slot from NOMIS`() {
+          nomisApi.verify(1, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
+        }
+
+        @Test
+        fun `will delete the slot mapping`() {
+          mappingApi.verify(1, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete was processed`() {
+          verify(telemetryClient).trackEvent(
+            eq("visit-slot-delete-success"),
+            check {
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["prisonId"]).isEqualTo("MDI")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class WhenMappingFailedToBeDeleteOnce {
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+            dpsId = dpsVisitSlotId,
+            mapping = VisitSlotMappingDto(
+              dpsId = dpsVisitSlotId,
+              nomisId = nomisVisitSlotId,
+              mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+            ),
+          )
+          nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
+          mappingApi.stubDeleteVisitSlotByNomisIdFailureFollowedBySuccess(nomisVisitSlotId)
+          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+          waitForAnyProcessingToComplete("visit-slot-delete-success")
+        }
+
+        @Test
+        fun `will delete the slot from NOMIS twice since it is idempotent`() {
+          nomisApi.verify(2, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
+        }
+
+        @Test
+        fun `will try to delete the slot mapping twice`() {
+          mappingApi.verify(2, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
+        }
+
+        @Test
+        fun `will send telemetry event showing the delete was processed along with error`() {
+          verify(telemetryClient).trackEvent(
+            eq("visit-slot-delete-error"),
+            check {
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["prisonId"]).isEqualTo("MDI")
+            },
+            isNull(),
+          )
+          verify(telemetryClient).trackEvent(
+            eq("visit-slot-delete-success"),
+            check {
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["prisonId"]).isEqualTo("MDI")
+            },
+            isNull(),
+          )
+        }
       }
     }
   }
