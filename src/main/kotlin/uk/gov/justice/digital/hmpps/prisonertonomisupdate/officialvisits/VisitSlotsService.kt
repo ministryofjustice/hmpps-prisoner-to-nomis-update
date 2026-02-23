@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Vi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitTimeSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.TIME_SLOT
@@ -70,7 +71,28 @@ class VisitSlotsService(
     }
   }
   suspend fun timeSlotUpdated(event: TimeSlotEvent) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-update-success", event.asTelemetry())
-  suspend fun timeSlotDeleted(event: TimeSlotEvent) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-delete-success", event.asTelemetry())
+  suspend fun timeSlotDeleted(event: TimeSlotEvent) {
+    val telemetry = event.asTelemetry()
+    mappingApiService.getTimeSlotByDpsIdOrNull(event.additionalInformation.timeSlotId.toString())?.also { mapping ->
+      telemetry["nomisSlotSequence"] = mapping.nomisSlotSequence.toString()
+      telemetry["nomisDayOfWeek"] = mapping.nomisDayOfWeek
+      telemetry["nomisPrisonId"] = mapping.nomisPrisonId
+      track("${TIME_SLOT.entityName}-delete", telemetry) {
+        nomisApiService.deleteTimeSlot(
+          prisonId = mapping.nomisPrisonId,
+          dayOfWeek = mapping.nomisDayOfWeek.toDayOfWeekDeleteVisitTimeSlot(),
+          timeSlotSequence = mapping.nomisSlotSequence,
+        )
+        mappingApiService.deleteTimeSlotByNomisIds(
+          nomisPrisonId = mapping.nomisPrisonId,
+          nomisDayOfWeek = mapping.nomisDayOfWeek,
+          nomisSlotSequence = mapping.nomisSlotSequence,
+        )
+      }
+    } ?: run {
+      telemetryClient.trackEvent("${TIME_SLOT.entityName}-delete-skipped", telemetry)
+    }
+  }
   suspend fun visitSlotCreated(event: VisitSlotEvent) {
     val telemetryMap = event.asTelemetry()
     if (event.didOriginateInDPS()) {
@@ -168,6 +190,17 @@ private fun String.toDayOfWeekCreateVisitSlot(): DayOfWeekCreateVisitSlot = when
   "FRI" -> DayOfWeekCreateVisitSlot.FRI
   "SAT" -> DayOfWeekCreateVisitSlot.SAT
   "SUN" -> DayOfWeekCreateVisitSlot.SUN
+  else -> throw IllegalArgumentException("Unknown day of week: $this")
+}
+
+private fun String.toDayOfWeekDeleteVisitTimeSlot(): DayOfWeekDeleteVisitTimeSlot = when (this) {
+  "MON" -> DayOfWeekDeleteVisitTimeSlot.MON
+  "TUE" -> DayOfWeekDeleteVisitTimeSlot.TUE
+  "WED" -> DayOfWeekDeleteVisitTimeSlot.WED
+  "THU" -> DayOfWeekDeleteVisitTimeSlot.THU
+  "FRI" -> DayOfWeekDeleteVisitTimeSlot.FRI
+  "SAT" -> DayOfWeekDeleteVisitTimeSlot.SAT
+  "SUN" -> DayOfWeekDeleteVisitTimeSlot.SUN
   else -> throw IllegalArgumentException("Unknown day of week: $this")
 }
 
