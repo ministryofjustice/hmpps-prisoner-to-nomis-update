@@ -152,8 +152,14 @@ class AdjudicationsReconciliationService(
 private val dpsAdaTypes = listOf(PunishmentDto.Type.ADDITIONAL_DAYS, PunishmentDto.Type.PROSPECTIVE_DAYS)
 
 private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
-  val adaPunishments = this.flatMap { it.punishments }.filter { it.type in dpsAdaTypes }
+  val adaPunishments = this.filter { it.hasValidOutcomeWithHearing() }.flatMap { it.punishments }.filter { it.type in dpsAdaTypes }
   return AdaSummary(count = adaPunishments.size, days = adaPunishments.sumOf { it.schedule.duration ?: 0 })
+}
+
+private fun ReportedAdjudicationDto.hasValidOutcomeWithHearing(): Boolean {
+  // ignore outcomes that have no hearing since the punishment will not be valid
+  // This matches DPS Adjustment logic
+  return this.outcomes.lastOrNull()?.hearing != null
 }
 
 private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })

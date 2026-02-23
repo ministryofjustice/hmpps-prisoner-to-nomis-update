@@ -20,11 +20,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.test.context.bean.override.mockito.MockitoBean
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.AdjudicationsApiExtension.Companion.adjudicationsApiServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentDetailsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentRoleDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.IncidentStatementDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OffenceRuleDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeHistoryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto.Type.ADDITIONAL_DAYS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto.Type.PROSPECTIVE_DAYS
@@ -96,6 +100,45 @@ internal class AdjudicationsReconciliationServiceTest {
       @BeforeEach
       fun beforeEach() {
         adjudicationsApiServer.stubGetAdjudicationsByBookingId(123456, listOf(aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10)))))
+        nomisApi.stubGetAdaAwardSummary(
+          bookingId = 123456,
+          adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
+            bookingId = 123456,
+            offenderNo = "A1234AA",
+            adaSummaries = listOf(nomisSummary(days = 10)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report a mismatch`() = runTest {
+        assertThat(
+          service.checkADAPunishmentsMatch(
+            PrisonerIds(
+              bookingId = 123456L,
+              offenderNo = "A1234AA",
+            ),
+          ),
+        ).isNull()
+      }
+    }
+
+    @Nested
+    inner class WhenDPSHasCorruptDataAnADAWithNoOutcome {
+      @BeforeEach
+      fun beforeEach() {
+        // also has an adjudication with an ADA but the outcome contains no hearing
+        // therefore the punishment can not be valid
+        adjudicationsApiServer.stubGetAdjudicationsByBookingId(
+          123456,
+          listOf(
+            aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10))),
+            aDPSAdjudication().copy(
+              outcomes = listOf(aDPSAdjudication().outcomes.lastOrNull()!!.copy(hearing = null)),
+              punishments = listOf(adaPunishment(days = 10)),
+            ),
+          ),
+        )
         nomisApi.stubGetAdaAwardSummary(
           bookingId = 123456,
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
@@ -613,7 +656,23 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   witnesses = emptyList(),
   hearings = listOf(),
   disIssueHistory = emptyList(),
-  outcomes = listOf(),
+  outcomes = listOf(
+    OutcomeHistoryDto(
+      hearing = HearingDto(
+        locationUuid = UUID.randomUUID(),
+        dateTimeOfHearing = LocalDateTime.parse("2023-02-01T10:00"),
+        oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+        agencyId = "MDI",
+      ),
+      outcome = CombinedOutcomeDto(
+        outcome = OutcomeDto(
+          code = OutcomeDto.Code.CHARGE_PROVED,
+          canRemove = false,
+        ),
+        referralOutcome = null,
+      ),
+    ),
+  ),
   punishments = emptyList(),
   punishmentComments = emptyList(),
   outcomeEnteredInNomis = false,
