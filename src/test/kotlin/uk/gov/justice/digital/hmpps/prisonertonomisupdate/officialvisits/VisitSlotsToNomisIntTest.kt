@@ -289,24 +289,84 @@ class VisitSlotsToNomisIntTest(
   @Nested
   @DisplayName("official-visits-api.time-slot.deleted")
   inner class TimeSlotDeleted {
+    val dpsTimeSlotId = "12345"
+    val nomisTimeSlotSequence: Int = 2
+    val prisonId = "MDI"
 
     @Nested
-    @DisplayName("when DPS is the origin of a time slot delete")
-    inner class WhenDpsDeleted {
+    inner class WhenNoMappingExists {
 
       @BeforeEach
       fun setUp() {
-        publishDeleteTimeSlotDomainEvent(timeSlotId = "12345", prisonId = "MDI", source = "DPS")
+        mappingApi.stubGetTimeSlotByDpsIdOrNull(
+          dpsId = dpsTimeSlotId,
+          mapping = null,
+        )
+        publishDeleteTimeSlotDomainEvent(timeSlotId = dpsTimeSlotId, prisonId = prisonId, source = "DPS")
         waitForAnyProcessingToComplete()
       }
 
       @Test
-      fun `will send telemetry event showing the delete`() {
+      fun `will send telemetry event showing the delete was skipped`() {
+        verify(telemetryClient).trackEvent(
+          eq("time-slot-delete-skipped"),
+          check {
+            assertThat(it["dpsTimeSlotId"]).isEqualTo(dpsTimeSlotId)
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingExists {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetTimeSlotByDpsIdOrNull(
+          dpsId = dpsTimeSlotId,
+          mapping = VisitTimeSlotMappingDto(
+            dpsId = dpsTimeSlotId,
+            nomisPrisonId = prisonId,
+            nomisDayOfWeek = "MON",
+            nomisSlotSequence = nomisTimeSlotSequence,
+            mappingType = VisitTimeSlotMappingDto.MappingType.DPS_CREATED,
+          ),
+        )
+        nomisApi.stubDeleteTimeSlot(
+          prisonId = prisonId,
+          dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot.MON,
+          timeSlotSequence = nomisTimeSlotSequence,
+        )
+        mappingApi.stubDeleteTimeSlotByNomisIds(
+          nomisPrisonId = prisonId,
+          nomisDayOfWeek = "MON",
+          nomisSlotSequence = nomisTimeSlotSequence,
+        )
+        publishDeleteTimeSlotDomainEvent(timeSlotId = dpsTimeSlotId, prisonId = prisonId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete the slot from NOMIS`() {
+        nomisApi.verify(1, deleteRequestedFor(urlEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/MON/time-slot-sequence/$nomisTimeSlotSequence")))
+      }
+
+      @Test
+      fun `will delete the slot mapping`() {
+        mappingApi.verify(1, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/time-slots/nomis-prison-id/$prisonId/nomis-day-of-week/MON/nomis-slot-sequence/$nomisTimeSlotSequence")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the delete was processed`() {
         verify(telemetryClient).trackEvent(
           eq("time-slot-delete-success"),
           check {
-            assertThat(it["dpsTimeSlotId"]).isEqualTo("12345")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsTimeSlotId"]).isEqualTo(dpsTimeSlotId)
+            assertThat(it["nomisDayOfWeek"]).isEqualTo("MON")
+            assertThat(it["nomisSlotSequence"]).isEqualTo(nomisTimeSlotSequence.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
           },
           isNull(),
         )
@@ -606,131 +666,127 @@ class VisitSlotsToNomisIntTest(
   @DisplayName("official-visits-api.visit-slot.deleted")
   inner class VisitSlotDeleted {
 
+    val dpsVisitSlotId = "56789"
+    val nomisVisitSlotId = 987654L
+
     @Nested
-    @DisplayName("when DPS is the origin of a visit slot delete")
-    inner class WhenDpsDeleted {
-      val dpsVisitSlotId = "56789"
-      val nomisVisitSlotId = 987654L
+    inner class WhenNoMappingExists {
 
-      @Nested
-      inner class WhenNoMappingExists {
-
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetVisitSlotByDpsIdOrNull(
-            dpsId = dpsVisitSlotId,
-            mapping = null,
-          )
-          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will send telemetry event showing the delete was skipped`() {
-          verify(telemetryClient).trackEvent(
-            eq("visit-slot-delete-skipped"),
-            check {
-              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
-              assertThat(it["prisonId"]).isEqualTo("MDI")
-            },
-            isNull(),
-          )
-        }
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitSlotByDpsIdOrNull(
+          dpsId = dpsVisitSlotId,
+          mapping = null,
+        )
+        publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+        waitForAnyProcessingToComplete()
       }
 
-      @Nested
-      inner class WhenMappingExists {
+      @Test
+      fun `will send telemetry event showing the delete was skipped`() {
+        verify(telemetryClient).trackEvent(
+          eq("visit-slot-delete-skipped"),
+          check {
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+      }
+    }
 
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+    @Nested
+    inner class WhenMappingExists {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitSlotByDpsIdOrNull(
+          dpsId = dpsVisitSlotId,
+          mapping = VisitSlotMappingDto(
             dpsId = dpsVisitSlotId,
-            mapping = VisitSlotMappingDto(
-              dpsId = dpsVisitSlotId,
-              nomisId = nomisVisitSlotId,
-              mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
-            ),
-          )
-          nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
-          mappingApi.stubDeleteVisitSlotByNomisId(nomisVisitSlotId)
-          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
-          waitForAnyProcessingToComplete()
-        }
-
-        @Test
-        fun `will delete the slot from NOMIS`() {
-          nomisApi.verify(1, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
-        }
-
-        @Test
-        fun `will delete the slot mapping`() {
-          mappingApi.verify(1, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
-        }
-
-        @Test
-        fun `will send telemetry event showing the delete was processed`() {
-          verify(telemetryClient).trackEvent(
-            eq("visit-slot-delete-success"),
-            check {
-              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
-              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
-              assertThat(it["prisonId"]).isEqualTo("MDI")
-            },
-            isNull(),
-          )
-        }
+            nomisId = nomisVisitSlotId,
+            mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+          ),
+        )
+        nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
+        mappingApi.stubDeleteVisitSlotByNomisId(nomisVisitSlotId)
+        publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+        waitForAnyProcessingToComplete()
       }
 
-      @Nested
-      inner class WhenMappingFailedToBeDeleteOnce {
+      @Test
+      fun `will delete the slot from NOMIS`() {
+        nomisApi.verify(1, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
+      }
 
-        @BeforeEach
-        fun setUp() {
-          mappingApi.stubGetVisitSlotByDpsIdOrNull(
+      @Test
+      fun `will delete the slot mapping`() {
+        mappingApi.verify(1, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
+      }
+
+      @Test
+      fun `will send telemetry event showing the delete was processed`() {
+        verify(telemetryClient).trackEvent(
+          eq("visit-slot-delete-success"),
+          check {
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingFailedToBeDeleteOnce {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitSlotByDpsIdOrNull(
+          dpsId = dpsVisitSlotId,
+          mapping = VisitSlotMappingDto(
             dpsId = dpsVisitSlotId,
-            mapping = VisitSlotMappingDto(
-              dpsId = dpsVisitSlotId,
-              nomisId = nomisVisitSlotId,
-              mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
-            ),
-          )
-          nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
-          mappingApi.stubDeleteVisitSlotByNomisIdFailureFollowedBySuccess(nomisVisitSlotId)
-          publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
-          waitForAnyProcessingToComplete("visit-slot-delete-success")
-        }
+            nomisId = nomisVisitSlotId,
+            mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+          ),
+        )
+        nomisApi.stubDeleteVisitSlot(nomisVisitSlotId)
+        mappingApi.stubDeleteVisitSlotByNomisIdFailureFollowedBySuccess(nomisVisitSlotId)
+        publishDeleteVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = "MDI")
+        waitForAnyProcessingToComplete("visit-slot-delete-success")
+      }
 
-        @Test
-        fun `will delete the slot from NOMIS twice since it is idempotent`() {
-          nomisApi.verify(2, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
-        }
+      @Test
+      fun `will delete the slot from NOMIS twice since it is idempotent`() {
+        nomisApi.verify(2, deleteRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")))
+      }
 
-        @Test
-        fun `will try to delete the slot mapping twice`() {
-          mappingApi.verify(2, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
-        }
+      @Test
+      fun `will try to delete the slot mapping twice`() {
+        mappingApi.verify(2, deleteRequestedFor(urlEqualTo("/mapping/visit-slots/visit-slot/nomis-id/$nomisVisitSlotId")))
+      }
 
-        @Test
-        fun `will send telemetry event showing the delete was processed along with error`() {
-          verify(telemetryClient).trackEvent(
-            eq("visit-slot-delete-error"),
-            check {
-              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
-              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
-              assertThat(it["prisonId"]).isEqualTo("MDI")
-            },
-            isNull(),
-          )
-          verify(telemetryClient).trackEvent(
-            eq("visit-slot-delete-success"),
-            check {
-              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
-              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
-              assertThat(it["prisonId"]).isEqualTo("MDI")
-            },
-            isNull(),
-          )
-        }
+      @Test
+      fun `will send telemetry event showing the delete was processed along with error`() {
+        verify(telemetryClient).trackEvent(
+          eq("visit-slot-delete-error"),
+          check {
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
+        verify(telemetryClient).trackEvent(
+          eq("visit-slot-delete-success"),
+          check {
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+            assertThat(it["prisonId"]).isEqualTo("MDI")
+          },
+          isNull(),
+        )
       }
     }
   }
