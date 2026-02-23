@@ -72,7 +72,7 @@ enum class UpsertAttendanceError(val errorCode: Int, val exception: (ErrorRespon
 sealed class UpsertAttendanceException(errorResponse: ErrorResponse) : RuntimeException(errorResponse.userMessage)
 class AttendancePaidException(errorResponse: ErrorResponse) : UpsertAttendanceException(errorResponse)
 class PrisonerMovedAllocationEndedException(errorResponse: ErrorResponse) : UpsertAttendanceException(errorResponse)
-class ParentEntityNotFoundRetry(message: String) : RuntimeException(message)
+open class ParentEntityNotFoundRetry(message: String) : RuntimeException(message)
 
 suspend fun WebClient.ResponseSpec.awaitBodilessEntityOrThrowOnConflict() = this.toBodilessEntity()
   .onErrorResume(WebClientResponseException.Conflict::class.java) {

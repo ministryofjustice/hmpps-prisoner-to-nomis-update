@@ -22,16 +22,18 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.D
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 
 @Service
 class VisitSlotsService(
-  private val telemetryClient: TelemetryClient,
+  override val telemetryClient: TelemetryClient,
   private val mappingApiService: VisitSlotsMappingService,
   private val dpsApiService: OfficialVisitsDpsApiService,
   private val nomisApiService: VisitSlotsNomisApiService,
   private val officialVisitsRetryQueueService: OfficialVisitsRetryQueueService,
-) {
+) : TelemetryEnabled {
 
   suspend fun timeSlotCreated(event: TimeSlotEvent) {
     val telemetryMap = event.asTelemetry()
@@ -114,7 +116,18 @@ class VisitSlotsService(
     }
   }
   suspend fun visitSlotUpdated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-update-success", event.asTelemetry())
-  suspend fun visitSlotDeleted(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-delete-success", event.asTelemetry())
+  suspend fun visitSlotDeleted(event: VisitSlotEvent) {
+    val telemetry = event.asTelemetry()
+    mappingApiService.getVisitSlotByDpsIdOrNull(event.additionalInformation.visitSlotId.toString())?.also { mapping ->
+      telemetry["nomisVisitSlotId"] = mapping.nomisId.toString()
+      track("${VISIT_SLOT.entityName}-delete", telemetry) {
+        nomisApiService.deleteVisitSlot(mapping.nomisId)
+        mappingApiService.deleteVisitSlotByNomisId(mapping.nomisId)
+      }
+    } ?: run {
+      telemetryClient.trackEvent("${VISIT_SLOT.entityName}-delete-skipped", telemetry)
+    }
+  }
   suspend fun createTimeSlotMapping(message: CreateMappingRetryMessage<VisitTimeSlotMappingDto>) {
     mappingApiService.createTimeSlotMapping(message.mapping)
     telemetryClient.trackEvent("${TIME_SLOT.entityName}-create-success", message.telemetryAttributes)
