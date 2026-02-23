@@ -32,6 +32,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
 
+private val OCCURRENCE_EVENTS_UPDATE_AUTHORISATION: List<String> = listOf("person.temporary-absence.rescheduled")
 private val AUTHORISATION_EVENTS_UPDATES_ONLY = listOf("person.temporary-absence-authorisation.relocated")
 private val NULL_NOMIS_ESCORT_CODE = "NOT_PROVIDED"
 
@@ -172,6 +173,11 @@ class ExternalMovementsService(
         existingMapping == null -> createScheduledMovementMapping(prisonerNumber, nomis, dpsOccurrenceId, dps, telemetryMap)
         existingMapping.nomisAddressId != nomis.addressId -> updateScheduledMovementMapping(existingMapping, nomis, dps, telemetryMap)
         else -> telemetryClient.trackEvent("${updateType.entityName}-success", telemetryMap)
+      }
+
+      // Synchronise the authorisation if required
+      if (event.eventType in OCCURRENCE_EVENTS_UPDATE_AUTHORISATION) {
+        authorisationChanged(prisonerNumber, dps.authorisation.id, "DPS", false)
       }
     }
       .onFailure {
