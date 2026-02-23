@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-17.903.864b760"
+    "version" : "2026-02-20.924.aa3f588"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -341,7 +341,7 @@
       "put" : {
         "tags" : [ "Sync" ],
         "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "migrateTemporaryAbsences",
+        "operationId" : "mergeTemporaryAbsences",
         "parameters" : [ {
           "name" : "personIdentifier",
           "in" : "path",
@@ -392,43 +392,6 @@
         "responses" : {
           "200" : {
             "description" : "OK"
-          }
-        }
-      }
-    },
-    "/migrate/temporary-absences/{personIdentifier}" : {
-      "put" : {
-        "tags" : [ "Sync" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__SYNC__RW",
-        "operationId" : "migrateTemporaryAbsences_1",
-        "parameters" : [ {
-          "name" : "personIdentifier",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/MigrateTapRequest"
-              }
-            }
-          },
-          "required" : true
-        },
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/MigrateTapResponse"
-                }
-              }
-            }
           }
         }
       }
@@ -1567,7 +1530,7 @@
             "format" : "int64"
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "legacyId", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ]
       },
       "SyncWriteTapOccurrence" : {
         "type" : "object",
@@ -1692,7 +1655,7 @@
             }
           }
         },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "legacyId", "occurrences", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "occurrences", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ]
       },
       "MigrateTapMovement" : {
         "type" : "object",
