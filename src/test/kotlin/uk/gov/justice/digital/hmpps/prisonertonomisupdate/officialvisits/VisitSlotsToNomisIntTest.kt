@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Visi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncTimeSlot
@@ -706,6 +707,34 @@ class VisitSlotsToNomisIntTest(
   @Nested
   @DisplayName("official-visits-api.visit-slot.updated")
   inner class VisitSlotUpdated {
+    val dpsVisitSlotId = "56789"
+    val nomisVisitSlotId = 987654L
+    val prisonId = "MDI"
+    val nomisLocationId = 123456L
+    val dpsLocationId: UUID = UUID.fromString("123e4567-e89b-12d3-a456-426655440000")
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a visit slot update")
+    inner class WhenNomisUpdated {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the update is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("visit-slot-update-ignored"),
+          check {
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     @DisplayName("when DPS is the origin of a visit slot update")
@@ -713,7 +742,38 @@ class VisitSlotsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        publishUpdateVisitSlotDomainEvent(visitSlotId = "12345", prisonId = "MDI", source = "NOMIS")
+        mappingApi.stubGetVisitSlotByDpsId(
+          dpsId = dpsVisitSlotId,
+          mapping = VisitSlotMappingDto(
+            dpsId = dpsVisitSlotId,
+            nomisId = nomisVisitSlotId,
+            mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+          ),
+        )
+
+        dpsApi.stubGetVisitSlot(
+          prisonVisitSlotId = dpsVisitSlotId.toLong(),
+          response = syncVisitSlot().copy(
+            visitSlotId = dpsVisitSlotId.toLong(),
+            prisonCode = prisonId,
+            dpsLocationId = dpsLocationId,
+            maxAdults = 10,
+            maxGroups = 5,
+          ),
+        )
+
+        mappingApi.stubGetInternalLocationByDpsId(
+          dpsLocationId = dpsLocationId.toString(),
+          mapping = LocationMappingDto(
+            dpsLocationId = dpsLocationId.toString(),
+            nomisLocationId = nomisLocationId,
+            mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+          ),
+        )
+
+        nomisApi.stubUpdateVisitSlot(visitSlotId = nomisVisitSlotId)
+
+        publishUpdateVisitSlotDomainEvent(visitSlotId = dpsVisitSlotId, prisonId = prisonId, source = "DPS")
         waitForAnyProcessingToComplete()
       }
 
@@ -722,11 +782,21 @@ class VisitSlotsToNomisIntTest(
         verify(telemetryClient).trackEvent(
           eq("visit-slot-update-success"),
           check {
-            assertThat(it["dpsVisitSlotId"]).isEqualTo("12345")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId)
+            assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+            assertThat(it["nomisLocationId"]).isEqualTo(nomisLocationId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
           },
           isNull(),
         )
+      }
+
+      @Test
+      fun `will update visit slot in NOMIS`() {
+        val request: UpdateVisitSlotRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/visits/configuration/visit-slots/$nomisVisitSlotId")), jsonMapper)
+        assertThat(request.maxGroups).isEqualTo(5)
+        assertThat(request.maxAdults).isEqualTo(10)
+        assertThat(request.internalLocationId).isEqualTo(nomisLocationId)
       }
     }
   }
