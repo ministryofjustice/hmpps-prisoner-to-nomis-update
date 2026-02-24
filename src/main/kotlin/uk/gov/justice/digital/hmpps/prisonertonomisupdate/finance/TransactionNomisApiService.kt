@@ -66,7 +66,6 @@ class TransactionNomisApiService(
     entryDate = entryDate,
     size = pageSize,
   ).retryWhen(backoffSpec).awaitSingle()
-
 }
 
 data class PrisonerTransactionLists(
