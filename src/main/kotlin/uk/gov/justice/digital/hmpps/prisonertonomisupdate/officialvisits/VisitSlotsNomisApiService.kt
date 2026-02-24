@@ -9,6 +9,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Visi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ActivePrisonWithTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotForPrisonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -34,6 +36,13 @@ class VisitSlotsNomisApiService(
     createVisitTimeSlotRequest = request,
   ).awaitSingle()
 
+  suspend fun updateTimeSlot(prisonId: String, dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot, timeSlotSequence: Int, request: UpdateVisitTimeSlotRequest) = api.updateVisitTimeSlot(
+    prisonId = prisonId,
+    dayOfWeek = dayOfWeek,
+    timeSlotSequence = timeSlotSequence,
+    updateVisitTimeSlotRequest = request,
+  ).awaitSingle()
+
   suspend fun deleteTimeSlot(prisonId: String, dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot, timeSlotSequence: Int) = api.deleteVisitTimeSlot(
     prisonId = prisonId,
     dayOfWeek = dayOfWeek,
@@ -47,5 +56,6 @@ class VisitSlotsNomisApiService(
     createVisitSlotRequest = request,
   ).awaitSingle()
 
+  suspend fun updateVisitSlot(visitSlotId: Long, request: UpdateVisitSlotRequest) = api.updateVisitSlot(visitSlotId = visitSlotId, updateVisitSlotRequest = request).awaitSingle()
   suspend fun deleteVisitSlot(visitSlotId: Long) = api.deleteVisitSlot(visitSlotId = visitSlotId).awaitSingle()
 }

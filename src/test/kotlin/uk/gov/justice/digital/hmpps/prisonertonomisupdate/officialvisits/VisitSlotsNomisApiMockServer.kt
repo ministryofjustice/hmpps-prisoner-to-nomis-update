@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -15,12 +16,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ac
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitInternalLocationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotForPrisonResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitTimeSlotResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
-import java.nio.file.Files.delete
 import java.time.LocalDate
 import java.time.LocalDateTime
 
@@ -59,7 +61,19 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       effectiveDate = LocalDate.parse("2020-01-01"),
     )
 
+    fun updateVisitTimeSlotRequest() = UpdateVisitTimeSlotRequest(
+      startTime = "10:00",
+      endTime = "11:00",
+      effectiveDate = LocalDate.parse("2020-01-01"),
+    )
+
     fun createVisitSlotRequest() = CreateVisitSlotRequest(
+      maxAdults = 10,
+      maxGroups = 5,
+      internalLocationId = 123,
+    )
+
+    fun updateVisitSlotRequest() = UpdateVisitSlotRequest(
       maxAdults = 10,
       maxGroups = 5,
       internalLocationId = 123,
@@ -110,6 +124,21 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+
+  fun stubUpdateTimeSlot(
+    prisonId: String,
+    dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot,
+    timeSlotSequence: Int,
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/visits/configuration/time-slots/prison-id/$prisonId/day-of-week/$dayOfWeek/time-slot-sequence/$timeSlotSequence")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubDeleteTimeSlot(
     prisonId: String,
     dayOfWeek: VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot,
@@ -139,6 +168,16 @@ class VisitSlotsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+  fun stubUpdateVisitSlot(visitSlotId: Long) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/visits/configuration/visit-slots/$visitSlotId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubDeleteVisitSlot(visitSlotId: Long) {
     nomisApi.stubFor(
       delete(urlPathEqualTo("/visits/configuration/visit-slots/$visitSlotId")).willReturn(

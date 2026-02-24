@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.junit.jupiter.api.Nested
@@ -15,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.createVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.createVisitTimeSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.updateVisitSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.VisitSlotsNomisApiMockServer.Companion.updateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -173,6 +176,50 @@ class VisitSlotsNomisApiServiceTest {
   }
 
   @Nested
+  inner class UpdateTimeSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubUpdateTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.updateTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+        request = updateVisitTimeSlotRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the put time slot endpoint`() = runTest {
+      mockServer.stubUpdateTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+      )
+
+      apiService.updateTimeSlot(
+        prisonId = "MDI",
+        dayOfWeek = VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot.MON,
+        timeSlotSequence = 1,
+        request = updateVisitTimeSlotRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON/time-slot-sequence/1")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateVisitSlot {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {
@@ -212,6 +259,32 @@ class VisitSlotsNomisApiServiceTest {
 
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/visits/configuration/time-slots/prison-id/MDI/day-of-week/MON/time-slot-sequence/1")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateVisitSlot {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubUpdateVisitSlot(visitSlotId = 1616)
+
+      apiService.updateVisitSlot(visitSlotId = 1616, updateVisitSlotRequest())
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the update visit slot endpoint`() = runTest {
+      mockServer.stubUpdateVisitSlot(visitSlotId = 1616)
+
+      apiService.updateVisitSlot(visitSlotId = 1616, updateVisitSlotRequest())
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/visits/configuration/visit-slots/1616")),
       )
     }
   }

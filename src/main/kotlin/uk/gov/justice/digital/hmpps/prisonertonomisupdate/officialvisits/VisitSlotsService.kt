@@ -8,8 +8,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Vi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekCreateVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekDeleteVisitTimeSlot
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.TIME_SLOT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.VISIT_SLOT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.DayType
@@ -70,7 +72,27 @@ class VisitSlotsService(
       telemetryClient.trackEvent("${TIME_SLOT.entityName}-create-ignored", telemetryMap)
     }
   }
-  suspend fun timeSlotUpdated(event: TimeSlotEvent) = telemetryClient.trackEvent("${TIME_SLOT.entityName}-update-success", event.asTelemetry())
+  suspend fun timeSlotUpdated(event: TimeSlotEvent) {
+    val telemetry = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      track("${TIME_SLOT.entityName}-update", telemetry) {
+        mappingApiService.getTimeSlotByDpsId(event.additionalInformation.timeSlotId.toString()).also { mapping ->
+          telemetry["nomisSlotSequence"] = mapping.nomisSlotSequence.toString()
+          telemetry["nomisDayOfWeek"] = mapping.nomisDayOfWeek
+          telemetry["nomisPrisonId"] = mapping.nomisPrisonId
+          val dpsTimeSlot = dpsApiService.getTimeSlot(event.additionalInformation.timeSlotId)
+          nomisApiService.updateTimeSlot(
+            mapping.nomisPrisonId,
+            mapping.nomisDayOfWeek.toDayOfWeekUpdateVisitTimeSlot(),
+            mapping.nomisSlotSequence,
+            dpsTimeSlot.toUpdateVisitTimeSlotRequest(),
+          )
+        }
+      }
+    } else {
+      telemetryClient.trackEvent("${TIME_SLOT.entityName}-update-ignored", telemetry)
+    }
+  }
   suspend fun timeSlotDeleted(event: TimeSlotEvent) {
     val telemetry = event.asTelemetry()
     mappingApiService.getTimeSlotByDpsIdOrNull(event.additionalInformation.timeSlotId.toString())?.also { mapping ->
@@ -192,6 +214,16 @@ private fun String.toDayOfWeekCreateVisitSlot(): DayOfWeekCreateVisitSlot = when
   "SUN" -> DayOfWeekCreateVisitSlot.SUN
   else -> throw IllegalArgumentException("Unknown day of week: $this")
 }
+private fun String.toDayOfWeekUpdateVisitTimeSlot(): DayOfWeekUpdateVisitTimeSlot = when (this) {
+  "MON" -> DayOfWeekUpdateVisitTimeSlot.MON
+  "TUE" -> DayOfWeekUpdateVisitTimeSlot.TUE
+  "WED" -> DayOfWeekUpdateVisitTimeSlot.WED
+  "THU" -> DayOfWeekUpdateVisitTimeSlot.THU
+  "FRI" -> DayOfWeekUpdateVisitTimeSlot.FRI
+  "SAT" -> DayOfWeekUpdateVisitTimeSlot.SAT
+  "SUN" -> DayOfWeekUpdateVisitTimeSlot.SUN
+  else -> throw IllegalArgumentException("Unknown day of week: $this")
+}
 
 private fun String.toDayOfWeekDeleteVisitTimeSlot(): DayOfWeekDeleteVisitTimeSlot = when (this) {
   "MON" -> DayOfWeekDeleteVisitTimeSlot.MON
@@ -205,6 +237,13 @@ private fun String.toDayOfWeekDeleteVisitTimeSlot(): DayOfWeekDeleteVisitTimeSlo
 }
 
 private fun SyncTimeSlot.toCreateVisitTimeSlotRequest(): CreateVisitTimeSlotRequest = CreateVisitTimeSlotRequest(
+  startTime = startTime,
+  endTime = endTime,
+  effectiveDate = effectiveDate,
+  expiryDate = expiryDate,
+)
+
+private fun SyncTimeSlot.toUpdateVisitTimeSlotRequest(): UpdateVisitTimeSlotRequest = UpdateVisitTimeSlotRequest(
   startTime = startTime,
   endTime = endTime,
   effectiveDate = effectiveDate,
