@@ -277,7 +277,7 @@ internal class AdjudicationsReconciliationServiceTest {
           adjudicationADAAwardSummaryResponse = AdjudicationADAAwardSummaryResponse(
             bookingId = 123456,
             offenderNo = "A1234AA",
-            adaSummaries = listOf(nomisSummary(days = 10).copy(sanctionStatus = CodeDescription("QUASHED", "Quashed"))),
+            adaSummaries = listOf(nomisSummary(days = 10).copy(sanctionStatus = CodeDescription("AWARD_RED", "Award Red"))),
           ),
         )
       }
