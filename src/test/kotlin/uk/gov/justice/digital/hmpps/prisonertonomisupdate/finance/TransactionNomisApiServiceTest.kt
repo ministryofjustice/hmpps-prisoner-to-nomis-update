@@ -67,6 +67,58 @@ class TransactionNomisApiServiceTest {
   }
 
   @Nested
+  @DisplayName("GET /transactions/from/{transactionId}?entryDate={entryDate}&size={pageSize")
+  inner class GetPrisonerTransactionIdsFromLastId {
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetPrisonerTransactionIdsByLastId()
+
+      apiService.getPrisonerTransactionIdsByLastId(pageSize = 20, entryDate = LocalDate.parse("2021-02-03"))
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerTransactionIdsByLastId()
+
+      apiService.getPrisonerTransactionIdsByLastId(pageSize = 20, entryDate = LocalDate.parse("2021-02-03"))
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/transactions/from/0"))
+          .withQueryParam("entryDate", equalTo("2021-02-03"))
+          .withQueryParam("size", equalTo("20")),
+      )
+    }
+
+    @Test
+    fun `will request just a page of transactions from specified transaction`() = runTest {
+      mockServer.stubGetPrisonerTransactionIdsByLastId(lastTransactionId = 1234, size = 3)
+
+      apiService.getPrisonerTransactionIdsByLastId(lastPrisonerTransactionId = 1234, entryDate = LocalDate.parse("2021-02-03"), pageSize = 3)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/transactions/from/1234"))
+          .withQueryParam("entryDate", equalTo("2021-02-03"))
+          .withQueryParam("size", equalTo("3")),
+      )
+    }
+
+    @Test
+    fun `will return a list of transaction Ids`() = runTest {
+      mockServer.stubGetPrisonerTransactionIdsByLastId(lastTransactionId = 1001)
+
+      val transactions = apiService.getPrisonerTransactionIdsByLastId(lastPrisonerTransactionId = 1001, entryDate = LocalDate.parse("2021-02-03"), pageSize = 20)
+
+      assertThat(transactions.ids.size).isEqualTo(1)
+      assertThat(transactions.ids[0].transactionId).isEqualTo(1001)
+    }
+  }
+
+  @Nested
   @DisplayName("GET /transactions/from/{transactionId}/{transactionEntrySequence}?pageSize={pageSize")
   inner class GetPrisonerTransactions {
 

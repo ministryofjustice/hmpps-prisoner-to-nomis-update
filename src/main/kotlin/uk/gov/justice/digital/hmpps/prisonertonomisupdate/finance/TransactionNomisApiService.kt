@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Pris
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerTransactionsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerTransactionIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -55,6 +56,17 @@ class TransactionNomisApiService(
     .uri("/transactions/{date}/first", fromDate)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getPrisonerTransactionIdsByLastId(
+    lastPrisonerTransactionId: Long = 0,
+    entryDate: LocalDate = LocalDate.now(),
+    pageSize: Int,
+  ): PrisonerTransactionIdsPage = prisonerTransactionsApi.findPrisonerTransactionsFromId(
+    transactionId = lastPrisonerTransactionId,
+    entryDate = entryDate,
+    size = pageSize,
+  ).retryWhen(backoffSpec).awaitSingle()
+
 }
 
 data class PrisonerTransactionLists(

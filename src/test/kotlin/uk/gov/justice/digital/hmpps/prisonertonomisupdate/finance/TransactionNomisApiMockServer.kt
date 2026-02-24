@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance
 
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
@@ -10,6 +11,8 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.GeneralLedgerTransactionDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTransactionDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerTransactionIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerTransactionIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
 import java.time.LocalDate
@@ -60,6 +63,25 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
       lastModifiedBy = "you",
       lastModifiedByDisplayName = "You",
       generalLedgerTransactions = listOf(nomisPrisonTransaction()),
+    )
+  }
+
+  fun stubGetPrisonerTransactionIdsByLastId(
+    lastTransactionId: Long = 0,
+    entryDate: LocalDate = LocalDate.parse("2021-02-03"),
+    size: Long = 20,
+    content: List<PrisonerTransactionIdResponse> = listOf(PrisonerTransactionIdResponse(lastTransactionId)),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/transactions/from/$lastTransactionId"))
+        .withQueryParam("entryDate", equalTo(entryDate.toString()))
+        .withQueryParam("size", equalTo(size.toString()))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(PrisonerTransactionIdsPage(content))),
+        ),
     )
   }
 
