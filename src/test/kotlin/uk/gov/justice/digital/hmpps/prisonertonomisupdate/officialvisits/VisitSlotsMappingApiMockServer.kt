@@ -154,6 +154,18 @@ class VisitSlotsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     }
   }
 
+  fun stubGetVisitSlotByDpsId(
+    dpsId: String = "123456",
+    mapping: VisitSlotMappingDto = VisitSlotMappingDto(
+      dpsId = "123456",
+      nomisId = 6543231,
+      mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetVisitSlotByDpsIdOrNull(
+    dpsId = dpsId,
+    mapping = mapping,
+  )
+
   fun stubCreateVisitSlotMapping() {
     mappingServer.stubFor(
       post("/mapping/visit-slots/visit-slot").willReturn(

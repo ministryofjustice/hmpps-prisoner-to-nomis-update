@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Visi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.VisitsConfigurationResourceApi.DayOfWeekUpdateVisitTimeSlot
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitTimeSlotRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateVisitTimeSlotRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.TIME_SLOT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.VISIT_SLOT
@@ -159,7 +160,25 @@ class VisitSlotsService(
       telemetryClient.trackEvent("${VISIT_SLOT.entityName}-create-ignored", telemetryMap)
     }
   }
-  suspend fun visitSlotUpdated(event: VisitSlotEvent) = telemetryClient.trackEvent("${VISIT_SLOT.entityName}-update-success", event.asTelemetry())
+  suspend fun visitSlotUpdated(event: VisitSlotEvent) {
+    val telemetry = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      track("${VISIT_SLOT.entityName}-update", telemetry) {
+        mappingApiService.getVisitSlotByDpsId(event.additionalInformation.visitSlotId.toString()).also { mapping ->
+          telemetry["nomisVisitSlotId"] = mapping.nomisId.toString()
+
+          val dpsVisitSlot = dpsApiService.getVisitSlot(event.additionalInformation.visitSlotId)
+          val locationMapping = mappingApiService.getInternalLocationByDpsId(dpsVisitSlot.dpsLocationId.toString()).also {
+            telemetry["nomisLocationId"] = it.nomisLocationId.toString()
+          }
+          nomisApiService.updateVisitSlot(visitSlotId = mapping.nomisId, dpsVisitSlot.toUpdateVisitSlotRequest(locationMapping.nomisLocationId))
+        }
+      }
+    } else {
+      telemetryClient.trackEvent("${VISIT_SLOT.entityName}-update-ignored", telemetry)
+    }
+  }
+
   suspend fun visitSlotDeleted(event: VisitSlotEvent) {
     val telemetry = event.asTelemetry()
     mappingApiService.getVisitSlotByDpsIdOrNull(event.additionalInformation.visitSlotId.toString())?.also { mapping ->
@@ -251,6 +270,12 @@ private fun SyncTimeSlot.toUpdateVisitTimeSlotRequest(): UpdateVisitTimeSlotRequ
 )
 
 private fun SyncVisitSlot.toCreateVisitSlotRequest(nomisLocationId: Long): CreateVisitSlotRequest = CreateVisitSlotRequest(
+  maxAdults = maxAdults,
+  maxGroups = maxGroups,
+  internalLocationId = nomisLocationId,
+)
+
+private fun SyncVisitSlot.toUpdateVisitSlotRequest(nomisLocationId: Long): UpdateVisitSlotRequest = UpdateVisitSlotRequest(
   maxAdults = maxAdults,
   maxGroups = maxGroups,
   internalLocationId = nomisLocationId,
