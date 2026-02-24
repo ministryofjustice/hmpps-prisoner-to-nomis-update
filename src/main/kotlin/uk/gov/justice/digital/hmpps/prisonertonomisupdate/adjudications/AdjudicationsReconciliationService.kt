@@ -9,6 +9,7 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.OutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.PunishmentDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.ReportedAdjudicationDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
@@ -158,11 +159,12 @@ private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
 
 private fun ReportedAdjudicationDto.hasValidOutcomeWithHearing(): Boolean {
   // ignore outcomes that have no hearing since the punishment will not be valid
-  // This matches DPS Adjustment logic
-  return this.outcomes.lastOrNull()?.hearing != null
+  // This matches DPS Adjustment logic which will implicitly exclude quashed punishments
+  return this.outcomes.lastOrNull()?.hearing != null || this.outcomes.lastOrNull()?.outcome?.outcome?.code == OutcomeDto.Code.QUASHED
 }
 
-private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = AdaSummary(count = this.adaSummaries.size, days = this.adaSummaries.sumOf { it.days })
+private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = this.adaSummaries.filterNot { it.sanctionStatus.code == "QUASHED" }
+  .let { adaSummaries -> AdaSummary(count = adaSummaries.size, days = adaSummaries.sumOf { it.days }) }
 
 data class MismatchAdjudicationAdaPunishments(
   val prisonerId: PrisonerIds,
