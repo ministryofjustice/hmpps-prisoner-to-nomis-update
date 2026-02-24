@@ -160,7 +160,7 @@ private fun List<ReportedAdjudicationDto>.toAdaSummary(): AdaSummary {
 private fun ReportedAdjudicationDto.hasValidOutcomeWithHearing(): Boolean {
   // ignore outcomes that have no hearing since the punishment will not be valid
   // This matches DPS Adjustment logic which will implicitly exclude quashed punishments
-  return this.outcomes.lastOrNull()?.hearing != null || this.outcomes.lastOrNull()?.outcome?.outcome?.code == OutcomeDto.Code.QUASHED
+  return this.outcomes.lastOrNull()?.hearing != null && this.outcomes.lastOrNull()?.outcome?.outcome?.code != OutcomeDto.Code.QUASHED
 }
 
 private fun AdjudicationADAAwardSummaryResponse.toAdaSummary(): AdaSummary = this.adaSummaries.filterNot { it.sanctionStatus.code == "QUASHED" }
