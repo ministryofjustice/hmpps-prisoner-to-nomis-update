@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-04.552.8d5cdb6"
+    "version" : "2026-02-23.568.772f86e"
   },
   "servers" : [ {
     "url" : "/",
@@ -79,6 +79,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -129,6 +139,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -206,6 +226,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -271,6 +301,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -389,6 +429,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -499,6 +549,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -592,6 +652,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -897,6 +967,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -967,6 +1047,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1060,6 +1150,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1172,6 +1272,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -1260,6 +1370,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1372,6 +1492,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -1460,6 +1590,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1572,6 +1712,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -1660,6 +1810,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1772,6 +1932,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -1872,6 +2042,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1996,6 +2176,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -2096,6 +2286,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2220,6 +2420,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -2320,6 +2530,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2444,6 +2664,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -2544,6 +2774,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2668,6 +2908,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -2764,6 +3014,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -2847,6 +3107,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2948,6 +3218,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3059,6 +3339,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -3154,6 +3444,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3271,6 +3571,16 @@
             "description" : "Unexpected error occurred",
             "content" : {
               "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
                 }
@@ -3441,6 +3751,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -3592,6 +3912,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -3623,6 +3953,135 @@
                 }
               }
             }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ ]
+        } ]
+      }
+    },
+    "/reports/{reportId}/{reportVariantId}/download" : {
+      "get" : {
+        "tags" : [ "Data API - Synchronous" ],
+        "description" : "Streams the entire result set of the sync query execution as a csv file.",
+        "operationId" : "downloadCsv",
+        "parameters" : [ {
+          "name" : "reportId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "reportVariantId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "dataProductDefinitionsPath",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : "definitions/prisons/orphanage"
+          }
+        }, {
+          "name" : "filters",
+          "in" : "query",
+          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
+          "required" : true,
+          "schema" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "type" : "string"
+            }
+          },
+          "example" : {
+            "filters.date.start" : "2023-04-25",
+            "filters.date.end" : "2023-05-30",
+            "filters.someMultiselectFilter" : "a,b,c"
+          }
+        }, {
+          "name" : "columns",
+          "in" : "query",
+          "description" : "List of column names to include in the generated report. If not provided all the columns will be returned.",
+          "required" : false,
+          "schema" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string"
+            }
+          }
+        }, {
+          "name" : "sortColumn",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "sortedAsc",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Forbidden",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "OK"
           }
         },
         "security" : [ {
@@ -3699,6 +4158,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3853,6 +4322,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -3944,6 +4423,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -3995,6 +4484,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4070,6 +4569,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4163,6 +4672,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4247,6 +4766,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4356,6 +4885,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4456,6 +4995,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4533,6 +5082,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4648,6 +5207,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4755,6 +5324,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4809,6 +5388,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4879,6 +5468,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -4933,6 +5532,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5003,6 +5612,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -5057,6 +5676,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5127,6 +5756,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -5181,6 +5820,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5251,6 +5900,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -5313,6 +5972,16 @@
               }
             }
           },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "429" : {
             "description" : "Too Many Requests",
             "content" : {
@@ -5367,6 +6036,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5443,6 +6122,16 @@
           },
           "500" : {
             "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7492,17 +8181,17 @@
               "type" : "string"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Number of elements in this page",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Total number of pages",
+            "example" : 3
           }
         },
         "readOnly" : true,
@@ -7943,7 +8632,7 @@
             }
           }
         },
-        "required" : [ "id", "visualisations" ]
+        "required" : [ "display", "id", "visualisations" ]
       },
       "DashboardVisualisationColumnDefinition" : {
         "type" : "object",
@@ -8024,7 +8713,7 @@
             "$ref" : "#/components/schemas/DashboardOptionDefinition"
           }
         },
-        "required" : [ "columns", "id", "type" ]
+        "required" : [ "columns", "display", "id", "type" ]
       },
       "ValueVisualisationColumnDefinition" : {
         "type" : "object",
