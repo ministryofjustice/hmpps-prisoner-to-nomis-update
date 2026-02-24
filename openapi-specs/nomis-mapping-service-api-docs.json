@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-20.418.2bd53ba"
+    "version" : "2026-02-23.427.cc2fb18"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -140,14 +140,6 @@
         "summary" : "Updates a mapping for a single scheduled movement",
         "description" : "Updates a mapping for a single scheduled movement. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
         "operationId" : "updateScheduledMovementSyncMapping",
-        "parameters" : [ {
-          "name" : "source",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -7556,16 +7548,17 @@
             "type" : "string"
           }
         } ],
-        "requestBody" : {
-          "content" : {
-            "application/json" : {
-              "schema" : {
-                "$ref" : "#/components/schemas/TemporaryAbsencesPrisonerMappingDto"
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner mapping IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TemporaryAbsencesPrisonerMappingIdsDto"
+                }
               }
             }
-          }
-        },
-        "responses" : {
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
             "content" : {
@@ -22972,6 +22965,95 @@
           }
         },
         "required" : [ "mappings" ]
+      },
+      "ExternalMovementMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single external movement",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS booking id"
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement id"
+          }
+        },
+        "required" : [ "dpsMovementId", "nomisBookingId", "nomisMovementSeq" ]
+      },
+      "ScheduledMovementMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single scheduled movement",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS scheduled movement id"
+          },
+          "dpsOccurrenceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS scheduled movement id"
+          }
+        },
+        "required" : [ "dpsOccurrenceId", "nomisEventId" ]
+      },
+      "TemporaryAbsenceApplicationMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single temporary absence application and its children",
+        "properties" : {
+          "nomisMovementApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS temporary absence application id"
+          },
+          "dpsMovementApplicationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS temporary absence application id"
+          }
+        },
+        "required" : [ "dpsMovementApplicationId", "nomisMovementApplicationId" ]
+      },
+      "TemporaryAbsencesPrisonerMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "Mappings for application IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TemporaryAbsenceApplicationMappingIdsDto"
+            }
+          },
+          "schedules" : {
+            "type" : "array",
+            "description" : "Mappings for schedule IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/ScheduledMovementMappingIdsDto"
+            }
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "Mappings for movement IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/ExternalMovementMappingIdsDto"
+            }
+          }
+        },
+        "required" : [ "applications", "movements", "prisonerNumber", "schedules" ]
       },
       "FindScheduledMovementsForAddressResponse" : {
         "type" : "object",
