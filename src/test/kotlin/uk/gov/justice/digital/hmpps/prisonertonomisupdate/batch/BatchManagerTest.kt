@@ -50,6 +50,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.csip.CSIPReconciliatio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonBalanceReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerBalanceReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransactionReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
@@ -91,6 +92,7 @@ class BatchManagerTest {
   private val organisationsReconciliationService = mock<OrganisationsReconciliationService>()
   private val prisonBalanceReconciliationService = mock<PrisonBalanceReconciliationService>()
   private val prisonTransactionsReconciliationService = mock<PrisonTransactionReconciliationService>()
+  private val prisonerTransactionsReconciliationService = mock<PrisonerTransactionReconciliationService>()
   private val prisonerBalanceReconciliationService = mock<PrisonerBalanceReconciliationService>()
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
@@ -371,6 +373,16 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the prisoner transactions reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.PRISONER_TRANSACTIONS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(prisonerTransactionsReconciliationService).generateReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the core person reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.CORE_PERSON_ACTIVE_RECON)
 
@@ -464,6 +476,7 @@ class BatchManagerTest {
     organisationReconciliationService = organisationsReconciliationService,
     prisonBalanceReconciliationService = prisonBalanceReconciliationService,
     prisonTransactionsReconciliationService = prisonTransactionsReconciliationService,
+    prisonerTransactionsReconciliationService = prisonerTransactionsReconciliationService,
     prisonerBalanceReconciliationService = prisonerBalanceReconciliationService,
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,

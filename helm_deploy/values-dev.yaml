@@ -67,6 +67,14 @@ generic-service:
     - name: prisoner-bal-recon
       type: PRISONER_BALANCE_RECON
       schedule: "30 3 * * *"
+    - name: prison-transactions-recon
+      type: PRISON_TRANSACTIONS_RECON
+      schedule: "00 2 * * *"
+      suspend: true
+    - name: prisoner-transactions-recon
+      type: PRISONER_TRANSACTIONS_RECON
+      schedule: "00 3 * * *"
+      suspend: true
     - name: core-person-recon
       type: CORE_PERSON_FULL_RECON
       schedule: "30 12 * * *"
