@@ -17,6 +17,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.test.context.TestPropertySource
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.offenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.prisonerTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
@@ -24,6 +25,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import java.time.LocalDate
 import java.util.UUID
 
+@TestPropertySource(
+  properties = ["reports.prisoner-transactions.reconciliation.page-size=2"],
+)
 class PrisonerTransactionsReconciliationIntTest(
   @Autowired private val reconciliationService: PrisonerTransactionReconciliationService,
   @Autowired private val nomisApi: TransactionNomisApiMockServer,
@@ -121,6 +125,7 @@ class PrisonerTransactionsReconciliationIntTest(
             assertThat(it).containsEntry("pages-count", "2")
             assertThat(it).containsEntry("transaction-count", "3")
             assertThat(it).containsEntry("success", "true")
+            assertThat(it).containsEntry("nomisTransactionIds", "")
           },
           isNull(),
         )
@@ -164,6 +169,7 @@ class PrisonerTransactionsReconciliationIntTest(
             assertThat(it).containsEntry("pages-count", "2")
             assertThat(it).containsEntry("transaction-count", "3")
             assertThat(it).containsEntry("success", "true")
+            assertThat(it).containsEntry("nomisTransactionIds", "2345")
           },
           isNull(),
         )

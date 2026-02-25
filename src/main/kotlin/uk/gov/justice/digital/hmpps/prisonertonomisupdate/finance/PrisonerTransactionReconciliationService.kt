@@ -51,7 +51,7 @@ class PrisonerTransactionReconciliationService(
             "pages-count" to it.pagesChecked.toString(),
             "mismatch-count" to it.mismatches.size.toString(),
             "success" to "true",
-          ), // TODO + it.mismatches.asMap(),
+          ) + it.mismatches.asMap(),
         )
       }
       .onFailure {
@@ -59,6 +59,9 @@ class PrisonerTransactionReconciliationService(
         log.error("Prisoner transactions reconciliation report failed", it)
       }
   }
+
+  private fun List<MismatchPrisonerTransaction>.asMap(): Pair<String, String> = sortedBy { it.nomisTransactionId }.take(10)
+    .let { mismatch -> "nomisTransactionIds" to mismatch.map { it.nomisTransactionId }.joinToString() }
 
   suspend fun generateReconciliationReport(entryDate: LocalDate): ReconciliationResult<MismatchPrisonerTransaction> {
     // TODO - check if we want to compare any totals
@@ -233,10 +236,3 @@ sealed interface DpsTransactionResult
 data class Transaction(val transaction: SyncOffenderTransactionResponse) : DpsTransactionResult
 class NoMapping : DpsTransactionResult
 data class NoDpsTransaction(val transactionId: String) : DpsTransactionResult
-
-/*
-TODO add in
-private fun List<MismatchPrisonerTransaction>.asMap(): Pair<String, String> = this
-  .sortedBy { it.offenderNo }.take(10).let { mismatch -> "offenderNos" to mismatch.joinToString { it.offenderNo } }
-
-*/
