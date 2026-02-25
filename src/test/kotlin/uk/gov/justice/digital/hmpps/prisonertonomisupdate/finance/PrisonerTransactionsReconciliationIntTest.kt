@@ -186,7 +186,7 @@ class PrisonerTransactionsReconciliationIntTest(
             mapOf(
               "nomisTransactionId" to "2345",
               "dpsTransactionId" to dpsId2345,
-              "offenderNo" to "A1234AA",
+              "prisonNumber" to "A1234AA",
               "reason" to "transaction-different-details",
             ),
           ),

@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.data.NotFoundException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.OffenderTransaction
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
@@ -63,16 +62,13 @@ class PrisonerTransactionReconciliationService(
   private fun List<MismatchPrisonerTransaction>.asMap(): Pair<String, String> = sortedBy { it.nomisTransactionId }.take(10)
     .let { mismatch -> "nomisTransactionIds" to mismatch.map { it.nomisTransactionId }.joinToString() }
 
-  suspend fun generateReconciliationReport(entryDate: LocalDate): ReconciliationResult<MismatchPrisonerTransaction> {
-    // TODO - check if we want to compare any totals
-    return generateReconciliationReport(
-      threadCount = pageSize,
-      checkMatch = ::checkTransactionMatch,
-      nextPage = { last ->
-        getNextNomisPrisonerTransactionIdsForPage(last, entryDate)
-      },
-    )
-  }
+  suspend fun generateReconciliationReport(entryDate: LocalDate): ReconciliationResult<MismatchPrisonerTransaction> = generateReconciliationReport(
+    threadCount = pageSize,
+    checkMatch = ::checkTransactionMatch,
+    nextPage = { last ->
+      getNextNomisPrisonerTransactionIdsForPage(last, entryDate)
+    },
+  )
 
   private suspend fun getNextNomisPrisonerTransactionIdsForPage(lastNomisPrisonerTransactionId: Long, entryDate: LocalDate): ReconciliationPageResult<Long> = runCatching {
     nomisApiService.getPrisonerTransactionIdsByLastId(
@@ -102,10 +98,7 @@ class PrisonerTransactionReconciliationService(
   suspend fun checkTransactionMatch(nomisTransactionId: Long): MismatchPrisonerTransaction? = runCatching {
     val (nomisTransaction, dpsTransactionResult: DpsTransactionResult) = withContext(Dispatchers.Unconfined) {
       async {
-        nomisApiService.getPrisonerTransaction(nomisTransactionId).ifEmpty {
-          // don't do this if just doing from as part of batch (ie only for call from endpoint)
-          throw NotFoundException("Prisoner transaction $nomisTransactionId not found")
-        }
+        nomisApiService.getPrisonerTransaction(nomisTransactionId)
       } to
         async {
           val mapping = mappingApiService.getByNomisTransactionIdOrNull(nomisTransactionId)
@@ -122,17 +115,19 @@ class PrisonerTransactionReconciliationService(
         }
     }.awaitBoth()
 
+    val prisonNumber = nomisTransaction.first().offenderNo
+
     return when (dpsTransactionResult) {
       is NoMapping -> {
         telemetryClient.trackEvent(
           "$TELEMETRY_PRISONER_PREFIX-mismatch",
           mapOf(
             "nomisTransactionId" to nomisTransactionId.toString(),
-            "offenderNo" to nomisTransaction.first().offenderNo,
+            "prisonNumber" to prisonNumber,
             "reason" to "transaction-mapping-missing",
           ),
         )
-        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId)
+        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId, prisonNumber = prisonNumber, reason = "transaction-mapping-missing")
       }
 
       is NoDpsTransaction -> {
@@ -141,11 +136,11 @@ class PrisonerTransactionReconciliationService(
           mapOf(
             "nomisTransactionId" to nomisTransactionId.toString(),
             "dpsTransactionId" to dpsTransactionResult.transactionId,
-            "offenderNo" to nomisTransaction.first().offenderNo,
+            "prisonNumber" to prisonNumber,
             "reason" to "dps-transaction-missing",
           ),
         )
-        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId)
+        MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId, dpsTransactionId = dpsTransactionResult.transactionId, prisonNumber = prisonNumber, reason = "dps-transaction-missing")
       }
 
       is Transaction -> {
@@ -161,11 +156,18 @@ class PrisonerTransactionReconciliationService(
             mapOf(
               "nomisTransactionId" to nomisTransactionId.toString(),
               "dpsTransactionId" to dpsTransaction.synchronizedTransactionId.toString(),
-              "offenderNo" to nomisTransaction.first().offenderNo,
+              "prisonNumber" to nomisTransaction.first().offenderNo,
               "reason" to "transaction-different-details",
             ),
           )
-          MismatchPrisonerTransaction(nomisTransactionId = nomisTransactionId)
+          MismatchPrisonerTransaction(
+            nomisTransactionId = nomisTransactionId,
+            dpsTransactionId = dpsTransaction.synchronizedTransactionId.toString(),
+            prisonNumber = prisonNumber,
+            reason = "transaction-different-details",
+            nomisTransaction = nomisTransaction.toPrisonerTransactionSummary(),
+            dpsTransaction = dpsTransaction.toPrisonerTransactionSummary(),
+          )
         } else {
           null
         }
@@ -181,15 +183,15 @@ class PrisonerTransactionReconciliationService(
   }.getOrNull()
 }
 
-// TODO Add more fields
 data class MismatchPrisonerTransaction(
   val nomisTransactionId: Long,
-  // val offenderId: String
-  // val dpsTransactionId: String,
-  // val differences: Map<String, String>,
+  val dpsTransactionId: String? = null,
+  val prisonNumber: String,
+  val reason: String,
+  val nomisTransaction: PrisonerTransactionSummary? = null,
+  val dpsTransaction: PrisonerTransactionSummary? = null,
 )
 
-// TODO determine all values to reconcile
 data class PrisonerTransactionSummary(
   val prisonId: String,
   val nomisTransactionId: Long,
@@ -198,6 +200,7 @@ data class PrisonerTransactionSummary(
 )
 
 data class PrisonerTransactionEntry(
+  val transactionSequence: Int,
   val subAccountType: String,
   val postingType: String,
   val amount: BigDecimal,
@@ -213,12 +216,12 @@ fun List<OffenderTransactionDto>.toPrisonerTransactionSummary(): PrisonerTransac
   )
 }
 fun OffenderTransactionDto.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
+  transactionSequence = transactionEntrySequence,
   subAccountType = subAccountType.value,
   postingType = postingType.value,
   amount = amount.setScale(2, RoundingMode.HALF_UP),
   prisonEntries = generalLedgerTransactions.map { it.toTransactionEntry() },
 )
-
 fun SyncOffenderTransactionResponse.toPrisonerTransactionSummary() = PrisonerTransactionSummary(
   nomisTransactionId = legacyTransactionId!!,
   prisonId = caseloadId,
@@ -226,6 +229,7 @@ fun SyncOffenderTransactionResponse.toPrisonerTransactionSummary() = PrisonerTra
   entries = transactions.map { it.toPrisonerTransactionEntry() },
 )
 fun OffenderTransaction.toPrisonerTransactionEntry() = PrisonerTransactionEntry(
+  transactionSequence = entrySequence,
   subAccountType = subAccountType,
   postingType = postingType.value,
   amount = amount.setScale(2, RoundingMode.HALF_UP),
