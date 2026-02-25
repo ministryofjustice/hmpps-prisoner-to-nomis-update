@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -12,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.createOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
@@ -71,6 +73,43 @@ class OfficialVisitsNomisApiServiceTest {
         getRequestedFor(urlPathEqualTo("/official-visits/ids"))
           .withQueryParam("page", equalTo("10"))
           .withQueryParam("size", equalTo("30")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateOfficialVisit {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubCreateOfficialVisit(
+        offenderNo = "A1234KT",
+        officialVisitResponse(),
+      )
+
+      apiService.createOfficialVisit(
+        offenderNo = "A1234KT",
+        createOfficialVisitRequest(),
+      )
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the create visit endpoint`() = runTest {
+      mockServer.stubCreateOfficialVisit(
+        offenderNo = "A1234KT",
+        officialVisitResponse(),
+      )
+
+      apiService.createOfficialVisit(
+        offenderNo = "A1234KT",
+        createOfficialVisitRequest(),
+      )
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits")),
       )
     }
   }

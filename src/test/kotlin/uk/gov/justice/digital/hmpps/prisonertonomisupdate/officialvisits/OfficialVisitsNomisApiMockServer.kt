@@ -3,6 +3,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRelationship
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
@@ -72,6 +74,15 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
         ),
       ),
     )
+
+    fun createOfficialVisitRequest() = CreateOfficialVisitRequest(
+      visitSlotId = 100,
+      prisonId = "MDI",
+      startDateTime = LocalDateTime.parse("2020-01-01T10:00"),
+      endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
+      internalLocationId = 20,
+      visitStatusCode = "SCH",
+    )
   }
   fun stubGetOfficialVisitIds(
     pageNumber: Int = 0,
@@ -89,6 +100,20 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
             .withStatus(HttpStatus.OK.value())
             .withBody(jsonMapper.writeValueAsString(pageVisitIdResponse(content, pageSize = pageSize, pageNumber = pageNumber, totalElements = totalElements))),
         ),
+    )
+  }
+
+  fun stubCreateOfficialVisit(
+    offenderNo: String,
+    response: OfficialVisitResponse = officialVisitResponse(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/prisoner/$offenderNo/official-visits")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
     )
   }
 

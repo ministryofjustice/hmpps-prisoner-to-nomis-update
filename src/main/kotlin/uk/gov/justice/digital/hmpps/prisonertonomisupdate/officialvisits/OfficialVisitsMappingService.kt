@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.OfficialVisitsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
@@ -35,4 +36,8 @@ class OfficialVisitsMappingService(
   )
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec)
+
+  suspend fun createVisitMapping(mapping: OfficialVisitMappingDto) = api.prepare(api.createVisitMappingRequestConfig(mapping))
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
 }
