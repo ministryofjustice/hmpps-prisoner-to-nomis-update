@@ -62,32 +62,32 @@ class FinanceDpsApiExtension :
       generalLedgerEntries = listOf(prisonEntry),
     )
 
-    fun prisonerTransaction(uuid: UUID = UUID.randomUUID(), transactionId: Long = 2345) = SyncOffenderTransactionResponse(
-      synchronizedTransactionId = uuid,
+    fun prisonerTransaction(dpsId: UUID = UUID.randomUUID(), nomisTransactionId: Long = 2345) = SyncOffenderTransactionResponse(
+      synchronizedTransactionId = dpsId,
       caseloadId = "MDI",
       transactionTimestamp = LocalDateTime.parse("2024-06-18T14:30"),
       createdAt = LocalDateTime.parse("2024-06-18T14:50"),
       createdBy = "JD12345",
       createdByDisplayName = "J Doe",
-      legacyTransactionId = transactionId,
+      legacyTransactionId = nomisTransactionId,
       lastModifiedAt = LocalDateTime.parse("2022-07-15T23:03:01"),
       lastModifiedBy = "AB11DZ",
       lastModifiedByDisplayName = "U Dated",
-      transactions = listOf(
-        OffenderTransaction(
-          entrySequence = 1,
-          offenderId = 1015388,
-          offenderDisplayId = "AA001AA",
-          offenderBookingId = 455987,
-          subAccountType = "REG",
-          postingType = OffenderTransaction.PostingType.CR,
-          type = "OT",
-          description = "Sub-Account Transfer",
-          amount = BigDecimal("162"),
-          reference = "string",
-          generalLedgerEntries = listOf(prisonEntry),
-        ),
-      ),
+      transactions = listOf(offenderTransaction()),
+    )
+
+    fun offenderTransaction() = OffenderTransaction(
+      entrySequence = 1,
+      offenderId = 1015388,
+      offenderDisplayId = "AA001AA",
+      offenderBookingId = 455987,
+      subAccountType = "REG",
+      postingType = OffenderTransaction.PostingType.CR,
+      type = "OT",
+      description = "Sub-Account Transfer",
+      amount = BigDecimal("162"),
+      reference = "string",
+      generalLedgerEntries = listOf(prisonEntry),
     )
   }
   override fun beforeAll(context: ExtensionContext) {
@@ -144,7 +144,7 @@ class FinanceDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       }
   }
 
-  fun stubGetPrisonerTransaction(dpsTransactionId: String, response: SyncOffenderTransactionResponse? = prisonerTransaction()) {
+  fun stubGetPrisonerTransaction(dpsTransactionId: String, response: SyncOffenderTransactionResponse? = prisonerTransaction(dpsId = UUID.fromString(dpsTransactionId))) {
     response?.apply {
       stubFor(
         get("/sync/offender-transactions/$dpsTransactionId")
