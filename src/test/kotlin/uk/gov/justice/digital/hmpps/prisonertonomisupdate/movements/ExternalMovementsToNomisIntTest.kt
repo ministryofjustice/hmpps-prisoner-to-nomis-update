@@ -7,6 +7,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.awaitility.kotlin.await
@@ -500,6 +501,62 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("toAddresses[0].postalCode", "some postcode 1")
               .withRequestBodyJsonPath("toAddresses[1].addressText", "some address 2")
               .withRequestBodyJsonPath("toAddresses[1].name", "some description 2")
+              .withRequestBodyJsonPath("toAddresses[1].postalCode", "some postcode 2"),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when there are multiple schedules with the same NOMIS address")
+      inner class MultipleSchedulesWithSameNomisAddress {
+        private val startTime = today
+        private val endTime = tomorrow.plusDays(1)
+
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          val authorisation = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 3, startTime = startTime, endTime = endTime)
+          dpsApi.stubGetTapAuthorisation(id = dpsId, response = authorisation)
+          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          // Create a stub for the first schedule mapping only (which is same as third schedule)
+          with(authorisation.occurrences[0]) {
+            mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(
+              dpsId = id,
+              mapping = temporaryAbsenceScheduledMovementMapping().copy(
+                prisonerNumber = prisonerNumber,
+                dpsOccurrenceId = id,
+                nomisAddressId = 1,
+                dpsDescription = "some description 1",
+                dpsAddressText = "some address 1",
+                dpsPostcode = "some postcode 1",
+              ),
+            )
+          }
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `we get the occurrence mappings for the 2 unique addresses`() {
+          mappingApi.verify(
+            2,
+            getRequestedFor(urlMatching("/mapping/temporary-absence/scheduled-movement/dps-id/.*")),
+          )
+        }
+
+        @Test
+        fun `the updated application's locations contain the NOMIS address IDs from the occurrence mappings`() {
+          nomisApi.verify(
+            putRequestedFor(anyUrl())
+              .withRequestBodyJsonPath("toAddresses.length()", 2)
+              // we found the existing NOMIS address
+              .withRequestBodyJsonPath("toAddresses[0].id", 1)
+              .withRequestBodyJsonPath("toAddresses[0].addressText", absent())
+              // there is no NOMIS address so NOMIS will create a new one
+              .withRequestBodyJsonPath("toAddresses[1].id", absent())
+              .withRequestBodyJsonPath("toAddresses[1].name", "some description 2")
+              .withRequestBodyJsonPath("toAddresses[1].addressText", "some address 2")
               .withRequestBodyJsonPath("toAddresses[1].postalCode", "some postcode 2"),
           )
         }

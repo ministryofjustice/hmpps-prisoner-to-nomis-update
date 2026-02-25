@@ -144,12 +144,18 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
 
   fun stubUpdateScheduledMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/scheduled-movement", ::put)
 
-  fun stubGetTemporaryAbsenceScheduledMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID(), nomisEventId: Long = 1, addressId: Long = 54321) {
+  fun stubGetTemporaryAbsenceScheduledMovementMapping(
+    prisonerNumber: String = "A1234BC",
+    dpsId: UUID = UUID.randomUUID(),
+    nomisEventId: Long = 1,
+    addressId: Long = 54321,
+    mapping: ScheduledMovementSyncMappingDto = temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId, addressId = addressId),
+  ) {
     mappingServer.stubFor(
       get(urlPathMatching("/mapping/temporary-absence/scheduled-movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceScheduledMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId, nomisEventId = nomisEventId, addressId = addressId))),
+          .withBody(jsonMapper.writeValueAsString(mapping)),
       ),
     )
   }
