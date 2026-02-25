@@ -124,17 +124,17 @@ internal class AdjudicationsReconciliationServiceTest {
     }
 
     @Nested
-    inner class WhenDPSHasCorruptDataAnADAWithNoOutcome {
+    inner class WhenDPSHasCorruptDataAnADAWithNoHearings {
       @BeforeEach
       fun beforeEach() {
-        // also has an adjudication with an ADA but the outcome contains no hearing
-        // therefore the punishment can not be valid
+        // also has an adjudication with an ADA but there was never a hearing
+        // so punishment could never have sync'd to NOMIS and won't display in DPS
         adjudicationsApiServer.stubGetAdjudicationsByBookingId(
           123456,
           listOf(
             aDPSAdjudication().copy(punishments = listOf(adaPunishment(days = 10))),
             aDPSAdjudication().copy(
-              outcomes = listOf(aDPSAdjudication().outcomes.lastOrNull()!!.copy(hearing = null)),
+              hearings = emptyList(),
               punishments = listOf(adaPunishment(days = 10)),
             ),
           ),
@@ -654,7 +654,14 @@ internal fun aDPSAdjudication(chargeNumber: String = "4000001", prisonerNumber: 
   damages = emptyList(),
   evidence = emptyList(),
   witnesses = emptyList(),
-  hearings = listOf(),
+  hearings = listOf(
+    HearingDto(
+      locationUuid = UUID.randomUUID(),
+      dateTimeOfHearing = LocalDateTime.parse("2023-02-01T10:00"),
+      oicHearingType = HearingDto.OicHearingType.GOV_ADULT,
+      agencyId = "MDI",
+    ),
+  ),
   disIssueHistory = emptyList(),
   outcomes = listOf(
     OutcomeHistoryDto(
