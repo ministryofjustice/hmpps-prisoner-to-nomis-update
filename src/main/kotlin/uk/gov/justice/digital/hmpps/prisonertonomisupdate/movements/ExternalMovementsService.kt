@@ -14,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_UPDATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
@@ -94,9 +95,10 @@ class ExternalMovementsService(
       }
 
       val dps = dpsApiService.getTapAuthorisation(dpsAuthorisationId)
+      val addressScheduleMappings = dps.occurrences.findAddressScheduleMappings()
       val nomis = nomisApiService.upsertTemporaryAbsenceApplication(
         prisonerNumber,
-        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId),
+        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId, addressScheduleMappings),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisApplicationId"] = it.movementApplicationId.toString() }
@@ -131,6 +133,11 @@ class ExternalMovementsService(
         throw it
       }
   }
+
+  private suspend fun List<SyncReadTapAuthorisationOccurrence>.findAddressScheduleMappings() = groupBy { it.location }
+    .map { uniqueLocations -> uniqueLocations.value.first() }
+    .map { occurrence -> occurrence.id }
+    .mapNotNull { occurrenceId -> mappingApiService.getScheduledMovementMapping(occurrenceId) }
 
   private suspend fun findParentApplicationIdOrThrow(
     dpsAuthorisationId: UUID,
@@ -465,7 +472,10 @@ class ExternalMovementsService(
   private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
 }
 
-private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Long?): UpsertTemporaryAbsenceApplicationRequest {
+private fun SyncReadTapAuthorisation.toNomisUpsertRequest(
+  nomisApplicationId: Long?,
+  addressScheduleMappings: List<ScheduledMovementSyncMappingDto>,
+): UpsertTemporaryAbsenceApplicationRequest {
   val releaseTime = when (repeat) {
     // If a schedule in NOMIS is deleted and re-created its start time is taken from the application releaseTime - so save it on the application
     false if (occurrences.size == 1) -> occurrences.first().start
@@ -492,13 +502,18 @@ private fun SyncReadTapAuthorisation.toNomisUpsertRequest(nomisApplicationId: Lo
     prisonId = prisonCode,
     temporaryAbsenceType = absenceTypeCode,
     temporaryAbsenceSubType = absenceSubTypeCode,
-    toAddresses = occurrences.map {
-      with(it.location) {
-        UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
-      }
-    }.toSet().toList(),
+    toAddresses = occurrences.map { it.location.toNomisAddressRequest(addressScheduleMappings) }.toSet().toList(),
   )
 }
+
+private fun Location.toNomisAddressRequest(knownAddresses: List<ScheduledMovementSyncMappingDto>) = knownAddresses.find { knownAddress ->
+  address == knownAddress.dpsAddressText &&
+    description == knownAddress.dpsDescription &&
+    postcode == knownAddress.dpsPostcode
+}
+  ?.takeIf { it.nomisAddressId != null }
+  ?.let { UpsertTemporaryAbsenceAddress(id = it.nomisAddressId) }
+  ?: UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
 
 private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
   "EXPIRED", "PENDING" -> "PEN"
