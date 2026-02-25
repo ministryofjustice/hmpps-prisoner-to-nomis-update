@@ -7,6 +7,7 @@ import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.OfficialVisitsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
@@ -32,6 +33,14 @@ class OfficialVisitsNomisApiService(
     size = pageSize,
     prisonIds = emptyList(),
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun createOfficialVisit(
+    offenderNo: String,
+    request: CreateOfficialVisitRequest,
+  ): OfficialVisitResponse = api.createOfficialVisit(
+    offenderNo = offenderNo,
+    createOfficialVisitRequest = request,
+  ).awaitSingle()
 
   suspend fun getOfficialVisit(
     visitId: Long,

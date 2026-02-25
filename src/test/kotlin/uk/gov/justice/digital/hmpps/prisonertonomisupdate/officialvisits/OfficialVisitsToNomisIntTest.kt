@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
@@ -9,15 +11,75 @@ import org.mockito.Mockito.eq
 import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
+import org.springframework.beans.factory.annotation.Autowired
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SearchLevelType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.getRequestBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
+import java.time.LocalDate
+import java.util.*
 
 @Suppress("SameParameterValue")
-class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
+class OfficialVisitsToNomisIntTest(
+  @Autowired
+  private val nomisApi: OfficialVisitsNomisApiMockServer,
+  @Autowired
+  private val mappingApi: OfficialVisitsMappingApiMockServer,
+  @Autowired
+  private val visitSlotsMappingApi: VisitSlotsMappingApiMockServer,
+) : SqsIntegrationTestBase() {
+  private val dpsApi = OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer
+
   @Nested
   @DisplayName("official-visits-api.visit.created")
   inner class OfficialVisitCreated {
+    val offenderNo = "A1234KT"
+    val prisonId = "MDI"
+    val dpsOfficialVisitId = 12345L
+    val nomisVisitId = 92492L
+    val dpsLocationId: UUID = UUID.randomUUID()
+    val nomisLocationId = 123456L
+    val dpsVisitSlotId = 56789L
+    val nomisVisitSlotId = 987654L
+
+    @Nested
+    @DisplayName("when NOMIS is the origin of a official visit create")
+    inner class WhenNomisCreated {
+
+      @BeforeEach
+      fun setUp() {
+        publishCreateOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the create is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visit-create-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     @DisplayName("when DPS is the origin of a official visit create")
@@ -25,21 +87,180 @@ class OfficialVisitsToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        publishCreateOfficialVisitDomainEvent(officialVisitId = "12345", prisonId = "MDI", offenderNo = "A1234KT", source = "DPS")
-        waitForAnyProcessingToComplete()
+        mappingApi.stubGetByDpsIdsOrNull(dpsOfficialVisitId, null)
+        dpsApi.stubGetOfficialVisit(
+          officialVisitId = dpsOfficialVisitId,
+          response = syncOfficialVisit().copy(
+            officialVisitId = dpsOfficialVisitId,
+            prisonCode = prisonId,
+            dpsLocationId = dpsLocationId,
+            prisonVisitSlotId = dpsVisitSlotId,
+            prisonerNumber = offenderNo,
+            visitDate = LocalDate.parse("2020-01-01"),
+            startTime = "10:00",
+            endTime = "11:00",
+            overrideBanStaffUsername = "T.SMITH",
+            statusCode = VisitStatusType.CANCELLED,
+            prisonerAttendance = AttendanceType.ATTENDED,
+            visitComments = "First visit",
+            visitorConcernNotes = "Very concerned",
+            searchType = SearchLevelType.RUB_A,
+            completionCode = VisitCompletionType.STAFF_CANCELLED,
+          ),
+        )
+        visitSlotsMappingApi.stubGetVisitSlotByDpsId(
+          dpsVisitSlotId.toString(),
+          VisitSlotMappingDto(
+            dpsId = dpsVisitSlotId.toString(),
+            nomisId = nomisVisitSlotId,
+            mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+          ),
+        )
+        visitSlotsMappingApi.stubGetInternalLocationByDpsId(
+          dpsLocationId.toString(),
+          LocationMappingDto(
+            dpsLocationId = dpsLocationId.toString(),
+            nomisLocationId = nomisLocationId,
+            mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+          ),
+        )
+
+        nomisApi.stubCreateOfficialVisit(
+          offenderNo = offenderNo,
+          response = officialVisitResponse().copy(visitId = nomisVisitId),
+        )
       }
 
-      @Test
-      fun `will send telemetry event showing the create`() {
-        verify(telemetryClient).trackEvent(
-          eq("official-visit-create-success"),
-          check {
-            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
-            assertThat(it["offenderNo"]).isEqualTo("A1234KT")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
-          },
-          isNull(),
-        )
+      @Nested
+      inner class HappyPath {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubCreateVisitMapping()
+          publishCreateOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create time slot in NOMIS`() {
+          val request: CreateOfficialVisitRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/prisoner/$offenderNo/official-visits")), jsonMapper)
+          assertThat(request.startDateTime).isEqualTo("2020-01-01T10:00")
+          assertThat(request.endDateTime).isEqualTo("2020-01-01T11:00")
+          assertThat(request.prisonId).isEqualTo(prisonId)
+          assertThat(request.visitSlotId).isEqualTo(nomisVisitSlotId)
+          assertThat(request.internalLocationId).isEqualTo(nomisLocationId)
+          assertThat(request.overrideBanStaffUsername).isEqualTo("T.SMITH")
+          assertThat(request.visitStatusCode).isEqualTo("CANC")
+          assertThat(request.prisonerAttendanceCode).isEqualTo("ATT")
+          assertThat(request.commentText).isEqualTo("First visit")
+          assertThat(request.visitorConcernText).isEqualTo("Very concerned")
+          assertThat(request.prisonerSearchTypeCode).isEqualTo("RUB_A")
+          assertThat(request.visitOutcomeCode).isEqualTo("HMP")
+        }
+
+        @Test
+        fun `will create mapping`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/official-visits/visit"))
+              .withRequestBodyJsonPath("dpsId", dpsOfficialVisitId)
+              .withRequestBodyJsonPath("nomisId", nomisVisitId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the create`() {
+          verify(telemetryClient).trackEvent(
+            eq("official-visit-create-success"),
+            check {
+              assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+              assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+              assertThat(it["dpsLocationId"]).isEqualTo(dpsLocationId.toString())
+              assertThat(it["nomisLocationId"]).isEqualTo(nomisLocationId.toString())
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId.toString())
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
+      inner class MappingRetry {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubCreateVisitMappingFailureFollowedBySuccess()
+          publishCreateOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "DPS")
+          waitForAnyProcessingToComplete("official-visit-create-success")
+        }
+
+        @Test
+        fun `will create visit in NOMIS once`() {
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoner/$offenderNo/official-visits")))
+        }
+
+        @Test
+        fun `will try to create mapping until it succeeds`() {
+          mappingApi.verify(
+            2,
+            postRequestedFor(urlEqualTo("/mapping/official-visits/visit")),
+          )
+        }
+      }
+
+      @Nested
+      inner class MappingDuplicate {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubCreateVisitMapping(
+            DuplicateMappingErrorResponse(
+              moreInfo = DuplicateErrorContentObject(
+                duplicate = OfficialVisitMappingDto(
+                  dpsId = dpsOfficialVisitId.toString(),
+                  nomisId = nomisVisitId,
+                  mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+                ),
+                existing = OfficialVisitMappingDto(
+                  dpsId = "93938593",
+                  nomisId = nomisVisitId,
+                  mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+                ),
+              ),
+              errorCode = 1409,
+              status = DuplicateMappingErrorResponse.Status._409_CONFLICT,
+              userMessage = "Duplicate mapping",
+            ),
+          )
+          publishCreateOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "DPS")
+          waitForAnyProcessingToComplete("to-nomis-synch-official-visit-duplicate")
+        }
+
+        @Test
+        fun `will create visit in NOMIS once`() {
+          nomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoner/$offenderNo/official-visits")))
+        }
+
+        @Test
+        fun `will try to create mapping once`() {
+          mappingApi.verify(
+            1,
+            postRequestedFor(urlEqualTo("/mapping/official-visits/visit")),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the duplicate mapping`() {
+          verify(telemetryClient).trackEvent(
+            eq("to-nomis-synch-official-visit-duplicate"),
+            check {
+              assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+              assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+            },
+            isNull(),
+          )
+        }
       }
     }
   }

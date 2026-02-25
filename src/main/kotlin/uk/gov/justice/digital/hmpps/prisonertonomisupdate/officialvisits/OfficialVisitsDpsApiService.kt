@@ -41,6 +41,7 @@ class OfficialVisitsDpsApiService(
   ).retrieve().awaitBodyWithRetry(retrySpec)
 
   suspend fun getOfficialVisitOrNull(visitId: Long): SyncOfficialVisit? = api.prepare(api.getOfficialVisitById1RequestConfig(visitId)).retrieve().awaitBodyOrNullForNotFound(retrySpec)
+  suspend fun getOfficialVisit(visitId: Long): SyncOfficialVisit = api.getOfficialVisitById1(officialVisitId = visitId).awaitSingle()
 
   suspend fun getOfficialVisitsForPrisoner(
     offenderNo: String,
