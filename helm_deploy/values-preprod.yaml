@@ -92,6 +92,10 @@ generic-service:
       type: PRISON_TRANSACTIONS_RECON
       schedule: "00 2 * * *"
       suspend: true
+    - name: prisoner-transactions-recon
+      type: PRISONER_TRANSACTIONS_RECON
+      schedule: "00 3 * * *"
+      suspend: true
     - name: tap-all-prisoners-recon
       type: TAP_ALL_PRISONERS_RECON
       schedule: "30 2 * * *"
