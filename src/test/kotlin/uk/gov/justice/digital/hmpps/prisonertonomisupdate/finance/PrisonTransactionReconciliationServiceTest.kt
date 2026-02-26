@@ -357,7 +357,7 @@ class PrisonTransactionReconciliationServiceTest {
         with(result!!) {
           assertThat(nomisTransactionId).isEqualTo(1234L)
           assertThat(dpsTransactionId).isNotEmpty
-          assertThat(differences).isEqualTo(mapOf("entryDate" to "nomis=2026-01-27T23:30, dps=2021-02-03T04:05:09"))
+          assertThat(differences).isEqualTo(mapOf("entryDate" to "nomis=2026-01-27T23:30, dps=2024-06-18T14:30:12"))
         }
         waitForEventProcessingToBeComplete()
       }

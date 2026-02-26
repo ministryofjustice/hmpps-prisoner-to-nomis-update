@@ -211,7 +211,7 @@ fun List<OffenderTransactionDto>.toPrisonerTransactionSummary(): PrisonerTransac
   PrisonerTransactionSummary(
     nomisTransactionId = transactionId,
     prisonId = caseloadId,
-    entryDateTime = createdAt,
+    entryDateTime = generalLedgerTransactions.first().transactionTimestamp,
     entries = this@toPrisonerTransactionSummary.map { it.toPrisonerTransactionEntry() },
   )
 }

@@ -203,13 +203,13 @@ class TransactionNomisApiServiceTest {
 
       val prisonTransactions = apiService.getPrisonTransaction(1234)
 
-      assertThat(prisonTransactions!!.size).isEqualTo(2)
+      assertThat(prisonTransactions.size).isEqualTo(2)
       with(prisonTransactions.first()) {
         assertThat(transactionId).isEqualTo(1234)
         assertThat(transactionEntrySequence).isEqualTo(1)
         assertThat(generalLedgerEntrySequence).isEqualTo(1)
         assertThat(caseloadId).isEqualTo("MDI")
-        assertThat(amount).isEqualTo(BigDecimal.valueOf(5.40))
+        assertThat(amount).isEqualTo(BigDecimal.valueOf(5.4))
         assertThat(type).isEqualTo("SPEN")
         assertThat(postingType).isEqualTo(GeneralLedgerTransactionDto.PostingType.CR)
         assertThat(accountCode).isEqualTo(1501)
