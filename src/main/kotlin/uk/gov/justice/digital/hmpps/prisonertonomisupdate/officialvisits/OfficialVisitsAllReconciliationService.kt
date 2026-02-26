@@ -144,7 +144,7 @@ class OfficialVisitsAllReconciliationService(
   private suspend fun nomisVisitToPossibleDpsVisit(nomisVisitId: Long): Pair<OfficialVisitResponse, DpsOfficialVisitResult> = withContext(Dispatchers.Unconfined) {
     async { nomisApiService.getOfficialVisit(nomisVisitId) } to
       async {
-        val mapping = mappingService.getByNomisIdsOrNull(nomisVisitId)
+        val mapping = mappingService.getVisitByNomisIdsOrNull(nomisVisitId)
         if (mapping != null) {
           val dpsOfficialVisit = dpsApiService.getOfficialVisitOrNull(mapping.dpsId.toLong())
           if (dpsOfficialVisit == null) {

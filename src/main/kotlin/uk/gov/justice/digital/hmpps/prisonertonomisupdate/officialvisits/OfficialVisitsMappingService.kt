@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.OfficialVisitsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -21,7 +22,7 @@ class OfficialVisitsMappingService(
     Context.of("api", "OfficialVisitsMappingService"),
   )
 
-  suspend fun getByNomisIdsOrNull(nomisVisitId: Long): OfficialVisitMappingDto? = api.prepare(
+  suspend fun getVisitByNomisIdsOrNull(nomisVisitId: Long): OfficialVisitMappingDto? = api.prepare(
     api.getVisitMappingByNomisIdRequestConfig(
       nomisVisitId = nomisVisitId,
     ),
@@ -29,7 +30,7 @@ class OfficialVisitsMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec)
 
-  suspend fun getByDpsIdsOrNull(dpsVisitId: Long): OfficialVisitMappingDto? = api.prepare(
+  suspend fun getVisitByDpsIdsOrNull(dpsVisitId: Long): OfficialVisitMappingDto? = api.prepare(
     api.getVisitMappingByDpsIdRequestConfig(
       dpsVisitId = dpsVisitId.toString(),
     ),
@@ -40,4 +41,12 @@ class OfficialVisitsMappingService(
   suspend fun createVisitMapping(mapping: OfficialVisitMappingDto) = api.prepare(api.createVisitMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun getVisitorByDpsIdsOrNull(dpsVisitorId: Long): OfficialVisitorMappingDto? = api.prepare(
+    api.getVisitorMappingByDpsIdRequestConfig(
+      dpsVisitorId = dpsVisitorId.toString(),
+    ),
+  )
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 }

@@ -14,7 +14,9 @@ import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.createOfficialVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.createOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -302,6 +304,43 @@ class OfficialVisitsNomisApiServiceTest {
         getRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits"))
           .withQueryParam("fromDate", equalTo("2020-01-01"))
           .withQueryParam("toDate", equalTo("2020-01-02")),
+      )
+    }
+  }
+
+  @Nested
+  inner class CreateOfficialVisitor {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubCreateOfficialVisitor(
+        123,
+        officialVisitor(),
+      )
+
+      apiService.createOfficialVisitor(
+        123,
+        createOfficialVisitorRequest(),
+      )
+
+      mockServer.verify(
+        postRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the create visit endpoint`() = runTest {
+      mockServer.stubCreateOfficialVisitor(
+        123,
+        officialVisitor(),
+      )
+
+      apiService.createOfficialVisitor(
+        123,
+        createOfficialVisitorRequest(),
+      )
+      mockServer.verify(
+        postRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor")),
       )
     }
   }
