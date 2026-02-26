@@ -113,7 +113,7 @@ class OfficialVisitsService(
     }
   }
   suspend fun visitorUpdated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-success", event.asTelemetry())
-  suspend fun visitorDeleted(event: VisitorDeletedEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-success", event.asTelemetry())
+  suspend fun visitorDeleted(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-success", event.asTelemetry())
   suspend fun createVisitMapping(message: CreateMappingRetryMessage<OfficialVisitMappingDto>) {
     mappingApiService.createVisitMapping(message.mapping)
     telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-success", message.telemetryAttributes)
@@ -136,13 +136,6 @@ fun VisitorEvent.asTelemetry() = mutableMapOf(
   "dpsOfficialVisitId" to additionalInformation.officialVisitId.toString(),
   "dpsOfficialVisitorId" to additionalInformation.officialVisitorId.toString(),
   "dpsContactId" to contactId().toString(),
-  "source" to additionalInformation.source,
-)
-
-fun VisitorDeletedEvent.asTelemetry() = mutableMapOf<String, Any>(
-  "prisonId" to additionalInformation.prisonId,
-  "dpsOfficialVisitId" to additionalInformation.officialVisitId,
-  "dpsOfficialVisitorId" to additionalInformation.officialVisitorId,
   "source" to additionalInformation.source,
 )
 
