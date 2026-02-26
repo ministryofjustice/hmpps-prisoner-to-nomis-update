@@ -34,11 +34,15 @@ class SynchroniseBuilder<MAPPING_DTO>(
       runCatching {
         transform()
       }.onFailure {
-        telemetryClient?.trackEvent(
-          "$name-create-failed",
-          eventTelemetry,
-          null,
-        )
+        when (it) {
+          is ParentEntityNotFoundRetry -> {
+            telemetryClient?.trackEvent("$name-awaiting-parent", eventTelemetry)
+          }
+
+          else -> {
+            telemetryClient?.trackEvent("$name-create-failed", eventTelemetry)
+          }
+        }
         throw it
       }.onSuccess {
         it.also { mapping ->
