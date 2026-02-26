@@ -122,7 +122,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationService(
   }.getOrNull()
 
   private suspend fun dpsVisitToPossibleNomisVisit(dpsVisitId: Long): NomisOfficialVisitResult = withContext(Dispatchers.Unconfined) {
-    val mapping = mappingService.getByDpsIdsOrNull(dpsVisitId)
+    val mapping = mappingService.getVisitByDpsIdsOrNull(dpsVisitId)
     if (mapping != null) {
       val nomisOfficialVisit = nomisApiService.getOfficialVisitOrNull(mapping.nomisId)
       if (nomisOfficialVisit == null) {

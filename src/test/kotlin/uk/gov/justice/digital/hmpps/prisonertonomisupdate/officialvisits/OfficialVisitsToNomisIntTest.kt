@@ -87,7 +87,7 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetByDpsIdsOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, null)
         dpsApi.stubGetOfficialVisit(
           officialVisitId = dpsOfficialVisitId,
           response = syncOfficialVisit().copy(

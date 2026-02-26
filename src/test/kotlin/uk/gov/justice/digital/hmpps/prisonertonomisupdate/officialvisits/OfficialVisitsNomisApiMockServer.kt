@@ -12,6 +12,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ContactRelationship
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
@@ -82,6 +83,10 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
       internalLocationId = 20,
       visitStatusCode = "SCH",
+    )
+
+    fun createOfficialVisitorRequest() = CreateOfficialVisitorRequest(
+      personId = 123,
     )
   }
   fun stubGetOfficialVisitIds(
@@ -168,6 +173,20 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubCreateOfficialVisitor(
+    visitId: Long,
+    response: OfficialVisitor = officialVisitor(),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/official-visits/$visitId/visitor")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
     )

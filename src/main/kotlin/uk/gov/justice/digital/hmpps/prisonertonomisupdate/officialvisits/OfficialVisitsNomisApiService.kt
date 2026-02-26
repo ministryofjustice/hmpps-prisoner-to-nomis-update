@@ -8,7 +8,9 @@ import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.OfficialVisitsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -47,6 +49,14 @@ class OfficialVisitsNomisApiService(
   ): OfficialVisitResponse = api.getOfficialVisit(
     visitId = visitId,
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun createOfficialVisitor(
+    visitId: Long,
+    request: CreateOfficialVisitorRequest,
+  ): OfficialVisitor = api.createOfficialVisitor(
+    visitId = visitId,
+    createOfficialVisitorRequest = request,
+  ).awaitSingle()
 
   suspend fun getOfficialVisitOrNull(
     visitId: Long,

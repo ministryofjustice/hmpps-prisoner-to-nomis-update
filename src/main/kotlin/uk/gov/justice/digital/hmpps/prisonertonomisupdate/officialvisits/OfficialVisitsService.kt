@@ -37,7 +37,7 @@ class OfficialVisitsService(
         eventTelemetry = telemetry
 
         checkMappingDoesNotExist {
-          mappingApiService.getByDpsIdsOrNull(event.additionalInformation.officialVisitId)
+          mappingApiService.getVisitByDpsIdsOrNull(event.additionalInformation.officialVisitId)
         }
         transform {
           val dpsVisit = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).also {
