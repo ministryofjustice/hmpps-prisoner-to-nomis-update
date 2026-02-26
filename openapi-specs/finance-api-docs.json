@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-19.588.4787cfa"
+    "version" : "2026-02-25.635.b27cf8d"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1547,7 +1547,8 @@
           "offenderDisplayId" : {
             "type" : "string",
             "description" : "The display ID for the offender.",
-            "example" : "AA001AA"
+            "example" : "A1234AA",
+            "pattern" : "^[A-Za-z]\\d{4}[A-Za-z]{2}$"
           },
           "offenderBookingId" : {
             "type" : "integer",
@@ -1569,7 +1570,8 @@
           "type" : {
             "type" : "string",
             "description" : "The type of transaction (e.g., OT, DISCP).",
-            "example" : "OT"
+            "example" : "OT",
+            "pattern" : "^[A-Z0-9_]{1,19}$"
           },
           "description" : {
             "type" : "string",
@@ -1616,7 +1618,8 @@
           "caseloadId" : {
             "type" : "string",
             "description" : "The ID of the caseload associated with this transaction.",
-            "example" : "GMI"
+            "example" : "GMI",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           },
           "transactionTimestamp" : {
             "type" : "string",
@@ -1750,12 +1753,14 @@
           "caseloadId" : {
             "type" : "string",
             "description" : "The ID of the caseload associated with the transaction.",
-            "example" : "GMI"
+            "example" : "GMI",
+            "pattern" : "^[A-Za-z0-9]{3}$"
           },
           "transactionType" : {
             "type" : "string",
             "description" : "The transaction type",
-            "example" : "GJ"
+            "example" : "GJ",
+            "pattern" : "^[A-Z0-9_]{1,19}$"
           },
           "transactionTimestamp" : {
             "type" : "string",
@@ -2533,12 +2538,12 @@
           "transactionType" : {
             "type" : "string"
           },
+          "caseloadId" : {
+            "type" : "string"
+          },
           "transactionTimestamp" : {
             "type" : "string",
             "format" : "date-time"
-          },
-          "caseloadId" : {
-            "type" : "string"
           },
           "requestTypeIdentifier" : {
             "type" : "string"
