@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-25.1125.58496b2"
+    "version" : "2026-02-25.1129.bb2ce58"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -11592,6 +11592,65 @@
           },
           "404" : {
             "description" : "Person or address does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visits/{visitId}/official-visitor" : {
+      "post" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Create an official visit for a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "createOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Visitor details created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitor"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -29325,6 +29384,33 @@
         },
         "required" : [ "mailAddress", "primaryAddress" ]
       },
+      "CreateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "visitor NOMIS person Id"
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcomeCode" : {
+            "type" : "string",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          }
+        },
+        "required" : [ "personId" ]
+      },
       "CreateNonAssociationRequest" : {
         "type" : "object",
         "description" : "Offender individual schedule creation request",
@@ -30472,12 +30558,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
