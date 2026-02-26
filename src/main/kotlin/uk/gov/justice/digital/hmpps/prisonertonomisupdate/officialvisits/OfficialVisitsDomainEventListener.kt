@@ -145,10 +145,11 @@ interface PrisonerReferencedEvent {
 fun PrisonerReferencedEvent.prisonerNumber() = personReference.identifiers.first { it.type == "NOMS" }.value
 
 interface ContactIdReferencedEvent {
-  val personReference: ContactIdentifiers
+  val personReference: ContactIdentifiers?
 }
 
-fun ContactIdReferencedEvent.contactId() = personReference.identifiers.first { it.type == "CONTACT_ID" }.value.toLong()
+// temp hack while DPS fix missing contact id
+fun ContactIdReferencedEvent.contactId() = personReference?.identifiers?.first { it.type == "CONTACT_ID" }?.value?.toLong() ?: 0
 
 data class ContactIdentifiers(val identifiers: List<ContactPersonReference>)
 data class ContactPersonReference(val type: String, val value: String)
