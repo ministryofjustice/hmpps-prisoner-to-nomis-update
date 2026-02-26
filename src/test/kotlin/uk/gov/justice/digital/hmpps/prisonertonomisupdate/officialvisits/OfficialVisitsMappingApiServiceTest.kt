@@ -40,7 +40,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitByNomisIdsOrNull(
+      apiService.getVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
       )
 
@@ -60,7 +60,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitByNomisIdsOrNull(
+      apiService.getVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
       )
 
@@ -80,7 +80,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      val mapping = apiService.getVisitByNomisIdsOrNull(
+      val mapping = apiService.getVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
       )
 
@@ -95,7 +95,7 @@ class OfficialVisitsMappingApiServiceTest {
       )
 
       assertThat(
-        apiService.getVisitByNomisIdsOrNull(
+        apiService.getVisitByNomisIdOrNull(
           nomisVisitId = nomisVisitId,
         ),
       ).isNull()
@@ -117,7 +117,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitByDpsIdsOrNull(
+      apiService.getVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
       )
 
@@ -137,7 +137,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitByDpsIdsOrNull(
+      apiService.getVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
       )
 
@@ -157,7 +157,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      val mapping = apiService.getVisitByDpsIdsOrNull(
+      val mapping = apiService.getVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
       )
 
@@ -172,7 +172,7 @@ class OfficialVisitsMappingApiServiceTest {
       )
 
       assertThat(
-        apiService.getVisitByDpsIdsOrNull(
+        apiService.getVisitByDpsIdOrNull(
           dpsVisitId = dpsVisitId,
         ),
       ).isNull()

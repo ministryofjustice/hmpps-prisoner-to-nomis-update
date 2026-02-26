@@ -174,3 +174,6 @@ fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = thi
 )
 
 fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }
+suspend fun <T> tryFetchParent(get: suspend () -> T?): T = get() ?: throw AwaitParentEntityRetry(
+  "Expected parent entity not found, retrying",
+)

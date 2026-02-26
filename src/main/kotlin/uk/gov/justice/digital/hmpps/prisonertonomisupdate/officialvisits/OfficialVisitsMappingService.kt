@@ -22,7 +22,7 @@ class OfficialVisitsMappingService(
     Context.of("api", "OfficialVisitsMappingService"),
   )
 
-  suspend fun getVisitByNomisIdsOrNull(nomisVisitId: Long): OfficialVisitMappingDto? = api.prepare(
+  suspend fun getVisitByNomisIdOrNull(nomisVisitId: Long): OfficialVisitMappingDto? = api.prepare(
     api.getVisitMappingByNomisIdRequestConfig(
       nomisVisitId = nomisVisitId,
     ),
@@ -30,7 +30,7 @@ class OfficialVisitsMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec)
 
-  suspend fun getVisitByDpsIdsOrNull(dpsVisitId: Long): OfficialVisitMappingDto? = api.prepare(
+  suspend fun getVisitByDpsIdOrNull(dpsVisitId: Long): OfficialVisitMappingDto? = api.prepare(
     api.getVisitMappingByDpsIdRequestConfig(
       dpsVisitId = dpsVisitId.toString(),
     ),
@@ -49,4 +49,8 @@ class OfficialVisitsMappingService(
   )
     .retrieve()
     .awaitBodyOrNullForNotFound()
+
+  suspend fun createVisitorMapping(mapping: OfficialVisitorMappingDto) = api.prepare(api.createVisitorMappingRequestConfig(mapping))
+    .retrieve()
+    .awaitBodilessEntityOrThrowOnConflict()
 }

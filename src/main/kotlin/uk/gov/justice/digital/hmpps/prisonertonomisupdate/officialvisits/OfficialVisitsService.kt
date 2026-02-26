@@ -6,16 +6,19 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISIT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISITOR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SearchLevelType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitCompletionType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.VisitStatusType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.tryFetchParent
 import java.time.LocalTime
 
 @Service
@@ -37,7 +40,7 @@ class OfficialVisitsService(
         eventTelemetry = telemetry
 
         checkMappingDoesNotExist {
-          mappingApiService.getVisitByDpsIdsOrNull(event.additionalInformation.officialVisitId)
+          mappingApiService.getVisitByDpsIdOrNull(event.additionalInformation.officialVisitId)
         }
         transform {
           val dpsVisit = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).also {
@@ -73,14 +76,52 @@ class OfficialVisitsService(
     }
   }
   suspend fun visitDeleted(event: VisitEvent) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-success", event.asTelemetry())
-  suspend fun visitorCreated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", event.asTelemetry())
+  suspend fun visitorCreated(event: VisitorEvent) {
+    val telemetry = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      synchronise {
+        name = OFFICIAL_VISITOR.entityName
+        telemetryClient = this@OfficialVisitsService.telemetryClient
+        retryQueueService = officialVisitsRetryQueueService
+        eventTelemetry = telemetry
+
+        checkMappingDoesNotExist {
+          mappingApiService.getVisitorByDpsIdsOrNull(event.additionalInformation.officialVisitorId)
+        }
+        transform {
+          val dpsVisitor = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
+          val visitMapping = tryFetchParent { mappingApiService.getVisitByDpsIdOrNull(event.additionalInformation.officialVisitId) }.also {
+            telemetry["nomisVisitId"] = it.nomisId.toString()
+          }
+          nomisApiService.createOfficialVisitor(
+            visitId = visitMapping.nomisId,
+            request = dpsVisitor.toCreateOfficialVisitorRequest(),
+          ).also {
+            telemetry["nomisVisitorId"] = it.id.toString()
+          }.let {
+            OfficialVisitorMappingDto(
+              dpsId = event.additionalInformation.officialVisitorId.toString(),
+              nomisId = it.id,
+              mappingType = OfficialVisitorMappingDto.MappingType.DPS_CREATED,
+            )
+          }
+        }
+        saveMapping { mappingApiService.createVisitorMapping(it) }
+      }
+    } else {
+      telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-ignored", telemetry)
+    }
+  }
   suspend fun visitorUpdated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-success", event.asTelemetry())
   suspend fun visitorDeleted(event: VisitorDeletedEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-success", event.asTelemetry())
   suspend fun createVisitMapping(message: CreateMappingRetryMessage<OfficialVisitMappingDto>) {
     mappingApiService.createVisitMapping(message.mapping)
     telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-success", message.telemetryAttributes)
   }
-  suspend fun createVisitorMapping(message: CreateMappingRetryMessage<OfficialVisitorMappingDto>) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", message.telemetryAttributes)
+  suspend fun createVisitorMapping(message: CreateMappingRetryMessage<OfficialVisitorMappingDto>) {
+    mappingApiService.createVisitorMapping(message.mapping)
+    telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", message.telemetryAttributes)
+  }
 }
 
 fun VisitEvent.asTelemetry() = mutableMapOf(
@@ -120,6 +161,13 @@ private fun SyncOfficialVisit.toCreateOfficialVisitRequest(visitSlotId: Long, in
   visitorConcernText = visitorConcernNotes,
   commentText = visitComments,
   overrideBanStaffUsername = overrideBanStaffUsername,
+)
+private fun SyncOfficialVisitor.toCreateOfficialVisitorRequest() = CreateOfficialVisitorRequest(
+  personId = this.contactId!!,
+  leadVisitor = this.leadVisitor,
+  assistedVisit = this.assistedVisit,
+  visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),
+  commentText = this.visitorNotes,
 )
 
 private fun VisitStatusType.toNomisVisitStatusCode() = when (this) {
