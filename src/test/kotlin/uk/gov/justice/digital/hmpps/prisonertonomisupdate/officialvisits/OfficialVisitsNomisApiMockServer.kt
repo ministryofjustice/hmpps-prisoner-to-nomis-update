@@ -183,7 +183,7 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: OfficialVisitor = officialVisitor(),
   ) {
     nomisApi.stubFor(
-      post(urlPathEqualTo("/official-visits/$visitId/visitor")).willReturn(
+      post(urlPathEqualTo("/official-visits/$visitId/official-visitor")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())

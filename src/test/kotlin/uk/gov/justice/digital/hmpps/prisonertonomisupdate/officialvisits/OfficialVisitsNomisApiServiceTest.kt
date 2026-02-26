@@ -340,7 +340,7 @@ class OfficialVisitsNomisApiServiceTest {
         createOfficialVisitorRequest(),
       )
       mockServer.verify(
-        postRequestedFor(urlPathEqualTo("/official-visits/123/visitors")),
+        postRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor")),
       )
     }
   }
