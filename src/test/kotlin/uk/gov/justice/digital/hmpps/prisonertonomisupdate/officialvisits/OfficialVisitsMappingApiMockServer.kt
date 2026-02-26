@@ -64,6 +64,51 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+  fun stubCreateVisitorMapping() {
+    mappingServer.stubFor(
+      post(urlEqualTo("/mapping/official-visits/visitor")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
+  fun stubCreateVisitorMappingFailureFollowedBySuccess(status: HttpStatus = HttpStatus.INTERNAL_SERVER_ERROR, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    mappingServer.stubFor(
+      post("/mapping/official-visits/visitor")
+        .inScenario("Retry CreateVisitorMapping Scenario")
+        .whenScenarioStateIs(Scenario.STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ).willSetStateTo("Cause CreateVisitorMapping Success"),
+    )
+
+    mappingServer.stubFor(
+      post("/mapping/official-visits/visitor")
+        .inScenario("Retry CreateVisitorMapping Scenario")
+        .whenScenarioStateIs("Cause CreateVisitorMapping Success")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201),
+
+        ).willSetStateTo(Scenario.STARTED),
+    )
+  }
+  fun stubCreateVisitorMapping(error: DuplicateMappingErrorResponse) {
+    mappingServer.stubFor(
+      post("/mapping/official-visits/visitor").willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(409)
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
 
   fun stubGetVisitByNomisIdsOrNull(
     nomisVisitId: Long = 1234L,
