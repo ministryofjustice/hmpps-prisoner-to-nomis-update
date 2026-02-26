@@ -130,13 +130,9 @@ data class VisitEvent(
 
 data class VisitorEvent(
   override val additionalInformation: VisitorAdditionalData,
-  override val personReference: ContactIdentifiers,
+  override val personReference: ContactIdentifiers?,
 ) : SourcedEvent,
   ContactIdReferencedEvent
-
-data class VisitorDeletedEvent(
-  override val additionalInformation: VisitorAdditionalData,
-) : SourcedEvent
 
 interface PrisonerReferencedEvent {
   val personReference: PrisonerIdentifiers
