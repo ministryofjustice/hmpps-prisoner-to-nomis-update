@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-02-12.2273.a44634e"
+    "version" : "2026-02-25.2430.cc81644"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -235,8 +235,8 @@
     "/syscon-sync/religion/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Update the prison religion records for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "saveReligions",
+        "description" : "Save the prison religion records for the given prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "savePrisonerReligions",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -257,12 +257,12 @@
           "required" : true
         },
         "responses" : {
-          "200" : {
+          "201" : {
             "description" : "Religions saved in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "string"
+                  "$ref" : "#/components/schemas/SysconReligionResponseBody"
                 }
               }
             }
@@ -1179,6 +1179,11 @@
       "PrisonReligion" : {
         "type" : "object",
         "properties" : {
+          "nomisReligionId" : {
+            "type" : "string",
+            "description" : "The nomis religion id",
+            "example" : 1234
+          },
           "religionCode" : {
             "type" : "string",
             "description" : "The religion code",
@@ -1228,7 +1233,7 @@
             "example" : true
           }
         },
-        "required" : [ "current", "modifyDateTime", "modifyUserId" ]
+        "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
       },
       "PrisonReligionRequest" : {
         "type" : "object",
@@ -1242,6 +1247,33 @@
           }
         },
         "required" : [ "religions" ]
+      },
+      "SysconReligionMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprReligionId", "nomisReligionId" ]
+      },
+      "SysconReligionResponseBody" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religionMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SysconReligionMapping"
+            }
+          }
+        },
+        "required" : [ "prisonNumber", "religionMappings" ]
       },
       "PrisonNationality" : {
         "type" : "object",
