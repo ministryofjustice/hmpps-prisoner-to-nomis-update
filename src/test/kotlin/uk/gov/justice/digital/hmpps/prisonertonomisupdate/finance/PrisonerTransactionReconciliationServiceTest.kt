@@ -252,7 +252,7 @@ class PrisonerTransactionReconciliationServiceTest {
 private fun transactionSummary() = PrisonerTransactionSummary(
   prisonId = "MDI",
   nomisTransactionId = 2345,
-  entryDateTime = LocalDateTime.parse("2024-06-18T14:30"),
+  entryDateTime = LocalDateTime.parse("2024-06-18T14:30:12"),
   entries = listOf(
     PrisonerTransactionEntry(
       transactionSequence = 1,
