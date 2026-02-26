@@ -29,7 +29,7 @@ class PrisonerTransactionResource(private val reconciliationService: PrisonerTra
     responses = [
       ApiResponse(
         responseCode = "200",
-        description = "Reconciliation differences returned",
+        description = "Reconciliation differences returned.",
       ),
       ApiResponse(
         responseCode = "401",

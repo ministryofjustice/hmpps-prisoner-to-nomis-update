@@ -85,7 +85,7 @@ class FinanceDpsApiExtension :
       postingType = OffenderTransaction.PostingType.CR,
       type = "OT",
       description = "Sub-Account Transfer",
-      amount = BigDecimal("162"),
+      amount = BigDecimal.valueOf(162),
       reference = "string",
       generalLedgerEntries = listOf(prisonEntry),
     )

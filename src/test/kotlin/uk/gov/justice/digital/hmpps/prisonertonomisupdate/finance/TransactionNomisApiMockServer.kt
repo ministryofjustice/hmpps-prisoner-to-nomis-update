@@ -26,7 +26,7 @@ class TransactionNomisApiMockServer(private val jsonMapper: JsonMapper) {
       transactionEntrySequence = 1,
       generalLedgerEntrySequence = 1,
       caseloadId = "MDI",
-      amount = BigDecimal(5.4),
+      amount = BigDecimal.valueOf(5.4),
       type = "SPEN",
       postingType = GeneralLedgerTransactionDto.PostingType.CR,
       accountCode = 1501,
