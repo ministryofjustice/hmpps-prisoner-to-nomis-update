@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -329,7 +330,7 @@ class OfficialVisitsNomisApiServiceTest {
     }
 
     @Test
-    fun `will call the create visit endpoint`() = runTest {
+    fun `will call the create visitor endpoint`() = runTest {
       mockServer.stubCreateOfficialVisitor(
         123,
         officialVisitor(),
@@ -341,6 +342,43 @@ class OfficialVisitsNomisApiServiceTest {
       )
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor")),
+      )
+    }
+  }
+
+  @Nested
+  inner class DeleteOfficialVisitor {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubDeleteOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+
+      apiService.deleteOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the delete endpoint`() = runTest {
+      mockServer.stubDeleteOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+
+      apiService.deleteOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor/12300")),
       )
     }
   }

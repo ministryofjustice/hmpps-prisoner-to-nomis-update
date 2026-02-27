@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
@@ -532,6 +533,68 @@ class OfficialVisitsToNomisIntTest(
   @Nested
   @DisplayName("official-visits-api.visitor.deleted")
   inner class OfficialVisitorDeleted {
+    val dpsOfficialVisitId = 12345L
+    val nomisVisitId = 92492L
+    val dpsOfficialVisitorId = 248240284L
+    val nomisVisitorId = 523661L
+    val contactAndPersonId = 1373L
+    val prisonId = "MDI"
+
+    @Nested
+    @DisplayName("when visitor mapping does not exists")
+    inner class WhenVisitorMappingDoesNotExists {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
+        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-delete-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
+    @DisplayName("when visit mapping does not exists")
+    inner class WhenVisitMappingDoesNotExists {
+
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, null)
+        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the create`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-delete-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["nomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     @DisplayName("when mapping exists")
@@ -539,8 +602,25 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = "7765", officialVisitId = "12345", prisonId = "MDI", source = "DPS")
+        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
+        nomisApi.stubDeleteOfficialVisitor(
+          visitId = nomisVisitId,
+          visitorId = nomisVisitorId,
+        )
+        mappingApi.stubDeleteByVisitorNomisId(nomisVisitorId)
+        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will delete visitor in NOMIS`() {
+        nomisApi.verify(1, deleteRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor/$nomisVisitorId")))
+      }
+
+      @Test
+      fun `will delete mapping`() {
+        mappingApi.verify(1, deleteRequestedFor(urlEqualTo("/mapping/official-visits/visitor/nomis-id/$nomisVisitorId")))
       }
 
       @Test
@@ -548,9 +628,12 @@ class OfficialVisitsToNomisIntTest(
         verify(telemetryClient).trackEvent(
           eq("official-visitor-delete-success"),
           check {
-            assertThat(it["dpsOfficialVisitorId"]).isEqualTo("7765")
-            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["nomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["nomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
           },
           isNull(),
         )
@@ -606,11 +689,12 @@ class OfficialVisitsToNomisIntTest(
   private fun publishDeleteOfficialVisitorDomainEvent(
     officialVisitorId: String,
     officialVisitId: String,
+    contactId: String,
     source: String = "DPS",
     prisonId: String,
   ) {
     with("official-visits-api.visitor.deleted") {
-      publishDomainEvent(eventType = this, payload = visitorDeletedMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId))
+      publishDomainEvent(eventType = this, payload = visitorMessagePayload(eventType = this, officialVisitorId = officialVisitorId, officialVisitId = officialVisitId, source = source, prisonId = prisonId, contactId = contactId))
     }
   }
 
@@ -681,24 +765,5 @@ fun visitorMessagePayload(
           }
         ]
       }
-    }
-    """
-fun visitorDeletedMessagePayload(
-  eventType: String,
-  officialVisitorId: String,
-  officialVisitId: String,
-  prisonId: String = "MDI",
-  source: String = "DPS",
-) = //language=JSON
-  """
-    {
-      "eventType":"$eventType", 
-      "additionalInformation": {
-        "officialVisitorId": "$officialVisitorId",
-        "officialVisitId": "$officialVisitId",
-        "prisonId": "$prisonId",
-        "source": "$source"
-      },
-      "personReference": null
     }
     """

@@ -18,6 +18,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.V
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.tryFetchParent
 import java.time.LocalTime
 
@@ -113,7 +114,32 @@ class OfficialVisitsService(
     }
   }
   suspend fun visitorUpdated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-success", event.asTelemetry())
-  suspend fun visitorDeleted(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-success", event.asTelemetry())
+  suspend fun visitorDeleted(event: VisitorEvent) {
+    val telemetry = event.asTelemetry()
+    val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
+      dpsVisitId = event.additionalInformation.officialVisitId,
+    )?.also {
+      telemetry["nomisVisitId"] = it.nomisId.toString()
+    }
+    val visitorMapping = mappingApiService.getVisitorByDpsIdsOrNull(
+      dpsVisitorId = event.additionalInformation.officialVisitorId,
+    )?.also {
+      telemetry["nomisVisitorId"] = it.nomisId.toString()
+    }
+
+    if (visitMapping != null && visitorMapping != null) {
+      track("${OFFICIAL_VISITOR.entityName}-delete", telemetry) {
+        nomisApiService.deleteOfficialVisitor(
+          visitId = visitMapping.nomisId,
+          visitorId = visitorMapping.nomisId,
+        )
+        mappingApiService.deleteByVisitorNomisId(visitorMapping.nomisId)
+      }
+    } else {
+      telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-ignored", telemetry)
+    }
+  }
+
   suspend fun createVisitMapping(message: CreateMappingRetryMessage<OfficialVisitMappingDto>) {
     mappingApiService.createVisitMapping(message.mapping)
     telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-success", message.telemetryAttributes)
