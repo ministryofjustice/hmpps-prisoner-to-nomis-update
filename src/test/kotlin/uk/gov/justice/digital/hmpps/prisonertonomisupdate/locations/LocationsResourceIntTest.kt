@@ -28,7 +28,6 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.locationMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -565,4 +564,10 @@ private val locationLegacyResponse = """{
   "isResidential": true,
   "lastModifiedBy": "xxxx",
   "lastModifiedDate": "2026-01-01T03:04:05"
+  }"""
+
+private val locationMappingResponse = """{
+  "dpsLocationId": "$DPS_ID",
+  "nomisLocationId": $NOMIS_ID,
+  "mappingType": "LOCATION_CREATED"
   }"""
