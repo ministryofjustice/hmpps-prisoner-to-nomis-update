@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-20.924.aa3f588"
+    "version" : "2026-02-26.962.4d04902"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -522,6 +522,43 @@
               "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TapAuthorisationSearchResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/search/people/{personIdentifier}/temporary-absence-occurrences" : {
+      "post" : {
+        "tags" : [ "search-tap-controller" ],
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS_UI",
+        "operationId" : "searchPersonTap",
+        "parameters" : [ {
+          "name" : "personIdentifier",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PersonTapSearchRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonTapSearchResponse"
                 }
               }
             }
@@ -2045,7 +2082,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "page", "size", "sort", "status" ]
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
       },
       "CodedDescription" : {
         "type" : "object",
@@ -2233,7 +2270,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "page", "size", "sort", "status" ]
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
       },
       "TapAuthorisationResult" : {
         "type" : "object",
@@ -2302,6 +2339,141 @@
         },
         "required" : [ "content", "metadata" ]
       },
+      "PersonTapSearchRequest" : {
+        "type" : "object",
+        "properties" : {
+          "start" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "status" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+            },
+            "uniqueItems" : true
+          },
+          "absenceCategorisation" : {
+            "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+          },
+          "page" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32",
+            "minimum" : 1
+          },
+          "sort" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "page", "size", "sort", "status" ]
+      },
+      "PersonOccurrenceAuthorisation" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "repeat" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "id", "repeat", "status" ]
+      },
+      "PersonOccurrenceResult" : {
+        "type" : "object",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "authorisation" : {
+            "$ref" : "#/components/schemas/PersonOccurrenceAuthorisation"
+          },
+          "prison" : {
+            "$ref" : "#/components/schemas/Prison"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceSubType" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReasonCategory" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "absenceReason" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "start" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "end" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "accompaniedBy" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "transport" : {
+            "$ref" : "#/components/schemas/CodedDescription"
+          },
+          "location" : {
+            "$ref" : "#/components/schemas/Location"
+          },
+          "isCancelled" : {
+            "type" : "boolean"
+          },
+          "absenceCategorisation" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "absenceCategorisation", "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "prison", "start", "status", "transport" ]
+      },
+      "PersonTapSearchResponse" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonOccurrenceResult"
+            }
+          },
+          "metadata" : {
+            "$ref" : "#/components/schemas/PageMetadata"
+          }
+        },
+        "required" : [ "content", "metadata" ]
+      },
       "Prison" : {
         "type" : "object",
         "properties" : {
@@ -2320,9 +2492,6 @@
           "id" : {
             "type" : "string",
             "format" : "uuid"
-          },
-          "prisonCode" : {
-            "type" : "string"
           },
           "prison" : {
             "$ref" : "#/components/schemas/Prison"
@@ -2386,7 +2555,7 @@
             }
           }
         },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prison", "prisonCode", "start", "status", "totalOccurrences", "transport" ]
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prison", "start", "status", "totalOccurrences", "transport" ]
       },
       "TapOccurrence.Authorisation" : {
         "type" : "object",
@@ -2475,9 +2644,6 @@
             "type" : "string",
             "enum" : [ "IN", "OUT" ]
           },
-          "prisonCode" : {
-            "type" : "string"
-          },
           "prison" : {
             "$ref" : "#/components/schemas/Prison"
           },
@@ -2497,7 +2663,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prison", "prisonCode" ]
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prison" ]
       },
       "TapMovement.Occurrence" : {
         "type" : "object",
@@ -2538,9 +2704,6 @@
           "id" : {
             "type" : "string",
             "format" : "uuid"
-          },
-          "prisonCode" : {
-            "type" : "string"
           },
           "prison" : {
             "$ref" : "#/components/schemas/Prison"
@@ -2604,7 +2767,7 @@
             "type" : "string"
           }
         },
-        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prison", "prisonCode", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prison", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
       },
       "TapAuthorisation.Occurrence" : {
         "type" : "object",
