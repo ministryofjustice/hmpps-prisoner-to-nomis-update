@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-23.427.cc2fb18"
+    "version" : "2026-02-26.430.512b0ed"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -14093,6 +14093,131 @@
         }
       }
     },
+    "/mapping/core-person/religion/nomis-religion-id/{nomisReligionId}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get a core person religion mapping by nomis religion Id",
+        "description" : "Retrieves the coreperson religion mapping by NOMIS Religion Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getReligionMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisReligionId",
+          "in" : "path",
+          "description" : "NOMIS religion id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS religion id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core Person religion mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CorePersonReligionMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person/religion/cpr-religion-id/{cprReligionId}" : {
+      "get" : {
+        "tags" : [ "core-person-mapping-resource" ],
+        "summary" : "Get core person religion mapping by cpr religion Id",
+        "description" : "Retrieves the core person religion mapping by CPR Religion Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getReligionMappingByCprId",
+        "parameters" : [ {
+          "name" : "cprReligionId",
+          "in" : "path",
+          "description" : "CPR religion id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR religion id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core Person religion mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CorePersonReligionMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person/profile/cpr-id/{cprId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -22926,12 +23051,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -23545,6 +23670,36 @@
             "type" : "boolean"
           }
         }
+      },
+      "CorePersonReligionMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string",
+            "description" : "CPR id"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS id"
+          },
+          "label" : {
+            "type" : "string",
+            "description" : "Label (a timestamp for migrated ids)"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "Mapping type",
+            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisId" ]
       },
       "ProfileMappingDto" : {
         "type" : "object",
