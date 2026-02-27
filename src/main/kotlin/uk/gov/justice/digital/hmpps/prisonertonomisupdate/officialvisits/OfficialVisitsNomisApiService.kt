@@ -80,4 +80,14 @@ class OfficialVisitsNomisApiService(
     fromDate = fromDate,
     toDate = toDate,
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun deleteOfficialVisitor(
+    visitId: Long,
+    visitorId: Long,
+  ) {
+    api.deleteOfficialVisitor(
+      visitId = visitId,
+      visitorId = visitorId,
+    ).awaitSingle()
+  }
 }

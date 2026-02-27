@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -53,4 +54,8 @@ class OfficialVisitsMappingService(
   suspend fun createVisitorMapping(mapping: OfficialVisitorMappingDto) = api.prepare(api.createVisitorMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
+
+  suspend fun deleteByVisitorNomisId(nomisVisitorId: Long) {
+    api.deleteOfficialVisitorMapping(nomisVisitorId = nomisVisitorId).awaitSingle()
+  }
 }

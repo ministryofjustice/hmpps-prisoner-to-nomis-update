@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -193,6 +194,18 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
         ),
       )
     }
+  }
+
+  fun stubDeleteByVisitorNomisId(
+    nomisVisitorId: Long = 1234L,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/official-visits/visitor/nomis-id/$nomisVisitorId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
   }
 
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
