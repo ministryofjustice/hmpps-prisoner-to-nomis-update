@@ -27,7 +27,7 @@ class LocationsReconciliationService(
   private val nomisApiService: NomisApiService,
   private val locationsApiService: LocationsApiService,
   private val mappingService: LocationsMappingService,
-  @Value("\${reports.locations.reconciliation.page-size}")
+  @Value($$"${reports.locations.reconciliation.page-size}")
   private val pageSize: Long,
 ) {
   private val invalidPrisons = listOf("ZZGHI", "UNKNWN", "TRN", "LT3", "LT4", "ALI") // Albany defunct
@@ -37,6 +37,7 @@ class LocationsReconciliationService(
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
+
   suspend fun generateReconciliationReport() {
     val locationsCount = nomisApiService.getLocations(0, 1).totalElements
 
@@ -128,8 +129,8 @@ class LocationsReconciliationService(
               dpsRecord.comments,
               dpsRecord.capacity?.workingCapacity,
               dpsRecord.capacity?.maxCapacity,
-              dpsRecord.certification?.certified,
-              dpsRecord.certification?.certifiedNormalAccommodation,
+              dpsRecord.certifiedCell,
+              dpsRecord.capacity?.certifiedNormalAccommodation,
               dpsRecord.active,
               dpsRecord.attributes?.size,
               dpsRecord.usage?.size,
@@ -216,8 +217,8 @@ class LocationsReconciliationService(
           dpsRecord.comments,
           dpsRecord.capacity?.workingCapacity,
           dpsRecord.capacity?.maxCapacity,
-          dpsRecord.certification?.certified,
-          dpsRecord.certification?.certifiedNormalAccommodation,
+          dpsRecord.certifiedCell,
+          dpsRecord.capacity?.certifiedNormalAccommodation,
           dpsRecord.active,
           dpsRecord.attributes?.size,
           dpsRecord.usage?.size,
@@ -280,8 +281,8 @@ class LocationsReconciliationService(
         if (oc != null && oc > 0 && oc != dps.capacity?.workingCapacity) return "Cell operational capacity mismatch"
         if (c != null && c > 0 && c != dps.capacity?.maxCapacity) return "Cell max capacity mismatch"
         if (cc != null && cc > 0) {
-          if ((nomis.certified == true) != (dps.certification?.certified == true)) return "Cell certification mismatch"
-          if (cc != dps.certification?.certifiedNormalAccommodation) return "Cell CNA capacity mismatch"
+          if ((nomis.certified == true) != (dps.certifiedCell == true)) return "Cell certification mismatch"
+          if (cc != dps.capacity?.certifiedNormalAccommodation) return "Cell CNA capacity mismatch"
         }
       }
       if (expectedDpsAttributesSize(nomis.profiles) != (dps.attributes?.size ?: 0)) return "Cell attributes mismatch"

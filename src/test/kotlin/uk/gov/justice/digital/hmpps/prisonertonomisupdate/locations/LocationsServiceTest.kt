@@ -212,12 +212,14 @@ internal class LocationsServiceTest {
     capacity = Capacity(
       workingCapacity = 12,
       maxCapacity = 14,
+      certifiedNormalAccommodation = 13,
     ),
     certification = Certification(
       certified = true,
       certifiedNormalAccommodation = 13,
       capacityOfCertifiedCell = 13,
     ),
+    certifiedCell = true,
     attributes = listOf(
       LegacyLocation.Attributes.GATED_CELL,
       LegacyLocation.Attributes.VULNERABLE_PRISONER_UNIT,

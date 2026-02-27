@@ -128,6 +128,14 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetLocationDPS(id: String, includeChildren: Boolean, response: String) {
+    stubFor(
+      get(urlPathEqualTo("/locations/$id"))
+        .withQueryParam("includeChildren", equalTo(includeChildren.toString()))
+        .willReturn(okJson(response)),
+    )
+  }
+
   fun stubGetLocationsPage(pageNumber: Long, pageSize: Long = 100, response: String) {
     stubFor(
       get(urlPathEqualTo("/locations"))

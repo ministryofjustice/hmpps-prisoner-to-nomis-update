@@ -1,6 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -13,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.Captor
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
@@ -141,13 +146,15 @@ class LocationsResourceIntTest(
     "localName": "Landing A",
     "capacity": {
       "maxCapacity": 2,
-      "workingCapacity": 2
+      "workingCapacity": 2,
+      "certifiedNormalAccommodation": 1
     },
     "certification": {
       "certified": true,
       "certifiedNormalAccommodation": 1,
       "capacityOfCertifiedCell": 3
     },
+    "certifiedCell": true,
     "orderWithinParentLocation": 1,
     "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
     "key": "MDI-A-1-001",
@@ -159,13 +166,16 @@ class LocationsResourceIntTest(
   }
   """.trimIndent()
 
+  @BeforeEach
+  fun setUp() {
+    reset(telemetryClient)
+  }
+
   @DisplayName("Locations reconciliation report")
   @Nested
   inner class GenerateLocationReconciliationReport {
     @BeforeEach
     fun setUp() {
-      reset(telemetryClient)
-
       val numberOfLocations = 34
       nomisApi.stubGetLocationsInitialCount(locationsNomisPagedResponse(totalElements = numberOfLocations, pageSize = 1))
       nomisApi.stubGetLocationsPage(0, 10, locationsNomisPagedResponse(numberOfLocations, 10, pageNumber = 0, pageSize = 10))
@@ -219,14 +229,14 @@ class LocationsResourceIntTest(
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/locations/ids"))
-          .withQueryParam("size", WireMock.equalTo("1")),
+        getRequestedFor(urlPathEqualTo("/locations/ids"))
+          .withQueryParam("size", equalTo("1")),
       )
       nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         4,
-        WireMock.getRequestedFor(urlPathEqualTo("/locations/ids"))
-          .withQueryParam("size", WireMock.equalTo("10")),
+        getRequestedFor(urlPathEqualTo("/locations/ids"))
+          .withQueryParam("size", equalTo("10")),
       )
     }
 
@@ -419,7 +429,145 @@ class LocationsResourceIntTest(
     }
   }
 
+  @DisplayName("Location resource")
+  @Nested
+  inner class LocationRepair {
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.put().uri("/locations/1/repair")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.put().uri("/locations/1/repair")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.put().uri("/locations/1/repair")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Test
+    fun `will repair a location by creation`() = runTest {
+      mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
+      mappingServer.stubCreateLocation()
+      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
+      // locationsApi.stubGetLocationDPS(DPS_ID, false, locationData)
+      nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
+
+      webTestClient.put().uri("/locations/$DPS_ID/repair")
+        .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+        .exchange()
+        .expectStatus().isOk
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("location-repaired"),
+          check {
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+            assertThat(it["operation"]).isEqualTo("create")
+          },
+          isNull(),
+        )
+      }
+
+      nomisApi.verify(postRequestedFor(urlEqualTo("/locations")))
+
+      verify(telemetryClient).trackEvent(
+        eq("location-create-success"),
+        anyMap(),
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `will repair a location by update`() = runTest {
+      mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
+      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
+
+      webTestClient.put().uri("/locations/$DPS_ID/repair")
+        .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+        .exchange()
+        .expectStatus().isOk
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("location-repaired"),
+          check {
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+            assertThat(it["operation"]).isEqualTo("amend")
+          },
+          isNull(),
+        )
+      }
+
+      nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
+
+      verify(telemetryClient).trackEvent(
+        eq("location-amend-success"),
+        anyMap(),
+        isNull(),
+      )
+    }
+  }
+
   private fun awaitReportFinished() {
     await untilAsserted { verify(telemetryClient).trackEvent(eq("locations-reports-reconciliation-success"), any(), isNull()) }
   }
 }
+
+private val locationResponse = """{
+  "id": "$DPS_ID",
+  "prisonId": "xxxx",
+  "code": "CELL",
+  "pathHierarchy": "xxxx",
+  "locationType": "xxxx",
+  "permanentlyInactive": "false",
+  "status": "xxxx",
+  "locked": "false",
+  "active": "false",
+  "deactivatedByParent": "false",
+  "topLevelId": "xxxx",
+  "level": 4,
+  "leafLevel": "false",
+  "lastModifiedBy": "xxxx",
+  "lastModifiedDate": "2026-01-01T03:04:05",
+  "key": "xxxx",
+  "isResidential": "false",
+  "childLocations": [
+  
+    ]
+  }"""
+
+private val locationLegacyResponse = """{
+  "id": "$DPS_ID",
+  "prisonId": "MDI",
+  "code": "001",
+  "pathHierarchy": "A-1-001",
+  "locationType": "CELL",
+  "active": true,
+  "key": "MDI-A-1-001",
+  "isResidential": true,
+  "lastModifiedBy": "xxxx",
+  "lastModifiedDate": "2026-01-01T03:04:05"
+  }"""
+
+private val locationMappingResponse = """{
+  "dpsLocationId": "$DPS_ID",
+  "nomisLocationId": $NOMIS_ID,
+  "mappingType": "LOCATION_CREATED"
+  }"""

@@ -79,8 +79,41 @@ class LocationsService(
       )
       nomisApiService.updateLocationCertification(
         nomisLocationId,
-        UpdateCertificationRequest(location.certification?.certifiedNormalAccommodation ?: 0, location.certification?.certified ?: false),
+        UpdateCertificationRequest(location.capacity?.certifiedNormalAccommodation ?: 0, location.certifiedCell ?: false),
       )
+    }
+  }
+
+  suspend fun repair(dpsLocationId: String, cascade: Boolean) {
+    mappingService.getMappingGivenDpsIdOrNull(dpsLocationId)
+      ?.let {
+        amendLocation(
+          LocationDomainEvent(
+            eventType = "amend",
+            version = "1",
+            description = "repair",
+            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = "", source = "DPS"),
+          ),
+        )
+        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "operation" to "amend"))
+      }
+      ?: run {
+        createLocation(
+          LocationDomainEvent(
+            eventType = "create",
+            version = "1",
+            description = "repair",
+            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = "", source = "DPS"),
+          ),
+        )
+        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "operation" to "create"))
+      }
+
+    if (cascade) {
+      val dpsLocation = locationsApiService.getLocationDPS(dpsLocationId)
+      dpsLocation.childLocations?.forEach {
+        repair(it.id.toString(), true)
+      }
     }
   }
 
@@ -144,8 +177,8 @@ class LocationsService(
 
   private suspend fun toCreateLocationRequest(instance: LegacyLocation) = CreateLocationRequest(
     locationCode = instance.code,
-    certified = instance.certification?.certified ?: false,
-    cnaCapacity = instance.certification?.certifiedNormalAccommodation,
+    certified = instance.certifiedCell ?: false,
+    cnaCapacity = instance.capacity?.certifiedNormalAccommodation,
     locationType = CreateLocationRequest.LocationType.valueOf(toLocationType(instance.locationType)),
     comment = instance.comments,
     parentLocationId = instance.parentId?.let { mappingService.getMappingGivenDpsId(it.toString()).nomisLocationId },
@@ -323,9 +356,7 @@ class LocationsService(
   private fun toLocationType(locationtype: LegacyLocation.LocationType) = when (locationtype) {
     LegacyLocation.LocationType.WING -> "WING"
     LegacyLocation.LocationType.SPUR -> "SPUR"
-    LegacyLocation.LocationType.LANDING,
-    -> "LAND"
-
+    LegacyLocation.LocationType.LANDING -> "LAND"
     LegacyLocation.LocationType.CELL -> "CELL"
     LegacyLocation.LocationType.ADJUDICATION_ROOM -> "ADJU"
     LegacyLocation.LocationType.ADMINISTRATION_AREA -> "ADMI"

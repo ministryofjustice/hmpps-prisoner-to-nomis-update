@@ -191,7 +191,7 @@ abstract class SqsIntegrationTestBase : IntegrationTestBase() {
     movementsQueueClient.purgeQueue(movementsQueueUrl).get()
     movementsDlqClient?.purgeQueue(movementsDlqUrl)?.get()
 
-    fromNomisCourtSentencingQueue.purgeQueue()
+    fromNomisCourtSentencingQueue.purgeQueue().get()
   }
 
   internal fun waitForAnyProcessingToComplete(times: Int = 1) {

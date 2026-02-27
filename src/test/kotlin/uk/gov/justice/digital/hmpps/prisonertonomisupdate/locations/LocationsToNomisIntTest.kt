@@ -29,13 +29,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtens
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-private const val DPS_ID = "57718979-573c-433a-9e51-2d83f887c11c"
-private const val PARENT_ID = "12345678-573c-433a-9e51-2d83f887c11c"
-private const val NOMIS_ID = 1234567L
+internal const val DPS_ID = "57718979-573c-433a-9e51-2d83f887c11c"
+internal const val PARENT_ID = "12345678-573c-433a-9e51-2d83f887c11c"
+internal const val NOMIS_ID = 1234567L
 
 class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
-  val locationApiResponse = """
+  private val locationApiResponse = """
     {
       "id": "$DPS_ID",
       "prisonId": "MDI",
@@ -47,13 +47,15 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
       "comments": "Not to be used",
       "capacity": {
         "maxCapacity": 2,
-        "workingCapacity": 2
+        "workingCapacity": 2,
+        "certifiedNormalAccommodation": 1
       },
       "certification": {
         "certified": true,
         "certifiedNormalAccommodation": 1,
         "capacityOfCertifiedCell": 3
       },
+      "certifiedCell": true,
       "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
       "usage": [
         { "usageType": "APPOINTMENT", "capacity": 3, "sequence": 1  },
@@ -73,7 +75,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   """.trimIndent()
 
-  fun locationApiResponseDeactivated(permanentlyDeactivated: Boolean = false) = """
+  private fun locationApiResponseDeactivated(permanentlyDeactivated: Boolean = false) = """
     {
       "id": "$DPS_ID",
       "prisonId": "MDI",
@@ -95,7 +97,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   """.trimIndent()
 
-  val locationMappingResponse = """
+  private val locationMappingResponse = """
     {
       "dpsLocationId": "$DPS_ID",
       "nomisLocationId": $NOMIS_ID,
@@ -103,7 +105,7 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
     }
   """.trimIndent()
 
-  val parentMappingResponse = """
+  private val parentMappingResponse = """
     {
       "dpsLocationId": "$PARENT_ID",
       "nomisLocationId": 12345678,

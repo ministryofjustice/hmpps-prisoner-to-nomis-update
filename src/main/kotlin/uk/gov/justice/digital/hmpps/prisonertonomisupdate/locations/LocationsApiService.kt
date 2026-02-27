@@ -7,9 +7,11 @@ import org.springframework.data.domain.Page
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
+import org.springframework.web.reactive.function.client.awaitBody
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.PatchNonResidentialLocationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RestResponsePage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -37,6 +39,16 @@ class LocationsApiService(
       .retrieve()
       .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
   }
+
+  suspend fun getLocationDPS(id: String): Location = webClient
+    .get()
+    .uri {
+      it.path("/locations/{id}")
+        .queryParam("includeChildren", true)
+        .build(id)
+    }
+    .retrieve()
+    .awaitBody()
 
   suspend fun getLocations(
     pageNumber: Long,
