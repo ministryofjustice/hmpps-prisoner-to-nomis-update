@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
@@ -16,6 +17,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.extension.ExtendWith
 import org.mockito.ArgumentCaptor
+import org.mockito.ArgumentMatchers.anyMap
 import org.mockito.Captor
 import org.mockito.junit.jupiter.MockitoExtension
 import org.mockito.kotlin.any
@@ -26,6 +28,7 @@ import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.locationMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
@@ -227,14 +230,14 @@ class LocationsResourceIntTest(
 
       awaitReportFinished()
       nomisApi.verify(
-        WireMock.getRequestedFor(urlPathEqualTo("/locations/ids"))
-          .withQueryParam("size", WireMock.equalTo("1")),
+        getRequestedFor(urlPathEqualTo("/locations/ids"))
+          .withQueryParam("size", equalTo("1")),
       )
       nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         4,
-        WireMock.getRequestedFor(urlPathEqualTo("/locations/ids"))
-          .withQueryParam("size", WireMock.equalTo("10")),
+        getRequestedFor(urlPathEqualTo("/locations/ids"))
+          .withQueryParam("size", equalTo("10")),
       )
     }
 
@@ -459,7 +462,8 @@ class LocationsResourceIntTest(
     @Test
     fun `will repair a location by creation`() = runTest {
       mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
-      locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
+      mappingServer.stubCreateLocation()
+      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
       // locationsApi.stubGetLocationDPS(DPS_ID, false, locationData)
       nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
 
@@ -469,15 +473,21 @@ class LocationsResourceIntTest(
         .expectStatus().isOk
 
       await untilAsserted {
-        nomisApi.verify(postRequestedFor(urlEqualTo("/locations")))
+        verify(telemetryClient).trackEvent(
+          eq("location-repaired"),
+          check {
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+            assertThat(it["operation"]).isEqualTo("create")
+          },
+          isNull(),
+        )
       }
 
+      nomisApi.verify(postRequestedFor(urlEqualTo("/locations")))
+
       verify(telemetryClient).trackEvent(
-        eq("location-repaired"),
-        check {
-          assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
-          assertThat(it["operation"]).isEqualTo("create")
-        },
+        eq("location-create-success"),
+        anyMap(),
         isNull(),
       )
     }
@@ -485,10 +495,10 @@ class LocationsResourceIntTest(
     @Test
     fun `will repair a location by update`() = runTest {
       mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-      // just shifts the error to nomis mock> mappingServer.stubGetMappingGivenDpsLocationId("12345678-573c-433a-9e51-2d83f887c11c", locationMappingResponse)
-      locationsApi.stubGetLocation(DPS_ID, false, locationApiResponse)
-      // locationsApi.stubGetLocationDPS(DPS_ID, false, locationData)
-      nomisApi.stubLocationUpdate("http://dummybug.com")
+      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
+      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
 
       webTestClient.put().uri("/locations/$DPS_ID/repair")
         .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -496,15 +506,21 @@ class LocationsResourceIntTest(
         .expectStatus().isOk
 
       await untilAsserted {
-        nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
+        verify(telemetryClient).trackEvent(
+          eq("location-repaired"),
+          check {
+            assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
+            assertThat(it["operation"]).isEqualTo("amend")
+          },
+          isNull(),
+        )
       }
 
+      nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
+
       verify(telemetryClient).trackEvent(
-        eq("location-repaired"),
-        check {
-          assertThat(it["dpsLocationId"]).isEqualTo(DPS_ID)
-          assertThat(it["operation"]).isEqualTo("amend")
-        },
+        eq("location-amend-success"),
+        anyMap(),
         isNull(),
       )
     }
@@ -515,7 +531,7 @@ class LocationsResourceIntTest(
   }
 }
 
-const val locationData = """{
+private val locationResponse = """{
   "id": "$DPS_ID",
   "prisonId": "xxxx",
   "code": "CELL",
@@ -536,4 +552,17 @@ const val locationData = """{
   "childLocations": [
   
     ]
+  }"""
+
+private val locationLegacyResponse = """{
+  "id": "$DPS_ID",
+  "prisonId": "MDI",
+  "code": "001",
+  "pathHierarchy": "A-1-001",
+  "locationType": "CELL",
+  "active": true,
+  "key": "MDI-A-1-001",
+  "isResidential": true,
+  "lastModifiedBy": "xxxx",
+  "lastModifiedDate": "2026-01-01T03:04:05"
   }"""

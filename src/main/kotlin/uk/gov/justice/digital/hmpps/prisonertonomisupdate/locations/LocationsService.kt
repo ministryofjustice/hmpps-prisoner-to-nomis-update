@@ -85,8 +85,6 @@ class LocationsService(
   }
 
   suspend fun repair(dpsLocationId: String, cascade: Boolean) {
-//    val dpsData = locationsApiService.getLocation(dpsLocationId)
-//      ?: throw NotFoundException("Location $dpsLocationId not found")
     mappingService.getMappingGivenDpsIdOrNull(dpsLocationId)
       ?.let {
         amendLocation(
@@ -98,7 +96,6 @@ class LocationsService(
           ),
         )
         telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "operation" to "amend"))
-
       }
       ?: run {
         createLocation(
@@ -359,9 +356,7 @@ class LocationsService(
   private fun toLocationType(locationtype: LegacyLocation.LocationType) = when (locationtype) {
     LegacyLocation.LocationType.WING -> "WING"
     LegacyLocation.LocationType.SPUR -> "SPUR"
-    LegacyLocation.LocationType.LANDING,
-      -> "LAND"
-
+    LegacyLocation.LocationType.LANDING -> "LAND"
     LegacyLocation.LocationType.CELL -> "CELL"
     LegacyLocation.LocationType.ADJUDICATION_ROOM -> "ADJU"
     LegacyLocation.LocationType.ADMINISTRATION_AREA -> "ADMI"

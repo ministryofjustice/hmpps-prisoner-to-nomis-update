@@ -41,7 +41,7 @@ private const val PRISON_ID = "MDI"
 private const val OFFENDER_NO = "A1234AA"
 private const val INTERNAL_LOCATION_DPS_ID = "be1ee367-8cfa-4499-942b-3938d375f41e"
 private const val INTERNAL_LOCATION_NOMIS_ID = 197683L
-val locationMappingResponse = """
+internal val locationMappingResponse = """
     {
       "dpsLocationId": "$INTERNAL_LOCATION_DPS_ID",
       "nomisLocationId": $INTERNAL_LOCATION_NOMIS_ID,

@@ -40,16 +40,15 @@ class LocationsApiService(
       .awaitBodyWithRetry(backoffSpec.withRetryContext(Context.of("api", "locations-api", "url", url.path)))
   }
 
-  suspend fun getLocationDPS(id: String): Location {
-    return webClient.get()
-      .uri {
-        it.path("/locations/{id}")
-          .queryParam("includeChildren", true)
-          .build(id)
-      }
-      .retrieve()
-      .awaitBody()
-  }
+  suspend fun getLocationDPS(id: String): Location = webClient
+    .get()
+    .uri {
+      it.path("/locations/{id}")
+        .queryParam("includeChildren", true)
+        .build(id)
+    }
+    .retrieve()
+    .awaitBody()
 
   suspend fun getLocations(
     pageNumber: Long,

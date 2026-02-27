@@ -13,9 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 
 @RestController
 @Tag(name = "Locations Resource")
-class LocationsResource(
-    private val locationsService: LocationsService,
-) {
+class LocationsResource(private val locationsService: LocationsService) {
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @PutMapping("/locations/{dpsLocationId}/repair")
   @Operation(
