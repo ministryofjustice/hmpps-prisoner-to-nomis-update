@@ -27,7 +27,7 @@ abstract class DomainEventListenerNoMapping(
     rawMessage: String,
     processMessage: suspend (eventType: String, message: String) -> Unit,
   ): CompletableFuture<Void?> {
-    log.debug("Received message {}", rawMessage)
+    log.debug("Received $domain message {}", rawMessage)
     val sqsMessage: SQSMessage = rawMessage.fromJson()
     return asCompletableFuture {
       when (sqsMessage.Type) {

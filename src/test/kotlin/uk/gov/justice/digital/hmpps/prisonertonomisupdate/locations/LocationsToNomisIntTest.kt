@@ -23,94 +23,18 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.locationMappingResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiExtension.Companion.locationsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 
-private const val DPS_ID = "57718979-573c-433a-9e51-2d83f887c11c"
-private const val PARENT_ID = "12345678-573c-433a-9e51-2d83f887c11c"
-private const val NOMIS_ID = 1234567L
+internal const val DPS_ID = "57718979-573c-433a-9e51-2d83f887c11c"
+internal const val PARENT_ID = "12345678-573c-433a-9e51-2d83f887c11c"
+internal const val NOMIS_ID = 1234567L
 
 class LocationsToNomisIntTest : SqsIntegrationTestBase() {
-
-  val locationApiResponse = """
-    {
-      "id": "$DPS_ID",
-      "prisonId": "MDI",
-      "code": "001",
-      "pathHierarchy": "A-1-001",
-      "locationType": "CELL",
-      "active": true,
-      "localName": "Wing A",
-      "comments": "Not to be used",
-      "capacity": {
-        "maxCapacity": 2,
-        "workingCapacity": 2
-      },
-      "certification": {
-        "certified": true,
-        "certifiedNormalAccommodation": 1,
-        "capacityOfCertifiedCell": 3
-      },
-      "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
-      "usage": [
-        { "usageType": "APPOINTMENT", "capacity": 3, "sequence": 1  },
-        { "usageType": "VISIT",       "capacity": 3, "sequence": 2  },
-        { "usageType": "MOVEMENT",    "sequence": 3  },
-        { "usageType": "OCCURRENCE",  "sequence": 4  }
-      ],
-      "orderWithinParentLocation": 1,
-      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
-      "parentId": "$PARENT_ID",
-      "key": "MDI-A-1-001",
-      "status": "ACTIVE",
-      "isResidential": true,
-      "internalMovementAllowed": false,
-      "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25T01:02:03"
-    }
-  """.trimIndent()
-
-  fun locationApiResponseDeactivated(permanentlyDeactivated: Boolean = false) = """
-    {
-      "id": "$DPS_ID",
-      "prisonId": "MDI",
-      "code": "001",
-      "pathHierarchy": "A-1-001",
-      "locationType": "CELL",
-      "active": false,
-      "orderWithinParentLocation": 1,
-      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
-      "key": "MDI-A-1-001",
-      "status": "INACTIVE",
-      "isResidential": true,
-      "deactivatedDate": "2024-02-01",
-      "deactivatedReason": "MOTHBALLED",
-      "proposedReactivationDate": "2024-02-14",
-      "permanentlyDeactivated": $permanentlyDeactivated,
-      "lastModifiedBy": "me",
-      "lastModifiedDate": "2024-05-25T01:02:03"
-    }
-  """.trimIndent()
-
-  val locationMappingResponse = """
-    {
-      "dpsLocationId": "$DPS_ID",
-      "nomisLocationId": $NOMIS_ID,
-      "mappingType": "LOCATION_CREATED"
-    }
-  """.trimIndent()
-
-  val parentMappingResponse = """
-    {
-      "dpsLocationId": "$PARENT_ID",
-      "nomisLocationId": 12345678,
-      "mappingType": "LOCATION_CREATED"
-    }
-  """.trimIndent()
-
   @Nested
   inner class Create {
     @Nested
@@ -764,3 +688,79 @@ class LocationsToNomisIntTest : SqsIntegrationTestBase() {
 
   private fun locationMessagePayload(id: String, eventType: String) = """{"eventType":"$eventType", "additionalInformation": {"id":"$id", "key":"MDI-A-1-001"}, "version": "1.0", "description": "description", "occurredAt": "2024-04-02T10:58:01.531693442+01:00"}"""
 }
+
+internal val locationApiResponse = """
+    {
+      "id": "$DPS_ID",
+      "prisonId": "MDI",
+      "code": "001",
+      "pathHierarchy": "A-1-001",
+      "locationType": "CELL",
+      "active": true,
+      "localName": "Wing A",
+      "comments": "Not to be used",
+      "capacity": {
+        "maxCapacity": 2,
+        "workingCapacity": 2
+      },
+      "certification": {
+        "certified": true,
+        "certifiedNormalAccommodation": 1,
+        "capacityOfCertifiedCell": 3
+      },
+      "attributes": [ "FEMALE_SEMI", "NON_SMOKER_CELL" ],
+      "usage": [
+        { "usageType": "APPOINTMENT", "capacity": 3, "sequence": 1  },
+        { "usageType": "VISIT",       "capacity": 3, "sequence": 2  },
+        { "usageType": "MOVEMENT",    "sequence": 3  },
+        { "usageType": "OCCURRENCE",  "sequence": 4  }
+      ],
+      "orderWithinParentLocation": 1,
+      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+      "parentId": "$PARENT_ID",
+      "key": "MDI-A-1-001",
+      "status": "ACTIVE",
+      "isResidential": true,
+      "internalMovementAllowed": false,
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25T01:02:03"
+    }
+  """.trimIndent()
+
+internal fun locationApiResponseDeactivated(permanentlyDeactivated: Boolean = false) = """
+    {
+      "id": "$DPS_ID",
+      "prisonId": "MDI",
+      "code": "001",
+      "pathHierarchy": "A-1-001",
+      "locationType": "CELL",
+      "active": false,
+      "orderWithinParentLocation": 1,
+      "topLevelId": "abcdef01-573c-433a-9e51-2d83f887c11c",
+      "key": "MDI-A-1-001",
+      "status": "INACTIVE",
+      "isResidential": true,
+      "deactivatedDate": "2024-02-01",
+      "deactivatedReason": "MOTHBALLED",
+      "proposedReactivationDate": "2024-02-14",
+      "permanentlyDeactivated": $permanentlyDeactivated,
+      "lastModifiedBy": "me",
+      "lastModifiedDate": "2024-05-25T01:02:03"
+    }
+  """.trimIndent()
+
+internal val locationMappingResponse = """
+    {
+      "dpsLocationId": "$DPS_ID",
+      "nomisLocationId": $NOMIS_ID,
+      "mappingType": "LOCATION_CREATED"
+    }
+  """.trimIndent()
+
+internal val parentMappingResponse = """
+    {
+      "dpsLocationId": "$PARENT_ID",
+      "nomisLocationId": 12345678,
+      "mappingType": "LOCATION_CREATED"
+    }
+  """.trimIndent()
