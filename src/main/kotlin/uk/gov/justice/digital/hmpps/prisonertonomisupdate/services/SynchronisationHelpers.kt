@@ -35,7 +35,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
         transform()
       }.onFailure {
         when (it) {
-          is ParentEntityNotFoundRetry -> {
+          is AwaitParentEntityRetry -> {
             telemetryClient?.trackEvent("$name-awaiting-parent", eventTelemetry)
           }
 
