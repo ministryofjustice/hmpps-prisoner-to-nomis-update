@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.1138.b16c698"
+    "version" : "2026-02-27.1155.ce18310"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -4201,6 +4201,154 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visits/{visitId}/official-visitor/{visitorId}" : {
+      "put" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Updates an official visitor from a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "visitorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOfficialVisitorRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Visitor details updated"
+          },
+          "400" : {
+            "description" : "Visitor is on a different visit or attendance code is incorrect",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit or visitor does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Delete an official visitor from a visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteOfficialVisitor",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "visitorId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Visitor details deleted"
+          },
+          "400" : {
+            "description" : "Visitor is on a different visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit does not exist",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -16902,6 +17050,122 @@
         }
       }
     },
+    "/prisoners/ids-in-range" : {
+      "get" : {
+        "tags" : [ "prisoners-resource" ],
+        "summary" : "Gets every prison number and root offender id between range for prisoner search.",
+        "description" : "Returns a list of ids for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllPrisonersInRange_1",
+        "parameters" : [ {
+          "name" : "fromRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id greater than this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "toRootOffenderId",
+          "in" : "query",
+          "description" : "Return prisoners with root offender id less than or equal to this value.",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of prison numbers and root offender ids",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonNumberAndRootOffenderId"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/prisoners/id-ranges" : {
+      "get" : {
+        "tags" : [ "prisoners-resource" ],
+        "summary" : "Gets every size prisoner root offender ids.",
+        "description" : "Returns a list of root offender id ranges for prisoners. Each list item has a from and to \n      root offender id, with the number of prisoners between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
+        "operationId" : "getAllPrisonersIdRanges_1",
+        "parameters" : [ {
+          "name" : "size",
+          "in" : "query",
+          "description" : "Number of prisoners to get",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int32",
+            "default" : 1000
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "list of root offender id ranges",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/RootOffenderIdRange"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint when role NOMIS_PRISONER_API__SYNCHRONISATION__RW not present",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/prisoners/booking-id/{bookingId}/sentencing-adjustments" : {
       "get" : {
         "tags" : [ "sentencing-adjustment-resource" ],
@@ -18428,6 +18692,71 @@
           },
           "404" : {
             "description" : "Offender or scheduled temporary absence not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "movements-resource" ],
+        "summary" : "Delete a scheduled temporary absence for an offender.",
+        "description" : "Deletes a scheduled temporary absence. This should only be required where we have duplicates! Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteScheduledTemporaryAbsence",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender no (aka prisoner number)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender no (aka prisoner number)",
+            "example" : "A1234AK"
+          },
+          "example" : "A1234AK"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Scheduled TAP movement event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Scheduled TAP movement event ID",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Temporary absence application deleted"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Unable to delete the schedule. See error message for details",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -20730,6 +21059,72 @@
         }
       }
     },
+    "/core-person/root-offender-id/{rootOffenderId}/religions" : {
+      "get" : {
+        "tags" : [ "core-person-resource" ],
+        "summary" : "Get all the religion information for an offender by root offender id",
+        "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOffenderReligions_1",
+        "parameters" : [ {
+          "name" : "rootOffenderId",
+          "in" : "path",
+          "description" : "Root offender id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Root offender id",
+            "example" : 12345
+          },
+          "example" : 12345
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Core religion information returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/OffenderBelief"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender does not exist",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/contact/{contactId}" : {
       "get" : {
         "tags" : [ "contact-person-resource" ],
@@ -22433,76 +22828,6 @@
         }
       }
     },
-    "/official-visits/{visitId}/official-visitor/{visitorId}" : {
-      "delete" : {
-        "tags" : [ "official-visits-resource" ],
-        "summary" : "Delete an official visitor from a visit",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteOfficialVisitor",
-        "parameters" : [ {
-          "name" : "visitId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        }, {
-          "name" : "visitorId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "204" : {
-            "description" : "Visitor details deleted"
-          },
-          "400" : {
-            "description" : "Visitor is on a different visit",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Visit does not exist",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/incident/adjudication-number/{adjudicationNumber}" : {
       "delete" : {
         "tags" : [ "adjudication-resource" ],
@@ -23875,6 +24200,27 @@
           }
         },
         "required" : [ "mailAddress", "primaryAddress" ]
+      },
+      "UpdateOfficialVisitorRequest" : {
+        "type" : "object",
+        "properties" : {
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates lead visitor for the visit"
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Indicates visitor requires assistance"
+          },
+          "visitorAttendanceOutcomeCode" : {
+            "type" : "string",
+            "description" : "The status of visitor, Attended or Absent"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visitor comments"
+          }
+        }
       },
       "UpdateNonAssociationRequest" : {
         "type" : "object",
@@ -33160,7 +33506,7 @@
         "properties" : {
           "offenderNo" : {
             "type" : "string",
-            "description" : "The NOMIS reference AKA prisoner number",
+            "description" : "The NOMIS reference AKA prison number",
             "example" : "A1234AA"
           }
         },
@@ -33181,6 +33527,24 @@
           }
         },
         "required" : [ "lastOffenderId", "prisonerIds" ]
+      },
+      "PrisonNumberAndRootOffenderId" : {
+        "type" : "object",
+        "description" : "Prisoner identifiers",
+        "properties" : {
+          "rootOffenderId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Root offender id",
+            "example" : 12345
+          },
+          "prisonNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS reference AKA prison number",
+            "example" : "A1234AA"
+          }
+        },
+        "required" : [ "prisonNumber", "rootOffenderId" ]
       },
       "KeyDateAdjustmentResponse" : {
         "type" : "object",
