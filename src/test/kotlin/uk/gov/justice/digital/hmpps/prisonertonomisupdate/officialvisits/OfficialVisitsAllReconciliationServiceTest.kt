@@ -394,7 +394,7 @@ class OfficialVisitsAllReconciliationServiceTest {
     fun stubVisits(nomisVisit: OfficialVisitResponse, dpsVisit: SyncOfficialVisit) {
       nomisApi.stubGetOfficialVisit(nomisVisitId, response = nomisVisit.copy(visitId = nomisVisitId))
       dpsApi.stubGetOfficialVisit(dpsVisitId, response = dpsVisit.copy(officialVisitId = dpsVisitId))
-      mappingService.stubGetVisitByNomisIdsOrNull(
+      mappingService.stubGetVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = dpsVisitId.toString(),

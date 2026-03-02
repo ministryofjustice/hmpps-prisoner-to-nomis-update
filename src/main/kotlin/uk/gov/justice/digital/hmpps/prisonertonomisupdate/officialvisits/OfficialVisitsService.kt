@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISIT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISITOR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
@@ -87,7 +88,7 @@ class OfficialVisitsService(
         eventTelemetry = telemetry
 
         checkMappingDoesNotExist {
-          mappingApiService.getVisitorByDpsIdsOrNull(event.additionalInformation.officialVisitorId)
+          mappingApiService.getVisitorByDpsIdOrNull(event.additionalInformation.officialVisitorId)
         }
         transform {
           val dpsVisitor = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
@@ -113,7 +114,33 @@ class OfficialVisitsService(
       telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-ignored", telemetry)
     }
   }
-  suspend fun visitorUpdated(event: VisitorEvent) = telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-success", event.asTelemetry())
+  suspend fun visitorUpdated(event: VisitorEvent) {
+    val telemetry = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      track("${OFFICIAL_VISITOR.entityName}-update", telemetry) {
+        val visitMapping = mappingApiService.getVisitByDpsId(
+          dpsVisitId = event.additionalInformation.officialVisitId,
+        ).also {
+          telemetry["nomisVisitId"] = it.nomisId.toString()
+        }
+        val visitorMapping = mappingApiService.getVisitorByDpsId(
+          dpsVisitorId = event.additionalInformation.officialVisitorId,
+        ).also {
+          telemetry["nomisVisitorId"] = it.nomisId.toString()
+        }
+
+        val dpsVisitor = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
+
+        nomisApiService.updateOfficialVisitor(
+          visitId = visitMapping.nomisId,
+          visitorId = visitorMapping.nomisId,
+          request = dpsVisitor.toUpdateOfficialVisitorRequest(),
+        )
+      }
+    } else {
+      telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-update-ignored", telemetry)
+    }
+  }
   suspend fun visitorDeleted(event: VisitorEvent) {
     val telemetry = event.asTelemetry()
     val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
@@ -121,7 +148,7 @@ class OfficialVisitsService(
     )?.also {
       telemetry["nomisVisitId"] = it.nomisId.toString()
     }
-    val visitorMapping = mappingApiService.getVisitorByDpsIdsOrNull(
+    val visitorMapping = mappingApiService.getVisitorByDpsIdOrNull(
       dpsVisitorId = event.additionalInformation.officialVisitorId,
     )?.also {
       telemetry["nomisVisitorId"] = it.nomisId.toString()
@@ -183,6 +210,13 @@ private fun SyncOfficialVisit.toCreateOfficialVisitRequest(visitSlotId: Long, in
 )
 private fun SyncOfficialVisitor.toCreateOfficialVisitorRequest() = CreateOfficialVisitorRequest(
   personId = this.contactId!!,
+  leadVisitor = this.leadVisitor,
+  assistedVisit = this.assistedVisit,
+  visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),
+  commentText = this.visitorNotes,
+)
+
+private fun SyncOfficialVisitor.toUpdateOfficialVisitorRequest() = UpdateOfficialVisitorRequest(
   leadVisitor = this.leadVisitor,
   assistedVisit = this.assistedVisit,
   visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),

@@ -27,12 +27,12 @@ class OfficialVisitsMappingApiServiceTest {
   private lateinit var mockServer: OfficialVisitsMappingApiMockServer
 
   @Nested
-  inner class GetVisitByNomisIdsOrNull {
+  inner class GetVisitByNomisIdOrNull {
     val nomisVisitId = 12345L
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetVisitByNomisIdsOrNull(
+      mockServer.stubGetVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = "1234",
@@ -52,7 +52,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will pass NOMIS id to service`() = runTest {
-      mockServer.stubGetVisitByNomisIdsOrNull(
+      mockServer.stubGetVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = "1234",
@@ -72,7 +72,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return dpsId when mapping exists`() = runTest {
-      mockServer.stubGetVisitByNomisIdsOrNull(
+      mockServer.stubGetVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = "1234",
@@ -90,7 +90,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return null if mapping does not exist`() = runTest {
-      mockServer.stubGetVisitByNomisIdsOrNull(
+      mockServer.stubGetVisitByNomisIdOrNull(
         nomisVisitId = nomisVisitId,
         mapping = null,
       )
@@ -104,12 +104,12 @@ class OfficialVisitsMappingApiServiceTest {
   }
 
   @Nested
-  inner class GetVisitByDpsIdsOrNull {
+  inner class GetVisitByDpsIdOrNull {
     val dpsVisitId = 12345L
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetVisitByDpsIdsOrNull(
+      mockServer.stubGetVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = "1234",
@@ -128,8 +128,8 @@ class OfficialVisitsMappingApiServiceTest {
     }
 
     @Test
-    fun `will pass NOMIS id to service`() = runTest {
-      mockServer.stubGetVisitByDpsIdsOrNull(
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = "1234",
@@ -149,7 +149,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return dpsId when mapping exists`() = runTest {
-      mockServer.stubGetVisitByDpsIdsOrNull(
+      mockServer.stubGetVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
         mapping = OfficialVisitMappingDto(
           dpsId = dpsVisitId.toString(),
@@ -167,7 +167,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return null if mapping does not exist`() = runTest {
-      mockServer.stubGetVisitByDpsIdsOrNull(
+      mockServer.stubGetVisitByDpsIdOrNull(
         dpsVisitId = dpsVisitId,
         mapping = null,
       )
@@ -181,12 +181,57 @@ class OfficialVisitsMappingApiServiceTest {
   }
 
   @Nested
-  inner class GetVisitorByDpsIdsOrNull {
+  inner class GetVisitByDpsId {
+    val dpsVisitId = 12345L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetVisitByDpsId(
+        dpsVisitId = dpsVisitId,
+        mapping = OfficialVisitMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitId,
+          mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getVisitByDpsId(
+        dpsVisitId = dpsVisitId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetVisitByDpsId(
+        dpsVisitId = dpsVisitId,
+        mapping = OfficialVisitMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitId,
+          mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getVisitByDpsId(
+        dpsVisitId = dpsVisitId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/official-visits/visit/dps-id/$dpsVisitId")),
+      )
+    }
+  }
+
+  @Nested
+  inner class GetVisitorByDpsIdOrNull {
     val dpsVisitorId = 12345L
 
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetVisitorByDpsIdsOrNull(
+      mockServer.stubGetVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
         mapping = OfficialVisitorMappingDto(
           dpsId = "1234",
@@ -195,7 +240,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitorByDpsIdsOrNull(
+      apiService.getVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
       )
 
@@ -205,8 +250,8 @@ class OfficialVisitsMappingApiServiceTest {
     }
 
     @Test
-    fun `will pass NOMIS id to service`() = runTest {
-      mockServer.stubGetVisitorByDpsIdsOrNull(
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
         mapping = OfficialVisitorMappingDto(
           dpsId = "1234",
@@ -215,7 +260,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      apiService.getVisitorByDpsIdsOrNull(
+      apiService.getVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
       )
 
@@ -226,7 +271,7 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return dpsId when mapping exists`() = runTest {
-      mockServer.stubGetVisitorByDpsIdsOrNull(
+      mockServer.stubGetVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
         mapping = OfficialVisitorMappingDto(
           dpsId = dpsVisitorId.toString(),
@@ -235,7 +280,7 @@ class OfficialVisitsMappingApiServiceTest {
         ),
       )
 
-      val mapping = apiService.getVisitorByDpsIdsOrNull(
+      val mapping = apiService.getVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
       )
 
@@ -244,16 +289,61 @@ class OfficialVisitsMappingApiServiceTest {
 
     @Test
     fun `will return null if mapping does not exist`() = runTest {
-      mockServer.stubGetVisitorByDpsIdsOrNull(
+      mockServer.stubGetVisitorByDpsIdOrNull(
         dpsVisitorId = dpsVisitorId,
         mapping = null,
       )
 
       assertThat(
-        apiService.getVisitorByDpsIdsOrNull(
+        apiService.getVisitorByDpsIdOrNull(
           dpsVisitorId = dpsVisitorId,
         ),
       ).isNull()
+    }
+  }
+
+  @Nested
+  inner class GetVisitorByDpsId {
+    val dpsVisitorId = 12345L
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetVisitorByDpsId(
+        dpsVisitorId = dpsVisitorId,
+        mapping = OfficialVisitorMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitorId,
+          mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getVisitorByDpsId(
+        dpsVisitorId = dpsVisitorId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will pass DPS id to service`() = runTest {
+      mockServer.stubGetVisitorByDpsId(
+        dpsVisitorId = dpsVisitorId,
+        mapping = OfficialVisitorMappingDto(
+          dpsId = "1234",
+          nomisId = dpsVisitorId,
+          mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED,
+        ),
+      )
+
+      apiService.getVisitorByDpsId(
+        dpsVisitorId = dpsVisitorId,
+      )
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/official-visits/visitor/dps-id/$dpsVisitorId")),
+      )
     }
   }
 

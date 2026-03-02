@@ -41,7 +41,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationIntTest(
       dpsApi.stubGetOfficialVisitIds(pageNumber = 1, pageSize = 2, content = listOf(SyncOfficialVisitId(103), SyncOfficialVisitId(104)))
       dpsApi.stubGetOfficialVisitIds(pageNumber = 2, pageSize = 2, content = listOf(SyncOfficialVisitId(105)))
 
-      mappingApi.stubGetVisitByDpsIdsOrNull(
+      mappingApi.stubGetVisitByDpsIdOrNull(
         dpsVisitId = 101,
         mapping = OfficialVisitMappingDto(
           dpsId = "101",
@@ -51,7 +51,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationIntTest(
       )
       nomisApi.stubGetOfficialVisit(visitId = 1, response = officialVisitResponse().copy(visitId = 1))
 
-      mappingApi.stubGetVisitByDpsIdsOrNull(
+      mappingApi.stubGetVisitByDpsIdOrNull(
         dpsVisitId = 102,
         mapping = OfficialVisitMappingDto(
           dpsId = "102",
@@ -61,7 +61,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationIntTest(
       )
       nomisApi.stubGetOfficialVisit(visitId = 2, response = officialVisitResponse().copy(visitId = 2))
 
-      mappingApi.stubGetVisitByDpsIdsOrNull(
+      mappingApi.stubGetVisitByDpsIdOrNull(
         dpsVisitId = 103,
         mapping = OfficialVisitMappingDto(
           dpsId = "103",
@@ -71,7 +71,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationIntTest(
       )
       nomisApi.stubGetOfficialVisit(visitId = 3, response = officialVisitResponse().copy(visitId = 3))
 
-      mappingApi.stubGetVisitByDpsIdsOrNull(
+      mappingApi.stubGetVisitByDpsIdOrNull(
         dpsVisitId = 104,
         mapping = OfficialVisitMappingDto(
           dpsId = "104",
@@ -81,7 +81,7 @@ class OfficialVisitsAllMissingFromNOMISReconciliationIntTest(
       )
       nomisApi.stubGetOfficialVisitOrNull(visitId = 4, response = null)
 
-      mappingApi.stubGetVisitByDpsIdsOrNull(
+      mappingApi.stubGetVisitByDpsIdOrNull(
         dpsVisitId = 105,
         mapping = null,
       )
