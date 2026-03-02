@@ -33,6 +33,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.LocationsApiE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 
+const val CHILD1 = "57718979-573c-433a-9e51-000011110001"
+const val CHILD2 = "57718979-573c-433a-9e51-000011110002"
+const val CHILD1_NOMIS_ID = 50001L
+const val CHILD2_NOMIS_ID = 50002L
+
 @ExtendWith(MockitoExtension::class)
 class LocationsResourceIntTest(
   @Autowired private val locationsReconciliationService: LocationsReconciliationService,
@@ -193,7 +198,7 @@ class LocationsResourceIntTest(
         val nomisId = it.toLong()
         val dpsId = generateUUID(it)
         nomisApi.stubGetLocation(nomisId, locationNomisResponse(nomisId))
-        locationsApi.stubGetLocation(dpsId, false, locationApiResponse(if (it % 10 == 0) "OTHER" else "001", dpsId)) // every 10th location has an 'OTHER' code in DPS
+        locationsApi.stubGetLocationSync(dpsId, false, locationApiResponse(if (it % 10 == 0) "OTHER" else "001", dpsId)) // every 10th location has an 'OTHER' code in DPS
         mappingServer.stubGetMappingGivenNomisLocationId(
           nomisId,
           """{
@@ -462,8 +467,7 @@ class LocationsResourceIntTest(
     fun `will repair a location by creation`() = runTest {
       mappingServer.stubGetMappingGivenDpsLocationIdWithError(DPS_ID, 404)
       mappingServer.stubCreateLocation()
-      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
-      // locationsApi.stubGetLocationDPS(DPS_ID, false, locationData)
+      locationsApi.stubGetLocationSync(DPS_ID, false, locationLegacyResponse)
       nomisApi.stubLocationCreate("""{ "locationId": $NOMIS_ID }""")
 
       webTestClient.put().uri("/locations/$DPS_ID/repair")
@@ -493,11 +497,9 @@ class LocationsResourceIntTest(
 
     @Test
     fun `will repair a location by update`() = runTest {
-      mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMappingResponse)
-      locationsApi.stubGetLocation(DPS_ID, false, locationLegacyResponse)
-      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID")
-      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/capacity?ignoreOperationalCapacity=false")
-      nomisApi.stubLocationUpdate("/locations/$NOMIS_ID/certification")
+      mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMapping)
+      locationsApi.stubGetLocationSync(DPS_ID, false, locationLegacyResponse)
+      stubNomisUpdates(NOMIS_ID)
 
       webTestClient.put().uri("/locations/$DPS_ID/repair")
         .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
@@ -523,6 +525,96 @@ class LocationsResourceIntTest(
         isNull(),
       )
     }
+
+    @Test
+    fun `will repair child locations`() = runTest {
+      // parent stubs
+      mappingServer.stubGetMappingGivenDpsLocationId(DPS_ID, locationMapping)
+      locationsApi.stubGetLocationSync(DPS_ID, false, locationLegacyResponse)
+      stubNomisUpdates(NOMIS_ID)
+      locationsApi.stubGetLocationDPS(DPS_ID, true, locationResponse(DPS_ID, listOf(CHILD1, CHILD2)))
+
+      // child1 stubs - amend
+      mappingServer.stubGetMappingGivenDpsLocationId(
+        CHILD1,
+        """
+          {
+            "dpsLocationId": "$CHILD1",
+            "nomisLocationId": $CHILD1_NOMIS_ID,
+            "mappingType": "LOCATION_CREATED"
+          }
+        """,
+      )
+      locationsApi.stubGetLocationSync(
+        CHILD1,
+        false,
+        """{
+          "id": "$CHILD1",
+          "prisonId": "MDI",
+          "code": "001",
+          "pathHierarchy": "A-1-001",
+          "locationType": "CELL",
+          "active": true,
+          "key": "MDI-A-1-001",
+          "isResidential": true,
+          "lastModifiedBy": "me",
+          "lastModifiedDate": "2026-01-01T03:04:05"
+          }""",
+      )
+      stubNomisUpdates(CHILD1_NOMIS_ID)
+      locationsApi.stubGetLocationDPS(CHILD1, true, locationResponse(CHILD1))
+
+      // child2 stubs - create
+      mappingServer.stubGetMappingGivenDpsLocationIdWithError(CHILD2, 404)
+      mappingServer.stubCreateLocation()
+      locationsApi.stubGetLocationSync(
+        CHILD2,
+        false,
+        """{
+          "id": "$CHILD2",
+          "prisonId": "MDI",
+          "code": "001",
+          "pathHierarchy": "A-1-001",
+          "locationType": "CELL",
+          "active": true,
+          "key": "MDI-A-1-001",
+          "isResidential": true,
+          "lastModifiedBy": "me",
+          "lastModifiedDate": "2026-01-01T03:04:05"
+          }""",
+      )
+      nomisApi.stubLocationCreate("""{ "locationId": $CHILD2_NOMIS_ID }""")
+      locationsApi.stubGetLocationDPS(CHILD2, true, locationResponse(CHILD2))
+
+      webTestClient.put().uri("/locations/$DPS_ID/repair?include-children=true")
+        .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+        .exchange()
+        .expectStatus().isOk
+
+      await untilAsserted {
+        verify(telemetryClient).trackEvent(
+          eq("location-repaired"),
+          check {
+            assertThat(it["dpsLocationId"]).isEqualTo(CHILD2)
+            assertThat(it["operation"]).isEqualTo("create")
+          },
+          isNull(),
+        )
+      }
+
+      nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$NOMIS_ID")))
+      nomisApi.verify(putRequestedFor(urlEqualTo("/locations/$CHILD1_NOMIS_ID")))
+      nomisApi.verify(postRequestedFor(urlEqualTo("/locations")))
+
+      verify(telemetryClient, times(2)).trackEvent(eq("location-amend-success"), anyMap(), isNull())
+      verify(telemetryClient, times(1)).trackEvent(eq("location-create-success"), anyMap(), isNull())
+    }
+  }
+
+  private fun stubNomisUpdates(id: Long) {
+    nomisApi.stubLocationUpdate("/locations/$id")
+    nomisApi.stubLocationUpdate("/locations/$id/capacity?ignoreOperationalCapacity=false")
+    nomisApi.stubLocationUpdate("/locations/$id/certification")
   }
 
   private fun awaitReportFinished() {
@@ -530,28 +622,32 @@ class LocationsResourceIntTest(
   }
 }
 
-private val locationResponse = """{
-  "id": "$DPS_ID",
-  "prisonId": "xxxx",
-  "code": "CELL",
-  "pathHierarchy": "xxxx",
-  "locationType": "xxxx",
+private fun locationResponse(id: String, children: List<String>? = null) = """{
+  "id": "$id",
+  "prisonId": "SWI",
+  "code": "004",
+  "pathHierarchy": "C-2-004",
+  "locationType": "CELL",
   "permanentlyInactive": "false",
-  "status": "xxxx",
+  "status": "ACTIVE",
   "locked": "false",
-  "active": "false",
+  "active": "true",
   "deactivatedByParent": "false",
-  "topLevelId": "xxxx",
   "level": 4,
   "leafLevel": "false",
-  "lastModifiedBy": "xxxx",
+  "lastModifiedBy": "me",
   "lastModifiedDate": "2026-01-01T03:04:05",
-  "key": "xxxx",
-  "isResidential": "false",
-  "childLocations": [
-  
-    ]
+  "key": "SWI-C-2-004",
+  "topLevelId": "$DPS_ID",
+  ${locationChildList(children)}
+  "isResidential": "true"
   }"""
+
+private fun locationChildList(children: List<String>?): String = children
+  ?.let {
+    """"childLocations": [ ${children.joinToString(",") { locationResponse(it) }} ],"""
+  }
+  ?: ""
 
 private val locationLegacyResponse = """{
   "id": "$DPS_ID",
@@ -562,11 +658,11 @@ private val locationLegacyResponse = """{
   "active": true,
   "key": "MDI-A-1-001",
   "isResidential": true,
-  "lastModifiedBy": "xxxx",
+  "lastModifiedBy": "me",
   "lastModifiedDate": "2026-01-01T03:04:05"
   }"""
 
-private val locationMappingResponse = """{
+private val locationMapping = """{
   "dpsLocationId": "$DPS_ID",
   "nomisLocationId": $NOMIS_ID,
   "mappingType": "LOCATION_CREATED"

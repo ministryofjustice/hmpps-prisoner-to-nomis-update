@@ -64,7 +64,7 @@ internal class LocationsApiServiceTest {
   inner class GetLocation {
     @BeforeEach
     internal fun setUp() {
-      locationsApi.stubGetLocation(LOCATION_ID, false, response)
+      locationsApi.stubGetLocationSync(LOCATION_ID, false, response)
     }
 
     @Test

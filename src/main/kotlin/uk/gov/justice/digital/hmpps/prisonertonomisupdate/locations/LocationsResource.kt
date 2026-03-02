@@ -8,6 +8,7 @@ import io.swagger.v3.oas.annotations.tags.Tag
 import org.springframework.security.access.prepost.PreAuthorize
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PutMapping
+import org.springframework.web.bind.annotation.RequestParam
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 
@@ -31,5 +32,8 @@ class LocationsResource(private val locationsService: LocationsService) {
       ),
     ],
   )
-  suspend fun repairLocation(@PathVariable dpsLocationId: String) = locationsService.repair(dpsLocationId, false)
+  suspend fun repairLocation(
+    @PathVariable dpsLocationId: String,
+    @RequestParam(name = "include-children", defaultValue = "false") includeChildren: Boolean,
+  ) = locationsService.repair(dpsLocationId, includeChildren)
 }
