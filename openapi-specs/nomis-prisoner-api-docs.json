@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.1155.ce18310"
+    "version" : "2026-03-02.1158.8aa688c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -4201,6 +4201,135 @@
           },
           "403" : {
             "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visits/{visitId}" : {
+      "get" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Get an official visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getOfficialVisit",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OfficialVisitResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Visit is not an official visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "official-visits-resource" ],
+        "summary" : "Updates an official visit",
+        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "updateOfficialVisit",
+        "parameters" : [ {
+          "name" : "visitId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/UpdateOfficialVisitRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Visit details update"
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Visit not found",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -17784,75 +17913,6 @@
         }
       }
     },
-    "/official-visits/{visitId}" : {
-      "get" : {
-        "tags" : [ "official-visits-resource" ],
-        "summary" : "Get an official visit",
-        "description" : "Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOfficialVisit",
-        "parameters" : [ {
-          "name" : "visitId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "The official visit",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/OfficialVisitResponse"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Visit is not an official visit",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden to access this endpoint. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Visit not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/official-visits/ids" : {
       "get" : {
         "tags" : [ "official-visits-resource" ],
@@ -24201,6 +24261,61 @@
         },
         "required" : [ "mailAddress", "primaryAddress" ]
       },
+      "UpdateOfficialVisitRequest" : {
+        "type" : "object",
+        "description" : "Official Visit information",
+        "properties" : {
+          "visitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Visit slot that typically matches the location and start and end time"
+          },
+          "startDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit start date and time"
+          },
+          "endDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Visit end date and time"
+          },
+          "internalLocationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The room where the visit will take place"
+          },
+          "visitStatusCode" : {
+            "type" : "string",
+            "description" : "The status of the visit; Scheduled, Normal, Cancelled"
+          },
+          "visitOutcomeCode" : {
+            "type" : "string",
+            "description" : "The outcome of the visit; Completed, Cancelled, Scheduled, Expired"
+          },
+          "prisonerAttendanceCode" : {
+            "type" : "string",
+            "description" : "The status of prisoner, Attended or Absent"
+          },
+          "prisonerSearchTypeCode" : {
+            "type" : "string",
+            "description" : "The type of search to apply to prisoner"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visitor concerns text"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "Visit comments"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "A username associated with the staff user who override ban"
+          }
+        },
+        "required" : [ "endDateTime", "internalLocationId", "startDateTime", "visitSlotId", "visitStatusCode" ]
+      },
       "UpdateOfficialVisitorRequest" : {
         "type" : "object",
         "properties" : {
@@ -29193,7 +29308,8 @@
         "properties" : {
           "visitSlotId" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "description" : "Visit slot that typically matches the location and start and end time"
           },
           "prisonId" : {
             "type" : "string",
@@ -29202,7 +29318,7 @@
           "startDateTime" : {
             "type" : "string",
             "format" : "date-time",
-            "description" : "The offender booking id"
+            "description" : "Visit start date and time"
           },
           "endDateTime" : {
             "type" : "string",
@@ -30974,12 +31090,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
