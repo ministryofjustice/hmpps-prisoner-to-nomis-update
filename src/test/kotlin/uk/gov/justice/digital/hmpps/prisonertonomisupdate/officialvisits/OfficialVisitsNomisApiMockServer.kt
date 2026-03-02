@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
@@ -20,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PageMetadata
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -89,6 +91,7 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun createOfficialVisitorRequest() = CreateOfficialVisitorRequest(
       personId = 123,
     )
+    fun updateOfficialVisitorRequest() = UpdateOfficialVisitorRequest()
   }
   fun stubGetOfficialVisitIds(
     pageNumber: Int = 0,
@@ -189,6 +192,18 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+  fun stubUpdateOfficialVisitor(
+    visitId: Long,
+    visitorId: Long,
+  ) {
+    nomisApi.stubFor(
+      put(urlPathEqualTo("/official-visits/$visitId/official-visitor/$visitorId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
       ),
     )
   }

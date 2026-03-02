@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
@@ -80,6 +81,18 @@ class OfficialVisitsNomisApiService(
     fromDate = fromDate,
     toDate = toDate,
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun updateOfficialVisitor(
+    visitId: Long,
+    visitorId: Long,
+    request: UpdateOfficialVisitorRequest,
+  ) {
+    api.updateOfficialVisitor(
+      visitId = visitId,
+      visitorId = visitorId,
+      updateOfficialVisitorRequest = request,
+    ).awaitSingle()
+  }
 
   suspend fun deleteOfficialVisitor(
     visitId: Long,
