@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-24.429.081d7c9"
+    "version" : "2026-02-27.467.0cca5b0"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -504,11 +504,230 @@
         }
       }
     },
+    "/official-visit/prison/{prisonCode}/id/{officialVisitId}/visitors" : {
+      "put" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Update  visitors details for an official visit",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "updateVisitors",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficialVisitUpdateVisitorsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Official visit updated successfully"
+          },
+          "404" : {
+            "description" : "No official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}/id/{officialVisitId}/update-type-and-slot" : {
+      "put" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Update  visit type and slot details for an official visit",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "updateVisitTypeAndSlot",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficialVisitUpdateSlotRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Official visit updated successfully"
+          },
+          "404" : {
+            "description" : "No official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/official-visit/prison/{prisonCode}/id/{officialVisitId}/update-comments" : {
+      "put" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Update  prisoner and staff notes details for an official visit",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "updateComments",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        }, {
+          "name" : "officialVisitId",
+          "in" : "path",
+          "description" : "The official visit identifier",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "example" : 123
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OfficialVisitUpdateCommentRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Official visit updated successfully"
+          },
+          "404" : {
+            "description" : "No official visit found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/admin/visit-slot/id/{visitSlotId}" : {
       "put" : {
         "tags" : [ "Admin" ],
         "summary" : "Update capacities for a visit slot",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Only capacities (max groups, adults, and video) may be updated.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Only capacities (max groups, adults, and video) may be updated.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "updateVisitSlot",
         "parameters" : [ {
           "name" : "visitSlotId",
@@ -586,7 +805,7 @@
       "delete" : {
         "tags" : [ "Admin" ],
         "summary" : "Delete a prison visit slot",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Delete a visit slot if there are no official visits associated with it.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Delete a visit slot if there are no official visits associated with it.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "deleteVisitSlot",
         "parameters" : [ {
           "name" : "visitSlotId",
@@ -649,7 +868,7 @@
       "get" : {
         "tags" : [ "Admin" ],
         "summary" : "Returns the data for a prison time slot by ID",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to get the details for one prison time slot.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Used to get the details for one prison time slot.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "getPrisonTimeSlotById",
         "parameters" : [ {
           "name" : "prisonTimeSlotId",
@@ -707,7 +926,7 @@
       "put" : {
         "tags" : [ "Admin" ],
         "summary" : "Updates a prison time slot",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to update a prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Used to update a prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "updateTimeSlot",
         "parameters" : [ {
           "name" : "prisonTimeSlotId",
@@ -1430,7 +1649,7 @@
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Creates a new prison time slot for official visits",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Used to create a new prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Used to create a new prison time slot for official visits.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "createTimeSlot",
         "requestBody" : {
           "content" : {
@@ -1490,7 +1709,7 @@
       "post" : {
         "tags" : [ "Admin" ],
         "summary" : "Create a visit slot in an existing prison time slot",
-        "description" : "\n      Requires role: ROLE_OFFICIAL_VISIT_ADMIN.\n      Creates a new visit slot for the given prison time slot.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Creates a new visit slot for the given prison time slot.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "createVisitSlot",
         "parameters" : [ {
           "name" : "prisonTimeSlotId",
@@ -2412,7 +2631,7 @@
       "delete" : {
         "tags" : [ "Admin" ],
         "summary" : "Delete a prison time slot",
-        "description" : "\n      Delete a time slot if there are no visit slots associated with it.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISIT_ADMIN",
+        "description" : "\n      Delete a time slot if there are no visit slots associated with it.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
         "operationId" : "deleteTimeSlot",
         "parameters" : [ {
           "name" : "timeSlotId",
@@ -3146,6 +3365,147 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "OfficialVisitUpdateVisitorsRequest" : {
+        "type" : "object",
+        "description" : "The request body for updating  visitors details for an official visit",
+        "properties" : {
+          "officialVisitors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/OfficialVisitor"
+            }
+          }
+        },
+        "required" : [ "officialVisitors" ]
+      },
+      "OfficialVisitor" : {
+        "type" : "object",
+        "properties" : {
+          "officialVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Official Visitor ID - only required for updates and should be 0 when creating official visitors"
+          },
+          "visitorTypeCode" : {
+            "$ref" : "#/components/schemas/VisitorType",
+            "description" : "The visitor type code (CONTACT, OPV, PRISONER)",
+            "example" : "CONTACT"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID for the visitor",
+            "example" : 123456
+          },
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact ID for the visitor",
+            "example" : 123456
+          },
+          "relationshipCode" : {
+            "type" : "string",
+            "description" : "The relationship code",
+            "example" : "POM",
+            "minLength" : 1
+          },
+          "leadVisitor" : {
+            "type" : "boolean",
+            "description" : "Set to true if this is the lead visitor",
+            "example" : false
+          },
+          "assistedVisit" : {
+            "type" : "boolean",
+            "description" : "Set to true if this visitor requires an assisted visit",
+            "example" : false
+          },
+          "assistedNotes" : {
+            "type" : "string",
+            "description" : "Any required assistance notes to keep about this visitor.  Will be ignored if assisted visit is not true",
+            "example" : "Wheelchair access required",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "visitorEquipment" : {
+            "$ref" : "#/components/schemas/VisitorEquipment",
+            "description" : "Details of any equipment the visitor will bring to the visit."
+          }
+        },
+        "required" : [ "officialVisitorId", "relationshipCode", "visitorTypeCode" ]
+      },
+      "VisitorEquipment" : {
+        "type" : "object",
+        "properties" : {
+          "description" : {
+            "type" : "string",
+            "description" : "A description of the equipment the visitor will bring",
+            "example" : "Laptop"
+          }
+        },
+        "required" : [ "description" ]
+      },
+      "VisitorType" : {
+        "type" : "string",
+        "enum" : [ "CONTACT", "OPV", "PRISONER" ]
+      },
+      "OfficialVisitUpdateSlotRequest" : {
+        "type" : "object",
+        "description" : "The request body for updating  visit type and slot details for an official visit",
+        "properties" : {
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the official visit will take place",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time of the official visit",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time of the official visit",
+            "example" : "11:00"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location ID where the official visit is to take place",
+            "example" : "aaaa-bbbb-9f9f9f9f-9f9f9f9f"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The visit type code",
+            "example" : "IN_PERSON"
+          }
+        },
+        "required" : [ "dpsLocationId", "endTime", "prisonVisitSlotId", "startTime", "visitDate", "visitTypeCode" ]
+      },
+      "OfficialVisitUpdateCommentRequest" : {
+        "type" : "object",
+        "description" : "The request body for updating prisoner and staff notes details for an official visit",
+        "properties" : {
+          "staffNotes" : {
+            "type" : "string",
+            "description" : "Notes for staff that will not be shared on movement slips",
+            "example" : "Staff notes",
+            "maxLength" : 240,
+            "minLength" : 0
+          },
+          "prisonerNotes" : {
+            "type" : "string",
+            "description" : "Notes for prisoners that may be shared on movement slips",
+            "example" : "Prisoner notes",
+            "maxLength" : 240,
+            "minLength" : 0
+          }
+        }
+      },
       "UpdateVisitSlotRequest" : {
         "type" : "object",
         "description" : "Request to update capacities for a prison visit slot",
@@ -3465,8 +3825,7 @@
           "prisonCode" : {
             "type" : "string",
             "description" : "The prison code where the visit takes place",
-            "example" : "PVI",
-            "minLength" : 1
+            "example" : "PVI"
           },
           "offenderBookId" : {
             "type" : "integer",
@@ -3703,71 +4062,6 @@
         },
         "required" : [ "dpsLocationId", "endTime", "officialVisitors", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitTypeCode" ]
       },
-      "OfficialVisitor" : {
-        "type" : "object",
-        "properties" : {
-          "visitorTypeCode" : {
-            "$ref" : "#/components/schemas/VisitorType",
-            "description" : "The visitor type code (CONTACT, OPV, PRISONER)",
-            "example" : "CONTACT"
-          },
-          "contactId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The contact ID for the visitor",
-            "example" : 123456
-          },
-          "prisonerContactId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The prisoner contact ID for the visitor",
-            "example" : 123456
-          },
-          "relationshipCode" : {
-            "type" : "string",
-            "description" : "The relationship code",
-            "example" : "POM",
-            "minLength" : 1
-          },
-          "leadVisitor" : {
-            "type" : "boolean",
-            "description" : "Set to true if this is the lead visitor",
-            "example" : false
-          },
-          "assistedVisit" : {
-            "type" : "boolean",
-            "description" : "Set to true if this visitor requires an assisted visit",
-            "example" : false
-          },
-          "assistedNotes" : {
-            "type" : "string",
-            "description" : "Any required assistance notes to keep about this visitor.  Will be ignored if assisted visit is not true",
-            "example" : "Wheelchair access required",
-            "maxLength" : 240,
-            "minLength" : 0
-          },
-          "visitorEquipment" : {
-            "$ref" : "#/components/schemas/VisitorEquipment",
-            "description" : "Details of any equipment the visitor will bring to the visit."
-          }
-        },
-        "required" : [ "relationshipCode", "visitorTypeCode" ]
-      },
-      "VisitorEquipment" : {
-        "type" : "object",
-        "properties" : {
-          "description" : {
-            "type" : "string",
-            "description" : "A description of the equipment the visitor will bring",
-            "example" : "Laptop"
-          }
-        },
-        "required" : [ "description" ]
-      },
-      "VisitorType" : {
-        "type" : "string",
-        "enum" : [ "CONTACT", "OPV", "PRISONER" ]
-      },
       "CreateOfficialVisitResponse" : {
         "type" : "object",
         "properties" : {
@@ -3775,15 +4069,31 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "officialVisitorIds" : {
+          "prisonerNumber" : {
+            "type" : "string"
+          },
+          "visitorAndContactIds" : {
             "type" : "array",
             "items" : {
-              "type" : "integer",
-              "format" : "int64"
+              "$ref" : "#/components/schemas/PairLongLong"
             }
           }
         },
-        "required" : [ "officialVisitId", "officialVisitorIds" ]
+        "required" : [ "officialVisitId", "prisonerNumber", "visitorAndContactIds" ]
+      },
+      "PairLongLong" : {
+        "type" : "object",
+        "properties" : {
+          "first" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "second" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "first", "second" ]
       },
       "OfficialVisitCompletionRequest" : {
         "type" : "object",
@@ -4143,8 +4453,7 @@
           "prisonCode" : {
             "type" : "string",
             "description" : "The prison code where the visit takes place",
-            "example" : "PVI",
-            "minLength" : 1
+            "example" : "PVI"
           },
           "offenderBookId" : {
             "type" : "integer",
