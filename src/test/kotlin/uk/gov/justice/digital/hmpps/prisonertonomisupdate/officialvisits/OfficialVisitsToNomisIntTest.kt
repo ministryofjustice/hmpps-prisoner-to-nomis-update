@@ -162,7 +162,7 @@ class OfficialVisitsToNomisIntTest(
           assertThat(request.commentText).isEqualTo("First visit")
           assertThat(request.visitorConcernText).isEqualTo("Very concerned")
           assertThat(request.prisonerSearchTypeCode).isEqualTo("RUB_A")
-          assertThat(request.visitOutcomeCode).isEqualTo("HMP")
+          assertThat(request.visitOutcomeCode).isEqualTo("ADMIN")
         }
 
         @Test
@@ -371,7 +371,7 @@ class OfficialVisitsToNomisIntTest(
         }
 
         @Test
-        fun `will update visit slot in NOMIS`() {
+        fun `will update visit  in NOMIS`() {
           val request: UpdateOfficialVisitRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/official-visits/$nomisVisitId")), jsonMapper)
           assertThat(request.startDateTime).isEqualTo("2020-01-01T10:00")
           assertThat(request.endDateTime).isEqualTo("2020-01-01T11:00")
@@ -383,7 +383,7 @@ class OfficialVisitsToNomisIntTest(
           assertThat(request.commentText).isEqualTo("First visit")
           assertThat(request.visitorConcernText).isEqualTo("Very concerned")
           assertThat(request.prisonerSearchTypeCode).isEqualTo("RUB_A")
-          assertThat(request.visitOutcomeCode).isEqualTo("HMP")
+          assertThat(request.visitOutcomeCode).isEqualTo("ADMIN")
         }
 
         @Test

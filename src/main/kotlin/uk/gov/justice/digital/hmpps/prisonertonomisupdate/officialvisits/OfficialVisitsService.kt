@@ -234,7 +234,7 @@ private fun SyncOfficialVisit.toCreateOfficialVisitRequest(visitSlotId: Long, in
   startDateTime = visitDate.atTime(LocalTime.parse(startTime)),
   endDateTime = visitDate.atTime(LocalTime.parse(endTime)),
   internalLocationId = internalLocationId,
-  visitStatusCode = statusCode.toNomisVisitStatusCode(),
+  visitStatusCode = statusCode.toNomisVisitStatusCode(completionCode),
   visitOutcomeCode = completionCode?.toNomisVisitOutcomeCode(),
   prisonerAttendanceCode = prisonerAttendance?.toNomisAttendanceCode(),
   prisonerSearchTypeCode = searchType?.toNomisSearchTypeCode(),
@@ -247,7 +247,7 @@ private fun SyncOfficialVisit.toUpdateOfficialVisitRequest(visitSlotId: Long, in
   startDateTime = visitDate.atTime(LocalTime.parse(startTime)),
   endDateTime = visitDate.atTime(LocalTime.parse(endTime)),
   internalLocationId = internalLocationId,
-  visitStatusCode = statusCode.toNomisVisitStatusCode(),
+  visitStatusCode = statusCode.toNomisVisitStatusCode(completionCode),
   visitOutcomeCode = completionCode?.toNomisVisitOutcomeCode(),
   prisonerAttendanceCode = prisonerAttendance?.toNomisAttendanceCode(),
   prisonerSearchTypeCode = searchType?.toNomisSearchTypeCode(),
@@ -270,25 +270,31 @@ private fun SyncOfficialVisitor.toUpdateOfficialVisitorRequest() = UpdateOfficia
   commentText = this.visitorNotes,
 )
 
-private fun VisitStatusType.toNomisVisitStatusCode() = when (this) {
-  VisitStatusType.COMPLETED -> "COMP"
-  VisitStatusType.CANCELLED -> "CANC"
-  VisitStatusType.SCHEDULED -> "SCH"
-  VisitStatusType.EXPIRED -> "EXP"
+private fun VisitStatusType.toNomisVisitStatusCode(completionCode: VisitCompletionType?) = when (completionCode) {
+  VisitCompletionType.VISITOR_DENIED -> "VDE"
+
+  VisitCompletionType.PRISONER_EARLY -> "OFFEND"
+
+  VisitCompletionType.VISITOR_EARLY -> "VISITOR"
+
+  VisitCompletionType.STAFF_EARLY -> "HMPOP"
+
+  else -> when (this) {
+    VisitStatusType.COMPLETED -> "NORM"
+    VisitStatusType.CANCELLED -> "CANC"
+    VisitStatusType.SCHEDULED -> "SCH"
+    VisitStatusType.EXPIRED -> "EXP"
+  }
 }
 
-// TODO - how correct is this for creating a visit
 private fun VisitCompletionType.toNomisVisitOutcomeCode() = when (this) {
-  VisitCompletionType.NORMAL -> null
-  VisitCompletionType.PRISONER_EARLY -> null
-  VisitCompletionType.PRISONER_REFUSED -> "REFUSED"
-  VisitCompletionType.STAFF_EARLY -> null
-  VisitCompletionType.VISITOR_DENIED -> "NO_ID"
-  VisitCompletionType.VISITOR_EARLY -> null
-  VisitCompletionType.VISITOR_NO_SHOW -> "NSHOW"
-  VisitCompletionType.PRISONER_CANCELLED -> "OFFCANC"
-  VisitCompletionType.STAFF_CANCELLED -> "HMP"
   VisitCompletionType.VISITOR_CANCELLED -> "VISCANC"
+  VisitCompletionType.PRISONER_CANCELLED -> "OFFCANC"
+  VisitCompletionType.PRISONER_REFUSED -> "REFUSED"
+  VisitCompletionType.VISITOR_NO_SHOW -> "NSHOW"
+  VisitCompletionType.VISITOR_DENIED -> "NO_ID"
+  VisitCompletionType.STAFF_CANCELLED -> "ADMIN"
+  else -> null
 }
 
 private fun AttendanceType.toNomisAttendanceCode() = when (this) {
