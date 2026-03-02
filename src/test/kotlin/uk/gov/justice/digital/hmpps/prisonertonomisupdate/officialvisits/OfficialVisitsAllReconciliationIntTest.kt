@@ -40,7 +40,7 @@ class OfficialVisitsAllReconciliationIntTest(
       nomisApi.stubGetOfficialVisitIdsByLastId(content = listOf(VisitIdResponse(1), VisitIdResponse(2), VisitIdResponse(3)))
       dpsApi.stubGetOfficialVisitIds(content = listOf(SyncOfficialVisitId(100)))
 
-      mappingApi.stubGetVisitByNomisIdsOrNull(
+      mappingApi.stubGetVisitByNomisIdOrNull(
         nomisVisitId = 1,
         mapping = OfficialVisitMappingDto(
           dpsId = "100",
@@ -51,13 +51,13 @@ class OfficialVisitsAllReconciliationIntTest(
       nomisApi.stubGetOfficialVisit(visitId = 1, response = officialVisitResponse().copy(visitId = 1))
       dpsApi.stubGetOfficialVisit(officialVisitId = 100, response = syncOfficialVisit())
 
-      mappingApi.stubGetVisitByNomisIdsOrNull(
+      mappingApi.stubGetVisitByNomisIdOrNull(
         nomisVisitId = 2,
         mapping = null,
       )
       nomisApi.stubGetOfficialVisit(visitId = 2, response = officialVisitResponse().copy(visitId = 2, offenderNo = "A1234KT"))
 
-      mappingApi.stubGetVisitByNomisIdsOrNull(
+      mappingApi.stubGetVisitByNomisIdOrNull(
         nomisVisitId = 3,
         mapping = OfficialVisitMappingDto(
           dpsId = "300",

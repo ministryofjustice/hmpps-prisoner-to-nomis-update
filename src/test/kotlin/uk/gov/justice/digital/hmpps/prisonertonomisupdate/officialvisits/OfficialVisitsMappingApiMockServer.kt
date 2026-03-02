@@ -111,7 +111,7 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetVisitByNomisIdsOrNull(
+  fun stubGetVisitByNomisIdOrNull(
     nomisVisitId: Long = 1234L,
     mapping: OfficialVisitMappingDto? = OfficialVisitMappingDto(
       dpsId = "123456",
@@ -139,7 +139,7 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       )
     }
   }
-  fun stubGetVisitByDpsIdsOrNull(
+  fun stubGetVisitByDpsIdOrNull(
     dpsVisitId: Long = 1234L,
     mapping: OfficialVisitMappingDto? = OfficialVisitMappingDto(
       dpsId = dpsVisitId.toString(),
@@ -167,7 +167,20 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       )
     }
   }
-  fun stubGetVisitorByDpsIdsOrNull(
+
+  fun stubGetVisitByDpsId(
+    dpsVisitId: Long = 1234L,
+    mapping: OfficialVisitMappingDto = OfficialVisitMappingDto(
+      dpsId = dpsVisitId.toString(),
+      nomisId = 544321,
+      mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetVisitByDpsIdOrNull(
+    dpsVisitId = dpsVisitId,
+    mapping = mapping,
+  )
+
+  fun stubGetVisitorByDpsIdOrNull(
     dpsVisitorId: Long = 1234L,
     mapping: OfficialVisitorMappingDto? = OfficialVisitorMappingDto(
       dpsId = dpsVisitorId.toString(),
@@ -195,6 +208,17 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
       )
     }
   }
+  fun stubGetVisitorByDpsId(
+    dpsVisitorId: Long = 1234L,
+    mapping: OfficialVisitorMappingDto = OfficialVisitorMappingDto(
+      dpsId = dpsVisitorId.toString(),
+      nomisId = 544321,
+      mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED,
+    ),
+  ) = stubGetVisitorByDpsIdOrNull(
+    dpsVisitorId = dpsVisitorId,
+    mapping = mapping,
+  )
 
   fun stubDeleteByVisitorNomisId(
     nomisVisitorId: Long = 1234L,

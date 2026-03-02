@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
@@ -24,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
@@ -92,7 +94,7 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitByDpsIdOrNull(dpsOfficialVisitId, null)
         dpsApi.stubGetOfficialVisit(
           officialVisitId = dpsOfficialVisitId,
           response = syncOfficialVisit().copy(
@@ -340,7 +342,7 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitorByDpsIdOrNull(dpsOfficialVisitId, null)
         dpsApi.stubGetOfficialVisit(
           officialVisitId = dpsOfficialVisitId,
           response = syncOfficialVisit().copy(
@@ -358,7 +360,7 @@ class OfficialVisitsToNomisIntTest(
             ),
           ),
         )
-        mappingApi.stubGetVisitByDpsIdsOrNull(
+        mappingApi.stubGetVisitByDpsIdOrNull(
           dpsOfficialVisitId,
           OfficialVisitMappingDto(
             dpsId = dpsOfficialVisitId.toString(),
@@ -383,7 +385,7 @@ class OfficialVisitsToNomisIntTest(
         }
 
         @Test
-        fun `will create time slot in NOMIS`() {
+        fun `will create visitor in NOMIS`() {
           val request: CreateOfficialVisitorRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor")), jsonMapper)
           assertThat(request.personId).isEqualTo(contactAndPersonId)
           assertThat(request.commentText).isEqualTo("First time visit")
@@ -503,6 +505,43 @@ class OfficialVisitsToNomisIntTest(
   @Nested
   @DisplayName("official-visits-api.visitor.updated")
   inner class OfficialVisitorUpdated {
+    val dpsOfficialVisitId = 12345L
+    val nomisVisitId = 92492L
+    val dpsOfficialVisitorId = 248240284L
+    val nomisVisitorId = 523661L
+    val contactAndPersonId = 1373L
+    val prisonId = "MDI"
+
+    @Nested
+    @DisplayName("when DPS is the origin of a visitor update")
+    inner class WhenNomisUpdate {
+
+      @BeforeEach
+      fun setUp() {
+        publishUpdateOfficialVisitorDomainEvent(
+          officialVisitorId = dpsOfficialVisitorId.toString(),
+          officialVisitId = dpsOfficialVisitId.toString(),
+          contactId = contactAndPersonId.toString(),
+          prisonId = prisonId,
+          source = "NOMIS",
+        )
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the update`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-update-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
 
     @Nested
     @DisplayName("when DPS is the origin of a visitor update")
@@ -510,8 +549,46 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        publishUpdateOfficialVisitorDomainEvent(officialVisitorId = "7765", officialVisitId = "12345", contactId = "9855", prisonId = "MDI", source = "DPS")
+        mappingApi.stubGetVisitorByDpsId(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitByDpsId(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
+        dpsApi.stubGetOfficialVisit(
+          officialVisitId = dpsOfficialVisitId,
+          response = syncOfficialVisit().copy(
+            officialVisitId = dpsOfficialVisitId,
+            prisonCode = prisonId,
+            visitors = listOf(
+              syncOfficialVisitor().copy(
+                officialVisitorId = dpsOfficialVisitorId,
+                contactId = contactAndPersonId,
+                attendanceCode = AttendanceType.ABSENT,
+                leadVisitor = false,
+                assistedVisit = true,
+                visitorNotes = "Second time visit",
+              ),
+            ),
+          ),
+        )
+        nomisApi.stubUpdateOfficialVisitor(
+          visitId = nomisVisitId,
+          visitorId = nomisVisitorId,
+        )
+        publishUpdateOfficialVisitorDomainEvent(
+          officialVisitorId = dpsOfficialVisitorId.toString(),
+          officialVisitId = dpsOfficialVisitId.toString(),
+          contactId = contactAndPersonId.toString(),
+          prisonId = prisonId,
+          source = "DPS",
+        )
         waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will update visitor in NOMIS`() {
+        val request: UpdateOfficialVisitorRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor/$nomisVisitorId")), jsonMapper)
+        assertThat(request.commentText).isEqualTo("Second time visit")
+        assertThat(request.leadVisitor).isFalse
+        assertThat(request.assistedVisit).isTrue
+        assertThat(request.visitorAttendanceOutcomeCode).isEqualTo("ABS")
       }
 
       @Test
@@ -519,10 +596,12 @@ class OfficialVisitsToNomisIntTest(
         verify(telemetryClient).trackEvent(
           eq("official-visitor-update-success"),
           check {
-            assertThat(it["dpsOfficialVisitorId"]).isEqualTo("7765")
-            assertThat(it["dpsOfficialVisitId"]).isEqualTo("12345")
-            assertThat(it["dpsContactId"]).isEqualTo("9855")
-            assertThat(it["prisonId"]).isEqualTo("MDI")
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["nomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["nomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
           },
           isNull(),
         )
@@ -546,8 +625,8 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitId, null)
-        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitorByDpsIdOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitByDpsIdOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
         publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
         waitForAnyProcessingToComplete()
       }
@@ -574,8 +653,8 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
-        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, null)
+        mappingApi.stubGetVisitorByDpsIdOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitByDpsIdOrNull(dpsOfficialVisitId, null)
         publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
         waitForAnyProcessingToComplete()
       }
@@ -602,8 +681,8 @@ class OfficialVisitsToNomisIntTest(
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetVisitorByDpsIdsOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
-        mappingApi.stubGetVisitByDpsIdsOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitorByDpsIdOrNull(dpsOfficialVisitorId, OfficialVisitorMappingDto(dpsId = dpsOfficialVisitorId.toString(), nomisId = nomisVisitorId, mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED))
+        mappingApi.stubGetVisitByDpsIdOrNull(dpsOfficialVisitId, OfficialVisitMappingDto(dpsId = dpsOfficialVisitId.toString(), nomisId = nomisVisitId, mappingType = OfficialVisitMappingDto.MappingType.MIGRATED))
         nomisApi.stubDeleteOfficialVisitor(
           visitId = nomisVisitId,
           visitorId = nomisVisitorId,
