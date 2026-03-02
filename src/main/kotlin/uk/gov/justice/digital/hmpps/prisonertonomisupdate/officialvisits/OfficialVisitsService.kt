@@ -7,6 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISIT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISITOR
@@ -77,6 +78,39 @@ class OfficialVisitsService(
       telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-ignored", telemetry)
     }
   }
+  suspend fun visitUpdated(event: VisitEvent) {
+    val telemetry = event.asTelemetry()
+    if (event.didOriginateInDPS()) {
+      track("${OFFICIAL_VISIT.entityName}-update", telemetry) {
+        val visitMapping = mappingApiService.getVisitByDpsId(
+          dpsVisitId = event.additionalInformation.officialVisitId,
+        ).also {
+          telemetry["nomisVisitId"] = it.nomisId.toString()
+        }
+        val dpsVisit = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).also {
+          telemetry["dpsVisitSlotId"] = it.prisonVisitSlotId.toString()
+          telemetry["dpsLocationId"] = it.dpsLocationId.toString()
+        }
+        val timeSlotMapping = visitSlotsMappingApiService.getVisitSlotByDpsId(dpsVisit.prisonVisitSlotId.toString()).also {
+          telemetry["nomisVisitSlotId"] = it.nomisId.toString()
+        }
+        val locationMapping = visitSlotsMappingApiService.getInternalLocationByDpsId(dpsVisit.dpsLocationId.toString()).also {
+          telemetry["nomisLocationId"] = it.nomisLocationId.toString()
+        }
+
+        nomisApiService.updateOfficialVisit(
+          visitId = visitMapping.nomisId,
+          request = dpsVisit.toUpdateOfficialVisitRequest(
+            visitSlotId = timeSlotMapping.nomisId,
+            internalLocationId = locationMapping.nomisLocationId,
+          ),
+        )
+      }
+    } else {
+      telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-update-ignored", telemetry)
+    }
+  }
+
   suspend fun visitDeleted(event: VisitEvent) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-success", event.asTelemetry())
   suspend fun visitorCreated(event: VisitorEvent) {
     val telemetry = event.asTelemetry()
@@ -197,6 +231,19 @@ private fun SourcedEvent.didOriginateInDPS() = this.additionalInformation.source
 private fun SyncOfficialVisit.toCreateOfficialVisitRequest(visitSlotId: Long, internalLocationId: Long) = CreateOfficialVisitRequest(
   visitSlotId = visitSlotId,
   prisonId = prisonCode,
+  startDateTime = visitDate.atTime(LocalTime.parse(startTime)),
+  endDateTime = visitDate.atTime(LocalTime.parse(endTime)),
+  internalLocationId = internalLocationId,
+  visitStatusCode = statusCode.toNomisVisitStatusCode(),
+  visitOutcomeCode = completionCode?.toNomisVisitOutcomeCode(),
+  prisonerAttendanceCode = prisonerAttendance?.toNomisAttendanceCode(),
+  prisonerSearchTypeCode = searchType?.toNomisSearchTypeCode(),
+  visitorConcernText = visitorConcernNotes,
+  commentText = visitComments,
+  overrideBanStaffUsername = overrideBanStaffUsername,
+)
+private fun SyncOfficialVisit.toUpdateOfficialVisitRequest(visitSlotId: Long, internalLocationId: Long) = UpdateOfficialVisitRequest(
+  visitSlotId = visitSlotId,
   startDateTime = visitDate.atTime(LocalTime.parse(startTime)),
   endDateTime = visitDate.atTime(LocalTime.parse(endTime)),
   internalLocationId = internalLocationId,

@@ -44,6 +44,7 @@ class OfficialVisitsDomainEventListener(
       "official-visits-api.visit-slot.updated" -> visitSlotsService.visitSlotUpdated(message.fromJson())
       "official-visits-api.visit-slot.deleted" -> visitSlotsService.visitSlotDeleted(message.fromJson())
       "official-visits-api.visit.created" -> officialVisitsService.visitCreated(message.fromJson())
+      "official-visits-api.visit.updated" -> officialVisitsService.visitUpdated(message.fromJson())
       "official-visits-api.visit.deleted" -> officialVisitsService.visitDeleted(message.fromJson())
       "official-visits-api.visitor.created" -> officialVisitsService.visitorCreated(message.fromJson())
       "official-visits-api.visitor.updated" -> officialVisitsService.visitorUpdated(message.fromJson())

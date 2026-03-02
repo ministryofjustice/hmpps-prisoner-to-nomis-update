@@ -12,6 +12,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PagedModelVisitIdResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -50,6 +51,16 @@ class OfficialVisitsNomisApiService(
   ): OfficialVisitResponse = api.getOfficialVisit(
     visitId = visitId,
   ).retryWhen(retrySpec).awaitSingle()
+
+  suspend fun updateOfficialVisit(
+    visitId: Long,
+    request: UpdateOfficialVisitRequest,
+  ) {
+    api.updateOfficialVisit(
+      visitId = visitId,
+      updateOfficialVisitRequest = request,
+    ).awaitSingle()
+  }
 
   suspend fun createOfficialVisitor(
     visitId: Long,

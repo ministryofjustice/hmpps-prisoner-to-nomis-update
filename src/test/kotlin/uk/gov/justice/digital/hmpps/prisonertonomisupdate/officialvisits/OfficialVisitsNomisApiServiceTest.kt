@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.Officia
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.createOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitor
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.updateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.updateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
@@ -115,6 +116,41 @@ class OfficialVisitsNomisApiServiceTest {
       )
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateOfficialVisit {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubUpdateOfficialVisit(
+        visitId = 10111,
+      )
+
+      apiService.updateOfficialVisit(
+        visitId = 10111,
+        updateOfficialVisitRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the update visit endpoint`() = runTest {
+      mockServer.stubUpdateOfficialVisit(
+        visitId = 10111,
+      )
+
+      apiService.updateOfficialVisit(
+        visitId = 10111,
+        updateOfficialVisitRequest(),
+      )
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/official-visits/10111")),
       )
     }
   }
