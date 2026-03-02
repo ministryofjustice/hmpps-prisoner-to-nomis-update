@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-26.1358.faa1936"
+    "version" : "2026-02-27.1362.1a174f5"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -29,12 +29,6 @@
     "name" : "legacy-court-appearance-controller",
     "description" : "CRUD operations for syncing court appearance data from NOMIS Court Events into remand and sentencing api database."
   }, {
-    "name" : "legacy-court-case-controller",
-    "description" : "CRUD operations for syncing court case data from NOMIS into remand and sentencing api database."
-  }, {
-    "name" : "sentence-type-controller",
-    "description" : "Sentence Type"
-  }, {
     "name" : "migration-controller",
     "description" : "Create operation for migrating court case data from NOMIS into remand and sentencing api database."
   }, {
@@ -53,6 +47,27 @@
     "name" : "legacy-recall-controller",
     "description" : "GET operation for syncing recall data. This controller is only ever used for syncing DPS recalls to NOMIS."
   }, {
+    "name" : "appearance-outcome-controller",
+    "description" : "Appearance outcome"
+  }, {
+    "name" : "legacy-charge-controller",
+    "description" : "CRUD operations for syncing charge data from NOMIS Offender charges into remand and sentencing api database."
+  }, {
+    "name" : "event-admin-controller",
+    "description" : "Event Admin tasks"
+  }, {
+    "name" : "uploaded-documents-controller",
+    "description" : "Endpoint for creating a record of an uploaded document"
+  }, {
+    "name" : "court-case-controller",
+    "description" : "Court case"
+  }, {
+    "name" : "legacy-court-case-controller",
+    "description" : "CRUD operations for syncing court case data from NOMIS into remand and sentencing api database."
+  }, {
+    "name" : "sentence-type-controller",
+    "description" : "Sentence Type"
+  }, {
     "name" : "booking-controller",
     "description" : "Create operation for bookings in NOMIS. This is used when court cases are cloned onto different bookings"
   }, {
@@ -65,9 +80,6 @@
     "name" : "immigration-detention-controller",
     "description" : "Immigration Detention"
   }, {
-    "name" : "appearance-outcome-controller",
-    "description" : "Appearance outcome"
-  }, {
     "name" : "person-controller",
     "description" : "Get person details"
   }, {
@@ -76,15 +88,6 @@
   }, {
     "name" : "charge-controller",
     "description" : "Charges"
-  }, {
-    "name" : "legacy-charge-controller",
-    "description" : "CRUD operations for syncing charge data from NOMIS Offender charges into remand and sentencing api database."
-  }, {
-    "name" : "uploaded-documents-controller",
-    "description" : "Endpoint for creating a record of an uploaded document"
-  }, {
-    "name" : "court-case-controller",
-    "description" : "Court case"
   }, {
     "name" : "legacy-prisoner-controller",
     "description" : "CRUD operations for getting prisoner data"
@@ -2766,6 +2769,27 @@
         }
       }
     },
+    "/event-admin/republish" : {
+      "post" : {
+        "tags" : [ "event-admin-controller" ],
+        "operationId" : "republishEvents",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RepublishEvents"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "No Content"
+          }
+        }
+      }
+    },
     "/court-case" : {
       "post" : {
         "tags" : [ "court-case-controller" ],
@@ -4981,6 +5005,24 @@
             "default" : "STATUS_APPEARANCE_DATE_DESC",
             "enum" : [ "STATUS_APPEARANCE_DATE_DESC", "APPEARANCE_DATE_ASC", "APPEARANCE_DATE_DESC" ]
           }
+        }, {
+          "name" : "appearanceDateFrom",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "default" : "0001-01-01"
+          }
+        }, {
+          "name" : "appearanceDateTo",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date",
+            "default" : "9999-12-31"
+          }
         } ],
         "responses" : {
           "200" : {
@@ -5841,7 +5883,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6183,7 +6225,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "courtCode" : {
             "type" : "string"
@@ -7628,6 +7670,18 @@
         },
         "required" : [ "appearanceLifetimeUuid", "legacyData", "offenceCode" ]
       },
+      "RepublishEvents" : {
+        "type" : "object",
+        "properties" : {
+          "eventsMetadata" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/EventMetadata"
+            }
+          }
+        },
+        "required" : [ "eventsMetadata" ]
+      },
       "SentenceTypeUpdate" : {
         "type" : "object",
         "properties" : {
@@ -8579,7 +8633,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "courtCode" : {
             "type" : "string"
@@ -9210,7 +9264,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9274,7 +9328,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "courtId" : {
             "type" : "string"
@@ -9414,7 +9468,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "charges" : {
             "type" : "array",
@@ -9441,7 +9495,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "courtId" : {
             "type" : "string"
@@ -9741,15 +9795,15 @@
             "type" : "integer",
             "format" : "int64"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
@@ -9996,7 +10050,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.615485933"
+            "example" : "06:23:48.031019772"
           },
           "courtCode" : {
             "type" : "string"
@@ -10112,10 +10166,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           }
         }
