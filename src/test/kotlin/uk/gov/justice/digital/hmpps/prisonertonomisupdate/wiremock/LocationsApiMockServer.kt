@@ -50,7 +50,7 @@ class LocationsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetLocation(id: String, includeHistory: Boolean, response: String) {
+  fun stubGetLocationSync(id: String, includeHistory: Boolean, response: String) {
     stubFor(
       get(urlPathEqualTo("/sync/id/$id"))
         .withQueryParam("includeHistory", equalTo(includeHistory.toString()))
