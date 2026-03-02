@@ -5,6 +5,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -18,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.Officia
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.createOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitor
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.updateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 
@@ -342,6 +344,46 @@ class OfficialVisitsNomisApiServiceTest {
       )
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor")),
+      )
+    }
+  }
+
+  @Nested
+  inner class UpdateOfficialVisitor {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubUpdateOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+
+      apiService.updateOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+        updateOfficialVisitorRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the put endpoint`() = runTest {
+      mockServer.stubUpdateOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+      )
+
+      apiService.updateOfficialVisitor(
+        visitId = 123,
+        visitorId = 12300,
+        updateOfficialVisitorRequest(),
+      )
+
+      mockServer.verify(
+        putRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor/12300")),
       )
     }
   }
