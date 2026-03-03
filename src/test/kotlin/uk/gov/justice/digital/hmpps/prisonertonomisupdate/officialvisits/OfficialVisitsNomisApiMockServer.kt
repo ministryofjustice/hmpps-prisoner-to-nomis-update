@@ -87,6 +87,7 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
       internalLocationId = 20,
       visitStatusCode = "SCH",
+      overallVisitStatus = CreateOfficialVisitRequest.OverallVisitStatus.SCH,
     )
 
     fun updateOfficialVisitRequest() = UpdateOfficialVisitRequest(
@@ -95,12 +96,16 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
       internalLocationId = 20,
       visitStatusCode = "SCH",
+      overallVisitStatus = UpdateOfficialVisitRequest.OverallVisitStatus.SCH,
     )
 
     fun createOfficialVisitorRequest() = CreateOfficialVisitorRequest(
       personId = 123,
+      overallVisitStatus = CreateOfficialVisitorRequest.OverallVisitStatus.SCH,
     )
-    fun updateOfficialVisitorRequest() = UpdateOfficialVisitorRequest()
+    fun updateOfficialVisitorRequest() = UpdateOfficialVisitorRequest(
+      overallVisitStatus = UpdateOfficialVisitorRequest.OverallVisitStatus.COMP,
+    )
   }
   fun stubGetOfficialVisitIds(
     pageNumber: Int = 0,
