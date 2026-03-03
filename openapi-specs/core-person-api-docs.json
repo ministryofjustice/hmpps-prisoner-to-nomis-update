@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.2473.797d890"
+    "version" : "2026-03-02.2491.542dc50"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -187,6 +187,88 @@
         "responses" : {
           "200" : {
             "description" : "OK"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/{prisonNumber}/religion/{cprReligionId}" : {
+      "get" : {
+        "tags" : [ "HMPPS Person API" ],
+        "description" : "Get prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "get",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprReligionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonReligionGetResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      },
+      "put" : {
+        "tags" : [ "HMPPS Person API" ],
+        "description" : "Update prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
+        "operationId" : "update_1",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprReligionId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonReligionUpdateRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonReligionResponse"
+                }
+              }
+            }
           }
         },
         "security" : [ {
@@ -384,13 +466,13 @@
         }
       }
     },
-    "/person/prison/{prisonerNumber}/religion" : {
+    "/person/prison/{prisonNumber}/religion" : {
       "post" : {
         "tags" : [ "HMPPS Person API" ],
         "description" : "Save prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "save",
         "parameters" : [ {
-          "name" : "prisonerNumber",
+          "name" : "prisonNumber",
           "in" : "path",
           "required" : true,
           "schema" : {
@@ -413,7 +495,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionResponseBody"
+                  "$ref" : "#/components/schemas/PrisonReligionResponse"
                 }
               }
             }
@@ -1220,6 +1302,59 @@
           }
         }
       },
+      "PrisonReligionUpdateRequest" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "current" : {
+            "type" : "boolean"
+          },
+          "modifyUserId" : {
+            "type" : "string"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "endDate" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "comments" : {
+            "type" : "string"
+          },
+          "verified" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
+      },
+      "PrisonReligionMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisReligionId" : {
+            "type" : "string"
+          },
+          "cprReligionId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprReligionId", "nomisReligionId" ]
+      },
+      "PrisonReligionResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religionMappings" : {
+            "$ref" : "#/components/schemas/PrisonReligionMapping"
+          }
+        },
+        "required" : [ "prisonNumber", "religionMappings" ]
+      },
       "PrisonSexualOrientation" : {
         "type" : "object",
         "properties" : {
@@ -1245,61 +1380,37 @@
       "PrisonReligion" : {
         "type" : "object",
         "properties" : {
-          "nomisReligionId" : {
-            "type" : "string",
-            "description" : "The nomis religion id",
-            "example" : 1234
-          },
           "religionCode" : {
-            "type" : "string",
-            "description" : "The religion code",
-            "example" : "AGNO"
+            "type" : "string"
           },
           "changeReasonKnown" : {
-            "type" : "boolean",
-            "description" : "The religion change reason known",
-            "example" : true
+            "type" : "boolean"
           },
           "comments" : {
-            "type" : "string",
-            "description" : "The religion comments",
-            "example" : "Foo Bar"
+            "type" : "string"
           },
           "verified" : {
-            "type" : "boolean",
-            "description" : "The religion verified flag",
-            "example" : true
+            "type" : "boolean"
           },
           "startDate" : {
             "type" : "string",
-            "format" : "date",
-            "description" : "The religion start date",
-            "example" : "1980-01-01"
+            "format" : "date"
           },
           "endDate" : {
             "type" : "string",
-            "format" : "date",
-            "description" : "The religion end date",
-            "example" : "2000-01-01"
+            "format" : "date"
           },
           "modifyDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The religion modify date and time",
-            "example" : "2000-01-01 12:00:00"
+            "format" : "date-time"
           },
           "modifyUserId" : {
-            "type" : "string",
-            "description" : "The religion modify user id",
-            "example" : 12345
+            "type" : "string"
           },
           "current" : {
-            "type" : "boolean",
-            "description" : "Flag indicating the current religion",
-            "example" : true
+            "type" : "boolean"
           }
-        },
-        "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
+        }
       },
       "PrisonReligionRequest" : {
         "type" : "object",
@@ -1411,30 +1522,6 @@
           }
         },
         "required" : [ "disability", "modifyDateTime", "modifyUserId" ]
-      },
-      "PrisonReligionMapping" : {
-        "type" : "object",
-        "properties" : {
-          "nomisReligionId" : {
-            "type" : "string"
-          },
-          "cprReligionId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "cprReligionId", "nomisReligionId" ]
-      },
-      "PrisonReligionResponseBody" : {
-        "type" : "object",
-        "properties" : {
-          "prisonNumber" : {
-            "type" : "string"
-          },
-          "religionMappings" : {
-            "$ref" : "#/components/schemas/PrisonReligionMapping"
-          }
-        },
-        "required" : [ "prisonNumber", "religionMappings" ]
       },
       "DlqMessage" : {
         "type" : "object",
@@ -1821,6 +1908,18 @@
             "example" : "Mr"
           }
         }
+      },
+      "PrisonReligionGetResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonNumber" : {
+            "type" : "string"
+          },
+          "religion" : {
+            "$ref" : "#/components/schemas/PrisonReligion"
+          }
+        },
+        "required" : [ "prisonNumber", "religion" ]
       },
       "MatchDetailsResponse" : {
         "type" : "object",
