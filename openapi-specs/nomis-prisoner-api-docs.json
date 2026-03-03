@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-02.1158.8aa688c"
+    "version" : "2026-03-03.1168.8581cd1"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24312,9 +24312,14 @@
           "overrideBanStaffUsername" : {
             "type" : "string",
             "description" : "A username associated with the staff user who override ban"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
           }
         },
-        "required" : [ "endDateTime", "internalLocationId", "startDateTime", "visitSlotId", "visitStatusCode" ]
+        "required" : [ "endDateTime", "internalLocationId", "overallVisitStatus", "startDateTime", "visitSlotId", "visitStatusCode" ]
       },
       "UpdateOfficialVisitorRequest" : {
         "type" : "object",
@@ -24334,8 +24339,14 @@
           "commentText" : {
             "type" : "string",
             "description" : "Visitor comments"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
           }
-        }
+        },
+        "required" : [ "overallVisitStatus" ]
       },
       "UpdateNonAssociationRequest" : {
         "type" : "object",
@@ -29357,9 +29368,14 @@
           "overrideBanStaffUsername" : {
             "type" : "string",
             "description" : "A username associated with the staff user who override ban"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
           }
         },
-        "required" : [ "endDateTime", "internalLocationId", "prisonId", "startDateTime", "visitSlotId", "visitStatusCode" ]
+        "required" : [ "endDateTime", "internalLocationId", "overallVisitStatus", "prisonId", "startDateTime", "visitSlotId", "visitStatusCode" ]
       },
       "ContactRelationship" : {
         "type" : "object",
@@ -29939,9 +29955,14 @@
           "commentText" : {
             "type" : "string",
             "description" : "Visitor comments"
+          },
+          "overallVisitStatus" : {
+            "type" : "string",
+            "description" : "Overall visit status",
+            "enum" : [ "SCH", "EXP", "COMP", "CANC" ]
           }
         },
-        "required" : [ "personId" ]
+        "required" : [ "overallVisitStatus", "personId" ]
       },
       "CreateNonAssociationRequest" : {
         "type" : "object",

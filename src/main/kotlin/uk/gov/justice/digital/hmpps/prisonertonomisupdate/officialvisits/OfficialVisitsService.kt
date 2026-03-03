@@ -125,13 +125,14 @@ class OfficialVisitsService(
           mappingApiService.getVisitorByDpsIdOrNull(event.additionalInformation.officialVisitorId)
         }
         transform {
-          val dpsVisitor = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
+          val dpsVisit = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId)
+          val dpsVisitor = dpsVisit.visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
           val visitMapping = tryFetchParent { mappingApiService.getVisitByDpsIdOrNull(event.additionalInformation.officialVisitId) }.also {
             telemetry["nomisVisitId"] = it.nomisId.toString()
           }
           nomisApiService.createOfficialVisitor(
             visitId = visitMapping.nomisId,
-            request = dpsVisitor.toCreateOfficialVisitorRequest(),
+            request = dpsVisitor.toCreateOfficialVisitorRequest(dpsVisit),
           ).also {
             telemetry["nomisVisitorId"] = it.id.toString()
           }.let {
@@ -163,12 +164,13 @@ class OfficialVisitsService(
           telemetry["nomisVisitorId"] = it.nomisId.toString()
         }
 
-        val dpsVisitor = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId).visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
+        val dpsVisit = dpsApiService.getOfficialVisit(event.additionalInformation.officialVisitId)
+        val dpsVisitor = dpsVisit.visitors.find { it.officialVisitorId == event.additionalInformation.officialVisitorId } ?: throw IllegalStateException("Visitor ${event.additionalInformation.officialVisitorId} does not exist on DPS visit")
 
         nomisApiService.updateOfficialVisitor(
           visitId = visitMapping.nomisId,
           visitorId = visitorMapping.nomisId,
-          request = dpsVisitor.toUpdateOfficialVisitorRequest(),
+          request = dpsVisitor.toUpdateOfficialVisitorRequest(dpsVisit),
         )
       }
     } else {
@@ -241,6 +243,7 @@ private fun SyncOfficialVisit.toCreateOfficialVisitRequest(visitSlotId: Long, in
   visitorConcernText = visitorConcernNotes,
   commentText = visitComments,
   overrideBanStaffUsername = overrideBanStaffUsername,
+  overallVisitStatus = CreateOfficialVisitRequest.OverallVisitStatus.valueOf(statusCode.toNomisOverallVisitStatus(completionCode)),
 )
 private fun SyncOfficialVisit.toUpdateOfficialVisitRequest(visitSlotId: Long, internalLocationId: Long) = UpdateOfficialVisitRequest(
   visitSlotId = visitSlotId,
@@ -254,20 +257,23 @@ private fun SyncOfficialVisit.toUpdateOfficialVisitRequest(visitSlotId: Long, in
   visitorConcernText = visitorConcernNotes,
   commentText = visitComments,
   overrideBanStaffUsername = overrideBanStaffUsername,
+  overallVisitStatus = UpdateOfficialVisitRequest.OverallVisitStatus.valueOf(statusCode.toNomisOverallVisitStatus(completionCode)),
 )
-private fun SyncOfficialVisitor.toCreateOfficialVisitorRequest() = CreateOfficialVisitorRequest(
+private fun SyncOfficialVisitor.toCreateOfficialVisitorRequest(visit: SyncOfficialVisit) = CreateOfficialVisitorRequest(
   personId = this.contactId!!,
   leadVisitor = this.leadVisitor,
   assistedVisit = this.assistedVisit,
   visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),
   commentText = this.visitorNotes,
+  overallVisitStatus = CreateOfficialVisitorRequest.OverallVisitStatus.valueOf(visit.statusCode.toNomisOverallVisitStatus(visit.completionCode)),
 )
 
-private fun SyncOfficialVisitor.toUpdateOfficialVisitorRequest() = UpdateOfficialVisitorRequest(
+private fun SyncOfficialVisitor.toUpdateOfficialVisitorRequest(visit: SyncOfficialVisit) = UpdateOfficialVisitorRequest(
   leadVisitor = this.leadVisitor,
   assistedVisit = this.assistedVisit,
   visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),
   commentText = this.visitorNotes,
+  overallVisitStatus = UpdateOfficialVisitorRequest.OverallVisitStatus.valueOf(visit.statusCode.toNomisOverallVisitStatus(visit.completionCode)),
 )
 
 private fun VisitStatusType.toNomisVisitStatusCode(completionCode: VisitCompletionType?) = when (completionCode) {
@@ -281,6 +287,22 @@ private fun VisitStatusType.toNomisVisitStatusCode(completionCode: VisitCompleti
 
   else -> when (this) {
     VisitStatusType.COMPLETED -> "NORM"
+    VisitStatusType.CANCELLED -> "CANC"
+    VisitStatusType.SCHEDULED -> "SCH"
+    VisitStatusType.EXPIRED -> "EXP"
+  }
+}
+private fun VisitStatusType.toNomisOverallVisitStatus(completionCode: VisitCompletionType?) = when (completionCode) {
+  VisitCompletionType.VISITOR_DENIED -> "COMP"
+
+  VisitCompletionType.PRISONER_EARLY -> "COMP"
+
+  VisitCompletionType.VISITOR_EARLY -> "COMP"
+
+  VisitCompletionType.STAFF_EARLY -> "COMP"
+
+  else -> when (this) {
+    VisitStatusType.COMPLETED -> "COMP"
     VisitStatusType.CANCELLED -> "CANC"
     VisitStatusType.SCHEDULED -> "SCH"
     VisitStatusType.EXPIRED -> "EXP"

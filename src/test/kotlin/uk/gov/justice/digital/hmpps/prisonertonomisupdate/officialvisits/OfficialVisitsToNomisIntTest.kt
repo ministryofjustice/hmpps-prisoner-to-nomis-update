@@ -149,7 +149,7 @@ class OfficialVisitsToNomisIntTest(
         }
 
         @Test
-        fun `will create time slot in NOMIS`() {
+        fun `will create visit in NOMIS`() {
           val request: CreateOfficialVisitRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/prisoner/$offenderNo/official-visits")), jsonMapper)
           assertThat(request.startDateTime).isEqualTo("2020-01-01T10:00")
           assertThat(request.endDateTime).isEqualTo("2020-01-01T11:00")
@@ -163,6 +163,7 @@ class OfficialVisitsToNomisIntTest(
           assertThat(request.visitorConcernText).isEqualTo("Very concerned")
           assertThat(request.prisonerSearchTypeCode).isEqualTo("RUB_A")
           assertThat(request.visitOutcomeCode).isEqualTo("ADMIN")
+          assertThat(request.overallVisitStatus).isEqualTo(CreateOfficialVisitRequest.OverallVisitStatus.CANC)
         }
 
         @Test
@@ -384,6 +385,7 @@ class OfficialVisitsToNomisIntTest(
           assertThat(request.visitorConcernText).isEqualTo("Very concerned")
           assertThat(request.prisonerSearchTypeCode).isEqualTo("RUB_A")
           assertThat(request.visitOutcomeCode).isEqualTo("ADMIN")
+          assertThat(request.overallVisitStatus).isEqualTo(UpdateOfficialVisitRequest.OverallVisitStatus.CANC)
         }
 
         @Test
@@ -483,6 +485,7 @@ class OfficialVisitsToNomisIntTest(
           response = syncOfficialVisit().copy(
             officialVisitId = dpsOfficialVisitId,
             prisonCode = prisonId,
+            statusCode = VisitStatusType.SCHEDULED,
             visitors = listOf(
               syncOfficialVisitor().copy(
                 officialVisitorId = dpsOfficialVisitorId,
@@ -527,6 +530,7 @@ class OfficialVisitsToNomisIntTest(
           assertThat(request.leadVisitor).isFalse
           assertThat(request.assistedVisit).isTrue
           assertThat(request.visitorAttendanceOutcomeCode).isEqualTo("ATT")
+          assertThat(request.overallVisitStatus).isEqualTo(CreateOfficialVisitorRequest.OverallVisitStatus.SCH)
         }
 
         @Test
@@ -691,6 +695,8 @@ class OfficialVisitsToNomisIntTest(
           response = syncOfficialVisit().copy(
             officialVisitId = dpsOfficialVisitId,
             prisonCode = prisonId,
+            statusCode = VisitStatusType.COMPLETED,
+            completionCode = VisitCompletionType.VISITOR_EARLY,
             visitors = listOf(
               syncOfficialVisitor().copy(
                 officialVisitorId = dpsOfficialVisitorId,
@@ -724,6 +730,7 @@ class OfficialVisitsToNomisIntTest(
         assertThat(request.leadVisitor).isFalse
         assertThat(request.assistedVisit).isTrue
         assertThat(request.visitorAttendanceOutcomeCode).isEqualTo("ABS")
+        assertThat(request.overallVisitStatus).isEqualTo(UpdateOfficialVisitorRequest.OverallVisitStatus.COMP)
       }
 
       @Test
