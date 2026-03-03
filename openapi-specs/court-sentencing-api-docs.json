@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.1362.1a174f5"
+    "version" : "2026-03-02.1367.2ca18b1"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2033,6 +2033,75 @@
         }
       }
     },
+    "/appearance-outcome/{appearanceOutcomeUuid}" : {
+      "put" : {
+        "tags" : [ "appearance-outcome-controller" ],
+        "summary" : "Update appearance outcome",
+        "description" : "This endpoint will update an existing appearance outcome and migrate any appearance data over that needs to be mapped to the newly updated appearance outcome",
+        "operationId" : "updateAppearanceOutcome",
+        "parameters" : [ {
+          "name" : "appearanceOutcomeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateAppearanceOutcome"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FieldErrorErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/uploaded-documents" : {
       "post" : {
         "tags" : [ "uploaded-documents-controller" ],
@@ -3043,7 +3112,7 @@
       "post" : {
         "tags" : [ "appearance-outcome-controller" ],
         "summary" : "Create appearance outcome",
-        "description" : "This endpoint will create a new appearance outcome and migrate any charge data over that needs to be mapped to the newly created appearance outcome",
+        "description" : "This endpoint will create a new appearance outcome and migrate any appearance data over that needs to be mapped to the newly created appearance outcome",
         "operationId" : "createAppearanceOutcome",
         "requestBody" : {
           "content" : {
@@ -5883,7 +5952,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6225,7 +6294,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "courtCode" : {
             "type" : "string"
@@ -6479,6 +6548,91 @@
           }
         },
         "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "status" ]
+      },
+      "CreateAppearanceOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "nomisCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "outcomeType" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "warrantType" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "relatedChargeOutcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isSubList" : {
+            "type" : "boolean"
+          },
+          "dispositionCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          }
+        },
+        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "relatedChargeOutcomeUuid", "status", "warrantType" ]
+      },
+      "CourtAppearanceOutcome" : {
+        "type" : "object",
+        "properties" : {
+          "outcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "outcomeName" : {
+            "type" : "string"
+          },
+          "nomisCode" : {
+            "type" : "string"
+          },
+          "outcomeType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "relatedChargeOutcomeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "isSubList" : {
+            "type" : "boolean"
+          },
+          "dispositionCode" : {
+            "type" : "string"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "warrantType" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid", "status", "warrantType" ]
       },
       "CreateUploadedDocument" : {
         "type" : "object",
@@ -7722,91 +7876,6 @@
         },
         "required" : [ "updatedSentenceUuids" ]
       },
-      "CreateAppearanceOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "nomisCode" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "outcomeType" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "warrantType" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "relatedChargeOutcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isSubList" : {
-            "type" : "boolean"
-          },
-          "dispositionCode" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          }
-        },
-        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "relatedChargeOutcomeUuid", "status", "warrantType" ]
-      },
-      "CourtAppearanceOutcome" : {
-        "type" : "object",
-        "properties" : {
-          "outcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "outcomeName" : {
-            "type" : "string"
-          },
-          "nomisCode" : {
-            "type" : "string"
-          },
-          "outcomeType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "relatedChargeOutcomeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "isSubList" : {
-            "type" : "boolean"
-          },
-          "dispositionCode" : {
-            "type" : "string"
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          },
-          "warrantType" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "displayOrder", "dispositionCode", "isSubList", "nomisCode", "outcomeName", "outcomeType", "outcomeUuid", "relatedChargeOutcomeUuid", "status", "warrantType" ]
-      },
       "FineAmount" : {
         "type" : "object",
         "properties" : {
@@ -8633,7 +8702,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "courtCode" : {
             "type" : "string"
@@ -9264,7 +9333,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9328,7 +9397,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "courtId" : {
             "type" : "string"
@@ -9468,7 +9537,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "charges" : {
             "type" : "array",
@@ -9495,7 +9564,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "courtId" : {
             "type" : "string"
@@ -9795,9 +9864,6 @@
             "type" : "integer",
             "format" : "int64"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
@@ -9805,12 +9871,15 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "pageNumber" : {
-            "type" : "integer",
-            "format" : "int32"
+          "unpaged" : {
+            "type" : "boolean"
           },
           "paged" : {
             "type" : "boolean"
+          },
+          "pageNumber" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         }
       },
@@ -10050,7 +10119,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:48.031019772"
+            "example" : "06:23:49.277874645"
           },
           "courtCode" : {
             "type" : "string"
@@ -10166,10 +10235,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
