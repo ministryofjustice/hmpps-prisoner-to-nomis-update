@@ -166,6 +166,16 @@ class NonAssociationsReconciliationServiceTest {
   }
 
   @Test
+  fun `correctly identifies whether create dates match`() = runTest {
+    val today = LocalDate.now()
+    assertThat(nonAssociationsReconciliationService.startDateDoesNotMatch(LocalDate.parse("2023-04-13"), LocalDate.parse("2023-04-13"), today)).isFalse()
+    assertThat(nonAssociationsReconciliationService.startDateDoesNotMatch(LocalDate.parse("2023-04-13"), LocalDate.parse("2023-04-14"), today)).isTrue()
+    assertThat(nonAssociationsReconciliationService.startDateDoesNotMatch(LocalDate.parse("1066-01-01"), LocalDate.parse("0143-01-01"), today)).isFalse()
+    assertThat(nonAssociationsReconciliationService.startDateDoesNotMatch(LocalDate.parse("1066-01-01"), LocalDate.parse("2023-01-01"), today)).isTrue()
+    assertThat(nonAssociationsReconciliationService.startDateDoesNotMatch(LocalDate.parse("2999-01-01"), LocalDate.parse("2023-01-01"), today)).isFalse()
+  }
+
+  @Test
   fun `will correctly sort NAs with same start date`() = runTest {
     whenever(nomisApiService.getNonAssociationDetails(OFFENDER1, OFFENDER2)).thenReturn(
       listOf(
