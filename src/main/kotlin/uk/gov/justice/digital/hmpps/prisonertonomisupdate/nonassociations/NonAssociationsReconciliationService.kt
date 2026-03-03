@@ -277,13 +277,27 @@ class NonAssociationsReconciliationService(
   ): Boolean {
     val today = LocalDate.now()
     return typeDoesNotMatch(nomis.type, dps.restrictionType) ||
-      (!nomis.effectiveDate.isAfter(today) && nomis.effectiveDate != dps.whenCreated.toLocalDate()) ||
+      (startDateDoesNotMatch(nomis.effectiveDate, dps.whenCreated.toLocalDate(), today)) ||
       (closedInNomis(nomis, today) xor dps.isClosed)
   }
 
-  internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate?): Boolean {
+  internal fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate): Boolean {
     val expiryDate = nomis.expiryDate
     return (expiryDate != null && !expiryDate.isAfter(today)) || nomis.effectiveDate.isAfter(today)
+  }
+
+  // Some NA start/effective dates are before this due to typos
+  // We cannot compare them accurately due to Julian calendar, leap year issues etc. but we don't care
+  private val ancientCutoffDate = LocalDate.parse("1960-01-01")
+
+  internal fun startDateDoesNotMatch(
+    nomisDate: LocalDate,
+    dpsDate: LocalDate,
+    today: LocalDate,
+  ): Boolean = if (nomisDate.isBefore(ancientCutoffDate)) {
+    dpsDate.isAfter(ancientCutoffDate)
+  } else {
+    !nomisDate.isAfter(today) && nomisDate != dpsDate
   }
 
   private fun typeDoesNotMatch(
