@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.964.51e6eda"
+    "version" : "2026-03-02.976.b78a876"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -3043,6 +3043,14 @@
       "SearchScheduledMovementsRequest" : {
         "type" : "object",
         "properties" : {
+          "movementTypes" : {
+            "type" : "array",
+            "items" : {
+              "type" : "string",
+              "enum" : [ "TEMPORARY_ABSENCE" ]
+            },
+            "uniqueItems" : true
+          },
           "personIdentifiers" : {
             "type" : "array",
             "items" : {
@@ -3065,7 +3073,7 @@
             "type" : "boolean"
           }
         },
-        "required" : [ "end", "includeLocation", "includeSensitive", "personIdentifiers", "start" ]
+        "required" : [ "end", "includeLocation", "includeSensitive", "movementTypes", "personIdentifiers", "start" ]
       },
       "Detail" : {
         "type" : "object",
