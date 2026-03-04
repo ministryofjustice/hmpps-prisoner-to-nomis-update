@@ -6,6 +6,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.NonResidentialUsageDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateLocationRequest
@@ -85,6 +86,24 @@ class LocationsService(
   }
 
   suspend fun repair(dpsLocationId: String, cascade: Boolean) {
+    val dpsLocation = locationsApiService.getLocationDPS(dpsLocationId)
+    if (cascade) {
+      repairMultiple(dpsLocation)
+    } else {
+      repairSingle(dpsLocation)
+    }
+  }
+
+  private suspend fun repairMultiple(dpsLocation: Location) {
+    repairSingle(dpsLocation)
+
+    dpsLocation.childLocations?.forEach {
+      repairMultiple(it)
+    }
+  }
+
+  private suspend fun repairSingle(dpsLocation: Location) {
+    val dpsLocationId: String = dpsLocation.id.toString()
     mappingService.getMappingGivenDpsIdOrNull(dpsLocationId)
       ?.let {
         amendLocation(
@@ -92,10 +111,10 @@ class LocationsService(
             eventType = "amend",
             version = "1",
             description = "repair",
-            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = "", source = "DPS"),
+            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = dpsLocation.key, source = "DPS"),
           ),
         )
-        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "operation" to "amend"))
+        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "key" to dpsLocation.key, "operation" to "amend"))
       }
       ?: run {
         createLocation(
@@ -103,18 +122,11 @@ class LocationsService(
             eventType = "create",
             version = "1",
             description = "repair",
-            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = "", source = "DPS"),
+            additionalInformation = LocationAdditionalInformation(id = dpsLocationId, key = dpsLocation.key, source = "DPS"),
           ),
         )
-        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "operation" to "create"))
+        telemetryClient.trackEvent("location-repaired", mapOf("dpsLocationId" to dpsLocationId, "key" to dpsLocation.key, "operation" to "create"))
       }
-
-    if (cascade) {
-      val dpsLocation = locationsApiService.getLocationDPS(dpsLocationId)
-      dpsLocation.childLocations?.forEach {
-        repair(it.id.toString(), true)
-      }
-    }
   }
 
   suspend fun deactivateLocation(event: LocationDomainEvent) {
@@ -144,6 +156,7 @@ class LocationsService(
       }.onSuccess {
         telemetryClient.trackEvent("location-delete-success", telemetryMap)
       }.onFailure { e ->
+        telemetryMap["error"] = e.message ?: "unknown error"
         telemetryClient.trackEvent("location-delete-failed", telemetryMap)
         throw e
       }
@@ -167,6 +180,7 @@ class LocationsService(
       }.onSuccess {
         telemetryClient.trackEvent("location-$name-success", telemetryMap)
       }.onFailure { e ->
+        telemetryMap["error"] = e.message ?: "unknown error"
         telemetryClient.trackEvent("location-$name-failed", telemetryMap)
         throw e
       }
