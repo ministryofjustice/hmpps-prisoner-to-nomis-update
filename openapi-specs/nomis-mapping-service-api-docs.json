@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-02.432.b6fde87"
+    "version" : "2026-03-03.434.409199d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -4650,6 +4650,114 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/CorePersonMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion/religion" : {
+      "post" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Creates a religion mapping",
+        "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createReligionMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReligionMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "Indicates a duplicate mapping has been rejected. If Error code = 1409 the body will return a DuplicateErrorResponse",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/DuplicateMappingErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion" : {
+      "post" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Creates a mini tree of religion mappings typically for a migration",
+        "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createMigrationMappings_2",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReligionsMigrationMappingDto"
               }
             }
           },
@@ -14142,131 +14250,6 @@
         }
       }
     },
-    "/mapping/core-person/religion/nomis-religion-id/{nomisReligionId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get a core person religion mapping by nomis religion Id",
-        "description" : "Retrieves the coreperson religion mapping by NOMIS Religion Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getReligionMappingByNomisId",
-        "parameters" : [ {
-          "name" : "nomisReligionId",
-          "in" : "path",
-          "description" : "NOMIS religion id",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS religion id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core Person religion mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonReligionMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/mapping/core-person/religion/cpr-religion-id/{cprReligionId}" : {
-      "get" : {
-        "tags" : [ "core-person-mapping-resource" ],
-        "summary" : "Get core person religion mapping by cpr religion Id",
-        "description" : "Retrieves the core person religion mapping by CPR Religion Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getReligionMappingByCprId",
-        "parameters" : [ {
-          "name" : "cprReligionId",
-          "in" : "path",
-          "description" : "CPR religion id",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "description" : "CPR religion id",
-            "example" : 12345
-          },
-          "example" : 12345
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Core Person religion mapping data",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CorePersonReligionMappingDto"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Access this endpoint is forbidden",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Id does not exist in mapping table",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/mapping/core-person/profile/cpr-id/{cprId}" : {
       "get" : {
         "tags" : [ "core-person-mapping-resource" ],
@@ -14890,6 +14873,235 @@
           },
           "404" : {
             "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion/religion/nomis-id/{nomisId}" : {
+      "get" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Get religion mapping by nomis religion id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getReligionMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS religion id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS religion id",
+            "example" : 1234
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReligionMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Deletes religion mapping by nomis religion id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteReligionMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisId",
+          "in" : "path",
+          "description" : "NOMIS religion id",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "NOMIS religion id",
+            "example" : 1234
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "204" : {
+            "description" : "Mapping deleted or does not exist",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion/religion/cpr-id/{cprId}" : {
+      "get" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Get religion mapping by cpr id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getReligionMappingByCprId",
+        "parameters" : [ {
+          "name" : "cprId",
+          "in" : "path",
+          "description" : "CPR id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "CPR id",
+            "example" : 1234
+          },
+          "example" : 1234
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Mapping data",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ReligionMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access this endpoint is forbidden",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Id does not exist in mapping table",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/core-person-religion/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Get paged religions mappings by migration id",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getReligionsMappingsByMigrationId",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Religions mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageReligionsMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -19332,12 +19544,46 @@
         }
       }
     },
+    "/mapping/core-person-religion/all" : {
+      "delete" : {
+        "tags" : [ "religion-resource" ],
+        "summary" : "Delete all religions and religion mappings",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteAllMappings_6",
+        "responses" : {
+          "204" : {
+            "description" : "All mappings deleted",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/core-person" : {
       "delete" : {
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Deletes all core person mappings",
         "description" : "Deletes all core person mappings regardless of source. This includes person and address. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_6",
+        "operationId" : "deleteAllMappings_7",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -22262,6 +22508,80 @@
         },
         "required" : [ "cprId", "nomisId" ]
       },
+      "ReligionMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisId", "nomisPrisonNumber" ]
+      },
+      "ReligionMigrationMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "cprId", "nomisId", "nomisPrisonNumber" ]
+      },
+      "ReligionsMigrationMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "religions" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReligionMigrationMappingDto"
+            }
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisPrisonNumber", "religions" ]
+      },
       "ContactPersonPrisonerMappingsDto" : {
         "type" : "object",
         "description" : "New and old mappings related to a prisoner",
@@ -23100,12 +23420,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -23720,36 +24040,6 @@
           }
         }
       },
-      "CorePersonReligionMappingDto" : {
-        "type" : "object",
-        "properties" : {
-          "cprId" : {
-            "type" : "string",
-            "description" : "CPR id"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS id"
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)"
-          },
-          "mappingType" : {
-            "type" : "string",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "CPR_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "cprId", "mappingType", "nomisId" ]
-      },
       "ProfileMappingDto" : {
         "type" : "object",
         "properties" : {
@@ -23957,6 +24247,76 @@
           }
         },
         "required" : [ "cprId", "mappingType", "nomisId" ]
+      },
+      "PageReligionsMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ReligionsMappingDto"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "ReligionsMappingDto" : {
+        "type" : "object",
+        "properties" : {
+          "cprId" : {
+            "type" : "string"
+          },
+          "nomisPrisonNumber" : {
+            "type" : "string"
+          },
+          "label" : {
+            "type" : "string"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "cprId", "mappingType", "nomisPrisonNumber" ]
       },
       "PagePersonMappingDto" : {
         "type" : "object",
