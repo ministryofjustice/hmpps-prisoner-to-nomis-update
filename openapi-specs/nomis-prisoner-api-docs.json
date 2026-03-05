@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-03.1168.8581cd1"
+    "version" : "2026-03-04.1182.676e52c"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -24497,8 +24497,12 @@
           "postalCode" : {
             "type" : "string",
             "description" : "The postal code"
+          },
+          "isCorporateAddress" : {
+            "type" : "boolean"
           }
-        }
+        },
+        "required" : [ "isCorporateAddress" ]
       },
       "UpsertScheduledTemporaryAbsenceResponse" : {
         "type" : "object",
@@ -31111,12 +31115,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -34540,9 +34544,13 @@
           "activeBooking" : {
             "type" : "boolean",
             "description" : "Whether this is an active booking"
+          },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
           }
         },
-        "required" : [ "activeBooking", "bookingId", "temporaryAbsenceApplications", "unscheduledTemporaryAbsenceReturns", "unscheduledTemporaryAbsences" ]
+        "required" : [ "activeBooking", "bookingId", "latestBooking", "temporaryAbsenceApplications", "unscheduledTemporaryAbsenceReturns", "unscheduledTemporaryAbsences" ]
       },
       "OffenderTemporaryAbsencesResponse" : {
         "type" : "object",
@@ -35490,6 +35498,10 @@
             "format" : "int64",
             "description" : "Booking ID"
           },
+          "latestBooking" : {
+            "type" : "boolean",
+            "description" : "Whether this is the latest booking"
+          },
           "activeBooking" : {
             "type" : "boolean",
             "description" : "Whether this is an active booking"
@@ -35594,7 +35606,7 @@
             "description" : "Audit data associated with the records"
           }
         },
-        "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
+        "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "movementApplicationId", "prisonId", "releaseTime", "returnTime", "toDate" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
