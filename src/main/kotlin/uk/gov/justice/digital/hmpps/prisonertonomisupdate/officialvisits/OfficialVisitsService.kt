@@ -274,6 +274,7 @@ private fun SyncOfficialVisitor.toUpdateOfficialVisitorRequest(visit: SyncOffici
   visitorAttendanceOutcomeCode = this.attendanceCode?.toNomisAttendanceCode(),
   commentText = this.visitorNotes,
   overallVisitStatus = UpdateOfficialVisitorRequest.OverallVisitStatus.valueOf(visit.statusCode.toNomisOverallVisitStatus(visit.completionCode)),
+  visitOutcomeCode = visit.completionCode?.toNomisVisitOutcomeCode(),
 )
 
 private fun VisitStatusType.toNomisVisitStatusCode(completionCode: VisitCompletionType?) = when (completionCode) {
