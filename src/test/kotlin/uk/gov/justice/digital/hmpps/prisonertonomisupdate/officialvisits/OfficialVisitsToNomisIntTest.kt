@@ -684,7 +684,7 @@ class OfficialVisitsToNomisIntTest(
 
     @Nested
     @DisplayName("when DPS is the origin of a visitor update")
-    inner class WhenDpsCreated {
+    inner class WhenDpsUpdated {
 
       @BeforeEach
       fun setUp() {
@@ -695,8 +695,8 @@ class OfficialVisitsToNomisIntTest(
           response = syncOfficialVisit().copy(
             officialVisitId = dpsOfficialVisitId,
             prisonCode = prisonId,
-            statusCode = VisitStatusType.COMPLETED,
-            completionCode = VisitCompletionType.VISITOR_EARLY,
+            statusCode = VisitStatusType.CANCELLED,
+            completionCode = VisitCompletionType.STAFF_CANCELLED,
             visitors = listOf(
               syncOfficialVisitor().copy(
                 officialVisitorId = dpsOfficialVisitorId,
@@ -730,7 +730,8 @@ class OfficialVisitsToNomisIntTest(
         assertThat(request.leadVisitor).isFalse
         assertThat(request.assistedVisit).isTrue
         assertThat(request.visitorAttendanceOutcomeCode).isEqualTo("ABS")
-        assertThat(request.overallVisitStatus).isEqualTo(UpdateOfficialVisitorRequest.OverallVisitStatus.COMP)
+        assertThat(request.overallVisitStatus).isEqualTo(UpdateOfficialVisitorRequest.OverallVisitStatus.CANC)
+        assertThat(request.visitOutcomeCode).isEqualTo("ADMIN")
       }
 
       @Test
