@@ -39,6 +39,7 @@ private const val OFFENDER_NO_2 = "B1234BB"
 private const val OFFENDER_TO_REMOVE = "A4567ZQ"
 private const val OFFENDER_TO_SURVIVE = "A7869AW"
 
+@Suppress("SameParameterValue")
 class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
   val nonAssociationApiResponse = """
@@ -510,10 +511,11 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             "nomisTypeSequence": $sequence,
             "mappingType": "NON_ASSOCIATION_CREATED"
           }"""
-    private fun dpsNA(nonAssociationId: Long, offender: String, other: String, effectiveDateTime: String) = """ {
+    private fun dpsNA(nonAssociationId: Long, offender: String, other: String, effectiveDateTime: String, closed: Boolean = false) = """ {
           "id": $nonAssociationId,
           "offenderNo": "$offender",
           "effectiveDate": "$effectiveDateTime",
+          ${if (closed) """"expiryDate": "2025-12-31T12:00:00",""" else ""}
           "reasonCode": "VIC",
           "reasonDescription": "Victim",
           "typeCode": "WING",
@@ -552,45 +554,59 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
 
       nonAssociationsApiServer.stubGetNonAssociation(
         1001,
-        dpsNA(1001, OFFENDER_TO_REMOVE, "COMMON", "2026-01-01T10:10:10"),
+        dpsNA(1001, OFFENDER_TO_REMOVE, "COMMON", "2025-01-01T10:10:10"),
       )
       nonAssociationsApiServer.stubGetNonAssociation(
         1002,
-        dpsNA(1002, "COMMON", OFFENDER_TO_SURVIVE, "2026-05-05T10:10:10"),
+        dpsNA(1002, "COMMON", OFFENDER_TO_SURVIVE, "2025-05-05T10:10:10", closed = true),
       )
       nonAssociationsApiServer.stubGetNonAssociation(
         1011,
-        dpsNA(1011, OFFENDER_TO_REMOVE, "COMMON2", "2026-07-07T10:10:10"),
+        dpsNA(1011, OFFENDER_TO_REMOVE, "COMMON2", "2025-07-07T10:10:10"),
       )
       nonAssociationsApiServer.stubGetNonAssociation(
         1012,
-        dpsNA(1012, "COMMON2", OFFENDER_TO_SURVIVE, "2026-09-09T10:10:10"),
+        dpsNA(1012, "COMMON2", OFFENDER_TO_SURVIVE, "2025-09-09T10:10:10", closed = true),
       )
 
       // In Nomis, the merge has already completed so OFFENDER_TO_REMOVE doesn't exist
       nomisApi.stubGetNonAssociationsAll(
         OFFENDER_TO_SURVIVE,
         "COMMON",
-        "[${nomisNA(OFFENDER_TO_SURVIVE, "COMMON", 1, "2026-01-01")},${nomisNA(OFFENDER_TO_SURVIVE, "COMMON", 2, "2026-05-05")}]",
+        """[${nomisNA(OFFENDER_TO_SURVIVE, "COMMON", 1, "2025-01-01")},
+            ${nomisNA(OFFENDER_TO_SURVIVE, "COMMON", 2, "2025-05-05")}]
+        """,
       )
       nomisApi.stubGetNonAssociationsAll(
         "COMMON",
         OFFENDER_TO_SURVIVE,
-        "[${nomisNA("COMMON", OFFENDER_TO_SURVIVE, 1, "2026-01-01")},${nomisNA("COMMON", OFFENDER_TO_SURVIVE, 2, "2026-05-05")}]",
+        """[${nomisNA("COMMON", OFFENDER_TO_SURVIVE, 1, "2025-01-01")},
+            ${nomisNA("COMMON", OFFENDER_TO_SURVIVE, 2, "2025-05-05")}]
+        """,
       )
       nomisApi.stubGetNonAssociationsAll(
         OFFENDER_TO_SURVIVE,
         "COMMON2",
-        "[${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 1, "2026-09-09")},${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 2, "2023-11-11")},${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 3, "2026-07-07")}]",
+        """[${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 1, "2025-09-09")},
+            ${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 2, "2023-11-11")},
+            ${nomisNA(OFFENDER_TO_SURVIVE, "COMMON2", 3, "2025-07-07")}]
+        """,
       )
       nomisApi.stubGetNonAssociationsAll(
         "COMMON2",
         OFFENDER_TO_SURVIVE,
-        "[${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 1, "2026-09-09")},${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 2, "2023-11-11")},${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 3, "2026-07-07")}]",
+        """[${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 1, "2025-09-09")},
+            ${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 2, "2023-11-11")},
+            ${nomisNA("COMMON2", OFFENDER_TO_SURVIVE, 3, "2025-07-07")}]
+        """,
       )
       mappingServer.stubSetSequence(1002, 2)
       mappingServer.stubSetSequence(1011, 3)
       mappingServer.stubPutMergeNonAssociation(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
+
+      nomisApi.stubNonAssociationClose("COMMON", OFFENDER_TO_SURVIVE, 2)
+      nomisApi.stubNonAssociationClose("COMMON2", OFFENDER_TO_SURVIVE, 1)
+
       sendMergeEvent(OFFENDER_TO_REMOVE, OFFENDER_TO_SURVIVE)
     }
 
@@ -610,6 +626,21 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Test
+    fun `will correctly close one of the nomis NAs`() {
+      await untilAsserted {
+        mappingServer.verify(
+          putRequestedFor(urlEqualTo("/mapping/non-associations/merge/from/$OFFENDER_TO_REMOVE/to/$OFFENDER_TO_SURVIVE")),
+        )
+      }
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/non-associations/offender/COMMON/ns-offender/$OFFENDER_TO_SURVIVE/sequence/2/close")),
+      )
+      nomisApi.verify(
+        putRequestedFor(urlEqualTo("/non-associations/offender/COMMON2/ns-offender/$OFFENDER_TO_SURVIVE/sequence/1/close")),
+      )
+    }
+
+    @Test
     fun `will create success telemetry`() {
       await untilAsserted {
         verify(telemetryClient).trackEvent(
@@ -620,6 +651,8 @@ class NonAssociationsToNomisIntTest : SqsIntegrationTestBase() {
             assertThat(it["reason"]).isEqualTo("MERGE")
             assertThat(it["COMMON"]).isEqualTo("Reset nonAssociationId 1002 sequence from 1 to 2")
             assertThat(it["COMMON2"]).isEqualTo("Reset nonAssociationId 1011 sequence from 1 to 3")
+            assertThat(it["COMMON-closed"]).isEqualTo("Closed non-association between COMMON and $OFFENDER_TO_SURVIVE with sequence 2")
+            assertThat(it["COMMON2-closed"]).isEqualTo("Closed non-association between COMMON2 and $OFFENDER_TO_SURVIVE with sequence 1")
           },
           isNull(),
         )

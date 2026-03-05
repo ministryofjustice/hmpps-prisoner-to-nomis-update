@@ -6,6 +6,7 @@ import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateNonAssociationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NonAssociationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateNonAssociationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.model.LegacyNonAssociation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.BookingMovedEvent
@@ -15,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSyste
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.MergeEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import java.time.LocalDate
+import kotlin.collections.isNotEmpty
 
 @Service
 class NonAssociationsService(
@@ -135,6 +138,7 @@ class NonAssociationsService(
 
   suspend fun processMerge(event: MergeEvent) {
     val (reason, nomsNumber, removedNomsNumber) = event.additionalInformation
+    val today = LocalDate.now()
 
     if (reason == "MERGE") {
       val thirdParties = mappingService.findCommon(removedNomsNumber, nomsNumber)
@@ -144,27 +148,28 @@ class NonAssociationsService(
          If thirdParties exist, the scenario is :
         •  - a duplicate prisoner record exists and an NA is created with the same other prisoner as for the existing prisoner’s NA
         •  - a mapping is therefore added for this NA (with seq 1, same as the old one)
-        •  - a merge event occurs, and the mapping update which tries to change the old to the new offenderno fails with duplicate key
+        •  - a merge event occurs, and the mapping update which tries to change the old to the new offenderNo fails with duplicate key
 
         The process is to identify which DPS NA corresponds to which Nomis NA, then update the relevant sequence no to 2 (usually, or
         whatever the Nomis value is) in the mapping table. This will cause the merge event message to go through avoiding a mapping duplicate key error.
-        Note that in Nomis the NA of the merged FROM offender no has the sequence set to the next highest available no.
+        Note that in Nomis the NA of the merged FROM offenderNo has the sequence set to the next highest available no.
 
-        Eg we might be merging A1234AA to A1234AB, there could be 2 third party offenders COMMON1 and COMMON2 and the mapping
+        E.g. we might be merging A1234AA to A1234AB, there could be 2 third party offenders COMMON1 and COMMON2 and the mapping
         table might contain:
-          101,COMMON1, A1234AA, sequence 1
-          102,A1234AB, COMMON1, sequence 1
+          101,COMMON1, A1234AA, sequence 1 <- mappingRecord1
+          102,A1234AB, COMMON1, sequence 1 <- mappingRecord2
           103,COMMON2, A1234AA, sequence 1
           104,A1234AB, COMMON2, sequence 1
+          105,COMMON2, A1234AB, sequence 2 (a different NA, closed)
 
         In Nomis (already merged) these may look something like
-          COMMON1, A1234AB, sequence 1
-          A1234AB, COMMON1, sequence 2
+          COMMON1, A1234AB, sequence 1 <- nomisRecordMatchingSeq
+          A1234AB, COMMON1, sequence 2 <- nomisRecordNotMatching
           COMMON2, A1234AB, sequence 1
           COMMON2, A1234AB, sequence 2 (a different NA, closed)
           A1234AB, COMMON2, sequence 3
 
-        So we need to set the 2 correct mapping table entries to sequence 2.
+        So we would need to set the 2 relevant mapping table entries to sequence 3 in this example.
          */
         .forEach { entry ->
           if (entry.value.size != 2) {
@@ -194,6 +199,22 @@ class NonAssociationsService(
 
           mappingService.setSequence(otherDpsRecord.id, nomisRecordNotMatching.typeSequence)
           sequenceReport[entry.key] = "Reset nonAssociationId ${otherDpsRecord.id} sequence from ${mappingRecord1.nomisTypeSequence} to ${nomisRecordNotMatching.typeSequence}"
+
+          if (nomisRecordMatchingSeq != null && !closedInNomis(nomisRecordMatchingSeq, today) && !closedInNomis(nomisRecordNotMatching, today)) {
+            // both open ! Need to close the one which corresponds with the closed DPS NA
+            when {
+              closedInDPS(dpsRecord1, today) && !closedInDPS(dpsRecord2, today) -> dpsRecord1
+              !closedInDPS(dpsRecord1, today) && closedInDPS(dpsRecord2, today) -> dpsRecord2
+              else -> null
+            }
+              ?.let { closedDpsRecord ->
+                nomisData.find { closedDpsRecord.effectiveDate.toLocalDate() == it.effectiveDate }
+              }
+              ?.run {
+                nomisApiService.closeNonAssociation(offenderNo, nsOffenderNo, typeSequence)
+                sequenceReport[entry.key + "-closed"] = "Closed non-association between $offenderNo and $nsOffenderNo with sequence $typeSequence"
+              }
+          }
         }
 
       mappingService.mergeNomsNumber(removedNomsNumber, nomsNumber)
@@ -290,3 +311,13 @@ data class NonAssociationAdditionalInformation(
   val id: Long,
   val source: String? = null,
 )
+
+fun closedInNomis(nomis: NonAssociationResponse, today: LocalDate): Boolean {
+  val expiryDate = nomis.expiryDate
+  return (expiryDate != null && !expiryDate.isAfter(today)) || nomis.effectiveDate.isAfter(today)
+}
+
+fun closedInDPS(dps: LegacyNonAssociation, today: LocalDate): Boolean {
+  val expiryDate = dps.expiryDate
+  return (expiryDate != null && !expiryDate.toLocalDate().isAfter(today)) || dps.effectiveDate.toLocalDate().isAfter(today)
+}

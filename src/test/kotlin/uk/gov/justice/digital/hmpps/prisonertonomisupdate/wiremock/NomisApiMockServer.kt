@@ -1997,9 +1997,9 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubNonAssociationClose(offenderNo1: String, offenderNo2: String) {
+  fun stubNonAssociationClose(offenderNo1: String, offenderNo2: String, sequence: Int = 1) {
     stubFor(
-      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/1/close").willReturn(ok()),
+      put("/non-associations/offender/$offenderNo1/ns-offender/$offenderNo2/sequence/$sequence/close").willReturn(ok()),
     )
   }
 
@@ -2210,53 +2210,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
       put(url)
         .inScenario("Retry NOMIS Locations Update Scenario")
         .whenScenarioStateIs("Cause NOMIS Locations Update Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withStatus(200)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
-  fun stubLocationDelete(locationId: Long) {
-    stubFor(
-      delete("/locations/$locationId").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(204),
-      ),
-    )
-  }
-
-  fun stubLocationDeleteWithError(locationId: Long, status: Int = 500) {
-    stubFor(
-      delete("/locations/$locationId").willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withBody(ERROR_RESPONSE)
-          .withStatus(status),
-      ),
-    )
-  }
-
-  fun stubLocationDeleteWithErrorFollowedBySlowSuccess(locationId: Long) {
-    stubFor(
-      delete("/locations/$locationId")
-        .inScenario("Retry NOMIS Appointments Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS Appointments Success"),
-    )
-
-    stubFor(
-      delete("/locations/$locationId")
-        .inScenario("Retry NOMIS Appointments Scenario")
-        .whenScenarioStateIs("Cause NOMIS Appointments Success")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
