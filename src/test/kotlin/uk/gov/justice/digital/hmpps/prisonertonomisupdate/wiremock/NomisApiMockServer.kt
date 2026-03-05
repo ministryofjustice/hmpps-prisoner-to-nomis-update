@@ -2145,33 +2145,6 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubLocationCreateWithErrorFollowedBySlowSuccess(response: String) {
-    stubFor(
-      post("/locations")
-        .inScenario("Retry NOMIS Locations Scenario")
-        .whenScenarioStateIs(Scenario.STARTED)
-        .willReturn(
-          aResponse()
-            .withStatus(500) // request unsuccessful with status code 500
-            .withHeader("Content-Type", "application/json"),
-        )
-        .willSetStateTo("Cause NOMIS Locations Success"),
-    )
-
-    stubFor(
-      post("/locations")
-        .inScenario("Retry NOMIS Locations Scenario")
-        .whenScenarioStateIs("Cause NOMIS Locations Success")
-        .willReturn(
-          aResponse()
-            .withHeader("Content-Type", "application/json")
-            .withBody(response)
-            .withStatus(200)
-            .withFixedDelay(1500),
-        ).willSetStateTo(Scenario.STARTED),
-    )
-  }
-
   fun stubLocationUpdate(url: String) {
     stubFor(
       put(url).willReturn(
