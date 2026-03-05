@@ -159,10 +159,10 @@ class NonAssociationsReconciliationServiceTest {
   @Test
   fun `correctly identifies whether nomis is closed`() = runTest {
     val today = LocalDate.now()
-    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, null), today)).isFalse()
-    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today), today)).isTrue()
-    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today.minusDays(1)), today)).isTrue()
-    assertThat(nonAssociationsReconciliationService.closedInNomis(nomisResponse(1, today.plusDays(1)), today)).isFalse()
+    assertThat(closedInNomis(nomisResponse(1, null), today)).isFalse()
+    assertThat(closedInNomis(nomisResponse(1, today), today)).isTrue()
+    assertThat(closedInNomis(nomisResponse(1, today.minusDays(1)), today)).isTrue()
+    assertThat(closedInNomis(nomisResponse(1, today.plusDays(1)), today)).isFalse()
   }
 
   @Test
