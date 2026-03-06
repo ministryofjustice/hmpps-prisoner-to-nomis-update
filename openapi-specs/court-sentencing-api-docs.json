@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-04.1374.91264b3"
+    "version" : "2026-03-05.1380.1620eb9"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2127,17 +2127,6 @@
           },
           "403" : {
             "description" : "Forbidden, requires an appropriate role"
-          }
-        }
-      }
-    },
-    "/temp/generate-failed-court-case-event-publish-telemetry" : {
-      "post" : {
-        "tags" : [ "temp-controller" ],
-        "operationId" : "generateFailedEventPublishTelemetry",
-        "responses" : {
-          "204" : {
-            "description" : "No Content"
           }
         }
       }
@@ -5099,7 +5088,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                  "$ref" : "#/components/schemas/SearchCourtCasesPage"
                 }
               }
             }
@@ -5109,7 +5098,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                  "$ref" : "#/components/schemas/SearchCourtCasesPage"
                 }
               }
             }
@@ -5119,7 +5108,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PagePagedCourtCase"
+                  "$ref" : "#/components/schemas/SearchCourtCasesPage"
                 }
               }
             }
@@ -5952,7 +5941,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6294,7 +6283,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "courtCode" : {
             "type" : "string"
@@ -8702,7 +8691,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "courtCode" : {
             "type" : "string"
@@ -9333,7 +9322,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9397,7 +9386,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "courtId" : {
             "type" : "string"
@@ -9537,7 +9526,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "charges" : {
             "type" : "array",
@@ -9564,7 +9553,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "courtId" : {
             "type" : "string"
@@ -9808,52 +9797,6 @@
             "items" : {
               "type" : "string"
             }
-          }
-        }
-      },
-      "PagePagedCourtCase" : {
-        "type" : "object",
-        "properties" : {
-          "totalElements" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "size" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "content" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PagedCourtCase"
-            }
-          },
-          "number" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "first" : {
-            "type" : "boolean"
-          },
-          "last" : {
-            "type" : "boolean"
-          },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "pageable" : {
-            "$ref" : "#/components/schemas/PageableObject"
-          },
-          "empty" : {
-            "type" : "boolean"
           }
         }
       },
@@ -10119,7 +10062,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.300619078"
+            "example" : "06:23:49.380771571"
           },
           "courtCode" : {
             "type" : "string"
@@ -10228,6 +10171,62 @@
           }
         },
         "required" : [ "classification", "description", "sentenceTypeUuid" ]
+      },
+      "SearchCourtCasesPage" : {
+        "type" : "object",
+        "properties" : {
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PagedCourtCase"
+            }
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "total" : {
+            "type" : "integer",
+            "format" : "int64",
+            "writeOnly" : true
+          },
+          "prisonerCourtCaseTotal" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "prisonerCourtCaseTotal" ]
       },
       "SortObject" : {
         "type" : "object",
