@@ -200,7 +200,13 @@ class CourtSentencingService(
             telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
           }.toCourtCaseBatchMappingDto(dpsCourtAppearanceId = dpsCourtAppearanceId, offenderNo = offenderNo)
         }
-        saveMapping { createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper = it, offenderNo = offenderNo, telemetry = telemetryMap) }
+        saveMapping {
+          createAppearanceMappingsAndNotifyClonedCases(
+            mappingsWrapper = it,
+            offenderNo = offenderNo,
+            telemetry = telemetryMap,
+          )
+        }
       }
     } else {
       telemetryMap["reason"] = "Court appearance created in NOMIS"
@@ -212,7 +218,10 @@ class CourtSentencingService(
     }
   }
 
-  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(dpsCourtAppearanceId: String, offenderNo: String): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
+  private suspend fun CreateCourtAppearanceResponse.toCourtCaseBatchMappingDto(
+    dpsCourtAppearanceId: String,
+    offenderNo: String,
+  ): CourtCaseBatchUpdateAndCreateMappingsWrapper = CourtCaseBatchUpdateAndCreateMappingsWrapper(
     mappings =
     CourtCaseBatchUpdateAndCreateMappingDto(
       mappingsToCreate = CourtCaseBatchMappingDto(
@@ -239,7 +248,11 @@ class CourtSentencingService(
     offenderNo = offenderNo,
     clonedClonedCourtCaseDetails = clonedCourtCases?.toClonedCourtCaseDetails(),
   )
-  private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(dpsRecallId: String, offenderNo: String): RecallAppearanceAndCreateMappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
+
+  private suspend fun ConvertToRecallResponse.toCourtCaseBatchMappingDto(
+    dpsRecallId: String,
+    offenderNo: String,
+  ): RecallAppearanceAndCreateMappingsWrapper = RecallAppearanceAndCreateMappingsWrapper(
     mappings = CourtAppearanceRecallMappingsDto(
       nomisCourtAppearanceIds = this.courtEventIds,
       dpsRecallId = dpsRecallId,
@@ -325,6 +338,7 @@ class CourtSentencingService(
     telemetryClient.trackEvent("court-case-mapping-deleted-failed", mapOf("dpsCourtCaseId" to dpsCaseId))
     log.warn("Unable to delete mapping for Court Case $dpsCaseId. Please delete manually", e)
   }
+
   private suspend fun tryToDeleteRecallMapping(dpsRecallId: String) = runCatching {
     courtCaseMappingService.deleteAppearanceRecallMappings(dpsRecallId)
   }.onFailure { e ->
@@ -393,7 +407,12 @@ class CourtSentencingService(
             courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = courtCaseId)
           }
 
-          val charge = courtAppearanceId?.let { courtSentencingApiService.getCourtChargeByAppearance(appearanceId = it, chargeId = chargeId) } ?: courtSentencingApiService.getCourtCharge(chargeId)
+          val charge = courtAppearanceId?.let {
+            courtSentencingApiService.getCourtChargeByAppearance(
+              appearanceId = it,
+              chargeId = chargeId,
+            )
+          } ?: courtSentencingApiService.getCourtCharge(chargeId)
           charge.nomisOutcomeCode.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
           telemetryMap["nomisOffenceCode"] = charge.offenceCode
 
@@ -455,24 +474,25 @@ class CourtSentencingService(
               telemetryMap["nomisChargeId"] = it.nomisCourtChargeId.toString()
             }
 
-        courtSentencingApiService.getCourtChargeByAppearance(appearanceId = courtAppearanceId, chargeId = chargeId).let { dpsCharge ->
+        courtSentencingApiService.getCourtChargeByAppearance(appearanceId = courtAppearanceId, chargeId = chargeId)
+          .let { dpsCharge ->
 
-          val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
-          nomisApiService.updateCourtCharge(
-            offenderNo = offenderNo,
-            nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
-            chargeId = chargeMapping.nomisCourtChargeId,
-            nomisCourtAppearanceId = appearanceMapping.nomisCourtAppearanceId,
-            request = nomisCourtCharge,
-          ).also {
-            nomisCourtCharge.resultCode1.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
-            telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
-            telemetryClient.trackEvent(
-              "charge-updated-success",
-              telemetryMap,
-            )
+            val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
+            nomisApiService.updateCourtCharge(
+              offenderNo = offenderNo,
+              nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
+              chargeId = chargeMapping.nomisCourtChargeId,
+              nomisCourtAppearanceId = appearanceMapping.nomisCourtAppearanceId,
+              request = nomisCourtCharge,
+            ).also {
+              nomisCourtCharge.resultCode1.let { telemetryMap["nomisOutcomeCode"] = it.toString() }
+              telemetryMap["nomisOffenceCode"] = nomisCourtCharge.offenceCode
+              telemetryClient.trackEvent(
+                "charge-updated-success",
+                telemetryMap,
+              )
+            }
           }
-        }
       }.onFailure { e ->
         telemetryClient.trackEvent("charge-updated-failed", telemetryMap, null)
         throw e
@@ -573,7 +593,11 @@ class CourtSentencingService(
     )
   }
 
-  suspend fun createAppearanceMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
+  suspend fun createAppearanceMappingsAndNotifyClonedCases(
+    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
+    offenderNo: String,
+    telemetry: Map<String, String>,
+  ) {
     createAndUpdateMappingsAndNotifyClonedCases(
       mappingsWrapper = mappingsWrapper,
       offenderNo = offenderNo,
@@ -688,7 +712,11 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun tryUpdateCaseMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: MutableMap<String, String>) {
+  suspend fun tryUpdateCaseMappingsAndNotifyClonedCases(
+    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
+    offenderNo: String,
+    telemetry: MutableMap<String, String>,
+  ) {
     try {
       telemetry["nomisCourtCaseIds"] = mappingsWrapper.clonedClonedCourtCaseDetails!!.clonedCourtCaseIds.joinToString()
       updateCaseMappingsAndNotifyClonedCases(
@@ -697,7 +725,11 @@ class CourtSentencingService(
         telemetry = telemetry,
       )
     } catch (e: Exception) {
-      telemetryClient.trackEvent("court-case-cloned-repair-failed", telemetry + ("reason" to (e.message ?: "unknown")), null)
+      telemetryClient.trackEvent(
+        "court-case-cloned-repair-failed",
+        telemetry + ("reason" to (e.message ?: "unknown")),
+        null,
+      )
       courtSentencingRetryQueueService.sendMessage(
         mapping = mappingsWrapper,
         telemetryAttributes = telemetry,
@@ -706,7 +738,11 @@ class CourtSentencingService(
     }
   }
 
-  suspend fun updateCaseMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String, telemetry: Map<String, String>) {
+  suspend fun updateCaseMappingsAndNotifyClonedCases(
+    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
+    offenderNo: String,
+    telemetry: Map<String, String>,
+  ) {
     createAndUpdateMappingsAndNotifyClonedCases(
       mappingsWrapper = mappingsWrapper,
       offenderNo = offenderNo,
@@ -717,7 +753,11 @@ class CourtSentencingService(
       null,
     )
   }
-  suspend fun createAndUpdateMappingsAndNotifyClonedCases(mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper, offenderNo: String) {
+
+  suspend fun createAndUpdateMappingsAndNotifyClonedCases(
+    mappingsWrapper: CourtCaseBatchUpdateAndCreateMappingsWrapper,
+    offenderNo: String,
+  ) {
     courtCaseMappingService.updateAndCreateMappings(mappingsWrapper.mappings)
     mappingsWrapper.clonedClonedCourtCaseDetails?.also { details ->
       queueService.sendMessageTrackOnFailure(
@@ -810,7 +850,10 @@ class CourtSentencingService(
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceMappingsRetry(message.fromJson())
-      EntityType.COURT_APPEARANCE_RECALL.displayName -> createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(message.fromJson())
+      EntityType.COURT_APPEARANCE_RECALL.displayName -> createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(
+        message.fromJson(),
+      )
+
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
       EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
@@ -1099,13 +1142,14 @@ class CourtSentencingService(
                 active = sentence.dpsSentence.active,
               )
             },
-            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
-              ReturnToCustodyRequest(
-                returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
-                enteredByStaffUsername = recall.recallBy,
-                recallLength = recall.recallType.toDays()!!,
-              )
-            },
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }
+              ?.let {
+                ReturnToCustodyRequest(
+                  returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
+                  enteredByStaffUsername = recall.recallBy,
+                  recallLength = recall.recallType.toDays()!!,
+                )
+              },
             // should always be present for recalls from DPS
             recallRevocationDate = recall.revocationDate!!,
           ),
@@ -1150,9 +1194,11 @@ class CourtSentencingService(
           telemetryMap["recallType"] = it.recallType.name
         }
         val dpsSentenceIds = recall.sentenceIds.map { it.toString() }
-        val dpsRemovedSentenceIds = recallUpdateEvent.additionalInformation.previousSentenceIds.subtract(dpsSentenceIds).toList()
+        val dpsRemovedSentenceIds =
+          recallUpdateEvent.additionalInformation.previousSentenceIds.subtract(dpsSentenceIds).toList()
         val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
-        val sentenceAndMappingsToRemove = getSentenceAndMappings(dpsRemovedSentenceIds).also { telemetryMap.toRemovedTelemetry(it) }
+        val sentenceAndMappingsToRemove =
+          getSentenceAndMappings(dpsRemovedSentenceIds).also { telemetryMap.toRemovedTelemetry(it) }
         val breachCourtAppearanceIds =
           courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
         nomisApiService.updateRecallSentences(
@@ -1160,13 +1206,14 @@ class CourtSentencingService(
           UpdateRecallRequest(
             sentences = sentenceAndMappings.map { it.toRecallRelatedSentenceDetails() },
             sentencesRemoved = sentenceAndMappingsToRemove.map { it.toRecallRelatedSentenceDetails() },
-            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
-              ReturnToCustodyRequest(
-                returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
-                enteredByStaffUsername = recall.recallBy,
-                recallLength = recall.recallType.toDays()!!,
-              )
-            },
+            returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }
+              ?.let {
+                ReturnToCustodyRequest(
+                  returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
+                  enteredByStaffUsername = recall.recallBy,
+                  recallLength = recall.recallType.toDays()!!,
+                )
+              },
             // should always be present for recalls from DPS
             recallRevocationDate = recall.revocationDate!!,
             beachCourtEventIds = breachCourtAppearanceIds,
@@ -1208,7 +1255,8 @@ class CourtSentencingService(
             telemetryMap["dpsOriginalSentenceIds"] = recallDeletedEvent.additionalInformation.sentenceIds.joinToString()
           }
           val dpsSentenceIdsOnPreviousRecall = recall.sentenceIds.map { it.toString() }
-          val dpsSentenceIds = (dpsSentenceIdsOnPreviousRecall + recallDeletedEvent.additionalInformation.sentenceIds).distinct()
+          val dpsSentenceIds =
+            (dpsSentenceIdsOnPreviousRecall + recallDeletedEvent.additionalInformation.sentenceIds).distinct()
           val sentenceAndMappings = getSentenceAndMappings(dpsSentenceIds).also { telemetryMap.toTelemetry(it) }
           val breachCourtAppearanceIds =
             courtCaseMappingService.getAppearanceRecallMappings(recallId).map { it.nomisCourtAppearanceId }
@@ -1227,13 +1275,14 @@ class CourtSentencingService(
                   active = sentence.dpsSentence.active,
                 )
               },
-              returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }?.let {
-                ReturnToCustodyRequest(
-                  returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
-                  enteredByStaffUsername = recall.recallBy,
-                  recallLength = recall.recallType.toDays()!!,
-                )
-              },
+              returnToCustody = recall.takeIf { recall.recallType.isFixedTermRecall() && recall.hasReturnToCustodyDate() }
+                ?.let {
+                  ReturnToCustodyRequest(
+                    returnToCustodyDate = it.returnToCustodyDate ?: it.revocationDate!!,
+                    enteredByStaffUsername = recall.recallBy,
+                    recallLength = recall.recallType.toDays()!!,
+                  )
+                },
               beachCourtEventIds = breachCourtAppearanceIds,
             ),
           )
@@ -1315,6 +1364,7 @@ class CourtSentencingService(
     this["nomisBookingId"] = sentence.map { it.nomisBookingId }.toSortedSet().joinToString()
     this["dpsSentenceTypes"] = sentence.map { it.dpsSentence.sentenceCalcType }.toSortedSet().joinToString()
   }
+
   private fun MutableMap<String, String>.toRemovedTelemetry(sentences: List<DpsSentenceWithNomisKey>) = this.takeIf { sentences.isNotEmpty() }?.apply {
     this["removedNomisSentenceSeq"] = sentences.joinToString { it.nomisSentenceSequence.toString() }
     this["removedNomisBookingId"] = sentences.map { it.nomisBookingId }.toSortedSet().joinToString()
@@ -1633,6 +1683,7 @@ class CourtSentencingService(
     val additionalInformation: RecallAdditionalInformation,
     val personReference: PersonReferenceList,
   )
+
   data class UpdateRecallEvent(
     val additionalInformation: UpdateRecallAdditionalInformation,
     val personReference: PersonReferenceList,
@@ -1888,6 +1939,7 @@ private fun BookingCourtCaseCloneResponse?.toSentences(): List<CourtSentenceIdPa
     )
   } ?: emptyList()
 }
+
 private fun BookingCourtCaseCloneResponse?.toSentenceTerms(): List<CourtSentenceTermIdPair> {
   val sourceSentences = this?.courtCases?.flatMap { it.sourceCourtCase.sentences }
   val clonedSentences = this?.courtCases?.flatMap { it.courtCase.sentences }
