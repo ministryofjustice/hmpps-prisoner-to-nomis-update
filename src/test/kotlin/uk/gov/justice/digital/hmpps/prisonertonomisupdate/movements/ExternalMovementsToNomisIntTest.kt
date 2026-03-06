@@ -988,7 +988,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
-          waitForAnyProcessingToComplete("temporary-absence-schedule-create-failed")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-create-awaiting-parent")
         }
 
         @Test
@@ -1007,11 +1007,11 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will publish failed telemetry`() {
           verify(telemetryClient).trackEvent(
-            eq("temporary-absence-schedule-create-failed"),
+            eq("temporary-absence-schedule-create-awaiting-parent"),
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
-              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
+              assertThat(it).containsEntry("reason", "Expected parent entity not found, retrying")
             },
             isNull(),
           )
@@ -1218,7 +1218,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
-          waitForAnyProcessingToComplete("temporary-absence-schedule-update-failed")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-update-awaiting-parent")
         }
 
         @Test
@@ -1237,11 +1237,11 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will publish failed telemetry`() {
           verify(telemetryClient).trackEvent(
-            eq("temporary-absence-schedule-update-failed"),
+            eq("temporary-absence-schedule-update-awaiting-parent"),
             check {
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
-              assertThat(it).containsEntry("reason", "Cannot find parent application mapping for $dpsAuthorisationId")
+              assertThat(it).containsEntry("reason", "Expected parent entity not found, retrying")
             },
             isNull(),
           )
