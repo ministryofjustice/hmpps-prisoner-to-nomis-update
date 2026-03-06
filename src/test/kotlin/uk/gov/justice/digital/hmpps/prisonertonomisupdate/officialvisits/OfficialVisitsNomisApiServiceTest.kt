@@ -207,7 +207,7 @@ class OfficialVisitsNomisApiServiceTest {
     }
 
     @Test
-    fun `will call the get time slot endpoint`() = runTest {
+    fun `will call the get visit endpoint`() = runTest {
       mockServer.stubGetOfficialVisitOrNull(
         visitId = 1234,
       )
@@ -235,7 +235,7 @@ class OfficialVisitsNomisApiServiceTest {
     }
 
     @Test
-    fun `will return mapping when  found`() = runTest {
+    fun `will return visit when found`() = runTest {
       mockServer.stubGetOfficialVisitOrNull(
         visitId = 1234,
         response = officialVisitResponse(),
@@ -381,6 +381,41 @@ class OfficialVisitsNomisApiServiceTest {
       mockServer.verify(
         postRequestedFor(urlPathEqualTo("/official-visits/123/official-visitor")),
       )
+    }
+
+    @Test
+    fun `will return created visitor on success`() = runTest {
+      mockServer.stubCreateOfficialVisitor(
+        123,
+        officialVisitor().copy(id = 999),
+      )
+
+      val response = apiService.createOfficialVisitor(
+        123,
+        createOfficialVisitorRequest(),
+      )
+
+      assertThat(response.isError).isFalse
+      assertThat(response.successResponse).isNotNull
+      assertThat(response.successResponse!!.id).isEqualTo(999)
+    }
+
+    @Test
+    fun `will return existing visitor on duplicate`() = runTest {
+      mockServer.stubCreateOfficialVisitor(
+        123,
+        existingVisitorId = 888,
+      )
+
+      val response = apiService.createOfficialVisitor(
+        123,
+        createOfficialVisitorRequest(),
+      )
+
+      assertThat(response.isError).isTrue
+      assertThat(response.successResponse).isNull()
+      assertThat(response.errorResponse).isNotNull
+      assertThat(response.errorResponse!!.moreInfo).isEqualTo(888)
     }
   }
 

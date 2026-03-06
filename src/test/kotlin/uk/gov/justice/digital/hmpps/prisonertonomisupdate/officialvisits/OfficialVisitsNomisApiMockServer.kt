@@ -221,6 +221,28 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+
+  fun stubCreateOfficialVisitor(
+    visitId: Long,
+    existingVisitorId: Long = 654L,
+    personId: Long = 999L,
+    response: ErrorResponse = ErrorResponse(
+      status = 409,
+      userMessage = "Person $personId is already on visit $visitId",
+      developerMessage = "Person $personId is already on visit $visitId",
+      moreInfo = "$existingVisitorId",
+    ),
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/official-visits/$visitId/official-visitor")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.CONFLICT.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
   fun stubUpdateOfficialVisitor(
     visitId: Long,
     visitorId: Long,
