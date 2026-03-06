@@ -982,6 +982,16 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             isNull(),
           )
         }
+        verify(telemetryClient).trackEvent(
+          org.mockito.kotlin.eq("court-appearance-create-awaiting-parent"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["reason"]).isEqualTo("Missing DPS charge: $DPS_COURT_CHARGE_ID")
+          },
+          isNull(),
+        )
         courtSentencingNomisApi.verify(
           1,
           postRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances")),

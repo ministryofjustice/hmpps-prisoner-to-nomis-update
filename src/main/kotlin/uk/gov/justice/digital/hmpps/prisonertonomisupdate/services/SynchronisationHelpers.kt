@@ -42,7 +42,10 @@ class SynchroniseBuilder<MAPPING_DTO>(
       }.onFailure {
         when (it) {
           is AwaitParentEntityRetry -> {
-            telemetryClient?.trackEvent("$name-awaiting-parent", eventTelemetry)
+            telemetryClient?.let { client ->
+              it.message?.let { message -> eventTelemetry = eventTelemetry + ("reason" to message) }
+              client.trackEvent("$name-create-awaiting-parent", eventTelemetry)
+            }
           }
 
           else -> {
@@ -167,7 +170,7 @@ inline fun TelemetryEnabled.track(name: String, telemetry: MutableMap<String, St
     transform()
     telemetryClient.trackEvent("$name-success", telemetry)
   } catch (e: AwaitParentEntityRetry) {
-    telemetry["error"] = e.message.toString()
+    telemetry["reason"] = e.message.toString()
     telemetryClient.trackEvent("$name-awaiting-parent", telemetry)
     throw e
   } catch (e: Exception) {
@@ -184,8 +187,8 @@ fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = thi
 )
 
 fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }
-suspend fun <T> tryFetchParent(get: suspend () -> T?): T = get() ?: throw AwaitParentEntityRetry(
-  "Expected parent entity not found, retrying",
+suspend fun <T> tryFetchParent(message: String = "Expected parent entity not found, retrying", get: suspend () -> T?): T = get() ?: throw AwaitParentEntityRetry(
+  message,
 )
 
 suspend inline fun <reified T : Any, reified E : Any> WebClient.ResponseSpec.awaitSuccessOrDuplicate(): SuccessOrDuplicate<T, E> = this.bodyToMono<T>()
