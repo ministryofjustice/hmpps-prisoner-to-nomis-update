@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-27.467.0cca5b0"
+    "version" : "2026-03-05.496.ae1ada0"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1109,6 +1109,16 @@
               }
             }
           },
+          "400" : {
+            "description" : "The request was invalid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "404" : {
             "description" : "The prison visit slot did not exist",
             "content" : {
@@ -1119,8 +1129,8 @@
               }
             }
           },
-          "400" : {
-            "description" : "The request was invalid",
+          "409" : {
+            "description" : "Another visit exists with the same offender visit ID",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2329,6 +2339,74 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/prisoner/{prisonerNumber}/all-contacts" : {
+      "get" : {
+        "tags" : [ "Contacts" ],
+        "summary" : "Get all of the available contacts for a prisoner for official visits",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS__R\n* ROLE_OFFICIAL_VISITS__RW",
+        "operationId" : "getAllContacts",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "approved",
+          "in" : "query",
+          "description" : "Restricts to approved only contacts when true",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
+          "name" : "currentTerm",
+          "in" : "query",
+          "description" : "Restricts to current term only contacts when true",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The contacts for the prisoner",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerContact"
+                  }
                 }
               }
             }
@@ -5348,6 +5426,174 @@
           }
         },
         "required" : [ "active", "totalActive", "totalExpired" ]
+      },
+      "PrisonerContact" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact number",
+            "example" : 1
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact",
+            "example" : 1
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "Prisoner number (NOMS ID)"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the contact"
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the contact"
+          },
+          "relationshipTypeCode" : {
+            "type" : "string",
+            "description" : "Coded value indicating either a social or official contact"
+          },
+          "relationshipTypeDescription" : {
+            "type" : "string",
+            "description" : "Relationship type Description"
+          },
+          "relationshipToPrisonerCode" : {
+            "type" : "string",
+            "description" : "The relationship to the prisoner. A code from SOCIAL_RELATIONSHIP or OFFICIAL_RELATIONSHIP reference data groups depending on the relationship type."
+          },
+          "relationshipToPrisonerDescription" : {
+            "type" : "string",
+            "description" : "Relationship type Description"
+          },
+          "isApprovedVisitor" : {
+            "type" : "boolean",
+            "description" : "Indicates whether the contact is an approved visitor"
+          },
+          "isNextOfKin" : {
+            "type" : "boolean",
+            "description" : "Is this contact the prisoner's next of kin?"
+          },
+          "isEmergencyContact" : {
+            "type" : "boolean",
+            "description" : "Is this contact the prisoner's emergency contact?"
+          },
+          "isRelationshipActive" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship active?"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "Is this relationship active for the current booking?"
+          },
+          "isStaff" : {
+            "type" : "boolean",
+            "description" : "Whether the contact is a staff member"
+          },
+          "restrictionSummary" : {
+            "$ref" : "#/components/schemas/RestrictionsSummary",
+            "description" : "Restriction Summary"
+          },
+          "titleCode" : {
+            "type" : "string",
+            "description" : "The title code for the contact"
+          },
+          "titleDescription" : {
+            "type" : "string",
+            "description" : "The description of the title code, if present"
+          },
+          "middleNames" : {
+            "type" : "string",
+            "description" : "The middle names of the contact, if any"
+          },
+          "dateOfBirth" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date of birth of the contact"
+          },
+          "deceasedDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the contact deceased, if known"
+          },
+          "flat" : {
+            "type" : "string",
+            "description" : "Flat number in the address, if any"
+          },
+          "property" : {
+            "type" : "string",
+            "description" : "Property name or number"
+          },
+          "street" : {
+            "type" : "string",
+            "description" : "Street Name"
+          },
+          "area" : {
+            "type" : "string",
+            "description" : "Area or locality, if any"
+          },
+          "cityCode" : {
+            "type" : "string",
+            "description" : "City code"
+          },
+          "cityDescription" : {
+            "type" : "string",
+            "description" : "The description of city code"
+          },
+          "countyCode" : {
+            "type" : "string",
+            "description" : "Country code"
+          },
+          "countyDescription" : {
+            "type" : "string",
+            "description" : "The description of county code"
+          },
+          "postcode" : {
+            "type" : "string",
+            "description" : "Postal code"
+          },
+          "countryCode" : {
+            "type" : "string",
+            "description" : "Country Code"
+          },
+          "countryDescription" : {
+            "type" : "string",
+            "description" : "Flag to indicate whether this address indicates no fixed address"
+          },
+          "noFixedAddress" : {
+            "type" : "boolean",
+            "description" : "Flag to indicate whether this address indicates no fixed address"
+          },
+          "primaryAddress" : {
+            "type" : "boolean",
+            "description" : "If true this address should be considered as the primary residential address"
+          },
+          "mailAddress" : {
+            "type" : "boolean",
+            "description" : "If true this address should be considered for sending mail to"
+          },
+          "phoneType" : {
+            "type" : "string",
+            "description" : "Type of the latest phone number"
+          },
+          "phoneTypeDescription" : {
+            "type" : "string",
+            "description" : "Description of the type of the latest phone number"
+          },
+          "phoneNumber" : {
+            "type" : "string",
+            "description" : "The latest phone number, if there are any"
+          },
+          "extNumber" : {
+            "type" : "string",
+            "description" : "The extension number of the latest phone number"
+          }
+        },
+        "required" : [ "contactId", "currentTerm", "firstName", "isApprovedVisitor", "isEmergencyContact", "isNextOfKin", "isRelationshipActive", "isStaff", "lastName", "prisonerContactId", "prisonerNumber", "relationshipToPrisonerCode", "relationshipToPrisonerDescription", "relationshipTypeCode", "relationshipTypeDescription", "restrictionSummary" ]
       },
       "OfficialVisitDetails" : {
         "type" : "object",
