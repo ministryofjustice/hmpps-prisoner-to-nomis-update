@@ -25,10 +25,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.AwaitParentEntityRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.tryFetchParent
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.util.*
@@ -164,8 +166,9 @@ class ExternalMovementsService(
       if (existingMapping != null) updateType = SCHEDULED_MOVEMENT_UPDATE
       val dps = dpsApiService.getTapOccurrence(dpsOccurrenceId)
         .also { telemetryMap["dpsAuthorisationId"] = "${it.authorisation.id}" }
-      val nomisApplicationId = findParentApplicationIdOrThrow(dps.authorisation.id)
-        .also { telemetryMap["nomisApplicationId"] = it.toString() }
+      val nomisApplicationId = tryFetchParent {
+        mappingApiService.getApplicationMapping(dps.authorisation.id)?.nomisMovementApplicationId
+      }.also { telemetryMap["nomisApplicationId"] = it.toString() }
 
       // perform the sync to NOMIS
       val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
@@ -188,8 +191,9 @@ class ExternalMovementsService(
       }
     }
       .onFailure {
+        val failureType = if (it is AwaitParentEntityRetry) "awaiting-parent" else "failed"
         telemetryMap["reason"] = it.message ?: "Unknown error"
-        telemetryClient.trackEvent("${updateType.entityName}-failed", telemetryMap)
+        telemetryClient.trackEvent("${updateType.entityName}-$failureType", telemetryMap)
         throw it
       }
   }
@@ -336,13 +340,15 @@ class ExternalMovementsService(
 
         transform {
           dpsMovementApplicationId?.let {
-            findParentApplicationIdOrThrow(dpsMovementApplicationId)
-              .also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
-          }
+            tryFetchParent {
+              mappingApiService.getApplicationMapping(it)?.nomisMovementApplicationId
+            }
+          }.also { telemetryMap["nomisMovementApplicationId"] = it.toString() }
           val nomisEventId = dpsScheduledMovementInId?.let {
-            findParentScheduleOrThrow(dpsScheduledMovementInId)
-              .also { telemetryMap["nomisEventId"] = it.toString() }
-          }
+            tryFetchParent {
+              mappingApiService.getScheduledMovementMapping(it)?.nomisEventId
+            }
+          }.also { telemetryMap["nomisEventId"] = it.toString() }
 // TODO         val dps = dpsApiService.getTapIn(dpsId)
           val dps = ExternalMovementIn.createData(dpsMovementApplicationId, dpsScheduledMovementInId)
           val nomis = nomisApiService.createTemporaryAbsenceReturn(prisonerNumber, dps.toNomisCreateRequest(nomisEventId))
