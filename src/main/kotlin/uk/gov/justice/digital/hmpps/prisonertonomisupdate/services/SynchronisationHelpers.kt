@@ -2,8 +2,14 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.reactive.awaitFirst
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import org.springframework.core.ParameterizedTypeReference
+import org.springframework.web.reactive.function.client.WebClient
+import org.springframework.web.reactive.function.client.WebClientResponseException
+import org.springframework.web.reactive.function.client.bodyToMono
+import reactor.core.publisher.Mono
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateErrorContent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNotFoundRetry
@@ -180,4 +186,24 @@ fun TelemetryClient.trackEvent(name: String, properties: Map<String, Any>) = thi
 fun Map<String, Any>.valuesAsStrings(): Map<String, String> = this.entries.associate { it.key to it.value.toString() }
 suspend fun <T> tryFetchParent(get: suspend () -> T?): T = get() ?: throw AwaitParentEntityRetry(
   "Expected parent entity not found, retrying",
+)
+
+suspend inline fun <reified T : Any, reified E : Any> WebClient.ResponseSpec.awaitSuccessOrDuplicate(): SuccessOrDuplicate<T, E> = this.bodyToMono<T>()
+  .map { SuccessOrDuplicate<T, E>(successResponse = it) }
+  .onErrorResume(WebClientResponseException.Conflict::class.java) {
+    Mono.just(SuccessOrDuplicate(errorResponse = it.getResponseBodyAs(object : ParameterizedTypeReference<DuplicateError<E>>() {})))
+  }
+  .awaitFirst()
+
+data class SuccessOrDuplicate<T, E>(
+  val errorResponse: DuplicateError<E>? = null,
+  val successResponse: T? = null,
+) {
+  val isError
+    get() = errorResponse != null
+}
+
+class DuplicateError<E>(
+  val moreInfo: E,
+  val developerMessage: String? = null,
 )

@@ -561,6 +561,50 @@ class OfficialVisitsToNomisIntTest(
       }
 
       @Nested
+      inner class PersonAlreadyExistsOnVisit {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubCreateOfficialVisitor(
+            visitId = nomisVisitId,
+            existingVisitorId = nomisVisitorId,
+            personId = contactAndPersonId,
+          )
+          publishCreateOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), contactId = contactAndPersonId.toString(), prisonId = prisonId, source = "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will attempt create visitor in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor")))
+        }
+
+        @Test
+        fun `will not create mapping`() {
+          mappingApi.verify(
+            0,
+            postRequestedFor(urlEqualTo("/mapping/official-visits/visitor")),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the create was ignored`() {
+          verify(telemetryClient).trackEvent(
+            eq("official-visitor-create-ignored"),
+            check {
+              assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+              assertThat(it["existingNomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
+              assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+              assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
+              assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+              assertThat(it["reason"]).isEqualTo("Person $contactAndPersonId is already on visit $nomisVisitId")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
       inner class MappingRetry {
         @BeforeEach
         fun setUp() {

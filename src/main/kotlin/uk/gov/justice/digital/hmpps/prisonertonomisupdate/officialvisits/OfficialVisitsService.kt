@@ -130,15 +130,22 @@ class OfficialVisitsService(
           val visitMapping = tryFetchParent { mappingApiService.getVisitByDpsIdOrNull(event.additionalInformation.officialVisitId) }.also {
             telemetry["nomisVisitId"] = it.nomisId.toString()
           }
-          nomisApiService.createOfficialVisitor(
+          val visitorResponse = nomisApiService.createOfficialVisitor(
             visitId = visitMapping.nomisId,
             request = dpsVisitor.toCreateOfficialVisitorRequest(dpsVisit),
-          ).also {
-            telemetry["nomisVisitorId"] = it.id.toString()
-          }.let {
+          )
+
+          if (visitorResponse.isError) {
+            // TODO - possibly check if mapping already exists - if not create it for the double POST scenario
+            telemetry["existingNomisVisitorId"] = visitorResponse.errorResponse!!.moreInfo.toString()
+            telemetry["reason"] = visitorResponse.errorResponse.developerMessage.toString()
+            null
+          } else {
+            val nomisVisitor = visitorResponse.successResponse!!
+            telemetry["nomisVisitorId"] = nomisVisitor.id.toString()
             OfficialVisitorMappingDto(
               dpsId = event.additionalInformation.officialVisitorId.toString(),
-              nomisId = it.id,
+              nomisId = nomisVisitor.id,
               mappingType = OfficialVisitorMappingDto.MappingType.DPS_CREATED,
             )
           }

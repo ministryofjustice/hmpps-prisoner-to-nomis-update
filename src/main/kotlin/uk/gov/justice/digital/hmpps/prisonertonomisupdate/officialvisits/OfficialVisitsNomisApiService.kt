@@ -16,6 +16,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.VisitIdsPage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SuccessOrDuplicate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitSuccessOrDuplicate
 import java.time.LocalDate
 
 @Service
@@ -65,10 +67,12 @@ class OfficialVisitsNomisApiService(
   suspend fun createOfficialVisitor(
     visitId: Long,
     request: CreateOfficialVisitorRequest,
-  ): OfficialVisitor = api.createOfficialVisitor(
-    visitId = visitId,
-    createOfficialVisitorRequest = request,
-  ).awaitSingle()
+  ): SuccessOrDuplicate<OfficialVisitor, Long> = api.prepare(
+    api.createOfficialVisitorRequestConfig(
+      visitId = visitId,
+      createOfficialVisitorRequest = request,
+    ),
+  ).retrieve().awaitSuccessOrDuplicate()
 
   suspend fun getOfficialVisitOrNull(
     visitId: Long,
