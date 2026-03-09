@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-05.496.ae1ada0"
+    "version" : "2026-03-06.513.5a97ecf"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2614,6 +2614,58 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TimeSlotSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/prison/{prisonCode}/official-visit-locations" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Get all official visit locations at a prison",
+        "description" : "Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getOfficialVisitLocationsAtPrison",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of visit locations",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/VisitLocation"
+                  }
                 }
               }
             }
@@ -5950,6 +6002,23 @@
           }
         },
         "required" : [ "timeSlot", "visitSlots" ]
+      },
+      "VisitLocation" : {
+        "type" : "object",
+        "description" : "Response for a prison visit location (id and name)",
+        "properties" : {
+          "locationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "DPS location id"
+          },
+          "locationName" : {
+            "type" : "string",
+            "description" : "The formatted local name of the location",
+            "example" : "Legal visits room 8"
+          }
+        },
+        "required" : [ "locationId" ]
       }
     },
     "securitySchemes" : {
