@@ -24,9 +24,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ad
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Prison
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonNumberAndRootOffenderId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.SentencingAdjustmentsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.jsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -2312,6 +2314,41 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
             .withHeader("Content-Type", "application/json")
             .withStatus(errorStatus.value()),
         ),
+    )
+  }
+
+  fun stubGetAllPrisonersIdRanges(pageSize: Long = 10, totalElements: Long = 20) {
+    val content: List<RootOffenderIdRange> = (0..(totalElements / pageSize))
+      .zipWithNext()
+      .map { RootOffenderIdRange(it.first * pageSize, it.second * pageSize) }
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/id-ranges")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(
+            jsonMapper.writeValueAsString(content),
+          ),
+      ),
+    )
+  }
+
+  fun stubGetAllPrisonersInRange(fromRootOffenderId: Long = 1L, toRootOffenderId: Long = 20L, firstOffenderNo: String = "A0001KT") {
+    val content: List<PrisonNumberAndRootOffenderId> = (fromRootOffenderId..toRootOffenderId).map {
+      PrisonNumberAndRootOffenderId(
+        rootOffenderId = it,
+        prisonNumber = firstOffenderNo.replace("0001", "$it".padStart(4, '0')),
+      )
+    }
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/prisoners/ids-in-range")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(
+            jsonMapper.writeValueAsString(content),
+          ),
+      ),
     )
   }
 

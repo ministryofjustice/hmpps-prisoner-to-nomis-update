@@ -46,7 +46,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ex
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.HearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.IncidentToCreate
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MergeDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonNumberAndRootOffenderId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RepairToUpdateOrAdd
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdRange
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UnquashHearingResultAwardRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateActivityRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateEvidenceRequest
@@ -1506,6 +1508,96 @@ internal class NomisApiServiceTest {
           .withQueryParam("activeOnly", equalTo("true"))
           .withQueryParam("pageSize", equalTo("1000")),
       )
+    }
+  }
+
+  @Nested
+  inner class GetAllPrisonersInRange {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubGetAllPrisonersInRange()
+
+      nomisApiService.getAllPrisonersInRange(
+        fromRootOffenderId = 0,
+        toRootOffenderId = 20,
+      )
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass params to service`() = runTest {
+      nomisApi.stubGetAllPrisonersInRange()
+
+      nomisApiService.getAllPrisonersInRange(
+        fromRootOffenderId = 5,
+        toRootOffenderId = 100,
+      )
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/ids-in-range"))
+          .withQueryParam("fromRootOffenderId", equalTo("5"))
+          .withQueryParam("toRootOffenderId", equalTo("100")),
+      )
+    }
+
+    @Test
+    fun `will return a range of prisoners ids`() = runTest {
+      nomisApi.stubGetAllPrisonersInRange(fromRootOffenderId = 1, toRootOffenderId = 10, firstOffenderNo = "A0001BC")
+
+      val prisonerIds = nomisApiService.getAllPrisonersInRange(
+        fromRootOffenderId = 1,
+        toRootOffenderId = 10,
+      )
+
+      assertThat(prisonerIds).hasSize(10)
+      assertThat(prisonerIds[0]).isEqualTo(PrisonNumberAndRootOffenderId(1, "A0001BC"))
+      assertThat(prisonerIds[1]).isEqualTo(PrisonNumberAndRootOffenderId(2, "A0002BC"))
+    }
+  }
+
+  @Nested
+  inner class GetAllPrisonersIsRanges {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      nomisApi.stubGetAllPrisonersIdRanges(pageSize = 10)
+
+      nomisApiService.getAllPrisonersIdRanges(
+        pageSize = 10,
+      )
+
+      nomisApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass params to service`() = runTest {
+      nomisApi.stubGetAllPrisonersIdRanges(pageSize = 5)
+
+      nomisApiService.getAllPrisonersIdRanges(
+        pageSize = 5,
+      )
+
+      nomisApi.verify(
+        getRequestedFor(urlPathEqualTo("/prisoners/id-ranges"))
+          .withQueryParam("size", equalTo("5")),
+      )
+    }
+
+    @Test
+    fun `will return a range of prisoners ids`() = runTest {
+      nomisApi.stubGetAllPrisonersIdRanges(pageSize = 10, totalElements = 20)
+
+      val prisonerIds = nomisApiService.getAllPrisonersIdRanges(
+        pageSize = 20,
+      )
+
+      assertThat(prisonerIds).hasSize(2)
+      assertThat(prisonerIds[0]).isEqualTo(RootOffenderIdRange(0, 10))
+      assertThat(prisonerIds[1]).isEqualTo(RootOffenderIdRange(10, 20))
     }
   }
 }

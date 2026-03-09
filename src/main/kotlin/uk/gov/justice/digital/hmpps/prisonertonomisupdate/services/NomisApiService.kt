@@ -25,6 +25,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithR
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.BookingsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.IncentivesResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonersResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.SentencingAdjustmentResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
@@ -101,6 +102,7 @@ class NomisApiService(
   private val incentivesResourceApi = IncentivesResourceApi(webClient)
   private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
   private val prisonApi = PrisonResourceApi(webClient)
+  private val prisonersApi = PrisonersResourceApi(webClient)
 
   suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
     .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
@@ -353,6 +355,14 @@ class NomisApiService(
     .retrieve()
     .bodyToMono(PrisonerNosWithLast::class.java)
     .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
+    .awaitSingle()
+
+  suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
+    .getAllPrisonersInRange1(fromRootOffenderId, toRootOffenderId)
+    .awaitSingle()
+
+  suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
+    .getAllPrisonersIdRanges1(pageSize.toInt())
     .awaitSingle()
 
   suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = webClient.get()
