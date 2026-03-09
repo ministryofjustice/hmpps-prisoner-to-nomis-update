@@ -136,10 +136,14 @@ class OfficialVisitsService(
           )
 
           if (visitorResponse.isError) {
-            // TODO - possibly check if mapping already exists - if not create it for the double POST scenario
-            telemetry["existingNomisVisitorId"] = visitorResponse.errorResponse!!.moreInfo.toString()
+            val existingNomisVisitorId = visitorResponse.errorResponse!!.moreInfo
+            telemetry["existingNomisVisitorId"] = existingNomisVisitorId.toString()
             telemetry["reason"] = visitorResponse.errorResponse.developerMessage.toString()
-            null
+            OfficialVisitorMappingDto(
+              dpsId = event.additionalInformation.officialVisitorId.toString(),
+              nomisId = existingNomisVisitorId,
+              mappingType = OfficialVisitorMappingDto.MappingType.DPS_CREATED,
+            )
           } else {
             val nomisVisitor = visitorResponse.successResponse!!
             telemetry["nomisVisitorId"] = nomisVisitor.id.toString()
