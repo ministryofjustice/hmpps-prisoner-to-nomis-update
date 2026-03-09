@@ -569,6 +569,7 @@ class OfficialVisitsToNomisIntTest(
             existingVisitorId = nomisVisitorId,
             personId = contactAndPersonId,
           )
+          mappingApi.stubCreateVisitorMapping()
           publishCreateOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), contactId = contactAndPersonId.toString(), prisonId = prisonId, source = "DPS")
           waitForAnyProcessingToComplete()
         }
@@ -579,17 +580,16 @@ class OfficialVisitsToNomisIntTest(
         }
 
         @Test
-        fun `will not create mapping`() {
+        fun `will attempt to create mapping which might work if this visitor was previously created by a POST that we did not get a response from`() {
           mappingApi.verify(
-            0,
             postRequestedFor(urlEqualTo("/mapping/official-visits/visitor")),
           )
         }
 
         @Test
-        fun `will send telemetry event showing the create was ignored`() {
+        fun `will send telemetry event showing the create succeeded but indicate they were created from a previous POST`() {
           verify(telemetryClient).trackEvent(
-            eq("official-visitor-create-ignored"),
+            eq("official-visitor-create-success"),
             check {
               assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
               assertThat(it["existingNomisVisitorId"]).isEqualTo(nomisVisitorId.toString())
