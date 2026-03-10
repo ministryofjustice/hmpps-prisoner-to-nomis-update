@@ -133,7 +133,9 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     if (dpsTaps.movements.unscheduled.inCount != nomisTaps.movements.unscheduled.inCount.toInt()) {
       mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.UNSCHEDULED_IN, dpsTaps.movements.unscheduled.inCount, nomisTaps.movements.unscheduled.inCount.toInt())
     }
+    // TODO if mismatches > 0, call ids endpoints on both systems
     mismatches.forEach {
+      // TODO interrogate the ids results to find ids missing in either service
       telemetryClient.trackEvent(
         "$TELEMETRY_ALL_TAPS-mismatch",
         mapOf(

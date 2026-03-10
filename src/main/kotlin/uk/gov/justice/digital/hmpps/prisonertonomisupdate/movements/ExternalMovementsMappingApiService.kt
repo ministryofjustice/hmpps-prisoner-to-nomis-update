@@ -10,6 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.Temp
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import java.util.*
 
 @Service
@@ -51,4 +52,8 @@ class ExternalMovementsMappingApiService(
     .prepare(mappingApi.getExternalMovementSyncMappingByDpsIdRequestConfig(dpsId))
     .retrieve()
     .awaitBodyOrNullForNotFound()
+
+  suspend fun getTapMappingIds(offenderNo: String): TemporaryAbsencesPrisonerMappingIdsDto = mappingApi
+    .getMappings1(offenderNo)
+    .awaitSingle()
 }

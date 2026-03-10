@@ -43,7 +43,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       )
 
       nomisMovementsApi.stubGetBookingTemporaryAbsences(bookingId = 12345L)
-      dpsApi.stubGetTapReconciliation(personIdentifier = "A0001TZ")
+      dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
     }
 
     @Test

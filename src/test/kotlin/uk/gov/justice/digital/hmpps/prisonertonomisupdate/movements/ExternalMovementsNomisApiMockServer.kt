@@ -19,6 +19,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Movements
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementsByDirection
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
@@ -125,6 +127,15 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
         scheduled = MovementsByDirection(outCount = 3, inCount = 4),
         unscheduled = MovementsByDirection(outCount = 5, inCount = 6),
       ),
+    )
+
+    fun temporaryAbsenceSummaryIdsResponse() = OffenderTemporaryAbsenceIdsResponse(
+      applicationIds = listOf(1111),
+      scheduleIds = listOf(2222),
+      scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 3)),
+      scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345, 4)),
+      unscheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 5)),
+      unscheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345, 6)),
     )
 
     fun bookingTemporaryAbsences(
@@ -440,6 +451,37 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   ) {
     nomisApi.stubFor(
       get(urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTemporaryAbsencePrisonerSummaryIds(
+    offenderNo: String = "A1234BC",
+    response: OffenderTemporaryAbsenceIdsResponse = temporaryAbsenceSummaryIdsResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.CREATED.value())
+            .withBody(jsonMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTemporaryAbsencePrisonerSummaryIds(
+    offenderNo: String = "A1234BC",
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status),
+  ) {
+    nomisApi.stubFor(
+      get(urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")

@@ -235,4 +235,60 @@ class ExternalMovementsDpsApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetTapReconciliationDetail {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+
+      apiService.getTapReconciliationDetail(personIdentifier)
+
+      dpsExternalMovementsServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+
+      apiService.getTapReconciliationDetail(personIdentifier)
+
+      dpsExternalMovementsServer.verify(
+        getRequestedFor(urlPathEqualTo("/reconciliation-detail/$personIdentifier/temporary-absences")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+
+      with(apiService.getTapReconciliationDetail(personIdentifier)) {
+        assertThat(scheduledAbsences.size).isEqualTo(1)
+        assertThat(scheduledAbsences[0].statusCode.value).isEqualTo("APPROVED")
+        assertThat(scheduledAbsences[0].prisonCode).isEqualTo("LEI")
+        assertThat(scheduledAbsences[0].occurrences.size).isEqualTo(1)
+        assertThat(scheduledAbsences[0].occurrences[0].statusCode.value).isEqualTo("SCHEDULED")
+        assertThat(scheduledAbsences[0].occurrences[0].prisonCode).isEqualTo("LEI")
+        assertThat(scheduledAbsences[0].occurrences[0].movements.size).isEqualTo(1)
+        assertThat(scheduledAbsences[0].occurrences[0].movements[0].direction.value).isEqualTo("OUT")
+        assertThat(unscheduledMovements.size).isEqualTo(1)
+      }
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      val personIdentifier = "A1234BC"
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier, status = 500)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTapReconciliationDetail(personIdentifier)
+      }
+    }
+  }
 }

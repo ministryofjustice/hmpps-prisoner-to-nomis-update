@@ -8,6 +8,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLog
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.api.SyncApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
@@ -38,6 +39,10 @@ class ExternalMovementsDpsApiService(
     .awaitBodyOrLogAndRethrowBadRequest()
 
   suspend fun getTapReconciliation(personIdentifier: String): PersonTapCounts = syncApi.prepare(syncApi.countTemporaryAbsencesRequestConfig(personIdentifier))
+    .retrieve()
+    .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getTapReconciliationDetail(personIdentifier: String): PersonTapDetail = syncApi.prepare(syncApi.getTemporaryAbsencesRequestConfig(personIdentifier))
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 }

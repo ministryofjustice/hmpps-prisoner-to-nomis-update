@@ -1,5 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
+import kotlinx.coroutines.reactor.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
@@ -13,6 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
@@ -59,6 +61,9 @@ class ExternalMovementsNomisApiService(
     .uri("/movements/{offenderNo}/temporary-absences/summary", offenderNo)
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
+
+  suspend fun getTemporaryAbsenceIds(offenderNo: String): OffenderTemporaryAbsenceIdsResponse = movementsApi.getTemporaryAbsencesAndMovementIds(offenderNo)
+    .awaitSingle()
 
   suspend fun getBookingTemporaryAbsences(bookingId: Long): BookingTemporaryAbsences? = movementsApi.prepare(movementsApi.getTemporaryAbsencesAndMovementsForBookingRequestConfig(bookingId))
     .retrieve()
