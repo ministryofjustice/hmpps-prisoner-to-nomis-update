@@ -56,18 +56,28 @@ class OfficialVisitsService(
           val locationMapping = visitSlotsMappingApiService.getInternalLocationByDpsId(dpsVisit.dpsLocationId.toString()).also {
             telemetry["nomisLocationId"] = it.nomisLocationId.toString()
           }
-          nomisApiService.createOfficialVisit(
+          val visitResponse = nomisApiService.createOfficialVisit(
             offenderNo = dpsVisit.prisonerNumber,
             request = dpsVisit.toCreateOfficialVisitRequest(
               visitSlotId = timeSlotMapping.nomisId,
               internalLocationId = locationMapping.nomisLocationId,
             ),
-          ).also {
-            telemetry["nomisVisitId"] = it.visitId.toString()
-          }.let {
+          )
+          if (visitResponse.isDuplicate) {
+            val existingNomisVisitId = visitResponse.duplicateResponse!!.moreInfo
+            telemetry["existingNomisVisitId"] = existingNomisVisitId.toString()
+            telemetry["reason"] = visitResponse.duplicateResponse.developerMessage.toString()
             OfficialVisitMappingDto(
               dpsId = event.additionalInformation.officialVisitId.toString(),
-              nomisId = it.visitId,
+              nomisId = existingNomisVisitId,
+              mappingType = OfficialVisitMappingDto.MappingType.DPS_CREATED,
+            )
+          } else {
+            val nomisVisit = visitResponse.successResponse!!
+            telemetry["nomisVisitId"] = nomisVisit.visitId.toString()
+            OfficialVisitMappingDto(
+              dpsId = event.additionalInformation.officialVisitId.toString(),
+              nomisId = nomisVisit.visitId,
               mappingType = OfficialVisitMappingDto.MappingType.DPS_CREATED,
             )
           }
@@ -135,10 +145,10 @@ class OfficialVisitsService(
             request = dpsVisitor.toCreateOfficialVisitorRequest(dpsVisit),
           )
 
-          if (visitorResponse.isError) {
-            val existingNomisVisitorId = visitorResponse.errorResponse!!.moreInfo
+          if (visitorResponse.isDuplicate) {
+            val existingNomisVisitorId = visitorResponse.duplicateResponse!!.moreInfo
             telemetry["existingNomisVisitorId"] = existingNomisVisitorId.toString()
-            telemetry["reason"] = visitorResponse.errorResponse.developerMessage.toString()
+            telemetry["reason"] = visitorResponse.duplicateResponse.developerMessage.toString()
             OfficialVisitorMappingDto(
               dpsId = event.additionalInformation.officialVisitorId.toString(),
               nomisId = existingNomisVisitorId,

@@ -43,10 +43,14 @@ class OfficialVisitsNomisApiService(
   suspend fun createOfficialVisit(
     offenderNo: String,
     request: CreateOfficialVisitRequest,
-  ): OfficialVisitResponse = api.createOfficialVisit(
-    offenderNo = offenderNo,
-    createOfficialVisitRequest = request,
-  ).awaitSingle()
+  ): SuccessOrDuplicate<OfficialVisitResponse, Long> = with(api) {
+    awaitSuccessOrDuplicate(
+      createOfficialVisitRequestConfig(
+        offenderNo = offenderNo,
+        createOfficialVisitRequest = request,
+      ),
+    )
+  }
 
   suspend fun getOfficialVisit(
     visitId: Long,

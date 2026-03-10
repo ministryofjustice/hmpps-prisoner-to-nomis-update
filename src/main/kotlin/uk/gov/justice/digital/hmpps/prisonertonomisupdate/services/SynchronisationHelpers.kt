@@ -3,6 +3,8 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.reactive.awaitFirst
+import org.openapitools.client.infrastructure.ApiClient
+import org.openapitools.client.infrastructure.RequestConfig
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.core.ParameterizedTypeReference
@@ -194,16 +196,18 @@ suspend fun <T> tryFetchParent(message: String = "Expected parent entity not fou
 suspend inline fun <reified T : Any, reified E : Any> WebClient.ResponseSpec.awaitSuccessOrDuplicate(): SuccessOrDuplicate<T, E> = this.bodyToMono<T>()
   .map { SuccessOrDuplicate<T, E>(successResponse = it) }
   .onErrorResume(WebClientResponseException.Conflict::class.java) {
-    Mono.just(SuccessOrDuplicate(errorResponse = it.getResponseBodyAs(object : ParameterizedTypeReference<DuplicateError<E>>() {})))
+    Mono.just(SuccessOrDuplicate(duplicateResponse = it.getResponseBodyAs(object : ParameterizedTypeReference<DuplicateError<E>>() {})))
   }
   .awaitFirst()
 
+suspend inline fun <reified T : Any, reified E : Any, reified C : Any> ApiClient.awaitSuccessOrDuplicate(requestConfig: RequestConfig<C>): SuccessOrDuplicate<T, E> = this.prepare(requestConfig).retrieve().awaitSuccessOrDuplicate()
+
 data class SuccessOrDuplicate<T, E>(
-  val errorResponse: DuplicateError<E>? = null,
+  val duplicateResponse: DuplicateError<E>? = null,
   val successResponse: T? = null,
 ) {
-  val isError
-    get() = errorResponse != null
+  val isDuplicate
+    get() = duplicateResponse != null
 }
 
 class DuplicateError<E>(
