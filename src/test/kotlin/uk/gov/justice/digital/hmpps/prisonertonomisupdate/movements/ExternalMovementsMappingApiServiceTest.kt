@@ -477,4 +477,38 @@ class ExternalMovementsMappingApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetMappingIds {
+    @Test
+    internal fun `should pass oath2 token to service`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC")
+
+      apiService.getTapMappingIds("A1234BC")
+
+      mappingApi.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `should send prisoner in url`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC")
+
+      apiService.getTapMappingIds("A1234BC")
+
+      mappingApi.verify(
+        getRequestedFor(urlPathEqualTo("/mapping/temporary-absence/A1234BC/ids")),
+      )
+    }
+
+    @Test
+    fun `should throw if API calls fail`() = runTest {
+      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC", status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTapMappingIds("A1234BC")
+      }
+    }
+  }
 }

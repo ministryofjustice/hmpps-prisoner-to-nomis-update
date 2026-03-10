@@ -13,9 +13,13 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
@@ -227,6 +231,34 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
+  fun stubGetTemporaryAbsenceMappingIds(
+    prisonerNumber: String = "A1234BC",
+    response: TemporaryAbsencesPrisonerMappingIdsDto = prisonerMappingIdsDto(),
+  ) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/$prisonerNumber/ids")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsenceMappingIds(
+    prisonerNumber: String = "A1234BC",
+    status: HttpStatus,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
+    mappingServer.stubFor(
+      get(urlPathMatching("/mapping/temporary-absence/$prisonerNumber/ids")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
@@ -269,4 +301,16 @@ fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSe
   nomisAddressId = 0,
   nomisAddressOwnerClass = "",
   dpsAddressText = "",
+)
+
+fun prisonerMappingIdsDto(offenderNo: String = "A1234BC") = TemporaryAbsencesPrisonerMappingIdsDto(
+  prisonerNumber = offenderNo,
+  applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(1111, UUID.randomUUID())),
+  schedules = listOf(ScheduledMovementMappingIdsDto(2222, UUID.randomUUID())),
+  movements = listOf(
+    ExternalMovementMappingIdsDto(12345, 3, UUID.randomUUID()),
+    ExternalMovementMappingIdsDto(12345, 4, UUID.randomUUID()),
+    ExternalMovementMappingIdsDto(12345, 5, UUID.randomUUID()),
+    ExternalMovementMappingIdsDto(12345, 6, UUID.randomUUID()),
+  ),
 )
