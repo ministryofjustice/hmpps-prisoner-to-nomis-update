@@ -242,6 +242,61 @@ class ExternalMovementsNomisApiServiceTest {
   }
 
   @Nested
+  inner class TemporaryAbsencePrisonerSummaryIds {
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+
+      apiService.getTemporaryAbsenceIds("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call get endpoint`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+
+      apiService.getTemporaryAbsenceIds("A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/ids")),
+      )
+    }
+
+    @Test
+    fun `will parse response`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+
+      apiService.getTemporaryAbsenceIds("A1234BC")
+        .also {
+          assertThat(it.applicationIds[0]).isEqualTo(1111)
+          assertThat(it.scheduleIds[0]).isEqualTo(2222)
+          assertThat(it.scheduledMovementOutIds[0].bookingId).isEqualTo(12345)
+          assertThat(it.scheduledMovementOutIds[0].sequence).isEqualTo(3)
+          assertThat(it.scheduledMovementInIds[0].sequence).isEqualTo(4)
+          assertThat(it.unscheduledMovementOutIds[0].sequence).isEqualTo(5)
+          assertThat(it.unscheduledMovementInIds[0].sequence).isEqualTo(6)
+        }
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/ids")),
+      )
+    }
+
+    @Test
+    fun `will throw if error`() = runTest {
+      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds(status = INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTemporaryAbsenceIds("A1234BC")
+      }
+    }
+  }
+
+  @Nested
   inner class GetTemporaryAbsencesByBooking {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
