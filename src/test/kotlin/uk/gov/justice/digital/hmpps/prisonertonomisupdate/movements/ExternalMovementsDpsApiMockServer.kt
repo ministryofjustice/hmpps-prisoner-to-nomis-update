@@ -17,6 +17,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonOccurrenceCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncAtAndBy
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
@@ -162,6 +166,37 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     ),
   )
 
+  fun personTapDetail() = PersonTapDetail(
+    scheduledAbsences = listOf(reconAuthorisation()),
+    unscheduledMovements = listOf(reconMovement()),
+  )
+
+  fun reconAuthorisation(
+    id: UUID = UUID.randomUUID(),
+  ) = ReconciliationAuthorisation(
+    id = id,
+    statusCode = ReconciliationAuthorisation.StatusCode.APPROVED,
+    prisonCode = "LEI",
+    occurrences = listOf(reconOccurrence()),
+  )
+
+  fun reconOccurrence(
+    id: UUID = UUID.randomUUID(),
+  ) = ReconciliationOccurrence(
+    id = id,
+    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+    prisonCode = "LEI",
+    movements = listOf(reconMovement()),
+  )
+
+  fun reconMovement(
+    id: UUID = UUID.randomUUID(),
+  ) = ReconciliationMovement(
+    id = id,
+    direction = ReconciliationMovement.Direction.OUT,
+    directionPrisonCode = "LEI",
+  )
+
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {
     dpsExternalMovementsServer.stubFor(
       get("/sync/temporary-absence-authorisations/$id")
@@ -254,6 +289,30 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   fun stubGetTapReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
     dpsExternalMovementsServer.stubFor(
       get("/reconciliation/$personIdentifier/temporary-absences")
+        .willReturn(
+          aResponse()
+            .withStatus(status)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliationDetail(personIdentifier: String, response: PersonTapDetail = personTapDetail()) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation-detail/$personIdentifier/temporary-absences")
+        .willReturn(
+          aResponse()
+            .withStatus(200)
+            .withHeader("Content-Type", "application/json")
+            .withBody(jsonMapper.writeValueAsString(response)),
+        ),
+    )
+  }
+
+  fun stubGetTapReconciliationDetail(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
+    dpsExternalMovementsServer.stubFor(
+      get("/reconciliation-detail/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()
             .withStatus(status)

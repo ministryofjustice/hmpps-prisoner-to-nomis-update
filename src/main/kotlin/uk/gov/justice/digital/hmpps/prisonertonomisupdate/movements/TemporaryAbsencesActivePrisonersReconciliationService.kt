@@ -14,7 +14,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTemporaryAbsences
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -109,7 +109,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> {
     val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getBookingTemporaryAbsences(bookingId) } to
-        async { dpsApiService.getTapReconciliation(offenderNo) }
+        async { dpsApiService.getTapReconciliationDetail(offenderNo) }
     }.awaitBoth()
     return checkTapsMatch(
       offenderNo = offenderNo,
@@ -119,7 +119,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     )
   }
 
-  private fun checkTapsMatch(offenderNo: String, bookingId: Long, dpsTaps: PersonTapCounts, nomisTaps: BookingTemporaryAbsences?): List<MismatchPrisonerTaps> {
+  private fun checkTapsMatch(offenderNo: String, bookingId: Long, dpsTaps: PersonTapDetail, nomisTaps: BookingTemporaryAbsences?): List<MismatchPrisonerTaps> {
     // TODO work out how to compare NOMIS / DPS - e.g. filter all active NOMIS TAPs , call mapping service to get IDs and get DPS entities, then compare? Or get all DPS active TAPs from a new endpoint?
     val mismatches = mutableListOf<MismatchPrisonerTaps>()
     mismatches.forEach {
