@@ -1175,7 +1175,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update an court appearance in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("court-appearance-updated-failed"),
+            eq("court-appearance-updated-error"),
             check {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -2524,6 +2524,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID)
         courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(
           DPS_SENTENCE_ID,
           404,
@@ -2535,7 +2536,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update a sentence in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("sentence-updated-failed"),
+            eq("sentence-updated-error"),
             check {
               assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
@@ -2592,13 +2593,66 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("sentence-updated-failed"),
+            eq("sentence-updated-awaiting-parent"),
             check {
               assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
               assertThat(it["reason"])
-                .isEqualTo("Parent entity not found. Dps charge id: $DPS_COURT_CHARGE_ID")
+                .isEqualTo("Missing Dps charge id: $DPS_COURT_CHARGE_ID")
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesntExistForConsecutiveSentence {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID)
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsId(
+          id = DPS_SENTENCE_ID,
+          nomisSentenceSequence = NOMIS_SENTENCE_SEQ,
+          nomisBookingId = NOMIS_BOOKING_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
+
+        courtSentencingApi.stubGetSentence(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+          chargeUuid = DPS_COURT_CHARGE_ID,
+          consecutiveToLifetimeUuid = UUID.fromString(DPS_SENTENCE_ID_2),
+        )
+
+        // consecutive sentence mapping doesn't exist
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(
+          DPS_SENTENCE_ID_2,
+          404,
+        )
+        publishUpdateSentenceDomainEvent()
+      }
+
+      @Test
+      fun `will not update a sentence in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(3)).trackEvent(
+            eq("sentence-updated-awaiting-parent"),
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["reason"]).isEqualTo("Missing consecutive sentence id: $DPS_SENTENCE_ID_2")
             },
             isNull(),
           )
@@ -3111,7 +3165,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update a sentence term in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("sentence-term-updated-failed"),
+            eq("sentence-term-updated-error"),
             check {
               assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
@@ -3290,10 +3344,11 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update the references in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("case-references-refreshed-failure"),
+            eq("case-references-refreshed-awaiting-parent"),
             check {
               assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("Missing DPS Case: $COURT_CASE_ID_FOR_CREATION")
             },
             isNull(),
           )
