@@ -118,6 +118,24 @@ class OfficialVisitsNomisApiServiceTest {
         postRequestedFor(urlPathEqualTo("/prisoner/A1234KT/official-visits")),
       )
     }
+
+    @Test
+    fun `will return existing visit on duplicate`() = runTest {
+      mockServer.stubCreateOfficialVisit(
+        offenderNo = "A1234KT",
+        existingVisitId = 888,
+      )
+
+      val response = apiService.createOfficialVisit(
+        offenderNo = "A1234KT",
+        createOfficialVisitRequest(),
+      )
+
+      assertThat(response.isDuplicate).isTrue
+      assertThat(response.successResponse).isNull()
+      assertThat(response.duplicateResponse).isNotNull
+      assertThat(response.duplicateResponse!!.moreInfo).isEqualTo(888)
+    }
   }
 
   @Nested
@@ -395,7 +413,7 @@ class OfficialVisitsNomisApiServiceTest {
         createOfficialVisitorRequest(),
       )
 
-      assertThat(response.isError).isFalse
+      assertThat(response.isDuplicate).isFalse
       assertThat(response.successResponse).isNotNull
       assertThat(response.successResponse!!.id).isEqualTo(999)
     }
@@ -412,10 +430,10 @@ class OfficialVisitsNomisApiServiceTest {
         createOfficialVisitorRequest(),
       )
 
-      assertThat(response.isError).isTrue
+      assertThat(response.isDuplicate).isTrue
       assertThat(response.successResponse).isNull()
-      assertThat(response.errorResponse).isNotNull
-      assertThat(response.errorResponse!!.moreInfo).isEqualTo(888)
+      assertThat(response.duplicateResponse).isNotNull
+      assertThat(response.duplicateResponse!!.moreInfo).isEqualTo(888)
     }
   }
 

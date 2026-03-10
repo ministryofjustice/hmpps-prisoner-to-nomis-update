@@ -196,6 +196,51 @@ class OfficialVisitsToNomisIntTest(
       }
 
       @Nested
+      inner class VisitAlreadyCreated {
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubCreateOfficialVisit(offenderNo = offenderNo, existingVisitId = nomisVisitId)
+          mappingApi.stubCreateVisitMapping()
+          publishCreateOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "DPS")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will attempt create visit in NOMIS`() {
+          nomisApi.verify(postRequestedFor(urlEqualTo("/prisoner/$offenderNo/official-visits")))
+        }
+
+        @Test
+        fun `will attempt to create mapping which might work if this visit was previously created by a POST that we did not get a response from`() {
+          mappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/official-visits/visit"))
+              .withRequestBodyJsonPath("dpsId", dpsOfficialVisitId)
+              .withRequestBodyJsonPath("nomisId", nomisVisitId)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+          )
+        }
+
+        @Test
+        fun `will send telemetry event showing the create succeeded but indicate they were created from a previous POST`() {
+          verify(telemetryClient).trackEvent(
+            eq("official-visit-create-success"),
+            check {
+              assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+              assertThat(it["existingNomisVisitId"]).isEqualTo(nomisVisitId.toString())
+              assertThat(it["dpsLocationId"]).isEqualTo(dpsLocationId.toString())
+              assertThat(it["nomisLocationId"]).isEqualTo(nomisLocationId.toString())
+              assertThat(it["dpsVisitSlotId"]).isEqualTo(dpsVisitSlotId.toString())
+              assertThat(it["nomisVisitSlotId"]).isEqualTo(nomisVisitSlotId.toString())
+              assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+              assertThat(it["prisonId"]).isEqualTo(prisonId)
+              assertThat(it["reason"]).isEqualTo("Visit $nomisVisitId already exists for prisoner $offenderNo")
+            },
+            isNull(),
+          )
+        }
+      }
+
+      @Nested
       inner class MappingRetry {
         @BeforeEach
         fun setUp() {
