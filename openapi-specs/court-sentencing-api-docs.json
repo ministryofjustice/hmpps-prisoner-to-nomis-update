@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-05.1380.1620eb9"
+    "version" : "2026-03-09.1384.a12b16b"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3789,6 +3789,36 @@
         }
       }
     },
+    "/sentence-type/all" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Search all sentence types",
+        "description" : "This endpoint will search all sentence types",
+        "operationId" : "getAllSentenceTypes",
+        "responses" : {
+          "200" : {
+            "description" : "Returns sentence types",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AllSentenceTypes"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/AllSentenceTypes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recall/person/{prisonerId}" : {
       "get" : {
         "tags" : [ "recall-controller" ],
@@ -5941,7 +5971,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6283,7 +6313,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "courtCode" : {
             "type" : "string"
@@ -8235,6 +8265,79 @@
         },
         "required" : [ "isStillValid" ]
       },
+      "AllSentenceTypes" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceTypeDetails"
+            }
+          }
+        },
+        "required" : [ "sentenceTypes" ]
+      },
+      "SentenceTypeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string"
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "isRecallable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
+      },
       "Recall" : {
         "type" : "object",
         "properties" : {
@@ -8691,7 +8794,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "courtCode" : {
             "type" : "string"
@@ -9322,7 +9425,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9386,7 +9489,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "courtId" : {
             "type" : "string"
@@ -9526,7 +9629,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "charges" : {
             "type" : "array",
@@ -9553,7 +9656,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "courtId" : {
             "type" : "string"
@@ -9817,12 +9920,12 @@
           "unpaged" : {
             "type" : "boolean"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -10062,7 +10165,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.380771571"
+            "example" : "06:23:49.418184381"
           },
           "courtCode" : {
             "type" : "string"
