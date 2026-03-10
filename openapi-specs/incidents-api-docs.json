@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-02-23.568.772f86e"
+    "version" : "2026-03-06.594.42229bc"
   },
   "servers" : [ {
     "url" : "/",
@@ -510,7 +510,7 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "example" : 40102,
+              "example" : "40102",
               "minLength" : 1
             },
             "maxItems" : 2147483647,
@@ -737,7 +737,7 @@
           "schema" : {
             "type" : "string",
             "description" : "Filter by given human-readable report reference",
-            "example" : "11124143",
+            "example" : "\"11124143\"",
             "maxLength" : 25,
             "minLength" : 1,
             "pattern" : "^\\d+$"
@@ -3867,7 +3867,8 @@
           "description" : "The name of the schema field which will be used as a dynamic filter.",
           "required" : true,
           "schema" : {
-            "type" : "string"
+            "type" : "string",
+            "minLength" : 1
           },
           "example" : "name"
         }, {
@@ -8181,17 +8182,17 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
