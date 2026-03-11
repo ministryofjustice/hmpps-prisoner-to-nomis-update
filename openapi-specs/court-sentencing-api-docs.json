@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-09.1384.a12b16b"
+    "version" : "2026-03-10.1396.6e019ae"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -2184,6 +2184,66 @@
               "*/*" : {
                 "schema" : {
                   "type" : "boolean"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence-type" : {
+      "post" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Create sentence type",
+        "description" : "This endpoint will create a new sentence type and migrate any sentence data over that needs to be mapped to the newly created sentence type",
+        "operationId" : "createSentenceType",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateSentenceType"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Created",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FieldErrorErrorResponse"
                 }
               }
             }
@@ -4787,20 +4847,12 @@
             "type" : "string"
           }
         }, {
-          "name" : "sortBy",
+          "name" : "mergeDuplicateCourtCases",
           "in" : "query",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "default" : "date"
-          }
-        }, {
-          "name" : "sortOrder",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "desc"
+            "type" : "boolean",
+            "default" : false
           }
         } ],
         "responses" : {
@@ -5971,7 +6023,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6212,6 +6264,10 @@
           "replacingChargeUuid" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "createChargeOrder" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
         "required" : [ "offenceCode", "offenceStartDate", "prisonId" ]
@@ -6313,7 +6369,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "courtCode" : {
             "type" : "string"
@@ -6712,6 +6768,131 @@
           }
         },
         "required" : [ "sentenceUuid" ]
+      },
+      "CreateSentenceType" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "isRecallable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "status" ]
+      },
+      "SentenceTypeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string"
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "isRecallable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
       },
       "IsRecallPossibleRequest" : {
         "type" : "object",
@@ -8277,67 +8458,6 @@
         },
         "required" : [ "sentenceTypes" ]
       },
-      "SentenceTypeDetails" : {
-        "type" : "object",
-        "properties" : {
-          "sentenceTypeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "minAgeInclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "maxAgeExclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "minDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "minOffenceDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxOffenceDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "classification" : {
-            "type" : "string",
-            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
-          },
-          "hintText" : {
-            "type" : "string"
-          },
-          "nomisCjaCode" : {
-            "type" : "string"
-          },
-          "nomisSentenceCalcType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          },
-          "isRecallable" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
-      },
       "Recall" : {
         "type" : "object",
         "properties" : {
@@ -8664,9 +8784,13 @@
           },
           "mergedFromCase" : {
             "$ref" : "#/components/schemas/MergedFromCase"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
-        "required" : [ "chargeUuid", "offenceCode" ]
+        "required" : [ "chargeUuid", "createdAt", "offenceCode" ]
       },
       "CourtAppearance" : {
         "type" : "object",
@@ -8794,7 +8918,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "courtCode" : {
             "type" : "string"
@@ -9425,7 +9549,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9489,7 +9613,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "courtId" : {
             "type" : "string"
@@ -9629,7 +9753,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "charges" : {
             "type" : "array",
@@ -9656,7 +9780,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "courtId" : {
             "type" : "string"
@@ -9818,9 +9942,13 @@
           "consecutiveToSentenceUuid" : {
             "type" : "string",
             "format" : "uuid"
+          },
+          "createdAt" : {
+            "type" : "string",
+            "format" : "date-time"
           }
         },
-        "required" : [ "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
+        "required" : [ "createdAt", "isRecallable", "periodLengths", "sentenceTypeUuid", "sentenceUuid", "systemOfRecord" ]
       },
       "RecallableCourtCasesResponse" : {
         "type" : "object",
@@ -9920,12 +10048,12 @@
           "unpaged" : {
             "type" : "boolean"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           }
         }
       },
@@ -10165,7 +10293,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:49.418184381"
+            "example" : "06:23:50.653818011"
           },
           "courtCode" : {
             "type" : "string"

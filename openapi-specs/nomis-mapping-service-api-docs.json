@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-04.436.4e1efa0"
+    "version" : "2026-03-10.440.949ceba"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -20215,7 +20215,7 @@
           "dpsPunishmentId" : {
             "type" : "string",
             "description" : "DPS punishment id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -20335,7 +20335,7 @@
           "dpsCourtChargeId" : {
             "type" : "string",
             "description" : "DPS offender charge id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -20384,7 +20384,7 @@
           "dpsCourtAppearanceId" : {
             "type" : "string",
             "description" : "DPS court appearance id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -20534,7 +20534,7 @@
           "dpsCourtCaseId" : {
             "type" : "string",
             "description" : "DPS court case id",
-            "example" : 123456
+            "example" : "123456"
           },
           "offenderNo" : {
             "type" : "string",
@@ -20619,7 +20619,7 @@
           "dpsSentenceId" : {
             "type" : "string",
             "description" : "DPS sentence id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -20680,7 +20680,7 @@
           "dpsTermId" : {
             "type" : "string",
             "description" : "DPS sentence id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -21637,7 +21637,7 @@
           "dpsHearingId" : {
             "type" : "string",
             "description" : "DPS hearing id",
-            "example" : 123456
+            "example" : "123456"
           },
           "label" : {
             "type" : "string",
@@ -22257,7 +22257,7 @@
           "dpsCourtCaseId" : {
             "type" : "string",
             "description" : "DPS court case id",
-            "example" : 123456
+            "example" : "123456"
           },
           "courtAppearances" : {
             "type" : "array",
@@ -22318,7 +22318,7 @@
           "dpsRecallId" : {
             "type" : "string",
             "description" : "DPS recall id",
-            "example" : 123456,
+            "example" : "123456",
             "minLength" : 1
           },
           "label" : {
@@ -23492,12 +23492,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -24036,7 +24036,7 @@
           "dpsCourtAppearanceId" : {
             "type" : "string",
             "description" : "DPS court appearance id",
-            "example" : 123456
+            "example" : "123456"
           },
           "courtCharges" : {
             "type" : "array",
