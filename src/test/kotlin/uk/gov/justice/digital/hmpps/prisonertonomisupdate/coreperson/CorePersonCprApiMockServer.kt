@@ -15,12 +15,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.CorePersonC
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalEthnicity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalIdentifiers
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalNationality
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSex
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalSexualOrientation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalTitle
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonCanonicalRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionGet
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ErrorResponse
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class CorePersonCprApiExtension :
   BeforeAllCallback,
@@ -62,7 +65,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetCorePerson(prisonNumber: String = "AA1234A", response: CanonicalRecord = corePersonDto(), status: HttpStatus = HttpStatus.OK, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubGetCorePerson(prisonNumber: String = "AA1234A", response: PrisonCanonicalRecord = corePersonDto(), status: HttpStatus = HttpStatus.OK, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
       get("/person/prison/$prisonNumber").willReturn(
         aResponse()
@@ -79,7 +82,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 }
 
-fun corePersonDto(nationality: String? = null, religion: String? = null) = CanonicalRecord(
+fun corePersonDto(nationality: String? = null, religion: String? = null) = PrisonCanonicalRecord(
   addresses = listOf(),
   aliases = listOf(),
   dateOfBirth = null,
@@ -103,4 +106,20 @@ fun corePersonDto(nationality: String? = null, religion: String? = null) = Canon
   sexualOrientation = CanonicalSexualOrientation("HET", "Hetrosexual Description"),
   sex = CanonicalSex(),
   title = CanonicalTitle(),
+  religionHistory = if (religion != null) {
+    listOf(
+      PrisonReligionGet(
+        religionCode = religion,
+        religionDescription = "$religion Description",
+        changeReasonKnown = false,
+        verified = true,
+        startDate = LocalDate.parse("2024-01-01"),
+        modifyDateTime = LocalDateTime.now(),
+        modifyUserId = "them",
+        current = true,
+      ),
+    )
+  } else {
+    emptyList()
+  },
 )

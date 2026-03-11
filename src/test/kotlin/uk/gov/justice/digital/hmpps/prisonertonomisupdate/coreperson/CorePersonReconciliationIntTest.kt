@@ -36,14 +36,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Bo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.time.LocalDateTime
 import kotlin.collections.listOf
 
 @ExtendWith(MockitoExtension::class)
 class CorePersonReconciliationIntTest(
-  @Autowired private val nomisApi: CorePersonNomisApiMockServer,
+  @Autowired private val corePersonNomisApi: CorePersonNomisApiMockServer,
   @Autowired private val service: CorePersonReconciliationService,
   @Value($$"${reports.core-person.reconciliation.page-size}") private val pageSize: Long,
 ) : IntegrationTestBase() {
@@ -66,7 +66,7 @@ class CorePersonReconciliationIntTest(
         assertThat(it).isNull()
       }
 
-      nomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC")))
+      corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC")))
       cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/A1234BC")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
@@ -81,6 +81,7 @@ class CorePersonReconciliationIntTest(
         assertThat(it?.differences).containsExactly(
           entry("nationality", "nomis=BR, cpr=M"),
           entry("religion", "nomis=null, cpr=ZOO Description"),
+          entry("religions", "nomis=0, cpr=1"),
         )
       }
 
@@ -90,7 +91,7 @@ class CorePersonReconciliationIntTest(
           assertThat(it).containsExactlyInAnyOrderEntriesOf(
             mapOf(
               "prisonNumber" to "A1234BC",
-              "differences5" to "nationality, religion",
+              "differences5" to "nationality, religion, religions",
             ),
           )
         },
@@ -100,7 +101,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should ignore previous bookings`() = runTest {
-      nomisApi.stubGetCorePerson(
+      corePersonNomisApi.stubGetCorePerson(
         prisonNumber = "A1234BC",
         response = corePerson(prisonNumber = "A1234BC").copy(
           nationalities =
@@ -161,7 +162,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report null differences when not found`() = runTest {
-      nomisApi.stubGetCorePerson("A1234BC", status = NOT_FOUND)
+      corePersonNomisApi.stubGetCorePerson("A1234BC", status = NOT_FOUND)
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
 
       service.checkCorePersonMatch("A1234BC").also {
@@ -197,7 +198,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `should report errors from NOMIS`() = runTest {
-      nomisApi.stubGetCorePerson("A1234BC", status = HttpStatus.INTERNAL_SERVER_ERROR)
+      corePersonNomisApi.stubGetCorePerson("A1234BC", status = HttpStatus.INTERNAL_SERVER_ERROR)
       cprApi.stubGetCorePerson(prisonNumber = "A1234BC", corePersonDto(nationality = "BR"))
 
       service.checkCorePersonMatch("A1234BC").also {
@@ -248,28 +249,28 @@ class CorePersonReconciliationIntTest(
     fun setUp() {
       reset(telemetryClient)
 
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(
+      nomisApi.stuGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 10,
           prisonerIds = (1L..10L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(
+      nomisApi.stuGetAllLatestBookings(
         bookingId = 10,
         response = BookingIdsWithLast(
           lastBookingId = 20,
           prisonerIds = (11L..20L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(
+      nomisApi.stuGetAllLatestBookings(
         bookingId = 20,
         response = BookingIdsWithLast(
           lastBookingId = 30,
           prisonerIds = (21L..30L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(
+      nomisApi.stuGetAllLatestBookings(
         bookingId = 30,
         response = BookingIdsWithLast(
           lastBookingId = 34,
@@ -278,19 +279,19 @@ class CorePersonReconciliationIntTest(
       )
 
       // mock non-matching for first, second and last prisoners
-      nomisApi.stubGetCorePerson("A0001TZ", corePerson("A0001TZ", nationality = "GB"))
+      corePersonNomisApi.stubGetCorePerson("A0001TZ", corePerson("A0001TZ", nationality = "GB"))
       cprApi.stubGetCorePerson("A0001TZ", corePersonDto(nationality = "12"))
 
-      nomisApi.stubGetCorePerson("A0002TZ", corePerson("A0002TZ", nationality = "US"))
+      corePersonNomisApi.stubGetCorePerson("A0002TZ", corePerson("A0002TZ", nationality = "US"))
       cprApi.stubGetCorePerson("A0002TZ", corePersonDto(nationality = "9"))
 
-      nomisApi.stubGetCorePerson("A0034TZ", corePerson("A0034TZ", nationality = "IS"))
+      corePersonNomisApi.stubGetCorePerson("A0034TZ", corePerson("A0034TZ", nationality = "IS"))
       cprApi.stubGetCorePerson("A0034TZ", corePersonDto(nationality = "17"))
 
       // all others are ok
       (3L..<34L).forEach {
         val offenderNo = generateOffenderNo(sequence = it)
-        nomisApi.stubGetCorePerson(offenderNo, corePerson(offenderNo, nationality = "BR"))
+        corePersonNomisApi.stubGetCorePerson(offenderNo, corePerson(offenderNo, nationality = "BR"))
         cprApi.stubGetCorePerson(offenderNo, corePersonDto(nationality = "BR"))
       }
     }
@@ -326,32 +327,32 @@ class CorePersonReconciliationIntTest(
       service.generateReconciliationReport(false)
 
       awaitReportFinished()
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("0"))
           .withQueryParam("activeOnly", equalTo("false"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("10"))
           .withQueryParam("activeOnly", equalTo("false"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("20"))
           .withQueryParam("activeOnly", equalTo("false"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("30"))
           .withQueryParam("activeOnly", equalTo("false"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.checkForUnmatchedRequests()
+      nomisApi.checkForUnmatchedRequests()
     }
 
     @Test
@@ -359,32 +360,32 @@ class CorePersonReconciliationIntTest(
       service.generateReconciliationReport(true)
 
       awaitReportFinished()
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("0"))
           .withQueryParam("activeOnly", equalTo("true"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         // 34 prisoners will be spread over 4 pages of 10 prisoners each
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("10"))
           .withQueryParam("activeOnly", equalTo("true"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("20"))
           .withQueryParam("activeOnly", equalTo("true"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.verify(
+      nomisApi.verify(
         getRequestedFor(urlPathEqualTo("/bookings/ids/latest-from-id"))
           .withQueryParam("bookingId", equalTo("30"))
           .withQueryParam("activeOnly", equalTo("true"))
           .withQueryParam("pageSize", equalTo(pageSize.toString())),
       )
-      NomisApiExtension.nomisApi.checkForUnmatchedRequests()
+      nomisApi.checkForUnmatchedRequests()
     }
 
     @Test
@@ -449,7 +450,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will complete a report even if a core person from Nomis does not exist`() = runTest {
-      nomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
+      corePersonNomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
 
       service.generateReconciliationReport(true)
 
@@ -495,7 +496,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will complete a report even if a core person from both nomis and dps do not exist`() = runTest {
-      nomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
+      corePersonNomisApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
       cprApi.stubGetCorePerson("A0002TZ", status = NOT_FOUND)
 
       service.generateReconciliationReport(true)
@@ -519,7 +520,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will attempt to complete a report even if the first page fails`() = runTest {
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(bookingId = 0, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
+      nomisApi.stuGetAllLatestBookings(bookingId = 0, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
       service.generateReconciliationReport(true)
 
@@ -534,7 +535,7 @@ class CorePersonReconciliationIntTest(
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(bookingId = 20, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
+      nomisApi.stuGetAllLatestBookings(bookingId = 20, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
       service.generateReconciliationReport(true)
 
@@ -560,8 +561,8 @@ class CorePersonReconciliationIntTest(
     prisonNumber: String = "A1234BC",
     nationality: String? = "BR",
     religion: String? = null,
-    fixedDelay: Int = 30,
-  ) = nomisApi.stubGetCorePerson(
+    fixedDelay: Int = 0,
+  ) = corePersonNomisApi.stubGetCorePerson(
     response = corePerson(prisonNumber = prisonNumber, nationality = nationality, religion = religion),
     fixedDelay = fixedDelay,
   )

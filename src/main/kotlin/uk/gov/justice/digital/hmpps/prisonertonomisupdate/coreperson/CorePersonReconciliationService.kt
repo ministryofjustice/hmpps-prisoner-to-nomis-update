@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.CanonicalRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonCanonicalRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
@@ -19,6 +19,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Co
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
+import java.time.LocalDate
 
 @Service
 class CorePersonReconciliationService(
@@ -28,7 +29,7 @@ class CorePersonReconciliationService(
   private val nomisApiService: NomisApiService,
   @Value($$"${reports.core-person.reconciliation.page-size}")
   private val prisonerPageSize: Int = 20,
-  @Value($$"${reports.prisoner.balance.reconciliation.fields:#{null}}")
+  @Value($$"${reports.core-person.reconciliation.fields:#{null}}")
   fields: String?,
 ) {
   private val reconciliationFields: Set<String>? = fields?.split(",")?.toSet()
@@ -131,6 +132,7 @@ class CorePersonReconciliationService(
     appendDifference(nomisCorePerson.nationality, cprCorePerson.nationality, differences, "nationality")
     // This should be comparing the code, but core person only currently holds the description (even in code field)
     appendDifference(nomisCorePerson.religion, cprCorePerson.religion, differences, "religion")
+    appendReligionsDifference(nomisCorePerson.religions, cprCorePerson.religions, differences, "religions")
 
     return differences.takeIf { it.isNotEmpty() }?.let { MismatchCorePerson(prisonNumber = prisonerId.offenderNo, differences = it) }?.also { mismatch ->
       log.info("CorePerson mismatch found {}", mismatch)
@@ -148,6 +150,23 @@ class CorePersonReconciliationService(
     }
   }
 
+  private fun appendReligionsDifference(
+    nomisField: List<PrisonerReligion>,
+    cprField: List<PrisonerReligion>,
+    differences: MutableMap<String, String>,
+    fieldName: String,
+  ) {
+    if (reconciliationFields != null && !reconciliationFields.contains(fieldName)) return
+    if (nomisField.size != cprField.size) {
+      differences[fieldName] = "nomis=${nomisField.size}, cpr=${cprField.size}"
+    } else {
+      nomisField.mapIndexedNotNull { i, n -> if (n != cprField[i]) i else null }
+        .takeIf { it.isNotEmpty() }
+        ?.joinToString()
+        ?.apply { differences[fieldName] = this }
+    }
+  }
+
   private fun appendDifference(
     nomisField: String?,
     cprField: String?,
@@ -161,13 +180,33 @@ class CorePersonReconciliationService(
   suspend fun checkCorePersonMatch(offenderNo: String): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo))
 }
 
-fun CanonicalRecord.toPerson() = PrisonerPerson(
+fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
   religion = religion.description,
+  religions = religionHistory.map {
+    PrisonerReligion(
+      religion = it.religionCode,
+      startDate = it.startDate,
+      endDate = it.endDate,
+      current = it.current,
+      comments = it.comments,
+      verified = it.verified,
+    )
+  },
 )
 fun CorePerson.toPerson() = PrisonerPerson(
   nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
   religion = this.beliefs?.firstOrNull()?.belief?.description,
+  religions = this.beliefs?.mapIndexed { i, r ->
+    PrisonerReligion(
+      religion = r.belief.code,
+      startDate = r.startDate,
+      endDate = r.endDate,
+      current = i == 0,
+      comments = r.comments,
+      verified = r.verified,
+    )
+  } ?: emptyList(),
 )
 
 data class MismatchCorePerson(
@@ -178,4 +217,14 @@ data class MismatchCorePerson(
 data class PrisonerPerson(
   val nationality: String? = null,
   val religion: String? = null,
+  val religions: List<PrisonerReligion> = emptyList(),
+)
+
+data class PrisonerReligion(
+  val religion: String?,
+  val startDate: LocalDate?,
+  val endDate: LocalDate?,
+  val current: Boolean?,
+  val comments: String?,
+  val verified: Boolean?,
 )
