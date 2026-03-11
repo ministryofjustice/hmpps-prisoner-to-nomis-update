@@ -160,9 +160,26 @@ class CorePersonReconciliationService(
     if (nomisField.size != cprField.size) {
       differences[fieldName] = "nomis=${nomisField.size}, cpr=${cprField.size}"
     } else {
-      nomisField.mapIndexedNotNull { i, n -> if (n != cprField[i]) i else null }
+      nomisField.mapIndexedNotNull { i, n ->
+        val cpr = cprField[i]
+        if (n.religion != cpr.religion) {
+          "$i:nomis=${n.religion}, cpr=${cpr.religion}"
+        } else if (n.verified != cpr.verified) {
+          "$i:nomis=${n. verified}, cpr=${cpr.verified}"
+        } else if (n.comments != cpr.comments) {
+          "$i:nomis=${n. comments}, cpr=${cpr.comments}"
+        } else if (n.startDate?.equals(cpr.startDate) == false) {
+          "$i:nomis=${n. startDate}, cpr=${cpr.startDate}"
+        } else if (n.endDate?.equals(cpr.endDate) == false) {
+          "$i:nomis=${n. endDate}, cpr=${cpr.endDate}"
+        } else if (n.current != cpr.current) {
+          "$i:nomis=${n. current}, cpr=${cpr.current}"
+        } else {
+          null
+        }
+      }
         .takeIf { it.isNotEmpty() }
-        ?.joinToString()
+        ?.joinToString(separator = ",")
         ?.apply { differences[fieldName] = this }
     }
   }
