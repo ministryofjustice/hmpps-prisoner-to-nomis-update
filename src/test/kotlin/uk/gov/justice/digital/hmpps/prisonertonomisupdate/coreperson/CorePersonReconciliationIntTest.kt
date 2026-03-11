@@ -31,13 +31,17 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionGet
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderBelief
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderNationality
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
+import java.time.LocalDate
 import java.time.LocalDateTime
 import kotlin.collections.listOf
 
@@ -97,6 +101,78 @@ class CorePersonReconciliationIntTest(
         },
         isNull(),
       )
+    }
+
+    @Test
+    fun `should report religions differences`() = runTest {
+      corePersonNomisApi.stubGetCorePerson(
+        response = corePerson(prisonNumber = "A1234BC").copy(
+          beliefs = listOf(
+            OffenderBelief(
+              beliefId = 12345L,
+              belief = CodeDescription("ZOO", "ZOO Description"),
+              startDate = LocalDate.parse("2024-01-01"),
+              verified = true,
+              audit = NomisAudit(
+                createDatetime = LocalDateTime.now(),
+                createUsername = "User",
+              ),
+              changeReason = true,
+              comments = "Some comment",
+            ),
+            OffenderBelief(
+              beliefId = 12345L,
+              belief = CodeDescription("DRU", "DRU Description"),
+              startDate = LocalDate.parse("2025-01-01"),
+              verified = true,
+              audit = NomisAudit(
+                createDatetime = LocalDateTime.now(),
+                createUsername = "User",
+              ),
+              changeReason = true,
+              comments = "Some comment",
+            ),
+          ),
+        ),
+      )
+      cprApi.stubGetCorePerson(
+        prisonNumber = "A1234BC",
+        corePersonDto(religion = "ZOO").copy(
+          religionHistory = listOf(
+            PrisonReligionGet(
+              // different religion
+              religionCode = "DRU",
+              religionDescription = "DRU Description",
+              changeReasonKnown = true,
+              comments = "Some comment",
+              verified = true,
+              startDate = LocalDate.parse("2024-01-01"),
+              modifyDateTime = LocalDateTime.now(),
+              modifyUserId = "User",
+              current = true,
+            ),
+            PrisonReligionGet(
+              religionCode = "DRU",
+              religionDescription = "DRU Description",
+              changeReasonKnown = true,
+              comments = "Some comment",
+              verified = true,
+              // different date
+              startDate = LocalDate.parse("2024-01-01"),
+              modifyDateTime = LocalDateTime.now(),
+              modifyUserId = "User",
+              current = false,
+            ),
+          ),
+        ),
+      )
+
+      service.checkCorePersonMatch("A1234BC").also {
+        assertThat(it?.prisonNumber).isEqualTo("A1234BC")
+        assertThat(it?.differences).containsExactly(
+          entry("religions", "0:nomis=ZOO, cpr=DRU,1:nomis=2025-01-01, cpr=2024-01-01"),
+        )
+      }
     }
 
     @Test
