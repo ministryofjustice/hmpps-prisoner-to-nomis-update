@@ -59,6 +59,44 @@ class ExternalMovementsDpsApiExtension :
 class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
     private const val WIREMOCK_PORT = 8102
+
+    fun personTapDetail() = PersonTapDetail(
+      scheduledAbsences = listOf(reconAuthorisation()),
+      unscheduledMovements = listOf(
+        reconMovement(direction = ReconciliationMovement.Direction.OUT),
+        reconMovement(direction = ReconciliationMovement.Direction.IN),
+      ),
+    )
+
+    fun reconAuthorisation(
+      id: UUID = UUID.randomUUID(),
+    ) = ReconciliationAuthorisation(
+      id = id,
+      statusCode = ReconciliationAuthorisation.StatusCode.APPROVED,
+      prisonCode = "LEI",
+      occurrences = listOf(reconOccurrence()),
+    )
+
+    fun reconOccurrence(
+      id: UUID = UUID.randomUUID(),
+    ) = ReconciliationOccurrence(
+      id = id,
+      statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+      prisonCode = "LEI",
+      movements = listOf(
+        reconMovement(direction = ReconciliationMovement.Direction.OUT),
+        reconMovement(direction = ReconciliationMovement.Direction.IN),
+      ),
+    )
+
+    fun reconMovement(
+      id: UUID = UUID.randomUUID(),
+      direction: ReconciliationMovement.Direction = ReconciliationMovement.Direction.OUT,
+    ) = ReconciliationMovement(
+      id = id,
+      direction = direction,
+      directionPrisonCode = "LEI",
+    )
   }
 
   private val now = LocalDateTime.now()
@@ -164,37 +202,6 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       scheduled = MovementInOutCount(outCount = 3, inCount = 4),
       unscheduled = MovementInOutCount(outCount = 5, inCount = 6),
     ),
-  )
-
-  fun personTapDetail() = PersonTapDetail(
-    scheduledAbsences = listOf(reconAuthorisation()),
-    unscheduledMovements = listOf(reconMovement()),
-  )
-
-  fun reconAuthorisation(
-    id: UUID = UUID.randomUUID(),
-  ) = ReconciliationAuthorisation(
-    id = id,
-    statusCode = ReconciliationAuthorisation.StatusCode.APPROVED,
-    prisonCode = "LEI",
-    occurrences = listOf(reconOccurrence()),
-  )
-
-  fun reconOccurrence(
-    id: UUID = UUID.randomUUID(),
-  ) = ReconciliationOccurrence(
-    id = id,
-    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-    prisonCode = "LEI",
-    movements = listOf(reconMovement()),
-  )
-
-  fun reconMovement(
-    id: UUID = UUID.randomUUID(),
-  ) = ReconciliationMovement(
-    id = id,
-    direction = ReconciliationMovement.Direction.OUT,
-    directionPrisonCode = "LEI",
   )
 
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {

@@ -275,9 +275,10 @@ class ExternalMovementsDpsApiServiceTest {
         assertThat(scheduledAbsences[0].occurrences.size).isEqualTo(1)
         assertThat(scheduledAbsences[0].occurrences[0].statusCode.value).isEqualTo("SCHEDULED")
         assertThat(scheduledAbsences[0].occurrences[0].prisonCode).isEqualTo("LEI")
-        assertThat(scheduledAbsences[0].occurrences[0].movements.size).isEqualTo(1)
+        assertThat(scheduledAbsences[0].occurrences[0].movements.size).isEqualTo(2)
         assertThat(scheduledAbsences[0].occurrences[0].movements[0].direction.value).isEqualTo("OUT")
-        assertThat(unscheduledMovements.size).isEqualTo(1)
+        assertThat(scheduledAbsences[0].occurrences[0].movements[1].direction.value).isEqualTo("IN")
+        assertThat(unscheduledMovements.size).isEqualTo(2)
       }
     }
 
