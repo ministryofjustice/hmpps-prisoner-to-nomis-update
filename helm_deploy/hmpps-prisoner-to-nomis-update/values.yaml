@@ -40,6 +40,7 @@ generic-service:
     APPLICATIONINSIGHTS_CONFIGURATION_FILE: applicationinsights.json
     REPORTS_CONTACT-PERSON_PROFILE-DETAILS_RECONCILIATION_PAGE-SIZE: 1000
     REPORTS_CONTACT-PERSON_PROFILE-DETAILS_RECONCILIATION_PARALLEL-JOBS: 6
+    REPORTS_CORE-PERSON_RECONCILIATION_FIELDS: religions
 
   # Pre-existing kubernetes secrets to load as environment variables in the deployment.
   # namespace_secrets:
