@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonCanonicalRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionGet
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
@@ -163,17 +164,17 @@ class CorePersonReconciliationService(
       nomisField.mapIndexedNotNull { i, n ->
         val cpr = cprField[i]
         if (n.religion != cpr.religion) {
-          "$i:nomis=${n.religion}, cpr=${cpr.religion}"
+          "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
         } else if (n.verified != cpr.verified) {
-          "$i:nomis=${n. verified}, cpr=${cpr.verified}"
+          "$i-verified:nomis=${n. verified}, cpr=${cpr.verified}"
         } else if (n.comments != cpr.comments) {
-          "$i:nomis=${n. comments}, cpr=${cpr.comments}"
+          "$i-comments:nomis=${n. comments}, cpr=${cpr.comments}"
         } else if (n.startDate?.equals(cpr.startDate) == false) {
-          "$i:nomis=${n. startDate}, cpr=${cpr.startDate}"
+          "$i-startDate:nomis=${n. startDate}, cpr=${cpr.startDate}"
         } else if (n.endDate?.equals(cpr.endDate) == false) {
-          "$i:nomis=${n. endDate}, cpr=${cpr.endDate}"
+          "$i-endDate:nomis=${n. endDate}, cpr=${cpr.endDate}"
         } else if (n.current != cpr.current) {
-          "$i:nomis=${n. current}, cpr=${cpr.current}"
+          "$i-current:nomis=${n. current}, cpr=${cpr.current}"
         } else {
           null
         }
@@ -200,7 +201,8 @@ class CorePersonReconciliationService(
 fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
   religion = religion.description,
-  religions = religionHistory.map {
+  // TODO: remove sorting here once core person implement sorting properly their end
+  religions = religionHistory.sortedByDescending(PrisonReligionGet::startDate).map {
     PrisonerReligion(
       religion = it.religionCode,
       startDate = it.startDate,

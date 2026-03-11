@@ -170,7 +170,7 @@ class CorePersonReconciliationIntTest(
       service.checkCorePersonMatch("A1234BC").also {
         assertThat(it?.prisonNumber).isEqualTo("A1234BC")
         assertThat(it?.differences).containsExactly(
-          entry("religions", "0:nomis=ZOO, cpr=DRU,1:nomis=2025-01-01, cpr=2024-01-01"),
+          entry("religions", "0-code:nomis=ZOO, cpr=DRU,1-startDate:nomis=2025-01-01, cpr=2024-01-01"),
         )
       }
     }
