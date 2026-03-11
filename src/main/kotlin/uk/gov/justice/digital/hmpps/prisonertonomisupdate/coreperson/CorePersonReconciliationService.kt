@@ -166,15 +166,15 @@ class CorePersonReconciliationService(
         if (n.religion != cpr.religion) {
           "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
         } else if (n.verified != cpr.verified) {
-          "$i-verified:nomis=${n. verified}, cpr=${cpr.verified}"
+          "$i-verified:nomis=${n.verified}, cpr=${cpr.verified}"
         } else if (n.comments != cpr.comments) {
-          "$i-comments:nomis=${n. comments}, cpr=${cpr.comments}"
+          "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
         } else if (n.startDate?.equals(cpr.startDate) == false) {
-          "$i-startDate:nomis=${n. startDate}, cpr=${cpr.startDate}"
+          "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
         } else if (n.endDate?.equals(cpr.endDate) == false) {
-          "$i-endDate:nomis=${n. endDate}, cpr=${cpr.endDate}"
+          "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
         } else if (n.current != cpr.current) {
-          "$i-current:nomis=${n. current}, cpr=${cpr.current}"
+          "$i-current:nomis=${n.current}, cpr=${cpr.current}"
         } else {
           null
         }
