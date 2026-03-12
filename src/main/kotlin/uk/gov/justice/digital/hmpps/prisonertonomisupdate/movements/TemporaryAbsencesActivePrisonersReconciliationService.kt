@@ -66,13 +66,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   private fun List<PrisonerIds>.asMap(): Pair<String, String> = this
     .sortedBy { it.offenderNo }.take(10).let { mismatch -> "offenderNos" to mismatch.joinToString { it.offenderNo } }
 
-  suspend fun generateTapActivePrisonersReconciliationReport(): ReconciliationResult<PrisonerIds> =
-    generateReconciliationReport(
-      threadCount = threadCount,
-      pageSize = pageSize,
-      checkMatch = ::checkPrisonerTapsMatch,
-      nextPage = ::getNextBookingsForPage,
-    )
+  suspend fun generateTapActivePrisonersReconciliationReport(): ReconciliationResult<PrisonerIds> = generateReconciliationReport(
+    threadCount = threadCount,
+    pageSize = pageSize,
+    checkMatch = ::checkPrisonerTapsMatch,
+    nextPage = ::getNextBookingsForPage,
+  )
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
@@ -113,20 +112,18 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> {
-    return withContext(Dispatchers.Unconfined) {
-      val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
-      val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
-      val mappings = async { mappingService.getTapMappingIds(offenderNo) }
+  suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
+    val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
+    val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
+    val mappings = async { mappingService.getTapMappingIds(offenderNo) }
 
-      checkTapsMatch(
-        offenderNo = offenderNo,
-        bookingId = bookingId,
-        dpsTaps = dpsTaps.await(),
-        nomisTaps = nomisTaps.await(),
-        mappings = mappings.await(),
-      )
-    }
+    checkTapsMatch(
+      offenderNo = offenderNo,
+      bookingId = bookingId,
+      dpsTaps = dpsTaps.await(),
+      nomisTaps = nomisTaps.await(),
+      mappings = mappings.await(),
+    )
   }
 
   private fun checkTapsMatch(
@@ -178,7 +175,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           nomisCount = nomisApplicationIds.size,
           dpsCount = dpsAuthorisationIds.size,
           unexpectedNomisIds = mappings.unexpectedApplications(nomisApplicationIds, dpsAuthorisationIds).toString(),
-          unexpectedDpsIds = mappings.unexpectedAuthorisations(dpsAuthorisationIds, nomisApplicationIds).toString()
+          unexpectedDpsIds = mappings.unexpectedAuthorisations(dpsAuthorisationIds, nomisApplicationIds).toString(),
         ),
       )
     }
@@ -192,7 +189,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           nomisCount = nomisScheduleOutIds.size,
           dpsCount = dpsOccurrenceIds.size,
           unexpectedNomisIds = mappings.unexpectedScheduledOut(nomisScheduleOutIds, dpsOccurrenceIds).toString(),
-          unexpectedDpsIds = mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisScheduleOutIds).toString()
+          unexpectedDpsIds = mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisScheduleOutIds).toString(),
         ),
       )
     }
@@ -208,7 +205,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementOutIds, dpsScheduledOutIds)
             .formatNomisMovementId(),
           unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledOutIds, nomisScheduledMovementOutIds)
-            .toString()
+            .toString(),
         ),
       )
     }
@@ -223,7 +220,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           dpsCount = dpsScheduledInIds.size,
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementInIds, dpsScheduledInIds)
             .formatNomisMovementId(),
-          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledInIds, nomisScheduledMovementInIds).toString()
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledInIds, nomisScheduledMovementInIds).toString(),
         ),
       )
     }
@@ -239,7 +236,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementOutIds, dpsUnscheduledOutIds)
             .formatNomisMovementId(),
           unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsUnscheduledOutIds, nomisUnscheduledMovementOutIds)
-            .toString()
+            .toString(),
         ),
       )
     }
@@ -255,7 +252,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementInIds, dpsUnscheduledInIds)
             .formatNomisMovementId(),
           unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsUnscheduledInIds, nomisUnscheduledMovementInIds)
-            .toString()
+            .toString(),
         ),
       )
     }
@@ -329,7 +326,7 @@ data class MismatchedPrisonerTapDetails(
   val nomisCount: Int,
   val dpsCount: Int,
   val unexpectedNomisIds: String,
-  val unexpectedDpsIds: String
+  val unexpectedDpsIds: String,
 ) {
   enum class Types {
     AUTHORISATIONS,

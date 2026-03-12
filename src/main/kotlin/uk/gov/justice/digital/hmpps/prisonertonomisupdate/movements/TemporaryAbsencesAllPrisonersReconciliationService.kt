@@ -283,5 +283,3 @@ data class MismatchPrisonerTapsSummary(
     UNSCHEDULED_IN,
   }
 }
-
-
