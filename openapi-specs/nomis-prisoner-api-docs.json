@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-09.1197.6e3ddb0"
+    "version" : "2026-03-11.1205.30bac89"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -23333,7 +23333,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX", "TCA", "TSA" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -23424,7 +23425,7 @@
           "bonusPay" : {
             "type" : "number",
             "description" : "Any bonus pay for the attendance",
-            "example" : 1.5
+            "example" : "1.50"
           }
         },
         "required" : [ "endTime", "eventStatusCode", "scheduleDate", "startTime" ]
@@ -23516,7 +23517,8 @@
           "outcome" : {
             "type" : "string",
             "description" : "The cancellation reason",
-            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ]
+            "enum" : [ "VISCANC", "OFFCANC", "ADMIN", "NSHOW" ],
+            "minLength" : 1
           }
         },
         "required" : [ "outcome" ]
@@ -24259,7 +24261,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -24279,7 +24281,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City reference code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -24890,7 +24892,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -25956,7 +25959,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -25976,7 +25979,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -26381,7 +26384,7 @@
           "compensationAmount" : {
             "type" : "number",
             "description" : "optional compensation amount",
-            "example" : 0.5
+            "example" : "0.50"
           },
           "sanctionDays" : {
             "type" : "integer",
@@ -26477,12 +26480,12 @@
           "payBand" : {
             "type" : "string",
             "description" : "The pay band (1 TO 10)",
-            "example" : 4
+            "example" : "4"
           },
           "rate" : {
             "type" : "number",
             "description" : "The half day rate",
-            "example" : 0.5
+            "example" : "0.50"
           },
           "startDate" : {
             "type" : "string",
@@ -26716,7 +26719,7 @@
           "payBandCode" : {
             "type" : "string",
             "description" : "The prisoner's pay band",
-            "example" : 2
+            "example" : "2"
           },
           "startDate" : {
             "type" : "string",
@@ -29200,7 +29203,7 @@
           "cost" : {
             "type" : "number",
             "description" : "Optional cost of repairs",
-            "example" : 62.12
+            "example" : "62.12"
           }
         },
         "required" : [ "typeCode" ]
@@ -29252,7 +29255,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "RSR", "UR", "S240A", "RST", "RX", "TCA", "TSA" ],
-            "example" : "RX"
+            "example" : "RX",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -29350,7 +29354,8 @@
             "type" : "string",
             "description" : "NOMIS Adjustment type code from SENTENCE_ADJUSTMENTS",
             "enum" : [ "LAL", "UAL", "RADA", "ADA", "SREM" ],
-            "example" : "ADA"
+            "example" : "ADA",
+            "minLength" : 1
           },
           "adjustmentDate" : {
             "type" : "string",
@@ -29938,7 +29943,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -29958,7 +29963,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City reference code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -30609,7 +30614,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -30629,7 +30634,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -31178,12 +31183,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -31440,7 +31445,7 @@
           "amount" : {
             "type" : "number",
             "description" : "The transaction amount",
-            "example" : 2.14
+            "example" : "2.14"
           },
           "type" : {
             "type" : "string",
@@ -31472,7 +31477,7 @@
           "reference" : {
             "type" : "string",
             "description" : "The transaction reference",
-            "example" : 1423558449
+            "example" : "1423558449"
           },
           "createdAt" : {
             "type" : "string",
@@ -31538,7 +31543,7 @@
           "amount" : {
             "type" : "number",
             "description" : "The transaction amount",
-            "example" : 2.14
+            "example" : "2.14"
           },
           "type" : {
             "type" : "string",
@@ -31569,7 +31574,7 @@
           "reference" : {
             "type" : "string",
             "description" : "The transaction reference",
-            "example" : 1423558449
+            "example" : "1423558449"
           },
           "subAccountType" : {
             "type" : "string",
@@ -34070,7 +34075,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -35513,8 +35518,25 @@
               "format" : "int64"
             }
           },
+          "scheduleOutIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement OUT IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "scheduleInIds" : {
+            "type" : "array",
+            "description" : "List of TAP scheduled movement IN IDs",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
           "scheduleIds" : {
             "type" : "array",
+            "deprecated" : true,
             "description" : "List of TAP scheduled movement IDs",
             "items" : {
               "type" : "integer",
@@ -35550,7 +35572,7 @@
             }
           }
         },
-        "required" : [ "applicationIds", "scheduleIds", "scheduledMovementInIds", "scheduledMovementOutIds", "unscheduledMovementInIds", "unscheduledMovementOutIds" ]
+        "required" : [ "applicationIds", "scheduleIds", "scheduleInIds", "scheduleOutIds", "scheduledMovementInIds", "scheduledMovementOutIds", "unscheduledMovementInIds", "unscheduledMovementOutIds" ]
       },
       "TemporaryAbsenceApplicationResponse" : {
         "type" : "object",
@@ -36632,12 +36654,12 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance",
-            "example" : 12.5
+            "example" : "12.50"
           },
           "holdBalance" : {
             "type" : "number",
             "description" : "The amount on hold",
-            "example" : 12.5
+            "example" : "12.50"
           }
         },
         "required" : [ "accountCode", "balance", "lastTransactionId", "prisonId", "transactionDate" ]
@@ -36711,7 +36733,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The balance for this prison and account code",
-            "example" : 33.12
+            "example" : "33.12"
           },
           "transactionDate" : {
             "type" : "string",
@@ -36830,7 +36852,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -37338,7 +37360,7 @@
           "premise" : {
             "type" : "string",
             "description" : "Premise",
-            "example" : 22
+            "example" : "22"
           },
           "street" : {
             "type" : "string",
@@ -37961,7 +37983,7 @@
           "payBand" : {
             "type" : "string",
             "description" : "Pay band",
-            "example" : 1
+            "example" : "1"
           },
           "livingUnitDescription" : {
             "type" : "string",
@@ -38440,12 +38462,12 @@
           "payBand" : {
             "type" : "string",
             "description" : "Pay band",
-            "example" : 1
+            "example" : "1"
           },
           "rate" : {
             "type" : "number",
             "description" : "rate",
-            "example" : 3.2
+            "example" : "3.2"
           }
         },
         "required" : [ "incentiveLevelCode", "payBand", "rate" ]
@@ -38486,7 +38508,7 @@
           "payBandCode" : {
             "type" : "string",
             "description" : "Pay band code",
-            "example" : 5
+            "example" : "5"
           },
           "incentiveLevelCode" : {
             "type" : "string",
