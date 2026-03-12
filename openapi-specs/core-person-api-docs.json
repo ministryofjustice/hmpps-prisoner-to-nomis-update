@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-10.2595.dd78921"
+    "version" : "2026-03-11.2616.e313ac4"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -931,7 +931,7 @@
           "type" : {
             "type" : "string",
             "description" : "The contact type",
-            "enum" : [ "HOME", "MOBILE", "EMAIL" ],
+            "enum" : [ "HOME", "BUS", "FAX", "ALTB", "ALTH", "MOBILE", "VISIT", "EMAIL" ],
             "example" : "HOME"
           },
           "extension" : {
