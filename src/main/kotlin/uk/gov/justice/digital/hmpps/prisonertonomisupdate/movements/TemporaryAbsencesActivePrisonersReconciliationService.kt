@@ -15,10 +15,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.util.UUID
 
 @Service
 class TemporaryAbsencesActivePrisonersReconciliationService(
@@ -63,12 +66,13 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   private fun List<PrisonerIds>.asMap(): Pair<String, String> = this
     .sortedBy { it.offenderNo }.take(10).let { mismatch -> "offenderNos" to mismatch.joinToString { it.offenderNo } }
 
-  suspend fun generateTapActivePrisonersReconciliationReport(): ReconciliationResult<PrisonerIds> = generateReconciliationReport(
-    threadCount = threadCount,
-    pageSize = pageSize,
-    checkMatch = ::checkPrisonerTapsMatch,
-    nextPage = ::getNextBookingsForPage,
-  )
+  suspend fun generateTapActivePrisonersReconciliationReport(): ReconciliationResult<PrisonerIds> =
+    generateReconciliationReport(
+      threadCount = threadCount,
+      pageSize = pageSize,
+      checkMatch = ::checkPrisonerTapsMatch,
+      nextPage = ::getNextBookingsForPage,
+    )
 
   private suspend fun getNextBookingsForPage(lastBookingId: Long): ReconciliationPageResult<PrisonerIds> = runCatching {
     nomisPrisonerApiService.getAllLatestBookings(
@@ -95,7 +99,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize offenders") }
 
   suspend fun checkPrisonerTapsMatch(prisonerIds: PrisonerIds): PrisonerIds? = runCatching {
-    checkPrisonerTapsMatch(prisonerIds.offenderNo, prisonerIds.bookingId).takeIf { it.isNotEmpty() }?.let { prisonerIds }
+    checkPrisonerTapsMatch(prisonerIds.offenderNo, prisonerIds.bookingId).takeIf { it.isNotEmpty() }
+      ?.let { prisonerIds }
   }.onFailure {
     log.error("Unable to match temporary absences for prisoner ${prisonerIds.offenderNo} booking ${prisonerIds.bookingId}", it)
     telemetryClient.trackEvent(
@@ -103,12 +108,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mapOf(
         "offenderNo" to prisonerIds.offenderNo,
         "bookingId" to prisonerIds.bookingId,
+        "reason" to (it.message ?: "unknown"),
       ),
     )
   }.getOrNull()
 
   suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> {
-//    TODO we'll base the reconciliation for each offender from these - but dive straight into mismatch counts and comparing occurrences rather than getting IDs
     return withContext(Dispatchers.Unconfined) {
       val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
       val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
@@ -131,9 +136,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     nomisTaps: OffenderTemporaryAbsencesResponse?,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
   ): List<MismatchPrisonerTaps> {
-    // TODO work out how to compare NOMIS / DPS - e.g. filter all active NOMIS TAPs , call mapping service to get IDs and get DPS entities, then compare? Or get all DPS active TAPs from a new endpoint?
-    val mismatches = mutableListOf<MismatchPrisonerTaps>()
-    mismatches.forEach {
+    if (nomisTaps == null) {
+      throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
+    }
+
+    val mismatchedCounts = findMismatchedCounts(nomisTaps, dpsTaps, mappings)
+    mismatchedCounts.forEach {
       telemetryClient.trackEvent(
         "$TELEMETRY_ACTIVE_TAPS-mismatch",
         mapOf(
@@ -142,10 +150,193 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           "type" to it.type.name,
           "nomisCount" to it.nomisCount.toString(),
           "dpsCount" to it.dpsCount.toString(),
+          "unexpected-nomis-ids" to it.unexpectedNomisIds,
+          "unexpected-dps-ids" to it.unexpectedDpsIds,
         ),
       )
     }
 
-    return mismatches.toList()
+    // TODO we will also perform some occurrence detail comparisons and mismatch if different
+
+    return mismatchedCounts.map { MismatchPrisonerTaps(offenderNo, bookingId, it.type) }
+  }
+
+  // Checks each NOMIS ID for a mapping to a real DPS ID, and vice versa. Any not found are returned
+  private fun findMismatchedCounts(
+    nomisIds: OffenderTemporaryAbsencesResponse,
+    dpsIds: PersonTapDetail,
+    mappings: TemporaryAbsencesPrisonerMappingIdsDto,
+  ): List<MismatchedPrisonerTapDetails> {
+    val mismatchedDetails = mutableListOf<MismatchedPrisonerTapDetails>()
+
+    val nomisApplicationIds = nomisIds.bookings.flatMap { it.temporaryAbsenceApplications.map { it.movementApplicationId } }
+    val dpsAuthorisationIds = dpsIds.scheduledAbsences.map { it.id }
+    if (nomisApplicationIds.size != dpsAuthorisationIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.AUTHORISATIONS,
+          nomisCount = nomisApplicationIds.size,
+          dpsCount = dpsAuthorisationIds.size,
+          unexpectedNomisIds = mappings.unexpectedApplications(nomisApplicationIds, dpsAuthorisationIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedAuthorisations(dpsAuthorisationIds, nomisApplicationIds).toString()
+        ),
+      )
+    }
+
+    val nomisScheduleOutIds = nomisIds.bookings.flatMap { it.temporaryAbsenceApplications.flatMap { it.absences.mapNotNull { it.scheduledTemporaryAbsence?.eventId } } }
+    val dpsOccurrenceIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.map { it.id } }
+    if (nomisScheduleOutIds.size != dpsOccurrenceIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.OCCURRENCES,
+          nomisCount = nomisScheduleOutIds.size,
+          dpsCount = dpsOccurrenceIds.size,
+          unexpectedNomisIds = mappings.unexpectedScheduledOut(nomisScheduleOutIds, dpsOccurrenceIds).toString(),
+          unexpectedDpsIds = mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisScheduleOutIds).toString()
+        ),
+      )
+    }
+
+    val nomisScheduledMovementOutIds = nomisIds.bookings.flatMap { booking -> booking.temporaryAbsenceApplications.flatMap { it.absences.mapNotNull { it.temporaryAbsence?.let { OffenderTemporaryAbsenceId(booking.bookingId, it.sequence) } } } }
+    val dpsScheduledOutIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id } } }
+    if (nomisScheduledMovementOutIds.size != dpsScheduledOutIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.SCHEDULED_OUT,
+          nomisCount = nomisScheduledMovementOutIds.size,
+          dpsCount = dpsScheduledOutIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementOutIds, dpsScheduledOutIds)
+            .formatNomisMovementId(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledOutIds, nomisScheduledMovementOutIds)
+            .toString()
+        ),
+      )
+    }
+
+    val nomisScheduledMovementInIds = nomisIds.bookings.flatMap { booking -> booking.temporaryAbsenceApplications.flatMap { it.absences.mapNotNull { it.temporaryAbsenceReturn?.let { OffenderTemporaryAbsenceId(booking.bookingId, it.sequence) } } } }
+    val dpsScheduledInIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id } } }
+    if (nomisScheduledMovementInIds.size != dpsScheduledInIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.SCHEDULED_IN,
+          nomisCount = nomisScheduledMovementInIds.size,
+          dpsCount = dpsScheduledInIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementInIds, dpsScheduledInIds)
+            .formatNomisMovementId(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsScheduledInIds, nomisScheduledMovementInIds).toString()
+        ),
+      )
+    }
+
+    val nomisUnscheduledMovementOutIds = nomisIds.bookings.flatMap { booking -> booking.unscheduledTemporaryAbsences.map { OffenderTemporaryAbsenceId(booking.bookingId, it.sequence) } }
+    val dpsUnscheduledOutIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id }
+    if (nomisUnscheduledMovementOutIds.size != dpsUnscheduledOutIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.UNSCHEDULED_OUT,
+          nomisCount = nomisUnscheduledMovementOutIds.size,
+          dpsCount = dpsUnscheduledOutIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementOutIds, dpsUnscheduledOutIds)
+            .formatNomisMovementId(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsUnscheduledOutIds, nomisUnscheduledMovementOutIds)
+            .toString()
+        ),
+      )
+    }
+
+    val nomisUnscheduledMovementInIds = nomisIds.bookings.flatMap { booking -> booking.unscheduledTemporaryAbsenceReturns.map { OffenderTemporaryAbsenceId(booking.bookingId, it.sequence) } }
+    val dpsUnscheduledInIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id }
+    if (nomisUnscheduledMovementInIds.size != dpsUnscheduledInIds.size) {
+      mismatchedDetails.add(
+        MismatchedPrisonerTapDetails(
+          type = MismatchedPrisonerTapDetails.Types.UNSCHEDULED_IN,
+          nomisCount = nomisUnscheduledMovementInIds.size,
+          dpsCount = dpsUnscheduledInIds.size,
+          unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementInIds, dpsUnscheduledInIds)
+            .formatNomisMovementId(),
+          unexpectedDpsIds = mappings.unexpectedDpsMovements(dpsUnscheduledInIds, nomisUnscheduledMovementInIds)
+            .toString()
+        ),
+      )
+    }
+
+    return mismatchedDetails
+  }
+
+  private fun List<OffenderTemporaryAbsenceId>.formatNomisMovementId() = joinToString(prefix = "[", postfix = "]") { "${it.bookingId}_${it.sequence}" }
+
+  // This checks each element of `sources` exists in `targets` after transformation by `findTarget`
+  private fun <SOURCE, TARGET> findMissing(
+    sources: List<SOURCE>,
+    targets: List<TARGET>,
+    findTarget: (SOURCE) -> TARGET?,
+  ) = sources.map { src -> src to findTarget(src) }
+    .map { (src, trg) -> src to targets.contains(trg) }
+    .filter { (_, found) -> !found }
+    .map { (src, _) -> src }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedApplications(
+    nomisApplicationIds: List<Long>,
+    dpsAuthorisationIds: List<UUID>,
+  ) = findMissing(nomisApplicationIds, dpsAuthorisationIds) { applicationId ->
+    applications.find { applicationId == it.nomisMovementApplicationId }?.dpsMovementApplicationId
+  }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedAuthorisations(
+    dpsAuthorisationIds: List<UUID>,
+    nomisApplicationIds: List<Long>,
+  ) = findMissing(dpsAuthorisationIds, nomisApplicationIds) { dpsId ->
+    applications.find { dpsId == it.dpsMovementApplicationId }?.nomisMovementApplicationId
+  }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedScheduledOut(
+    nomisScheduledOutIds: List<Long>,
+    dpsOccurrenceIds: List<UUID>,
+  ) = findMissing(nomisScheduledOutIds, dpsOccurrenceIds) { nomisId ->
+    schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
+  }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedOccurrences(
+    dpsOccurrenceIds: List<UUID>,
+    nomisScheduledOutIds: List<Long>,
+  ) = findMissing(dpsOccurrenceIds, nomisScheduledOutIds) { dpsId ->
+    schedules.find { dpsId == it.dpsOccurrenceId }?.nomisEventId
+  }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedNomisMovements(
+    nomisMovementIds: List<OffenderTemporaryAbsenceId>,
+    dpsMovementIds: List<UUID>,
+  ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisId ->
+    this.movements.find { nomisId.bookingId == it.nomisBookingId && nomisId.sequence == it.nomisMovementSeq }?.dpsMovementId
+  }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedDpsMovements(
+    dpsMovementIds: List<UUID>,
+    nomisMovementIds: List<OffenderTemporaryAbsenceId>,
+  ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
+    movements.find { dpsId == it.dpsMovementId }?.let { OffenderTemporaryAbsenceId(it.nomisBookingId, it.nomisMovementSeq) }
+  }
+}
+
+data class MismatchPrisonerTaps(
+  val offenderNo: String,
+  val bookingId: Long,
+  val type: MismatchedPrisonerTapDetails.Types,
+)
+
+data class MismatchedPrisonerTapDetails(
+  val type: Types,
+  val nomisCount: Int,
+  val dpsCount: Int,
+  val unexpectedNomisIds: String,
+  val unexpectedDpsIds: String
+) {
+  enum class Types {
+    AUTHORISATIONS,
+    OCCURRENCES,
+    SCHEDULED_OUT,
+    SCHEDULED_IN,
+    UNSCHEDULED_OUT,
+    UNSCHEDULED_IN,
   }
 }

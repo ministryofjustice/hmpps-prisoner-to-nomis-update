@@ -14,5 +14,5 @@ class ExternalMovementsReconciliationResource(
 
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/external-movements/all-taps/{offenderNo}/reconciliation")
-  suspend fun allTapsReconciliation(@PathVariable offenderNo: String): List<MismatchPrisonerTaps> = reconciliationService.checkPrisonerTapsMatch(offenderNo)
+  suspend fun allTapsReconciliation(@PathVariable offenderNo: String): List<MismatchPrisonerTapsSummary> = reconciliationService.checkPrisonerTapsMatch(offenderNo)
 }
