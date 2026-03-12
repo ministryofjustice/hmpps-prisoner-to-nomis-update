@@ -255,7 +255,7 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
             applicationIds = listOf(unexpectedApplicationId),
-            scheduleIds = listOf(unexpectedScheduleId),
+            scheduleOutIds = listOf(unexpectedScheduleId),
             scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq)),
             scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementInSeq)),
           ),
@@ -375,7 +375,7 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
             applicationIds = listOf(unexpectedApplicationId),
-            scheduleIds = listOf(unexpectedScheduleId),
+            scheduleOutIds = listOf(unexpectedScheduleId),
             scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq)),
             scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementInSeq)),
           ),
@@ -990,6 +990,50 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
       }
     }
 
+    @Nested
+    inner class NomisScheduledInNotReportedAsUnexpected {
+      private val nomisScheduleOutId = 1111L
+      private val nomisScheduleInId = 2222L
+
+      @BeforeEach
+      fun `create stubs for an unexpected OUT and IN schedule in NOMIS`() = runTest {
+        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+          offenderNo = "A0001TZ",
+          response = emptyTemporaryAbsenceSummaryResponse().copy(
+            scheduledOutMovements = ScheduledOut(1),
+          ),
+        )
+        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+          offenderNo = "A0001TZ",
+          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+            scheduleOutIds = listOf(nomisScheduleOutId),
+            scheduleInIds = listOf(nomisScheduleInId),
+          ),
+        )
+
+        reconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+        awaitReportFinished()
+      }
+
+      @Test
+      fun `should report extra NOMIS schedule OUT only`() = runTest {
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-all-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "type" to "OCCURRENCES",
+              "dpsCount" to "0",
+              "nomisCount" to "1",
+              "unexpected-dps-ids" to "[]",
+              "unexpected-nomis-ids" to "[$nomisScheduleOutId]",
+            ),
+          ),
+          isNull(),
+        )
+      }
+    }
+
     private fun awaitReportFinished() {
       await untilAsserted { verify(telemetryClient).trackEvent(eq("temporary-absences-all-reconciliation-report"), any(), isNull()) }
     }
@@ -1132,6 +1176,8 @@ private fun emptyPersonTapCounts() = PersonTapCounts(
 private fun emptyTemporaryAbsenceSummaryIdsResponse() = OffenderTemporaryAbsenceIdsResponse(
   applicationIds = listOf(),
   scheduleIds = listOf(),
+  scheduleOutIds = listOf(),
+  scheduleInIds = listOf(),
   scheduledMovementOutIds = listOf(),
   scheduledMovementInIds = listOf(),
   unscheduledMovementOutIds = listOf(),

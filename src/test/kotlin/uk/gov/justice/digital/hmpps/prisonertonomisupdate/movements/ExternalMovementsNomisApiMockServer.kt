@@ -131,7 +131,9 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun temporaryAbsenceSummaryIdsResponse() = OffenderTemporaryAbsenceIdsResponse(
       applicationIds = listOf(1111),
-      scheduleIds = listOf(2222),
+      scheduleIds = listOf(),
+      scheduleOutIds = listOf(2222),
+      scheduleInIds = listOf(9999),
       scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 3)),
       scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345, 4)),
       unscheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 5)),

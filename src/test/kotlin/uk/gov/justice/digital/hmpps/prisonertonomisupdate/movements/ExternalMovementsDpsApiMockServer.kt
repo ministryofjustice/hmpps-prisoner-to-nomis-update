@@ -83,6 +83,9 @@ class ExternalMovementsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       id = id,
       statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
       prisonCode = "LEI",
+      reasonCode = "RC",
+      start = LocalDateTime.now(),
+      end = LocalDateTime.now().plusDays(1),
       movements = listOf(
         reconMovement(direction = ReconciliationMovement.Direction.OUT),
         reconMovement(direction = ReconciliationMovement.Direction.IN),

@@ -184,8 +184,8 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 
     TapMismatchTypes.OCCURRENCES -> {
       val dpsOccurrenceIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.map { it.id } }
-      mappings.unexpectedScheduledOut(nomisIds.scheduleIds, dpsOccurrenceIds) to
-        mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisIds.scheduleIds)
+      mappings.unexpectedScheduledOut(nomisIds.scheduleOutIds, dpsOccurrenceIds) to
+        mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisIds.scheduleOutIds)
     }
 
     TapMismatchTypes.SCHEDULED_OUT -> {

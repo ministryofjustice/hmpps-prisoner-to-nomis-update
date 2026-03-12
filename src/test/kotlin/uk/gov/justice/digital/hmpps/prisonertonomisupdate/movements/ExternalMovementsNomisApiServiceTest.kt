@@ -273,7 +273,7 @@ class ExternalMovementsNomisApiServiceTest {
       apiService.getTemporaryAbsenceIds("A1234BC")
         .also {
           assertThat(it.applicationIds[0]).isEqualTo(1111)
-          assertThat(it.scheduleIds[0]).isEqualTo(2222)
+          assertThat(it.scheduleOutIds[0]).isEqualTo(2222)
           assertThat(it.scheduledMovementOutIds[0].bookingId).isEqualTo(12345)
           assertThat(it.scheduledMovementOutIds[0].sequence).isEqualTo(3)
           assertThat(it.scheduledMovementInIds[0].sequence).isEqualTo(4)
