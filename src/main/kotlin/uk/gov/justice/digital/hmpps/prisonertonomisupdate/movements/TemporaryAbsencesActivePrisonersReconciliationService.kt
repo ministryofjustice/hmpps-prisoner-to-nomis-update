@@ -15,10 +15,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTemporaryAbsences
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 
 @Service
 class TemporaryAbsencesActivePrisonersReconciliationService(
@@ -26,6 +26,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   private val nomisApiService: ExternalMovementsNomisApiService,
   private val dpsApiService: ExternalMovementsDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
+  private val mappingService: ExternalMovementsMappingApiService,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
@@ -107,19 +108,29 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   }.getOrNull()
 
   suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> {
-    val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getBookingTemporaryAbsences(bookingId) } to
-        async { dpsApiService.getTapReconciliationDetail(offenderNo) }
-    }.awaitBoth()
-    return checkTapsMatch(
-      offenderNo = offenderNo,
-      bookingId = bookingId,
-      dpsTaps = dpsTaps,
-      nomisTaps = nomisTaps,
-    )
+//    TODO we'll base the reconciliation for each offender from these - but dive straight into mismatch counts and comparing occurrences rather than getting IDs
+    return withContext(Dispatchers.Unconfined) {
+      val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
+      val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
+      val mappings = async { mappingService.getTapMappingIds(offenderNo) }
+
+      checkTapsMatch(
+        offenderNo = offenderNo,
+        bookingId = bookingId,
+        dpsTaps = dpsTaps.await(),
+        nomisTaps = nomisTaps.await(),
+        mappings = mappings.await(),
+      )
+    }
   }
 
-  private fun checkTapsMatch(offenderNo: String, bookingId: Long, dpsTaps: PersonTapDetail, nomisTaps: BookingTemporaryAbsences?): List<MismatchPrisonerTaps> {
+  private fun checkTapsMatch(
+    offenderNo: String,
+    bookingId: Long,
+    dpsTaps: PersonTapDetail,
+    nomisTaps: OffenderTemporaryAbsencesResponse?,
+    mappings: TemporaryAbsencesPrisonerMappingIdsDto,
+  ): List<MismatchPrisonerTaps> {
     // TODO work out how to compare NOMIS / DPS - e.g. filter all active NOMIS TAPs , call mapping service to get IDs and get DPS entities, then compare? Or get all DPS active TAPs from a new endpoint?
     val mismatches = mutableListOf<MismatchPrisonerTaps>()
     mismatches.forEach {
