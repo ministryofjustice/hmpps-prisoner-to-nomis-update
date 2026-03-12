@@ -108,7 +108,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTaps> {
+  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTapsSummary> {
     val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getTemporaryAbsenceSummary(offenderNo) } to
         async { dpsApiService.getTapReconciliation(offenderNo) }
@@ -120,25 +120,25 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     )
   }
 
-  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse): List<MismatchPrisonerTaps> {
-    val mismatches = mutableListOf<MismatchPrisonerTaps>()
+  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse): List<MismatchPrisonerTapsSummary> {
+    val mismatches = mutableListOf<MismatchPrisonerTapsSummary>()
     if (dpsTaps.authorisations.count != nomisTaps.applications.count.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.AUTHORISATIONS, dpsTaps.authorisations.count, nomisTaps.applications.count.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.AUTHORISATIONS, dpsTaps.authorisations.count, nomisTaps.applications.count.toInt())
     }
     if (dpsTaps.occurrences.count != nomisTaps.scheduledOutMovements.count.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.OCCURRENCES, dpsTaps.occurrences.count, nomisTaps.scheduledOutMovements.count.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.OCCURRENCES, dpsTaps.occurrences.count, nomisTaps.scheduledOutMovements.count.toInt())
     }
     if (dpsTaps.movements.scheduled.outCount != nomisTaps.movements.scheduled.outCount.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.SCHEDULED_OUT, dpsTaps.movements.scheduled.outCount, nomisTaps.movements.scheduled.outCount.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.SCHEDULED_OUT, dpsTaps.movements.scheduled.outCount, nomisTaps.movements.scheduled.outCount.toInt())
     }
     if (dpsTaps.movements.scheduled.inCount != nomisTaps.movements.scheduled.inCount.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.SCHEDULED_IN, dpsTaps.movements.scheduled.inCount, nomisTaps.movements.scheduled.inCount.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.SCHEDULED_IN, dpsTaps.movements.scheduled.inCount, nomisTaps.movements.scheduled.inCount.toInt())
     }
     if (dpsTaps.movements.unscheduled.outCount != nomisTaps.movements.unscheduled.outCount.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.UNSCHEDULED_OUT, dpsTaps.movements.unscheduled.outCount, nomisTaps.movements.unscheduled.outCount.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.UNSCHEDULED_OUT, dpsTaps.movements.unscheduled.outCount, nomisTaps.movements.unscheduled.outCount.toInt())
     }
     if (dpsTaps.movements.unscheduled.inCount != nomisTaps.movements.unscheduled.inCount.toInt()) {
-      mismatches += MismatchPrisonerTaps(offenderNo, TapMismatchTypes.UNSCHEDULED_IN, dpsTaps.movements.unscheduled.inCount, nomisTaps.movements.unscheduled.inCount.toInt())
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.UNSCHEDULED_IN, dpsTaps.movements.unscheduled.inCount, nomisTaps.movements.unscheduled.inCount.toInt())
     }
 
     if (mismatches.isEmpty()) return emptyList()
@@ -171,42 +171,42 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 
   // Checks each NOMIS ID for a mapping to a real DPS ID, and vice versa. Any not found are returned
   private fun findMismatchedIds(
-    type: TapMismatchTypes,
+    type: MismatchPrisonerTapsSummary.Types,
     nomisIds: OffenderTemporaryAbsenceIdsResponse,
     dpsIds: PersonTapDetail,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
   ): MismatchedIds = when (type) {
-    TapMismatchTypes.AUTHORISATIONS -> {
+    MismatchPrisonerTapsSummary.Types.AUTHORISATIONS -> {
       val dpsAuthorisationIds = dpsIds.scheduledAbsences.map { it.id }
       mappings.unexpectedApplications(nomisIds.applicationIds, dpsAuthorisationIds) to
         mappings.unexpectedAuthorisations(dpsAuthorisationIds, nomisIds.applicationIds)
     }
 
-    TapMismatchTypes.OCCURRENCES -> {
+    MismatchPrisonerTapsSummary.Types.OCCURRENCES -> {
       val dpsOccurrenceIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.map { it.id } }
       mappings.unexpectedScheduledOut(nomisIds.scheduleOutIds, dpsOccurrenceIds) to
         mappings.unexpectedOccurrences(dpsOccurrenceIds, nomisIds.scheduleOutIds)
     }
 
-    TapMismatchTypes.SCHEDULED_OUT -> {
+    MismatchPrisonerTapsSummary.Types.SCHEDULED_OUT -> {
       val dpsScheduledOutIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id } } }
       mappings.unexpectedNomisMovements(nomisIds.scheduledMovementOutIds, dpsScheduledOutIds).format() to
         mappings.unexpectedDpsMovements(dpsScheduledOutIds, nomisIds.scheduledMovementOutIds)
     }
 
-    TapMismatchTypes.SCHEDULED_IN -> {
+    MismatchPrisonerTapsSummary.Types.SCHEDULED_IN -> {
       val dpsScheduledInIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id } } }
       mappings.unexpectedNomisMovements(nomisIds.scheduledMovementInIds, dpsScheduledInIds).format() to
         mappings.unexpectedDpsMovements(dpsScheduledInIds, nomisIds.scheduledMovementInIds)
     }
 
-    TapMismatchTypes.UNSCHEDULED_OUT -> {
+    MismatchPrisonerTapsSummary.Types.UNSCHEDULED_OUT -> {
       val dpsUnscheduledOutIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id }
       mappings.unexpectedNomisMovements(nomisIds.unscheduledMovementOutIds, dpsUnscheduledOutIds).format() to
         mappings.unexpectedDpsMovements(dpsUnscheduledOutIds, nomisIds.unscheduledMovementOutIds)
     }
 
-    TapMismatchTypes.UNSCHEDULED_IN -> {
+    MismatchPrisonerTapsSummary.Types.UNSCHEDULED_IN -> {
       val dpsUnscheduledInIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id }
       mappings.unexpectedNomisMovements(nomisIds.unscheduledMovementInIds, dpsUnscheduledInIds).format() to
         mappings.unexpectedDpsMovements(dpsUnscheduledInIds, nomisIds.unscheduledMovementInIds)
@@ -215,12 +215,12 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 
   private fun List<OffenderTemporaryAbsenceId>.format() = joinToString(prefix = "[", postfix = "]") { "${it.bookingId}_${it.sequence}" }
 
-  // This checks each element of `sources` exists in `targets` after transformation by `findMapping`
+  // This checks each element of `sources` exists in `targets` after transformation by `findTarget`
   private fun <SOURCE, TARGET> findMissing(
     sources: List<SOURCE>,
     targets: List<TARGET>,
-    findMapping: (SOURCE) -> TARGET?,
-  ) = sources.map { src -> src to findMapping(src) }
+    findTarget: (SOURCE) -> TARGET?,
+  ) = sources.map { src -> src to findTarget(src) }
     .map { (src, trg) -> src to targets.contains(trg) }
     .filter { (_, found) -> !found }
     .map { (src, _) -> src }
@@ -268,18 +268,18 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
   }
 }
 
-data class MismatchPrisonerTaps(
+data class MismatchPrisonerTapsSummary(
   val offenderNo: String,
-  val type: TapMismatchTypes,
+  val type: Types,
   val dpsCount: Int,
   val nomisCount: Int,
-)
-
-enum class TapMismatchTypes {
-  AUTHORISATIONS,
-  OCCURRENCES,
-  SCHEDULED_OUT,
-  SCHEDULED_IN,
-  UNSCHEDULED_OUT,
-  UNSCHEDULED_IN,
+) {
+  enum class Types {
+    AUTHORISATIONS,
+    OCCURRENCES,
+    SCHEDULED_OUT,
+    SCHEDULED_IN,
+    UNSCHEDULED_OUT,
+    UNSCHEDULED_IN,
+  }
 }

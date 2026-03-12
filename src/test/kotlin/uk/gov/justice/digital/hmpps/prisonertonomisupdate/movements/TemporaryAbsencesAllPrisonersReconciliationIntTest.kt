@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.Integratio
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconOccurrence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TapMismatchTypes.AUTHORISATIONS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
@@ -1072,7 +1071,7 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
           .apply {
             with(this[0]) {
               assertThat(offenderNo).isEqualTo("A0001TZ")
-              assertThat(type).isEqualTo(AUTHORISATIONS)
+              assertThat(type).isEqualTo(MismatchPrisonerTapsSummary.Types.AUTHORISATIONS)
               assertThat(dpsCount).isEqualTo(2)
               assertThat(nomisCount).isEqualTo(1)
             }
@@ -1117,7 +1116,7 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
 
     private fun WebTestClient.getAllTapsPrisonerReconOk(offenderNo: String = "A0001TZ") = getAllTapsPrisonerRecon(offenderNo)
       .expectStatus().isOk
-      .expectBody<List<MismatchPrisonerTaps>>()
+      .expectBody<List<MismatchPrisonerTapsSummary>>()
       .returnResult().responseBody!!
 
     private fun WebTestClient.getAllTapsPrisonerRecon(offenderNo: String = "A0001TZ") = get().uri("/external-movements/all-taps/$offenderNo/reconciliation")
@@ -1189,7 +1188,7 @@ private fun emptyPersonTapDetail() = PersonTapDetail(
   unscheduledMovements = listOf(),
 )
 
-fun emptyPrisonerMappingIdsDto(offenderNo: String = "A0001TZ") = TemporaryAbsencesPrisonerMappingIdsDto(
+private fun emptyPrisonerMappingIdsDto(offenderNo: String = "A0001TZ") = TemporaryAbsencesPrisonerMappingIdsDto(
   prisonerNumber = offenderNo,
   applications = listOf(),
   schedules = listOf(),
