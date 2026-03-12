@@ -16,6 +16,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
@@ -66,6 +67,10 @@ class ExternalMovementsNomisApiService(
     .awaitSingle()
 
   suspend fun getBookingTemporaryAbsences(bookingId: Long): BookingTemporaryAbsences? = movementsApi.prepare(movementsApi.getTemporaryAbsencesAndMovementsForBookingRequestConfig(bookingId))
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getTemporaryAbsencesOrNull(offenderNo: String): OffenderTemporaryAbsencesResponse? = movementsApi.prepare(movementsApi.getTemporaryAbsencesAndMovementsRequestConfig(offenderNo))
     .retrieve()
     .awaitBodyOrNullForNotFound()
 }

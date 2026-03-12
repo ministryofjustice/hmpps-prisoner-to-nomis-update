@@ -352,4 +352,62 @@ class ExternalMovementsNomisApiServiceTest {
       }
     }
   }
+
+  @Nested
+  inner class GetTemporaryAbsences {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubGetTemporaryAbsences(offenderNo = "A1234BC")
+
+      apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass offender number to service`() = runTest {
+      mockServer.stubGetTemporaryAbsences(offenderNo = "A1234BC")
+
+      apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences")),
+      )
+    }
+
+    @Test
+    fun `will return temporary absences`() = runTest {
+      mockServer.stubGetTemporaryAbsences(offenderNo = "A1234BC")
+
+      val result = apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")!!
+
+      assertThat(result.bookings).hasSize(1)
+      assertThat(result.bookings[0].bookingId).isEqualTo(12345)
+      assertThat(result.bookings[0].temporaryAbsenceApplications).hasSize(1)
+      assertThat(result.bookings[0].temporaryAbsenceApplications[0].absences[0].scheduledTemporaryAbsence?.eventId).isEqualTo(1)
+      assertThat(result.bookings[0].temporaryAbsenceApplications[0].absences[0].scheduledTemporaryAbsenceReturn?.eventId).isEqualTo(2)
+      assertThat(result.bookings[0].temporaryAbsenceApplications[0].absences[0].temporaryAbsence?.sequence).isEqualTo(3)
+      assertThat(result.bookings[0].temporaryAbsenceApplications[0].absences[0].temporaryAbsenceReturn?.sequence).isEqualTo(4)
+      assertThat(result.bookings[0].unscheduledTemporaryAbsences[0].sequence).isEqualTo(1)
+      assertThat(result.bookings[0].unscheduledTemporaryAbsenceReturns[0].sequence).isEqualTo(2)
+    }
+
+    @Test
+    fun `will return null when offender does not exist`() = runTest {
+      mockServer.stubGetTemporaryAbsences(NOT_FOUND)
+
+      assertThat(apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")).isNull()
+    }
+
+    @Test
+    fun `will throw error when API returns an error`() = runTest {
+      mockServer.stubGetTemporaryAbsences(INTERNAL_SERVER_ERROR)
+
+      assertThrows<WebClientResponseException.InternalServerError> {
+        apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")
+      }
+    }
+  }
 }

@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExten
 class TemporaryAbsencesActivePrisonersReconciliationIntTest(
   @Autowired private val reconciliationService: TemporaryAbsencesActivePrisonersReconciliationService,
   @Autowired private val nomisMovementsApi: ExternalMovementsNomisApiMockServer,
+  @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,
 ) : IntegrationTestBase() {
 
   private val dpsApi = ExternalMovementsDpsApiExtension.dpsExternalMovementsServer
@@ -42,8 +43,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
         ),
       )
 
-      nomisMovementsApi.stubGetBookingTemporaryAbsences(bookingId = 12345L)
+      nomisMovementsApi.stubGetTemporaryAbsences(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
+      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ")
     }
 
     @Test

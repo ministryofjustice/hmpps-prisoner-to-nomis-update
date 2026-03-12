@@ -5,6 +5,8 @@ import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -22,6 +24,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.No
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsenceReturn
@@ -305,6 +308,28 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
         createUsername = "USER",
       ),
     )
+
+    fun temporaryAbsencesResponse(
+      movementPrison: String = "LEI",
+      bookingId: Long = 12345L,
+      activeBooking: Boolean = true,
+      latestBooking: Boolean = true,
+      absences: List<Absence> = listOf(absence(movementPrison = movementPrison)),
+      applications: List<TemporaryAbsenceApplication> = listOf(application(absences = absences)),
+      unscheduledTemporaryAbsences: List<TemporaryAbsence> = listOf(temporaryAbsence(seq = 1).copy(movementDate = yesterday.toLocalDate(), movementTime = yesterday)),
+      unscheduledTemporaryAbsenceReturns: List<TemporaryAbsenceReturn> = listOf(temporaryAbsenceReturn(seq = 2).copy(movementDate = yesterday.toLocalDate(), movementTime = yesterday)),
+    ): OffenderTemporaryAbsencesResponse = OffenderTemporaryAbsencesResponse(
+      bookings = listOf(
+        BookingTemporaryAbsences(
+          bookingId = bookingId,
+          activeBooking = activeBooking,
+          latestBooking = latestBooking,
+          temporaryAbsenceApplications = applications,
+          unscheduledTemporaryAbsences = unscheduledTemporaryAbsences,
+          unscheduledTemporaryAbsenceReturns = unscheduledTemporaryAbsenceReturns,
+        ),
+      ),
+    )
   }
 
   fun stubUpsertTemporaryAbsenceApplication(
@@ -521,6 +546,31 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
         ),
+    )
+  }
+
+  fun stubGetTemporaryAbsences(
+    offenderNo: String = "A1234BC",
+    response: OffenderTemporaryAbsencesResponse = temporaryAbsencesResponse(),
+  ) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/movements/$offenderNo/temporary-absences")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.OK.value())
+          .withBody(jsonMapper.writeValueAsString(response)),
+      ),
+    )
+  }
+
+  fun stubGetTemporaryAbsences(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+    nomisApi.stubFor(
+      get(urlPathMatching("/movements/.*/temporary-absences")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(status.value())
+          .withBody(jsonMapper.writeValueAsString(error)),
+      ),
     )
   }
 
