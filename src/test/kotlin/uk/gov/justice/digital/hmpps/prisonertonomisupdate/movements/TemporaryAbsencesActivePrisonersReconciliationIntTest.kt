@@ -878,6 +878,78 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       }
 
       @Test
+      fun `should NOT publish telemetry if NOMIS expired but DPS cancelled`() = runTest {
+        nomisMovementsApi.stubGetTemporaryAbsences(
+          offenderNo = "A0001TZ",
+          response = emptyTemporaryAbsenceSummaryResponse().copy(
+            bookings = listOf(
+              BookingTemporaryAbsences(
+                bookingId = 12345,
+                latestBooking = true,
+                activeBooking = true,
+                temporaryAbsenceApplications = listOf(
+                  application(
+                    id = applicationId,
+                    absences = listOf(
+                      absence(
+                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                          // important - expired in NOMIS
+                          eventStatus = "EXP",
+                          eventSubType = "C5",
+                          startTime = startTime,
+                          returnTime = endTime,
+                          toAddressPostcode = "S1 1AA",
+                        ),
+                        scheduledAbsenceReturn = null,
+                        temporaryAbsence = null,
+                        temporaryAbsenceReturn = null,
+                      ),
+                    ),
+                  ),
+                ),
+                unscheduledTemporaryAbsences = listOf(),
+                unscheduledTemporaryAbsenceReturns = listOf(),
+              ),
+            ),
+          ),
+        )
+
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    // important - cancelled in DPS
+                    statusCode = ReconciliationOccurrence.StatusCode.CANCELLED,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
       fun `should publish telemetry if Expired, old booking but NOMIS scheduled is completed`() = runTest {
         nomisMovementsApi.stubGetTemporaryAbsences(
           offenderNo = "A0001TZ",
