@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-11.2616.e313ac4"
+    "version" : "2026-03-12.2632.7c5db84"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -57,31 +57,11 @@
         },
         "responses" : {
           "200" : {
-            "description" : "Data update in CPR",
+            "description" : "Data updated in CPR",
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Person not found",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Unrecoverable error occurred whilst processing request.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/SysconUpdatePersonResponse"
                 }
               }
             }
@@ -953,7 +933,8 @@
           "birthCountryCode" : {
             "type" : "string",
             "description" : "The person's birth country code",
-            "example" : "UK"
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
+            "example" : "GBR"
           },
           "ethnicityCode" : {
             "type" : "string",
@@ -1075,27 +1056,122 @@
           }
         }
       },
-      "ErrorResponse" : {
+      "AddressContactMapping" : {
         "type" : "object",
         "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
+          "nomisContactId" : {
             "type" : "string"
           },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
+          "cprContactId" : {
             "type" : "string"
           }
         },
-        "required" : [ "status" ]
+        "required" : [ "nomisContactId" ]
+      },
+      "AddressMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressId" : {
+            "type" : "string"
+          },
+          "cprAddressId" : {
+            "type" : "string"
+          },
+          "addressUsageMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressUsageMapping"
+            }
+          },
+          "addressContactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressContactMapping"
+            }
+          }
+        },
+        "required" : [ "addressContactMappings", "addressUsageMappings", "nomisAddressId" ]
+      },
+      "AddressUsageMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisAddressUsageId" : {
+            "type" : "string"
+          },
+          "cprAddressUsageid" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "nomisAddressUsageId" ]
+      },
+      "AliasMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisPseudonymId" : {
+            "type" : "string"
+          },
+          "cprPseudonymId" : {
+            "type" : "string"
+          },
+          "identifierMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/IdentifierMapping"
+            }
+          }
+        },
+        "required" : [ "identifierMappings", "nomisPseudonymId" ]
+      },
+      "IdentifierMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisIdentifierId" : {
+            "type" : "string"
+          },
+          "cprIdentifierId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "nomisIdentifierId" ]
+      },
+      "PersonContactMapping" : {
+        "type" : "object",
+        "properties" : {
+          "nomisContactId" : {
+            "type" : "string"
+          },
+          "cprContactId" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "nomisContactId" ]
+      },
+      "SysconUpdatePersonResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerId" : {
+            "type" : "string"
+          },
+          "addressMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AddressMapping"
+            }
+          },
+          "personContactMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PersonContactMapping"
+            }
+          },
+          "pseudonymMappings" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AliasMapping"
+            }
+          }
+        },
+        "required" : [ "addressMappings", "personContactMappings", "pseudonymMappings" ]
       },
       "RetryDlqResult" : {
         "type" : "object",
