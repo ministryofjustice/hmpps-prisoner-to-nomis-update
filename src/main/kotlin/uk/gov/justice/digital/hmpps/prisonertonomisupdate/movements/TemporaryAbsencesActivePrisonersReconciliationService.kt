@@ -100,28 +100,26 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize offenders") }
 
   suspend fun checkPrisonerTapsMatch(prisonerIds: PrisonerIds): PrisonerIds? = runCatching {
-    checkPrisonerTapsMatch(prisonerIds.offenderNo, prisonerIds.bookingId).takeIf { it.isNotEmpty() }
+    checkPrisonerTapsMatch(prisonerIds.offenderNo).takeIf { it.isNotEmpty() }
       ?.let { prisonerIds }
   }.onFailure {
-    log.error("Unable to match temporary absences for prisoner ${prisonerIds.offenderNo} booking ${prisonerIds.bookingId}", it)
+    log.error("Unable to match temporary absences for prisoner ${prisonerIds.offenderNo}", it)
     telemetryClient.trackEvent(
       "$TELEMETRY_ACTIVE_TAPS-mismatch-error",
       mapOf(
         "offenderNo" to prisonerIds.offenderNo,
-        "bookingId" to prisonerIds.bookingId,
         "reason" to (it.message ?: "unknown"),
       ),
     )
   }.getOrNull()
 
-  suspend fun checkPrisonerTapsMatch(offenderNo: String, bookingId: Long): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
     val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
     val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
     val mappings = async { mappingService.getTapMappingIds(offenderNo) }
 
     checkTapsMatch(
       offenderNo = offenderNo,
-      bookingId = bookingId,
       dpsTaps = dpsTaps.await(),
       nomisTaps = nomisTaps.await(),
       mappings = mappings.await(),
@@ -130,7 +128,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
 
   private fun checkTapsMatch(
     offenderNo: String,
-    bookingId: Long,
     dpsTaps: PersonTapDetail,
     nomisTaps: OffenderTemporaryAbsencesResponse?,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
@@ -139,13 +136,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
-    val mismatchedCounts = findMismatchedCounts(offenderNo, bookingId, nomisTaps, dpsTaps, mappings)
+    val mismatchedCounts = findMismatchedCounts(offenderNo, nomisTaps, dpsTaps, mappings)
     mismatchedCounts.forEach {
       telemetryClient.trackEvent(
         "$TELEMETRY_ACTIVE_TAPS-mismatch",
         mapOf(
           "offenderNo" to offenderNo,
-          "bookingId" to bookingId,
           "type" to it.type,
           "nomisCount" to it.nomisCount.toString(),
           "dpsCount" to it.dpsCount.toString(),
@@ -155,13 +151,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       )
     }
 
-    val mismatchedSchedulesOut = findMismatchedOccurrences(offenderNo, bookingId, nomisTaps, dpsTaps, mappings)
+    val mismatchedSchedulesOut = findMismatchedOccurrences(offenderNo, nomisTaps, dpsTaps, mappings)
     mismatchedSchedulesOut.forEach {
       telemetryClient.trackEvent(
         "$TELEMETRY_ACTIVE_TAPS-mismatch",
         mapOf(
           "offenderNo" to offenderNo,
-          "bookingId" to bookingId,
           "nomisEventId" to "${it.nomisEventId}",
           "dpsOccurrenceId" to "${it.dpsOccurrenceId}",
           "type" to it.type,
@@ -175,7 +170,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   // Checks each NOMIS ID for a mapping to a real DPS ID, and vice versa. Any not found are returned
   private fun findMismatchedCounts(
     offenderNo: String,
-    bookingId: Long,
     nomisIds: OffenderTemporaryAbsencesResponse,
     dpsIds: PersonTapDetail,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
@@ -188,7 +182,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.AUTHORISATIONS,
           nomisCount = nomisApplicationIds.size,
           dpsCount = dpsAuthorisationIds.size,
@@ -204,7 +197,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.OCCURRENCES,
           nomisCount = nomisScheduleOutIds.size,
           dpsCount = dpsOccurrenceIds.size,
@@ -220,7 +212,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.SCHEDULED_OUT,
           nomisCount = nomisScheduledMovementOutIds.size,
           dpsCount = dpsScheduledOutIds.size,
@@ -238,7 +229,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.SCHEDULED_IN,
           nomisCount = nomisScheduledMovementInIds.size,
           dpsCount = dpsScheduledInIds.size,
@@ -255,7 +245,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.UNSCHEDULED_OUT,
           nomisCount = nomisUnscheduledMovementOutIds.size,
           dpsCount = dpsUnscheduledOutIds.size,
@@ -273,7 +262,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
-          bookingId = bookingId,
           type = MismatchedPrisonerTapIds.Type.UNSCHEDULED_IN,
           nomisCount = nomisUnscheduledMovementInIds.size,
           dpsCount = dpsUnscheduledInIds.size,
@@ -344,7 +332,6 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
 
   private fun findMismatchedOccurrences(
     offenderNo: String,
-    bookingId: Long,
     nomis: OffenderTemporaryAbsencesResponse,
     dps: PersonTapDetail,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
@@ -357,7 +344,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       .forEach { (nomisEventId, dpsOccurrenceId) ->
         val (nomisScheduleOut, latestBooking) = nomis.findScheduleOut(nomisEventId)
         val dpsOccurrence = dps.findOccurrence(dpsOccurrenceId)
-        fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, bookingId, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
+        fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
 
         // status must match
         if (dpsOccurrence.statusCode.value.toNomisSchedulesStatus().first != nomisScheduleOut.eventStatus) {
@@ -432,19 +419,17 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
 
 abstract class MismatchPrisonerTaps(
   val offenderNo: String,
-  val bookingId: Long,
   val type: String,
 )
 
 class MismatchedPrisonerTapIds(
   offenderNo: String,
-  bookingId: Long,
   type: Type,
   val nomisCount: Int,
   val dpsCount: Int,
   val unexpectedNomisIds: String,
   val unexpectedDpsIds: String,
-) : MismatchPrisonerTaps(offenderNo, bookingId, type.name) {
+) : MismatchPrisonerTaps(offenderNo, type.name) {
   enum class Type {
     AUTHORISATIONS,
     OCCURRENCES,
@@ -457,13 +442,12 @@ class MismatchedPrisonerTapIds(
 
 class MismatchedPrisonerTapDetails(
   offenderNo: String,
-  bookingId: Long,
   type: Type,
   val nomisEventId: Long,
   val dpsOccurrenceId: UUID,
   val nomisValue: String,
   val dpsValue: String,
-) : MismatchPrisonerTaps(offenderNo, bookingId, type.name) {
+) : MismatchPrisonerTaps(offenderNo, type.name) {
   enum class Type {
     STATUS,
     REASON,
