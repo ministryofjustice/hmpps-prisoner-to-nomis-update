@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-06.513.5a97ecf"
+    "version" : "2026-03-12.541.f16533f"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -724,6 +724,64 @@
       }
     },
     "/admin/visit-slot/id/{visitSlotId}" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Get a prison visit slot by ID",
+        "description" : "\n          Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n          Gets the details for a prison visit slot by the visit slot's internal ID.\n          \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getVisitSlot",
+        "parameters" : [ {
+          "name" : "visitSlotId",
+          "in" : "path",
+          "description" : "The internal ID for the prison visit slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Successfully retrieved the prison visit slot",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitSlot"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prison visit slot with this ID was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/VisitSlot"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
       "put" : {
         "tags" : [ "Admin" ],
         "summary" : "Update capacities for a visit slot",
@@ -3717,6 +3775,10 @@
             "format" : "int32",
             "description" : "Maximum groups allowed in the visit slot"
           },
+          "hasVisit" : {
+            "type" : "boolean",
+            "description" : "Whether there are any visits booked for this visit slot"
+          },
           "createdBy" : {
             "type" : "string",
             "description" : "Username who created the visit slot",
@@ -3740,7 +3802,7 @@
             "example" : "2024-01-01T00:00:00Z"
           }
         },
-        "required" : [ "createdBy", "createdTime", "dpsLocationId", "prisonCode", "prisonTimeSlotId", "visitSlotId" ]
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "hasVisit", "prisonCode", "prisonTimeSlotId", "visitSlotId" ]
       },
       "UpdateTimeSlotRequest" : {
         "type" : "object",
