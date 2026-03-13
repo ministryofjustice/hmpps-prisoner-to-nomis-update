@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Si
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingCourtCaseCloneResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ClonedCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceResponse
@@ -541,6 +542,8 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["courtEventCharges"])
                 .isEqualTo("[$NOMIS_COURT_CHARGE_ID, $NOMIS_COURT_CHARGE_2_ID, $NOMIS_COURT_CHARGE_3_ID, $NOMIS_COURT_CHARGE_4_ID]")
+              assertThat(it["courtEventChargesWithOutcomes"])
+                .isEqualTo("[CourtEventChargeRequest(offenderChargeId=$NOMIS_COURT_CHARGE_ID, resultCode1=$COURT_CHARGE_1_RESULT_CODE), CourtEventChargeRequest(offenderChargeId=$NOMIS_COURT_CHARGE_2_ID, resultCode1=$COURT_CHARGE_2_RESULT_CODE), CourtEventChargeRequest(offenderChargeId=$NOMIS_COURT_CHARGE_3_ID, resultCode1=$COURT_CHARGE_3_RESULT_CODE), CourtEventChargeRequest(offenderChargeId=$NOMIS_COURT_CHARGE_4_ID, resultCode1=null)]")
               assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
               assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
               assertThat(it["nextAppearanceDate"]).isEqualTo("2027-10-15")
@@ -978,7 +981,21 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
         await untilAsserted {
           verify(telemetryClient).trackEvent(
             eq("court-appearance-create-success"),
-            any(),
+            check {
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["courtEventCharges"]).isEqualTo(listOf(NOMIS_COURT_CHARGE_ID).toString())
+              assertThat(it["courtEventChargesWithOutcomes"]).isEqualTo(
+                listOf(
+                  CourtEventChargeRequest(
+                    offenderChargeId = NOMIS_COURT_CHARGE_ID,
+                    resultCode1 = COURT_CHARGE_1_RESULT_CODE,
+                  ),
+                ).toString(),
+              )
+              assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+            },
             isNull(),
           )
         }
@@ -1097,6 +1114,31 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               matchingJsonPath(
                 "courtEventCharges[1]",
                 equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+              ),
+            )
+            .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[0].offenderChargeId",
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[0].resultCode1",
+                equalTo(COURT_CHARGE_1_RESULT_CODE.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[1].offenderChargeId",
+                equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[1].resultCode1",
+                equalTo(COURT_CHARGE_2_RESULT_CODE.toString()),
               ),
             ),
         )

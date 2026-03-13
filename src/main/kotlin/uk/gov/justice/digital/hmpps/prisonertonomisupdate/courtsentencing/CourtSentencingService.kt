@@ -37,6 +37,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Ca
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ConvertToRecallResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtAppearanceRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CourtEventChargeRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtAppearanceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateCourtCaseRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateSentenceRequest
@@ -179,19 +180,23 @@ class CourtSentencingService(
           telemetryMap["nextAppearanceDate"] = courtAppearance.nextCourtAppearance?.appearanceDate.asStringOrBlank()
 
           val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
+          val courtEventChargesToUpdateWithOutcomes: MutableList<CourtEventChargeRequest> = mutableListOf()
           courtAppearance.charges.forEach { charge ->
             val courtChargeMapping = tryFetchParent(message = "Missing DPS charge: ${charge.lifetimeUuid}") {
               courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())
             }
             courtEventChargesToUpdate.add(courtChargeMapping.nomisCourtChargeId)
+            courtEventChargesToUpdateWithOutcomes.add(charge.toNomisCourtEventCharge(courtChargeMapping.nomisCourtChargeId))
           }
+          telemetryMap["courtEventCharges"] = courtEventChargesToUpdate.toString()
+          telemetryMap["courtEventChargesWithOutcomes"] = courtEventChargesToUpdateWithOutcomes.toString()
 
           nomisApiService.createCourtAppearance(
             offenderNo,
             courtCaseMapping.nomisCourtCaseId,
             courtAppearance.toNomisCourtAppearance(
-              courtEventCharges = courtEventChargesToUpdate.map { it }
-                .also { telemetryMap["courtEventCharges"] = it.toString() },
+              courtEventCharges = courtEventChargesToUpdate,
+              courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
             ),
           ).also { response ->
             telemetryMap["nomisCourtAppearanceId"] = response.id.toString()
@@ -514,10 +519,12 @@ class CourtSentencingService(
         telemetryMap["dpsAppearanceDate"] = dpsCourtAppearance.appearanceDate.toString()
 
         val courtEventChargesToUpdate: MutableList<Long> = mutableListOf()
+        val courtEventChargesWithOutcomesToUpdate: MutableList<CourtEventChargeRequest> = mutableListOf()
 
         dpsCourtAppearance.charges.forEach { charge ->
           courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
             courtEventChargesToUpdate.add(mapping.nomisCourtChargeId)
+            courtEventChargesWithOutcomesToUpdate.add(charge.toNomisCourtEventCharge(mapping.nomisCourtChargeId))
           } ?: let {
             telemetryMap["reason"] = "Parent entity not found"
             throw ParentEntityNotFoundRetry(
@@ -525,13 +532,17 @@ class CourtSentencingService(
             )
           }
         }
+        telemetryMap["courtEventChargesWithOutcomes"] = courtEventChargesWithOutcomesToUpdate.toString()
         val nomisResponse = nomisApiService.updateCourtAppearance(
           offenderNo = offenderNo,
           nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
           nomisCourtAppearanceId = courtAppearanceMapping.nomisCourtAppearanceId,
           request = dpsCourtAppearance.toNomisCourtAppearance(
-            courtEventCharges = courtEventChargesToUpdate.map { it },
-          ).also { telemetryMap["courtEventCharges"] = it.courtEventCharges.toString() },
+            courtEventCharges = courtEventChargesToUpdate,
+            courtEventChargesWithOutcomes = courtEventChargesWithOutcomesToUpdate,
+          ).also {
+            telemetryMap["courtEventChargesResponse"] = it.courtEventCharges.toString()
+          },
         )
 
         CourtChargeBatchUpdateMappingDto(
@@ -1646,6 +1657,7 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCase
 
 fun LegacyCourtAppearance.toNomisCourtAppearance(
   courtEventCharges: List<Long>,
+  courtEventChargesWithOutcomes: List<CourtEventChargeRequest>,
 ): CourtAppearanceRequest = CourtAppearanceRequest(
   eventDateTime = LocalDateTime.of(
     this.appearanceDate,
@@ -1666,6 +1678,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
     )
   },
   courtEventCharges = courtEventCharges,
+  courtEventChargesWithOutcomes = courtEventChargesWithOutcomes,
   nextCourtId = this.nextCourtAppearance?.courtId,
 )
 
@@ -1673,6 +1686,11 @@ fun LegacyCharge.toNomisCourtCharge(): OffenderChargeRequest = OffenderChargeReq
   offenceCode = this.offenceCode,
   offenceDate = this.offenceStartDate,
   offenceEndDate = this.offenceEndDate,
+  resultCode1 = this.nomisOutcomeCode,
+)
+
+fun LegacyCharge.toNomisCourtEventCharge(nomisChargeId: Long): CourtEventChargeRequest = CourtEventChargeRequest(
+  offenderChargeId = nomisChargeId,
   resultCode1 = this.nomisOutcomeCode,
 )
 
