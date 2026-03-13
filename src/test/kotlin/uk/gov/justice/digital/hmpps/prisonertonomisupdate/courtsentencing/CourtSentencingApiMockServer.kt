@@ -44,7 +44,6 @@ const val COURT_CHARGE_4_OFFENCE_CODE = "PS90034"
 const val COURT_CHARGE_1_RESULT_CODE = "4531"
 const val COURT_CHARGE_2_RESULT_CODE = "4531"
 const val COURT_CHARGE_3_RESULT_CODE = "1002"
-const val COURT_CHARGE_4_RESULT_CODE = "1002"
 const val COURT_CHARGE_1_OFFENCE_DATE = "2024-01-11"
 const val COURT_CHARGE_2_OFFENCE_DATE = "2024-01-12"
 const val COURT_CHARGE_3_OFFENCE_DATE = "2024-01-13"
@@ -262,7 +261,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           offenceCode = COURT_CHARGE_4_OFFENCE_CODE,
           offenceStartDate = LocalDate.parse(COURT_CHARGE_4_OFFENCE_DATE),
           prisonerId = offenderNo,
-          nomisOutcomeCode = COURT_CHARGE_4_RESULT_CODE,
+          nomisOutcomeCode = null,
         ),
       ),
       nomisOutcomeCode = "4531",
