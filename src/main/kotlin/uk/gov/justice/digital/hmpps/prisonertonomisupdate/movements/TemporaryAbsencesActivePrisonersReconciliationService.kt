@@ -16,10 +16,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.util.UUID
 
@@ -137,14 +139,14 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
-    val mismatchedCounts = findMismatchedCounts(nomisTaps, dpsTaps, mappings)
+    val mismatchedCounts = findMismatchedCounts(offenderNo, bookingId, nomisTaps, dpsTaps, mappings)
     mismatchedCounts.forEach {
       telemetryClient.trackEvent(
         "$TELEMETRY_ACTIVE_TAPS-mismatch",
         mapOf(
           "offenderNo" to offenderNo,
           "bookingId" to bookingId,
-          "type" to it.type.name,
+          "type" to it.type,
           "nomisCount" to it.nomisCount.toString(),
           "dpsCount" to it.dpsCount.toString(),
           "unexpected-nomis-ids" to it.unexpectedNomisIds,
@@ -153,25 +155,41 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       )
     }
 
-    // TODO we will also perform some occurrence detail comparisons and mismatch if different
+    val mismatchedSchedulesOut = findMismatchedOccurrences(offenderNo, bookingId, nomisTaps, dpsTaps, mappings)
+    mismatchedSchedulesOut.forEach {
+      telemetryClient.trackEvent(
+        "$TELEMETRY_ACTIVE_TAPS-mismatch",
+        mapOf(
+          "offenderNo" to offenderNo,
+          "bookingId" to bookingId,
+          "nomisEventId" to "${it.nomisEventId}",
+          "dpsOccurrenceId" to "${it.dpsOccurrenceId}",
+          "type" to it.type,
+        ),
+      )
+    }
 
-    return mismatchedCounts.map { MismatchPrisonerTaps(offenderNo, bookingId, it.type) }
+    return mismatchedCounts + mismatchedSchedulesOut
   }
 
   // Checks each NOMIS ID for a mapping to a real DPS ID, and vice versa. Any not found are returned
   private fun findMismatchedCounts(
+    offenderNo: String,
+    bookingId: Long,
     nomisIds: OffenderTemporaryAbsencesResponse,
     dpsIds: PersonTapDetail,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
-  ): List<MismatchedPrisonerTapDetails> {
-    val mismatchedDetails = mutableListOf<MismatchedPrisonerTapDetails>()
+  ): List<MismatchedPrisonerTapIds> {
+    val mismatchedDetails = mutableListOf<MismatchedPrisonerTapIds>()
 
     val nomisApplicationIds = nomisIds.bookings.flatMap { it.temporaryAbsenceApplications.map { it.movementApplicationId } }
     val dpsAuthorisationIds = dpsIds.scheduledAbsences.map { it.id }
     if (nomisApplicationIds.size != dpsAuthorisationIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.AUTHORISATIONS,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.AUTHORISATIONS,
           nomisCount = nomisApplicationIds.size,
           dpsCount = dpsAuthorisationIds.size,
           unexpectedNomisIds = mappings.unexpectedApplications(nomisApplicationIds, dpsAuthorisationIds).toString(),
@@ -184,8 +202,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val dpsOccurrenceIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.map { it.id } }
     if (nomisScheduleOutIds.size != dpsOccurrenceIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.OCCURRENCES,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.OCCURRENCES,
           nomisCount = nomisScheduleOutIds.size,
           dpsCount = dpsOccurrenceIds.size,
           unexpectedNomisIds = mappings.unexpectedScheduledOut(nomisScheduleOutIds, dpsOccurrenceIds).toString(),
@@ -198,8 +218,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val dpsScheduledOutIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id } } }
     if (nomisScheduledMovementOutIds.size != dpsScheduledOutIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.SCHEDULED_OUT,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.SCHEDULED_OUT,
           nomisCount = nomisScheduledMovementOutIds.size,
           dpsCount = dpsScheduledOutIds.size,
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementOutIds, dpsScheduledOutIds)
@@ -214,8 +236,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val dpsScheduledInIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id } } }
     if (nomisScheduledMovementInIds.size != dpsScheduledInIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.SCHEDULED_IN,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.SCHEDULED_IN,
           nomisCount = nomisScheduledMovementInIds.size,
           dpsCount = dpsScheduledInIds.size,
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisScheduledMovementInIds, dpsScheduledInIds)
@@ -229,8 +253,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val dpsUnscheduledOutIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.OUT }.map { it.id }
     if (nomisUnscheduledMovementOutIds.size != dpsUnscheduledOutIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.UNSCHEDULED_OUT,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.UNSCHEDULED_OUT,
           nomisCount = nomisUnscheduledMovementOutIds.size,
           dpsCount = dpsUnscheduledOutIds.size,
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementOutIds, dpsUnscheduledOutIds)
@@ -245,8 +271,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val dpsUnscheduledInIds = dpsIds.unscheduledMovements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id }
     if (nomisUnscheduledMovementInIds.size != dpsUnscheduledInIds.size) {
       mismatchedDetails.add(
-        MismatchedPrisonerTapDetails(
-          type = MismatchedPrisonerTapDetails.Types.UNSCHEDULED_IN,
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          bookingId = bookingId,
+          type = MismatchedPrisonerTapIds.Type.UNSCHEDULED_IN,
           nomisCount = nomisUnscheduledMovementInIds.size,
           dpsCount = dpsUnscheduledInIds.size,
           unexpectedNomisIds = mappings.unexpectedNomisMovements(nomisUnscheduledMovementInIds, dpsUnscheduledInIds)
@@ -313,27 +341,134 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
     movements.find { dpsId == it.dpsMovementId }?.let { OffenderTemporaryAbsenceId(it.nomisBookingId, it.nomisMovementSeq) }
   }
+
+  private fun findMismatchedOccurrences(
+    offenderNo: String,
+    bookingId: Long,
+    nomis: OffenderTemporaryAbsencesResponse,
+    dps: PersonTapDetail,
+    mappings: TemporaryAbsencesPrisonerMappingIdsDto,
+  ): List<MismatchedPrisonerTapDetails> {
+    val nomisScheduleOutIds = nomis.bookings.flatMap { it.temporaryAbsenceApplications.flatMap { it.absences.mapNotNull { it.scheduledTemporaryAbsence?.eventId } } }
+    val dpsOccurrenceIds = dps.scheduledAbsences.flatMap { it.occurrences.map { it.id } }
+
+    val mismatches = mutableListOf<MismatchedPrisonerTapDetails>()
+    mappings.matchingSchedulesOut(nomisScheduleOutIds, dpsOccurrenceIds)
+      .forEach { (nomisEventId, dpsOccurrenceId) ->
+        val (nomisScheduleOut, latestBooking) = nomis.findScheduleOut(nomisEventId)
+        val dpsOccurrence = dps.findOccurrence(dpsOccurrenceId)
+        fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, bookingId, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
+
+        // status must match
+        if (dpsOccurrence.statusCode.value.toNomisSchedulesStatus().first != nomisScheduleOut.eventStatus) {
+          // check for exclusions
+          when {
+            // old booking not completed in NOMIS can be expired in DPS
+            !latestBooking && nomisScheduleOut.eventStatus != "COMP" && dpsOccurrence.statusCode == ReconciliationOccurrence.StatusCode.EXPIRED -> {}
+            // not excluded so we will publish the difference
+            else -> mismatches.add(
+              mismatch(MismatchedPrisonerTapDetails.Type.STATUS, nomisScheduleOut.eventStatus, dpsOccurrence.statusCode.value),
+            )
+          }
+        }
+
+        // reason code must match
+        if (dpsOccurrence.reasonCode != nomisScheduleOut.eventSubType) {
+          mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.REASON, nomisScheduleOut.eventSubType, dpsOccurrence.reasonCode))
+        }
+
+        // start time must match
+        if (dpsOccurrence.start != nomisScheduleOut.startTime) {
+          mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.START_TIME, "${nomisScheduleOut.startTime}", "${dpsOccurrence.start}"))
+        }
+
+        // end time must match
+        if (dpsOccurrence.end != nomisScheduleOut.returnTime) {
+          mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.END_TIME, "${nomisScheduleOut.returnTime}", "${dpsOccurrence.end}"))
+        }
+
+        // postcode must match
+        if (dpsOccurrence.location?.postcode != nomisScheduleOut.toAddressPostcode) {
+          mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.POSTCODE, "${nomisScheduleOut.toAddressPostcode}", "${dpsOccurrence.location?.postcode}"))
+        }
+      }
+
+    return mismatches
+  }
+
+  // This finds each element of `sources` that exists in `targets` after transformation by `findTarget`
+  private fun <SOURCE, TARGET> findMatches(
+    sources: List<SOURCE>,
+    targets: List<TARGET>,
+    findTarget: (SOURCE) -> TARGET?,
+  ): List<Pair<SOURCE, TARGET>> = sources.map { src -> src to findTarget(src) }
+    .filter { (_, trg) -> trg in targets }
+    .filter { (_, trg) -> trg != null }
+    .map { (src, trg) -> src to trg!! }
+
+  private fun TemporaryAbsencesPrisonerMappingIdsDto.matchingSchedulesOut(
+    nomisScheduledOutIds: List<Long>,
+    dpsOccurrenceIds: List<UUID>,
+  ) = findMatches(nomisScheduledOutIds, dpsOccurrenceIds) { nomisId ->
+    schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
+  }
+
+  private fun OffenderTemporaryAbsencesResponse.findScheduleOut(eventId: Long): Pair<ScheduledTemporaryAbsence, Boolean> = bookings.flatMap { booking ->
+    booking.temporaryAbsenceApplications.flatMap { application ->
+      application.absences.mapNotNull { absence ->
+        if (absence.scheduledTemporaryAbsence?.eventId == eventId) absence.scheduledTemporaryAbsence to booking.latestBooking else null
+      }
+    }
+  }
+    .firstOrNull()
+    ?: throw IllegalStateException("Unable to find schedule out for eventId=$eventId despite having matched it earlier. Has there been a merge or move booking?")
+
+  private fun PersonTapDetail.findOccurrence(occurrenceId: UUID): ReconciliationOccurrence = scheduledAbsences.flatMap { absence ->
+    absence.occurrences
+  }
+    .firstOrNull { occurrence -> occurrence.id == occurrenceId }
+    ?: throw IllegalStateException("Unable to find occurrence for occurrenceId=$occurrenceId despite having matched it earlier. Has there been a merge or move booking?")
 }
 
-data class MismatchPrisonerTaps(
+abstract class MismatchPrisonerTaps(
   val offenderNo: String,
   val bookingId: Long,
-  val type: MismatchedPrisonerTapDetails.Types,
+  val type: String,
 )
 
-data class MismatchedPrisonerTapDetails(
-  val type: Types,
+class MismatchedPrisonerTapIds(
+  offenderNo: String,
+  bookingId: Long,
+  type: Type,
   val nomisCount: Int,
   val dpsCount: Int,
   val unexpectedNomisIds: String,
   val unexpectedDpsIds: String,
-) {
-  enum class Types {
+) : MismatchPrisonerTaps(offenderNo, bookingId, type.name) {
+  enum class Type {
     AUTHORISATIONS,
     OCCURRENCES,
     SCHEDULED_OUT,
     SCHEDULED_IN,
     UNSCHEDULED_OUT,
     UNSCHEDULED_IN,
+  }
+}
+
+class MismatchedPrisonerTapDetails(
+  offenderNo: String,
+  bookingId: Long,
+  type: Type,
+  val nomisEventId: Long,
+  val dpsOccurrenceId: UUID,
+  val nomisValue: String,
+  val dpsValue: String,
+) : MismatchPrisonerTaps(offenderNo, bookingId, type.name) {
+  enum class Type {
+    STATUS,
+    REASON,
+    START_TIME,
+    END_TIME,
+    POSTCODE,
   }
 }

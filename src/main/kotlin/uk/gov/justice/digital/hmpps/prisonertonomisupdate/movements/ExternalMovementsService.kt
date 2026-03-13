@@ -530,7 +530,7 @@ private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) 
   else -> throw IllegalArgumentException("Unknown authorisation status: $this")
 }
 
-private fun String.toNomisSchedulesStatus() = when (this) {
+fun String.toNomisSchedulesStatus() = when (this) {
   "PENDING" -> "PEN" to null
   "CANCELLED" -> "CANC" to null
   "DENIED" -> "DEN" to null

@@ -210,13 +210,13 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     fun absence(
       movementPrison: String = "LEI",
       scheduledAbsence: ScheduledTemporaryAbsence = scheduledAbsence(),
-      scheduledAbsenceReturn: ScheduledTemporaryAbsenceReturn = scheduledAbsenceReturn(),
-      temporaryAbsence: TemporaryAbsence = temporaryAbsence(seq = 3).copy(
+      scheduledAbsenceReturn: ScheduledTemporaryAbsenceReturn? = scheduledAbsenceReturn(),
+      temporaryAbsence: TemporaryAbsence? = temporaryAbsence(seq = 3).copy(
         movementDate = yesterday.toLocalDate(),
         movementTime = yesterday,
         fromPrison = movementPrison,
       ),
-      temporaryAbsenceReturn: TemporaryAbsenceReturn = temporaryAbsenceReturn(seq = 4).copy(
+      temporaryAbsenceReturn: TemporaryAbsenceReturn? = temporaryAbsenceReturn(seq = 4).copy(
         movementDate = now.toLocalDate(),
         movementTime = now,
         toPrison = movementPrison,
