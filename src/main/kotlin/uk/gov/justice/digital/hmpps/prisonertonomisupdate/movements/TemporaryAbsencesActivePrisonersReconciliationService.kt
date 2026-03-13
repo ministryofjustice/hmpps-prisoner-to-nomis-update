@@ -38,6 +38,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_ACTIVE_TAPS = "temporary-absences-active-reconciliation"
+    val ACCEPTABLE_OCCURRENCE_STATUSES = listOf("EXP" to ReconciliationOccurrence.StatusCode.CANCELLED)
   }
 
   suspend fun generateTapActivePrisonersReconciliationReportBatch() {
@@ -352,6 +353,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           when {
             // old booking not completed in NOMIS can be expired in DPS
             !latestBooking && nomisScheduleOut.eventStatus != "COMP" && dpsOccurrence.statusCode == ReconciliationOccurrence.StatusCode.EXPIRED -> {}
+            // acceptable status combinations (due to slightly different business rules in NOMIS / DPS)
+            (nomisScheduleOut.eventStatus to dpsOccurrence.statusCode) in ACCEPTABLE_OCCURRENCE_STATUSES -> {}
             // not excluded so we will publish the difference
             else -> mismatches.add(
               mismatch(MismatchedPrisonerTapDetails.Type.STATUS, nomisScheduleOut.eventStatus, dpsOccurrence.statusCode.value),
