@@ -54,6 +54,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
@@ -97,6 +98,7 @@ class BatchManagerTest {
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
+  private val temporaryAbsencesActivePrisonersReconciliationService = mock<TemporaryAbsencesActivePrisonersReconciliationService>()
   private val temporaryAbsencesAllPrisonersReconciliationService = mock<TemporaryAbsencesAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
@@ -443,6 +445,16 @@ class BatchManagerTest {
   }
 
   @Test
+  fun `should call the TAP active prisoner reconciliation service`() = runTest {
+    val batchManager = batchManager(BatchType.TAP_ACTIVE_PRISONERS_RECON)
+
+    batchManager.onApplicationEvent(event)
+
+    verify(temporaryAbsencesActivePrisonersReconciliationService).generateTapActivePrisonersReconciliationReportBatch()
+    verify(context).close()
+  }
+
+  @Test
   fun `should call the TAP all prisoner reconciliation service`() = runTest {
     val batchManager = batchManager(BatchType.TAP_ALL_PRISONERS_RECON)
 
@@ -481,6 +493,7 @@ class BatchManagerTest {
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,
     sentencingReconciliationService = sentencingReconciliationService,
+    temporaryAbsencesActivePrisonersReconciliationService = temporaryAbsencesActivePrisonersReconciliationService,
     temporaryAbsencesAllPrisonersReconciliationService = temporaryAbsencesAllPrisonersReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     visitSlotsReconciliationService = visitSlotsReconciliationService,

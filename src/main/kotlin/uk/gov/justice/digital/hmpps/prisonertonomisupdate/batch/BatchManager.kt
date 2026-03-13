@@ -46,6 +46,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PRISON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.PURGE_ACTIVITY_DLQ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SENTENCING_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.SUSPENDED_ALLOCATION_RECON
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ACTIVE_PRISONERS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.TAP_ALL_PRISONERS_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_BALANCE_RECON
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.batch.BatchType.VISIT_SLOTS_RECON
@@ -60,6 +61,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesActivePrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsencesAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
@@ -110,6 +112,7 @@ enum class BatchType {
   SENTENCING_RECON,
   SUSPENDED_ALLOCATION_RECON,
   TAP_ALL_PRISONERS_RECON,
+  TAP_ACTIVE_PRISONERS_RECON,
   VISIT_BALANCE_RECON,
 }
 
@@ -144,6 +147,7 @@ class BatchManager(
   private val prisonerTransactionsReconciliationService: PrisonerTransactionReconciliationService,
   private val schedulesService: SchedulesService,
   private val sentencingReconciliationService: SentencingReconciliationService,
+  private val temporaryAbsencesActivePrisonersReconciliationService: TemporaryAbsencesActivePrisonersReconciliationService,
   private val temporaryAbsencesAllPrisonersReconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
@@ -187,6 +191,7 @@ class BatchManager(
       PURGE_ACTIVITY_DLQ -> purgeQueue(activitiesDlqName)
       SENTENCING_RECON -> sentencingReconciliationService.generateSentencingReconciliationReport()
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
+      TAP_ACTIVE_PRISONERS_RECON -> temporaryAbsencesActivePrisonersReconciliationService.generateTapActivePrisonersReconciliationReportBatch()
       TAP_ALL_PRISONERS_RECON -> temporaryAbsencesAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()

@@ -19,6 +19,7 @@ import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.personTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconAuthorisation
@@ -43,7 +44,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 class TemporaryAbsencesActivePrisonersReconciliationIntTest(
   @Autowired private val reconciliationService: TemporaryAbsencesActivePrisonersReconciliationService,
@@ -181,7 +182,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "AUTHORISATIONS",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -200,7 +200,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "OCCURRENCES",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -219,7 +218,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "SCHEDULED_OUT",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -238,7 +236,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "SCHEDULED_IN",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -257,7 +254,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "UNSCHEDULED_OUT",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -276,7 +272,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "UNSCHEDULED_IN",
               "dpsCount" to "0",
               "nomisCount" to "1",
@@ -343,7 +338,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "AUTHORISATIONS",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -362,7 +356,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "OCCURRENCES",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -381,7 +374,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "SCHEDULED_OUT",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -400,7 +392,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "SCHEDULED_IN",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -419,7 +410,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "UNSCHEDULED_OUT",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -438,7 +428,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "type" to "UNSCHEDULED_IN",
               "dpsCount" to "1",
               "nomisCount" to "0",
@@ -605,7 +594,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "STATUS",
@@ -647,7 +635,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "REASON",
@@ -689,7 +676,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "START_TIME",
@@ -731,7 +717,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "END_TIME",
@@ -773,7 +758,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "POSTCODE",
@@ -814,7 +798,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq("temporary-absences-active-reconciliation-mismatch"),
           check {
             assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
-            assertThat(it["bookingId"]).isEqualTo("12345")
             assertThat(it["nomisEventId"]).isEqualTo("$scheduleOutId")
             assertThat(it["dpsOccurrenceId"]).isEqualTo("$occurrenceId")
           },
@@ -965,7 +948,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           eq(
             mapOf(
               "offenderNo" to "A0001TZ",
-              "bookingId" to "12345",
               "nomisEventId" to "$scheduleOutId",
               "dpsOccurrenceId" to "$occurrenceId",
               "type" to "STATUS",
@@ -1008,13 +990,225 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
         eq(
           mapOf(
             "offenderNo" to "A0001TZ",
-            "bookingId" to "12345",
             "reason" to "Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?",
           ),
         ),
         isNull(),
       )
     }
+  }
+
+  @Nested
+  inner class SinglePrisonerActivePrisonerReconciliationReport {
+    private val applicationId = 1111L
+    private val scheduleOutId = 2222L
+    private val authorisationId = UUID.randomUUID()
+    private val occurrenceId = UUID.randomUUID()
+    private val dpsMovementId = UUID.randomUUID()
+    private val startTime = LocalDateTime.now().plusDays(1)
+    private val endTime = LocalDateTime.now().plusDays(2)
+
+    @BeforeEach
+    fun setUp() = runTest {
+      nomisMovementsApi.stubGetTemporaryAbsences(
+        offenderNo = "A0001TZ",
+        response = emptyTemporaryAbsenceSummaryResponse()
+          .copy(
+            bookings = listOf(
+              BookingTemporaryAbsences(
+                bookingId = 12345,
+                temporaryAbsenceApplications = listOf(
+                  application(
+                    id = applicationId,
+                    absences = listOf(
+                      absence(
+                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                          eventStatus = "SCH",
+                          eventSubType = "C5",
+                          startTime = startTime,
+                          returnTime = endTime,
+                          toAddressPostcode = "S1 1AA",
+                        ),
+                        scheduledAbsenceReturn = null,
+                        temporaryAbsence = null,
+                        temporaryAbsenceReturn = null,
+                      ),
+                    ),
+                  ),
+                ),
+                activeBooking = true,
+                latestBooking = true,
+                unscheduledTemporaryAbsences = listOf(),
+                unscheduledTemporaryAbsenceReturns = listOf(),
+              ),
+            ),
+          ),
+      )
+
+      dpsApi.stubGetTapReconciliationDetail(
+        personIdentifier = "A0001TZ",
+        response = personTapDetail().copy(
+          scheduledAbsences = listOf(
+            reconAuthorisation(id = authorisationId).copy(
+              occurrences = listOf(
+                reconOccurrence(id = occurrenceId).copy(
+                  statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                  reasonCode = "C5",
+                  start = startTime,
+                  end = endTime,
+                  location = Location(
+                    address = "1 street",
+                    postcode = "S1 1AA",
+                  ),
+                  movements = listOf(),
+                ),
+              ),
+            ),
+          ),
+          unscheduledMovements = listOf(),
+        ),
+      )
+
+      mappingApi.stubGetTemporaryAbsenceMappingIds(
+        prisonerNumber = "A0001TZ",
+        response = emptyPrisonerMappingIdsDto().copy(
+          applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
+          schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
+        ),
+      )
+    }
+
+    @Nested
+    inner class RunReport {
+      @Test
+      fun `no differences found`() {
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(0)
+      }
+
+      @Test
+      fun `one detail difference`() {
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    // status is different to NOMIS
+                    statusCode = ReconciliationOccurrence.StatusCode.IN_PROGRESS,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+          .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
+          .jsonPath("$[0].nomisEventId").isEqualTo("$scheduleOutId")
+          .jsonPath("$[0].dpsOccurrenceId").isEqualTo("$occurrenceId")
+          .jsonPath("$[0].nomisValue").isEqualTo("SCH")
+          .jsonPath("$[0].dpsValue").isEqualTo("IN_PROGRESS")
+      }
+
+      @Test
+      fun `one count difference`() {
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(
+                      reconMovement(id = dpsMovementId),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+          .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
+          .jsonPath("$[0].type").isEqualTo("SCHEDULED_OUT")
+          .jsonPath("$[0].dpsCount").isEqualTo("1")
+          .jsonPath("$[0].nomisCount").isEqualTo("0")
+          .jsonPath("$[0].unexpectedNomisIds").isEqualTo("[]")
+          .jsonPath("$[0].unexpectedDpsIds").isEqualTo("[$dpsMovementId]")
+      }
+    }
+
+    @Nested
+    inner class Validation {
+      @Test
+      fun `should return error for unknown offender`() {
+        webTestClient.getActiveTapsPrisonerRecon("UNKNOWN")
+          .expectStatus().is5xxServerError
+      }
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/external-movements/active-taps/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/external-movements/active-taps/A0001TZ/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/external-movements/active-taps/A0001TZ/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    private fun WebTestClient.getActiveTapsPrisonerReconOk(
+      offenderNo: String = "A0001TZ",
+    ) = getActiveTapsPrisonerRecon(offenderNo)
+      .expectStatus().isOk
+
+    private fun WebTestClient.getActiveTapsPrisonerRecon(
+      offenderNo: String = "A0001TZ",
+    ) = get().uri("/external-movements/active-taps/$offenderNo/reconciliation")
+      .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+      .exchange()
   }
 
   private fun awaitReportFinished() {
