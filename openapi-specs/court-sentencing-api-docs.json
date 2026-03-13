@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-11.1409.d386e3c"
+    "version" : "2026-03-12.1421.5e3ab6e"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -1763,8 +1763,8 @@
       },
       "put" : {
         "tags" : [ "court-appearance-controller" ],
-        "summary" : "Create Court appearance",
-        "description" : "This endpoint will create a court appearance in a given court case",
+        "summary" : "Update Court appearance",
+        "description" : "This endpoint will update a court appearance in a given court case",
         "operationId" : "updateCourtAppearance",
         "parameters" : [ {
           "name" : "appearanceUuid",
@@ -4252,6 +4252,62 @@
         }
       }
     },
+    "/person/{prisonerId}/booking-court-case-count" : {
+      "get" : {
+        "tags" : [ "person-controller" ],
+        "summary" : "retrieve court case count for person",
+        "description" : "This endpoint will retrieve the court case count for a person by booking id",
+        "operationId" : "courtCaseCount",
+        "parameters" : [ {
+          "name" : "prisonerId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "bookingId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns total count and optional booking count",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCourtCaseCount"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCourtCaseCount"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PersonCourtCaseCount"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/legacy/sentence-type/summary" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -5163,6 +5219,14 @@
             "format" : "date",
             "default" : "9999-12-31"
           }
+        }, {
+          "name" : "bookingId",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "default" : ""
+          }
         } ],
         "responses" : {
           "200" : {
@@ -6023,7 +6087,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6369,7 +6433,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "courtCode" : {
             "type" : "string"
@@ -8918,7 +8982,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "courtCode" : {
             "type" : "string"
@@ -9164,6 +9228,20 @@
           }
         },
         "required" : [ "courtCaseDocuments" ]
+      },
+      "PersonCourtCaseCount" : {
+        "type" : "object",
+        "properties" : {
+          "suppliedBookingCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "otherBookingCount" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "otherBookingCount", "suppliedBookingCount" ]
       },
       "LegacySentenceTypeGroupingSummary" : {
         "type" : "object",
@@ -9549,7 +9627,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9613,7 +9691,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "courtId" : {
             "type" : "string"
@@ -9753,7 +9831,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "charges" : {
             "type" : "array",
@@ -9780,7 +9858,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "courtId" : {
             "type" : "string"
@@ -10041,18 +10119,18 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
-          "unpaged" : {
-            "type" : "boolean"
-          },
           "pageSize" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
+          "unpaged" : {
             "type" : "boolean"
           }
         }
@@ -10297,7 +10375,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "06:23:50.573075628"
+            "example" : "06:23:49.338800821"
           },
           "courtCode" : {
             "type" : "string"
