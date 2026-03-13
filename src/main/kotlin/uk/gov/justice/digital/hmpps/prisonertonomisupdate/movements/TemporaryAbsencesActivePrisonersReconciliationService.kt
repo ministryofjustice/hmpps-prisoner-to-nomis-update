@@ -233,7 +233,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     }
 
     val nomisScheduledMovementInIds = nomisIds.bookings.flatMap { booking -> booking.temporaryAbsenceApplications.flatMap { it.absences.mapNotNull { it.temporaryAbsenceReturn?.let { OffenderTemporaryAbsenceId(booking.bookingId, it.sequence) } } } }
-    val dpsScheduledInIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id } } }; if (nomisScheduledMovementInIds.size != dpsScheduledInIds.size) {
+    val dpsScheduledInIds = dpsIds.scheduledAbsences.flatMap { it.occurrences.flatMap { it.movements.filter { it.direction == ReconciliationMovement.Direction.IN }.map { it.id } } }
+    if (nomisScheduledMovementInIds.size != dpsScheduledInIds.size) {
       mismatchedDetails.add(
         MismatchedPrisonerTapIds(
           offenderNo = offenderNo,
@@ -356,8 +357,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       .forEach { (nomisEventId, dpsOccurrenceId) ->
         val (nomisScheduleOut, latestBooking) = nomis.findScheduleOut(nomisEventId)
         val dpsOccurrence = dps.findOccurrence(dpsOccurrenceId)
-        fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) =
-          MismatchedPrisonerTapDetails(offenderNo, bookingId, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
+        fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, bookingId, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
 
         // status must match
         if (dpsOccurrence.statusCode.value.toNomisSchedulesStatus().first != nomisScheduleOut.eventStatus) {
@@ -366,7 +366,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
             // old booking not completed in NOMIS can be expired in DPS
             !latestBooking && nomisScheduleOut.eventStatus != "COMP" && dpsOccurrence.statusCode == ReconciliationOccurrence.StatusCode.EXPIRED -> {}
             // not excluded so we will publish the difference
-            else -> mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.STATUS, nomisScheduleOut.eventStatus, dpsOccurrence.statusCode.value)
+            else -> mismatches.add(
+              mismatch(MismatchedPrisonerTapDetails.Type.STATUS, nomisScheduleOut.eventStatus, dpsOccurrence.statusCode.value),
             )
           }
         }
@@ -391,7 +392,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.POSTCODE, "${nomisScheduleOut.toAddressPostcode}", "${dpsOccurrence.location?.postcode}"))
         }
       }
-    
+
     return mismatches
   }
 
@@ -412,23 +413,21 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
   }
 
-  private fun OffenderTemporaryAbsencesResponse.findScheduleOut(eventId: Long): Pair<ScheduledTemporaryAbsence, Boolean> =
-    bookings.flatMap { booking ->
-      booking.temporaryAbsenceApplications.flatMap { application ->
-        application.absences.mapNotNull { absence ->
-          if (absence.scheduledTemporaryAbsence?.eventId == eventId) absence.scheduledTemporaryAbsence to booking.latestBooking else null
-        }
+  private fun OffenderTemporaryAbsencesResponse.findScheduleOut(eventId: Long): Pair<ScheduledTemporaryAbsence, Boolean> = bookings.flatMap { booking ->
+    booking.temporaryAbsenceApplications.flatMap { application ->
+      application.absences.mapNotNull { absence ->
+        if (absence.scheduledTemporaryAbsence?.eventId == eventId) absence.scheduledTemporaryAbsence to booking.latestBooking else null
       }
     }
-      .firstOrNull()
-      ?: throw IllegalStateException("Unable to find schedule out for eventId=$eventId despite having matched it earlier. Has there been a merge or move booking?")
+  }
+    .firstOrNull()
+    ?: throw IllegalStateException("Unable to find schedule out for eventId=$eventId despite having matched it earlier. Has there been a merge or move booking?")
 
-  private fun PersonTapDetail.findOccurrence(occurrenceId: UUID): ReconciliationOccurrence =
-    scheduledAbsences.flatMap { absence ->
-      absence.occurrences
-    }
-      .firstOrNull { occurrence -> occurrence.id == occurrenceId }
-      ?: throw IllegalStateException("Unable to find occurrence for occurrenceId=$occurrenceId despite having matched it earlier. Has there been a merge or move booking?")
+  private fun PersonTapDetail.findOccurrence(occurrenceId: UUID): ReconciliationOccurrence = scheduledAbsences.flatMap { absence ->
+    absence.occurrences
+  }
+    .firstOrNull { occurrence -> occurrence.id == occurrenceId }
+    ?: throw IllegalStateException("Unable to find occurrence for occurrenceId=$occurrenceId despite having matched it earlier. Has there been a merge or move booking?")
 }
 
 abstract class MismatchPrisonerTaps(
