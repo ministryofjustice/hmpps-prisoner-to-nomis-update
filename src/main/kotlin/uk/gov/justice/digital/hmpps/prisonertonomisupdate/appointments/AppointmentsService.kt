@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClientResponseException
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
@@ -23,7 +23,7 @@ class AppointmentsService(
   private val mappingService: AppointmentMappingService,
   private val appointmentsUpdateQueueService: AppointmentsUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
 
   suspend fun createAppointment(event: AppointmentDomainEvent) {
@@ -233,7 +233,7 @@ class AppointmentsService(
   }
 
   override suspend fun retryCreateMapping(message: String) = createRetry(message.fromJson())
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 data class AppointmentDomainEvent(

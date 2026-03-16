@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.appointments
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -15,6 +13,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.NOMIS_EVENT_ID
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.AppointmentInstance
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AppointmentMappingDto
@@ -25,7 +24,6 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class AppointmentsServiceTest {
 
   private val appointmentsApiService: AppointmentsApiService = mock()
@@ -33,7 +31,7 @@ class AppointmentsServiceTest {
   private val appointmentsMappingService: AppointmentMappingService = mock()
   private val appointmentsUpdateQueueService: AppointmentsUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val objectMapper: ObjectMapper = mock()
+  private val jsonMapper: JsonMapper = mock()
 
   private val appointmentsService = AppointmentsService(
     appointmentsApiService,
@@ -41,7 +39,7 @@ class AppointmentsServiceTest {
     appointmentsMappingService,
     appointmentsUpdateQueueService,
     telemetryClient,
-    objectMapper,
+    jsonMapper,
   )
 
   @Test

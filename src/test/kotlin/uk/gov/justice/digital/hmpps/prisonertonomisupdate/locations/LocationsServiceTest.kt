@@ -1,8 +1,6 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.groups.Tuple
@@ -13,6 +11,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Capacity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.Certification
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.model.LegacyLocation
@@ -33,7 +32,6 @@ private const val DPS_KEY = "LEI-B-3-003"
 private const val NOMIS_LOCATION_ID = 4567L
 private const val PARENT_NOMIS_LOCATION_ID = 1234L
 
-@OptIn(ExperimentalCoroutinesApi::class)
 internal class LocationsServiceTest {
 
   private val locationsApiService: LocationsApiService = mock()
@@ -41,7 +39,7 @@ internal class LocationsServiceTest {
   private val locationsMappingService: LocationsMappingService = mock()
   private val locationsUpdateQueueService: LocationsRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val objectMapper: ObjectMapper = mock()
+  private val jsonMapper: JsonMapper = mock()
 
   private val locationsService = LocationsService(
     locationsApiService,
@@ -49,7 +47,7 @@ internal class LocationsServiceTest {
     locationsMappingService,
     locationsUpdateQueueService,
     telemetryClient,
-    objectMapper,
+    jsonMapper,
   )
 
   @Test

@@ -1,6 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -10,6 +9,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.CombinedOutcomeDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.adjudications.model.HearingOutcomeDto
@@ -45,7 +45,7 @@ internal class AdjudicationsServiceTest {
   private val locationsMappingService: LocationsMappingService = mock()
   private val adjudicationsRetryQueueService: AdjudicationsRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
-  private val objectMapper: ObjectMapper = mock()
+  private val jsonMapper: JsonMapper = mock()
 
   private val adjudicationsService = AdjudicationsService(
     telemetryClient = telemetryClient,
@@ -56,7 +56,7 @@ internal class AdjudicationsServiceTest {
     punishmentsMappingService = punishmentMappingService,
     locationsMappingService = locationsMappingService,
     nomisApiService = nomisApiService,
-    objectMapper = objectMapper,
+    jsonMapper = jsonMapper,
   )
 
   @Test
