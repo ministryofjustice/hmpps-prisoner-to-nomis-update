@@ -20,6 +20,7 @@ import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
 import org.springframework.web.reactive.function.client.WebClientResponseException.NotFound
 import org.springframework.web.reactive.function.client.WebClientResponseException.ServiceUnavailable
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activity
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityCategory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ActivityLite
@@ -29,7 +30,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.Activ
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.InternalLocation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.PrisonPayBand
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.activities.model.ScheduledInstance
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto.MappingType.LOCATION_CREATED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateActivityResponse
@@ -41,12 +41,12 @@ import java.time.LocalDateTime
 import java.util.*
 
 internal class ActivitiesServiceTest {
-
   private val activitiesApiService: ActivitiesApiService = mock()
   private val nomisApiService: ActivitiesNomisApiService = mock()
   private val mappingService: ActivitiesMappingService = mock()
   private val updateQueueService: ActivitiesRetryQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
+  private val jsonMapper: JsonMapper = mock()
   private val activitiesService =
     ActivitiesService(
       activitiesApiService,
@@ -54,7 +54,7 @@ internal class ActivitiesServiceTest {
       mappingService,
       updateQueueService,
       telemetryClient,
-      objectMapper(),
+      jsonMapper,
     )
 
   @Nested

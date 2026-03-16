@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.casenotes
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.CaseNoteMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -21,7 +21,7 @@ class CaseNotesService(
   private val nomisApiService: CaseNotesNomisApiService,
   private val mappingApiService: CaseNotesMappingApiService,
   private val caseNotesRetryQueueService: CaseNotesRetryQueueService,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
   private companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
@@ -161,7 +161,7 @@ class CaseNotesService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 data class CaseNoteEvent(
