@@ -86,6 +86,7 @@ val models = listOf(
   ModelConfiguration(
     name = "activities",
     packageName = "activities",
+    testPackageName = "activities",
     url = "https://activities-api-dev.prison.service.justice.gov.uk/v3/api-docs",
     models = "Activity,ActivityCategory,ActivityEligibility,ActivityLite,ActivityMinimumEducationLevel,ActivityPay,ActivityPayHistory,ActivitySchedule,ActivityScheduleInstance,ActivityScheduleLite,ActivityScheduleSlot,AdvanceAttendance,AdvanceAttendanceHistory,Allocation,AllocationReconciliationResponse,AppointmentAttendeeSearchResult,AppointmentCategorySummary,AppointmentInstance,AppointmentLocationSummary,AppointmentSearchRequest,AppointmentSearchResult,Attendance,AttendanceHistory,AttendanceReason,AttendanceReconciliationResponse,AttendanceSync,BookingCount,DeallocationReason,EarliestReleaseDate,EligibilityRule,EventOrganiser,EventTier,InternalLocation,PlannedDeallocation,PlannedSuspension,PrisonPayBand,RolloutPrisonPlan,ScheduledInstance,Slot,Suspension",
   ),
@@ -141,6 +142,7 @@ val models = listOf(
   ModelConfiguration(
     name = "incentives",
     packageName = "incentives",
+    testPackageName = "incentives",
     url = "https://incentives-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
   ),
   ModelConfiguration(
@@ -152,12 +154,14 @@ val models = listOf(
   ModelConfiguration(
     name = "non-associations",
     packageName = "nonassociations",
+    testPackageName = "nonassociations",
     url = "https://non-associations-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "LegacyNonAssociation,LegacyNonAssociationOtherPrisonerDetails,NonAssociation",
   ),
   ModelConfiguration(
     name = "locations",
     packageName = "locations",
+    testPackageName = "locations",
     url = "https://locations-inside-prison-api-dev.hmpps.service.justice.gov.uk/v3/api-docs",
     models = "Capacity,CellCertificateLocationDto,Certification,ChangeHistory,LegacyLocation,Location,NonResidentialUsageDto,PatchNonResidentialLocationRequest,PendingChangeDto,ServiceUsingLocationDto,TransactionDetail,TransactionHistory",
   ),
@@ -280,6 +284,7 @@ models.forEach {
       filter {
         includeTestsMatching("uk.gov.justice.digital.hmpps.prisonertonomisupdate.${it.testPackageName}.*")
       }
+      maxHeapSize = "1024m"
     }
     tasks.check { dependsOn(task) }
   }

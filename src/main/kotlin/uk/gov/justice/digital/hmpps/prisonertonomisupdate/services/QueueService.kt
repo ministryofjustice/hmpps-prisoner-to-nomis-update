@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.services
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.retry.policy.SimpleRetryPolicy
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.sendMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.SQSMessage
 import uk.gov.justice.hmpps.sqs.HmppsQueue
@@ -12,7 +12,7 @@ import uk.gov.justice.hmpps.sqs.HmppsQueueService
 @Service
 class QueueService(
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val hmppsQueueService: HmppsQueueService,
 ) {
 
@@ -45,5 +45,5 @@ class QueueService(
     )
   }
 
-  private inline fun <reified T> T.toJson(): String = objectMapper.writeValueAsString(this)
+  private inline fun <reified T> T.toJson(): String = jsonMapper.writeValueAsString(this)
 }
