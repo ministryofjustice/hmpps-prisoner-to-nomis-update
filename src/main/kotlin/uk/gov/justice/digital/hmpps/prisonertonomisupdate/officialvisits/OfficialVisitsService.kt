@@ -121,7 +121,26 @@ class OfficialVisitsService(
     }
   }
 
-  suspend fun visitDeleted(event: VisitEvent) = telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-success", event.asTelemetry())
+  suspend fun visitDeleted(event: VisitEvent) {
+    val telemetry = event.asTelemetry()
+    val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
+      dpsVisitId = event.additionalInformation.officialVisitId,
+    )?.also {
+      telemetry["nomisVisitId"] = it.nomisId.toString()
+    }
+
+    if (visitMapping != null) {
+      track("${OFFICIAL_VISIT.entityName}-delete", telemetry) {
+        nomisApiService.deleteOfficialVisit(
+          visitId = visitMapping.nomisId,
+        )
+        mappingApiService.deleteByVisitNomisId(visitMapping.nomisId)
+      }
+    } else {
+      telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-ignored", telemetry)
+    }
+  }
+
   suspend fun visitorCreated(event: VisitorEvent) {
     val telemetry = event.asTelemetry()
     if (event.didOriginateInDPS()) {

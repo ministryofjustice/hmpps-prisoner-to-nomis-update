@@ -68,6 +68,12 @@ class OfficialVisitsNomisApiService(
     ).awaitSingle()
   }
 
+  suspend fun deleteOfficialVisit(visitId: Long) {
+    api.deleteOfficialVisit(
+      visitId = visitId,
+    ).awaitSingle()
+  }
+
   suspend fun createOfficialVisitor(
     visitId: Long,
     request: CreateOfficialVisitorRequest,
