@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto.MappingType.INCENTIVE_CREATED
@@ -23,7 +23,7 @@ class IncentivesService(
   private val mappingService: IncentivesMappingService,
   private val incentivesUpdateQueueService: IncentivesUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
 
   suspend fun createIncentive(event: IncentiveCreatedEvent) {
@@ -94,7 +94,7 @@ class IncentivesService(
     val additionalInformation: AdditionalInformation,
   )
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 fun IncentiveReviewDetail.toNomisIncentive() = CreateIncentiveRequest(

@@ -115,6 +115,7 @@ hmpps.sqs:
           "location.inside.prison.deleted"]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     sentencing:
       queueName: "sentencing-${random.uuid}"
       dlqName: "sentencing-dlq-${random.uuid}"
@@ -187,6 +188,7 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 3
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     fromnomiscourtsentencing:
       queueName: "court-sentencing-from-nomis-${random.uuid}"
     alerts:
@@ -289,6 +291,7 @@ hmpps.sqs:
           "personal-relationships-api.prisoner-restriction.deleted"
         ]}
       dlqMaxReceiveCount: 1
+      errorVisibilityTimeout: 0
     organisations:
       queueName: "organisations-${random.uuid}"
       dlqName: "organisations-dlq-${random.uuid}"
@@ -338,6 +341,7 @@ hmpps.sqs:
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120
+      errorVisibilityTimeout: 0
     officialvisits:
       queueName: "officialvisits-${random.uuid}"
       dlqName: "officialvisits-dlq-${random.uuid}"

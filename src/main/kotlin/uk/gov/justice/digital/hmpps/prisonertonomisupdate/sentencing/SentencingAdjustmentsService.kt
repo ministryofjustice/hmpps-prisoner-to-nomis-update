@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.sentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.MappingType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.SentencingAdjustmentMappingDto.NomisAdjustmentCategory
@@ -26,7 +26,7 @@ class SentencingAdjustmentsService(
   private val sentencingAdjustmentsMappingService: SentencingAdjustmentsMappingService,
   private val sentencingRetryQueueService: SentencingRetryQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
   suspend fun createAdjustment(createEvent: AdjustmentCreatedEvent) = createAdjustment(
     offenderNo = createEvent.additionalInformation.offenderNo,
@@ -246,7 +246,7 @@ class SentencingAdjustmentsService(
 
   override suspend fun retryCreateMapping(message: String) = createSentencingAdjustmentMapping(message.fromJson())
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 data class AdditionalInformation(

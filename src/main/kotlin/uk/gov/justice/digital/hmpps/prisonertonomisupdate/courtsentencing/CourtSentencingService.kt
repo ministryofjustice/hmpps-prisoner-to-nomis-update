@@ -1,11 +1,11 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.courtsentencing
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.CaseReferenceLegacyData
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.court.sentencing.model.LegacyCharge
@@ -78,7 +78,7 @@ class CourtSentencingService(
   private val courtCaseMappingService: CourtSentencingMappingService,
   private val courtSentencingRetryQueueService: CourtSentencingRetryQueueService,
   override val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
   private val queueService: QueueService,
 ) : CreateMappingRetryable,
   TelemetryEnabled {
@@ -1489,7 +1489,7 @@ class CourtSentencingService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 
   suspend fun refreshCaseReferences(createEvent: CaseReferencesUpdatedEvent) {
     val dpsCourtCaseId = createEvent.additionalInformation.courtCaseId
