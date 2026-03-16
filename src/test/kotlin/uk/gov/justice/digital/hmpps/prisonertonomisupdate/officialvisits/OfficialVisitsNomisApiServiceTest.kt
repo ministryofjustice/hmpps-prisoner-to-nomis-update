@@ -366,6 +366,39 @@ class OfficialVisitsNomisApiServiceTest {
   }
 
   @Nested
+  inner class DeleteOfficialVisit {
+    @Test
+    internal fun `will pass oath2 token to endpoint`() = runTest {
+      mockServer.stubDeleteOfficialVisit(
+        visitId = 123,
+      )
+
+      apiService.deleteOfficialVisit(
+        visitId = 123,
+      )
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl())
+          .withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the delete endpoint`() = runTest {
+      mockServer.stubDeleteOfficialVisit(
+        visitId = 123,
+      )
+
+      apiService.deleteOfficialVisit(
+        visitId = 123,
+      )
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/official-visits/123")),
+      )
+    }
+  }
+
+  @Nested
   inner class CreateOfficialVisitor {
     @Test
     internal fun `will pass oath2 token to endpoint`() = runTest {

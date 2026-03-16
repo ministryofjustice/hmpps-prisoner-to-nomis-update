@@ -232,6 +232,18 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubDeleteByVisitNomisId(
+    nomisVisitId: Long = 1234L,
+  ) {
+    mappingServer.stubFor(
+      delete(urlEqualTo("/mapping/official-visits/visit/nomis-id/$nomisVisitId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun verify(pattern: RequestPatternBuilder) = mappingServer.verify(pattern)
   fun verify(count: Int, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)
   fun verify(count: CountMatchingStrategy, pattern: RequestPatternBuilder) = mappingServer.verify(count, pattern)

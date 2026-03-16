@@ -228,6 +228,18 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
+  fun stubDeleteOfficialVisit(
+    visitId: Long,
+  ) {
+    nomisApi.stubFor(
+      delete(urlPathEqualTo("/official-visits/$visitId")).willReturn(
+        aResponse()
+          .withHeader("Content-Type", "application/json")
+          .withStatus(HttpStatus.NO_CONTENT.value()),
+      ),
+    )
+  }
+
   fun stubCreateOfficialVisitor(
     visitId: Long,
     response: OfficialVisitor = officialVisitor(),

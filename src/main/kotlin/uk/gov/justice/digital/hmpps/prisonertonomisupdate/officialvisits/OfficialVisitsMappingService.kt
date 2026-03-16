@@ -45,6 +45,10 @@ class OfficialVisitsMappingService(
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
+  suspend fun deleteByVisitNomisId(nomisId: Long) {
+    api.deleteOfficialVisitMapping(nomisVisitId = nomisId).awaitSingle()
+  }
+
   suspend fun getVisitorByDpsIdOrNull(dpsVisitorId: Long): OfficialVisitorMappingDto? = api.prepare(
     api.getVisitorMappingByDpsIdRequestConfig(
       dpsVisitorId = dpsVisitorId.toString(),
