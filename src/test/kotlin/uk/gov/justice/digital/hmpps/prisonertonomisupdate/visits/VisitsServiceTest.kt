@@ -17,14 +17,17 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CancelVisitDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateVisitResponseDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDateTime
 import java.time.OffsetDateTime
 
-internal class VisitsServiceTest {
+@JsonTest
+internal class VisitsServiceTest(@Autowired jsonMapper: JsonMapper) {
 
   private val visitApiService: VisitsApiService = mock()
   private val nomisApiService: NomisApiService = mock()
@@ -32,7 +35,7 @@ internal class VisitsServiceTest {
   private val updateQueueService: VisitsUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val visitsService =
-    VisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, objectMapper())
+    VisitsService(visitApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, jsonMapper)
 
   @Nested
   inner class CreateVisit {

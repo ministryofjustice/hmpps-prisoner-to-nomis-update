@@ -16,7 +16,9 @@ import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.whenever
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.objectMapper
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.test.autoconfigure.json.JsonTest
+import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.model.IncentiveReviewDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.IncentiveMappingDto.MappingType.INCENTIVE_CREATED
@@ -26,7 +28,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import java.time.LocalDate
 import java.time.LocalDateTime
 
-internal class IncentivesServiceTest {
+@JsonTest
+internal class IncentivesServiceTest(@Autowired jsonMapper: JsonMapper) {
 
   private val incentiveApiService: IncentivesApiService = mock()
   private val nomisApiService: NomisApiService = mock()
@@ -34,7 +37,7 @@ internal class IncentivesServiceTest {
   private val updateQueueService: IncentivesUpdateQueueService = mock()
   private val telemetryClient: TelemetryClient = mock()
   private val incentivesService =
-    IncentivesService(incentiveApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, objectMapper())
+    IncentivesService(incentiveApiService, nomisApiService, mappingService, updateQueueService, telemetryClient, jsonMapper)
 
   @Nested
   inner class CreateIncentive {

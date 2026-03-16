@@ -1,9 +1,9 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.personalrelationships
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.PersonAddressMappingDto
@@ -66,7 +66,7 @@ class ContactPersonService(
   private val dpsApiService: ContactPersonDpsApiService,
   private val contactPersonRetryQueueService: ContactPersonRetryQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
   companion object {
     enum class MappingTypes(val entityName: String) {
@@ -1188,7 +1188,7 @@ class ContactPersonService(
     }
   }
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this)
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 private fun contactCreatedEvent(contactId: Long) = ContactCreatedEvent(

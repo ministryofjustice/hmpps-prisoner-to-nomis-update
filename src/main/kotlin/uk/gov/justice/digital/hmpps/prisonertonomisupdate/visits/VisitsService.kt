@@ -1,10 +1,10 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.visits
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.microsoft.applicationinsights.TelemetryClient
 import jakarta.validation.ValidationException
 import org.springframework.stereotype.Service
+import tools.jackson.databind.json.JsonMapper
+import tools.jackson.module.kotlin.readValue
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateVisitRequest.OpenClosedStatus
@@ -27,7 +27,7 @@ class VisitsService(
   private val mappingService: VisitsMappingService,
   private val visitsUpdateQueueService: VisitsUpdateQueueService,
   private val telemetryClient: TelemetryClient,
-  private val objectMapper: ObjectMapper,
+  private val jsonMapper: JsonMapper,
 ) : CreateMappingRetryable {
 
   suspend fun resynchronisePrisonerVisit(offenderNo: String, visitId: String) = createVisit(
@@ -190,7 +190,7 @@ class VisitsService(
     vsipToNomisOutcomeMap[it]?.name
   } ?: NomisCancellationOutcome.ADMIN.name
 
-  private inline fun <reified T> String.fromJson(): T = objectMapper.readValue(this, object : TypeReference<T>() {})
+  private inline fun <reified T> String.fromJson(): T = jsonMapper.readValue(this)
 }
 
 data class VisitBookedEvent(
