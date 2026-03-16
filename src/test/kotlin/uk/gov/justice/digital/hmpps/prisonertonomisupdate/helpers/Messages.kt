@@ -1,11 +1,5 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers
 
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.databind.DeserializationFeature
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule
-import com.fasterxml.jackson.module.kotlin.registerKotlinModule
-
 fun prisonVisitMessagePayload(
   eventType: String,
   visitId: String = "12",
@@ -117,12 +111,6 @@ fun attendanceDeletedMessagePayload(eventType: String, scheduledInstanceId: Long
       }
     }
 """.trimMargin()
-
-fun objectMapper(): ObjectMapper = ObjectMapper()
-  .setSerializationInclusion(JsonInclude.Include.NON_NULL)
-  .registerModule(JavaTimeModule())
-  .registerKotlinModule()
-  .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
 
 fun bookingMovedDomainEvent(
   eventType: String = "prison-offender-events.prisoner.booking.moved",
