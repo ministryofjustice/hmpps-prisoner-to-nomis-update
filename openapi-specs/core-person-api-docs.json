@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-12.2632.7c5db84"
+    "version" : "2026-03-13.2665.cb4df5a"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -781,7 +781,8 @@
           "countryCode" : {
             "type" : "string",
             "description" : "The address country code",
-            "example" : "UK"
+            "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
+            "example" : "GBR"
           },
           "comment" : {
             "type" : "string",
@@ -850,6 +851,7 @@
           "titleCode" : {
             "type" : "string",
             "description" : "The alias title code",
+            "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
             "example" : "MR"
           },
           "firstName" : {
@@ -939,6 +941,7 @@
           "ethnicityCode" : {
             "type" : "string",
             "description" : "The person's ethnicity code",
+            "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
             "example" : "W1"
           },
           "sexCode" : {
@@ -950,6 +953,7 @@
           "sexualOrientation" : {
             "type" : "string",
             "description" : "The person's sexual orientation code",
+            "enum" : [ "BIS", "HOM", "HET", "ND", "OTH", "REF", "UNKNOWN" ],
             "example" : "HET"
           },
           "disability" : {
@@ -970,7 +974,8 @@
           "nationalityCode" : {
             "type" : "string",
             "description" : "The person's nationality code",
-            "example" : "GB"
+            "enum" : [ "AB", "AFGA", "AG", "ALBA", "ALGE", "AMER", "AN", "ANDO", "ANGOL", "ANTIG", "ARGEN", "ARME", "ASM", "AUSI", "AUST", "AZERB", "BAHA", "BAHR", "BANGL", "BARB", "BELA", "BELG", "BELI", "BENI", "BHUT", "BM", "BOLI", "BOSNI", "BRAZ", "BRIT", "BRUN", "BULG", "BURM", "BURU", "CAMB", "CAMER", "CANA", "CAVER", "CCK", "CDR", "CF", "CGB", "CHAD", "CHIL", "CHINA", "COK", "COLO", "COMO", "COND", "CONG", "CONR", "COSRI", "CROAT", "CT", "CUBA", "CXR", "CYPR", "CZEC", "DANE", "DJIB", "DOMI", "DUTCH", "EATIM", "ECUA", "EGYP", "EMIR", "EQUATO", "ERI", "ESTO", "ETHI", "FG", "FIJI", "FILIP", "FINN", "FO", "FREN", "GABO", "GAMB", "GE", "GERM", "GHAN", "GI", "GL", "GLP", "GREE", "GREN", "GRN", "GU", "GUAT", "GUIN", "GUYA", "HAIT", "HKG", "HOND", "HUNG", "HV", "ICE", "INDI", "INDO", "IRAN", "IRAQ", "IRISH", "ISRA", "ITAL", "IVOR", "JAM", "JAP", "JORD", "JSM", "KAZA", "KENY", "KN", "KOS", "KUWA", "KY", "LA", "LATV", "LEBA", "LIBE", "LIBY", "LIEC", "LITHU", "LS", "LUX", "MAC", "MACE", "MALA", "MALD", "MALT", "MAN", "MAR", "MARI", "MAUR", "MEXI", "MG", "MICR", "ML", "MLAW", "MNE", "MO", "MOLD", "MONA", "MONGO", "MORO", "MOTS", "MOZA", "MS", "MTQ", "NAMI", "NAUR", "NCL", "NEPA", "NFK", "NICA", "NIGER", "NIGERIA", "NIU", "NKOR", "NORW", "NZEA", "OMAN", "PAKN", "PALA", "PANA", "PARA", "PCN", "PERU", "PNGU", "POLE", "PORTU", "PRI", "PSE", "PYF", "QUAT", "REF", "REU", "RID", "ROMA", "RUSS", "RWAN", "SAARA", "SALV", "SAMO", "SANM", "SECR", "SENE", "SEYC", "SH", "SILE", "SING", "SKOR", "SLENE", "SLOV", "SOAFR", "SOLO", "SOMA", "SPAN", "SRB", "SRIL", "SRK", "SSUDAN", "STATE", "STLU", "STP", "SUDAN", "SURIN", "SW", "SWAZI", "SWEDE", "SWIS", "SYRI", "TA", "TAIW", "TANZ", "TCI", "THAI", "TKL", "TNGA", "TOGO", "TRIN", "TRS", "TU", "TUNI", "TURK", "TV", "UGAN", "UKRA", "UNKNOWN", "URUG", "UZBE", "VC", "VENE", "VG", "VIET", "VTC", "VY", "WA", "WAL", "YEMIN", "ZAM", "ZIM" ],
+            "example" : "BRIT"
           },
           "nationalityNote" : {
             "type" : "string",
