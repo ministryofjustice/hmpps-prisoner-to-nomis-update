@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-12.541.f16533f"
+    "version" : "2026-03-17.569.73a1348"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1192,7 +1192,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/DuplicateOffenderVisitIdErrorResponse"
                 }
               }
             }
@@ -4113,6 +4113,23 @@
           }
         },
         "required" : [ "createDateTime", "createUsername", "currentTerm", "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitStatusCode" ]
+      },
+      "DuplicateOffenderVisitIdErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "offenderVisitId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "dpsOfficialVisitId" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "dpsOfficialVisitId", "message", "offenderVisitId" ]
       },
       "SyncCreateOfficialVisitorRequest" : {
         "type" : "object",
