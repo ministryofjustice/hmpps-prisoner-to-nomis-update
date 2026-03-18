@@ -205,7 +205,7 @@ class NonAssociationsService(
             when {
               closedInDPS(dpsRecord1, today) && !closedInDPS(dpsRecord2, today) -> dpsRecord1
               !closedInDPS(dpsRecord1, today) && closedInDPS(dpsRecord2, today) -> dpsRecord2
-              else -> null
+              else -> null.also { sequenceReport[entry.key + "-warning"] = "Found both non-associations open or closed in DPS" }
             }
               ?.let { closedDpsRecord ->
                 nomisData.find { closedDpsRecord.effectiveDate.toLocalDate() == it.effectiveDate }

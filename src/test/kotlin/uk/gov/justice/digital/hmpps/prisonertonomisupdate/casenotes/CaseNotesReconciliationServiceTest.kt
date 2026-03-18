@@ -475,7 +475,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(2, "UUID02", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -493,10 +493,12 @@ class CaseNotesReconciliationServiceTest {
       )
 
       verify(caseNotesNomisApiService).deleteCaseNote(3L)
+      assertThat(nomisCaseNotes).hasSize(2)
+      assertThat(nomisCaseNotes).containsOnlyKeys(1, 2)
       verifyNoMoreInteractions(caseNotesNomisApiService)
 
       verify(telemetryClient).trackEvent(
-        "casenotes-reports-reconciliation-mismatch-deleted",
+        "casenotes-reports-reconciliation-deleted",
         mapOf("offenderNo" to "A3456GH", "nomisId" to "3"),
         null,
       )
@@ -508,7 +510,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(3, "UUID03", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -526,10 +528,12 @@ class CaseNotesReconciliationServiceTest {
       )
 
       verify(caseNotesNomisApiService).deleteCaseNote(2L)
+      assertThat(nomisCaseNotes).hasSize(2)
+      assertThat(nomisCaseNotes).containsOnlyKeys(1, 3)
       verifyNoMoreInteractions(caseNotesNomisApiService)
 
       verify(telemetryClient).trackEvent(
-        "casenotes-reports-reconciliation-mismatch-deleted",
+        "casenotes-reports-reconciliation-deleted",
         mapOf("offenderNo" to "A3456GH", "nomisId" to "2"),
         null,
       )
@@ -541,7 +545,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(2, "UUID02", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -568,7 +572,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(2, "UUID02", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -593,7 +597,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(4, "UUID04", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -620,7 +624,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(2, "UUID02", OFFENDER_NO),
         templateMapping(3, "UUID03", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -646,7 +650,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(2, "UUID02", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is NOT duplicated", 3),
@@ -663,6 +667,7 @@ class CaseNotesReconciliationServiceTest {
         dpsCaseNotes,
       )
 
+      assertThat(nomisCaseNotes).hasSize(3)
       verifyNoInteractions(caseNotesNomisApiService)
     }
 
@@ -672,7 +677,7 @@ class CaseNotesReconciliationServiceTest {
         templateMapping(1, "UUID01", OFFENDER_NO),
         templateMapping(2, "UUID02", OFFENDER_NO),
       )
-      val nomisCaseNotes = mapOf(
+      val nomisCaseNotes = mutableMapOf(
         1L to templateComparison("1", "Other", 1),
         2L to templateComparison("2", "The text - this is duplicated", 2),
         3L to templateComparison("3", "The text - this is duplicated", 3),
@@ -729,6 +734,37 @@ class CaseNotesReconciliationServiceTest {
         ).getLastModified(),
       ).isEqualTo(creationDateTime)
     }
+  }
+
+  @Test
+  fun `equalDateTimes tests`() {
+    val comparisonCaseNote = ComparisonCaseNote(
+      id = "id",
+      text = "text",
+      type = "type",
+      subType = "subType",
+      occurrenceDateTime = null,
+      creationDateTime = null,
+      dpsUsername = null,
+      nomisUsernames = null,
+      legacyId = 0,
+    )
+    val recent1 = "2016-06-01T12:34:56"
+    val recent2 = "2016-06-01T12:34:56"
+    val recent3 = "2016-06-01T12:55:56"
+    val ancient1 = "0126-06-01T12:34:56"
+    val ancient2 = "1426-06-01T12:34:56"
+
+    assertThat(comparisonCaseNote.equalDateTimes(null, null)).isTrue
+    assertThat(comparisonCaseNote.equalDateTimes(null, recent1)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimes(recent1, null)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimes(ancient1, null)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimes(ancient1, ancient2)).isTrue
+    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent1)).isTrue
+    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent2)).isTrue
+    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent3)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimes(recent1, ancient1)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimes(ancient1, recent1)).isFalse
   }
 }
 

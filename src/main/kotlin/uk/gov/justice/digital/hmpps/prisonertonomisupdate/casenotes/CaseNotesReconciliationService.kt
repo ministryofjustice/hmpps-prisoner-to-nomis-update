@@ -202,15 +202,20 @@ class CaseNotesReconciliationService(
 
     if (mappings.size != nomisCaseNotes.size) {
       log.info("prisoner $offenderNo : $message")
-      val differences = mappings.map { it.nomisCaseNoteId }.toSet().xor(nomisCaseNotes.map { it.key }.toSet())
-      telemetryClient.trackEvent(
-        "casenotes-reports-reconciliation-mismatch-size-nomis",
-        mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
-      )
 
-      checkForNomisDuplicateAndDelete(offenderNo, mappings, nomisCaseNotes, dpsCaseNotes)
+      val mutableNomisCaseNotes = nomisCaseNotes.toMutableMap()
 
-      return MismatchCaseNote(offenderNo, diffsForNomis = differences, notes = listOf(message))
+      checkForNomisDuplicateAndDelete(offenderNo, mappings, mutableNomisCaseNotes, dpsCaseNotes)
+      val wasDeleted = mutableNomisCaseNotes.size < nomisCaseNotes.size
+
+      if (!wasDeleted) {
+        val differences = mappings.map { it.nomisCaseNoteId }.toSet().xor(mutableNomisCaseNotes.map { it.key }.toSet())
+        telemetryClient.trackEvent(
+          "casenotes-reports-reconciliation-mismatch-size-nomis",
+          mapOf("offenderNo" to offenderNo, "message" to message, "differences" to differences.joinToString(",")),
+        )
+        return MismatchCaseNote(offenderNo, diffsForNomis = differences, notes = listOf(message))
+      }
     }
 
     if (mappingsDpsDistinctIds.size != dpsCaseNotes.size) {
@@ -260,7 +265,7 @@ class CaseNotesReconciliationService(
   internal suspend fun checkForNomisDuplicateAndDelete(
     offenderNo: String,
     mappings: List<CaseNoteMappingDto>,
-    nomisCaseNotes: Map<Long, ComparisonCaseNote>,
+    nomisCaseNotes: MutableMap<Long, ComparisonCaseNote>,
     dpsCaseNotes: Map<String, ComparisonCaseNote>,
   ) {
     if (mappings.size + 1 == nomisCaseNotes.size) {
@@ -284,18 +289,18 @@ class CaseNotesReconciliationService(
           if (exactlyOneExistsInDps) {
             val inMapping1 = mappings.any { it.nomisCaseNoteId == nomisCaseNote1.legacyId }
             val inMapping2 = mappings.any { it.nomisCaseNoteId == nomisCaseNote2.legacyId }
+
+            var toBeDeleted: ComparisonCaseNote? = null
             if (inMapping1 && !inMapping2) {
-              caseNotesNomisApiService.deleteCaseNote(nomisCaseNote2.legacyId)
-              telemetryClient.trackEvent(
-                "casenotes-reports-reconciliation-mismatch-deleted",
-                mapOf("offenderNo" to offenderNo, "nomisId" to nomisCaseNote2.id),
-              )
+              toBeDeleted = nomisCaseNote2
             } else if (!inMapping1 && inMapping2) {
-              caseNotesNomisApiService.deleteCaseNote(nomisCaseNote1.legacyId)
-              telemetryClient.trackEvent(
-                "casenotes-reports-reconciliation-mismatch-deleted",
-                mapOf("offenderNo" to offenderNo, "nomisId" to nomisCaseNote1.id),
-              )
+              toBeDeleted = nomisCaseNote1
+            }
+
+            toBeDeleted?.run {
+              caseNotesNomisApiService.deleteCaseNote(legacyId)
+              telemetryClient.trackEvent("casenotes-reports-reconciliation-deleted", mapOf("offenderNo" to offenderNo, "nomisId" to id))
+              nomisCaseNotes.remove(id.toLong())
             }
           }
         }
@@ -426,8 +431,8 @@ data class ComparisonCaseNote(
     return text == other.text &&
       equalTypes(other) &&
       subType == other.subType &&
-      occurrenceDateTime == other.occurrenceDateTime &&
-      creationDateTime == other.creationDateTime &&
+      equalDateTimes(occurrenceDateTime, other.occurrenceDateTime) &&
+      equalDateTimes(creationDateTime, other.creationDateTime) &&
       equalUsers(other)
   }
 
@@ -440,6 +445,16 @@ data class ComparisonCaseNote(
     }
     return equal
   }
+
+  fun equalDateTimes(nomisDate: String?, dpsDate: String?): Boolean = when {
+    nomisDate == null -> dpsDate == null
+    isAncient(nomisDate) -> dpsDate != null && isAncient(dpsDate)
+    else -> nomisDate == dpsDate
+  }
+
+  // Some dates are ancient due to typos
+  // We cannot compare them accurately due to Julian calendar, leap year issues etc. but we don't care
+  private fun isAncient(nomisDate: String): Boolean = nomisDate.take(4).toInt() <= 1960
 
   override fun hashCode(): Int = javaClass.hashCode()
 
