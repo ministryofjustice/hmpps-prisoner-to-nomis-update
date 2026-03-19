@@ -64,8 +64,7 @@ fun corePerson(prisonNumber: String? = null, nationality: String? = null, religi
         beliefId = 1,
         belief = CodeDescription(code = religion, description = "$religion Description"),
         startDate = LocalDate.parse("2024-01-01"),
-        verified = true,
-        audit = NomisAudit(createDatetime = LocalDateTime.now(), createUsername = "ME"),
+        audit = NomisAudit(createDatetime = LocalDateTime.parse("2025-02-03T10:20:30"), createUsername = "ME"),
       ),
     )
   } else {

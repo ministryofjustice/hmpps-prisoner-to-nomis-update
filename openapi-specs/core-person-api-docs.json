@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-13.2665.cb4df5a"
+    "version" : "2026-03-19.2718.4a930cc"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -589,7 +589,7 @@
       "get" : {
         "tags" : [ "HMPPS Person API" ],
         "description" : "Retrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
-        "operationId" : "getRecord_1",
+        "operationId" : "getByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -622,7 +622,7 @@
       "get" : {
         "tags" : [ "HMPPS Person API" ],
         "description" : "Retrieve person record by C_ID coming from Libra. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
-        "operationId" : "getRecord_2",
+        "operationId" : "getRecord_1",
         "parameters" : [ {
           "name" : "cId",
           "in" : "path",
@@ -652,7 +652,7 @@
       "get" : {
         "tags" : [ "HMPPS Person API" ],
         "description" : "Retrieve person record by Defendant ID. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
-        "operationId" : "getRecord_3",
+        "operationId" : "getRecord_2",
         "parameters" : [ {
           "name" : "defendantId",
           "in" : "path",
@@ -1435,9 +1435,6 @@
           },
           "comments" : {
             "type" : "string"
-          },
-          "verified" : {
-            "type" : "boolean"
           }
         },
         "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
@@ -1513,11 +1510,6 @@
             "description" : "The religion comments",
             "example" : "Foo Bar"
           },
-          "verified" : {
-            "type" : "boolean",
-            "description" : "The religion verified flag",
-            "example" : true
-          },
           "startDate" : {
             "type" : "string",
             "format" : "date",
@@ -1545,9 +1537,20 @@
             "type" : "boolean",
             "description" : "Flag indicating the current religion",
             "example" : true
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The religion create date and time",
+            "example" : "2000-01-01 12:00:00"
+          },
+          "createUserId" : {
+            "type" : "string",
+            "description" : "The religion create user id",
+            "example" : "12345"
           }
         },
-        "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
+        "required" : [ "createDateTime", "createUserId", "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
       },
       "PrisonReligionRequest" : {
         "type" : "object",
@@ -2155,9 +2158,6 @@
           "comments" : {
             "type" : "string"
           },
-          "verified" : {
-            "type" : "boolean"
-          },
           "startDate" : {
             "type" : "string",
             "format" : "date"
@@ -2175,8 +2175,16 @@
           },
           "current" : {
             "type" : "boolean"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time"
+          },
+          "createUserId" : {
+            "type" : "string"
           }
-        }
+        },
+        "required" : [ "createDateTime", "createUserId" ]
       },
       "PrisonReligionGetResponse" : {
         "type" : "object",
