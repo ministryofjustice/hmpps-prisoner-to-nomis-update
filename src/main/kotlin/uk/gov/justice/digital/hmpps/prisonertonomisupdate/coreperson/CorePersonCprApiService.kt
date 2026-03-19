@@ -20,7 +20,7 @@ class CorePersonCprApiService(
   private val personApi = HMPPSPersonAPIApi(corePersonApiWebClient)
 
   suspend fun getCorePerson(prisonNumber: String): PrisonCanonicalRecord? = personApi
-    .prepare(personApi.getRecord1RequestConfig(prisonNumber))
+    .prepare(personApi.getByPrisonNumberRequestConfig(prisonNumber))
     .retrieve()
     .awaitBodyOrNullForNotFound(backoffSpec)
 }

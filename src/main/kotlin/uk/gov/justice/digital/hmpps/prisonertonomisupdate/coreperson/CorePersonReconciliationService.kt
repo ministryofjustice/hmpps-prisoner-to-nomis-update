@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
+import java.time.LocalDateTime
 
 @Service
 class CorePersonReconciliationService(
@@ -165,8 +166,6 @@ class CorePersonReconciliationService(
         val cpr = cprField[i]
         if (n.religion != cpr.religion) {
           "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
-        } else if (n.verified != cpr.verified) {
-          "$i-verified:nomis=${n.verified}, cpr=${cpr.verified}"
         } else if (n.comments != cpr.comments) {
           "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
         } else if (n.startDate?.equals(cpr.startDate) == false) {
@@ -175,6 +174,14 @@ class CorePersonReconciliationService(
           "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
         } else if (n.current != cpr.current) {
           "$i-current:nomis=${n.current}, cpr=${cpr.current}"
+        } else if (n.createUsername != cpr.createUsername) {
+          "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
+        } else if (!n.createDatetime.equals(cpr.createDatetime)) {
+          "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
+        } else if (n.modifyUsername != cpr.modifyUsername) {
+          "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
+        } else if (n.modifyDatetime?.equals(cpr.modifyDatetime) ?: false) {
+          "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
         } else {
           null
         }
@@ -209,7 +216,10 @@ fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
       endDate = it.endDate,
       current = it.current,
       comments = it.comments,
-      verified = it.verified,
+      createUsername = it.createUserId,
+      createDatetime = it.createDateTime,
+      modifyUsername = it.modifyUserId,
+      modifyDatetime = it.modifyDateTime,
     )
   },
 )
@@ -223,7 +233,10 @@ fun CorePerson.toPerson() = PrisonerPerson(
       endDate = r.endDate,
       current = i == 0,
       comments = r.comments,
-      verified = r.verified,
+      createUsername = r.audit.createUsername,
+      createDatetime = r.audit.createDatetime,
+      modifyUsername = r.audit.modifyUserId,
+      modifyDatetime = r.audit.modifyDatetime,
     )
   } ?: emptyList(),
 )
@@ -245,5 +258,8 @@ data class PrisonerReligion(
   val endDate: LocalDate?,
   val current: Boolean?,
   val comments: String?,
-  val verified: Boolean?,
+  val createUsername: String,
+  val createDatetime: LocalDateTime,
+  val modifyUsername: String?,
+  val modifyDatetime: LocalDateTime?,
 )

@@ -112,7 +112,6 @@ class CorePersonReconciliationIntTest(
               beliefId = 12345L,
               belief = CodeDescription("ZOO", "ZOO Description"),
               startDate = LocalDate.parse("2024-01-01"),
-              verified = true,
               audit = NomisAudit(
                 createDatetime = LocalDateTime.now(),
                 createUsername = "User",
@@ -124,7 +123,6 @@ class CorePersonReconciliationIntTest(
               beliefId = 12345L,
               belief = CodeDescription("DRU", "DRU Description"),
               startDate = LocalDate.parse("2025-01-01"),
-              verified = true,
               audit = NomisAudit(
                 createDatetime = LocalDateTime.now(),
                 createUsername = "User",
@@ -145,8 +143,9 @@ class CorePersonReconciliationIntTest(
               religionDescription = "DRU Description",
               changeReasonKnown = true,
               comments = "Some comment",
-              verified = true,
               startDate = LocalDate.parse("2024-01-01"),
+              createDateTime = LocalDateTime.now(),
+              createUserId = "User",
               modifyDateTime = LocalDateTime.now(),
               modifyUserId = "User",
               current = true,
@@ -156,9 +155,10 @@ class CorePersonReconciliationIntTest(
               religionDescription = "DRU Description",
               changeReasonKnown = true,
               comments = "Some comment",
-              verified = true,
               // different date
               startDate = LocalDate.parse("2024-01-01"),
+              createDateTime = LocalDateTime.now(),
+              createUserId = "User",
               modifyDateTime = LocalDateTime.now(),
               modifyUserId = "User",
               current = false,
