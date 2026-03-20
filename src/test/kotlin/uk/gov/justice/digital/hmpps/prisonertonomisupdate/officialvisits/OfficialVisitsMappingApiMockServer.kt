@@ -6,8 +6,10 @@ import com.github.tomakehurst.wiremock.client.WireMock.delete
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import com.github.tomakehurst.wiremock.stubbing.Scenario
+import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
@@ -166,6 +168,52 @@ class OfficialVisitsMappingApiMockServer(private val jsonMapper: JsonMapper) {
         ),
       )
     }
+  }
+
+  fun stubGetByVisitDpsIdOrNullNotFoundTwiceFollowedBySuccessForever(
+    dpsVisitId: Long = 1234L,
+    mapping: OfficialVisitMappingDto = OfficialVisitMappingDto(
+      dpsId = dpsVisitId.toString(),
+      nomisId = 544321,
+      mappingType = OfficialVisitMappingDto.MappingType.MIGRATED,
+    ),
+  ) {
+    val url = "/mapping/official-visits/visit/dps-id/$dpsVisitId"
+    mappingServer.stubFor(
+      get(urlPathMatching(url))
+        .inScenario("stubGetByVisitDpsIdOrNullNotFoundOnceFollowedBySuccessForever")
+        .whenScenarioStateIs(STARTED)
+        .willReturn(
+          aResponse()
+            .withStatus(404)
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("NotFound"),
+    )
+
+    mappingServer.stubFor(
+      get(urlPathMatching(url))
+        .inScenario("stubGetByVisitDpsIdOrNullNotFoundOnceFollowedBySuccessForever")
+        .whenScenarioStateIs("NotFound")
+        .willReturn(
+          aResponse()
+            .withStatus(404)
+            .withHeader("Content-Type", "application/json"),
+        )
+        .willSetStateTo("Success"),
+    )
+
+    mappingServer.stubFor(
+      get(urlPathMatching(url))
+        .inScenario("stubGetByVisitDpsIdOrNullNotFoundOnceFollowedBySuccessForever")
+        .whenScenarioStateIs("Success")
+        .willReturn(
+          aResponse().withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.OK.value())
+            .withBody(jsonMapper.writeValueAsString(mapping)),
+        ).willSetStateTo("Success"),
+
+    )
   }
 
   fun stubGetVisitByDpsId(

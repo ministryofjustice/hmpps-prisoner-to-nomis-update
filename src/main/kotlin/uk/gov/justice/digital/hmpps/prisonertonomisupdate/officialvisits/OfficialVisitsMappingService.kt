@@ -39,6 +39,8 @@ class OfficialVisitsMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec)
 
+  suspend fun hasVisitForDpsId(dpsVisitId: Long) = getVisitByDpsIdOrNull(dpsVisitId) != null
+
   suspend fun getVisitByDpsId(dpsVisitId: Long): OfficialVisitMappingDto = api.getVisitMappingByDpsId(dpsVisitId = dpsVisitId.toString()).awaitSingle()
 
   suspend fun createVisitMapping(mapping: OfficialVisitMappingDto) = api.prepare(api.createVisitMappingRequestConfig(mapping))
