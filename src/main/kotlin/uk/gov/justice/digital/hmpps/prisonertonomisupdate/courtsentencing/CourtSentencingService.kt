@@ -195,7 +195,6 @@ class CourtSentencingService(
             offenderNo,
             courtCaseMapping.nomisCourtCaseId,
             courtAppearance.toNomisCourtAppearance(
-              courtEventCharges = courtEventChargesToUpdate,
               courtEventChargesWithOutcomes = courtEventChargesToUpdateWithOutcomes,
             ),
           ).also { response ->
@@ -507,6 +506,7 @@ class CourtSentencingService(
             telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
           }
         // todo check for entity and stop if mapping doesn't exist OR , await parent exception with message for reason in event logging
+        // function to return mapping or throw with message for logging and retry purposes OR return a dto to indicate entity no longer exists. Sealed class with defined number of subclasses,
         val courtAppearanceMapping =
           courtCaseMappingService.getMappingGivenCourtAppearanceId(courtAppearanceId)
             .also {
@@ -538,12 +538,10 @@ class CourtSentencingService(
           nomisCourtCaseId = courtCaseMapping.nomisCourtCaseId,
           nomisCourtAppearanceId = courtAppearanceMapping.nomisCourtAppearanceId,
           request = dpsCourtAppearance.toNomisCourtAppearance(
-            courtEventCharges = courtEventChargesToUpdate,
             courtEventChargesWithOutcomes = courtEventChargesWithOutcomesToUpdate,
-          ).also {
-            telemetryMap["courtEventChargesResponse"] = it.courtEventCharges.toString()
-          },
+          ),
         )
+        telemetryMap["courtEventChargesResponse"] = nomisResponse.toString()
 
         CourtChargeBatchUpdateMappingDto(
           courtChargesToCreate = emptyList(),
@@ -1656,7 +1654,6 @@ fun LegacyCourtCase.toNomisCourtCase(): CreateCourtCaseRequest = CreateCourtCase
 )
 
 fun LegacyCourtAppearance.toNomisCourtAppearance(
-  courtEventCharges: List<Long>,
   courtEventChargesWithOutcomes: List<CourtEventChargeRequest>,
 ): CourtAppearanceRequest = CourtAppearanceRequest(
   eventDateTime = LocalDateTime.of(
@@ -1677,7 +1674,6 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
       LocalTime.MIDNIGHT,
     )
   },
-  courtEventCharges = courtEventCharges,
   courtEventChargesWithOutcomes = courtEventChargesWithOutcomes,
   nextCourtId = this.nextCourtAppearance?.courtId,
 )
