@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-11.1024.c02da90"
+    "version" : "2026-03-19.1088.99624ff"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -822,7 +822,7 @@
     "/search/prisons/{prisonCode}/external-movements/schedules" : {
       "get" : {
         "tags" : [ "search-external-movements-controller" ],
-        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__RO",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__RO\n* ROLE_EXTERNAL_MOVEMENTS__EXTERNAL_MOVEMENTS__RW",
         "operationId" : "externalMovementSchedules",
         "parameters" : [ {
           "name" : "prisonCode",
@@ -1917,6 +1917,65 @@
         },
         "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ]
       },
+      "AuthorisationSchedule" : {
+        "type" : "object",
+        "description" : "AuthorisationSchedule",
+        "discriminator" : {
+          "propertyName" : "type",
+          "mapping" : {
+            "SINGLE" : "#/components/schemas/SingleSchedule",
+            "FREEFORM" : "#/components/schemas/FreeFormSchedule",
+            "WEEKLY" : "#/components/schemas/WeeklySchedule",
+            "BIWEEKLY" : "#/components/schemas/BiweeklySchedule",
+            "SHIFT" : "#/components/schemas/ShiftSchedule"
+          }
+        },
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/AuthorisationScheduleType"
+          }
+        },
+        "required" : [ "type" ]
+      },
+      "AuthorisationScheduleType" : {
+        "type" : "string",
+        "enum" : [ "SINGLE", "FREEFORM", "WEEKLY", "BIWEEKLY", "SHIFT" ]
+      },
+      "BiweeklyPattern" : {
+        "type" : "object",
+        "properties" : {
+          "weekA" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WeekDayPattern"
+            }
+          },
+          "weekB" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/WeekDayPattern"
+            }
+          }
+        },
+        "required" : [ "weekA", "weekB" ]
+      },
+      "BiweeklySchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationSchedule"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "biweeklyPattern" : {
+              "$ref" : "#/components/schemas/BiweeklyPattern"
+            },
+            "absencesPerDay" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        } ],
+        "required" : [ "biweeklyPattern", "type" ]
+      },
       "CreateTapAuthorisationRequest" : {
         "type" : "object",
         "properties" : {
@@ -1966,12 +2025,59 @@
             "type" : "string"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/JsonNode"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BiweeklySchedule"
+            }, {
+              "$ref" : "#/components/schemas/FreeFormSchedule"
+            }, {
+              "$ref" : "#/components/schemas/ShiftSchedule"
+            }, {
+              "$ref" : "#/components/schemas/SingleSchedule"
+            }, {
+              "$ref" : "#/components/schemas/WeeklySchedule"
+            } ]
           }
         },
         "required" : [ "absenceTypeCode", "accompaniedByCode", "end", "occurrences", "repeat", "start", "statusCode", "transportCode" ]
       },
-      "JsonNode" : { },
+      "DayShiftPattern" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ShiftPattern"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "startTime" : {
+              "type" : "string"
+            },
+            "returnTime" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "count", "returnTime", "startTime", "type" ]
+      },
+      "FreeFormSchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationSchedule"
+        } ],
+        "required" : [ "type" ]
+      },
+      "NightShiftPattern" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ShiftPattern"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "startTime" : {
+              "type" : "string"
+            },
+            "returnTime" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "count", "returnTime", "startTime", "type" ]
+      },
       "OccurrenceRequest" : {
         "type" : "object",
         "properties" : {
@@ -1985,12 +2091,118 @@
           },
           "location" : {
             "$ref" : "#/components/schemas/Location"
-          },
-          "scheduleReference" : {
-            "$ref" : "#/components/schemas/JsonNode"
           }
         },
         "required" : [ "end", "location", "start" ]
+      },
+      "RestShiftPattern" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/ShiftPattern"
+        } ],
+        "required" : [ "count", "type" ]
+      },
+      "ShiftPattern" : {
+        "type" : "object",
+        "description" : "ShiftPattern",
+        "discriminator" : {
+          "propertyName" : "type",
+          "mapping" : {
+            "DAY" : "#/components/schemas/DayShiftPattern",
+            "NIGHT" : "#/components/schemas/NightShiftPattern",
+            "REST" : "#/components/schemas/RestShiftPattern"
+          }
+        },
+        "properties" : {
+          "count" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "type" : {
+            "$ref" : "#/components/schemas/ShiftPatternType"
+          }
+        },
+        "required" : [ "count", "type" ]
+      },
+      "ShiftPatternType" : {
+        "type" : "string",
+        "enum" : [ "DAY", "NIGHT", "REST" ]
+      },
+      "ShiftSchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationSchedule"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "shiftPattern" : {
+              "type" : "array",
+              "items" : {
+                "oneOf" : [ {
+                  "$ref" : "#/components/schemas/DayShiftPattern"
+                }, {
+                  "$ref" : "#/components/schemas/NightShiftPattern"
+                }, {
+                  "$ref" : "#/components/schemas/RestShiftPattern"
+                } ]
+              }
+            }
+          }
+        } ],
+        "required" : [ "shiftPattern", "type" ]
+      },
+      "SingleSchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationSchedule"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "startTime" : {
+              "type" : "string"
+            },
+            "returnTime" : {
+              "type" : "string"
+            }
+          }
+        } ],
+        "required" : [ "returnTime", "startTime", "type" ]
+      },
+      "WeekDayPattern" : {
+        "type" : "object",
+        "properties" : {
+          "day" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "overnight" : {
+            "type" : "boolean"
+          },
+          "startTime" : {
+            "type" : "string"
+          },
+          "returnTime" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "day", "overnight", "returnTime", "startTime" ]
+      },
+      "WeeklySchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationSchedule"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "weeklyPattern" : {
+              "type" : "array",
+              "items" : {
+                "$ref" : "#/components/schemas/WeekDayPattern"
+              }
+            },
+            "absencesPerDay" : {
+              "type" : "integer",
+              "format" : "int32"
+            }
+          }
+        } ],
+        "required" : [ "type", "weeklyPattern" ]
       },
       "ReferenceId" : {
         "type" : "object",
@@ -2157,6 +2369,19 @@
           },
           "repeat" : {
             "type" : "boolean"
+          },
+          "schedule" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BiweeklySchedule"
+            }, {
+              "$ref" : "#/components/schemas/FreeFormSchedule"
+            }, {
+              "$ref" : "#/components/schemas/ShiftSchedule"
+            }, {
+              "$ref" : "#/components/schemas/SingleSchedule"
+            }, {
+              "$ref" : "#/components/schemas/WeeklySchedule"
+            } ]
           }
         },
         "required" : [ "id", "person", "repeat", "status" ]
@@ -2533,9 +2758,6 @@
           "contactInformation" : {
             "type" : "string"
           },
-          "scheduleReference" : {
-            "$ref" : "#/components/schemas/JsonNode"
-          },
           "comments" : {
             "type" : "string"
           },
@@ -2597,6 +2819,19 @@
           },
           "comments" : {
             "type" : "string"
+          },
+          "schedule" : {
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BiweeklySchedule"
+            }, {
+              "$ref" : "#/components/schemas/FreeFormSchedule"
+            }, {
+              "$ref" : "#/components/schemas/ShiftSchedule"
+            }, {
+              "$ref" : "#/components/schemas/SingleSchedule"
+            }, {
+              "$ref" : "#/components/schemas/WeeklySchedule"
+            } ]
           }
         },
         "required" : [ "accompaniedBy", "end", "id", "person", "repeat", "start", "status" ]
@@ -2760,7 +2995,17 @@
             "uniqueItems" : true
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/JsonNode"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BiweeklySchedule"
+            }, {
+              "$ref" : "#/components/schemas/FreeFormSchedule"
+            }, {
+              "$ref" : "#/components/schemas/ShiftSchedule"
+            }, {
+              "$ref" : "#/components/schemas/SingleSchedule"
+            }, {
+              "$ref" : "#/components/schemas/WeeklySchedule"
+            } ]
           },
           "comments" : {
             "type" : "string"
