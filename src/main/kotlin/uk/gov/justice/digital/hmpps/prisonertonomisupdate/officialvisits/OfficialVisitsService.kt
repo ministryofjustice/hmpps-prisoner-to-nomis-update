@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
@@ -88,6 +89,30 @@ class OfficialVisitsService(
       telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-create-ignored", telemetry)
     }
   }
+
+  suspend fun createVisitFromDps(offenderNo: String, prisonId: String, dpsVisitId: Long): SyncOfficialVisit {
+    if (mappingApiService.hasVisitForDpsId(dpsVisitId)) {
+      throw BadRequestException("Visit was not created since mapping already exists")
+    }
+    val telemetry = mutableMapOf(
+      "prisonId" to prisonId,
+      "dpsOfficialVisitId" to dpsVisitId.toString(),
+      "offenderNo" to offenderNo,
+    )
+
+    return track("officialvisits-visit-create-repair", telemetry) {
+      dpsApiService.getOfficialVisit(dpsVisitId).also { dpsVisit ->
+        visitCreated(visitEvent(prisonId, dpsVisitId, offenderNo))
+        val dpsVisitorIds: List<Long> = dpsVisit.visitors.map { visitor ->
+          visitorCreated(visitorEvent(prisonId, dpsVisitId, visitor))
+          visitor.officialVisitorId
+        }
+        telemetry["dpsOfficialVisitorIds"] = dpsVisitorIds.joinToString()
+        telemetry["reason"] = "Visit created. Manual repair"
+      }
+    }
+  }
+
   suspend fun visitUpdated(event: VisitEvent) {
     val telemetry = event.asTelemetry()
     if (event.didOriginateInDPS()) {
@@ -119,6 +144,10 @@ class OfficialVisitsService(
     } else {
       telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-update-ignored", telemetry)
     }
+  }
+
+  suspend fun updateVisitFromDps(offenderNo: String, prisonId: String, dpsVisitId: Long) {
+    // TODO
   }
 
   suspend fun visitDeleted(event: VisitEvent) {
@@ -252,6 +281,46 @@ class OfficialVisitsService(
     telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-create-success", message.telemetryAttributes)
   }
 }
+
+private fun visitorEvent(
+  prisonId: String,
+  dpsVisitId: Long,
+  visitor: SyncOfficialVisitor,
+): VisitorEvent = VisitorEvent(
+  additionalInformation = VisitorAdditionalData(
+    prisonId = prisonId,
+    officialVisitId = dpsVisitId,
+    officialVisitorId = visitor.officialVisitorId,
+    source = "DPS",
+  ),
+  personReference = ContactIdentifiers(
+    listOf(
+      ContactPersonReference(
+        type = "CONTACT_ID",
+        value = visitor.contactId.toString(),
+      ),
+    ),
+  ),
+)
+
+private fun visitEvent(
+  prisonId: String,
+  dpsVisitId: Long,
+  offenderNo: String,
+): VisitEvent = VisitEvent(
+  additionalInformation = VisitAdditionalData(
+    prisonId = prisonId,
+    officialVisitId = dpsVisitId,
+  ),
+  personReference = PrisonerIdentifiers(
+    listOf(
+      PrisonerReference(
+        type = "NOMS",
+        value = offenderNo,
+      ),
+    ),
+  ),
+)
 
 fun VisitEvent.asTelemetry() = mutableMapOf(
   "prisonId" to additionalInformation.prisonId,

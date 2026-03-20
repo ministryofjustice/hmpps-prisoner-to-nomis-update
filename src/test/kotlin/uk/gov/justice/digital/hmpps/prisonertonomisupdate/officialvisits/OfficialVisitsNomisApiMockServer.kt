@@ -8,6 +8,7 @@ import com.github.tomakehurst.wiremock.client.WireMock.post
 import com.github.tomakehurst.wiremock.client.WireMock.put
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
+import com.github.tomakehurst.wiremock.stubbing.Scenario.STARTED
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
@@ -251,6 +252,37 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withStatus(HttpStatus.CREATED.value())
           .withBody(jsonMapper.writeValueAsString(response)),
       ),
+    )
+  }
+  fun stubCreateOfficialVisitors(
+    visitId: Long,
+    response1: OfficialVisitor,
+    response2: OfficialVisitor,
+  ) {
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/official-visits/$visitId/official-visitor"))
+        .inScenario("Two Visitors Scenario")
+        .whenScenarioStateIs(STARTED)
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withBody(jsonMapper.writeValueAsString(response1)),
+        )
+        .willSetStateTo("2nd Visitor"),
+    )
+
+    nomisApi.stubFor(
+      post(urlPathEqualTo("/official-visits/$visitId/official-visitor"))
+        .inScenario("Two Visitors Scenario")
+        .whenScenarioStateIs("2nd Visitor")
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(201)
+            .withBody(jsonMapper.writeValueAsString(response2)),
+        )
+        .willSetStateTo(STARTED),
     )
   }
 
