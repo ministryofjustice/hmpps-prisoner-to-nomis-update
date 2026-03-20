@@ -21,7 +21,7 @@ class OfficialVisitsRepairResource(
   private val officialVisitsSynchronisationService: OfficialVisitsService,
 ) {
 
-  @PostMapping("/prison/{prisonId}/prisoners/{offenderNo}/official-visits/{dpsVisitId}")
+  @PostMapping("/prison/{prisonId}/prisoners/{offenderNo}/official-visits/{dpsOfficialVisitId}")
   @ResponseStatus(HttpStatus.CREATED)
   @Operation(
     summary = "Create a visit in NOMIS from the visit in DPS",
@@ -66,14 +66,14 @@ class OfficialVisitsRepairResource(
   suspend fun createOfficialVisitFromDps(
     @PathVariable offenderNo: String,
     @PathVariable prisonId: String,
-    @PathVariable dpsVisitId: Long,
+    @PathVariable dpsOfficialVisitId: Long,
   ) = officialVisitsSynchronisationService.createVisitFromDps(
     offenderNo = offenderNo,
     prisonId = prisonId,
-    dpsVisitId = dpsVisitId,
+    dpsOfficialVisitId = dpsOfficialVisitId,
   )
 
-  @PutMapping("/prison/{prisonId}/prisoners/{offenderNo}/official-visits/{dpsVisitId}")
+  @PutMapping("/prison/{prisonId}/prisoners/{offenderNo}/official-visits/{dpsOfficialVisitId}")
   @Operation(
     summary = "Updates a visit in NOMIS from the visit in DPS, will create or update visitors as required",
     description = "Used when an unexpected event has happened in DPS that has resulted in the NOMIS data drifting from DPS, so emergency use only. Requires ROLE_PRISONER_TO_NOMIS__SYNCHRONISATION__RW",
@@ -117,10 +117,10 @@ class OfficialVisitsRepairResource(
   suspend fun updateOfficialVisitFromNomis(
     @PathVariable offenderNo: String,
     @PathVariable prisonId: String,
-    @PathVariable dpsVisitId: Long,
+    @PathVariable dpsOfficialVisitId: Long,
   ) = officialVisitsSynchronisationService.updateVisitFromDps(
     offenderNo = offenderNo,
     prisonId = prisonId,
-    dpsVisitId = dpsVisitId,
+    dpsOfficialVisitId = dpsOfficialVisitId,
   )
 }

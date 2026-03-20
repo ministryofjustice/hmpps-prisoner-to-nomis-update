@@ -59,6 +59,8 @@ class OfficialVisitsMappingService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
+  suspend fun hasVisitorForDpsId(dpsVisitorId: Long) = getVisitorByDpsIdOrNull(dpsVisitorId) != null
+
   suspend fun getVisitorByDpsId(dpsVisitorId: Long): OfficialVisitorMappingDto = api.getVisitorMappingByDpsId(
     dpsVisitorId = dpsVisitorId.toString(),
   )

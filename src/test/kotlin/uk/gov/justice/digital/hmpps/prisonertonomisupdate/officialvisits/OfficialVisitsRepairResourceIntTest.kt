@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import org.assertj.core.api.Assertions.assertThat
@@ -16,9 +17,11 @@ import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.LocationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitorMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.VisitSlotMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateOfficialVisitorRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisitor
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
@@ -231,7 +234,8 @@ class OfficialVisitsRepairResourceIntTest(
     val dpsOfficialVisitorId = 173193L
     val dpsOfficialVisitorId2 = 273193L
     val nomisVisitorId2 = 73738L
-    // TODO - next PR
+    val contactAndPersonId = 1373L
+    val contactAndPersonId2 = 94943L
 
     @Nested
     inner class Security {
@@ -256,6 +260,129 @@ class OfficialVisitsRepairResourceIntTest(
         webTestClient.put().uri("/prison/$prisonId/prisoners/$offenderNo/official-visits/$dpsOfficialVisitId")
           .exchange()
           .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @BeforeEach
+      fun setUp() {
+        mappingApi.stubGetVisitByDpsIdOrNull(
+          dpsOfficialVisitId,
+          OfficialVisitMappingDto(
+            dpsId = dpsOfficialVisitId.toString(),
+            nomisId = nomisVisitId,
+            mappingType = OfficialVisitMappingDto.MappingType.NOMIS_CREATED,
+          ),
+        )
+
+        dpsApi.stubGetOfficialVisit(
+          officialVisitId = dpsOfficialVisitId,
+          response = syncOfficialVisit().copy(
+            officialVisitId = dpsOfficialVisitId,
+            prisonCode = prisonId,
+            dpsLocationId = dpsLocationId,
+            prisonVisitSlotId = dpsVisitSlotId,
+            prisonerNumber = offenderNo,
+            visitors = listOf(
+              syncOfficialVisitor().copy(
+                officialVisitorId = dpsOfficialVisitorId,
+                contactId = contactAndPersonId,
+              ),
+              syncOfficialVisitor().copy(
+                officialVisitorId = dpsOfficialVisitorId2,
+                contactId = contactAndPersonId2,
+              ),
+            ),
+          ),
+        )
+        visitSlotsMappingApi.stubGetVisitSlotByDpsId(
+          dpsVisitSlotId.toString(),
+          VisitSlotMappingDto(
+            dpsId = dpsVisitSlotId.toString(),
+            nomisId = nomisVisitSlotId,
+            mappingType = VisitSlotMappingDto.MappingType.MIGRATED,
+          ),
+        )
+        visitSlotsMappingApi.stubGetInternalLocationByDpsId(
+          dpsLocationId.toString(),
+          LocationMappingDto(
+            dpsLocationId = dpsLocationId.toString(),
+            nomisLocationId = nomisLocationId,
+            mappingType = LocationMappingDto.MappingType.LOCATION_CREATED,
+          ),
+        )
+
+        nomisApi.stubUpdateOfficialVisit(
+          visitId = nomisVisitId,
+        )
+
+        mappingApi.stubGetVisitorByDpsIdOrNull(
+          dpsOfficialVisitorId,
+          OfficialVisitorMappingDto(
+            dpsId = dpsOfficialVisitorId.toString(),
+            nomisId = nomisVisitorId,
+            mappingType = OfficialVisitorMappingDto.MappingType.MIGRATED,
+          ),
+        )
+        mappingApi.stubGetVisitorByDpsIdOrNull(dpsOfficialVisitorId2, null)
+        nomisApi.stubUpdateOfficialVisitor(
+          visitId = nomisVisitId,
+          visitorId = nomisVisitorId,
+        )
+        nomisApi.stubCreateOfficialVisitor(
+          visitId = nomisVisitId,
+          response = officialVisitor().copy(id = nomisVisitorId2),
+        )
+        mappingApi.stubCreateVisitorMapping()
+
+        webTestClient.put().uri("/prison/$prisonId/prisoners/$offenderNo/official-visits/$dpsOfficialVisitId")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__SYNCHRONISATION__RW")))
+          .exchange()
+          .expectStatus().isOk
+      }
+
+      @Test
+      fun `will update visit in NOMIS`() {
+        val request: UpdateOfficialVisitRequest = NomisApiExtension.nomisApi.getRequestBody(putRequestedFor(urlEqualTo("/official-visits/$nomisVisitId")), jsonMapper)
+        assertThat(request.visitSlotId).isEqualTo(nomisVisitSlotId)
+        assertThat(request.internalLocationId).isEqualTo(nomisLocationId)
+      }
+
+      @Test
+      fun `will update visitor in NOMIS that already existed`() {
+        nomisApi.verify(putRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor/$nomisVisitorId")))
+      }
+
+      @Test
+      fun `will create visitor in NOMIS that was missing`() {
+        val request: CreateOfficialVisitorRequest = NomisApiExtension.nomisApi.getRequestBody(postRequestedFor(urlEqualTo("/official-visits/$nomisVisitId/official-visitor")), jsonMapper)
+        assertThat(request.personId).isEqualTo(contactAndPersonId2)
+      }
+
+      @Test
+      fun `will create mappings for missing visitor`() {
+        mappingApi.verify(
+          postRequestedFor(urlPathEqualTo("/mapping/official-visits/visitor"))
+            .withRequestBodyJsonPath("dpsId", dpsOfficialVisitorId2.toString())
+            .withRequestBodyJsonPath("nomisId", nomisVisitorId2)
+            .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
+        )
+      }
+
+      @Test
+      fun `will track telemetry`() {
+        verify(telemetryClient).trackEvent(
+          eq("officialvisits-visit-update-repair-success"),
+          check {
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo("$dpsOfficialVisitId")
+            assertThat(it["dpsOfficialVisitorIds"]).isEqualTo("$dpsOfficialVisitorId, $dpsOfficialVisitorId2")
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+            assertThat(it["reason"]).isEqualTo("Visit updated. Manual repair")
+          },
+          isNull(),
+        )
       }
     }
   }
