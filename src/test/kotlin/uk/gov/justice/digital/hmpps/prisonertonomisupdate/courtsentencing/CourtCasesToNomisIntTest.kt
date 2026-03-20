@@ -562,7 +562,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
                   equalTo("2024-09-23T10:00:00"),
                 ),
               )
-              .withRequestBody(matchingJsonPath("courtEventCharges.size()", equalTo("4")))
+              .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
               .withRequestBody(matchingJsonPath("courtEventType", equalTo("CRT")))
               .withRequestBody(
                 matchingJsonPath(
