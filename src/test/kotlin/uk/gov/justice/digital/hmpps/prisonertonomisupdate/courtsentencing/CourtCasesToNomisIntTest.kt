@@ -566,27 +566,43 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               .withRequestBody(matchingJsonPath("courtEventType", equalTo("CRT")))
               .withRequestBody(
                 matchingJsonPath(
-                  "courtEventCharges[0]",
+                  "courtEventChargesWithOutcomes[0].offenderChargeId",
                   equalTo(NOMIS_COURT_CHARGE_ID.toString()),
                 ),
-
               )
               .withRequestBody(
                 matchingJsonPath(
-                  "courtEventCharges[1]",
+                  "courtEventChargesWithOutcomes[0].resultCode1",
+                  equalTo(COURT_CHARGE_1_RESULT_CODE),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "courtEventChargesWithOutcomes[1].offenderChargeId",
                   equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
                 ),
               )
               .withRequestBody(
                 matchingJsonPath(
-                  "courtEventCharges[2]",
-                  equalTo(NOMIS_COURT_CHARGE_3_ID.toString()),
+                  "courtEventChargesWithOutcomes[1].resultCode1",
+                  equalTo(COURT_CHARGE_2_RESULT_CODE),
                 ),
-
               )
               .withRequestBody(
                 matchingJsonPath(
-                  "courtEventCharges[3]",
+                  "courtEventChargesWithOutcomes[2].offenderChargeId",
+                  equalTo(NOMIS_COURT_CHARGE_3_ID.toString()),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "courtEventChargesWithOutcomes[2].resultCode1",
+                  equalTo(COURT_CHARGE_3_RESULT_CODE),
+                ),
+              )
+              .withRequestBody(
+                matchingJsonPath(
+                  "courtEventChargesWithOutcomes[3].offenderChargeId",
                   equalTo(NOMIS_COURT_CHARGE_4_ID.toString()),
                 ),
               ),
