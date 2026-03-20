@@ -431,8 +431,8 @@ data class ComparisonCaseNote(
     return text == other.text &&
       equalTypes(other) &&
       subType == other.subType &&
-      equalDateTimes(occurrenceDateTime, other.occurrenceDateTime) &&
-      equalDateTimes(creationDateTime, other.creationDateTime) &&
+      equalDateTimesIgnoringAncient(occurrenceDateTime, other.occurrenceDateTime) &&
+      equalDateTimesIgnoringAncient(creationDateTime, other.creationDateTime) &&
       equalUsers(other)
   }
 
@@ -446,7 +446,7 @@ data class ComparisonCaseNote(
     return equal
   }
 
-  fun equalDateTimes(nomisDate: String?, dpsDate: String?): Boolean = when {
+  fun equalDateTimesIgnoringAncient(nomisDate: String?, dpsDate: String?): Boolean = when {
     nomisDate == null -> dpsDate == null
     isAncient(nomisDate) -> dpsDate != null && isAncient(dpsDate)
     else -> nomisDate == dpsDate

@@ -6,6 +6,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.params.ParameterizedTest
+import org.junit.jupiter.params.provider.CsvSource
 import org.mockito.kotlin.check
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
@@ -736,8 +738,21 @@ class CaseNotesReconciliationServiceTest {
     }
   }
 
-  @Test
-  fun `equalDateTimes tests`() {
+  @ParameterizedTest
+  @CsvSource(
+    value = [
+      ",,true",
+      ",2016-06-01T00:00:00,false",
+      "2016-06-01T00:00:00,,false",
+      "0126-06-01T00:00:00,,false",
+      "0126-06-01T00:00:00,1426-06-01T00:00:00,true",
+      "2016-06-01T00:00:00,2016-06-01T00:00:00,true",
+      "2016-06-01T00:00:00,2016-06-01T12:55:56,false",
+      "2016-06-01T00:00:00,0126-06-01T00:00:00,false",
+      "0126-06-01T00:00:00,2016-06-01T00:00:00,false",
+    ],
+  )
+  fun `equalDateTimesIgnoringAncient tests`(first: String?, second: String?, result: Boolean) {
     val comparisonCaseNote = ComparisonCaseNote(
       id = "id",
       text = "text",
@@ -749,22 +764,7 @@ class CaseNotesReconciliationServiceTest {
       nomisUsernames = null,
       legacyId = 0,
     )
-    val recent1 = "2016-06-01T12:34:56"
-    val recent2 = "2016-06-01T12:34:56"
-    val recent3 = "2016-06-01T12:55:56"
-    val ancient1 = "0126-06-01T12:34:56"
-    val ancient2 = "1426-06-01T12:34:56"
-
-    assertThat(comparisonCaseNote.equalDateTimes(null, null)).isTrue
-    assertThat(comparisonCaseNote.equalDateTimes(null, recent1)).isFalse
-    assertThat(comparisonCaseNote.equalDateTimes(recent1, null)).isFalse
-    assertThat(comparisonCaseNote.equalDateTimes(ancient1, null)).isFalse
-    assertThat(comparisonCaseNote.equalDateTimes(ancient1, ancient2)).isTrue
-    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent1)).isTrue
-    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent2)).isTrue
-    assertThat(comparisonCaseNote.equalDateTimes(recent1, recent3)).isFalse
-    assertThat(comparisonCaseNote.equalDateTimes(recent1, ancient1)).isFalse
-    assertThat(comparisonCaseNote.equalDateTimes(ancient1, recent1)).isFalse
+    assertThat(comparisonCaseNote.equalDateTimesIgnoringAncient(first, second)).isEqualTo(result)
   }
 }
 
