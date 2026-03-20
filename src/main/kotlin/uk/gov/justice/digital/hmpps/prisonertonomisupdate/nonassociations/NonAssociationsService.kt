@@ -205,14 +205,14 @@ class NonAssociationsService(
             when {
               closedInDPS(dpsRecord1, today) && !closedInDPS(dpsRecord2, today) -> dpsRecord1
               !closedInDPS(dpsRecord1, today) && closedInDPS(dpsRecord2, today) -> dpsRecord2
-              else -> null
+              else -> null.also { sequenceReport["${entry.key}-warning"] = "Found both non-associations open or closed in DPS" }
             }
               ?.let { closedDpsRecord ->
                 nomisData.find { closedDpsRecord.effectiveDate.toLocalDate() == it.effectiveDate }
               }
               ?.run {
                 nomisApiService.closeNonAssociation(offenderNo, nsOffenderNo, typeSequence)
-                sequenceReport[entry.key + "-closed"] = "Closed non-association between $offenderNo and $nsOffenderNo with sequence $typeSequence"
+                sequenceReport["${entry.key}-closed"] = "Closed non-association between $offenderNo and $nsOffenderNo with sequence $typeSequence"
               }
           }
         }
