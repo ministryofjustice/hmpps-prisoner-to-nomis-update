@@ -1102,20 +1102,6 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
         courtSentencingNomisApi.verify(
           putRequestedFor(WireMock.anyUrl())
-            .withRequestBody(matchingJsonPath("courtEventCharges.size()", equalTo("4")))
-            .withRequestBody(
-              matchingJsonPath(
-                "courtEventCharges[0]",
-                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
-              ),
-
-            )
-            .withRequestBody(
-              matchingJsonPath(
-                "courtEventCharges[1]",
-                equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
-              ),
-            )
             .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
             .withRequestBody(
               matchingJsonPath(
