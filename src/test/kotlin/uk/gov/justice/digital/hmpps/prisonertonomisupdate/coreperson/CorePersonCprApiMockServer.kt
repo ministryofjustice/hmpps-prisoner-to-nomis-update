@@ -112,10 +112,9 @@ fun corePersonDto(nationality: String? = null, religion: String? = null) = Priso
         religionCode = religion,
         religionDescription = "$religion Description",
         changeReasonKnown = false,
-        verified = true,
         startDate = LocalDate.parse("2024-01-01"),
-        modifyDateTime = LocalDateTime.now(),
-        modifyUserId = "them",
+        createDateTime = LocalDateTime.parse("2025-02-03T10:20:30"),
+        createUserId = "ME",
         current = true,
       ),
     )
