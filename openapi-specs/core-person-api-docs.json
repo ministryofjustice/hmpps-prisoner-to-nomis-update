@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-19.2718.4a930cc"
+    "version" : "2026-03-19.2721.197b157"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -450,7 +450,7 @@
       "post" : {
         "tags" : [ "HMPPS Person API" ],
         "description" : "Save prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
-        "operationId" : "save",
+        "operationId" : "savePrisonReligion",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -1550,7 +1550,7 @@
             "example" : "12345"
           }
         },
-        "required" : [ "createDateTime", "createUserId", "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
+        "required" : [ "createDateTime", "createUserId", "current", "nomisReligionId", "religionCode", "startDate" ]
       },
       "PrisonReligionRequest" : {
         "type" : "object",
