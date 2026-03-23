@@ -175,11 +175,11 @@ class CorePersonReconciliationService(
           "$i-current:nomis=${n.current}, cpr=${cpr.current}"
         } else if (n.createUsername != cpr.createUsername) {
           "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
-        } else if (!n.createDatetime.equals(cpr.createDatetime)) {
+        } else if (!n.createDatetime.equalsIgnoringNanos(cpr.createDatetime)) {
           "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
         } else if (n.modifyUsername != cpr.modifyUsername) {
           "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
-        } else if (n.modifyDatetime?.equals(cpr.modifyDatetime) ?: false) {
+        } else if (n.modifyDatetime?.equalsIgnoringNanos(cpr.modifyDatetime) ?: false) {
           "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
         } else {
           null
@@ -203,6 +203,12 @@ class CorePersonReconciliationService(
 
   suspend fun checkCorePersonMatch(offenderNo: String): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo))
 }
+
+private fun LocalDateTime.equalsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = createDatetime != null &&
+  this.toLocalDate() == createDatetime.toLocalDate() &&
+  this.hour == createDatetime.hour &&
+  this.minute == createDatetime.minute &&
+  this.second == createDatetime.second
 
 fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
