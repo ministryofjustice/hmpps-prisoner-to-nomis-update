@@ -1550,6 +1550,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
       courtId = PRISON_MDI,
     ),
     appearanceTypeUuid = UUID.fromString("1da09b6e-55cb-4838-a157-ee6944f2094c"),
+    nomisAppearanceTypeCode = "CRT",
   )
 
   fun nomisCaseResponse(
