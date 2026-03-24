@@ -1203,7 +1203,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenMappingDoesntExistForCourtAppearance {
+    inner class WhenMappingAndAppearanceDoNotExist {
 
       @BeforeEach
       fun setUp() {
@@ -1212,6 +1212,51 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_COURT_APPEARANCE_ID,
           404,
         )
+        courtSentencingApi.stubCourtAppearanceGetError(DPS_COURT_APPEARANCE_ID)
+        publishUpdateCourtAppearanceDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court appearance in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("court-appearance-updated-error"),
+            check {
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("DPS court appearance $DPS_COURT_APPEARANCE_ID does not exist in RaS")
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingDoesNotExistButAppearanceExists {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(
+          DPS_COURT_APPEARANCE_ID,
+          404,
+        )
+        courtSentencingApi.stubCourtAppearanceGetWithFourCharges(
+          COURT_CASE_ID_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          appearanceType = APPEARANCE_VL,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          courtCharge3Id = DPS_COURT_CHARGE_3_ID,
+          courtCharge4Id = DPS_COURT_CHARGE_4_ID,
+        )
         publishUpdateCourtAppearanceDomainEvent()
       }
 
@@ -1219,10 +1264,46 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update an court appearance in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("court-appearance-updated-error"),
+            eq("court-appearance-updated-awaiting-parent"),
             check {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("Missing Dps Appearance id: $DPS_COURT_APPEARANCE_ID")
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenMappingExistsButAppearanceDoesNotExist {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(
+          DPS_COURT_APPEARANCE_ID,
+          404,
+        )
+        courtSentencingApi.stubCourtAppearanceGetError(DPS_COURT_APPEARANCE_ID)
+        publishUpdateCourtAppearanceDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court appearance in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("court-appearance-updated-ignored"),
+            check {
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["reason"]).isEqualTo("DPS court appearance $DPS_COURT_APPEARANCE_ID does not exist in RaS")
             },
             isNull(),
           )

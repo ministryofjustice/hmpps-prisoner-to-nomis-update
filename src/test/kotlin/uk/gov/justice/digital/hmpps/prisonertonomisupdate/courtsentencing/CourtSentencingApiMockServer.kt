@@ -199,6 +199,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubGetWithError("/legacy/court-case/$courtCaseId", status)
   }
 
+  fun stubCourtAppearanceGetError(appearanceId: String, status: Int = 404) {
+    stubGetWithError("/legacy/court-appearance/$appearanceId", status)
+  }
+
   fun getCharge(courtCaseId: String, courtAppearanceId: String, courtChargeId: String, offenderNo: String) = LegacyCharge(
     lifetimeUuid = UUID.fromString(courtChargeId),
     courtCaseUuid = courtCaseId,
