@@ -21,6 +21,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.time.LocalDate
 import java.time.LocalDateTime
+import java.util.Objects
 
 @Service
 class CorePersonReconciliationService(
@@ -163,26 +164,17 @@ class CorePersonReconciliationService(
     } else {
       nomisField.mapIndexedNotNull { i, n ->
         val cpr = cprField[i]
-        if (n.religion != cpr.religion) {
-          "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
-        } else if (n.comments != cpr.comments) {
-          "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
-        } else if (n.startDate?.equals(cpr.startDate) == false) {
-          "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
-        } else if (n.endDate?.equals(cpr.endDate) == false) {
-          "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
-        } else if (n.current != cpr.current) {
-          "$i-current:nomis=${n.current}, cpr=${cpr.current}"
-        } else if (n.createUsername != cpr.createUsername) {
-          "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
-        } else if (!n.createDatetime.equalsIgnoringNanos(cpr.createDatetime)) {
-          "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
-        } else if (n.modifyUsername != cpr.modifyUsername) {
-          "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
-        } else if (n.modifyDatetime?.equalsIgnoringNanos(cpr.modifyDatetime) ?: false) {
-          "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
-        } else {
-          null
+        when {
+          n.religion != cpr.religion -> "$i-code:nomis=${n.religion}, cpr=${cpr.religion}"
+          n.comments != cpr.comments -> "$i-comments:nomis=${n.comments}, cpr=${cpr.comments}"
+          !Objects.equals(n.startDate, cpr.startDate) -> "$i-startDate:nomis=${n.startDate}, cpr=${cpr.startDate}"
+          !Objects.equals(n.endDate, cpr.endDate) -> "$i-endDate:nomis=${n.endDate}, cpr=${cpr.endDate}"
+          n.current != cpr.current -> "$i-current:nomis=${n.current}, cpr=${cpr.current}"
+          n.createUsername != cpr.createUsername -> "$i-createUser:nomis=${n.createUsername}, cpr=${cpr.createUsername}"
+          n.createDatetime.notEqualsIgnoringNanos(cpr.createDatetime) -> "$i-createDatetime:nomis=${n.createDatetime}, cpr=${cpr.createDatetime}"
+          n.modifyUsername != cpr.modifyUsername -> "$i-modifyUser:nomis=${n.modifyUsername}, cpr=${cpr.modifyUsername}"
+          n.modifyDatetime.notEqualsIgnoringNanos(cpr.modifyDatetime) -> "$i-modifyDatetime:nomis=${n.modifyDatetime}, cpr=${cpr.modifyDatetime}"
+          else -> null
         }
       }
         .takeIf { it.isNotEmpty() }
@@ -204,11 +196,7 @@ class CorePersonReconciliationService(
   suspend fun checkCorePersonMatch(offenderNo: String): MismatchCorePerson? = checkCorePersonMatch(PrisonerIds(0, offenderNo))
 }
 
-private fun LocalDateTime.equalsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = createDatetime != null &&
-  this.toLocalDate() == createDatetime.toLocalDate() &&
-  this.hour == createDatetime.hour &&
-  this.minute == createDatetime.minute &&
-  this.second == createDatetime.second
+private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))
 
 fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
@@ -227,6 +215,7 @@ fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
     )
   },
 )
+
 fun CorePerson.toPerson() = PrisonerPerson(
   nationality = this.nationalities?.firstOrNull()?.takeIf { it.latestBooking }?.nationality?.code,
   religion = this.beliefs?.firstOrNull()?.belief?.description,
