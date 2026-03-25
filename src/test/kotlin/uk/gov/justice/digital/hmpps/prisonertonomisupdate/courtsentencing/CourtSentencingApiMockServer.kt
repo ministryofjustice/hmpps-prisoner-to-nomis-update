@@ -112,6 +112,7 @@ class CourtSentencingApiExtension :
         courtId = "MDI",
       ),
       appearanceTypeUuid = UUID.fromString("1da09b6e-55cb-4838-a157-ee6944f2094c"),
+      nomisAppearanceTypeCode = "CRT",
     )
 
     fun reconciliationCharge(
@@ -270,6 +271,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
       nomisOutcomeCode = "4531",
       appearanceTypeUuid = UUID.fromString(appearanceType),
+      nomisAppearanceTypeCode = "CRT",
     )
 
     stubFor(
@@ -310,6 +312,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
       ),
       nomisOutcomeCode = "4531",
       appearanceTypeUuid = UUID.fromString(APPEARANCE_TYPE_CRT),
+      nomisAppearanceTypeCode = "CRT",
     )
     stubFor(
       get(WireMock.urlPathMatching("/legacy/court-appearance/$courtAppearanceId")).willReturn(
