@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-17.569.73a1348"
+    "version" : "2026-03-24.617.1720ed6"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2672,6 +2672,66 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TimeSlotSummary"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/time-slot/{prisonTimeSlotId}/summary" : {
+      "get" : {
+        "tags" : [ "Admin" ],
+        "summary" : "Returns the data for a prison time slot and its associated visit slots by ID",
+        "description" : "\n      Requires role: ROLE_OFFICIAL_VISITS_ADMIN.\n      Used to get the details for one prison time slot and its associated visit slots.\n      \n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN",
+        "operationId" : "getPrisonTimeSlotSummaryById",
+        "parameters" : [ {
+          "name" : "prisonTimeSlotId",
+          "in" : "path",
+          "description" : "The internal ID for a prison time slot",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "The prison time slot and associated visit slots matching the ID provided in the request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlotSummaryItem"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "No prison time slot with this ID was found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TimeSlotSummaryItem"
                 }
               }
             }
