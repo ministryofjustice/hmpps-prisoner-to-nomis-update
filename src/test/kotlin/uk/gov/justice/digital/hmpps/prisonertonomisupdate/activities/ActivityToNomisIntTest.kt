@@ -267,6 +267,7 @@ class ActivityToNomisIntTest : SqsIntegrationTestBase() {
 
       webTestClient.put()
         .uri("/queue-admin/retry-all-dlqs")
+        .headers(setAuthorisation(roles = listOf("ROLE_SYSCON__QUEUE_ADMIN")))
         .exchange()
         .expectStatus()
         .isOk

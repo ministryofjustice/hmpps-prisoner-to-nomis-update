@@ -239,6 +239,8 @@ reports:
 
 hmpps.sqs:
   defaultErrorVisibilityTimeout: 1, 10, 60, 600
+  queueAdminRole: ROLE_SYSCON__QUEUE_ADMIN
+  protectRetryAll: true
   queues:
     courtsentencing:
       errorVisibilityTimeout: 1, 1, 1, 1, 1, 1, 5, 5, 60, 1, 1, 1, 1, 1, 1, 5, 5, 60
@@ -251,8 +253,6 @@ hmpps.sqs:
         contacts-api.contact-address-phone.created: 3, 10, 60, 600
     officialvisits:
       errorVisibilityTimeout: 1, 1, 60, 600
-
-  queueAdminRole: ROLE_NOMIS_UPDATE__QUEUE_ADMIN__RW
 api:
   timeout: 60s
 
