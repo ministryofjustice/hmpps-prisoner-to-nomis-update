@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-23.2743.8023a37"
+    "version" : "2026-03-24.2753.947fe21"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1019,7 +1019,7 @@
             "$ref" : "#/components/schemas/DemographicAttributes",
             "description" : "The demographic attributes of the person"
           },
-          "aliases" : {
+          "pseudonyms" : {
             "type" : "array",
             "description" : "The aliases of the person",
             "items" : {
@@ -1048,7 +1048,7 @@
             }
           }
         },
-        "required" : [ "addresses", "aliases", "demographicAttributes", "personContacts", "sentences" ]
+        "required" : [ "addresses", "demographicAttributes", "personContacts", "pseudonyms", "sentences" ]
       },
       "Sentence" : {
         "type" : "object",
