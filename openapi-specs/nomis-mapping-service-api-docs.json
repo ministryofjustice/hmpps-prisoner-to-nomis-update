@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-25.458.07ba24d"
+    "version" : "2026-03-26.463.849ed2d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -35,7 +35,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
         "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByNomisId",
+        "operationId" : "updateTransactionMappingsByNomisId",
         "parameters" : [ {
           "name" : "oldOffenderNo",
           "in" : "path",
@@ -82,7 +82,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "For all transactions with the given booking id in the mapping table, sets the offender no to the given 'to' id",
         "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected transactions. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByBookingId",
+        "operationId" : "updateTransactionMappingsByBookingId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -322,7 +322,7 @@
         "tags" : [ "temporary-absence-resource" ],
         "summary" : "Creates all mappings for prisoner temporary absences which are all migrated at the same time",
         "description" : "Creates mappings for prisoner temporary absences including movement applications, scheduled movements and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings",
+        "operationId" : "createTemporaryAbsenceMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -706,7 +706,7 @@
         "tags" : [ "non-associations-mapping-resource" ],
         "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
         "description" : "Used for update after a prisoner number merge. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByNomisId_1",
+        "operationId" : "updateNonAssociationMappingsByNomisId",
         "parameters" : [ {
           "name" : "oldOffenderNo",
           "in" : "path",
@@ -763,7 +763,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
         "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByNomisId_2",
+        "operationId" : "updateCsraMappingsByNomisId",
         "parameters" : [ {
           "name" : "oldOffenderNo",
           "in" : "path",
@@ -810,7 +810,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "For all CSRAs with the given booking id in the mapping table, sets the offender no to the given 'to' id",
         "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected CSRAs. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByBookingId_1",
+        "operationId" : "updateCsraMappingsByBookingId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -1051,7 +1051,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Replaces all occurrences of the 'from' id with the 'to' id in the mapping table",
         "description" : "Used for update after a prisoner number merge. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByNomisId_3",
+        "operationId" : "updateCaseNoteMappingsByNomisId",
         "parameters" : [ {
           "name" : "oldOffenderNo",
           "in" : "path",
@@ -1098,7 +1098,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "For all case notes with the given booking id in the mapping table, sets the offender no to the given 'to' id",
         "description" : "Used for update after a booking has been moved from one offender to another. Returns the affected case notes. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "updateMappingsByBookingId_2",
+        "operationId" : "updateCaseNotesMappingsByBookingId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -1211,7 +1211,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Gets all alert mappings for a prisoner",
         "description" : "Gets all the mapping between nomis alert ids and dps alert id related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner",
+        "operationId" : "getAlertsMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -1315,7 +1315,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a set of new alert mapping for a prisoner",
         "description" : "Creates a mapping between all the nomis alert ids and dps alert id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappingsForPrisoner",
+        "operationId" : "createAlertsMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -1381,7 +1381,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId",
+        "operationId" : "getAlertsMappingByNomisId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -1577,7 +1577,7 @@
         "tags" : [ "activity-mapping-resource" ],
         "summary" : "Creates a new activity mapping",
         "description" : "Creates a mapping between nomis id and Activity service id. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping",
+        "operationId" : "createActivityMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1720,7 +1720,7 @@
         "tags" : [ "visit-mapping-resource" ],
         "summary" : "Creates a new visit",
         "description" : "Creates a new visit and decrements the visit balance. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_1",
+        "operationId" : "createVisitMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1921,7 +1921,7 @@
         "tags" : [ "visit-slots-resource" ],
         "summary" : "Creates a mini tree of visit time slots mappings typically for a migration",
         "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMigrationMappings",
+        "operationId" : "createVisitSlotsMigrationMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -1975,7 +1975,7 @@
         "tags" : [ "visit-balance-adjustment-mapping-resource" ],
         "summary" : "Creates a prisoner visit balance adjustment mapping",
         "description" : "Creates a prisoner visit balance adjustment mapping. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_2",
+        "operationId" : "createVisitBalanceAdjustmentMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2027,7 +2027,7 @@
         "tags" : [ "visit-balance-adjustment-mapping-resource" ],
         "summary" : "Deletes all visit balance adjustment mappings",
         "description" : "Deletes all visit balance adjustment mappings regardless of source.\n      This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings",
+        "operationId" : "deleteAllVisitBalanceAdjustmentMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -2061,7 +2061,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "get mappings by Nomis id",
         "description" : "Retrieves multiple mappings by NOMIS transaction id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByNomisId",
+        "operationId" : "getTransactionMappingsByNomisId",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2120,7 +2120,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Creates a batch of new transaction mappings",
         "description" : "Creates a mapping between a batch of nomis transaction ids and dps transaction ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_1",
+        "operationId" : "createTransactionMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2177,7 +2177,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Creates a new transaction mapping",
         "description" : "Creates a mapping between nomis transaction id and dps transaction id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_3",
+        "operationId" : "createTransactionMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2321,7 +2321,7 @@
         "tags" : [ "sentencing-mapping-resource" ],
         "summary" : "Creates a new sentence adjustment mapping",
         "description" : "Creates a mapping between nomis sentence adjustment ids and Sentencing service id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_4",
+        "operationId" : "createSentencingMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2640,7 +2640,7 @@
         "tags" : [ "official-visits-resource" ],
         "summary" : "Creates a visit mapping typically for synchronisation",
         "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createVisitMapping",
+        "operationId" : "createOfficialVisitMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2694,7 +2694,7 @@
         "tags" : [ "official-visits-resource" ],
         "summary" : "Creates a mini tree of visit mappings typically for a migration",
         "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMigrationMappings_1",
+        "operationId" : "createOfficialVisitsMigrationMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2748,7 +2748,7 @@
         "tags" : [ "non-associations-mapping-resource" ],
         "summary" : "Creates a new Non-association mapping",
         "description" : "Creates a mapping between a Nomis non-association and non-association instance id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_5",
+        "operationId" : "createNonAssociationsMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2792,7 +2792,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "Creates a new Location mapping",
         "description" : "Creates a mapping between a Nomis location id and a DPS location id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_6",
+        "operationId" : "createLocationMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2834,7 +2834,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "Deletes location mappings.",
         "description" : "Deletes all rows from the locations mapping table. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappings",
+        "operationId" : "deleteLocationMappings",
         "parameters" : [ {
           "name" : "onlyMigrated",
           "in" : "query",
@@ -2875,7 +2875,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "Creates a new Incident Report mapping",
         "description" : "Creates a mapping between a Nomis incident report id and DPS Incident report id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_7",
+        "operationId" : "createIncidentMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -2917,7 +2917,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "Deletes incident mappings.",
         "description" : "Deletes all rows from the incidents mapping table. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappings_1",
+        "operationId" : "deleteIncidentMappings",
         "parameters" : [ {
           "name" : "onlyMigrated",
           "in" : "query",
@@ -2958,7 +2958,7 @@
         "tags" : [ "incentive-mapping-resource" ],
         "summary" : "Creates a new incentive mapping",
         "description" : "Creates a mapping between nomis Incentive ids and Incentive service id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_8",
+        "operationId" : "createIncentiveMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3051,7 +3051,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "Creates a new hearing mapping",
         "description" : "Creates a record of a DPS hearing Id and a NOMIS hearing Id . Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_9",
+        "operationId" : "createHearingsMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3095,7 +3095,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Gets all CSRA mappings for a prisoner",
         "description" : "Gets all the mappings between Nomis CSRAs and DPS CSRAs related to specific prisoner created either via migration or synchronisation. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner_1",
+        "operationId" : "getCsraMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -3125,7 +3125,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Creates a set of new CSRA mappings for a prisoner",
         "description" : "Creates a mapping between all the nomis CSRA ids and dps CSRA ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappingsForPrisoner_1",
+        "operationId" : "createCsraMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -3171,7 +3171,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Creates a batch of new CSRA mappings",
         "description" : "Creates a mapping between a batch of nomis CSRA ids and dps CSRA ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_2",
+        "operationId" : "createCsraMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3208,7 +3208,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Creates a new CSRA mapping",
         "description" : "Creates a mapping between Nomis booking & sequence, and DPS CSRA id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_10",
+        "operationId" : "createCsraMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -3578,7 +3578,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Deletes CSIP mappings.",
         "description" : "Deletes all rows from the csip mapping table. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_1",
+        "operationId" : "deleteAllCSIPMappings",
         "parameters" : [ {
           "name" : "onlyMigrated",
           "in" : "query",
@@ -3619,7 +3619,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Creates a new CSIP Report mapping",
         "description" : "Creates a mapping between a Nomis CSIP report id and DPS CSIP report id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_11",
+        "operationId" : "createCSIPMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4022,7 +4022,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Deletes court case hierarchical mappings by DPS IDs",
         "description" : "Deletes court case hierarchical mappings by DPS IDs. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId",
+        "operationId" : "deleteAllCourtSentencingMappingByDpsId",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4066,7 +4066,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Creates a new court case hierarchical mapping",
         "description" : "Creates a mapping between nomis Court Case ID and DPS Court Case ID. Also maps child entities: Court appearances and charges. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_12",
+        "operationId" : "createCourtSentencingMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4644,7 +4644,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Creates a tree of core person mappings typically for a migration",
         "description" : "Creates a tree of core person mappings typically for a migration between NOMIS ids and cpr ids. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_3",
+        "operationId" : "createCorePersonMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -4796,7 +4796,7 @@
         "tags" : [ "religion-resource" ],
         "summary" : "Creates a mini tree of religion mappings typically for a migration",
         "description" : "Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMigrationMappings_2",
+        "operationId" : "createReligionMigrationMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5692,7 +5692,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get mappings by Nomis id",
         "description" : "Retrieves multiple mappings by NOMIS case note id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByNomisId_1",
+        "operationId" : "getCaseNotesMappingsByNomisId",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5751,7 +5751,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a batch of new casenote mappings",
         "description" : "Creates a mapping between a batch of nomis casenote ids and dps casenote id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_4",
+        "operationId" : "createCaseNotesMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5808,7 +5808,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Creates a new casenote mapping",
         "description" : "Creates a mapping between nomis casenote id and dps casenote id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_13",
+        "operationId" : "createCaseNotesMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5862,7 +5862,7 @@
         "tags" : [ "appointment-mapping-resource" ],
         "summary" : "Creates a new appointment mapping",
         "description" : "Creates a mapping between nomis id and Appointment instance id. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_14",
+        "operationId" : "createAppointmentMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5916,7 +5916,7 @@
         "tags" : [ "allocation-migration-resource" ],
         "summary" : "Creates a new allocation migration mapping",
         "description" : "Creates a mapping between nomis allocation id and Actvities allocation id. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_15",
+        "operationId" : "createAllocationMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -5960,7 +5960,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a batch of new alert mappings",
         "description" : "Creates a mapping between a batch of nomis alert ids and dps alert id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMappings_5",
+        "operationId" : "createAlertsMappings",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6017,7 +6017,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Get all paged mappings",
         "description" : "Retrieve all mappings. Results are paged.",
-        "operationId" : "getMappings",
+        "operationId" : "getAlertsMappings",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -6063,7 +6063,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Creates a new alert mapping",
         "description" : "Creates a mapping between nomis alert ids and dps alert id. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_16",
+        "operationId" : "createAlertsMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6115,7 +6115,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes all alert mappings",
         "description" : "Deletes all alert mappings regardless of source. This is expected to only ever been used in a non-production environment. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_2",
+        "operationId" : "deleteAllAlertsMappings",
         "responses" : {
           "204" : {
             "description" : "Mappings deleted",
@@ -6227,7 +6227,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "Creates a new adjudication mapping",
         "description" : "Creates a record of a adjudication number. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_17",
+        "operationId" : "createAdjudicationsMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6271,7 +6271,7 @@
         "tags" : [ "activity-migration-resource" ],
         "summary" : "Creates a new activity migration mapping",
         "description" : "Creates a mapping between nomis id and up to 2 Activity service ids. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "createMapping_18",
+        "operationId" : "createActivityMigrationMapping",
         "requestBody" : {
           "content" : {
             "application/json" : {
@@ -6682,7 +6682,7 @@
         "tags" : [ "visit-mapping-resource" ],
         "summary" : "get paged mappings by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMigratedVisitMappingsByMigrationId",
+        "operationId" : "getVisitMigratedVisitMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -7268,7 +7268,7 @@
         "tags" : [ "visit-balance-adjustment-mapping-resource" ],
         "summary" : "Get prisoner visit balance adjustment mapping by Nomis visit balance adjustment id",
         "description" : "Retrieves the prisoner visit balance adjustment mapping by Nomis visit balance adjustment id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_1",
+        "operationId" : "getVisitBalanceAdjustmentMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisVisitBalanceAdjustmentId",
           "in" : "path",
@@ -7331,7 +7331,7 @@
         "tags" : [ "visit-balance-adjustment-mapping-resource" ],
         "summary" : "Get visit balance adjustments mappings by DPS id",
         "description" : "Retrieves a list of visit balance adjustment mappings by DPS id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByDpsId",
+        "operationId" : "getVisitBalanceAdjustmentMappingsByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -7394,7 +7394,7 @@
         "tags" : [ "visit-balance-adjustment-mapping-resource" ],
         "summary" : "Deletes visit balance adjustment mappings",
         "description" : "Deletes visit balance adjustment mappings by DPS id. Multiple rows may be deleted. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingsByDpsId",
+        "operationId" : "deleteVisitBalanceAdjustmentMappingsByDpsId",
         "parameters" : [ {
           "name" : "dpsId",
           "in" : "path",
@@ -7440,7 +7440,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Gets all transaction mappings for a prisoner",
         "description" : "Gets all the mappings between nomis transaction ids and dps transaction ids related to specific prisoner created either via migration or synchronisation. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner_2",
+        "operationId" : "getTransactionMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -7492,7 +7492,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_2",
+        "operationId" : "getTransactionMappingByNomisId",
         "parameters" : [ {
           "name" : "transactionId",
           "in" : "path",
@@ -7544,7 +7544,7 @@
       "get" : {
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Get count of mappings by migration id grouped by prisoner",
-        "operationId" : "getMappingsByMigrationIdGroupByPrisoner",
+        "operationId" : "getTransactionMappingsByMigrationIdGroupByPrisoner",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -7644,7 +7644,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Retrieves mapping by DPS id",
         "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId",
+        "operationId" : "getTransactionMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsTransactionId",
           "in" : "path",
@@ -7694,7 +7694,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_1",
+        "operationId" : "deleteTransactionMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsTransactionId",
           "in" : "path",
@@ -7740,7 +7740,7 @@
         "tags" : [ "temporary-absence-resource" ],
         "summary" : "Gets all mappings for prisoner temporary absences",
         "description" : "Gets mappings for prisoner temporary absences including movement applications, scheduled movements and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappings_1",
+        "operationId" : "getTemporaryAbsenceMappings",
         "parameters" : [ {
           "name" : "prisonerNumber",
           "in" : "path",
@@ -8733,7 +8733,7 @@
         "tags" : [ "punishments-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS punishment id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenDpsId",
+        "operationId" : "getPunishmentsMappingGivenDpsId",
         "parameters" : [ {
           "name" : "dpsPunishmentId",
           "in" : "path",
@@ -8783,7 +8783,7 @@
         "tags" : [ "punishments-mapping-resource" ],
         "summary" : "Delete mapping",
         "description" : "Deletes a mapping by DPS punishment id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_2",
+        "operationId" : "deletePunishmentsMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsPunishmentId",
           "in" : "path",
@@ -8829,7 +8829,7 @@
         "tags" : [ "punishments-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS booking id and sanction sequence. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenNomisId",
+        "operationId" : "getPunishmentsMappingGivenNomisId",
         "parameters" : [ {
           "name" : "nomisBookingId",
           "in" : "path",
@@ -9996,7 +9996,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by Nomis location id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenNomisId_1",
+        "operationId" : "getLocationMappingGivenNomisId",
         "parameters" : [ {
           "name" : "nomisLocationId",
           "in" : "path",
@@ -10049,7 +10049,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "get paged mappings by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMappingsByMigrationId",
+        "operationId" : "getLocationMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -10098,7 +10098,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "get the latest mapping for a migration",
         "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getLatestMigratedMapping",
+        "operationId" : "getLocationLatestMigratedMapping",
         "responses" : {
           "200" : {
             "description" : "Mapping Information Returned",
@@ -10138,7 +10138,7 @@
         "tags" : [ "location-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS Location Id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenDpsId_1",
+        "operationId" : "getLocationMappingGivenDpsId",
         "parameters" : [ {
           "name" : "dpsLocationId",
           "in" : "path",
@@ -10190,7 +10190,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisIncidentId. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_3",
+        "operationId" : "getIncidentMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisIncidentId",
           "in" : "path",
@@ -10241,7 +10241,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "get a list of mappings for Nomis Incident id",
         "description" : "Retrieves matching mappings for a list of NOMIS Incident ids. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByNomisId_2",
+        "operationId" : "getIncidentMappingsByNomisId",
         "parameters" : [ {
           "name" : "nomisIncidentId",
           "in" : "query",
@@ -10374,7 +10374,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS Incident Id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDPSId",
+        "operationId" : "getIncidentMappingByDPSId",
         "parameters" : [ {
           "name" : "dpsIncidentId",
           "in" : "path",
@@ -10424,7 +10424,7 @@
         "tags" : [ "incident-mapping-resource" ],
         "summary" : "Deletes a specific incident mapping by DPS incident id",
         "description" : "Deletes the incident from the mapping table. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMapping",
+        "operationId" : "deleteIncidentMapping",
         "parameters" : [ {
           "name" : "dpsIncidentId",
           "in" : "path",
@@ -10525,7 +10525,7 @@
         "tags" : [ "incentive-mapping-resource" ],
         "summary" : "get paged mappings by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMigratedVisitMappingsByMigrationId_1",
+        "operationId" : "getIncentiveMigratedVisitMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -10702,7 +10702,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS hearing Id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenNomisId_2",
+        "operationId" : "getHearingsMappingGivenNomisId",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -10755,7 +10755,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS hearing Id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenDpsId_2",
+        "operationId" : "getHearingsMappingGivenDpsId",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -10805,7 +10805,7 @@
         "tags" : [ "hearings-mapping-resource" ],
         "summary" : "Deletes a specific mapping by DPS hearing id",
         "description" : "Deletes the mapping table row. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMapping_1",
+        "operationId" : "deleteHearingsMapping",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -10840,7 +10840,7 @@
       "get" : {
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Get count of mappings by migration id grouped by prisoner",
-        "operationId" : "getMappingsByMigrationIdGroupByPrisoner_1",
+        "operationId" : "getCsraMappingsByMigrationIdGroupByPrisoner",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -10910,7 +10910,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "get mapping given DPS id",
         "description" : "Retrieves mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId_1",
+        "operationId" : "getCsraMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsCsraId",
           "in" : "path",
@@ -10950,7 +10950,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Deletes a mapping",
         "description" : "Deletes mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_3",
+        "operationId" : "deleteCsraMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsCsraId",
           "in" : "path",
@@ -10976,7 +10976,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_4",
+        "operationId" : "getCsraMappingByNomisId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -11029,7 +11029,7 @@
         "tags" : [ "csra-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByNomisId",
+        "operationId" : "deleteCsraMappingByNomisId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -11075,7 +11075,7 @@
         "tags" : [ "csip-review-mapping-resource" ],
         "summary" : "get CSIP Review mapping",
         "description" : "Retrieves a CSIP Review mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_5",
+        "operationId" : "getCSIPReviewMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPReviewId",
           "in" : "path",
@@ -11224,7 +11224,7 @@
         "tags" : [ "csip-plan-mapping-resource" ],
         "summary" : "get CSIP Plan mapping",
         "description" : "Retrieves a CSIP Plan mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_6",
+        "operationId" : "getCSIPPlanMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPPlanId",
           "in" : "path",
@@ -11373,7 +11373,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by nomisCSIPId. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_7",
+        "operationId" : "getCSIPMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPId",
           "in" : "path",
@@ -11424,7 +11424,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get a list of mappings for Nomis CSIP Report ids",
         "description" : "Retrieves matching mappings for a list of NOMIS CSIP report ids. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByNomisId_3",
+        "operationId" : "getCSIPMappingsByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPId",
           "in" : "query",
@@ -11468,7 +11468,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get paged mappings by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMappingsByMigrationId_1",
+        "operationId" : "getCSIPMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -11557,7 +11557,7 @@
         "tags" : [ "csip-interview-mapping-resource" ],
         "summary" : "get CSIP Interview mapping",
         "description" : "Retrieves a CSIP Interview mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_8",
+        "operationId" : "getCSIPInterviewMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPInterviewId",
           "in" : "path",
@@ -11706,7 +11706,7 @@
         "tags" : [ "csip-factor-mapping-resource" ],
         "summary" : "get CSIP Factor mapping",
         "description" : "Retrieves a CSIP Factor mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_9",
+        "operationId" : "getCSIPFactorMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPFactorId",
           "in" : "path",
@@ -11907,7 +11907,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS CSIP Id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDPSId_1",
+        "operationId" : "getCSIPMappingByDPSId",
         "parameters" : [ {
           "name" : "csipId",
           "in" : "path",
@@ -11959,7 +11959,7 @@
         "tags" : [ "csip-attendee-mapping-resource" ],
         "summary" : "get CSIP Attendee mapping",
         "description" : "Retrieves a CSIP Attendee mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_10",
+        "operationId" : "getCSIPAttendeeMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCSIPAttendeeId",
           "in" : "path",
@@ -12108,7 +12108,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get sentence mapping",
         "description" : "Retrieves a mapping by nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getSentenceMappingByNomisId",
+        "operationId" : "getCourtSentenceMappingByNomisId",
         "parameters" : [ {
           "name" : "bookingId",
           "in" : "path",
@@ -12586,7 +12586,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Get paged offender migration summary by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMappingsByMigrationId_2",
+        "operationId" : "getCourtSentencingMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -12750,7 +12750,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_11",
+        "operationId" : "getCourtSentencingMappingByNomisId",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -12803,7 +12803,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "get court case mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId_2",
+        "operationId" : "getCourtSentencingMappingByDpsId",
         "parameters" : [ {
           "name" : "courtCaseId",
           "in" : "path",
@@ -13273,7 +13273,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Get phone mapping by nomis phone Id",
         "description" : "Retrieves the phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getPhoneMappingByNomisId",
+        "operationId" : "getCorporatePhoneMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisPhoneId",
           "in" : "path",
@@ -13915,7 +13915,7 @@
         "tags" : [ "corporate-mapping-resource" ],
         "summary" : "Get address mapping by nomis address Id",
         "description" : "Retrieves the address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getAddressMappingByNomisId",
+        "operationId" : "getCorporateAddressMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisAddressId",
           "in" : "path",
@@ -14375,7 +14375,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Get a core person phone mapping by nomis phone Id",
         "description" : "Retrieves the coreperson phone mapping by NOMIS Phone Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getPhoneMappingByNomisId_1",
+        "operationId" : "getCorePersonPhoneMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisPhoneId",
           "in" : "path",
@@ -14808,7 +14808,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Get a core person address mapping by nomis address Id",
         "description" : "Retrieves the core person address mapping by NOMIS Address Id. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getAddressMappingByNomisId_1",
+        "operationId" : "getCorePersonAddressMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisAddressId",
           "in" : "path",
@@ -17187,7 +17187,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Gets all case note mappings for a prisoner",
         "description" : "Gets all the mappings between nomis case note ids and dps case note ids related to specific prisoner created either via migration or synchronisation. Requires NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsForPrisoner_3",
+        "operationId" : "getCaseNotesMappingsForPrisoner",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -17239,7 +17239,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByNomisId_12",
+        "operationId" : "getCaseNotesMappingByNomisId",
         "parameters" : [ {
           "name" : "caseNoteId",
           "in" : "path",
@@ -17291,7 +17291,7 @@
       "get" : {
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Get count of mappings by migration id grouped by prisoner",
-        "operationId" : "getMappingsByMigrationIdGroupByPrisoner_2",
+        "operationId" : "getCaseNotesMappingsByMigrationIdGroupByPrisoner",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -17391,7 +17391,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "get multiple mappings",
         "description" : "Retrieves mappings by DPS id. In case of past merges, there could be > 1 nomis id per dps id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingsByDpsId_1",
+        "operationId" : "getCaseNotesMappingsByDpsId",
         "parameters" : [ {
           "name" : "dpsCaseNoteId",
           "in" : "path",
@@ -17632,7 +17632,7 @@
         "tags" : [ "appointment-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by appointment instance id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenId",
+        "operationId" : "getAppointmentMappingGivenId",
         "parameters" : [ {
           "name" : "appointmentInstanceId",
           "in" : "path",
@@ -17685,7 +17685,7 @@
         "tags" : [ "allocation-migration-resource" ],
         "summary" : "get mapping for an allocation migration",
         "description" : "Retrieves an allocation migration mapping by the nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMapping",
+        "operationId" : "getAllocationMapping",
         "parameters" : [ {
           "name" : "nomisAllocationId",
           "in" : "path",
@@ -17787,7 +17787,7 @@
         "tags" : [ "allocation-migration-resource" ],
         "summary" : "get the latest mapping for an allocation migration",
         "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getLatestMigratedMapping_1",
+        "operationId" : "getAllocationLatestMigratedMapping",
         "responses" : {
           "200" : {
             "description" : "Mapping Information Returned",
@@ -17827,7 +17827,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Get paged mappings by migration id grouped by prisoner",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run) grouped by prisoner. Results are paged.",
-        "operationId" : "getMappingsByMigrationIdGroupByPrisoner_3",
+        "operationId" : "getAlertsMappingsByMigrationIdGroupByPrisoner",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -17886,7 +17886,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Get paged mappings by migration id",
         "description" : "Retrieve all mappings of type 'MIGRATED' for the given migration id (identifies a single migration run). Results are paged.",
-        "operationId" : "getMappingsByMigrationId_3",
+        "operationId" : "getAlertsMappingsByMigrationId",
         "parameters" : [ {
           "name" : "pageRequest",
           "in" : "query",
@@ -17945,7 +17945,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingByDpsId_3",
+        "operationId" : "getAlertsMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -17995,7 +17995,7 @@
         "tags" : [ "alerts-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_4",
+        "operationId" : "deleteAlertsMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsAlertId",
           "in" : "path",
@@ -18130,7 +18130,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by DPS charge number. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenNomisId_3",
+        "operationId" : "getAdjudicationsMappingGivenNomisId",
         "parameters" : [ {
           "name" : "chargeNumber",
           "in" : "path",
@@ -18180,7 +18180,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "Deletes a specific mapping by DPS charge number",
         "description" : "Deletes the mapping table row. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMapping_2",
+        "operationId" : "deleteAdjudicationsMapping",
         "parameters" : [ {
           "name" : "chargeNumber",
           "in" : "path",
@@ -18216,7 +18216,7 @@
         "tags" : [ "adjudications-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by NOMIS adjudication number and charge sequence. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenDpsId_3",
+        "operationId" : "getAdjudicationsMappingGivenDpsId",
         "parameters" : [ {
           "name" : "adjudicationNumber",
           "in" : "path",
@@ -18334,7 +18334,7 @@
         "tags" : [ "activity-migration-resource" ],
         "summary" : "get mapping for an activity migration",
         "description" : "Retrieves an activity migration mapping by course activity id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMapping_1",
+        "operationId" : "getActivityMapping",
         "parameters" : [ {
           "name" : "courseActivityId",
           "in" : "path",
@@ -18436,7 +18436,7 @@
         "tags" : [ "activity-migration-resource" ],
         "summary" : "get the latest mapping for a migration",
         "description" : "Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getLatestMigratedMapping_2",
+        "operationId" : "getActivityLatestMigratedMapping",
         "responses" : {
           "200" : {
             "description" : "Mapping Information Returned",
@@ -18594,7 +18594,7 @@
         "tags" : [ "activity-mapping-resource" ],
         "summary" : "get mapping",
         "description" : "Retrieves a mapping by activity schedule id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "getMappingGivenId_1",
+        "operationId" : "getActivityMappingGivenId",
         "parameters" : [ {
           "name" : "activityScheduleId",
           "in" : "path",
@@ -18647,7 +18647,7 @@
         "tags" : [ "NOMIS / DPS Mapping lookup" ],
         "summary" : "Retrieves the DPS Sentence id from the NOMIS booking and sentence sequence",
         "description" : "Requires role <b>NOMIS_DPS_MAPPING__SENTENCE__R</b> or <b>NOMIS_MAPPING_API__SYNCHRONISATION__RW</b>",
-        "operationId" : "getSentenceMappingByNomisId_1",
+        "operationId" : "getSentenceMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisBookingId",
           "in" : "path",
@@ -18903,7 +18903,7 @@
         "tags" : [ "visit-slots-resource" ],
         "summary" : "Delete all visit slot and time slot mappings",
         "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_3",
+        "operationId" : "deleteAllVisitSlotsMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -18937,7 +18937,7 @@
         "tags" : [ "transaction-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByNomisId_1",
+        "operationId" : "deleteTransactionMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisTransactionId",
           "in" : "path",
@@ -19025,7 +19025,7 @@
         "tags" : [ "official-visits-resource" ],
         "summary" : "Delete all official visit mappings",
         "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_4",
+        "operationId" : "deleteAllOfficialVisitsMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -19168,7 +19168,7 @@
         "tags" : [ "csip-mapping-resource" ],
         "summary" : "Deletes a specific CSIP report mapping by DPS CSIP id and its associated children",
         "description" : "Deletes a mapping by DPS id and any children. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMapping_3",
+        "operationId" : "deleteCSIPMapping",
         "parameters" : [ {
           "name" : "dpsCSIPId",
           "in" : "path",
@@ -19389,7 +19389,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Deletes court case mapping",
         "description" : "Deletes a court case mapping by NOMIS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByNomisId_2",
+        "operationId" : "deleteCourtSentencingMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCourtCaseId",
           "in" : "path",
@@ -19436,7 +19436,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "Deletes court case mapping",
         "description" : "Deletes a court case mapping by DPS id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByDpsId_5",
+        "operationId" : "deleteCourtSentencingMappingByDpsId",
         "parameters" : [ {
           "name" : "dpsCourtCaseId",
           "in" : "path",
@@ -19575,7 +19575,7 @@
         "tags" : [ "court-sentencing-mapping-resource" ],
         "summary" : "delete all mappings",
         "description" : "Deletes all mappings, typically used before repeating a migration. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_5",
+        "operationId" : "deleteAllCourtSentencingMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -19655,7 +19655,7 @@
         "tags" : [ "religion-resource" ],
         "summary" : "Delete all religions and religion mappings",
         "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_6",
+        "operationId" : "deleteAllReligionMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -19689,7 +19689,7 @@
         "tags" : [ "core-person-mapping-resource" ],
         "summary" : "Deletes all core person mappings",
         "description" : "Deletes all core person mappings regardless of source. This includes person and address. This is expected to only ever been used in a non-production environment. Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAllMappings_7",
+        "operationId" : "deleteAllCorePersonMappings",
         "responses" : {
           "204" : {
             "description" : "All mappings deleted",
@@ -19723,7 +19723,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes a mapping by Nomis id. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingByNomisId_3",
+        "operationId" : "deleteCaseNotesMappingByNomisId",
         "parameters" : [ {
           "name" : "nomisCaseNoteId",
           "in" : "path",
@@ -19770,7 +19770,7 @@
         "tags" : [ "case-notes-mapping-resource" ],
         "summary" : "Deletes mapping",
         "description" : "Deletes mapping by DPS id (there could be more than one nomis id if a merge has taken place). Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMappingsByDpsId_1",
+        "operationId" : "deleteCaseNotesMappingsByDpsId",
         "parameters" : [ {
           "name" : "dpsCaseNoteId",
           "in" : "path",
@@ -19816,7 +19816,7 @@
         "tags" : [ "appointment-mapping-resource" ],
         "summary" : "Deletes a specific mapping by appointment instance id",
         "description" : "Deletes the mapping table row. Requires role NOMIS_MAPPING_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteMapping_4",
+        "operationId" : "deleteAppointmentMapping",
         "parameters" : [ {
           "name" : "id",
           "in" : "path",
@@ -23526,12 +23526,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
