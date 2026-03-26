@@ -58,7 +58,7 @@ class PrisonTransactionResource(private val reconciliationService: PrisonTransac
       ),
     ],
   )
-  suspend fun generateReconciliationReportForPrison(
+  suspend fun generatePrisonTransactionReconciliationReportForPrison(
     @Schema(description = "Prison Id", example = "MDI", required = true)
     @PathVariable prisonId: String,
     @Schema(description = "Date for prison reconcile", example = "2026-02-19")

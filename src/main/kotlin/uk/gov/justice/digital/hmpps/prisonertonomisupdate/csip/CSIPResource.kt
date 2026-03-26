@@ -66,7 +66,7 @@ class CSIPResource(
       ),
     ],
   )
-  suspend fun generateReconciliationReportForPrisoner(
+  suspend fun generateCSIPReconciliationReportForPrisoner(
     @Schema(description = "Prison number aka noms id / offender id display", example = "A1234BC")
     @PathVariable prisonNumber: String,
   ) = try {

@@ -20,7 +20,7 @@ class IncentivesDataRepairResource(
   @PostMapping("/incentives/prisoner/booking-id/{bookingId}/repair")
   @ResponseStatus(HttpStatus.OK)
   @PreAuthorize("hasRole('ROLE_PRISONER_TO_NOMIS__UPDATE__RW')")
-  suspend fun repair(@PathVariable bookingId: Long) {
+  suspend fun repairIncentive(@PathVariable bookingId: Long) {
     incentivesApiService.getCurrentIncentive(bookingId)?.also { currentIncentive ->
       incentivesApiService.getIncentive(currentIncentive.id)
         .run {
