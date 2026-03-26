@@ -358,11 +358,11 @@ class NomisApiService(
     .awaitSingle()
 
   suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
-    .getAllPrisonersInRange1(fromRootOffenderId, toRootOffenderId)
+    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId)
     .awaitSingle()
 
   suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
-    .getAllPrisonersIdRanges1(pageSize.toInt())
+    .getAllPrisonersIdRanges(pageSize.toInt())
     .awaitSingle()
 
   suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = webClient.get()
