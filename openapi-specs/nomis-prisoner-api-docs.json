@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-24.1240.f8c2948"
+    "version" : "2026-03-26.1256.1bf196a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -669,7 +669,7 @@
         "tags" : [ "activities-resource" ],
         "summary" : "Deletes an attendance record",
         "description" : "Deletes an attendance for the course schedule. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAttendance",
+        "operationId" : "deleteAttendanceByCourseScheduleAndBooking",
         "parameters" : [ {
           "name" : "courseScheduleId",
           "in" : "path",
@@ -5614,7 +5614,7 @@
         "tags" : [ "incident-resource" ],
         "summary" : "Delete an incident using the specified id",
         "description" : "Delete an incident. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteIncident",
+        "operationId" : "deleteIncidentByIncidentId",
         "parameters" : [ {
           "name" : "incidentId",
           "in" : "path",
@@ -9174,7 +9174,7 @@
         "tags" : [ "court-sentencing-resource" ],
         "summary" : "get court cases for an offender",
         "description" : "Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW. Retrieves a court case by id",
-        "operationId" : "getCourtCasesByOffender",
+        "operationId" : "getCourtCasesByOffenderNo",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -9684,7 +9684,7 @@
         "tags" : [ "Multiple Court case lookup" ],
         "summary" : "Retrieves a specified list of court cases for an offender",
         "description" : "Requires role <b>NOMIS_PRISONER_API__SYNCHRONISATION__RW</b>",
-        "operationId" : "getCourtCasesByOffender_1",
+        "operationId" : "getCourtCasesByOffenderNoAndCaseIds",
         "parameters" : [ {
           "name" : "offenderNo",
           "in" : "path",
@@ -14914,7 +14914,7 @@
         "tags" : [ "prisoner-search-resource" ],
         "summary" : "Gets every prison number between range for prisoner search.",
         "description" : "Returns a list of prison numbers for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
-        "operationId" : "getAllPrisonersInRange",
+        "operationId" : "getAllPrisonersInRangeForSearch",
         "parameters" : [ {
           "name" : "active",
           "in" : "query",
@@ -14984,7 +14984,7 @@
         "tags" : [ "prisoner-search-resource" ],
         "summary" : "Gets every size prisoner root offender ids for prisoner search.",
         "description" : "Returns a list of root offender id ranges for prisoners. Each list item has a from and to \n      root offender id, with the number of prisoners between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__PRISONER_SEARCH_R.",
-        "operationId" : "getAllPrisonersIdRanges",
+        "operationId" : "getAllPrisonersIdRangesForSearch",
         "parameters" : [ {
           "name" : "active",
           "in" : "query",
@@ -15168,7 +15168,7 @@
         "tags" : [ "questionnaire-resource" ],
         "summary" : "get questionnaire IDs by filter",
         "description" : "Retrieves a paged list of incident questionnaire ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getIdsByFilter",
+        "operationId" : "getQuestionnaireIdsByFilter",
         "parameters" : [ {
           "name" : "page",
           "in" : "query",
@@ -17215,7 +17215,7 @@
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets every prison number and root offender id between range for prisoner search.",
         "description" : "Returns a list of ids for root offender ids greater than the specified\n      fromRootOffenderId and less than or equal to the specified toRootOffenderId.\n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getAllPrisonersInRange_1",
+        "operationId" : "getAllPrisonersInRange",
         "parameters" : [ {
           "name" : "fromRootOffenderId",
           "in" : "query",
@@ -17277,7 +17277,7 @@
         "tags" : [ "prisoners-resource" ],
         "summary" : "Gets every size prisoner root offender ids.",
         "description" : "Returns a list of root offender id ranges for prisoners. Each list item has a from and to \n      root offender id, with the number of prisoners between the from and to equal to the specified size. \n      Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getAllPrisonersIdRanges_1",
+        "operationId" : "getAllPrisonersIdRanges",
         "parameters" : [ {
           "name" : "size",
           "in" : "query",
@@ -19659,7 +19659,7 @@
         "tags" : [ "incident-resource" ],
         "summary" : "get incident IDs by filter",
         "description" : "Retrieves a paged list of incident ids by filter. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW.",
-        "operationId" : "getIdsByFilter_1",
+        "operationId" : "getIncidentIdsByFilter",
         "parameters" : [ {
           "name" : "page",
           "in" : "query",
@@ -21153,7 +21153,7 @@
         "tags" : [ "core-person-resource" ],
         "summary" : "Get all the religion information for an offender by prison number",
         "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderReligions",
+        "operationId" : "getOffenderReligionsByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",
@@ -21218,7 +21218,7 @@
         "tags" : [ "core-person-resource" ],
         "summary" : "Get all the religion information for an offender by root offender id",
         "description" : "Retrieves the religion information for an offender. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "getOffenderReligions_1",
+        "operationId" : "getOffenderReligionsByRootOffenderId",
         "parameters" : [ {
           "name" : "rootOffenderId",
           "in" : "path",
@@ -22987,7 +22987,7 @@
         "tags" : [ "adjudication-resource" ],
         "summary" : "**** Used to recover from a duplicate incident creation only ***** Deletes an incident by adjudication number.",
         "description" : "Deletes an incident by adjudication number. Supports the removal of a duplicate incident without a DPS mapping. Requires ROLE_NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteIncident_1",
+        "operationId" : "deleteIncidentByAdjudicationNumber",
         "parameters" : [ {
           "name" : "adjudicationNumber",
           "in" : "path",
@@ -23198,7 +23198,7 @@
         "tags" : [ "activities-resource" ],
         "summary" : "Delete a NOMIS attendance (from OFFENDER_COURSE_ATTENDANCES table)",
         "description" : "Deletes an attendance from NOMIS. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
-        "operationId" : "deleteAttendance_1",
+        "operationId" : "deleteAttendanceByEventId",
         "parameters" : [ {
           "name" : "eventId",
           "in" : "path",
@@ -31227,12 +31227,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
