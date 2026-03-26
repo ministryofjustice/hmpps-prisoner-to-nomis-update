@@ -17,7 +17,7 @@ class SentencingAdjustmentsMappingService(
 
   suspend fun createMapping(request: SentencingAdjustmentMappingDto) {
     sentencingMappingResourceApi.prepare(
-      sentencingMappingResourceApi.createMapping4RequestConfig(request),
+      sentencingMappingResourceApi.createSentencingMappingRequestConfig(request),
     )
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()
