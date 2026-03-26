@@ -6,10 +6,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.NOMISSyncApi
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.api.PrisonerTrustAccountsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncGeneralLedgerTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.SyncOffenderTransactionResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
@@ -26,7 +24,6 @@ class FinanceDpsApiService(
   )
 
   private val syncApi = NOMISSyncApi(webClient)
-  private val prisonerApi = PrisonerTrustAccountsApi(webClient)
 
   suspend fun getPrisonAccounts(prisonId: String): GeneralLedgerBalanceDetailsList = syncApi
     .listGeneralLedgerBalances(prisonId)
@@ -46,10 +43,4 @@ class FinanceDpsApiService(
     .prepare(syncApi.getOffenderTransactionByIdRequestConfig(id))
     .retrieve()
     .awaitBodyOrNullForNotFound(retrySpec = backoffSpec)
-
-  // TODO check if this is still needed
-  suspend fun getPrisonerSubAccountDetails(prisonerNo: String, account: Int): PrisonerSubAccountDetails = prisonerApi
-    .getPrisonerSubAccountDetails(prisonerNo, account)
-    .retryWhen(backoffSpec)
-    .awaitSingle()
 }

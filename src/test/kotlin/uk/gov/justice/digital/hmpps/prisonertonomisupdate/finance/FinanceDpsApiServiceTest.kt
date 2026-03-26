@@ -14,10 +14,8 @@ import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.FinanceDpsApiExtension.Companion.dpsFinanceServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.GeneralLedgerBalanceDetailsList
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerEstablishmentBalanceDetailsList
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.model.PrisonerSubAccountDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.math.BigDecimal
 import java.util.UUID
 
 @SpringAPIServiceTest
@@ -120,51 +118,6 @@ class FinanceDpsApiServiceTest {
       dpsFinanceServer.stubListPrisonerAccounts(prisonerNo, sampleResponse)
 
       val data = apiService.getPrisonerAccounts(prisonerNo)
-
-      assertThat(data).isEqualTo(sampleResponse)
-    }
-  }
-
-  // TODO Check if we need this
-  @Nested
-  inner class GetPrisonerSubAccountDetails {
-    val prisonerNo = "A1234AA"
-    val sampleResponse = PrisonerSubAccountDetails(
-      code = 1001,
-      name = "name",
-      prisonNumber = prisonerNo,
-      balance = BigDecimal.ONE,
-      holdBalance = BigDecimal.TWO,
-    )
-
-    @Test
-    internal fun `will pass oath2 token to endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
-
-      apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(anyUrl())
-          .withHeader("Authorization", equalTo("Bearer ABCDE")),
-      )
-    }
-
-    @Test
-    fun `will call the GET endpoint`() = runTest {
-      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
-
-      apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
-
-      dpsFinanceServer.verify(
-        getRequestedFor(urlPathEqualTo("/prisoners/$prisonerNo/accounts/1001")),
-      )
-    }
-
-    @Test
-    fun `will return data`() = runTest {
-      dpsFinanceServer.stubGetPrisonerSubAccountDetails(prisonerNo, 1001, sampleResponse)
-
-      val data = apiService.getPrisonerSubAccountDetails(prisonerNo, 1001)
 
       assertThat(data).isEqualTo(sampleResponse)
     }
