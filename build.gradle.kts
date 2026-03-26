@@ -12,9 +12,9 @@ import kotlin.io.path.name
 import kotlin.io.path.Path as KotlinPath
 
 plugins {
-  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.0"
+  id("uk.gov.justice.hmpps.gradle-spring-boot") version "10.1.1"
   kotlin("plugin.spring") version "2.3.20"
-  id("org.openapi.generator") version "7.20.0"
+  id("org.openapi.generator") version "7.21.0"
 }
 
 configurations {
