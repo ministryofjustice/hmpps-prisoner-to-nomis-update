@@ -51,7 +51,7 @@ class PrisonBalanceResource(private val reconciliationService: PrisonBalanceReco
       ),
     ],
   )
-  suspend fun generateReconciliationReportForPrison(
+  suspend fun generatePrisonBalanceReconciliationReportForPrison(
     @Schema(description = "Prison Id", example = "MDI")
     @PathVariable prisonId: String,
   ): MismatchPrisonBalance? = reconciliationService.checkPrisonBalanceMatch(prisonId)
