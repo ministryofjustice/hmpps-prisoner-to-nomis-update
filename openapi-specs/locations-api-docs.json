@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-11.583.4c2e3b4"
+    "version" : "2026-03-26.624.c7106b5"
   },
   "servers" : [ {
     "url" : "/",
@@ -93,8 +93,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -103,8 +103,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -161,8 +161,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -171,8 +171,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -240,8 +240,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -250,8 +250,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -337,8 +337,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -347,8 +347,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -444,8 +444,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -454,8 +454,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -551,8 +551,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -561,8 +561,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -658,8 +658,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -668,8 +668,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -767,8 +767,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -777,8 +777,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -880,8 +880,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -890,8 +890,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -993,8 +993,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1003,8 +1003,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1112,8 +1112,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1122,8 +1122,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1201,6 +1201,14 @@
             "type" : "boolean",
             "default" : false
           }
+        }, {
+          "name" : "force-reactivation",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean",
+            "default" : false
+          }
         } ],
         "responses" : {
           "403" : {
@@ -1223,8 +1231,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1233,8 +1241,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1337,8 +1345,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1347,8 +1355,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1453,8 +1461,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1463,8 +1471,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1566,8 +1574,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1576,8 +1584,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1689,8 +1697,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1699,8 +1707,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1802,8 +1810,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1812,8 +1820,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1915,8 +1923,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -1925,8 +1933,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2028,8 +2036,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2038,8 +2046,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2151,8 +2159,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2161,8 +2169,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2264,8 +2272,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2274,8 +2282,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2375,8 +2383,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2385,8 +2393,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2496,8 +2504,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2506,8 +2514,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2606,8 +2614,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2616,8 +2624,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2716,8 +2724,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2726,8 +2734,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2819,8 +2827,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2829,8 +2837,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2922,8 +2930,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -2932,8 +2940,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3025,8 +3033,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3035,8 +3043,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3131,8 +3139,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3141,8 +3149,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3231,8 +3239,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3241,8 +3249,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3331,8 +3339,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3341,8 +3349,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3431,8 +3439,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3441,8 +3449,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3494,6 +3502,106 @@
         }
       }
     },
+    "/certification/location/reactivation-request-approval" : {
+      "put" : {
+        "tags" : [ "Certification" ],
+        "summary" : "Requests approval to reactivate a set of locations",
+        "description" : "Requires role LOCATION_CERTIFICATION",
+        "operationId" : "reactivationRequestApproval",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/ReactivationLocationsApprovalRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Invalid Request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "200" : {
+            "description" : "Returns the approval request status",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Location not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/certification/location/approve" : {
       "put" : {
         "tags" : [ "Certification" ],
@@ -3531,8 +3639,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3541,8 +3649,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3631,8 +3739,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3641,8 +3749,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3741,8 +3849,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3751,8 +3859,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3851,8 +3959,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3861,8 +3969,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3961,8 +4069,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -3971,8 +4079,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4086,8 +4194,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4096,8 +4204,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4201,8 +4309,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4211,8 +4319,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4297,8 +4405,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4307,8 +4415,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4400,8 +4508,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4410,8 +4518,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4500,8 +4608,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4510,8 +4618,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4558,6 +4666,103 @@
                   "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
+            }
+          }
+        }
+      }
+    },
+    "/cell-certificates/prison/{prisonId}/baseline" : {
+      "post" : {
+        "tags" : [ "Cell Certificates" ],
+        "summary" : "Baselines a certificate for a prison based on the current location setup",
+        "description" : "Requires LOCATION_CERTIFICATION role and write scope",
+        "operationId" : "baselineCellCertificateForPrison",
+        "parameters" : [ {
+          "name" : "prisonId",
+          "in" : "path",
+          "description" : "Prison Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Prison Id",
+            "example" : "MDI",
+            "maxLength" : 5,
+            "minLength" : 3,
+            "pattern" : "^[A-Z]{2}I|ZZGHI$"
+          },
+          "example" : "MDI"
+        } ],
+        "responses" : {
+          "403" : {
+            "description" : "Missing required role. Requires the LOCATION_CERTIFICATION role and write scope",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad Request",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429" : {
+            "description" : "Too Many Requests",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "410" : {
+            "description" : "Gone",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "201" : {
+            "description" : "Cell certificate generated - prison base-lined",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CertificationApprovalRequestDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : { }
+            }
+          },
+          "404" : {
+            "description" : "No prison found",
+            "content" : {
+              "application/json" : { }
             }
           }
         }
@@ -4613,8 +4818,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4623,8 +4828,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4735,8 +4940,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4745,8 +4950,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4857,8 +5062,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4867,8 +5072,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4970,8 +5175,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -4980,8 +5185,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5081,8 +5286,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5091,8 +5296,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5186,8 +5391,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5196,8 +5401,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5350,8 +5555,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5360,8 +5565,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5512,8 +5717,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5522,8 +5727,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5637,8 +5842,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5647,8 +5852,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5793,8 +5998,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5803,8 +6008,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5894,8 +6099,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5904,8 +6109,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5963,8 +6168,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -5973,8 +6178,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6048,8 +6253,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6058,8 +6263,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6134,8 +6339,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6144,8 +6349,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6228,8 +6433,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6238,8 +6443,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6324,8 +6529,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6334,8 +6539,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6430,8 +6635,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6440,8 +6645,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6537,8 +6742,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6547,8 +6752,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6632,8 +6837,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6642,8 +6847,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6745,8 +6950,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6755,8 +6960,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6865,8 +7070,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6875,8 +7080,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -6995,8 +7200,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7005,8 +7210,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7133,8 +7338,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7143,8 +7348,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7234,8 +7439,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7244,8 +7449,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7330,8 +7535,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7340,8 +7545,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7461,8 +7666,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7471,8 +7676,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7566,8 +7771,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7576,8 +7781,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7710,8 +7915,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7720,8 +7925,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7867,8 +8072,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7877,8 +8082,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7987,8 +8192,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -7997,8 +8202,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8111,8 +8316,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8121,8 +8326,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8244,8 +8449,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8254,8 +8459,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8378,8 +8583,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8388,8 +8593,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8505,8 +8710,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8515,8 +8720,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8625,8 +8830,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8635,8 +8840,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8723,8 +8928,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8733,8 +8938,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8842,20 +9047,20 @@
               }
             }
           },
-          "500" : {
-            "description" : "Unrecoverable error occurred whilst processing request.",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
-              "application/json" : {
+              "*/*" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Unrecoverable error occurred whilst processing request.",
             "content" : {
-              "*/*" : {
+              "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/ErrorResponse"
                 }
@@ -8927,8 +9132,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -8937,8 +9142,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9142,8 +9347,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9152,8 +9357,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9273,8 +9478,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9283,8 +9488,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9332,9 +9537,9 @@
     "/locations/non-residential/prison/{prisonId}/local-name/{localName}" : {
       "get" : {
         "tags" : [ "Non-residential functions" ],
-        "summary" : "Finds a non-residential location matching the local name for a given prison - returning ONLY the first one found",
+        "summary" : "Finds any non-residential location matching the local name for a given prison",
         "description" : "Requires role VIEW_LOCATIONS",
-        "operationId" : "findLocationByLocalName_1",
+        "operationId" : "findLocationsByLocalName",
         "parameters" : [ {
           "name" : "prisonId",
           "in" : "path",
@@ -9384,8 +9589,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9394,8 +9599,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9415,11 +9620,14 @@
             }
           },
           "200" : {
-            "description" : "Returns location matching local name",
+            "description" : "Returns locations matching local name",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/Location"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Location"
+                  }
                 }
               }
             }
@@ -9435,7 +9643,7 @@
             }
           },
           "404" : {
-            "description" : "Non residential location not found",
+            "description" : "No non-residential location not found with that localName",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9510,8 +9718,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9520,8 +9728,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9623,8 +9831,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9633,8 +9841,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9776,8 +9984,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9786,8 +9994,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9889,8 +10097,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9899,8 +10107,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9984,8 +10192,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -9994,8 +10202,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10101,8 +10309,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10111,8 +10319,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10218,8 +10426,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10228,8 +10436,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10291,8 +10499,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10301,8 +10509,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10392,8 +10600,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10402,8 +10610,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10478,8 +10686,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10488,8 +10696,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10564,8 +10772,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10574,8 +10782,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10650,8 +10858,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10660,8 +10868,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10736,8 +10944,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10746,8 +10954,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10822,8 +11030,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10832,8 +11040,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10908,8 +11116,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10918,8 +11126,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -10994,8 +11202,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11004,8 +11212,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11080,8 +11288,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11090,8 +11298,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11166,8 +11374,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11176,8 +11384,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11252,8 +11460,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11262,8 +11470,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11349,8 +11557,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11359,8 +11567,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11463,8 +11671,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11473,8 +11681,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11552,8 +11760,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11562,8 +11770,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11645,8 +11853,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11655,8 +11863,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11732,8 +11940,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11742,8 +11950,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11827,8 +12035,8 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
+          "429" : {
+            "description" : "Too Many Requests",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -11837,8 +12045,8 @@
               }
             }
           },
-          "429" : {
-            "description" : "Too Many Requests",
+          "500" : {
+            "description" : "Internal Server Error",
             "content" : {
               "*/*" : {
                 "schema" : {
@@ -12144,7 +12352,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Transaction type",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE" ],
             "example" : "CAPACITY_CHANGE"
           },
           "attribute" : {
@@ -12620,7 +12828,7 @@
           "transactionType" : {
             "type" : "string",
             "description" : "Type of transaction",
-            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST" ],
+            "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "PENDING_CELL_CHANGE", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE" ],
             "example" : "CAPACITY_CHANGE"
           },
           "prisonId" : {
@@ -12697,9 +12905,14 @@
             "type" : "string",
             "description" : "Explanation of why the capacity need to be decreased",
             "example" : "The cell is damaged and will be take 6 months to repair"
+          },
+          "forceReactivation" : {
+            "type" : "boolean",
+            "description" : "Skip certificate approval",
+            "example" : true
           }
         },
-        "required" : [ "deactivationReason", "requiresApproval" ]
+        "required" : [ "deactivationReason", "forceReactivation", "requiresApproval" ]
       },
       "UpdateNonResCellTypeRequest" : {
         "type" : "object",
@@ -13107,7 +13320,7 @@
       },
       "ReactivateLocationsRequest" : {
         "type" : "object",
-        "description" : "Reactivate Locations Request",
+        "description" : "Bulk reactivate locations Request",
         "properties" : {
           "locations" : {
             "type" : "object",
@@ -13124,18 +13337,24 @@
                 }
               }
             }
+          },
+          "forceReactivation" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Force location to be reactivated, regardless of the status of the prison certification process",
+            "example" : false
           }
         },
         "required" : [ "locations" ]
       },
       "ReactivationDetail" : {
         "type" : "object",
-        "description" : "Reactivation Details",
+        "description" : "Bulk reactivation details",
         "properties" : {
           "cascadeReactivation" : {
             "type" : "boolean",
             "default" : false,
-            "description" : "List of locations to reactivate",
+            "description" : "Cascade the reactivation",
             "example" : true
           },
           "capacity" : {
@@ -13145,6 +13364,16 @@
               "workingCapacity" : 1,
               "maxCapacity" : 2
             }
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist Cell Types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
           }
         },
         "required" : [ "cascadeReactivation" ]
@@ -13237,6 +13466,11 @@
               "type" : "string"
             },
             "minItems" : 1
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "The reason why the approval was requested, mandatory if it must be approved",
+            "example" : "The cell is no longer needed"
           }
         },
         "required" : [ "locations", "reason" ]
@@ -13303,6 +13537,11 @@
                 "certifiedNormalAccommodation" : 1
               }
             }
+          },
+          "reasonForChange" : {
+            "type" : "string",
+            "description" : "The reason why the approval was requested, mandatory if it must be approved",
+            "example" : "The cell capacity has changed"
           }
         },
         "required" : [ "locations" ]
@@ -13383,7 +13622,7 @@
           "approvalType" : {
             "type" : "string",
             "description" : "Type of approval",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE" ],
+            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE", "PRISON_BASELINE" ],
             "example" : "SIGNED_OP_CAP"
           },
           "prisonId" : {
@@ -13505,6 +13744,24 @@
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
+          },
+          "maxCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending max capacity",
+            "example" : 2
+          },
+          "workingCapacity" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending working capacity",
+            "example" : 1
+          },
+          "certifiedNormalAccommodation" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Pending CNA",
+            "example" : 2
           },
           "deactivationReasonDescription" : {
             "type" : "string",
@@ -13677,15 +13934,9 @@
             "format" : "uuid",
             "description" : "Location Id of location requiring approval for being certified",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
-          },
-          "approvalType" : {
-            "type" : "string",
-            "description" : "Type of approval request",
-            "enum" : [ "SIGNED_OP_CAP", "DRAFT", "DEACTIVATION", "CELL_MARK", "CELL_SANITATION", "REACTIVATION", "CAPACITY_CHANGE" ],
-            "example" : "DRAFT"
           }
         },
-        "required" : [ "approvalType", "locationId" ]
+        "required" : [ "locationId" ]
       },
       "RejectCertificationRequestDto" : {
         "type" : "object",
@@ -13703,6 +13954,65 @@
           }
         },
         "required" : [ "approvalRequestReference", "comments" ]
+      },
+      "CellReactivationDetail" : {
+        "type" : "object",
+        "description" : "Cell reactivation details",
+        "properties" : {
+          "capacity" : {
+            "$ref" : "#/components/schemas/Capacity",
+            "description" : "New capacity of the location, if null the old values are used",
+            "example" : {
+              "workingCapacity" : 1,
+              "maxCapacity" : 2
+            }
+          },
+          "specialistCellTypes" : {
+            "type" : "array",
+            "description" : "Specialist Cell Types",
+            "items" : {
+              "type" : "string",
+              "description" : "Specialist Cell Types",
+              "enum" : [ "ACCESSIBLE_CELL", "BIOHAZARD_DIRTY_PROTEST", "CSU", "CAT_A", "CONSTANT_SUPERVISION", "DRY", "ESCAPE_LIST", "ISOLATION_DISEASES", "LISTENER_CRISIS", "LOCATE_FLAT_CELL", "MEDICAL", "MOTHER_AND_BABY", "SAFE_CELL", "UNFURNISHED" ]
+            },
+            "uniqueItems" : true
+          }
+        }
+      },
+      "ReactivationLocationsApprovalRequest" : {
+        "type" : "object",
+        "description" : "Reactivate locations Approval Request",
+        "properties" : {
+          "topLevelLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The top level location Id of location for reactivation and requiring approval",
+            "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
+          },
+          "cascadeReactivation" : {
+            "type" : "boolean",
+            "default" : false,
+            "description" : "Cascade the reactivation from the top level, cells will be reactivated in their previous state, if this is true `cellReactivationChanges` should be null",
+            "example" : true
+          },
+          "cellReactivationChanges" : {
+            "type" : "object",
+            "additionalProperties" : {
+              "$ref" : "#/components/schemas/CellReactivationDetail"
+            },
+            "description" : "List of cells below the locationId to reactivate, with capacity and ttype details, missing cells will not be reactivated",
+            "example" : {
+              "de91dfa7-821f-4552-a427-bf2f32eafeb0" : {
+                "cascadeReactivation" : false,
+                "capacity" : {
+                  "workingCapacity" : 1,
+                  "maxCapacity" : 2
+                }
+              }
+            }
+          }
+        },
+        "required" : [ "topLevelLocationId" ]
       },
       "ApproveCertificationRequestDto" : {
         "type" : "object",
