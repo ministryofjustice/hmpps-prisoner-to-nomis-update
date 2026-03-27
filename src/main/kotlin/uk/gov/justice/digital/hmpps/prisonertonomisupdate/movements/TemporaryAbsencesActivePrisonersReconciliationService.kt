@@ -23,6 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import java.time.LocalDate
 import java.util.UUID
 
 @Service
@@ -377,8 +378,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
           mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.END_TIME, "${nomisScheduleOut.returnTime}", "${dpsOccurrence.end}"))
         }
 
-        // postcode must match
-        if (dpsOccurrence.location?.postcode != nomisScheduleOut.toAddressPostcode) {
+        // postcode must match as long as schedule not in the past
+        if (nomisScheduleOut.startTime.toLocalDate() >= LocalDate.now() && dpsOccurrence.location?.postcode != nomisScheduleOut.toAddressPostcode) {
           mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.POSTCODE, "${nomisScheduleOut.toAddressPostcode}", "${dpsOccurrence.location?.postcode}"))
         }
       }
