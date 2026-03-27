@@ -71,7 +71,7 @@ class CorePersonReconciliationIntTest(
       }
 
       corePersonNomisApi.verify(getRequestedFor(urlPathMatching("/core-person/A1234BC")))
-      cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/A1234BC")))
+      cprApi.verify(getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")))
       verify(telemetryClient, never()).trackEvent(anyString(), anyMap(), isNull())
     }
 
