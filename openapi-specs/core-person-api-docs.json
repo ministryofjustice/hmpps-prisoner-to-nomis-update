@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-24.2753.947fe21"
+    "version" : "2026-03-27.2801.2d1a891"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -590,6 +590,39 @@
         "tags" : [ "HMPPS Person API" ],
         "description" : "Retrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
         "operationId" : "getByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonCanonicalRecord"
+                }
+              }
+            }
+          },
+          "301" : {
+            "description" : "Permanent Redirect"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/prison/dps/{prisonNumber}" : {
+      "get" : {
+        "tags" : [ "HMPPS Person API" ],
+        "description" : "Retrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**\n      In addition to the person data being returned, the response also includes a list of the prison religions associated with the person\n      and a prison specific representation of alias & identifiers.\n      This \n      ",
+        "operationId" : "getByPrisonNumberDps",
         "parameters" : [ {
           "name" : "prisonNumber",
           "in" : "path",

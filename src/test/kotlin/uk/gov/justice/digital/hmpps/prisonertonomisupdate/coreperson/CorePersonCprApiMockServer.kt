@@ -67,7 +67,7 @@ class CorePersonCprApiMockServer : WireMockServer(WIREMOCK_PORT) {
 
   fun stubGetCorePerson(prisonNumber: String = "AA1234A", response: PrisonCanonicalRecord = corePersonDto(), status: HttpStatus = HttpStatus.OK, error: ErrorResponse = ErrorResponse(status = status.value())) {
     stubFor(
-      get("/person/prison/$prisonNumber").willReturn(
+      get("/person/prison/dps/$prisonNumber").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
