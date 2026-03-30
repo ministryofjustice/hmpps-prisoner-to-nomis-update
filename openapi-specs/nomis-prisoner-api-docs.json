@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-26.1260.410b5ca"
+    "version" : "2026-03-27.1265.2287222"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -31227,12 +31227,12 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "paged" : {
-            "type" : "boolean"
-          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
+          },
+          "paged" : {
+            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -32223,9 +32223,16 @@
             "items" : {
               "$ref" : "#/components/schemas/CourtCaseResponse"
             }
+          },
+          "sentencesDeactivated" : {
+            "type" : "array",
+            "description" : "Additional sentences deactivated due to the merge after being cloned from a previous booking but not on the courtCasesDeactivated",
+            "items" : {
+              "$ref" : "#/components/schemas/SentenceResponse"
+            }
           }
         },
-        "required" : [ "courtCasesCreated", "courtCasesDeactivated" ]
+        "required" : [ "courtCasesCreated", "courtCasesDeactivated", "sentencesDeactivated" ]
       },
       "ContactRestrictionEnteredStaff" : {
         "type" : "object",
