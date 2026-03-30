@@ -768,6 +768,80 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       }
 
       @Test
+      fun `should only report postcode is different for future TAPs`() = runTest {
+        // The TAP is historical
+        val startTime = LocalDateTime.now().minusDays(1)
+
+        nomisMovementsApi.stubGetTemporaryAbsences(
+          offenderNo = "A0001TZ",
+          response = emptyTemporaryAbsenceSummaryResponse().copy(
+            bookings = listOf(
+              BookingTemporaryAbsences(
+                bookingId = 12345,
+                temporaryAbsenceApplications = listOf(
+                  application(
+                    id = applicationId,
+                    absences = listOf(
+                      absence(
+                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                          eventStatus = "SCH",
+                          eventSubType = "C5",
+                          startTime = startTime,
+                          returnTime = endTime,
+                          // The postcode is different
+                          toAddressPostcode = "DIFFERENT",
+                        ),
+                        scheduledAbsenceReturn = null,
+                        temporaryAbsence = null,
+                        temporaryAbsenceReturn = null,
+                      ),
+                    ),
+                  ),
+                ),
+                activeBooking = true,
+                latestBooking = true,
+                unscheduledTemporaryAbsences = listOf(),
+                unscheduledTemporaryAbsenceReturns = listOf(),
+              ),
+            ),
+          ),
+        )
+
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
       fun `should report everything is different`() = runTest {
         dpsApi.stubGetTapReconciliationDetail(
           personIdentifier = "A0001TZ",
