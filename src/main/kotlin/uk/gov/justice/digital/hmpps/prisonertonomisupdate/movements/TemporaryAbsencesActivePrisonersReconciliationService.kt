@@ -22,6 +22,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
 import java.util.UUID
@@ -344,7 +345,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val mismatches = mutableListOf<MismatchedPrisonerTapDetails>()
     mappings.matchingSchedulesOut(nomisScheduleOutIds, dpsOccurrenceIds)
       .forEach { (nomisEventId, dpsOccurrenceId) ->
-        val (nomisScheduleOut, latestBooking) = nomis.findScheduleOut(nomisEventId)
+        val (nomisScheduleOut, nomisMovementOut, latestBooking) = nomis.findNomisTap(nomisEventId)
         val dpsOccurrence = dps.findOccurrence(dpsOccurrenceId)
         fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
 
@@ -379,7 +380,8 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
         }
 
         // postcode must match as long as schedule not in the past
-        if (nomisScheduleOut.startTime.toLocalDate() >= LocalDate.now() && dpsOccurrence.location?.postcode != nomisScheduleOut.toAddressPostcode) {
+        val nomisPostcode = nomisMovementOut?.let { nomisMovementOut.toAddressPostcode } ?: nomisScheduleOut.toAddressPostcode
+        if (nomisScheduleOut.startTime.toLocalDate() >= LocalDate.now() && dpsOccurrence.location?.postcode != nomisPostcode) {
           mismatches.add(mismatch(MismatchedPrisonerTapDetails.Type.POSTCODE, "${nomisScheduleOut.toAddressPostcode}", "${dpsOccurrence.location?.postcode}"))
         }
       }
@@ -404,10 +406,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
   }
 
-  private fun OffenderTemporaryAbsencesResponse.findScheduleOut(eventId: Long): Pair<ScheduledTemporaryAbsence, Boolean> = bookings.flatMap { booking ->
+  private data class NomisDetails(val scheduledOut: ScheduledTemporaryAbsence, val movementOut: TemporaryAbsence?, val latestBooking: Boolean)
+
+  private fun OffenderTemporaryAbsencesResponse.findNomisTap(eventId: Long): NomisDetails = bookings.flatMap { booking ->
     booking.temporaryAbsenceApplications.flatMap { application ->
       application.absences.mapNotNull { absence ->
-        if (absence.scheduledTemporaryAbsence?.eventId == eventId) absence.scheduledTemporaryAbsence to booking.latestBooking else null
+        if (absence.scheduledTemporaryAbsence?.eventId == eventId) NomisDetails(absence.scheduledTemporaryAbsence, absence.temporaryAbsence, booking.latestBooking) else null
       }
     }
   }
