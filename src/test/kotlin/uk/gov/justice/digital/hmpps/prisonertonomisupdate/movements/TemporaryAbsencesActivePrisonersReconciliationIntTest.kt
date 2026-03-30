@@ -842,6 +842,78 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       }
 
       @Test
+      fun `should compare NOMIS movement postcode with DPS if one exists`() = runTest {
+        nomisMovementsApi.stubGetTemporaryAbsences(
+          offenderNo = "A0001TZ",
+          response = emptyTemporaryAbsenceSummaryResponse().copy(
+            bookings = listOf(
+              BookingTemporaryAbsences(
+                bookingId = 12345,
+                temporaryAbsenceApplications = listOf(
+                  application(
+                    id = applicationId,
+                    absences = listOf(
+                      absence(
+                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                          startTime = LocalDateTime.now().plusDays(1),
+                          // The schedule postcode matches DPS
+                          toAddressPostcode = "S1 1AA",
+                        ),
+                        scheduledAbsenceReturn = null,
+                        // The movement postcode does not match DPS
+                        temporaryAbsence = temporaryAbsence().copy(toAddressPostcode = "DIFFERENT"),
+                        temporaryAbsenceReturn = null,
+                      ),
+                    ),
+                  ),
+                ),
+                activeBooking = true,
+                latestBooking = true,
+                unscheduledTemporaryAbsences = listOf(),
+                unscheduledTemporaryAbsenceReturns = listOf(),
+              ),
+            ),
+          ),
+        )
+
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(reconMovement()),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "$scheduleOutId",
+              "dpsOccurrenceId" to "$occurrenceId",
+              "type" to "POSTCODE",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
       fun `should report everything is different`() = runTest {
         dpsApi.stubGetTapReconciliationDetail(
           personIdentifier = "A0001TZ",
