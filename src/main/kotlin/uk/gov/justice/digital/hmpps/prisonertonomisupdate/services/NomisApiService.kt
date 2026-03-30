@@ -128,7 +128,7 @@ class NomisApiService(
     .bodyToMono(CreateVisitResponseDto::class.java)
     .onErrorResume(WebClientResponseException.Conflict::class.java) {
       val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
-      throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)
+      throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo.toString())
     }
     .awaitSingle()
 

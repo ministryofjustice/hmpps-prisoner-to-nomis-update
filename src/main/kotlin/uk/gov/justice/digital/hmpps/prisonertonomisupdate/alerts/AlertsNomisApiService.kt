@@ -5,6 +5,8 @@ import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import org.springframework.web.reactive.function.client.awaitBodilessEntity
 import org.springframework.web.reactive.function.client.awaitBody
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.AlertsResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertRequest
@@ -14,17 +16,24 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Pr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.SuccessOrDuplicate
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitSuccessOrDuplicate
 
 @Service
 class AlertsNomisApiService(@Qualifier("nomisApiWebClient") private val webClient: WebClient) {
-  suspend fun createAlert(offenderNo: String, nomisAlert: CreateAlertRequest): CreateAlertResponse = webClient.post()
-    .uri(
-      "/prisoners/{offenderNo}/alerts",
-      offenderNo,
+  private val api = AlertsResourceApi(webClient)
+
+  suspend fun createAlert(
+    offenderNo: String,
+    nomisAlert: CreateAlertRequest,
+  ): SuccessOrDuplicate<CreateAlertResponse, AlertId> = with(api) {
+    awaitSuccessOrDuplicate(
+      createAlertRequestConfig(
+        offenderNo = offenderNo,
+        createAlertRequest = nomisAlert,
+      ),
     )
-    .bodyValue(nomisAlert)
-    .retrieve()
-    .awaitBody()
+  }
 
   suspend fun updateAlert(bookingId: Long, alertSequence: Long, nomisAlert: UpdateAlertRequest): AlertResponse = webClient.put().uri(
     "/prisoners/booking-id/{bookingId}/alerts/{alertSequence}",

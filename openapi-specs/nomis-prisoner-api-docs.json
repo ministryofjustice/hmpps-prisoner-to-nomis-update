@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-27.1265.2287222"
+    "version" : "2026-03-30.1269.e7e6e61"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -10408,7 +10408,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/DuplicateErrorResponse"
                 }
               }
             }
@@ -23298,7 +23298,6 @@
             "type" : "string"
           },
           "moreInfo" : {
-            "type" : "string",
             "description" : "For 409 errors this may contain the entity Id for the existing record that causes the duplicate"
           }
         },
@@ -28544,6 +28543,33 @@
         },
         "required" : [ "alertCode", "alertSequence", "bookingId", "type" ]
       },
+      "AlertId" : {
+        "type" : "object",
+        "properties" : {
+          "sequence" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        },
+        "required" : [ "bookingId", "sequence" ]
+      },
+      "DuplicateErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "$ref" : "#/components/schemas/AlertId",
+            "description" : "Existing alert id"
+          }
+        },
+        "required" : [ "moreInfo" ]
+      },
       "CreateAlertRequest" : {
         "type" : "object",
         "description" : "A request to create an alert in NOMIS",
@@ -31227,12 +31253,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
