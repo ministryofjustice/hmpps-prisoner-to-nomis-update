@@ -15,10 +15,10 @@ class ExternalMovementsReconciliationResource(
 ) {
 
   @GetMapping("/external-movements/all-taps/{offenderNo}/reconciliation")
-  suspend fun allTapsReconciliation(@PathVariable offenderNo: String): List<MismatchPrisonerTapsSummary> = allPrisonerReconService.checkPrisonerTapsMatch(offenderNo)
+  suspend fun allTapsReconciliation(@PathVariable offenderNo: String): List<MismatchPrisonerTapsSummary> = allPrisonerReconService.checkPrisonerTapsMatch(offenderNo, suppressTelemetry = true)
 
   @GetMapping("/external-movements/active-taps/{offenderNo}/reconciliation")
   suspend fun activeTapsReconciliation(
     @PathVariable offenderNo: String,
-  ): List<MismatchPrisonerTaps> = activePrisonerReconService.checkPrisonerTapsMatch(offenderNo)
+  ): List<MismatchPrisonerTaps> = activePrisonerReconService.checkPrisonerTapsMatch(offenderNo, suppressTelemetry = true)
 }

@@ -121,7 +121,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
+  suspend fun checkPrisonerTapsMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchPrisonerTaps> = withContext(Dispatchers.Unconfined) {
     val nomisTaps = async { nomisApiService.getTemporaryAbsencesOrNull(offenderNo) }
     val dpsTaps = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
     val mappings = async { mappingService.getTapMappingIds(offenderNo) }
@@ -131,6 +131,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
       dpsTaps = dpsTaps.await(),
       nomisTaps = nomisTaps.await(),
       mappings = mappings.await(),
+      suppressTelemetry = suppressTelemetry,
     )
   }
 
@@ -139,37 +140,42 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     dpsTaps: PersonTapDetail,
     nomisTaps: OffenderTemporaryAbsencesResponse?,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
+    suppressTelemetry: Boolean,
   ): List<MismatchPrisonerTaps> {
     if (nomisTaps == null) {
       throw IllegalStateException("Cannot perform reconciliation for a prisoner that doesn't exist in NOMIS - has the prisoner been merged or deleted recently?")
     }
 
     val mismatchedCounts = findMismatchedCounts(offenderNo, nomisTaps, dpsTaps, mappings)
-    mismatchedCounts.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_ACTIVE_TAPS-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "type" to it.type,
-          "nomisCount" to it.nomisCount.toString(),
-          "dpsCount" to it.dpsCount.toString(),
-          "unexpected-nomis-ids" to it.unexpectedNomisIds,
-          "unexpected-dps-ids" to it.unexpectedDpsIds,
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedCounts.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_ACTIVE_TAPS-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "type" to it.type,
+            "nomisCount" to it.nomisCount.toString(),
+            "dpsCount" to it.dpsCount.toString(),
+            "unexpected-nomis-ids" to it.unexpectedNomisIds,
+            "unexpected-dps-ids" to it.unexpectedDpsIds,
+          ),
+        )
+      }
     }
 
     val mismatchedSchedulesOut = findMismatchedOccurrences(offenderNo, nomisTaps, dpsTaps, mappings)
-    mismatchedSchedulesOut.forEach {
-      telemetryClient.trackEvent(
-        "$TELEMETRY_ACTIVE_TAPS-mismatch",
-        mapOf(
-          "offenderNo" to offenderNo,
-          "nomisEventId" to "${it.nomisEventId}",
-          "dpsOccurrenceId" to "${it.dpsOccurrenceId}",
-          "type" to it.type,
-        ),
-      )
+    if (!suppressTelemetry) {
+      mismatchedSchedulesOut.forEach {
+        telemetryClient.trackEvent(
+          "$TELEMETRY_ACTIVE_TAPS-mismatch",
+          mapOf(
+            "offenderNo" to offenderNo,
+            "nomisEventId" to "${it.nomisEventId}",
+            "dpsOccurrenceId" to "${it.dpsOccurrenceId}",
+            "type" to it.type,
+          ),
+        )
+      }
     }
 
     return mismatchedCounts + mismatchedSchedulesOut
@@ -365,7 +371,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
             (nomisScheduleOut.eventStatus to dpsOccurrence.statusCode) in ACCEPTABLE_OCCURRENCE_STATUSES -> {}
             // not excluded so we will publish the difference
             else -> mismatches.add(
-              mismatch(MismatchedPrisonerTapDetails.Type.STATUS, nomisScheduleOut.eventStatus, dpsOccurrence.statusCode.value),
+              mismatch(MismatchedPrisonerTapDetails.Type.STATUS, "$nomisOutStatus,$nomisInStatus", dpsOccurrence.statusCode.value),
             )
           }
         }

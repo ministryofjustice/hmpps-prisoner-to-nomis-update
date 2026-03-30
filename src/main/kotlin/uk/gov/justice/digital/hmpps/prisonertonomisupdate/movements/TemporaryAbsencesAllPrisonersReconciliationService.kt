@@ -108,7 +108,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     )
   }.getOrNull()
 
-  suspend fun checkPrisonerTapsMatch(offenderNo: String): List<MismatchPrisonerTapsSummary> {
+  suspend fun checkPrisonerTapsMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchPrisonerTapsSummary> {
     val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getTemporaryAbsenceSummary(offenderNo) } to
         async { dpsApiService.getTapReconciliation(offenderNo) }
@@ -117,10 +117,11 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
       offenderNo = offenderNo,
       dpsTaps = dpsTaps,
       nomisTaps = nomisTaps,
+      suppressTelemetry = suppressTelemetry,
     )
   }
 
-  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse): List<MismatchPrisonerTapsSummary> {
+  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse, suppressTelemetry: Boolean): List<MismatchPrisonerTapsSummary> {
     val mismatches = mutableListOf<MismatchPrisonerTapsSummary>()
     if (dpsTaps.authorisations.count != nomisTaps.applications.count.toInt()) {
       mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.AUTHORISATIONS, dpsTaps.authorisations.count, nomisTaps.applications.count.toInt())
@@ -148,19 +149,21 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
       val dpsIds = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
       val mappings = async { mappingService.getTapMappingIds(offenderNo) }
 
-      mismatches.forEach {
-        val (unexpectedNomisIds, unexpectedDpsIds) = findMismatchedIds(it.type, nomisIds.await(), dpsIds.await(), mappings.await())
-        telemetryClient.trackEvent(
-          "$TELEMETRY_ALL_TAPS-mismatch",
-          mapOf(
-            "offenderNo" to offenderNo,
-            "type" to it.type.name,
-            "nomisCount" to it.nomisCount.toString(),
-            "dpsCount" to it.dpsCount.toString(),
-            "unexpected-nomis-ids" to unexpectedNomisIds,
-            "unexpected-dps-ids" to unexpectedDpsIds,
-          ),
-        )
+      if (!suppressTelemetry) {
+        mismatches.forEach {
+          val (unexpectedNomisIds, unexpectedDpsIds) = findMismatchedIds(it.type, nomisIds.await(), dpsIds.await(), mappings.await())
+          telemetryClient.trackEvent(
+            "$TELEMETRY_ALL_TAPS-mismatch",
+            mapOf(
+              "offenderNo" to offenderNo,
+              "type" to it.type.name,
+              "nomisCount" to it.nomisCount.toString(),
+              "dpsCount" to it.dpsCount.toString(),
+              "unexpected-nomis-ids" to unexpectedNomisIds,
+              "unexpected-dps-ids" to unexpectedDpsIds,
+            ),
+          )
+        }
       }
     }
 

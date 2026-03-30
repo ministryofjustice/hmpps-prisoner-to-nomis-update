@@ -17,6 +17,7 @@ import org.mockito.kotlin.never
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
@@ -1670,8 +1671,42 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
           .jsonPath("$[0].nomisEventId").isEqualTo("$scheduleOutId")
           .jsonPath("$[0].dpsOccurrenceId").isEqualTo("$occurrenceId")
-          .jsonPath("$[0].nomisValue").isEqualTo("SCH")
+          .jsonPath("$[0].nomisValue").isEqualTo("SCH,null")
           .jsonPath("$[0].dpsValue").isEqualTo("IN_PROGRESS")
+      }
+
+      @Test
+      fun `detail difference should not publish telemetry`() {
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    // status is different to NOMIS
+                    statusCode = IN_PROGRESS,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+
+        verifyNoInteractions(telemetryClient)
       }
 
       @Test
@@ -1711,6 +1746,41 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           .jsonPath("$[0].nomisCount").isEqualTo("0")
           .jsonPath("$[0].unexpectedNomisIds").isEqualTo("[]")
           .jsonPath("$[0].unexpectedDpsIds").isEqualTo("[$dpsMovementId]")
+      }
+
+      @Test
+      fun `one count difference should not publish telemetry`() {
+        dpsApi.stubGetTapReconciliationDetail(
+          personIdentifier = "A0001TZ",
+          response = personTapDetail().copy(
+            scheduledAbsences = listOf(
+              reconAuthorisation(id = authorisationId).copy(
+                occurrences = listOf(
+                  reconOccurrence(id = occurrenceId).copy(
+                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                    reasonCode = "C5",
+                    start = startTime,
+                    end = endTime,
+                    location = Location(
+                      address = "1 street",
+                      postcode = "S1 1AA",
+                    ),
+                    movements = listOf(
+                      reconMovement(id = dpsMovementId),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            unscheduledMovements = listOf(),
+          ),
+        )
+
+        webTestClient.getActiveTapsPrisonerReconOk()
+          .expectBody()
+          .jsonPath("$.length()").isEqualTo(1)
+
+        verifyNoInteractions(telemetryClient)
       }
     }
 
