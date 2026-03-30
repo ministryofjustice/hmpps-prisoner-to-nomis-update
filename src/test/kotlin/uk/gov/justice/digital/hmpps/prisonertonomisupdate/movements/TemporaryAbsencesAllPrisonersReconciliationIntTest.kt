@@ -14,6 +14,7 @@ import org.mockito.kotlin.eq
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.reset
 import org.mockito.kotlin.verify
+import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
@@ -1076,6 +1077,29 @@ class TemporaryAbsencesAllPrisonersReconciliationIntTest(
               assertThat(nomisCount).isEqualTo(1)
             }
           }
+      }
+
+      @Test
+      fun `one different count should suppress telemetry`() {
+        nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0001TZ")
+        dpsApi.stubGetTapReconciliation(
+          personIdentifier = "A0001TZ",
+          response = PersonTapCounts(
+            authorisations = PersonAuthorisationCount(2),
+            occurrences = PersonOccurrenceCount(2),
+            movements = PersonMovementsCount(MovementInOutCount(3, 4), MovementInOutCount(5, 6)),
+          ),
+        )
+        stubDifferenceIdsEmpty()
+
+        webTestClient.getAllTapsPrisonerReconOk()
+          .apply {
+            with(this[0]) {
+              assertThat(offenderNo).isEqualTo("A0001TZ")
+            }
+          }
+
+        verifyNoInteractions(telemetryClient)
       }
     }
 
