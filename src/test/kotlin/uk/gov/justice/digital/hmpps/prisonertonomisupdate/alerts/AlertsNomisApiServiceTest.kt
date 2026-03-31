@@ -20,7 +20,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertType
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertType
@@ -82,7 +82,7 @@ class AlertsNomisApiServiceTest {
     fun `will return existing NOMIS alert id`() = runTest {
       alertsNomisApiMockServer.stubPostAlert(
         offenderNo = "A1234KT",
-        errorResponse = DuplicateErrorResponse(
+        errorResponse = DuplicateAlertErrorResponse(
           moreInfo = AlertId(bookingId = 1234567, sequence = 3),
         ),
       )

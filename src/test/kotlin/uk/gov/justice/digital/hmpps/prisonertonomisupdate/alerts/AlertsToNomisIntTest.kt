@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExt
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
@@ -330,7 +330,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
           )
           alertsNomisApi.stubPostAlert(
             offenderNo = "A1234KT",
-            errorResponse = DuplicateErrorResponse(
+            errorResponse = DuplicateAlertErrorResponse(
               moreInfo = AlertId(bookingId = nomisBookingId, sequence = nomisAlertSequence),
             ),
           )
