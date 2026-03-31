@@ -49,7 +49,18 @@ class AlertsService(
         transform {
           dpsApiService.getAlert(dpsAlertId)
             .let { dpsAlert ->
-              nomisApiService.createAlert(offenderNo, dpsAlert.toNomisCreateRequest()).let { nomisAlert ->
+              val nomisAlertResponse = nomisApiService.createAlert(offenderNo, dpsAlert.toNomisCreateRequest())
+              if (nomisAlertResponse.isDuplicate) {
+                val nomisAlertId = nomisAlertResponse.duplicateResponse!!
+                AlertMappingDto(
+                  dpsAlertId = dpsAlertId,
+                  nomisBookingId = nomisAlertId.moreInfo.bookingId,
+                  nomisAlertSequence = nomisAlertId.moreInfo.sequence,
+                  offenderNo = offenderNo,
+                  mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+                )
+              } else {
+                val nomisAlert = nomisAlertResponse.successResponse!!
                 AlertMappingDto(
                   dpsAlertId = dpsAlertId,
                   nomisBookingId = nomisAlert.bookingId,
@@ -177,7 +188,6 @@ data class PersonReference(val identifiers: List<Identifier> = listOf()) {
 
   companion object {
     const val NOMS_NUMBER_TYPE = "NOMS"
-    fun withNomsNumber(prisonNumber: String) = PersonReference(listOf(Identifier(NOMS_NUMBER_TYPE, prisonNumber)))
   }
 
   data class Identifier(val type: String, val value: String)

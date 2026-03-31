@@ -16,7 +16,7 @@ class IncentivesMappingService(
 
   suspend fun createMapping(request: IncentiveMappingDto) {
     incentiveMappingResourceApi.prepare(
-      incentiveMappingResourceApi.createMapping8RequestConfig(request),
+      incentiveMappingResourceApi.createIncentiveMappingRequestConfig(request),
     )
       .retrieve()
       .awaitBodilessEntityOrThrowOnConflict()

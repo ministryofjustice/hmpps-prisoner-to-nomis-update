@@ -43,7 +43,7 @@ class OfficialVisitsMappingService(
 
   suspend fun getVisitByDpsId(dpsVisitId: Long): OfficialVisitMappingDto = api.getVisitMappingByDpsId(dpsVisitId = dpsVisitId.toString()).awaitSingle()
 
-  suspend fun createVisitMapping(mapping: OfficialVisitMappingDto) = api.prepare(api.createVisitMappingRequestConfig(mapping))
+  suspend fun createVisitMapping(mapping: OfficialVisitMappingDto) = api.prepare(api.createOfficialVisitMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 

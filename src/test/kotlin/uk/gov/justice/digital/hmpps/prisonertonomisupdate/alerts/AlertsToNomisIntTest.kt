@@ -29,6 +29,8 @@ import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.alerts.AlertsDpsApiExtension.Companion.alertsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.AlertMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
@@ -267,8 +269,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
-      @DisplayName("when alert has already been created")
-      inner class WhenAlertAlreadyCreated {
+      @DisplayName("when alert has already been created in NOMIS and has a mapping")
+      inner class WhenAlertAlreadyCreatedWithMapping {
         private val dpsAlertId = UUID.randomUUID().toString()
         private val nomisBookingId = 43217L
         private val nomisAlertSequence = 3L
@@ -299,6 +301,54 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `it will not create the alert again in NOMIS`() {
           alertsNomisApi.verify(0, postRequestedFor(anyUrl()))
+        }
+      }
+
+      @Nested
+      @DisplayName("when alert has already been created in NOMIS but mapping does not exist")
+      inner class WhenAlertAlreadyCreatedWithNoMapping {
+        private val dpsAlertId = UUID.randomUUID().toString()
+        private val nomisBookingId = 43217L
+        private val nomisAlertSequence = 3L
+        private val offenderNo = "A1234KT"
+
+        @BeforeEach
+        fun setUp() {
+          alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
+          alertsDpsApi.stubGetAlert(
+            dpsAlert().copy(
+              alertUuid = UUID.fromString(dpsAlertId),
+              prisonNumber = offenderNo,
+              alertCode = dpsAlert().alertCode.copy(code = "HPI"),
+              activeFrom = LocalDate.parse("2023-03-03"),
+              activeTo = LocalDate.parse("2023-06-06"),
+              isActive = false,
+              createdBy = "BOBBY.BEANS",
+              authorisedBy = "Security Team",
+              description = "Added for good reasons",
+            ),
+          )
+          alertsNomisApi.stubPostAlert(
+            offenderNo = "A1234KT",
+            errorResponse = DuplicateAlertErrorResponse(
+              moreInfo = AlertId(bookingId = nomisBookingId, sequence = nomisAlertSequence),
+            ),
+          )
+          alertsMappingApi.stubPostMapping()
+          publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will create a mapping between the NOMIS and DPS ids`() {
+          alertsMappingApi.verify(
+            postRequestedFor(urlEqualTo("/mapping/alerts"))
+              .withRequestBodyJsonPath("offenderNo", offenderNo)
+              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
+              .withRequestBodyJsonPath("dpsAlertId", dpsAlertId)
+              .withRequestBodyJsonPath("nomisAlertSequence", nomisAlertSequence)
+              .withRequestBodyJsonPath("nomisBookingId", nomisBookingId),
+          )
         }
       }
     }

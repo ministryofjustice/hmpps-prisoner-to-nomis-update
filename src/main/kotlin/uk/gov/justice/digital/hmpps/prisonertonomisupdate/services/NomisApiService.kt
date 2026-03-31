@@ -128,7 +128,7 @@ class NomisApiService(
     .bodyToMono(CreateVisitResponseDto::class.java)
     .onErrorResume(WebClientResponseException.Conflict::class.java) {
       val errorResponse = it.getResponseBodyAs(ErrorResponse::class.java) as ErrorResponse
-      throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo!!)
+      throw CreateVisitDuplicateResponse(nomisVisitId = errorResponse.moreInfo.toString())
     }
     .awaitSingle()
 
@@ -358,11 +358,11 @@ class NomisApiService(
     .awaitSingle()
 
   suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
-    .getAllPrisonersInRange1(fromRootOffenderId, toRootOffenderId)
+    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId)
     .awaitSingle()
 
   suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
-    .getAllPrisonersIdRanges1(pageSize.toInt())
+    .getAllPrisonersIdRanges(pageSize.toInt())
     .awaitSingle()
 
   suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = webClient.get()

@@ -25,7 +25,7 @@ class IncidentsNomisApiService(
 
   suspend fun deleteIncident(nomisId: Long) {
     nomisIncidentsApi
-      .deleteIncident(nomisId)
+      .deleteIncidentByIncidentId(nomisId)
       .awaitSingle()
   }
 

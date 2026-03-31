@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-24.617.1720ed6"
+    "version" : "2026-03-25.621.399e17f"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1369,6 +1369,66 @@
         }
       }
     },
+    "/official-visit/prison/{prisonCode}/overlapping" : {
+      "post" : {
+        "tags" : [ "Official visits" ],
+        "summary" : "Check for overlapping scheduled visits that fall within the given criteria.",
+        "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
+        "operationId" : "cancel",
+        "parameters" : [ {
+          "name" : "prisonCode",
+          "in" : "path",
+          "description" : "The prison code",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          },
+          "example" : "MDI"
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/OverlappingVisitsCriteriaRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Details of the prisoner and contacts that have overlapping scheduled visits if there are any.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/OverlappingVisitsResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/official-visit/prison/{prisonCode}/id/{officialVisitId}/complete" : {
       "post" : {
         "tags" : [ "Official visits" ],
@@ -1447,7 +1507,7 @@
         "tags" : [ "Official visits" ],
         "summary" : "Cancels an official visit.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
-        "operationId" : "cancel",
+        "operationId" : "cancel_1",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -4363,6 +4423,94 @@
           }
         },
         "required" : [ "first", "second" ]
+      },
+      "OverlappingVisitsCriteriaRequest" : {
+        "type" : "object",
+        "description" : "The request with the overlapping criteria to check against",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMIS ID) to check for overlapping",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date on which to check for overlapping",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time on which to check for overlapping",
+            "example" : "10:00"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time on which to check for overlapping",
+            "example" : "11:00"
+          },
+          "contactIds" : {
+            "type" : "array",
+            "description" : "One or more unique identifier for the prisoner contacts",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            },
+            "minItems" : 1
+          },
+          "existingOfficialVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier of the official visit to exclude from the check. Would be provided for an amend check, otherwise null"
+          }
+        },
+        "required" : [ "contactIds", "endTime", "prisonerNumber", "startTime", "visitDate" ]
+      },
+      "OverlappingContact" : {
+        "type" : "object",
+        "properties" : {
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the prisoner contact from the initial criteria request"
+          },
+          "overlappingContactVisits" : {
+            "type" : "array",
+            "description" : "The unique identifiers of any scheduled official visits that overlap with the contact, empty if there are none",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          }
+        },
+        "required" : [ "contactId", "overlappingContactVisits" ]
+      },
+      "OverlappingVisitsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number from the initial criteria request"
+          },
+          "overlappingPrisonerVisits" : {
+            "type" : "array",
+            "description" : "The unique identifiers of any scheduled official visits that overlap with the prisoner, empty if there are none",
+            "items" : {
+              "type" : "integer",
+              "format" : "int64"
+            }
+          },
+          "contacts" : {
+            "type" : "array",
+            "description" : "The contacts from the initial request criteria, with any overlapping visits if there are any",
+            "items" : {
+              "$ref" : "#/components/schemas/OverlappingContact"
+            }
+          }
+        },
+        "required" : [ "contacts", "overlappingPrisonerVisits", "prisonerNumber" ]
       },
       "OfficialVisitCompletionRequest" : {
         "type" : "object",

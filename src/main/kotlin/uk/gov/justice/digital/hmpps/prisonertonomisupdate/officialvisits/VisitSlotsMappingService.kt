@@ -57,5 +57,5 @@ class VisitSlotsMappingService(
     api.deleteVisitSlotMappingByNomisId(nomisId = nomisVisitSlotId).awaitSingle()
   }
 
-  suspend fun getInternalLocationByDpsId(dpsLocationId: String): LocationMappingDto = locationApi.getMappingGivenDpsId1(dpsLocationId = dpsLocationId).awaitSingle()
+  suspend fun getInternalLocationByDpsId(dpsLocationId: String): LocationMappingDto = locationApi.getLocationMappingGivenDpsId(dpsLocationId = dpsLocationId).awaitSingle()
 }

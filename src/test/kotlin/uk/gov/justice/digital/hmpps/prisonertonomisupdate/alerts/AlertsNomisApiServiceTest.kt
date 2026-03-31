@@ -14,11 +14,13 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertType
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertCode
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateAlertType
@@ -70,10 +72,25 @@ class AlertsNomisApiServiceTest {
         ),
       )
 
-      val nomisAlert = apiService.createAlert(offenderNo = "A1234KT", nomisAlert = createAlertRequest())
+      val nomisAlert = apiService.createAlert(offenderNo = "A1234KT", nomisAlert = createAlertRequest()).successResponse!!
 
       assertThat(nomisAlert.bookingId).isEqualTo(1234567)
       assertThat(nomisAlert.alertSequence).isEqualTo(3)
+    }
+
+    @Test
+    fun `will return existing NOMIS alert id`() = runTest {
+      alertsNomisApiMockServer.stubPostAlert(
+        offenderNo = "A1234KT",
+        errorResponse = DuplicateAlertErrorResponse(
+          moreInfo = AlertId(bookingId = 1234567, sequence = 3),
+        ),
+      )
+
+      val nomisDuplicateAlert = apiService.createAlert(offenderNo = "A1234KT", nomisAlert = createAlertRequest()).duplicateResponse!!
+
+      assertThat(nomisDuplicateAlert.moreInfo.bookingId).isEqualTo(1234567)
+      assertThat(nomisDuplicateAlert.moreInfo.sequence).isEqualTo(3)
     }
 
     private fun createAlertRequest(): CreateAlertRequest = CreateAlertRequest(

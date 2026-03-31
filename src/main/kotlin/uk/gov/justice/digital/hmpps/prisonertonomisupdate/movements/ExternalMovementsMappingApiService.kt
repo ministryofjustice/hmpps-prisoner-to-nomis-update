@@ -54,6 +54,6 @@ class ExternalMovementsMappingApiService(
     .awaitBodyOrNullForNotFound()
 
   suspend fun getTapMappingIds(offenderNo: String): TemporaryAbsencesPrisonerMappingIdsDto = mappingApi
-    .getMappings1(offenderNo)
+    .getTemporaryAbsenceMappings(offenderNo)
     .awaitSingle()
 }

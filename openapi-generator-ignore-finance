@@ -10,4 +10,3 @@
 **/src/test/
 **/api/*
 !**/NOMISSyncApi.kt
-!**/PrisonerTrustAccountsApi.kt

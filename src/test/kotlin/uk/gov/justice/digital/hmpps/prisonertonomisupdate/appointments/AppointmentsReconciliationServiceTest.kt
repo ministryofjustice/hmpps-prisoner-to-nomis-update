@@ -62,6 +62,7 @@ class AppointmentsReconciliationServiceTest {
           appointmentsRolledOut = true,
           maxDaysToExpiry = 45,
           prisonLive = true,
+          externalActivitiesRolledOut = true,
         ),
         RolloutPrisonPlan(
           prisonCode = "SWI",
@@ -69,6 +70,7 @@ class AppointmentsReconciliationServiceTest {
           appointmentsRolledOut = false,
           maxDaysToExpiry = 45,
           prisonLive = true,
+          externalActivitiesRolledOut = true,
         ),
       ),
     )

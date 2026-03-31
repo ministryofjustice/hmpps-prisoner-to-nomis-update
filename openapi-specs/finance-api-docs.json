@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-23.679.f7407c1"
+    "version" : "2026-03-27.698.3352695"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -848,430 +848,6 @@
         }
       }
     },
-    "/prisons/{prisonId}/reports/summary-of-payments-and-receipts" : {
-      "get" : {
-        "tags" : [ "Prison reports" ],
-        "summary" : "Get a summary of payments and receipts for a specific prison",
-        "operationId" : "getSummaryOfAccount",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "date",
-          "in" : "query",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SummaryOfPaymentAndReceiptsReport"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prison not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisons/{prisonId}/accounts" : {
-      "get" : {
-        "tags" : [ "Prison accounts" ],
-        "summary" : "Get a list of all accounts for a specific prison",
-        "operationId" : "listPrisonAccounts",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "^[A-Za-z0-9]{3}$"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonAccountDetailsList"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisons/{prisonId}/accounts/{accountCode}" : {
-      "get" : {
-        "tags" : [ "Prison accounts" ],
-        "summary" : "Get the details of a specific prison account",
-        "operationId" : "getPrisonAccountDetails",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "^[A-Za-z0-9]{3}$"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonAccountDetails"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prison account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisons/{prisonId}/accounts/{accountCode}/transactions" : {
-      "get" : {
-        "tags" : [ "Prison accounts" ],
-        "summary" : "Get list of transactions for a specific account for a specific prison",
-        "operationId" : "getPrisonAccountTransactions",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "^[A-Za-z0-9]{3}$"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "date",
-          "in" : "query",
-          "description" : "Optional filter by a specific business day",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "example" : "2023-01-25"
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TransactionDetailsList"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prison account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisons/{prisonId}/accounts/{accountCode}/transactions/{transactionId}" : {
-      "get" : {
-        "tags" : [ "Prison accounts" ],
-        "summary" : "Get a transaction for a specific account for a specific prison",
-        "operationId" : "getPrisonAccountTransaction",
-        "parameters" : [ {
-          "name" : "prisonId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "pattern" : "^[A-Za-z0-9]{3}$"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "transactionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TransactionDetailsList"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prison account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisoners/{prisonNumber}/accounts" : {
-      "get" : {
-        "tags" : [ "Prisoner trust accounts" ],
-        "summary" : "Get a list of all subaccounts for a specific prisoner",
-        "operationId" : "listPrisonerAccounts",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerSubAccountDetailsList"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisoners/{prisonNumber}/accounts/{accountCode}" : {
-      "get" : {
-        "tags" : [ "Prisoner trust accounts" ],
-        "summary" : "Get the details of a specific account for a prisoner",
-        "operationId" : "getPrisonerSubAccountDetails",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/PrisonerSubAccountDetails"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisoners/{prisonNumber}/accounts/{accountCode}/transactions" : {
-      "get" : {
-        "tags" : [ "Prisoner trust accounts" ],
-        "summary" : "Get list of transactions for a specific sub account for a specific prisoner",
-        "operationId" : "getPrisonerAccountTransactions",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TransactionDetailsList"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
-    "/prisoners/{prisonNumber}/accounts/{accountCode}/transactions/{transactionId}" : {
-      "get" : {
-        "tags" : [ "Prisoner trust accounts" ],
-        "summary" : "Get a transaction for a specific sub account for a specific prisoner",
-        "operationId" : "getPrisonerAccountTransaction",
-        "parameters" : [ {
-          "name" : "prisonNumber",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "accountCode",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }, {
-          "name" : "transactionId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/TransactionDetailsList"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Prisoner account not found",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
-        } ]
-      }
-    },
     "/audit/history" : {
       "get" : {
         "tags" : [ "Audit" ],
@@ -1523,7 +1099,7 @@
             "type" : "number",
             "format" : "decimal",
             "description" : "The monetary amount of the general ledger entry.",
-            "example" : 162.0
+            "example" : "162.00"
           }
         },
         "required" : [ "amount", "code", "entrySequence", "postingType" ]
@@ -1581,7 +1157,7 @@
           "amount" : {
             "type" : "number",
             "description" : "The monetary amount of the transaction entry.",
-            "example" : 162.0
+            "example" : "162.00"
           },
           "reference" : {
             "type" : "string",
@@ -1591,7 +1167,7 @@
             "type" : "array",
             "format" : "decimal",
             "description" : "A list of general ledger entries associated with this offender transaction.",
-            "example" : 162.0,
+            "example" : "162.00",
             "items" : {
               "$ref" : "#/components/schemas/GeneralLedgerEntry"
             }
@@ -1835,13 +1411,13 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance at the specified time.",
-            "example" : 123.45
+            "example" : "123.45"
           },
           "holdBalance" : {
             "type" : "number",
             "format" : "decimal",
             "description" : "The amount on hold for the sub-account.",
-            "example" : 10.0
+            "example" : "10.00"
           },
           "transactionId" : {
             "type" : "integer",
@@ -1899,7 +1475,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance at the specified time.",
-            "example" : 123.45
+            "example" : "123.45"
           },
           "asOfTimestamp" : {
             "type" : "string",
@@ -2164,13 +1740,13 @@
           "totalBalance" : {
             "type" : "number",
             "description" : "The current monetary balance of the sub account at this establishment. This value can be positive or negative.",
-            "example" : 32.0
+            "example" : "32.00"
           },
           "holdBalance" : {
             "type" : "number",
             "format" : "decimal",
             "description" : "The total amount on hold for this sub account at this establishment.",
-            "example" : 8.0
+            "example" : "8.00"
           }
         },
         "required" : [ "accountCode", "holdBalance", "prisonId", "totalBalance" ]
@@ -2201,7 +1777,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The current monetary balance of the prison general ledger account. This value can be positive or negative.",
-            "example" : 1234.56
+            "example" : "1234.56"
           }
         },
         "required" : [ "accountCode", "balance" ]
@@ -2252,251 +1828,6 @@
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
       },
-      "PostingReportEntry" : {
-        "type" : "object",
-        "properties" : {
-          "date" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "businessDate" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "transactionUsage" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "private" : {
-            "type" : "number"
-          },
-          "spending" : {
-            "type" : "number"
-          },
-          "saving" : {
-            "type" : "number"
-          },
-          "credits" : {
-            "type" : "number"
-          },
-          "debits" : {
-            "type" : "number"
-          },
-          "total" : {
-            "type" : "number"
-          }
-        },
-        "required" : [ "businessDate", "credits", "date", "debits", "description", "private", "saving", "spending", "total", "type" ]
-      },
-      "SummaryOfPaymentAndReceiptsReport" : {
-        "type" : "object",
-        "properties" : {
-          "postings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PostingReportEntry"
-            }
-          }
-        },
-        "required" : [ "postings" ]
-      },
-      "PrisonAccountDetails" : {
-        "type" : "object",
-        "description" : "Summary of a prison general ledger account",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The unique numeric code identifying the prison general ledger account.",
-            "example" : 1000
-          },
-          "name" : {
-            "type" : "string",
-            "description" : "The human-readable name of the prison general ledger account (e.g., 'Cash', 'Bank Account', 'Accounts Payable').",
-            "example" : "Cash"
-          },
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prison id that owns this general ledger account.",
-            "example" : "LEI"
-          },
-          "classification" : {
-            "type" : "string",
-            "description" : "The classification of the prison general ledger account. Values include 'Asset', 'Liability', 'Receipt', and 'Disbursement'.",
-            "enum" : [ "Asset", "Liability", "Receipt", "Disbursement" ],
-            "example" : "Asset"
-          },
-          "postingType" : {
-            "type" : "string",
-            "description" : "The natural transaction posting type for this prison general ledger account. 'DR' indicates a Debit posting, while 'CR' indicates a Credit posting.",
-            "enum" : [ "DR", "CR" ],
-            "example" : "DR"
-          },
-          "balance" : {
-            "type" : "number",
-            "description" : "The current monetary balance of the prison general ledger account. This value can be positive or negative.",
-            "example" : 1234.56
-          }
-        },
-        "required" : [ "balance", "classification", "code", "name", "postingType", "prisonId" ]
-      },
-      "PrisonAccountDetailsList" : {
-        "type" : "object",
-        "description" : "A list of accounts for a specific prison",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonAccountDetails"
-            }
-          }
-        },
-        "required" : [ "items" ]
-      },
-      "TransactionAccountDetails" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "transactionType" : {
-            "type" : "string"
-          },
-          "transactionDescription" : {
-            "type" : "string"
-          },
-          "prison" : {
-            "type" : "string"
-          },
-          "prisoner" : {
-            "type" : "string"
-          },
-          "classification" : {
-            "type" : "string"
-          },
-          "postingType" : {
-            "type" : "string",
-            "enum" : [ "DR", "CR" ]
-          }
-        },
-        "required" : [ "classification", "code", "name", "postingType" ]
-      },
-      "TransactionDetails" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "date" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "reference" : {
-            "type" : "string"
-          },
-          "clientRequestId" : {
-            "type" : "string"
-          },
-          "postings" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/TransactionPosting"
-            }
-          }
-        },
-        "required" : [ "date", "id", "postings", "type" ]
-      },
-      "TransactionDetailsList" : {
-        "type" : "object",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/TransactionDetails"
-            }
-          }
-        },
-        "required" : [ "items" ]
-      },
-      "TransactionPosting" : {
-        "type" : "object",
-        "properties" : {
-          "account" : {
-            "$ref" : "#/components/schemas/TransactionAccountDetails"
-          },
-          "address" : {
-            "type" : "string"
-          },
-          "postingType" : {
-            "type" : "string",
-            "enum" : [ "DR", "CR" ]
-          },
-          "amount" : {
-            "type" : "number"
-          }
-        },
-        "required" : [ "amount", "postingType" ]
-      },
-      "PrisonerSubAccountDetails" : {
-        "type" : "object",
-        "description" : "Summary of a prisoner sub account",
-        "properties" : {
-          "code" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The unique numeric code identifying the sub account.",
-            "example" : 1000
-          },
-          "name" : {
-            "type" : "string",
-            "description" : "The human-readable name of the sub account (e.g., 'Private Cash', 'Savings', 'Spends').",
-            "example" : "Savings"
-          },
-          "prisonNumber" : {
-            "type" : "string",
-            "description" : "Prison number of the prisoner. Also referred to as the offender number, offender id or NOMS id",
-            "example" : "Z9090ZZ"
-          },
-          "balance" : {
-            "type" : "number",
-            "description" : "The current monetary balance of the sub account. This value can be positive or negative.",
-            "example" : 1234.56
-          },
-          "holdBalance" : {
-            "type" : "number",
-            "description" : "The total amount on hold for this sub account",
-            "example" : 10.0
-          }
-        },
-        "required" : [ "balance", "code", "holdBalance", "name", "prisonNumber" ]
-      },
-      "PrisonerSubAccountDetailsList" : {
-        "type" : "object",
-        "description" : "A list of prisoner sub-accounts (e.g., Cash, Spends, Savings)",
-        "properties" : {
-          "items" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonerSubAccountDetails"
-            }
-          }
-        },
-        "required" : [ "items" ]
-      },
       "CursorPageNomisSyncPayloadSummary" : {
         "type" : "object",
         "properties" : {
@@ -2534,13 +1865,6 @@
           "caseloadId" : {
             "type" : "string"
           },
-          "requestId" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "transactionType" : {
-            "type" : "string"
-          },
           "transactionTimestamp" : {
             "type" : "string",
             "format" : "date-time"
@@ -2555,6 +1879,13 @@
           "legacyTransactionId" : {
             "type" : "integer",
             "format" : "int64"
+          },
+          "requestId" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "transactionType" : {
+            "type" : "string"
           }
         },
         "required" : [ "id", "requestId", "synchronizedTransactionId", "timestamp" ]

@@ -45,7 +45,7 @@ class CorePersonCprApiServiceTest {
       apiService.getCorePerson("A1234BC")
 
       corePersonCprApi.verify(
-        getRequestedFor(urlPathEqualTo("/person/prison/A1234BC")),
+        getRequestedFor(urlPathEqualTo("/person/prison/dps/A1234BC")),
       )
     }
   }
