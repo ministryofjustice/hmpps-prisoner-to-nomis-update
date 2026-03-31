@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/create-github-app-token@v2
+      - uses: actions/create-github-app-token@f8d387b68d61c58ab83c6c016672934102569859 # v3.0.0
         id: generate-token
         with:
           repositories: ${{ github.event.repository.name }}
@@ -23,13 +23,13 @@ jobs:
           app-id: ${{ secrets.APP_ID }}
           private-key: ${{ secrets.APP_PRIVATE_KEY }}
 
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
         with:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Combine PRs
         id: combine-prs
-        uses: github/combine-prs@v5.2.0
+        uses: github/combine-prs@2909f404763c3177a456e052bdb7f2e85d3a7cb3 # v5.2.0
         with:
           branch_prefix: api-docs-
           pr_title: Combined update of api docs
@@ -44,7 +44,7 @@ jobs:
 
       - name: Slack message to review failing PRs
         if: ${{ steps.check-prs.outputs.failure_count != '0' }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         env:
           SLACK_BOT_TOKEN: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
         with:
@@ -72,7 +72,7 @@ jobs:
 
       - name: Slack message to review combined PR
         if: steps.check-prs.outputs.combined_pr
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         env:
           SLACK_BOT_TOKEN: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
         with:
@@ -98,7 +98,7 @@ jobs:
 
       - name: Slack message to review PRs
         if: ${{ steps.check-prs.outputs.failure_count != steps.check-prs.outputs.pr_count && steps.check-prs.outputs.combined_pr == '' }}
-        uses: slackapi/slack-github-action@485a9d42d3a73031f12ec201c457e2162c45d02d # v2.0.0
+        uses: slackapi/slack-github-action@af78098f536edbc4de71162a307590698245be95 # v3.0.1
         with:
           method: chat.postMessage
           token: ${{ secrets.HMPPS_SRE_SLACK_BOT_TOKEN }}
