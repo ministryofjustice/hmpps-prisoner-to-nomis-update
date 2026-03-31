@@ -13,7 +13,7 @@ import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateAlertResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateErrorResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAlertsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
@@ -37,7 +37,7 @@ class AlertsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   }
   fun stubPostAlert(
     offenderNo: String = "A1234AK",
-    errorResponse: DuplicateErrorResponse,
+    errorResponse: DuplicateAlertErrorResponse,
   ) {
     nomisApi.stubFor(
       post(urlEqualTo("/prisoners/$offenderNo/alerts")).willReturn(
