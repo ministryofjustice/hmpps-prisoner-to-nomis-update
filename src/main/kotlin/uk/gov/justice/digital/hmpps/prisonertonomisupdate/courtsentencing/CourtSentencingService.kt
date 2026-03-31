@@ -446,26 +446,18 @@ class CourtSentencingService(
     val offenderNo: String = eventOffenderNo(createEvent.personReference)
     val telemetryMap = createEvent.asTelemetry()
     if (isDpsCreated(source)) {
-      runCatching {
-        val courtCaseMapping =
-          courtCaseMappingService.getMappingGivenCourtCaseId(courtCaseId).also {
-            telemetryMap["nomisCourtCaseId"] = it.nomisCourtCaseId.toString()
-          }
+      track("charge-updated", telemetryMap) {
+        courtSentencingApiService.getCourtChargeByAppearanceOrNull(appearanceId = courtAppearanceId, chargeId = chargeId)
+          ?.let { dpsCharge ->
 
-        val appearanceMapping =
-          courtCaseMappingService.getMappingGivenCourtAppearanceId(courtAppearanceId)
-            .also {
-              telemetryMap["nomisCourtAppearanceId"] = it.nomisCourtAppearanceId.toString()
-            }
+            val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
+            telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
 
-        val chargeMapping =
-          courtCaseMappingService.getMappingGivenCourtChargeId(chargeId)
-            .also {
-              telemetryMap["nomisChargeId"] = it.nomisCourtChargeId.toString()
-            }
+            val appearanceMapping = retrieveParentAppearanceMapping(courtAppearanceId)
+            telemetryMap["nomisCourtAppearanceId"] = appearanceMapping.nomisCourtAppearanceId.toString()
 
-        courtSentencingApiService.getCourtChargeByAppearance(appearanceId = courtAppearanceId, chargeId = chargeId)
-          .let { dpsCharge ->
+            val chargeMapping = retrieveParentChargeMapping(chargeId)
+            telemetryMap["nomisChargeId"] = chargeMapping.nomisCourtChargeId.toString()
 
             val nomisCourtCharge = dpsCharge.toNomisCourtCharge()
             telemetryMap["nomisOutcomeCode"] = nomisCourtCharge.resultCode1 ?: "null"
@@ -476,16 +468,11 @@ class CourtSentencingService(
               chargeId = chargeMapping.nomisCourtChargeId,
               nomisCourtAppearanceId = appearanceMapping.nomisCourtAppearanceId,
               request = nomisCourtCharge,
-            ).also {
-              telemetryClient.trackEvent(
-                "charge-updated-success",
-                telemetryMap,
-              )
-            }
-          }
-      }.onFailure { e ->
-        telemetryClient.trackEvent("charge-updated-failed", telemetryMap, null)
-        throw e
+            )
+          } ?: run {
+          telemetryMap["reason"] = "Charge with id $chargeId and court appearance id $courtAppearanceId does not exist in RaS"
+          telemetryClient.trackEvent("charge-updated-ignored", telemetryMap, null)
+        }
       }
     } else {
       telemetryMap["reason"] = "Charge updated in NOMIS"
@@ -1039,7 +1026,10 @@ class CourtSentencingService(
           val chargeMapping = retrieveParentChargeMapping(dpsSentence.chargeLifetimeUuid.toString())
           val consecutiveSentenceSeq = dpsSentence.consecutiveToLifetimeUuid?.let { consecutiveSentenceId ->
             telemetryMap["dpsConsecutiveSentenceId"] = consecutiveSentenceId.toString()
-            retrieveParentSentenceMapping(consecutiveSentenceId.toString(), "Missing DPS consecutive sentence id: $consecutiveSentenceId").nomisSentenceSequence.toLong()
+            retrieveParentSentenceMapping(
+              consecutiveSentenceId.toString(),
+              "Missing DPS consecutive sentence id:",
+            ).nomisSentenceSequence.toLong()
           }
           nomisApiService.updateSentence(
             offenderNo = offenderNo,
@@ -1051,10 +1041,10 @@ class CourtSentencingService(
               nomisEventId = appearanceMapping.nomisCourtAppearanceId,
             ),
           )
+        } ?: run {
+          telemetryMap["reason"] = "DPS sentence $sentenceId does not exist in RaS"
+          telemetryClient.trackEvent("sentence-updated-ignored", telemetryMap, null)
         }
-      } ?: run {
-        telemetryMap["reason"] = "DPS sentence $sentenceId does not exist in RaS"
-        telemetryClient.trackEvent("sentence-updated-ignored", telemetryMap, null)
       }
     } else {
       telemetryMap["reason"] = "Sentence updated in NOMIS"
@@ -1352,30 +1342,25 @@ class CourtSentencingService(
 
     if (isDpsCreated(source)) {
       track("sentence-term-updated", telemetryMap) {
-        val courtCaseMapping =
-          courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(courtCaseId) ?: let {
-            throw AwaitParentEntityRetry(
-              "Missing Dps case id: $courtCaseId",
-            )
-          }
-        telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
-        val sentenceTermMapping =
-          courtCaseMappingService.getMappingGivenSentenceTermId(termId)
-            .also {
-              telemetryMap["nomisSentenceSeq"] = it.nomisSentenceSequence.toString()
-              telemetryMap["nomisTermSeq"] = it.nomisTermSequence.toString()
-              telemetryMap["nomisBookingId"] = it.nomisBookingId.toString()
-            }
+        courtSentencingApiService.getPeriodLengthOrNull(termId)?.let { dpsPeriodLength ->
+          val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
+          telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
+          val sentenceTermMapping = retrieveParentSentenceTermMapping(termId)
+          telemetryMap["nomisSentenceSeq"] = sentenceTermMapping.nomisSentenceSequence.toString()
+          telemetryMap["nomisTermSeq"] = sentenceTermMapping.nomisTermSequence.toString()
+          telemetryMap["nomisBookingId"] = sentenceTermMapping.nomisBookingId.toString()
 
-        val dpsPeriodLength = courtSentencingApiService.getPeriodLength(termId)
-
-        nomisApiService.updateSentenceTerm(
-          offenderNo = offenderNo,
-          caseId = courtCaseMapping.nomisCourtCaseId,
-          sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
-          termSeq = sentenceTermMapping.nomisTermSequence,
-          request = dpsPeriodLength.toNomisSentenceTerm(),
-        )
+          nomisApiService.updateSentenceTerm(
+            offenderNo = offenderNo,
+            caseId = courtCaseMapping.nomisCourtCaseId,
+            sentenceSeq = sentenceTermMapping.nomisSentenceSequence,
+            termSeq = sentenceTermMapping.nomisTermSequence,
+            request = dpsPeriodLength.toNomisSentenceTerm(),
+          )
+        } ?: run {
+          telemetryMap["reason"] = "DPS sentence term $termId does not exist in RaS"
+          telemetryClient.trackEvent("sentence-term-updated-ignored", telemetryMap, null)
+        }
       }
     } else {
       telemetryMap["reason"] = "Sentence term updated in NOMIS"
@@ -1652,13 +1637,24 @@ class CourtSentencingService(
     }
   }
 
-  private suspend fun retrieveParentSentenceMapping(dpsSentenceId: String, awaitParantLogText: String = "Missing Dps sentence id:"): SentenceMappingDto {
+  private suspend fun retrieveParentSentenceMapping(dpsSentenceId: String, awaitParentLogText: String = "Missing Dps sentence id:"): SentenceMappingDto {
     val mapping = courtCaseMappingService.getMappingGivenSentenceIdOrNull(dpsSentenceId)
     return if (mapping != null) {
       mapping
     } else {
       throw AwaitParentEntityRetry(
-        "$awaitParantLogText $dpsSentenceId",
+        "$awaitParentLogText $dpsSentenceId",
+      )
+    }
+  }
+
+  private suspend fun retrieveParentSentenceTermMapping(dpsPeriodLengthId: String): SentenceTermMappingDto {
+    val mapping = courtCaseMappingService.getMappingGivenSentenceTermIdOrNull(dpsPeriodLengthId)
+    return if (mapping != null) {
+      mapping
+    } else {
+      throw AwaitParentEntityRetry(
+        "Missing Dps period length id: $dpsPeriodLengthId",
       )
     }
   }
@@ -1989,12 +1985,3 @@ fun CourtSentencingService.RecallEvent.asTelemetry() = mutableMapOf(
 )
 
 fun eventOffenderNo(personRef: PersonReferenceList) = personRef.identifiers.first { it.type == "NOMS" }.value
-
-sealed interface DpsCourtAppearanceResult
-data class CourtAppearance(val appearance: LegacyCourtAppearance, val mapping: CourtAppearanceMappingDto) : DpsCourtAppearanceResult
-class NoCourtAppearanceEntityOrMapping : DpsCourtAppearanceResult
-class NoCourtAppearance : DpsCourtAppearanceResult
-
-sealed interface DpsCaseMappingResult
-data class CaseMapping(val mapping: CourtCaseMappingDto) : DpsCaseMappingResult
-class NoMapping : DpsCaseMappingResult

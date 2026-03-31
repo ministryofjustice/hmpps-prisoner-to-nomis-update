@@ -59,6 +59,11 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .retrieve()
     .awaitBody()
 
+  suspend fun getCourtChargeByAppearanceOrNull(appearanceId: String, chargeId: String): LegacyCharge? = courtSentencingApiWebClient.get()
+    .uri("/legacy/court-appearance/{appearanceId}/charge/{chargeId}", appearanceId, chargeId)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
+
   suspend fun getSentence(id: String): LegacySentence = courtSentencingApiWebClient.get()
     .uri("/legacy/sentence/{id}", id)
     .retrieve()
@@ -73,6 +78,11 @@ class CourtSentencingApiService(private val courtSentencingApiWebClient: WebClie
     .uri("/legacy/period-length/{id}", id)
     .retrieve()
     .awaitBody()
+
+  suspend fun getPeriodLengthOrNull(id: String): LegacyPeriodLength? = courtSentencingApiWebClient.get()
+    .uri("/legacy/period-length/{id}", id)
+    .retrieve()
+    .awaitBodyOrNullForNotFound()
 
   suspend fun getRecall(id: String): LegacyRecall = courtSentencingApiWebClient.get()
     .uri("/legacy/recall/{id}", id)

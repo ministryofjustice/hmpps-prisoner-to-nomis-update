@@ -1203,7 +1203,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
-    inner class WhenMappingAndAppearanceDoNotExist {
+    inner class WhenAppearanceDoesNotExist {
 
       @BeforeEach
       fun setUp() {
@@ -1220,7 +1220,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update an court appearance in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(1)).trackEvent(
-            eq("court-appearance-updated-error"),
+            eq("court-appearance-updated-ignored"),
             check {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -1268,42 +1268,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["reason"]).isEqualTo("Missing Dps Appearance id: $DPS_COURT_APPEARANCE_ID")
-            },
-            isNull(),
-          )
-        }
-
-        courtSentencingNomisApi.verify(
-          0,
-          putRequestedFor(WireMock.anyUrl()),
-        )
-      }
-    }
-
-    @Nested
-    inner class WhenMappingExistsButAppearanceDoesNotExist {
-
-      @BeforeEach
-      fun setUp() {
-        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
-        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(
-          DPS_COURT_APPEARANCE_ID,
-          404,
-        )
-        courtSentencingApi.stubCourtAppearanceGetError(DPS_COURT_APPEARANCE_ID)
-        publishUpdateCourtAppearanceDomainEvent()
-      }
-
-      @Test
-      fun `will not update an court appearance in NOMIS`() {
-        await untilAsserted {
-          verify(telemetryClient, times(1)).trackEvent(
-            eq("court-appearance-updated-ignored"),
-            check {
-              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
-              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
-              assertThat(it["reason"]).isEqualTo("DPS court appearance $DPS_COURT_APPEARANCE_ID does not exist in RaS")
+              assertThat(it["reason"]).isEqualTo("Missing Dps appearance id: $DPS_COURT_APPEARANCE_ID")
             },
             isNull(),
           )
@@ -1826,8 +1791,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
-        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID)
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          courtChargeId = DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID, NOMIS_COURT_APPEARANCE_ID)
         courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsIdWithError(
           DPS_COURT_CHARGE_ID,
           404,
@@ -1836,9 +1807,90 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Test
-      fun `will not update an court case in NOMIS`() {
-        // 1 telemetry for move to DLQ
+      fun `will not update an court charge in NOMIS`() {
         waitForAnyProcessingToComplete(4)
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("charge-updated-awaiting-parent"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["reason"]).isEqualTo("Missing Dps charge id: $DPS_COURT_CHARGE_ID")
+          },
+          isNull(),
+        )
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtAppearanceMappingDoesNotExist {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetCourtChargeByAppearance(
+          courtChargeId = DPS_COURT_CHARGE_ID,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION, nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsIdWithError(DPS_COURT_APPEARANCE_ID, 404)
+        publishUpdatedCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court charge in NOMIS`() {
+        waitForAnyProcessingToComplete(4)
+        verify(telemetryClient, times(3)).trackEvent(
+          eq("charge-updated-awaiting-parent"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["reason"]).isEqualTo("Missing Dps appearance id: $DPS_COURT_APPEARANCE_ID")
+          },
+          isNull(),
+        )
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenCourtChargeEntityDoesNotExist {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetCourtChargeByAppearanceGetError(
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtChargeId = DPS_COURT_CHARGE_ID,
+        )
+        publishUpdatedCourtChargeDomainEvent()
+      }
+
+      @Test
+      fun `will not update an court charge in NOMIS`() {
+        waitForAnyProcessingToComplete(2)
+        verify(telemetryClient).trackEvent(
+          eq("charge-updated-ignored"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsChargeId"]).isEqualTo(DPS_COURT_CHARGE_ID)
+            assertThat(it["reason"]).isEqualTo("Charge with id $DPS_COURT_CHARGE_ID and court appearance id $DPS_COURT_APPEARANCE_ID does not exist in RaS")
+          },
+          isNull(),
+        )
 
         courtSentencingNomisApi.verify(
           0,
@@ -2654,6 +2706,12 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
           DPS_SENTENCE_ID,
           404,
         )
+        courtSentencingApi.stubGetSentence(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseID = COURT_CASE_ID_FOR_CREATION,
+          chargeUuid = DPS_COURT_CHARGE_ID,
+        )
         publishUpdateSentenceDomainEvent()
       }
 
@@ -2661,8 +2719,46 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update a sentence in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("sentence-updated-error"),
+            eq("sentence-updated-awaiting-parent"),
             check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenEntityDoesntExistForSentence {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(DPS_COURT_APPEARANCE_ID)
+        courtSentencingMappingApi.stubGetSentenceMappingGivenDpsIdWithError(
+          DPS_SENTENCE_ID,
+          404,
+        )
+        courtSentencingApi.stubGetSentenceGetError(sentenceId = DPS_SENTENCE_ID)
+        publishUpdateSentenceDomainEvent()
+      }
+
+      @Test
+      fun `will not update a sentence in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("sentence-updated-ignored"),
+            check {
+              assertThat(it["reason"]).isEqualTo("DPS sentence $DPS_SENTENCE_ID does not exist in RaS")
               assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
@@ -2777,7 +2873,7 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
-              assertThat(it["reason"]).isEqualTo("Missing consecutive sentence id: $DPS_SENTENCE_ID_2")
+              assertThat(it["reason"]).isEqualTo("Missing DPS consecutive sentence id: $DPS_SENTENCE_ID_2")
             },
             isNull(),
           )
@@ -3279,6 +3375,14 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       @BeforeEach
       fun setUp() {
         courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(COURT_CASE_ID_FOR_CREATION)
+        courtSentencingApi.stubGetPeriodLength(
+          sentenceId = DPS_SENTENCE_ID,
+          offenderNo = OFFENDER_NO,
+          caseId = COURT_CASE_ID_FOR_CREATION,
+          periodLengthId = DPS_TERM_ID,
+          chargeId = DPS_COURT_CHARGE_ID,
+          appearanceId = DPS_COURT_APPEARANCE_ID,
+        )
         courtSentencingMappingApi.stubGetSentenceTermMappingGivenDpsIdWithError(
           DPS_SENTENCE_ID,
           404,
@@ -3290,13 +3394,46 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
       fun `will not update a sentence term in NOMIS`() {
         await untilAsserted {
           verify(telemetryClient, times(3)).trackEvent(
-            eq("sentence-term-updated-error"),
+            eq("sentence-term-updated-awaiting-parent"),
             check {
               assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
               assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
               assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
               assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
               assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            },
+            isNull(),
+          )
+        }
+
+        courtSentencingNomisApi.verify(
+          0,
+          putRequestedFor(WireMock.anyUrl()),
+        )
+      }
+    }
+
+    @Nested
+    inner class WhenEntityDoesntExistForPeriodLength {
+
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubGetPeriodLengthGetError(DPS_TERM_ID)
+        publishUpdatePeriodLengthDomainEvent()
+      }
+
+      @Test
+      fun `will not update a sentence term in NOMIS`() {
+        await untilAsserted {
+          verify(telemetryClient, times(1)).trackEvent(
+            eq("sentence-term-updated-ignored"),
+            check {
+              assertThat(it["dpsSentenceId"]).isEqualTo(DPS_SENTENCE_ID)
+              assertThat(it["dpsTermId"]).isEqualTo(DPS_TERM_ID)
+              assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+              assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+              assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+              assertThat(it["reason"]).isEqualTo("DPS sentence term $DPS_TERM_ID does not exist in RaS")
             },
             isNull(),
           )
