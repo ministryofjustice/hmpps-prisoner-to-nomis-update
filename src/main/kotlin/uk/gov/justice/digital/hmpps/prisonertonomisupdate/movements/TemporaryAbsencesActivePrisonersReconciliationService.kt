@@ -17,6 +17,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.CANCELLED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.OVERDUE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
@@ -45,7 +47,12 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_ACTIVE_TAPS = "temporary-absences-active-reconciliation"
-    val ACCEPTABLE_OCCURRENCE_STATUSES = listOf("EXP" to ReconciliationOccurrence.StatusCode.CANCELLED)
+    val ACCEPTABLE_OCCURRENCE_STATUSES = listOf(
+      "COMP,null" to OVERDUE,
+      "COMP,EXP" to OVERDUE,
+      "COMP,SCH" to OVERDUE,
+      "EXP,null" to CANCELLED,
+    )
   }
 
   suspend fun generateTapActivePrisonersReconciliationReportBatch() {
@@ -368,7 +375,7 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
             // old booking not completed in NOMIS can be expired in DPS
             !latestBooking && nomisScheduleOut.eventStatus != "COMP" && dpsOccurrence.statusCode == ReconciliationOccurrence.StatusCode.EXPIRED -> {}
             // acceptable status combinations (due to slightly different business rules in NOMIS / DPS)
-            (nomisScheduleOut.eventStatus to dpsOccurrence.statusCode) in ACCEPTABLE_OCCURRENCE_STATUSES -> {}
+            ("${nomisScheduleOut.eventStatus},${nomisScheduleIn?.eventStatus}" to dpsOccurrence.statusCode) in ACCEPTABLE_OCCURRENCE_STATUSES -> {}
             // not excluded so we will publish the difference
             else -> mismatches.add(
               mismatch(MismatchedPrisonerTapDetails.Type.STATUS, "$nomisOutStatus,$nomisInStatus", dpsOccurrence.statusCode.value),

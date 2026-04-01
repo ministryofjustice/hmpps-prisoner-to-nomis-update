@@ -41,7 +41,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Reconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.COMPLETED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.EXPIRED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.IN_PROGRESS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.OVERDUE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.SCHEDULED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
@@ -469,8 +471,10 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     private val applicationId = 1111L
     private val scheduleOutId = 2222L
     private val scheduleInId = 3333L
+    private val movementOutSeq = 1
     private val authorisationId = UUID.randomUUID()
     private val occurrenceId = UUID.randomUUID()
+    private val movementId = UUID.randomUUID()
     private val defaultStartTime = LocalDateTime.now().plusDays(1)
     private val defaultEndTime = LocalDateTime.now().plusDays(2)
 
@@ -857,6 +861,136 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           isNull(),
         )
       }
+
+      @Test
+      fun `should report status where DPS OVERDUE but NOMIS is COMP,COMP`() = runTest {
+        val startTime = LocalDateTime.now().minusDays(1)
+        val endTime = LocalDateTime.now().minusHours(1)
+        stubNomisTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = "COMP",
+          scheduleIn = true,
+          scheduleInStatus = "COMP",
+          movementOut = true,
+        )
+        stubDpsTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = OVERDUE,
+          movementOut = true,
+        )
+        stubMappingTaps(movementOut = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // mismatch because NOMIS schedule completed but DPS think it's overdue
+        verify(telemetryClient).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          eq(
+            mapOf(
+              "offenderNo" to "A0001TZ",
+              "nomisEventId" to "$scheduleOutId",
+              "dpsOccurrenceId" to "$occurrenceId",
+              "type" to "STATUS",
+            ),
+          ),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report status where DPS OVERDUE and NOMIS IN still SCH`() = runTest {
+        val startTime = LocalDateTime.now().minusDays(1)
+        val endTime = LocalDateTime.now().minusHours(1)
+        stubNomisTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = "COMP",
+          scheduleIn = true,
+          scheduleInStatus = "SCH",
+          movementOut = true,
+        )
+        stubDpsTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = OVERDUE,
+          movementOut = true,
+        )
+        stubMappingTaps(movementOut = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // no mismatch because TAP is overdue
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report status where DPS OVERDUE and NOMIS IN is EXP`() = runTest {
+        val startTime = LocalDateTime.now().minusDays(1)
+        val endTime = LocalDateTime.now().minusHours(1)
+        stubNomisTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = "COMP",
+          scheduleIn = true,
+          scheduleInStatus = "EXP",
+          movementOut = true,
+        )
+        stubDpsTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = OVERDUE,
+          movementOut = true,
+        )
+        stubMappingTaps(movementOut = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // no mismatch because TAP is overdue
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `should NOT report status where DPS OVERDUE and NOMIS IN is missing`() = runTest {
+        val startTime = LocalDateTime.now().minusDays(1)
+        val endTime = LocalDateTime.now().minusHours(1)
+        stubNomisTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = "COMP",
+          scheduleIn = false,
+          movementOut = true,
+        )
+        stubDpsTaps(
+          startTime = startTime,
+          endTime = endTime,
+          status = OVERDUE,
+          movementOut = true,
+        )
+        stubMappingTaps(movementOut = true)
+
+        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+        awaitReportFinished()
+
+        // no mismatch because TAP is overdue
+        verify(telemetryClient, never()).trackEvent(
+          eq("temporary-absences-active-reconciliation-mismatch"),
+          anyMap(),
+          isNull(),
+        )
+      }
     }
 
     private fun stubNomisTaps(
@@ -939,11 +1073,16 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       ),
     )
 
-    private fun stubMappingTaps() = mappingApi.stubGetTemporaryAbsenceMappingIds(
+    private fun stubMappingTaps(
+      movementOut: Boolean = false,
+    ) = mappingApi.stubGetTemporaryAbsenceMappingIds(
       prisonerNumber = "A0001TZ",
       response = emptyPrisonerMappingIdsDto().copy(
         applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
         schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
+        movements = listOfNotNull(
+          if (movementOut) ExternalMovementMappingIdsDto(12345L, movementOutSeq, movementId) else null,
+        ),
       ),
     )
   }
