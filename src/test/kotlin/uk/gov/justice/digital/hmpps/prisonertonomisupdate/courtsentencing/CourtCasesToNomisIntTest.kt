@@ -1203,6 +1203,124 @@ class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
     }
 
     @Nested
+    inner class WhenCourtAppearanceHasBeenUpdatedInDPSWithoutChargeBatchUpdate {
+      @BeforeEach
+      fun setUp() {
+        courtSentencingApi.stubCourtAppearanceGetWithFourCharges(
+          COURT_CASE_ID_FOR_CREATION,
+          offenderNo = OFFENDER_NO,
+          appearanceType = APPEARANCE_VL,
+          courtAppearanceId = DPS_COURT_APPEARANCE_ID,
+          courtCharge1Id = DPS_COURT_CHARGE_ID,
+          courtCharge2Id = DPS_COURT_CHARGE_2_ID,
+          courtCharge3Id = DPS_COURT_CHARGE_3_ID,
+          courtCharge4Id = DPS_COURT_CHARGE_4_ID,
+        )
+        courtSentencingNomisApi.stubCourtAppearanceUpdate(
+          OFFENDER_NO,
+          NOMIS_COURT_CASE_ID_FOR_CREATION,
+          NOMIS_COURT_APPEARANCE_ID,
+          UpdateCourtAppearanceResponse(
+            createdCourtEventChargesIds = emptyList(),
+            deletedOffenderChargesIds = emptyList(),
+          ),
+        )
+        courtSentencingMappingApi.stubGetCourtCaseMappingGivenDpsId(
+          id = COURT_CASE_ID_FOR_CREATION,
+          nomisCourtCaseId = NOMIS_COURT_CASE_ID_FOR_CREATION,
+        )
+
+        courtSentencingMappingApi.stubGetCourtAppearanceMappingGivenDpsId(
+          DPS_COURT_APPEARANCE_ID,
+          NOMIS_COURT_APPEARANCE_ID,
+        )
+        // mappings found for all 4 charges
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(DPS_COURT_CHARGE_ID, NOMIS_COURT_CHARGE_ID)
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_2_ID,
+          NOMIS_COURT_CHARGE_2_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_3_ID,
+          NOMIS_COURT_CHARGE_3_ID,
+        )
+        courtSentencingMappingApi.stubGetCourtChargeMappingGivenDpsId(
+          DPS_COURT_CHARGE_4_ID,
+          NOMIS_COURT_CHARGE_4_ID,
+        )
+        publishUpdateCourtAppearanceDomainEvent()
+      }
+
+      @Test
+      fun `will callback back to court sentencing service to get more details`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingApi.verify(getRequestedFor(urlEqualTo("/legacy/court-appearance/${DPS_COURT_APPEARANCE_ID}")))
+      }
+
+      @Test
+      fun `will map new DPS court charges to NOMIS court charges`() {
+        waitForAnyProcessingToComplete()
+
+        courtSentencingNomisApi.verify(
+          putRequestedFor(WireMock.anyUrl())
+            .withRequestBody(matchingJsonPath("courtEventChargesWithOutcomes.size()", equalTo("4")))
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[0].offenderChargeId",
+                equalTo(NOMIS_COURT_CHARGE_ID.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[0].resultCode1",
+                equalTo(COURT_CHARGE_1_RESULT_CODE.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[1].offenderChargeId",
+                equalTo(NOMIS_COURT_CHARGE_2_ID.toString()),
+              ),
+            )
+            .withRequestBody(
+              matchingJsonPath(
+                "courtEventChargesWithOutcomes[1].resultCode1",
+                equalTo(COURT_CHARGE_2_RESULT_CODE.toString()),
+              ),
+            ),
+        )
+      }
+
+      @Test
+      fun `will create success telemetry`() {
+        waitForAnyProcessingToComplete()
+
+        verify(telemetryClient).trackEvent(
+          eq("court-appearance-updated-success"),
+          check {
+            assertThat(it["dpsCourtCaseId"]).isEqualTo(COURT_CASE_ID_FOR_CREATION)
+            assertThat(it["nomisCourtCaseId"]).isEqualTo(NOMIS_COURT_CASE_ID_FOR_CREATION.toString())
+            assertThat(it["offenderNo"]).isEqualTo(OFFENDER_NO)
+            assertThat(it["dpsCourtAppearanceId"]).isEqualTo(DPS_COURT_APPEARANCE_ID)
+            assertThat(it["nomisCourtAppearanceId"]).isEqualTo(NOMIS_COURT_APPEARANCE_ID.toString())
+            assertThat(it["deletedCourtChargeMappings"]).isNull()
+            assertThat(it["nomisOutcomeCode"]).isEqualTo("4531")
+          },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will call nomis api to update the Court Appearance`() {
+        waitForAnyProcessingToComplete()
+        courtSentencingNomisApi.verify(
+          putRequestedFor(urlEqualTo("/prisoners/$OFFENDER_NO/sentencing/court-cases/${NOMIS_COURT_CASE_ID_FOR_CREATION}/court-appearances/${NOMIS_COURT_APPEARANCE_ID}"))
+            .withRequestBody(matchingJsonPath("courtEventType", equalTo("VL"))),
+        )
+      }
+    }
+
+    @Nested
     inner class WhenAppearanceDoesNotExist {
 
       @BeforeEach
