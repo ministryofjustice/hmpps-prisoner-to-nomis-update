@@ -200,6 +200,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     stubGetWithError("/legacy/court-case/$courtCaseId", status)
   }
 
+  fun stubCourtAppearanceGetError(appearanceId: String, status: Int = 404) {
+    stubGetWithError("/legacy/court-appearance/$appearanceId", status)
+  }
+
   fun getCharge(courtCaseId: String, courtAppearanceId: String, courtChargeId: String, offenderNo: String) = LegacyCharge(
     lifetimeUuid = UUID.fromString(courtChargeId),
     courtCaseUuid = courtCaseId,
@@ -366,6 +370,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetCourtChargeByAppearanceGetError(courtChargeId: String, courtAppearanceId: String, status: Int = 404) {
+    stubGetWithError("/legacy/court-appearance/$courtAppearanceId/charge/$courtChargeId", status)
+  }
+
   fun stubGetSentence(
     sentenceId: String,
     caseID: String,
@@ -420,6 +428,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
+  fun stubGetSentenceGetError(sentenceId: String, status: Int = 404) {
+    stubGetWithError("/legacy/sentence/$sentenceId", status)
+  }
+
   fun stubGetPeriodLength(
     periodLengthId: String,
     sentenceId: String,
@@ -451,6 +463,10 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
           .withStatus(200),
       ),
     )
+  }
+
+  fun stubGetPeriodLengthGetError(periodLengthId: String, status: Int = 404) {
+    stubGetWithError("/legacy/period-length/$periodLengthId", status)
   }
 
   fun stubGetCourtCaseForReconciliation(courtCaseId: String, courtCaseResponse: ReconciliationCourtCase) {
