@@ -50,28 +50,28 @@ class SentencingResourceIntTest(
       OFFENDER_NO
 
       val numberOfActivePrisoners = 34L
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 10,
           prisonerIds = (1L..10).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 10,
         response = BookingIdsWithLast(
           lastBookingId = 20,
           prisonerIds = (11L..20).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 20,
         response = BookingIdsWithLast(
           lastBookingId = 30,
           prisonerIds = (21L..30).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 30,
         response = BookingIdsWithLast(
           lastBookingId = 34,
@@ -178,7 +178,7 @@ class SentencingResourceIntTest(
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 10,
         errorStatus = HttpStatus.INTERNAL_SERVER_ERROR,
       )

@@ -50,28 +50,28 @@ class VisitBalanceResourceIntTest(
     fun setUp() {
       reset(telemetryClient)
 
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 10,
           prisonerIds = (1L..10L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 10,
         response = BookingIdsWithLast(
           lastBookingId = 20,
           prisonerIds = (11L..20L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 20,
         response = BookingIdsWithLast(
           lastBookingId = 30,
           prisonerIds = (21L..30L).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },
         ),
       )
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         bookingId = 30,
         response = BookingIdsWithLast(
           lastBookingId = 34,
@@ -276,7 +276,7 @@ class VisitBalanceResourceIntTest(
 
     @Test
     fun `will attempt to complete a report even if the first page fails`() = runTest {
-      nomisApi.stuGetAllLatestBookings(bookingId = 0, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
+      nomisApi.stubGetAllLatestBookings(bookingId = 0, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
       visitBalanceReconciliationService.generateReconciliationReport()
 
@@ -291,7 +291,7 @@ class VisitBalanceResourceIntTest(
 
     @Test
     fun `will attempt to complete a report even if whole pages of the checks fail`() = runTest {
-      nomisApi.stuGetAllLatestBookings(bookingId = 20, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
+      nomisApi.stubGetAllLatestBookings(bookingId = 20, errorStatus = HttpStatus.INTERNAL_SERVER_ERROR)
 
       visitBalanceReconciliationService.generateReconciliationReport()
 

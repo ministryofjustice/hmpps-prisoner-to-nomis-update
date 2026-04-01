@@ -38,7 +38,7 @@ class OfficialVisitsActiveScheduledReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      NomisApiExtension.nomisApi.stuGetAllLatestBookings(
+      NomisApiExtension.nomisApi.stubGetAllLatestBookings(
         response = BookingIdsWithLast(
           lastBookingId = 0,
           prisonerIds = (1L..3).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },

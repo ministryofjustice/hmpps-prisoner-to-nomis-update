@@ -490,7 +490,7 @@ internal class SentencingReconciliationServiceTest {
   inner class GenerateReconciliationReport {
     @BeforeEach
     fun setUp() {
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         response = BookingIdsWithLast(
           lastBookingId = 4,
           prisonerIds = (1L..4).map { PrisonerIds(bookingId = it, offenderNo = generateOffenderNo(sequence = it)) },

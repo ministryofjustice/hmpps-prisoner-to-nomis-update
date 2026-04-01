@@ -2258,7 +2258,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stuGetAllLatestBookings(
+  fun stubGetAllLatestBookings(
     response: BookingIdsWithLast = BookingIdsWithLast(
       lastBookingId = 0,
       prisonerIds = emptyList(),
@@ -2282,7 +2282,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stuGetAllLatestBookings(
+  fun stubGetAllLatestBookings(
     bookingId: Long,
     response: BookingIdsWithLast = BookingIdsWithLast(
       lastBookingId = 0,
@@ -2301,7 +2301,7 @@ class NomisApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
     )
   }
-  fun stuGetAllLatestBookings(
+  fun stubGetAllLatestBookings(
     bookingId: Long,
     errorStatus: HttpStatus,
   ) {
