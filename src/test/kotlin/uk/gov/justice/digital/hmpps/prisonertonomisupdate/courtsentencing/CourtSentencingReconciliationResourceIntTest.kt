@@ -56,7 +56,7 @@ class CourtSentencingReconciliationResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisPrisonerApi.stuGetAllLatestBookings(
+      nomisPrisonerApi.stubGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 4,
@@ -163,7 +163,7 @@ class CourtSentencingReconciliationResourceIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisPrisonerApi.stuGetAllLatestBookings(
+      nomisPrisonerApi.stubGetAllLatestBookings(
         bookingId = 0,
         response = BookingIdsWithLast(
           lastBookingId = 4,

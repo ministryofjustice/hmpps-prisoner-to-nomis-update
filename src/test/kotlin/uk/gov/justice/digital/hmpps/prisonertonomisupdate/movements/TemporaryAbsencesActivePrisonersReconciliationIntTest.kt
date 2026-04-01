@@ -65,7 +65,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         activeOnly = true,
         response = BookingIdsWithLast(
           lastBookingId = 12345,
@@ -114,7 +114,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         activeOnly = true,
         response = BookingIdsWithLast(
           lastBookingId = 12345,
@@ -472,7 +472,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         activeOnly = true,
         response = BookingIdsWithLast(
           lastBookingId = 12345,
@@ -1516,7 +1516,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     @BeforeEach
     fun setUp() {
       reset(telemetryClient)
-      nomisApi.stuGetAllLatestBookings(
+      nomisApi.stubGetAllLatestBookings(
         activeOnly = true,
         response = BookingIdsWithLast(
           lastBookingId = 12345,

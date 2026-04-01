@@ -1486,7 +1486,7 @@ internal class NomisApiServiceTest {
   inner class GetAllLatestBookings {
     @Test
     fun `should call nomis api with OAuth2 token`() = runTest {
-      nomisApi.stuGetAllLatestBookings()
+      nomisApi.stubGetAllLatestBookings()
 
       nomisApiService.getAllLatestBookings(activeOnly = true, lastBookingId = 0, pageSize = 10)
 
@@ -1498,7 +1498,7 @@ internal class NomisApiServiceTest {
 
     @Test
     fun `will pass parameters to API`() = runTest {
-      nomisApi.stuGetAllLatestBookings()
+      nomisApi.stubGetAllLatestBookings()
 
       nomisApiService.getAllLatestBookings(activeOnly = true, lastBookingId = 54321, pageSize = 1000)
 
