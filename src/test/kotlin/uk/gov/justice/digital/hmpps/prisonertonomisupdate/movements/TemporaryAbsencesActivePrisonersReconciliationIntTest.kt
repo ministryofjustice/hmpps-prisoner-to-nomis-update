@@ -37,8 +37,11 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.IN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.CANCELLED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.COMPLETED
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.EXPIRED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.IN_PROGRESS
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.SCHEDULED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
@@ -468,6 +471,8 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
     private val scheduleInId = 3333L
     private val authorisationId = UUID.randomUUID()
     private val occurrenceId = UUID.randomUUID()
+    private val defaultStartTime = LocalDateTime.now().plusDays(1)
+    private val defaultEndTime = LocalDateTime.now().plusDays(2)
 
     @BeforeEach
     fun setUp() {
@@ -483,80 +488,12 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
     @Nested
     inner class ReportDifferences {
-      val startTime = LocalDateTime.now().plusDays(1)
-      val endTime = LocalDateTime.now().plusDays(2)
-
-      @BeforeEach
-      fun setUp() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          eventStatus = "SCH",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                activeBooking = true,
-                latestBooking = true,
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
-
-        mappingApi.stubGetTemporaryAbsenceMappingIds(
-          prisonerNumber = "A0001TZ",
-          response = emptyPrisonerMappingIdsDto().copy(
-            applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
-            schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
-          ),
-        )
-      }
-
       @Test
       fun `should not publish telemetry if no differences`() = runTest {
+        stubNomisTaps()
+        stubDpsTaps()
+        stubMappingTaps()
+
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
 
@@ -569,27 +506,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report status is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
+        stubNomisTaps()
+        stubDpsTaps(status = IN_PROGRESS)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -610,27 +529,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report reason code is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "RC",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
+        stubNomisTaps()
+        stubDpsTaps(reasonCode = "RC")
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -651,27 +552,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report start time is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "C5",
-                    start = LocalDateTime.now(),
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
+        stubNomisTaps()
+        stubDpsTaps(startTime = LocalDateTime.now())
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -692,27 +575,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report end time is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = LocalDateTime.now().plusDays(3),
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
+        stubNomisTaps()
+        stubDpsTaps(endTime = LocalDateTime.now().plusDays(3))
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -733,27 +598,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report postcode is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "X1 1XX",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        )
+        stubNomisTaps()
+        stubDpsTaps(postCode = "X1 1XX")
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -774,67 +621,10 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should only report postcode is different for future TAPs`() = runTest {
-        // The TAP is historical
         val startTime = LocalDateTime.now().minusDays(1)
-
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          eventStatus = "SCH",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          // The postcode is different
-                          toAddressPostcode = "DIFFERENT",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                activeBooking = true,
-                latestBooking = true,
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(startTime = startTime)
+        stubDpsTaps(startTime = startTime, postCode = "X1 1XX")
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -848,58 +638,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should compare NOMIS movement postcode with DPS if one exists`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          startTime = LocalDateTime.now().plusDays(1),
-                          // The schedule postcode matches DPS
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        // The movement postcode does not match DPS
-                        temporaryAbsence = temporaryAbsence().copy(toAddressPostcode = "DIFFERENT"),
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                activeBooking = true,
-                latestBooking = true,
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(reconMovement()),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(movementOut = true, movementOutPostcode = "X1 1XX")
+        stubDpsTaps(movementOut = true)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -920,27 +661,15 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should report everything is different`() = runTest {
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "RC",
-                    start = LocalDateTime.now(),
-                    end = LocalDateTime.now().plusDays(3),
-                    location = Location(
-                      address = "1 street",
-                      postcode = "X1 1XX",
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+        stubNomisTaps()
+        stubDpsTaps(
+          status = IN_PROGRESS,
+          reasonCode = "RC",
+          startTime = LocalDateTime.now().plusDays(2),
+          endTime = LocalDateTime.now().plusDays(3),
+          postCode = "X1 1XX",
         )
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -958,65 +687,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should not publish telemetry if only difference is Expired on an old booking`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                // important - NOT the latest booking
-                latestBooking = false,
-                activeBooking = false,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          eventStatus = "SCH",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // important - expired in DPS
-                    statusCode = ReconciliationOccurrence.StatusCode.EXPIRED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(latestBooking = false, activeBooking = false)
+        stubDpsTaps(status = EXPIRED)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1030,65 +703,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should NOT publish telemetry if NOMIS expired but DPS cancelled`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                latestBooking = true,
-                activeBooking = true,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          // important - expired in NOMIS
-                          eventStatus = "EXP",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // important - cancelled in DPS
-                    statusCode = ReconciliationOccurrence.StatusCode.CANCELLED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(status = "EXP")
+        stubDpsTaps(status = CANCELLED)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1102,66 +719,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should publish telemetry if Expired, old booking but NOMIS scheduled is completed`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                // important - NOT the latest booking
-                latestBooking = false,
-                activeBooking = false,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          // important - schedule in NOMIS is completed
-                          eventStatus = "COMP",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // important - expired in DPS
-                    statusCode = ReconciliationOccurrence.StatusCode.EXPIRED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(status = "COMP", latestBooking = false, activeBooking = false)
+        stubDpsTaps(status = EXPIRED)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1182,66 +742,9 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should publish telemetry if NOMIS scheduled OUT with movement but DPS in progress`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                latestBooking = true,
-                activeBooking = true,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          // scheduled in NOMIS
-                          eventStatus = "SCH",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = null,
-                        // movement exists
-                        temporaryAbsence = temporaryAbsence(),
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
-        )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // in progress in DPS
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(reconMovement()),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
-        )
+        stubNomisTaps(status = "SCH", movementOut = true)
+        stubDpsTaps(status = IN_PROGRESS, movementOut = true)
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1265,69 +768,19 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       fun `should NOT publish telemetry if NOMIS scheduled OUT with movement but DPS in progress for old TAP`() = runTest {
         // starts before status cut off
         val startTime = LocalDateTime.parse("2012-01-01T12:00:00")
-
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                latestBooking = true,
-                activeBooking = true,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          startTime = startTime,
-                          returnTime = endTime,
-                          // scheduled in NOMIS
-                          eventStatus = "SCH",
-                          eventSubType = "C5",
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = scheduledAbsenceReturn(id = scheduleInId).copy(
-                          eventStatus = "SCH",
-                        ),
-                        // OUT movement exists
-                        temporaryAbsence = temporaryAbsence(),
-                        temporaryAbsenceReturn = null,
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
+        stubNomisTaps(
+          startTime = startTime,
+          status = "SCH",
+          movementOut = true,
+          scheduleIn = true,
+          scheduleInStatus = "SCH",
         )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // in progress in DPS
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(reconMovement()),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
+        stubDpsTaps(
+          startTime = startTime,
+          status = IN_PROGRESS,
+          movementOut = true,
         )
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1342,71 +795,19 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
 
       @Test
       fun `should publish telemetry if NOMIS scheduled IN with movement but DPS completed`() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                latestBooking = true,
-                activeBooking = true,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          eventStatus = "COMP",
-                          eventSubType = "C5",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = scheduledAbsenceReturn(id = scheduleInId).copy(
-                          // schedule IN is still scheduled
-                          eventStatus = "SCH",
-                        ),
-                        temporaryAbsence = temporaryAbsence(),
-                        // IN movement exists
-                        temporaryAbsenceReturn = temporaryAbsenceReturn(),
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
+        stubNomisTaps(
+          status = "COMP",
+          scheduleIn = true,
+          scheduleInStatus = "SCH",
+          movementOut = true,
+          movementIn = true,
         )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // Completed in DPS
-                    statusCode = COMPLETED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(
-                      reconMovement(direction = OUT),
-                      reconMovement(direction = IN),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
+        stubDpsTaps(
+          status = COMPLETED,
+          movementOut = true,
+          movementIn = true,
         )
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1430,72 +831,21 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       fun `should NOT publish telemetry if NOMIS scheduled with movement but DPS in progress for old TAP`() = runTest {
         // starts before status cut off
         val startTime = LocalDateTime.parse("2012-01-01T12:00:00")
-
-        nomisMovementsApi.stubGetTemporaryAbsences(
-          offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
-            bookings = listOf(
-              BookingTemporaryAbsences(
-                bookingId = 12345,
-                latestBooking = true,
-                activeBooking = true,
-                temporaryAbsenceApplications = listOf(
-                  application(
-                    id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
-                          eventStatus = "COMP",
-                          startTime = startTime,
-                          returnTime = endTime,
-                          eventSubType = "C5",
-                          toAddressPostcode = "S1 1AA",
-                        ),
-                        scheduledAbsenceReturn = scheduledAbsenceReturn(id = scheduleInId).copy(
-                          // schedule IN is still scheduled
-                          eventStatus = "SCH",
-                        ),
-                        temporaryAbsence = temporaryAbsence(),
-                        // IN movement exists
-                        temporaryAbsenceReturn = temporaryAbsenceReturn(),
-                      ),
-                    ),
-                  ),
-                ),
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
-              ),
-            ),
-          ),
+        stubNomisTaps(
+          startTime = startTime,
+          status = "COMP",
+          scheduleIn = true,
+          scheduleInStatus = "SCH",
+          movementOut = true,
+          movementIn = true,
         )
-
-        dpsApi.stubGetTapReconciliationDetail(
-          personIdentifier = "A0001TZ",
-          response = personTapDetail().copy(
-            scheduledAbsences = listOf(
-              reconAuthorisation(id = authorisationId).copy(
-                occurrences = listOf(
-                  reconOccurrence(id = occurrenceId).copy(
-                    // Completed in DPS
-                    statusCode = COMPLETED,
-                    reasonCode = "C5",
-                    start = startTime,
-                    end = endTime,
-                    location = Location(
-                      address = "1 street",
-                      postcode = "S1 1AA",
-                    ),
-                    movements = listOf(
-                      reconMovement(direction = OUT),
-                      reconMovement(direction = IN),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-            unscheduledMovements = listOf(),
-          ),
+        stubDpsTaps(
+          startTime = startTime,
+          status = COMPLETED,
+          movementOut = true,
+          movementIn = true,
         )
+        stubMappingTaps()
 
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
@@ -1508,6 +858,94 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
         )
       }
     }
+
+    private fun stubNomisTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      movementOut: Boolean = false,
+      movementOutPostcode: String = "S1 1AA",
+      latestBooking: Boolean = true,
+      activeBooking: Boolean = true,
+      status: String = "SCH",
+      scheduleIn: Boolean = false,
+      scheduleInStatus: String = "SCH",
+      movementIn: Boolean = false,
+    ) = nomisMovementsApi.stubGetTemporaryAbsences(
+      offenderNo = "A0001TZ",
+      response = emptyTemporaryAbsenceSummaryResponse().copy(
+        bookings = listOf(
+          BookingTemporaryAbsences(
+            bookingId = 12345,
+            temporaryAbsenceApplications = listOf(
+              application(
+                id = applicationId,
+                absences = listOf(
+                  absence(
+                    scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                      eventStatus = status,
+                      eventSubType = "C5",
+                      startTime = startTime,
+                      returnTime = endTime,
+                      toAddressPostcode = "S1 1AA",
+                    ),
+                    scheduledAbsenceReturn = if (scheduleIn) scheduledAbsenceReturn(id = scheduleInId).copy(eventStatus = scheduleInStatus) else null,
+                    temporaryAbsence = if (movementOut) temporaryAbsence().copy(toAddressPostcode = movementOutPostcode) else null,
+                    temporaryAbsenceReturn = if (movementIn) temporaryAbsenceReturn() else null,
+                  ),
+                ),
+              ),
+            ),
+            activeBooking = activeBooking,
+            latestBooking = latestBooking,
+            unscheduledTemporaryAbsences = listOf(),
+            unscheduledTemporaryAbsenceReturns = listOf(),
+          ),
+        ),
+      ),
+    )
+
+    private fun stubDpsTaps(
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      status: ReconciliationOccurrence.StatusCode = SCHEDULED,
+      reasonCode: String = "C5",
+      postCode: String = "S1 1AA",
+      movementOut: Boolean = false,
+      movementIn: Boolean = false,
+    ) = dpsApi.stubGetTapReconciliationDetail(
+      personIdentifier = "A0001TZ",
+      response = personTapDetail().copy(
+        scheduledAbsences = listOf(
+          reconAuthorisation(id = authorisationId).copy(
+            occurrences = listOf(
+              reconOccurrence(id = occurrenceId).copy(
+                statusCode = status,
+                reasonCode = reasonCode,
+                start = startTime,
+                end = endTime,
+                location = Location(
+                  address = "1 street",
+                  postcode = postCode,
+                ),
+                movements = listOfNotNull(
+                  if (movementOut) reconMovement(direction = OUT) else null,
+                  if (movementIn) reconMovement(direction = IN) else null,
+                ),
+              ),
+            ),
+          ),
+        ),
+        unscheduledMovements = listOf(),
+      ),
+    )
+
+    private fun stubMappingTaps() = mappingApi.stubGetTemporaryAbsenceMappingIds(
+      prisonerNumber = "A0001TZ",
+      response = emptyPrisonerMappingIdsDto().copy(
+        applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
+        schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
+      ),
+    )
   }
 
   @DisplayName("Active prisoners reconciliation report errors")
@@ -1603,7 +1041,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
             reconAuthorisation(id = authorisationId).copy(
               occurrences = listOf(
                 reconOccurrence(id = occurrenceId).copy(
-                  statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                  statusCode = SCHEDULED,
                   reasonCode = "C5",
                   start = startTime,
                   end = endTime,
@@ -1718,7 +1156,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
               reconAuthorisation(id = authorisationId).copy(
                 occurrences = listOf(
                   reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                    statusCode = SCHEDULED,
                     reasonCode = "C5",
                     start = startTime,
                     end = endTime,
@@ -1757,7 +1195,7 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
               reconAuthorisation(id = authorisationId).copy(
                 occurrences = listOf(
                   reconOccurrence(id = occurrenceId).copy(
-                    statusCode = ReconciliationOccurrence.StatusCode.SCHEDULED,
+                    statusCode = SCHEDULED,
                     reasonCode = "C5",
                     start = startTime,
                     end = endTime,
