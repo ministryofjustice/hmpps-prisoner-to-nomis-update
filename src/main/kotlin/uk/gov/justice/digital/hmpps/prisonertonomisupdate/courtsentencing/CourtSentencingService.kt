@@ -448,7 +448,7 @@ class CourtSentencingService(
     if (isDpsCreated(source)) {
       track("charge-updated", telemetryMap) {
         courtSentencingApiService.getCourtChargeByAppearanceOrNull(appearanceId = courtAppearanceId, chargeId = chargeId)
-          ?.let { dpsCharge ->
+          ?.also { dpsCharge ->
 
             val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
             telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
@@ -489,7 +489,7 @@ class CourtSentencingService(
 
     if (isDpsCreated(source)) {
       track("court-appearance-updated", telemetryMap) {
-        courtSentencingApiService.getCourtAppearanceOrNull(courtAppearanceId)?.let { dpsCourtAppearance ->
+        courtSentencingApiService.getCourtAppearanceOrNull(courtAppearanceId)?.also { dpsCourtAppearance ->
 
           val courtAppearanceMapping = retrieveParentAppearanceMapping(courtAppearanceId)
 
@@ -504,7 +504,7 @@ class CourtSentencingService(
           val courtEventChargesWithOutcomesToUpdate: MutableList<CourtEventChargeRequest> = mutableListOf()
 
           dpsCourtAppearance.charges.forEach { charge ->
-            courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.let { mapping ->
+            courtCaseMappingService.getMappingGivenCourtChargeIdOrNull(charge.lifetimeUuid.toString())?.also { mapping ->
               courtEventChargesToUpdate.add(mapping.nomisCourtChargeId)
               courtEventChargesWithOutcomesToUpdate.add(charge.toNomisCourtEventCharge(mapping.nomisCourtChargeId))
             } ?: let {
@@ -819,15 +819,21 @@ class CourtSentencingService(
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (baseMapping.entityName) {
       EntityType.COURT_CASE.displayName -> createRetry(message.fromJson())
+
       EntityType.COURT_APPEARANCE.displayName -> createAppearanceMappingsRetry(message.fromJson())
+
       EntityType.COURT_APPEARANCE_RECALL.displayName -> createAppearanceMappingsAndNotifySentenceAdjustmentsAndClonedCasesRetry(
         message.fromJson(),
       )
 
       EntityType.COURT_CHARGE.displayName -> createChargeRetry(message.fromJson())
+
       EntityType.SENTENCE.displayName -> createSentenceRetry(message.fromJson())
+
       EntityType.SENTENCE_TERM.displayName -> createSentenceTermRetry(message.fromJson())
+
       EntityType.COURT_CASE_CLONE.displayName -> createMappingsAndNotifyClonedCasesRetry(message.fromJson())
+
       else -> throw IllegalArgumentException("Unknown entity type: ${baseMapping.entityName}")
     }
   }
@@ -1012,7 +1018,7 @@ class CourtSentencingService(
 
     if (isDpsCreated(source)) {
       track("sentence-updated", telemetryMap) {
-        courtSentencingApiService.getSentenceOrNull(sentenceId)?.let { dpsSentence ->
+        courtSentencingApiService.getSentenceOrNull(sentenceId)?.also { dpsSentence ->
           val sentenceMapping = retrieveParentSentenceMapping(sentenceId)
           telemetryMap["nomisSentenceSeq"] = sentenceMapping.nomisSentenceSequence.toString()
           telemetryMap["nomisBookingId"] = sentenceMapping.nomisBookingId.toString()
@@ -1342,7 +1348,7 @@ class CourtSentencingService(
 
     if (isDpsCreated(source)) {
       track("sentence-term-updated", telemetryMap) {
-        courtSentencingApiService.getPeriodLengthOrNull(termId)?.let { dpsPeriodLength ->
+        courtSentencingApiService.getPeriodLengthOrNull(termId)?.also { dpsPeriodLength ->
           val courtCaseMapping = retrieveParentCaseMapping(courtCaseId)
           telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
           val sentenceTermMapping = retrieveParentSentenceTermMapping(termId)
@@ -1464,9 +1470,9 @@ class CourtSentencingService(
       "offenderNo" to offenderNo,
     )
 
-    courtSentencingApiService.getCourtCaseOrNull(dpsCourtCaseId)?.let { dpsCourtCase ->
+    courtSentencingApiService.getCourtCaseOrNull(dpsCourtCaseId)?.also { dpsCourtCase ->
       courtCaseMappingService.getMappingGivenCourtCaseIdOrNull(dpsCourtCaseId = dpsCourtCaseId)
-        ?.let { courtCaseMapping ->
+        ?.also { courtCaseMapping ->
           telemetryMap["nomisCourtCaseId"] = courtCaseMapping.nomisCourtCaseId.toString()
           val caseIdentifiers = dpsCourtCase.getNomisCaseIdentifiers()
           nomisApiService.refreshCaseReferences(
