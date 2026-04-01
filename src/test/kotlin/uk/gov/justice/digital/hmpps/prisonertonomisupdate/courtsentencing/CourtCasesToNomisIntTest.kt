@@ -94,7 +94,7 @@ private const val NOMIS_TERM_SEQ = 32L
 private const val OFFENDER_NO = "AB12345"
 private const val DONCASTER_COURT_CODE = "DRBYYC"
 private const val CASE_REFERENCE = "ABC4999"
-private const val APPEARANCE_VL = "1da09b6e-55cb-4838-a157-ee6944f2094c"
+private const val APPEARANCE_VL = "VL"
 
 class CourtCasesToNomisIntTest : SqsIntegrationTestBase() {
 

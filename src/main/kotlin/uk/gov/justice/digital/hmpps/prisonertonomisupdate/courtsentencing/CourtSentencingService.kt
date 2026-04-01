@@ -1688,7 +1688,7 @@ fun LegacyCourtAppearance.toNomisCourtAppearance(
     this.appearanceDate,
     LocalTime.parse(this.appearanceTime),
   ),
-  courtEventType = if (this.appearanceTypeUuid.toString() == DPS_VIDEO_LINK) "VL" else "CRT",
+  courtEventType = this.nomisAppearanceTypeCode,
   courtId = this.courtCode,
   outcomeReasonCode = this.nomisOutcomeCode,
   nextEventDateTime = this.nextCourtAppearance?.let { next ->

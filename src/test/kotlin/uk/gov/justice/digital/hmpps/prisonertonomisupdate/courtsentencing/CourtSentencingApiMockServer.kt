@@ -111,7 +111,6 @@ class CourtSentencingApiExtension :
         appearanceTime = "10:10",
         courtId = "MDI",
       ),
-      appearanceTypeUuid = UUID.fromString("1da09b6e-55cb-4838-a157-ee6944f2094c"),
       nomisAppearanceTypeCode = "CRT",
     )
 
@@ -165,7 +164,7 @@ class CourtSentencingApiExtension :
   }
 }
 
-private const val APPEARANCE_TYPE_CRT = "63e8fce0-033c-46ad-9edf-391b802d547a"
+private const val APPEARANCE_TYPE_CRT = "CRT"
 
 class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
   companion object {
@@ -270,8 +269,7 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
       ),
       nomisOutcomeCode = "4531",
-      appearanceTypeUuid = UUID.fromString(appearanceType),
-      nomisAppearanceTypeCode = "CRT",
+      nomisAppearanceTypeCode = appearanceType,
     )
 
     stubFor(
@@ -311,7 +309,6 @@ class CourtSentencingApiMockServer : WireMockServer(WIREMOCK_PORT) {
         ),
       ),
       nomisOutcomeCode = "4531",
-      appearanceTypeUuid = UUID.fromString(APPEARANCE_TYPE_CRT),
       nomisAppearanceTypeCode = "CRT",
     )
     stubFor(
