@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-25.621.399e17f"
+    "version" : "2026-03-30.633.8543b14"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1374,7 +1374,7 @@
         "tags" : [ "Official visits" ],
         "summary" : "Check for overlapping scheduled visits that fall within the given criteria.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
-        "operationId" : "cancel",
+        "operationId" : "checkOverlappingVisits",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -1507,7 +1507,7 @@
         "tags" : [ "Official visits" ],
         "summary" : "Cancels an official visit.",
         "description" : "\n\nRequires one of the following roles:\n* ROLE_OFFICIAL_VISITS_ADMIN\n* ROLE_OFFICIAL_VISITS_RW",
-        "operationId" : "cancel_1",
+        "operationId" : "cancel",
         "parameters" : [ {
           "name" : "prisonCode",
           "in" : "path",
@@ -4453,12 +4453,11 @@
           },
           "contactIds" : {
             "type" : "array",
-            "description" : "One or more unique identifier for the prisoner contacts",
+            "description" : "One or more unique identifier for the prisoner contacts, can be null",
             "items" : {
               "type" : "integer",
               "format" : "int64"
-            },
-            "minItems" : 1
+            }
           },
           "existingOfficialVisitId" : {
             "type" : "integer",
@@ -4466,7 +4465,7 @@
             "description" : "The unique identifier of the official visit to exclude from the check. Would be provided for an amend check, otherwise null"
           }
         },
-        "required" : [ "contactIds", "endTime", "prisonerNumber", "startTime", "visitDate" ]
+        "required" : [ "endTime", "prisonerNumber", "startTime", "visitDate" ]
       },
       "OverlappingContact" : {
         "type" : "object",
