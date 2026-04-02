@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-30.633.8543b14"
+    "version" : "2026-04-01.649.0918247"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -1268,6 +1268,74 @@
           },
           "409" : {
             "description" : "The visitor with the IDs presented already exists on this visit",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/repair/prisoner-visits/{prisonerNumber}" : {
+      "post" : {
+        "tags" : [ "Repair prisoner visits" ],
+        "summary" : "Replace all official visits for a single prisoner with the data from NOMIS",
+        "description" : "This replaces all official visits for one prisoner with their visits as they exist in NOMIS\n\nRequires one of the following roles:\n* OFFICIAL_VISITS_MIGRATION\n* OFFICIAL_VISITS_ADMIN",
+        "operationId" : "repairPrisonerVisits",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/RepairPrisonerVisitsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "A list of the visit and visitor ID mappings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/RepairPrisonerVisitsResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request failed validation with invalid or missing data",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2662,6 +2730,15 @@
           "required" : false,
           "schema" : {
             "type" : "boolean"
+          }
+        }, {
+          "name" : "existingOfficialVisitId",
+          "in" : "query",
+          "description" : "The unique identifier of the official visit to exclude from availability calculations. Would be provided for an amend check, otherwise null",
+          "required" : false,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
           }
         } ],
         "responses" : {
@@ -4320,6 +4397,296 @@
         },
         "required" : [ "createDateTime", "createUsername", "offenderVisitVisitorId", "personId" ]
       },
+      "MigrateVisitRequest" : {
+        "type" : "object",
+        "properties" : {
+          "offenderVisitId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit ID",
+            "example" : 133232
+          },
+          "prisonVisitSlotId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The DPS visit slot ID - this provides the location, start time and end time via configuration data",
+            "example" : 123132
+          },
+          "prisonCode" : {
+            "type" : "string",
+            "description" : "The prison code where the visit takes place",
+            "example" : "PVI"
+          },
+          "offenderBookId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The offender book ID to echo back. It will be stored in DPS against the visit.",
+            "example" : 74748
+          },
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number (NOMS ID)",
+            "example" : "A1234AA",
+            "maxLength" : 7,
+            "minLength" : 0
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "If this visits relates to the current or latest term (booking) in prison true, else false.",
+            "example" : true
+          },
+          "visitDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The date the official visit will take place",
+            "example" : "2022-12-23"
+          },
+          "startTime" : {
+            "type" : "string",
+            "description" : "The start time for this official visit",
+            "example" : "09:15"
+          },
+          "endTime" : {
+            "type" : "string",
+            "description" : "The end time for this official visit",
+            "example" : "10:15"
+          },
+          "dpsLocationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS location where the visit takes place.",
+            "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
+          },
+          "visitStatusCode" : {
+            "$ref" : "#/components/schemas/VisitStatusType",
+            "description" : "The DPS visit status code. The Syscon migration service will map the NOMIS state to a value in this enumerated type.",
+            "example" : "SCHEDULED"
+          },
+          "visitTypeCode" : {
+            "$ref" : "#/components/schemas/VisitType",
+            "description" : "The DPS visit type code. For migrated NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
+            "example" : "UNKNOWN"
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visit comment text",
+            "example" : "This is a comment"
+          },
+          "searchTypeCode" : {
+            "$ref" : "#/components/schemas/SearchLevelType",
+            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
+            "example" : "RUB_A"
+          },
+          "visitCompletionCode" : {
+            "$ref" : "#/components/schemas/VisitCompletionType",
+            "description" : "The DPS visit completion code. Default is NORMAL if not supplied.",
+            "example" : "NORMAL"
+          },
+          "visitorConcernText" : {
+            "type" : "string",
+            "description" : "Visit concern text from NOMIS",
+            "example" : "I am concerned"
+          },
+          "overrideBanStaffUsername" : {
+            "type" : "string",
+            "description" : "The staff username who authorised an override for a ban for this visit",
+            "example" : "X3243H"
+          },
+          "visitOrderNumber" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The visit order number (if present) for the official visit",
+            "example" : 12344
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
+          },
+          "visitors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateVisitor"
+            }
+          }
+        },
+        "required" : [ "createDateTime", "createUsername", "currentTerm", "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitStatusCode", "visitors" ]
+      },
+      "MigrateVisitor" : {
+        "type" : "object",
+        "description" : "The details of an official visitor",
+        "properties" : {
+          "offenderVisitVisitorId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS offender visit visitor ID",
+            "example" : 133232
+          },
+          "personId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS person ID (same as contactId) for this visitor",
+            "example" : 13989898
+          },
+          "firstName" : {
+            "type" : "string",
+            "description" : "The first name of the visitor",
+            "example" : "Bob"
+          },
+          "lastName" : {
+            "type" : "string",
+            "description" : "The last name of the visitor",
+            "example" : "Harris"
+          },
+          "relationshipTypeCode" : {
+            "$ref" : "#/components/schemas/RelationshipType",
+            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
+            "example" : "OFFICIAL"
+          },
+          "relationshipToPrisoner" : {
+            "type" : "string",
+            "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
+            "example" : "POL"
+          },
+          "groupLeaderFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "assistedVisitFlag" : {
+            "type" : "boolean",
+            "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
+            "example" : true
+          },
+          "commentText" : {
+            "type" : "string",
+            "description" : "The visitor comment text from NOMIS",
+            "example" : "Some comments"
+          },
+          "attendanceCode" : {
+            "$ref" : "#/components/schemas/AttendanceType",
+            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
+            "example" : "ATTENDED"
+          },
+          "createDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The data and time the record was created",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "createUsername" : {
+            "type" : "string",
+            "description" : "The username who created the row",
+            "example" : "X999X"
+          },
+          "modifyDateTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The date and time the record was last amended",
+            "example" : "2022-10-01T16:45:45"
+          },
+          "modifyUsername" : {
+            "type" : "string",
+            "description" : "The username who last modified the row",
+            "example" : "X999X"
+          }
+        },
+        "required" : [ "createDateTime", "createUsername", "offenderVisitVisitorId", "personId" ]
+      },
+      "RepairPrisonerVisitsRequest" : {
+        "type" : "object",
+        "properties" : {
+          "visits" : {
+            "type" : "array",
+            "description" : "A list of visits to create for the prisoner",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateVisitRequest"
+            }
+          }
+        },
+        "required" : [ "visits" ]
+      },
+      "IdPair" : {
+        "type" : "object",
+        "properties" : {
+          "elementType" : {
+            "type" : "string",
+            "description" : "The category of information returned",
+            "enum" : [ "PRISON_VISIT_SLOT", "OFFICIAL_VISIT", "OFFICIAL_VISITOR", "PRISONER_VISITED" ],
+            "example" : "PRISON_VISIT_SLOT"
+          },
+          "nomisId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique ID for this data item provided in the request",
+            "example" : 123435
+          },
+          "dpsId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique ID created in the DPS official visits service",
+            "example" : 1234
+          }
+        },
+        "required" : [ "dpsId", "elementType", "nomisId" ]
+      },
+      "MigrateVisitResponse" : {
+        "type" : "object",
+        "description" : "The migration response for an official visit and the visitors attending",
+        "properties" : {
+          "visit" : {
+            "$ref" : "#/components/schemas/IdPair",
+            "description" : "The pair of IDs for this visit"
+          },
+          "visitors" : {
+            "type" : "array",
+            "description" : "The list of ID pairs for each visitor on this visit",
+            "items" : {
+              "$ref" : "#/components/schemas/IdPair"
+            }
+          },
+          "prisoner" : {
+            "$ref" : "#/components/schemas/IdPair",
+            "description" : "The pair of IDs for the prisoner on this visit. NOMS ID is used as the NOMIS ID, as it has no other ID"
+          }
+        },
+        "required" : [ "prisoner", "visit", "visitors" ]
+      },
+      "RepairPrisonerVisitsResponse" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number for whom visits were replaced",
+            "example" : "A1234AA"
+          },
+          "visits" : {
+            "type" : "array",
+            "description" : "The list of identifiers for the new visits created",
+            "items" : {
+              "$ref" : "#/components/schemas/MigrateVisitResponse"
+            }
+          }
+        },
+        "required" : [ "prisonerNumber", "visits" ]
+      },
       "CreateOfficialVisitRequest" : {
         "type" : "object",
         "description" : "The request with the official visit details",
@@ -4850,265 +5217,6 @@
           }
         },
         "required" : [ "prisonCode", "prisonerNumber" ]
-      },
-      "MigrateVisitRequest" : {
-        "type" : "object",
-        "properties" : {
-          "offenderVisitId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS offender visit ID",
-            "example" : 133232
-          },
-          "prisonVisitSlotId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The DPS visit slot ID - this provides the location, start time and end time via configuration data",
-            "example" : 123132
-          },
-          "prisonCode" : {
-            "type" : "string",
-            "description" : "The prison code where the visit takes place",
-            "example" : "PVI"
-          },
-          "offenderBookId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The offender book ID to echo back. It will be stored in DPS against the visit.",
-            "example" : 74748
-          },
-          "prisonerNumber" : {
-            "type" : "string",
-            "description" : "The prisoner number (NOMS ID)",
-            "example" : "A1234AA",
-            "maxLength" : 7,
-            "minLength" : 0
-          },
-          "currentTerm" : {
-            "type" : "boolean",
-            "description" : "If this visits relates to the current or latest term (booking) in prison true, else false.",
-            "example" : true
-          },
-          "visitDate" : {
-            "type" : "string",
-            "format" : "date",
-            "description" : "The date the official visit will take place",
-            "example" : "2022-12-23"
-          },
-          "startTime" : {
-            "type" : "string",
-            "description" : "The start time for this official visit",
-            "example" : "09:15"
-          },
-          "endTime" : {
-            "type" : "string",
-            "description" : "The end time for this official visit",
-            "example" : "10:15"
-          },
-          "dpsLocationId" : {
-            "type" : "string",
-            "format" : "uuid",
-            "description" : "The DPS location where the visit takes place.",
-            "example" : "aaaa-bbbb-xxxxxxxx-yyyyyyyy"
-          },
-          "visitStatusCode" : {
-            "$ref" : "#/components/schemas/VisitStatusType",
-            "description" : "The DPS visit status code. The Syscon migration service will map the NOMIS state to a value in this enumerated type.",
-            "example" : "SCHEDULED"
-          },
-          "visitTypeCode" : {
-            "$ref" : "#/components/schemas/VisitType",
-            "description" : "The DPS visit type code. For migrated NOMIS visits this will default to type UNKNOWN. Other values are IN_PERSON, VIDEO, or TELEPHONE.",
-            "example" : "UNKNOWN"
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "The visit comment text",
-            "example" : "This is a comment"
-          },
-          "searchTypeCode" : {
-            "$ref" : "#/components/schemas/SearchLevelType",
-            "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
-            "example" : "RUB_A"
-          },
-          "visitCompletionCode" : {
-            "$ref" : "#/components/schemas/VisitCompletionType",
-            "description" : "The DPS visit completion code. Default is NORMAL if not supplied.",
-            "example" : "NORMAL"
-          },
-          "visitorConcernText" : {
-            "type" : "string",
-            "description" : "Visit concern text from NOMIS",
-            "example" : "I am concerned"
-          },
-          "overrideBanStaffUsername" : {
-            "type" : "string",
-            "description" : "The staff username who authorised an override for a ban for this visit",
-            "example" : "X3243H"
-          },
-          "visitOrderNumber" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The visit order number (if present) for the official visit",
-            "example" : 12344
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The data and time the record was created",
-            "example" : "2022-10-01T16:45:45"
-          },
-          "createUsername" : {
-            "type" : "string",
-            "description" : "The username who created the row",
-            "example" : "X999X"
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the record was last amended",
-            "example" : "2022-10-01T16:45:45"
-          },
-          "modifyUsername" : {
-            "type" : "string",
-            "description" : "The username who last modified the row",
-            "example" : "X999X"
-          },
-          "visitors" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/MigrateVisitor"
-            }
-          }
-        },
-        "required" : [ "createDateTime", "createUsername", "currentTerm", "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "visitDate", "visitStatusCode", "visitors" ]
-      },
-      "MigrateVisitor" : {
-        "type" : "object",
-        "description" : "The details of an official visitor",
-        "properties" : {
-          "offenderVisitVisitorId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS offender visit visitor ID",
-            "example" : 133232
-          },
-          "personId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The NOMIS person ID (same as contactId) for this visitor",
-            "example" : 13989898
-          },
-          "firstName" : {
-            "type" : "string",
-            "description" : "The first name of the visitor",
-            "example" : "Bob"
-          },
-          "lastName" : {
-            "type" : "string",
-            "description" : "The last name of the visitor",
-            "example" : "Harris"
-          },
-          "relationshipTypeCode" : {
-            "$ref" : "#/components/schemas/RelationshipType",
-            "description" : "The relationship type OFFICIAL or SOCIAL. Default is null if not known.",
-            "example" : "OFFICIAL"
-          },
-          "relationshipToPrisoner" : {
-            "type" : "string",
-            "description" : "The relationship code between visitor and prisoner, from NOMIS reference data. A null value will indicate no relationship.",
-            "example" : "POL"
-          },
-          "groupLeaderFlag" : {
-            "type" : "boolean",
-            "description" : "Set to true if this person is the lead visitor. Defaults to false if not supplied.",
-            "example" : true
-          },
-          "assistedVisitFlag" : {
-            "type" : "boolean",
-            "description" : "Set to true if this person requires assistance at the visit. Defaults to false if not supplied.",
-            "example" : true
-          },
-          "commentText" : {
-            "type" : "string",
-            "description" : "The visitor comment text from NOMIS",
-            "example" : "Some comments"
-          },
-          "attendanceCode" : {
-            "$ref" : "#/components/schemas/AttendanceType",
-            "description" : "The visitor attendance code (ATTENDED or ABSENT). A null indicates no attendance was added.",
-            "example" : "ATTENDED"
-          },
-          "createDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The data and time the record was created",
-            "example" : "2022-10-01T16:45:45"
-          },
-          "createUsername" : {
-            "type" : "string",
-            "description" : "The username who created the row",
-            "example" : "X999X"
-          },
-          "modifyDateTime" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the record was last amended",
-            "example" : "2022-10-01T16:45:45"
-          },
-          "modifyUsername" : {
-            "type" : "string",
-            "description" : "The username who last modified the row",
-            "example" : "X999X"
-          }
-        },
-        "required" : [ "createDateTime", "createUsername", "offenderVisitVisitorId", "personId" ]
-      },
-      "IdPair" : {
-        "type" : "object",
-        "properties" : {
-          "elementType" : {
-            "type" : "string",
-            "description" : "The category of information returned",
-            "enum" : [ "PRISON_VISIT_SLOT", "OFFICIAL_VISIT", "OFFICIAL_VISITOR", "PRISONER_VISITED" ],
-            "example" : "PRISON_VISIT_SLOT"
-          },
-          "nomisId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The unique ID for this data item provided in the request",
-            "example" : 123435
-          },
-          "dpsId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The unique ID created in the DPS official visits service",
-            "example" : 1234
-          }
-        },
-        "required" : [ "dpsId", "elementType", "nomisId" ]
-      },
-      "MigrateVisitResponse" : {
-        "type" : "object",
-        "description" : "The migration response for an official visit and the visitors attending",
-        "properties" : {
-          "visit" : {
-            "$ref" : "#/components/schemas/IdPair",
-            "description" : "The pair of IDs for this visit"
-          },
-          "visitors" : {
-            "type" : "array",
-            "description" : "The list of ID pairs for each visitor on this visit",
-            "items" : {
-              "$ref" : "#/components/schemas/IdPair"
-            }
-          },
-          "prisoner" : {
-            "$ref" : "#/components/schemas/IdPair",
-            "description" : "The pair of IDs for the prisoner on this visit. NOMS ID is used as the NOMIS ID, as it has no other ID"
-          }
-        },
-        "required" : [ "prisoner", "visit", "visitors" ]
       },
       "MigrateVisitConfigRequest" : {
         "type" : "object",
