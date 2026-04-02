@@ -1,6 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
@@ -14,7 +15,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatus.BAD_REQUEST
 import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
@@ -71,7 +72,7 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubUpsertTemporaryAbsenceApplication(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertTemporaryAbsenceApplication(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
@@ -113,7 +114,7 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubUpsertScheduledTemporaryAbsence(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertScheduledTemporaryAbsence(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
@@ -155,7 +156,7 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsence(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubCreateTemporaryAbsence(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.createTemporaryAbsence("A1234BC", createTemporaryAbsenceRequest())
@@ -197,7 +198,7 @@ class ExternalMovementsNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceReturn(status = HttpStatus.INTERNAL_SERVER_ERROR)
+        mockServer.stubCreateTemporaryAbsenceReturn(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
           apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
@@ -233,7 +234,7 @@ class ExternalMovementsNomisApiServiceTest {
 
     @Test
     fun `will throw if error`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummary(status = HttpStatus.INTERNAL_SERVER_ERROR)
+      mockServer.stubGetTemporaryAbsencePrisonerSummary(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTemporaryAbsenceSummary("A1234BC")
@@ -407,6 +408,40 @@ class ExternalMovementsNomisApiServiceTest {
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTemporaryAbsencesOrNull(offenderNo = "A1234BC")
+      }
+    }
+  }
+
+  @Nested
+  inner class DeleteScheduledTemporaryAbsence {
+    @Test
+    internal fun `will pass oath2 token to service`() = runTest {
+      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L)
+
+      apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
+
+      mockServer.verify(
+        deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    internal fun `will pass parameters to service`() = runTest {
+      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L)
+
+      apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
+
+      mockServer.verify(
+        deleteRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence/4321")),
+      )
+    }
+
+    @Test
+    fun `will throw error when API returns an error`() = runTest {
+      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L, status = BAD_REQUEST)
+
+      assertThrows<WebClientResponseException.BadRequest> {
+        apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
       }
     }
   }
