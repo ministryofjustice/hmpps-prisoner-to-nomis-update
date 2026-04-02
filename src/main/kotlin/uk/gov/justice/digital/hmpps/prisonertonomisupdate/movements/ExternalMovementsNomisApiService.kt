@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
 import reactor.util.context.Context
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrLogAndRethrowBadRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
@@ -34,32 +35,23 @@ class ExternalMovementsNomisApiService(
 
   private val movementsApi = MovementsResourceApi(webClient)
 
-  suspend fun upsertTemporaryAbsenceApplication(offenderNo: String, request: UpsertTemporaryAbsenceApplicationRequest): UpsertTemporaryAbsenceApplicationResponse = webClient.put()
-    .uri("/movements/{offenderNo}/temporary-absences/application", offenderNo)
-    .bodyValue(request)
+  suspend fun upsertTemporaryAbsenceApplication(offenderNo: String, request: UpsertTemporaryAbsenceApplicationRequest): UpsertTemporaryAbsenceApplicationResponse = movementsApi.prepare(movementsApi.upsertTemporaryAbsenceApplicationRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun upsertScheduledTemporaryAbsence(offenderNo: String, request: UpsertScheduledTemporaryAbsenceRequest): UpsertScheduledTemporaryAbsenceResponse = webClient.put()
-    .uri("/movements/{offenderNo}/temporary-absences/scheduled-temporary-absence", offenderNo)
-    .bodyValue(request)
+  suspend fun upsertScheduledTemporaryAbsence(offenderNo: String, request: UpsertScheduledTemporaryAbsenceRequest): UpsertScheduledTemporaryAbsenceResponse = movementsApi.prepare(movementsApi.upsertScheduledTemporaryAbsenceRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun createTemporaryAbsence(offenderNo: String, request: CreateTemporaryAbsenceRequest): CreateTemporaryAbsenceResponse = webClient.post()
-    .uri("/movements/{offenderNo}/temporary-absences/temporary-absence", offenderNo)
-    .bodyValue(request)
+  suspend fun createTemporaryAbsence(offenderNo: String, request: CreateTemporaryAbsenceRequest): CreateTemporaryAbsenceResponse = movementsApi.prepare(movementsApi.createTemporaryAbsenceRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun createTemporaryAbsenceReturn(offenderNo: String, request: CreateTemporaryAbsenceReturnRequest): CreateTemporaryAbsenceReturnResponse = webClient.post()
-    .uri("/movements/{offenderNo}/temporary-absences/temporary-absence-return", offenderNo)
-    .bodyValue(request)
+  suspend fun createTemporaryAbsenceReturn(offenderNo: String, request: CreateTemporaryAbsenceReturnRequest): CreateTemporaryAbsenceReturnResponse = movementsApi.prepare(movementsApi.createTemporaryAbsenceReturnRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun getTemporaryAbsenceSummary(offenderNo: String): OffenderTemporaryAbsenceSummaryResponse = webClient.get()
-    .uri("/movements/{offenderNo}/temporary-absences/summary", offenderNo)
+  suspend fun getTemporaryAbsenceSummary(offenderNo: String): OffenderTemporaryAbsenceSummaryResponse = movementsApi.prepare(movementsApi.getTemporaryAbsencesAndMovementCountsRequestConfig(offenderNo))
     .retrieve()
     .awaitBodyWithRetry(backoffSpec)
 
@@ -73,4 +65,8 @@ class ExternalMovementsNomisApiService(
   suspend fun getTemporaryAbsencesOrNull(offenderNo: String): OffenderTemporaryAbsencesResponse? = movementsApi.prepare(movementsApi.getTemporaryAbsencesAndMovementsRequestConfig(offenderNo))
     .retrieve()
     .awaitBodyOrNullForNotFound()
+
+  suspend fun deleteScheduledTemporaryAbsence(offenderNo: String, eventId: Long) = movementsApi.prepare(movementsApi.deleteScheduledTemporaryAbsenceRequestConfig(offenderNo, eventId))
+    .retrieve()
+    .awaitBodilessEntityOrLogAndRethrowBadRequest()
 }
