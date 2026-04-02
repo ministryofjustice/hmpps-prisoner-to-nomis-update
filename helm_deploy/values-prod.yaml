@@ -118,6 +118,18 @@ generic-service:
     - name: non-assoc-recon
       type: NON_ASSOCIATIONS_RECON
       schedule: "30 2 * * 2"
+    - name: official-visits-all-recon
+      type: OFFICIAL_VISIT_ALL_RECON
+      schedule: "30 5 * * SAT"
+      suspend: true
+    - name: official-visits-all-missing-recon
+      type: OFFICIAL_VISIT_ALL_MISSING_RECON
+      schedule: "30 3 * * SAT"
+      suspend: true
+    - name: official-visits-active-sch-recon
+      type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
+      schedule: "10 2 * * SUN,MON,TUE,WED,THU"
+      suspend: true
     - name: organisations-recon
       type: ORGANISATIONS_RECON
       schedule: "30 4 * * *"
@@ -136,28 +148,15 @@ generic-service:
     - name: suspended-alloc-recon
       type: SUSPENDED_ALLOCATION_RECON
       schedule: "35 7 * * *"
+    - name: tap-all-prisoners-recon
+      type: TAP_ALL_PRISONERS_RECON
+      schedule: "00 1 * * 6"
+    - name: tap-active-prisoners-recon
+      type: TAP_ACTIVE_PRISONERS_RECON
+      schedule: "00 3 * * *"
     - name: visit-balance-recon
       type: VISIT_BALANCE_RECON
       schedule: "45 4 * * *"
-    - name: official-visits-all-recon
-      type: OFFICIAL_VISIT_ALL_RECON
-      schedule: "30 5 * * SAT"
-      suspend: true
-    - name: official-visits-all-missing-recon
-      type: OFFICIAL_VISIT_ALL_MISSING_RECON
-      schedule: "30 3 * * SAT"
-      suspend: true
-    - name: official-visits-active-sch-recon
-      type: OFFICIAL_VISIT_ACTIVE_SCH_RECON
-      schedule: "10 2 * * SUN,MON,TUE,WED,THU"
-      suspend: true
-    - name: tap-all-prisoners-recon
-      type: TAP_ALL_PRISONERS_RECON
-      schedule: "00 1 * * *"
-    - name: tap-active-prisoners-recon
-      type: TAP_ACTIVE_PRISONERS_RECON
-      schedule: "00 1 * * *"
-      suspend: true
     - name: visit-slots-recon
       type: VISIT_SLOTS_RECON
       schedule: "45 2 * * *"

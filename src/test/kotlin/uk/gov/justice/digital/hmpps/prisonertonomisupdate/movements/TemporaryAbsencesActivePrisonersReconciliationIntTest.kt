@@ -37,11 +37,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.IN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.CANCELLED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.COMPLETED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.EXPIRED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.IN_PROGRESS
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.OVERDUE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.SCHEDULED
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
@@ -509,29 +504,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       }
 
       @Test
-      fun `should report status is different`() = runTest {
-        stubNomisTaps()
-        stubDpsTaps(status = IN_PROGRESS)
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "$scheduleOutId",
-              "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "STATUS",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
       fun `should report reason code is different`() = runTest {
         stubNomisTaps()
         stubDpsTaps(reasonCode = "RC")
@@ -667,7 +639,6 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
       fun `should report everything is different`() = runTest {
         stubNomisTaps()
         stubDpsTaps(
-          status = IN_PROGRESS,
           reasonCode = "RC",
           startTime = LocalDateTime.now().plusDays(2),
           endTime = LocalDateTime.now().plusDays(3),
@@ -678,316 +649,13 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
         reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
         awaitReportFinished()
 
-        verify(telemetryClient, times(5)).trackEvent(
+        verify(telemetryClient, times(4)).trackEvent(
           eq("temporary-absences-active-reconciliation-mismatch"),
           check {
             assertThat(it["offenderNo"]).isEqualTo("A0001TZ")
             assertThat(it["nomisEventId"]).isEqualTo("$scheduleOutId")
             assertThat(it["dpsOccurrenceId"]).isEqualTo("$occurrenceId")
           },
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should not publish telemetry if only difference is Expired on an old booking`() = runTest {
-        stubNomisTaps(latestBooking = false, activeBooking = false)
-        stubDpsTaps(status = EXPIRED)
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT publish telemetry if NOMIS expired but DPS cancelled`() = runTest {
-        stubNomisTaps(status = "EXP")
-        stubDpsTaps(status = CANCELLED)
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should publish telemetry if Expired, old booking but NOMIS scheduled is completed`() = runTest {
-        stubNomisTaps(status = "COMP", latestBooking = false, activeBooking = false)
-        stubDpsTaps(status = EXPIRED)
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "$scheduleOutId",
-              "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "STATUS",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should publish telemetry if NOMIS scheduled OUT with movement but DPS in progress`() = runTest {
-        stubNomisTaps(status = "SCH", movementOut = true)
-        stubDpsTaps(status = IN_PROGRESS, movementOut = true)
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // mismatch because NOMIS schedule OUT status doesn't match DPS
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "$scheduleOutId",
-              "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "STATUS",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT publish telemetry if NOMIS scheduled OUT with movement but DPS in progress for old TAP`() = runTest {
-        // starts before status cut off
-        val startTime = LocalDateTime.parse("2012-01-01T12:00:00")
-        stubNomisTaps(
-          startTime = startTime,
-          status = "SCH",
-          movementOut = true,
-          scheduleIn = true,
-          scheduleInStatus = "SCH",
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          status = IN_PROGRESS,
-          movementOut = true,
-        )
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // no mismatch because TAP is before cutoff and there is an actual movement OUT in NOMIS
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should publish telemetry if NOMIS scheduled IN with movement but DPS completed`() = runTest {
-        stubNomisTaps(
-          status = "COMP",
-          scheduleIn = true,
-          scheduleInStatus = "SCH",
-          movementOut = true,
-          movementIn = true,
-        )
-        stubDpsTaps(
-          status = COMPLETED,
-          movementOut = true,
-          movementIn = true,
-        )
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // mismatch because NOMIS schedule IN status doesn't match DPS
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "$scheduleOutId",
-              "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "STATUS",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT publish telemetry if NOMIS scheduled with movement but DPS in progress for old TAP`() = runTest {
-        // starts before status cut off
-        val startTime = LocalDateTime.parse("2012-01-01T12:00:00")
-        stubNomisTaps(
-          startTime = startTime,
-          status = "COMP",
-          scheduleIn = true,
-          scheduleInStatus = "SCH",
-          movementOut = true,
-          movementIn = true,
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          status = COMPLETED,
-          movementOut = true,
-          movementIn = true,
-        )
-        stubMappingTaps()
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // no mismatch because TAP is before cutoff and there is an actual movement IN in NOMIS
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should report status where DPS OVERDUE but NOMIS is COMP,COMP`() = runTest {
-        val startTime = LocalDateTime.now().minusDays(1)
-        val endTime = LocalDateTime.now().minusHours(1)
-        stubNomisTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = "COMP",
-          scheduleIn = true,
-          scheduleInStatus = "COMP",
-          movementOut = true,
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = OVERDUE,
-          movementOut = true,
-        )
-        stubMappingTaps(movementOut = true)
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // mismatch because NOMIS schedule completed but DPS think it's overdue
-        verify(telemetryClient).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          eq(
-            mapOf(
-              "offenderNo" to "A0001TZ",
-              "nomisEventId" to "$scheduleOutId",
-              "dpsOccurrenceId" to "$occurrenceId",
-              "type" to "STATUS",
-            ),
-          ),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT report status where DPS OVERDUE and NOMIS IN still SCH`() = runTest {
-        val startTime = LocalDateTime.now().minusDays(1)
-        val endTime = LocalDateTime.now().minusHours(1)
-        stubNomisTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = "COMP",
-          scheduleIn = true,
-          scheduleInStatus = "SCH",
-          movementOut = true,
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = OVERDUE,
-          movementOut = true,
-        )
-        stubMappingTaps(movementOut = true)
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // no mismatch because TAP is overdue
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT report status where DPS OVERDUE and NOMIS IN is EXP`() = runTest {
-        val startTime = LocalDateTime.now().minusDays(1)
-        val endTime = LocalDateTime.now().minusHours(1)
-        stubNomisTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = "COMP",
-          scheduleIn = true,
-          scheduleInStatus = "EXP",
-          movementOut = true,
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = OVERDUE,
-          movementOut = true,
-        )
-        stubMappingTaps(movementOut = true)
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // no mismatch because TAP is overdue
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
-          isNull(),
-        )
-      }
-
-      @Test
-      fun `should NOT report status where DPS OVERDUE and NOMIS IN is missing`() = runTest {
-        val startTime = LocalDateTime.now().minusDays(1)
-        val endTime = LocalDateTime.now().minusHours(1)
-        stubNomisTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = "COMP",
-          scheduleIn = false,
-          movementOut = true,
-        )
-        stubDpsTaps(
-          startTime = startTime,
-          endTime = endTime,
-          status = OVERDUE,
-          movementOut = true,
-        )
-        stubMappingTaps(movementOut = true)
-
-        reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-        awaitReportFinished()
-
-        // no mismatch because TAP is overdue
-        verify(telemetryClient, never()).trackEvent(
-          eq("temporary-absences-active-reconciliation-mismatch"),
-          anyMap(),
           isNull(),
         )
       }
@@ -1224,9 +892,8 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
               reconAuthorisation(id = authorisationId).copy(
                 occurrences = listOf(
                   reconOccurrence(id = occurrenceId).copy(
-                    // status is different to NOMIS
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "C5",
+                    // reason is different
+                    reasonCode = "C4",
                     start = startTime,
                     end = endTime,
                     location = Location(
@@ -1248,8 +915,8 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
           .jsonPath("$[0].offenderNo").isEqualTo("A0001TZ")
           .jsonPath("$[0].nomisEventId").isEqualTo("$scheduleOutId")
           .jsonPath("$[0].dpsOccurrenceId").isEqualTo("$occurrenceId")
-          .jsonPath("$[0].nomisValue").isEqualTo("SCH,null")
-          .jsonPath("$[0].dpsValue").isEqualTo("IN_PROGRESS")
+          .jsonPath("$[0].nomisValue").isEqualTo("C5")
+          .jsonPath("$[0].dpsValue").isEqualTo("C4")
       }
 
       @Test
@@ -1261,9 +928,8 @@ class TemporaryAbsencesActivePrisonersReconciliationIntTest(
               reconAuthorisation(id = authorisationId).copy(
                 occurrences = listOf(
                   reconOccurrence(id = occurrenceId).copy(
-                    // status is different to NOMIS
-                    statusCode = IN_PROGRESS,
-                    reasonCode = "C5",
+                    // reason is different
+                    reasonCode = "C4",
                     start = startTime,
                     end = endTime,
                     location = Location(
