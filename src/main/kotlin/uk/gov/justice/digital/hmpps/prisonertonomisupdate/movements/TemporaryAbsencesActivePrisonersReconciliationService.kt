@@ -17,20 +17,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.CANCELLED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.OVERDUE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsenceReturn
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsenceReturn
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import java.time.LocalDate
-import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 
 @Service
 class TemporaryAbsencesActivePrisonersReconciliationService(
@@ -41,18 +36,10 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
   private val mappingService: ExternalMovementsMappingApiService,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
-  // For NOMIS TAPs prior to this date, workaround incorrect schedule status by taking a movement to mean the schedule is COMP
-  @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.status-cut-off:2013-01-01T00:00:00}") private val statusCutOff: LocalDateTime,
 ) {
   internal companion object {
     val log: Logger = LoggerFactory.getLogger(this::class.java)
     const val TELEMETRY_ACTIVE_TAPS = "temporary-absences-active-reconciliation"
-    val ACCEPTABLE_OCCURRENCE_STATUSES = listOf(
-      "COMP,null" to OVERDUE,
-      "COMP,EXP" to OVERDUE,
-      "COMP,SCH" to OVERDUE,
-      "EXP,null" to CANCELLED,
-    )
   }
 
   suspend fun generateTapActivePrisonersReconciliationReportBatch() {
@@ -363,25 +350,9 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     val mismatches = mutableListOf<MismatchedPrisonerTapDetails>()
     mappings.matchingSchedulesOut(nomisScheduleOutIds, dpsOccurrenceIds)
       .forEach { (nomisEventId, dpsOccurrenceId) ->
-        val (nomisScheduleOut, nomisMovementOut, nomisScheduleIn, nomisMovementIn, latestBooking) = nomis.findNomisTap(nomisEventId)
+        val (nomisScheduleOut, nomisMovementOut) = nomis.findNomisTap(nomisEventId)
         val dpsOccurrence = dps.findOccurrence(dpsOccurrenceId)
         fun mismatch(type: MismatchedPrisonerTapDetails.Type, nomisValue: String, dpsValue: String) = MismatchedPrisonerTapDetails(offenderNo, type, nomisEventId, dpsOccurrenceId, nomisValue, dpsValue)
-
-        val (nomisOutStatus, nomisInStatus) = getNomisStatuses(statusCutOff, nomisScheduleOut, nomisScheduleIn, nomisMovementOut != null, nomisMovementIn != null)
-        // status must match
-        if (dpsOccurrence.statusCode.value.toNomisSchedulesStatus() != (nomisOutStatus to nomisInStatus)) {
-          // check for exclusions
-          when {
-            // old booking not completed in NOMIS can be expired in DPS
-            !latestBooking && nomisScheduleOut.eventStatus != "COMP" && dpsOccurrence.statusCode == ReconciliationOccurrence.StatusCode.EXPIRED -> {}
-            // acceptable status combinations (due to slightly different business rules in NOMIS / DPS)
-            ("${nomisScheduleOut.eventStatus},${nomisScheduleIn?.eventStatus}" to dpsOccurrence.statusCode) in ACCEPTABLE_OCCURRENCE_STATUSES -> {}
-            // not excluded so we will publish the difference
-            else -> mismatches.add(
-              mismatch(MismatchedPrisonerTapDetails.Type.STATUS, "$nomisOutStatus,$nomisInStatus", dpsOccurrence.statusCode.value),
-            )
-          }
-        }
 
         // reason code must match
         if (dpsOccurrence.reasonCode != nomisScheduleOut.eventSubType) {
@@ -425,26 +396,16 @@ class TemporaryAbsencesActivePrisonersReconciliationService(
     schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
   }
 
-  // due to corrupt old NOMIS data, for old TAPs we'll rely on NOMIS movements existing rather than status
-  private fun getNomisStatuses(statusCutOff: LocalDateTime, scheduleOut: ScheduledTemporaryAbsence, scheduledIn: ScheduledTemporaryAbsenceReturn?, movementOutExists: Boolean, movementInExists: Boolean): Pair<String, String?> = if (scheduleOut.startTime > statusCutOff) {
-    scheduleOut.eventStatus to scheduledIn?.eventStatus
-  } else {
-    (if (movementOutExists) "COMP" else scheduleOut.eventStatus) to (if (movementInExists) "COMP" else scheduledIn?.eventStatus)
-  }
-
   private data class NomisDetails(
     val scheduledOut: ScheduledTemporaryAbsence,
     val movementOut: TemporaryAbsence?,
-    val scheduledIn: ScheduledTemporaryAbsenceReturn?,
-    val movementIn: TemporaryAbsenceReturn?,
-    val latestBooking: Boolean,
   )
 
   private fun OffenderTemporaryAbsencesResponse.findNomisTap(eventId: Long): NomisDetails = bookings.flatMap { booking ->
     booking.temporaryAbsenceApplications.flatMap { application ->
       application.absences.mapNotNull { absence ->
         if (absence.scheduledTemporaryAbsence?.eventId == eventId) {
-          NomisDetails(absence.scheduledTemporaryAbsence, absence.temporaryAbsence, absence.scheduledTemporaryAbsenceReturn, absence.temporaryAbsenceReturn, booking.latestBooking)
+          NomisDetails(absence.scheduledTemporaryAbsence, absence.temporaryAbsence)
         } else {
           null
         }
@@ -493,7 +454,6 @@ class MismatchedPrisonerTapDetails(
   val dpsValue: String,
 ) : MismatchPrisonerTaps(offenderNo, type.name) {
   enum class Type {
-    STATUS,
     REASON,
     START_TIME,
     END_TIME,
