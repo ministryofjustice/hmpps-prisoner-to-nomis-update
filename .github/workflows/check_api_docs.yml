@@ -2,8 +2,7 @@ name: Check API docs are up to date
 
 on:
   schedule:
-    - cron: "20 7 * * MON-FRI" # Every weekday at 07:20
-      timezone: "Europe/London"
+    - cron: "20 7 * * MON-FRI" # Every weekday at 07:20 UTC
   workflow_dispatch:
 
 permissions:
