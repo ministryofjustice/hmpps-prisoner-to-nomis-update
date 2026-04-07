@@ -194,9 +194,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will send telemetry for initial mapping failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-application-mapping-create-failed"),
+              eq("temporary-absence-application-mapping-create-error"),
               check {
-                assertThat(it).containsEntry("reason", "500 Internal Server Error from POST http://localhost:8084/mapping/temporary-absence/application")
+                assertThat(it).containsEntry("error", "500 Internal Server Error from POST http://localhost:8084/mapping/temporary-absence/application")
               },
               isNull(),
             )
@@ -637,7 +637,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
-          waitForAnyProcessingToComplete("temporary-absence-application-update-failed")
+          waitForAnyProcessingToComplete("temporary-absence-application-update-error")
         }
 
         @Test
@@ -648,11 +648,11 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         @Test
         fun `telemetry will contain key facts about the application`() {
           verify(telemetryClient).trackEvent(
-            eq("temporary-absence-application-update-failed"),
+            eq("temporary-absence-application-update-error"),
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
               assertThat(it).containsEntry("offenderNo", prisonerNumber)
-              assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/temporary-absences/application")
+              assertThat(it).containsEntry("error", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/temporary-absences/application")
             },
             isNull(),
           )
@@ -878,7 +878,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will send telemetry for initial failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-schedule-create-mapping-create-failed"),
+              eq("temporary-absence-schedule-create-mapping-create-error"),
               any(),
               isNull(),
             )
@@ -952,7 +952,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           )
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
-          waitForAnyProcessingToComplete("temporary-absence-schedule-create-mapping-create-failed")
+          waitForAnyProcessingToComplete("temporary-absence-schedule-create-mapping-create-error")
         }
 
         @Test
@@ -1013,7 +1013,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
-              assertThat(it).containsEntry("reason", "Expected parent entity not found, retrying")
+              assertThat(it).containsEntry("error", "Expected parent entity not found, retrying")
             },
             isNull(),
           )
@@ -1180,9 +1180,9 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will send telemetry for initial failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-schedule-update-mapping-create-failed"),
+              eq("temporary-absence-schedule-update-mapping-create-error"),
               check {
-                assertThat(it).containsEntry("reason", "500 Internal Server Error from PUT http://localhost:8084/mapping/temporary-absence/scheduled-movement")
+                assertThat(it).containsEntry("error", "500 Internal Server Error from PUT http://localhost:8084/mapping/temporary-absence/scheduled-movement")
               },
               isNull(),
             )
@@ -1243,7 +1243,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
               assertThat(it).containsEntry("dpsAuthorisationId", dpsAuthorisationId.toString())
-              assertThat(it).containsEntry("reason", "Expected parent entity not found, retrying")
+              assertThat(it).containsEntry("error", "Expected parent entity not found, retrying")
             },
             isNull(),
           )
@@ -1508,7 +1508,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
         fun `will send telemetry for initial failure`() {
           await untilAsserted {
             verify(telemetryClient).trackEvent(
-              eq("temporary-absence-external-movement-mapping-create-failed"),
+              eq("temporary-absence-external-movement-mapping-create-error"),
               any(),
               isNull(),
             )
@@ -1619,7 +1619,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsMovementApplicationId, status = NOT_FOUND)
 
           publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId, dpsScheduledMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-failed")
+          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-error")
         }
 
         @Test
@@ -1647,7 +1647,7 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsScheduledMovementId, status = NOT_FOUND)
 
           publishTemporaryAbsenceExternalMovementOutDomainEvent(dpsExternalMovementId, dpsScheduledMovementId, prisonerNumber, dpsMovementApplicationId, "DPS")
-          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-failed")
+          waitForAnyProcessingToComplete("temporary-absence-external-movement-create-error")
         }
 
         @Test

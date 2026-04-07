@@ -127,6 +127,8 @@ class ExternalMovementsService(
               retryQueueService,
               APPLICATION.entityName,
               log,
+              failureSuffix = "error",
+              failureReasonKey = "error",
             )
           }
       } else {
@@ -135,8 +137,8 @@ class ExternalMovementsService(
       }
     }
       .onFailure {
-        telemetryMap["reason"] = it.message ?: "Unknown error"
-        telemetryClient.trackEvent("${APPLICATION.entityName}-$updateType-failed", telemetryMap)
+        telemetryMap["error"] = it.message ?: "Unknown error"
+        telemetryClient.trackEvent("${APPLICATION.entityName}-$updateType-error", telemetryMap)
         throw it
       }
   }
@@ -196,8 +198,8 @@ class ExternalMovementsService(
       }
     }
       .onFailure {
-        val failureType = if (it is AwaitParentEntityRetry) "awaiting-parent" else "failed"
-        telemetryMap["reason"] = it.message ?: "Unknown error"
+        val failureType = if (it is AwaitParentEntityRetry) "awaiting-parent" else "error"
+        telemetryMap["error"] = it.message ?: "Unknown error"
         telemetryClient.trackEvent("${updateType.entityName}-$failureType", telemetryMap)
         throw it
       }
@@ -232,6 +234,8 @@ class ExternalMovementsService(
         retryQueueService,
         SCHEDULED_MOVEMENT_CREATE.entityName,
         log,
+        failureSuffix = "error",
+        failureReasonKey = "error",
       )
     }
 
@@ -257,6 +261,8 @@ class ExternalMovementsService(
         retryQueueService,
         SCHEDULED_MOVEMENT_UPDATE.entityName,
         log,
+        failureSuffix = "error",
+        failureReasonKey = "error",
       )
     }
 
@@ -301,6 +307,8 @@ class ExternalMovementsService(
         telemetryClient = this@ExternalMovementsService.telemetryClient
         retryQueueService = this@ExternalMovementsService.retryQueueService
         eventTelemetry = telemetryMap
+        failureSuffix = "error"
+        failureReasonKey = "error"
 
         checkMappingDoesNotExist {
           mappingApiService.getExternalMovementMapping(dpsExternalMovementId)
@@ -359,6 +367,8 @@ class ExternalMovementsService(
         telemetryClient = this@ExternalMovementsService.telemetryClient
         retryQueueService = this@ExternalMovementsService.retryQueueService
         eventTelemetry = telemetryMap
+        failureSuffix = "error"
+        failureReasonKey = "error"
 
         checkMappingDoesNotExist {
           mappingApiService.getExternalMovementMapping(dpsExternalMovementId)
