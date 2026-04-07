@@ -65,6 +65,9 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence.comments-changed",
       -> externalMovementsService.occurrenceChanged(message.fromJson())
 
+      "person.temporary-absence.unscheduled",
+      -> externalMovementsService.occurrenceDeleted(message.fromJson())
+
       // TODO external movements domain events with source=DPS are not published yet - these are placeholders
       "external-movements-api.temporary-absence-external-movement-out.created" -> externalMovementsService.externalMovementOutCreated(message.fromJson())
       "external-movements-api.temporary-absence-external-movement-in.created" -> externalMovementsService.externalMovementInCreated(message.fromJson())
