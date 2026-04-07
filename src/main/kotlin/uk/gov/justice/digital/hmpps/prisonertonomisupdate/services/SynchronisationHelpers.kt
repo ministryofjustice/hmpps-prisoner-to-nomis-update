@@ -25,6 +25,8 @@ class SynchroniseBuilder<MAPPING_DTO>(
   var eventTelemetry: Map<String, String> = mapOf(),
   var telemetryClient: TelemetryClient? = null,
   var retryQueueService: RetryQueueService? = null,
+  var failureSuffix: String = "failed",
+  var failureReasonKey: String = "reason",
 ) {
 
   private companion object {
@@ -51,7 +53,7 @@ class SynchroniseBuilder<MAPPING_DTO>(
           }
 
           else -> {
-            telemetryClient?.trackEvent("$name-create-failed", eventTelemetry)
+            telemetryClient?.trackEvent("$name-create-$failureSuffix", eventTelemetry)
           }
         }
         throw it
@@ -66,6 +68,8 @@ class SynchroniseBuilder<MAPPING_DTO>(
               retryQueueService = retryQueueService,
               name = name,
               log = log,
+              failureSuffix = failureSuffix,
+              failureReasonKey = failureReasonKey,
             ).onSuccess {
               telemetryClient?.trackEvent(
                 "$name-create-success",
@@ -108,6 +112,8 @@ suspend fun <MAPPING_DTO> createMapping(
   retryQueueService: RetryQueueService?,
   name: String,
   log: Logger,
+  failureSuffix: String = "failed",
+  failureReasonKey: String = "reason",
 ): Result<Unit> {
   val telemetryAttributes = eventTelemetry + mapping.asMap()
   return runCatching {
@@ -115,8 +121,8 @@ suspend fun <MAPPING_DTO> createMapping(
   }
     .onFailure { e ->
       telemetryClient?.trackEvent(
-        "$name-mapping-create-failed",
-        mutableMapOf("reason" to (e.message ?: "Unknown error")) + telemetryAttributes,
+        "$name-mapping-create-$failureSuffix",
+        mutableMapOf(failureReasonKey to (e.message ?: "Unknown error")) + telemetryAttributes,
         null,
       )
       when (e) {
