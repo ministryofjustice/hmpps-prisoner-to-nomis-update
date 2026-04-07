@@ -2,6 +2,7 @@ package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
 
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
+import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.equalToDateTime
 import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
@@ -24,6 +25,7 @@ import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.http.HttpStatus.CONFLICT
 import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
@@ -1247,6 +1249,107 @@ class ExternalMovementsToNomisIntTest : SqsIntegrationTestBase() {
           )
         }
       }
+    }
+  }
+
+  @Nested
+  @DisplayName("person.temporary-absence.unscheduled")
+  inner class TemporaryAbsenceScheduledMovementDeleted {
+    private val prisonerNumber = "A1234BC"
+    private val dpsOccurrenceId = UUID.randomUUID()
+    private val nomisEventId = 54321L
+
+    @BeforeEach
+    fun setUp() {
+      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
+      nomisApi.stubDeleteScheduledTemporaryAbsences(prisonerNumber, nomisEventId)
+    }
+
+    private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
+      publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, source, "person.temporary-absence.unscheduled")
+      if (completedTelemetry == null) {
+        waitForAnyProcessingToComplete()
+      } else {
+        waitForAnyProcessingToComplete(completedTelemetry)
+      }
+    }
+
+    @Test
+    fun `should delete the scheduled movement in NOMIS`() {
+      publishDeleteEvent()
+
+      nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/temporary-absences/scheduled-temporary-absence/$nomisEventId")))
+    }
+
+    @Test
+    fun `should publish telemetry`() {
+      publishDeleteEvent()
+
+      verify(telemetryClient).trackEvent(
+        eq("temporary-absence-schedule-delete-success"),
+        check {
+          assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+          assertThat(it).containsEntry("nomisEventId", nomisEventId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should ignore if triggered by NOMIS`() {
+      publishDeleteEvent(source = "NOMIS")
+
+      verify(telemetryClient).trackEvent(
+        eq("temporary-absence-schedule-delete-ignored"),
+        check {
+          assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if mapping does not exist`() {
+      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
+
+      publishDeleteEvent(completedTelemetry = "temporary-absence-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(movementsDlqClient!!.countAllMessagesOnQueue(movementsDlqUrl!!).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("temporary-absence-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+          assertThat(it).containsEntry("error", "Cannot find scheduled movement mapping for $dpsOccurrenceId")
+        },
+        isNull(),
+      )
+    }
+
+    @Test
+    fun `should end up on DLQ if NOMIS returns a conflict`() {
+      nomisApi.stubDeleteScheduledTemporaryAbsences(prisonerNumber, nomisEventId, status = CONFLICT)
+
+      publishDeleteEvent(completedTelemetry = "temporary-absence-schedule-delete-error")
+
+      await untilAsserted {
+        assertThat(movementsDlqClient!!.countAllMessagesOnQueue(movementsDlqUrl!!).get()).isEqualTo(1)
+      }
+
+      verify(telemetryClient).trackEvent(
+        eq("temporary-absence-schedule-delete-error"),
+        check {
+          assertThat(it).containsEntry("offenderNo", prisonerNumber)
+          assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
+          assertThat(it).containsEntry("error", "409 Conflict from DELETE http://localhost:8082/movements/$prisonerNumber/temporary-absences/scheduled-temporary-absence/$nomisEventId")
+        },
+        isNull(),
+      )
     }
   }
 

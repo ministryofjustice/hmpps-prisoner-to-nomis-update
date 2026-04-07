@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ParentEntityNo
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.APPLICATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.EXTERNAL_MOVEMENT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_CREATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_DELETE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsService.Companion.MappingTypes.SCHEDULED_MOVEMENT_UPDATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
@@ -28,8 +29,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.AwaitParentEntityRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.createMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.tryFetchParent
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -45,14 +48,16 @@ class ExternalMovementsService(
   private val nomisApiService: ExternalMovementsNomisApiService,
   private val dpsApiService: ExternalMovementsDpsApiService,
   private val retryQueueService: ExternalMovementsRetryQueueService,
-  private val telemetryClient: TelemetryClient,
+  override val telemetryClient: TelemetryClient,
   private val jsonMapper: JsonMapper,
-) : CreateMappingRetryable {
+) : CreateMappingRetryable,
+  TelemetryEnabled {
   private companion object {
     enum class MappingTypes(val entityName: String) {
       APPLICATION("temporary-absence-application"),
       SCHEDULED_MOVEMENT_CREATE("temporary-absence-schedule-create"),
       SCHEDULED_MOVEMENT_UPDATE("temporary-absence-schedule-update"),
+      SCHEDULED_MOVEMENT_DELETE("temporary-absence-schedule-delete"),
       EXTERNAL_MOVEMENT("temporary-absence-external-movement"),
       ;
 
@@ -255,6 +260,27 @@ class ExternalMovementsService(
       )
     }
 
+  suspend fun occurrenceDeleted(event: TemporaryAbsenceEvent) {
+    val prisonerNumber = event.personReference.prisonerNumber()
+    val dpsOccurrenceId = event.additionalInformation.id
+    val telemetryMap = mutableMapOf(
+      "offenderNo" to prisonerNumber,
+      "dpsOccurrenceId" to dpsOccurrenceId.toString(),
+    )
+
+    if (event.additionalInformation.source != "DPS") {
+      telemetryClient.trackEvent("${SCHEDULED_MOVEMENT_DELETE.entityName}-ignored", telemetryMap)
+      return
+    }
+
+    track(SCHEDULED_MOVEMENT_DELETE.entityName, telemetryMap) {
+      val mapping = mappingApiService.getScheduledMovementMapping(dpsOccurrenceId)
+        ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
+        ?: throw ExternalMovementsSyncException("Cannot find scheduled movement mapping for $dpsOccurrenceId")
+      nomisApiService.deleteScheduledTemporaryAbsence(prisonerNumber, mapping.nomisEventId)
+    }
+  }
+
   suspend fun externalMovementOutCreated(event: TemporaryAbsenceExternalMovementOutEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsMovementApplicationId = event.additionalInformation.authorisationId
@@ -385,6 +411,8 @@ class ExternalMovementsService(
       APPLICATION -> createApplicationMapping(message.fromJson())
       SCHEDULED_MOVEMENT_CREATE -> createScheduledMovementMapping(message.fromJson())
       SCHEDULED_MOVEMENT_UPDATE -> updateScheduledMovementMapping(message.fromJson())
+      // Does not delete mapping when schedule deleted
+      SCHEDULED_MOVEMENT_DELETE -> {}
       EXTERNAL_MOVEMENT -> createExternalMovementMapping(message.fromJson())
     }
   }

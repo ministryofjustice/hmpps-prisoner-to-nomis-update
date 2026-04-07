@@ -336,6 +336,7 @@ hmpps.sqs:
           "external-movements-api.temporary-absence-outside-movement.created",
           "person.temporary-absence.scheduled",
           "person.temporary-absence.rescheduled",
+          "person.temporary-absence.unscheduled",
           "external-movements-api.temporary-absence-external-movement-out.created",
           "external-movements-api.temporary-absence-external-movement-in.created"
         ]}
