@@ -46,7 +46,8 @@ internal fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
   visitors = this.visitors.filter { it.contactId != null }.map {
     VisitorSummary(
       nomisPersonAndDpsContactId = it.contactId!!,
-      attendance = it.attendanceCode,
+      // treat attended and null as the same since DPS defaults to null and NOMIS to ATTENDED
+      attendance = it.attendanceCode?.takeIf { it != AttendanceType.ATTENDED },
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
 )
@@ -102,8 +103,11 @@ private fun String?.toDpsVisitCompletionType(nomisVisitStatus: String): VisitCom
   else -> null
 }
 
-private fun String.toDpsAttendanceType(): AttendanceType = when (this) {
-  "ATT" -> AttendanceType.ATTENDED
+private fun String.toDpsAttendanceType(): AttendanceType? = when (this) {
+  // treat attended and null as the same since DPS defaults to null and NOMIS to ATTENDED
+  "ATT" -> null
+
   "ABS" -> AttendanceType.ABSENT
+
   else -> throw IllegalArgumentException("Unknown attendance type code: $this")
 }

@@ -391,6 +391,28 @@ class OfficialVisitsAllReconciliationServiceTest {
       }
     }
 
+    @Nested
+    inner class WhenVisitorAttendanceMarkedAsAttendedInNOMISWhileDSPSIsStillNull {
+      @BeforeEach
+      fun setUp() {
+        stubVisits(
+          nomisVisit = officialVisitResponse().copy(
+            offenderNo = offenderNo,
+            visitors = listOf(officialVisitor().copy(visitorAttendanceOutcome = CodeDescription("ATT", "Attended"))),
+          ),
+          dpsVisit = syncOfficialVisit().copy(
+            prisonerNumber = offenderNo,
+            visitors = listOf(syncOfficialVisitor().copy(attendanceCode = null)),
+          ),
+        )
+      }
+
+      @Test
+      fun `will not report or return mismatch`() = runTest {
+        assertThat(service.checkVisitsMatch(nomisVisitId)).isNull()
+      }
+    }
+
     fun stubVisits(nomisVisit: OfficialVisitResponse, dpsVisit: SyncOfficialVisit) {
       nomisApi.stubGetOfficialVisit(nomisVisitId, response = nomisVisit.copy(visitId = nomisVisitId))
       dpsApi.stubGetOfficialVisit(dpsVisitId, response = dpsVisit.copy(officialVisitId = dpsVisitId))
