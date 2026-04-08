@@ -17,12 +17,12 @@ import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
+import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.StatusHistory
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import java.time.LocalDateTime
-import kotlin.jvm.java
 
 class IncidentsReconciliationIntTest(
   @Autowired private val incidentsReconciliationService: IncidentsReconciliationService,
@@ -652,6 +652,51 @@ class IncidentsReconciliationIntTest(
       }
 
       @Test
+      fun `will show DPS not found in report`() = runTest {
+        incidentsDpsApi.stubGetIncidentByNomisId(33, status = HttpStatus.NOT_FOUND)
+
+        incidentsReconciliationService.incidentsReconciliation()
+
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-report"),
+          check {
+            assertThat(it).containsEntry("mismatch-count", "2")
+            assertThat(it).containsEntry("success", "true")
+            assertThat(it).containsEntry("ASI", "open-dps=3:open-nomis=2; closed-dps=3:closed-nomis=3")
+            assertThat(it).containsEntry("BFI", "open-dps=3:open-nomis=1; closed-dps=3:closed-nomis=4")
+            assertThat(it).doesNotContainKeys("WWI")
+          },
+          isNull(),
+        )
+
+        verify(telemetryClient, times(2)).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch"),
+          any(),
+          isNull(),
+        )
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch-detail"),
+          check {
+            assertThat(it).containsEntry("nomisId", "33")
+            assertThat(it).containsEntry("dpsId", "null")
+            assertThat(it).containsEntry("verdict", "DPS incident not found")
+            assertThat(it).containsEntry(
+              "nomis",
+              "IncidentReportDetail(type=ATT_ESC_E, status=AWAN, reportedBy=FSTAFF_GEN, reportedDateTime=2021-07-07T10:35:17, offenderParties=[A1234BC, A1234BD], totalStaffParties=2, totalQuestions=2, totalRequirements=1, totalResponses=3)",
+            )
+            assertThat(it).containsEntry(
+              "dps",
+              "null",
+            )
+          },
+          isNull(),
+        )
+      }
+
+      @Test
       fun `will complete a report even if some of the checks fail`() = runTest {
         incidentsDpsApi.stubGetIncidentsWithError(HttpStatus.INTERNAL_SERVER_ERROR)
 
@@ -756,13 +801,38 @@ class IncidentsReconciliationIntTest(
           .exchange()
           .expectStatus()
           .isOk
-          .expectBody(MismatchIncident::class.java)
+          .expectBody<MismatchIncident>()
           .returnResult()
           .responseBody!!
 
         assertThat(mismatch.nomisIncident!!.totalResponses).isEqualTo(3)
         assertThat(mismatch.dpsIncident!!.totalResponses).isEqualTo(3)
         assertThat(mismatch.verdict).isEqualTo("responses mismatch for question: 1234")
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch-detail"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will return Dps not found`() {
+        incidentsNomisApi.stubGetMismatchResponsesForIncident()
+        incidentsDpsApi.stubGetIncidentByNomisId(33, status = HttpStatus.NOT_FOUND)
+
+        val mismatch = webTestClient.get().uri("/incidents/reconciliation/$mismatchNomisIncidentId")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus()
+          .isOk
+          .expectBody<MismatchIncident>()
+          .returnResult()
+          .responseBody!!
+
+        assertThat(mismatch.nomisIncident!!.totalResponses).isEqualTo(3)
+        assertThat(mismatch.dpsIncident).isNull()
+        assertThat(mismatch.verdict).isEqualTo("DPS incident not found")
 
         verify(telemetryClient).trackEvent(
           eq("incidents-reports-reconciliation-mismatch-detail"),

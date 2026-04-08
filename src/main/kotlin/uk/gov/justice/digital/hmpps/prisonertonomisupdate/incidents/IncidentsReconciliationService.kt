@@ -177,16 +177,16 @@ class IncidentsReconciliationService(
     log.debug(
       "Incidents-NomisIncidentId:{}; DPSIncidentId:{} matchVerdict: {}",
       nomisOpenIncidentId,
-      dpsOpenIncident.id,
+      dpsOpenIncident?.id,
       verdict,
     )
 
     return if (verdict != null) {
       MismatchIncident(
         nomisId = nomisOpenIncident.incidentId,
-        dpsId = dpsOpenIncident.id,
+        dpsId = dpsOpenIncident?.id,
         nomisIncident = nomisOpenIncident.toReportDetail(),
-        dpsIncident = dpsOpenIncident.toReportDetail(),
+        dpsIncident = dpsOpenIncident?.toReportDetail(),
         verdict = verdict,
       )
         .also { mismatch ->
@@ -195,7 +195,7 @@ class IncidentsReconciliationService(
             "incidents-reports-reconciliation-mismatch-detail",
             mapOf(
               "nomisId" to mismatch.nomisId,
-              "dpsId" to mismatch.dpsId,
+              "dpsId" to (mismatch.dpsId ?: "null"),
               "verdict" to verdict,
               "nomis" to (mismatch.nomisIncident?.toString() ?: "null"),
               "dps" to (mismatch.dpsIncident?.toString() ?: "null"),
@@ -209,8 +209,10 @@ class IncidentsReconciliationService(
 
   internal fun doesNotMatch(
     nomis: IncidentResponse,
-    dps: ReportWithDetails,
+    dps: ReportWithDetails?,
   ): String? {
+    if (dps == null) return "DPS incident not found"
+
     // Check and ignore any draft incidents that have previously been open.  Any changes when in draft are not relayed back to Nomis.
     if (dps.isInDraftButPreviouslyOpen()) {
       return null
@@ -286,7 +288,7 @@ data class MismatchIncidents(
 
 data class MismatchIncident(
   val nomisId: Long,
-  val dpsId: UUID,
+  val dpsId: UUID?,
   val nomisIncident: IncidentReportDetail? = null,
   val dpsIncident: IncidentReportDetail? = null,
   val verdict: String,
