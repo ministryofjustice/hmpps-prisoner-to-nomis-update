@@ -124,13 +124,13 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient, times(0)).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           any(),
           isNull(),
         )
 
         verify(telemetryClient, times(0)).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch-error"),
+          eq("incidents-reports-reconciliation-mismatch-detail-error"),
           any(),
           isNull(),
         )
@@ -231,13 +231,13 @@ class IncidentsReconciliationIntTest(
           )
 
           verify(telemetryClient, times(0)).trackEvent(
-            eq("incidents-reports-reconciliation-detail-mismatch"),
+            eq("incidents-reports-reconciliation-mismatch-detail"),
             any(),
             isNull(),
           )
 
           verify(telemetryClient, times(0)).trackEvent(
-            eq("incidents-reports-reconciliation-detail-mismatch-error"),
+            eq("incidents-reports-reconciliation-mismatch-detail-error"),
             any(),
             isNull(),
           )
@@ -288,7 +288,7 @@ class IncidentsReconciliationIntTest(
           )
 
           verify(telemetryClient).trackEvent(
-            eq("incidents-reports-reconciliation-detail-mismatch"),
+            eq("incidents-reports-reconciliation-mismatch-detail"),
             check {
               assertThat(it).containsEntry("nomisId", "33")
               assertThat(it).containsKey("dpsId")
@@ -367,7 +367,7 @@ class IncidentsReconciliationIntTest(
       @Test
       fun `will not invoke detail mismatch`() {
         verify(telemetryClient, times(0)).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           any(),
           isNull(),
         )
@@ -453,7 +453,7 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           check {
             assertThat(it).containsEntry("nomisId", "33")
             assertThat(it).containsKey("dpsId")
@@ -498,7 +498,7 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           check {
             assertThat(it).containsEntry("nomisId", "33")
             assertThat(it).containsKey("dpsId")
@@ -543,7 +543,7 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           check {
             assertThat(it).containsEntry("nomisId", "33")
             assertThat(it).containsKey("dpsId")
@@ -588,7 +588,7 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           check {
             assertThat(it).containsEntry("nomisId", "33")
             assertThat(it).containsKey("dpsId")
@@ -633,7 +633,7 @@ class IncidentsReconciliationIntTest(
         )
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           check {
             assertThat(it).containsEntry("nomisId", "33")
             assertThat(it).containsKey("dpsId")
@@ -765,7 +765,7 @@ class IncidentsReconciliationIntTest(
         assertThat(mismatch.verdict).isEqualTo("responses mismatch for question: 1234")
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-detail-mismatch"),
+          eq("incidents-reports-reconciliation-mismatch-detail"),
           any(),
           isNull(),
         )
@@ -787,7 +787,7 @@ class IncidentsReconciliationIntTest(
           .expectBody().isEmpty
 
         verify(telemetryClient).trackEvent(
-          eq("incidents-reports-reconciliation-mismatch-multiple-answers-ignored"),
+          eq("incidents-reports-reconciliation-ignored-mismatch-multiple-answers"),
           check {
             assertThat(it).containsEntry("nomisIncidentId", "$nomisIncidentId")
             assertThat(it).containsKey("dpsIncidentId")
