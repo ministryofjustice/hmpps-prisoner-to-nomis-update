@@ -91,13 +91,18 @@ class IncidentsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     )
   }
 
-  fun stubGetIncidentByNomisId(nomisIncidentId: Long = 1234, response: ReportWithDetails = dpsIncident().copy(reportReference = nomisIncidentId.toString())) {
+  fun stubGetIncidentByNomisId(
+    nomisIncidentId: Long = 1234,
+    response: ReportWithDetails = dpsIncident().copy(reportReference = nomisIncidentId.toString()),
+    status: HttpStatus = HttpStatus.OK,
+    error: ErrorResponse = ErrorResponse(status = status.value()),
+  ) {
     stubFor(
       get(urlMatching("/incident-reports/reference/$nomisIncidentId/with-details")).willReturn(
         aResponse()
-          .withStatus(HttpStatus.OK.value())
+          .withStatus(status.value())
           .withHeader("Content-Type", APPLICATION_JSON_VALUE)
-          .withBody(response),
+          .withBody(if (status == HttpStatus.OK) response else error),
       ),
     )
   }

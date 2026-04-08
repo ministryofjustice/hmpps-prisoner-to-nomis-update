@@ -4,6 +4,7 @@ import kotlinx.coroutines.reactive.awaitSingle
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
 import org.springframework.web.reactive.function.client.WebClient
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.api.IncidentReportsApi.StatusGetBasicReports
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
@@ -26,9 +27,10 @@ class IncidentsDpsApiService(@Qualifier("incidentsApiWebClient") private val web
     .getBasicReports(location = listOf(agencyId), status = statusValues, size = 1)
     .awaitSingle()
 
-  suspend fun getIncidentDetailsByNomisId(nomisIncidentId: Long): ReportWithDetails = incidentsApi
-    .getReportWithDetailsByReference(nomisIncidentId.toString())
-    .awaitSingle()
+  suspend fun getIncidentDetailsByNomisId(nomisIncidentId: Long): ReportWithDetails? = incidentsApi.prepare(
+    incidentsApi.getReportWithDetailsByReferenceRequestConfig(nomisIncidentId.toString()),
+  ).retrieve()
+    .awaitBodyOrNullForNotFound()
 
   suspend fun getOpenIncidentsCount(agencyId: String) = getIncidentsByAgencyAndStatus(agencyId, openStatusValues).totalElements
 

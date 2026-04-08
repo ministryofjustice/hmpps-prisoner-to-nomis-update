@@ -81,6 +81,8 @@ class IncidentsService(
 
   suspend fun repairIncident(incidentId: Long) {
     val dps = dpsApiService.getIncidentDetailsByNomisId(incidentId)
+      ?: throw BadRequestException("Incident $incidentId not found in DPS")
+
     if (!nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
       throw BadRequestException("Incidents not switched on for ${dps.location}")
     }

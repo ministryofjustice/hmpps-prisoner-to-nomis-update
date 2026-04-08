@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
+import org.springframework.http.HttpStatus
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsDpsApiExtension.Companion.incidentsDpsApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.ReportWithDetails
@@ -86,29 +87,34 @@ class IncidentsDpsApiServiceTest {
     }
 
     @Test
-    fun `will retrieve incident data from the api`() {
-      runBlocking {
-        val incident = apiService.getIncidentDetailsByNomisId(1234)
+    fun `will retrieve incident data from the api`() = runTest {
+      val incident = apiService.getIncidentDetailsByNomisId(1234)!!
 
-        with(incident) {
-          assertThat(id).isNotNull()
-          assertThat(reportReference).isEqualTo("1234")
-          assertThat(type).isEqualTo(ReportWithDetails.Type.ATTEMPTED_ESCAPE_FROM_ESCORT_1)
-          assertThat(incidentDateAndTime).isEqualTo("2021-07-05T10:35:17")
-          assertThat(title).isEqualTo("There was an incident in the exercise yard")
-          assertThat(description).isEqualTo("Fred and Jimmy were fighting outside.")
-          assertThat(reportedBy).isEqualTo("FSTAFF_GEN")
-          assertThat(reportedAt).isEqualTo("2021-07-07T10:35:17.12345")
-          assertThat(status).isEqualTo(ReportWithDetails.Status.AWAITING_REVIEW)
-          assertThat(createdAt).isEqualTo("2021-07-05T10:35:17")
-          assertThat(modifiedAt).isEqualTo("2021-07-15T10:35:17")
-          assertThat(modifiedBy).isEqualTo("JSMITH")
-          assertThat(createdInNomis).isEqualTo(false)
-          assertThat(prisonersInvolved[0].prisonerNumber).isEqualTo("A1234BC")
-          assertThat(questions[0].question).isEqualTo("Was anybody hurt?")
-          assertThat(questions[0].responses[0].response).isEqualTo("Yes")
-        }
+      with(incident) {
+        assertThat(id).isNotNull()
+        assertThat(reportReference).isEqualTo("1234")
+        assertThat(type).isEqualTo(ReportWithDetails.Type.ATTEMPTED_ESCAPE_FROM_ESCORT_1)
+        assertThat(incidentDateAndTime).isEqualTo("2021-07-05T10:35:17")
+        assertThat(title).isEqualTo("There was an incident in the exercise yard")
+        assertThat(description).isEqualTo("Fred and Jimmy were fighting outside.")
+        assertThat(reportedBy).isEqualTo("FSTAFF_GEN")
+        assertThat(reportedAt).isEqualTo("2021-07-07T10:35:17.12345")
+        assertThat(status).isEqualTo(ReportWithDetails.Status.AWAITING_REVIEW)
+        assertThat(createdAt).isEqualTo("2021-07-05T10:35:17")
+        assertThat(modifiedAt).isEqualTo("2021-07-15T10:35:17")
+        assertThat(modifiedBy).isEqualTo("JSMITH")
+        assertThat(createdInNomis).isEqualTo(false)
+        assertThat(prisonersInvolved[0].prisonerNumber).isEqualTo("A1234BC")
+        assertThat(questions[0].question).isEqualTo("Was anybody hurt?")
+        assertThat(questions[0].responses[0].response).isEqualTo("Yes")
       }
+    }
+
+    @Test
+    fun `will return null iof incident not found in DPS`() = runTest {
+      incidentsDpsApi.stubGetIncidentByNomisId(1234, status = HttpStatus.NOT_FOUND)
+      val incident = apiService.getIncidentDetailsByNomisId(1234)
+      assertThat(incident).isNull()
     }
   }
 
