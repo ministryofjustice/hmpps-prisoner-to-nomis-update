@@ -28,8 +28,6 @@ generic-service:
       SecDefaultAction "phase:2,pass,log,tag:github_team=syscon-devs,tag:namespace={{ .Release.Namespace }}"
       # Default is only GET HEAD POST OPTIONS so need to include PUT etc.
       SecAction "id:900200,phase:1,nolog,pass,t:none,setvar:tx.allowed_methods=GET HEAD POST OPTIONS PUT PATCH DELETE,setvar:tx.paranoia_level=3"
-      # Do not scan request body - triggered by upload
-      SecRuleUpdateTargetById 920272 "!REQUEST_BODY"
       # Block Detectify scanner with 418
       SecRule REQUEST_HEADERS:User-Agent "@pm detectify Detectify DETECTIFY" "id:800003,phase:1,deny,status:418,log,tag:github_team=syscon-devs,tag:namespace={{ .Release.Namespace }}"
       # Change default denial to be a 406 so that we can tell easily that it is modsecurity doing the blocking
