@@ -146,7 +146,7 @@ class IncidentsReconciliationService(
         }.onFailure {
           log.error("Unable to match agency for incident: $nomisOpenIncidentId", it)
           telemetryClient.trackEvent(
-            "incidents-reports-reconciliation-detail-mismatch-error",
+            "incidents-reports-reconciliation-mismatch-detail-error",
             mapOf("nomisId" to nomisOpenIncidentId),
           )
         }.getOrNull()
@@ -192,7 +192,7 @@ class IncidentsReconciliationService(
         .also { mismatch ->
           log.info("Incident mismatch found $mismatch")
           telemetryClient.trackEvent(
-            "incidents-reports-reconciliation-detail-mismatch",
+            "incidents-reports-reconciliation-mismatch-detail",
             mapOf(
               "nomisId" to mismatch.nomisId,
               "dpsId" to mismatch.dpsId,
@@ -243,7 +243,7 @@ class IncidentsReconciliationService(
         // Ignore and log any dodgy Nomis data
         if (!nomisQuestion.hasMultipleAnswers && nomisQuestion.answers.size > 1) {
           telemetryClient.trackEvent(
-            "incidents-reports-reconciliation-mismatch-multiple-answers-ignored",
+            "incidents-reports-reconciliation-ignored-mismatch-multiple-answers",
             mapOf(
               "nomisIncidentId" to nomis.incidentId,
               "dpsIncidentId" to dps.id,
