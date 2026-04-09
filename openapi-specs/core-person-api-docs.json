@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-03-27.2820.5f9333b"
+    "version" : "2026-04-08.2890.b765b5e"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -201,7 +201,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionGetResponse"
+                  "$ref" : "#/components/schemas/PrisonReligionReadResponse"
                 }
               }
             }
@@ -246,7 +246,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionResponse"
+                  "$ref" : "#/components/schemas/PrisonReligionSaveResponse"
                 }
               }
             }
@@ -463,7 +463,7 @@
           "content" : {
             "application/json" : {
               "schema" : {
-                "$ref" : "#/components/schemas/PrisonReligion"
+                "$ref" : "#/components/schemas/PrisonReligionHistory"
               }
             }
           },
@@ -475,7 +475,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonReligionResponse"
+                  "$ref" : "#/components/schemas/PrisonReligionSaveResponse"
                 }
               }
             }
@@ -621,7 +621,7 @@
     "/person/prison/dps/{prisonNumber}" : {
       "get" : {
         "tags" : [ "HMPPS Person API" ],
-        "description" : "Retrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**\n      In addition to the person data being returned, the response also includes a list of the prison religions associated with the person\n      and a prison specific representation of alias & identifiers.\n      This \n      ",
+        "description" : "**NOTE: Use this only if you want to retrieve Prison Religion history & Alias References.**\n\nRetrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person. The other Identifiers come from just this person **cprUUID is not supplied on this endpoint.** In addition to the person data being returned, the response also includes a list of the prison religions associated with the person and a prison specific representation of alias & identifiers.",
         "operationId" : "getByPrisonNumberDps",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -637,7 +637,7 @@
             "content" : {
               "*/*" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/PrisonCanonicalRecord"
+                  "$ref" : "#/components/schemas/DpsPrisonRecord"
                 }
               }
             }
@@ -1484,7 +1484,7 @@
         },
         "required" : [ "cprReligionId", "nomisReligionId" ]
       },
-      "PrisonReligionResponse" : {
+      "PrisonReligionSaveResponse" : {
         "type" : "object",
         "properties" : {
           "prisonNumber" : {
@@ -1520,7 +1520,7 @@
         },
         "required" : [ "modifyDateTime", "modifyUserId" ]
       },
-      "PrisonReligion" : {
+      "PrisonReligionHistory" : {
         "type" : "object",
         "properties" : {
           "nomisReligionId" : {
@@ -1591,7 +1591,7 @@
           "religions" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/PrisonReligion"
+              "$ref" : "#/components/schemas/PrisonReligionHistory"
             },
             "minItems" : 1
           }
@@ -2084,7 +2084,7 @@
           }
         }
       },
-      "PrisonReligionGet" : {
+      "PrisonReligion" : {
         "type" : "object",
         "properties" : {
           "religionCode" : {
@@ -2127,19 +2127,19 @@
         },
         "required" : [ "createDateTime", "createUserId" ]
       },
-      "PrisonReligionGetResponse" : {
+      "PrisonReligionReadResponse" : {
         "type" : "object",
         "properties" : {
           "prisonNumber" : {
             "type" : "string"
           },
           "religion" : {
-            "$ref" : "#/components/schemas/PrisonReligionGet"
+            "$ref" : "#/components/schemas/PrisonReligion"
           }
         },
         "required" : [ "prisonNumber", "religion" ]
       },
-      "PrisonCanonicalRecord" : {
+      "DpsPrisonRecord" : {
         "type" : "object",
         "properties" : {
           "cprUUID" : {
@@ -2225,7 +2225,7 @@
           "religionHistory" : {
             "type" : "array",
             "items" : {
-              "$ref" : "#/components/schemas/PrisonReligionGet"
+              "$ref" : "#/components/schemas/PrisonReligion"
             }
           }
         },
