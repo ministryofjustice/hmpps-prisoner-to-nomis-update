@@ -6,7 +6,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-19.1088.99624ff"
+    "version" : "2026-04-08.1173.c84cded"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -192,11 +192,15 @@
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationDateRange"
                 }, {
+                  "$ref" : "#/components/schemas/ChangeAuthorisationLocation"
+                }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationLocations"
                 }, {
                   "$ref" : "#/components/schemas/ChangeAuthorisationTransport"
                 }, {
                   "$ref" : "#/components/schemas/ChangePrisonPerson"
+                }, {
+                  "$ref" : "#/components/schemas/ClearAuthorisationSchedule"
                 }, {
                   "$ref" : "#/components/schemas/DeferAuthorisation"
                 }, {
@@ -1351,6 +1355,19 @@
         } ],
         "required" : [ "end", "start" ]
       },
+      "ChangeAuthorisationLocation" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "location" : {
+              "$ref" : "#/components/schemas/Location"
+            }
+          }
+        } ],
+        "required" : [ "location" ]
+      },
       "ChangeAuthorisationLocations" : {
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
@@ -1396,6 +1413,11 @@
           }
         } ],
         "required" : [ "personIdentifier", "prisonCode" ]
+      },
+      "ClearAuthorisationSchedule" : {
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        } ]
       },
       "DeferAuthorisation" : {
         "allOf" : [ {
