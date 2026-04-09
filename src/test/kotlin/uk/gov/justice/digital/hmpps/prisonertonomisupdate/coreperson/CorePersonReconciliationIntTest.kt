@@ -31,7 +31,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.HttpStatus
 import org.springframework.http.HttpStatus.BAD_GATEWAY
 import org.springframework.http.HttpStatus.NOT_FOUND
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligionGet
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonReligion
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CodeDescription
@@ -137,7 +137,7 @@ class CorePersonReconciliationIntTest(
         prisonNumber = "A1234BC",
         corePersonDto(religion = "ZOO").copy(
           religionHistory = listOf(
-            PrisonReligionGet(
+            PrisonReligion(
               // different religion
               religionCode = "DRU",
               religionDescription = "DRU Description",
@@ -150,7 +150,7 @@ class CorePersonReconciliationIntTest(
               modifyUserId = "User",
               current = true,
             ),
-            PrisonReligionGet(
+            PrisonReligion(
               religionCode = "DRU",
               religionDescription = "DRU Description",
               changeReasonKnown = true,

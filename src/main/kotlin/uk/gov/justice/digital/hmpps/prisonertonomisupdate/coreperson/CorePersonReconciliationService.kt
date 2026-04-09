@@ -10,7 +10,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.PrisonCanonicalRecord
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.coreperson.model.DpsPrisonRecord
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationErrorPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
@@ -198,7 +198,7 @@ class CorePersonReconciliationService(
 
 private fun LocalDateTime?.notEqualsIgnoringNanos(createDatetime: LocalDateTime?): Boolean = !Objects.equals(this?.withNano(0), createDatetime?.withNano(0))
 
-fun PrisonCanonicalRecord.toPerson() = PrisonerPerson(
+fun DpsPrisonRecord.toPerson() = PrisonerPerson(
   nationality = nationalities.firstOrNull()?.code,
   religion = religion.description,
   religions = religionHistory.map {
