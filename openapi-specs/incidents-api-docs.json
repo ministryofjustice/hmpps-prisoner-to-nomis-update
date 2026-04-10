@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-31.649.3dbe61f"
+    "version" : "2026-04-09.655.cdbb9a3"
   },
   "servers" : [ {
     "url" : "/",
@@ -49,56 +49,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -117,56 +67,6 @@
         "tags" : [ "hmpps-queue-resource" ],
         "operationId" : "retryAllDlqs",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -196,56 +96,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -279,56 +129,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns all questions and responses in report",
             "content" : {
@@ -344,6 +144,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -399,12 +209,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns all questions and responses in report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Question"
+                  }
                 }
               }
             }
@@ -419,51 +232,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns all questions and responses in report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Question"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -519,12 +299,15 @@
           "example" : [ 40102, 40103 ]
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns all remaining questions and responses in report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/Question"
+                  }
                 }
               }
             }
@@ -539,51 +322,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns all remaining questions and responses in report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/Question"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -630,56 +380,6 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Invalid request",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "201" : {
             "description" : "Migrated NOMIS incident report id",
             "content" : {
@@ -700,8 +400,28 @@
               }
             }
           },
+          "400" : {
+            "description" : "Invalid request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -937,12 +657,12 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
+          "200" : {
+            "description" : "Returns a page of incident reports",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/SimplePageReportBasic"
                 }
               }
             }
@@ -957,48 +677,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns a page of incident reports",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/SimplePageReportBasic"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1025,12 +715,12 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "201" : {
+            "description" : "Returns created draft incident report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ReportWithDetails"
                 }
               }
             }
@@ -1045,48 +735,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201" : {
-            "description" : "Returns created draft incident report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ReportWithDetails"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1128,56 +788,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns staff involvement",
             "content" : {
@@ -1193,6 +803,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1242,12 +862,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "201" : {
+            "description" : "Returns staff involvement",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StaffInvolvement"
+                  }
                 }
               }
             }
@@ -1262,51 +885,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201" : {
-            "description" : "Returns staff involvement",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/StaffInvolvement"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1348,56 +938,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns prisoner involvement",
             "content" : {
@@ -1413,6 +953,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1462,12 +1012,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "201" : {
+            "description" : "Returns prisoner involvement",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerInvolvement"
+                  }
                 }
               }
             }
@@ -1482,51 +1035,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201" : {
-            "description" : "Returns prisoner involvement",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/PrisonerInvolvement"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1568,56 +1088,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns description addendums",
             "content" : {
@@ -1633,6 +1103,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1682,12 +1162,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "201" : {
+            "description" : "Returns description addendums",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DescriptionAddendum"
+                  }
                 }
               }
             }
@@ -1702,51 +1185,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201" : {
-            "description" : "Returns description addendums",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DescriptionAddendum"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1788,56 +1238,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns correction requests",
             "content" : {
@@ -1853,6 +1253,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -1902,12 +1312,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "201" : {
+            "description" : "Returns correction requests",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CorrectionRequest"
+                  }
                 }
               }
             }
@@ -1922,51 +1335,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "201" : {
-            "description" : "Returns correction requests",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/CorrectionRequest"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2020,56 +1400,6 @@
           "example" : 1
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns staff involvement",
             "content" : {
@@ -2085,6 +1415,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2146,12 +1486,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns staff involvement",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/StaffInvolvement"
+                  }
                 }
               }
             }
@@ -2166,51 +1509,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns staff involvement",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/StaffInvolvement"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2264,56 +1574,6 @@
           "example" : 1
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns prisoner involvement",
             "content" : {
@@ -2329,6 +1589,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2390,12 +1660,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns prisoner involvement",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PrisonerInvolvement"
+                  }
                 }
               }
             }
@@ -2410,51 +1683,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns prisoner involvement",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/PrisonerInvolvement"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2508,56 +1748,6 @@
           "example" : 1
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns description addendums",
             "content" : {
@@ -2573,6 +1763,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2634,12 +1834,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns description addendums",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/DescriptionAddendum"
+                  }
                 }
               }
             }
@@ -2654,51 +1857,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns description addendums",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/DescriptionAddendum"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2752,56 +1922,6 @@
           "example" : 1
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns correction requests",
             "content" : {
@@ -2817,6 +1937,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2878,12 +2008,15 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns correction requests",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/CorrectionRequest"
+                  }
                 }
               }
             }
@@ -2898,51 +2031,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns correction requests",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/CorrectionRequest"
-                  }
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -2984,56 +2084,6 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns an incident report",
             "content" : {
@@ -3046,6 +2096,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3085,12 +2145,12 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns deleted incident report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ReportWithDetails"
                 }
               }
             }
@@ -3105,48 +2165,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns deleted incident report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ReportWithDetails"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3196,12 +2226,12 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns updated incident report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ReportBasic"
                 }
               }
             }
@@ -3216,48 +2246,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns updated incident report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ReportBasic"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3309,12 +2309,12 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns updated incident report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ReportWithDetails"
                 }
               }
             }
@@ -3329,48 +2329,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns updated incident report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ReportWithDetails"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3422,12 +2392,12 @@
           "required" : true
         },
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
+          "200" : {
+            "description" : "Returns updated incident report",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
+                  "$ref" : "#/components/schemas/ReportWithDetails"
                 }
               }
             }
@@ -3442,48 +2412,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "Returns updated incident report",
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/ReportWithDetails"
+                  "$ref" : "#/components/schemas/ErrorResponse"
                 }
               }
             }
           },
-          "401" : {
-            "description" : "Unauthorized to access this endpoint",
+          "403" : {
+            "description" : "Missing required role. Requires the MAINTAIN_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -3547,56 +2487,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Unexpected error occurred",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Request successfully processed - content found",
             "content" : {
@@ -3636,740 +2526,28 @@
                 }
               }
             }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Unexpected error occurred",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
-      }
-    },
-    "/reports/{reportId}/{reportVariantId}" : {
-      "get" : {
-        "tags" : [ "Data API - Synchronous" ],
-        "description" : "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
-        "operationId" : "configuredApiDataset",
-        "parameters" : [ {
-          "name" : "selectedPage",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 1,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "pageSize",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 10,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "sortColumn",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "sortedAsc",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        }, {
-          "name" : "reportId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "reportVariantId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default" : {
-            "description" : "default response",
-            "headers" : {
-              "x-no-data-warning" : {
-                "description" : "Provides additional information about why no data has been returned.",
-                "style" : "simple",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            },
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "object",
-                    "additionalProperties" : { }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/reports/{reportId}/{reportVariantId}/{fieldId}" : {
-      "get" : {
-        "tags" : [ "Data API - Synchronous" ],
-        "description" : "Returns the dataset for the given report ID and report variant ID filtered by the filters provided in the query.",
-        "operationId" : "configuredApiDynamicFilter",
-        "parameters" : [ {
-          "name" : "pageSize",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 10,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "sortedAsc",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        }, {
-          "name" : "prefix",
-          "in" : "query",
-          "description" : "The value to match the start of the fieldId",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "Lond"
-        }, {
-          "name" : "reportId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "reportVariantId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "fieldId",
-          "in" : "path",
-          "description" : "The name of the schema field which will be used as a dynamic filter.",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "example" : "name"
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default" : {
-            "description" : "default response",
-            "headers" : {
-              "x-no-data-warning" : {
-                "description" : "Provides additional information about why no data has been returned.",
-                "style" : "simple",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            },
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "string"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/reports/{reportId}/{reportVariantId}/download" : {
-      "get" : {
-        "tags" : [ "Data API - Synchronous" ],
-        "description" : "Streams the entire result set of the sync query execution as a csv file.",
-        "operationId" : "downloadCsv",
-        "parameters" : [ {
-          "name" : "reportId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "reportVariantId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          }
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        }, {
-          "name" : "columns",
-          "in" : "query",
-          "description" : "List of column names to include in the generated report. If not provided all the columns will be returned.",
-          "required" : false,
-          "schema" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        }, {
-          "name" : "sortColumn",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "sortedAsc",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK"
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/reports/{reportId}/{reportVariantId}/count" : {
-      "get" : {
-        "tags" : [ "Data API - Synchronous" ],
-        "description" : "Returns the number of records for the given report ID and report variant ID filtered by the filters provided in the query.",
-        "operationId" : "configuredApiCount",
-        "parameters" : [ {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        }, {
-          "name" : "reportId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "reportVariantId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default" : {
-            "description" : "default response",
-            "headers" : {
-              "x-no-data-warning" : {
-                "description" : "Provides additional information about why no data has been returned.",
-                "style" : "simple",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            },
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/Count"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/reports/{reportId}/dashboards/{dashboardId}" : {
-      "get" : {
-        "tags" : [ "Data API - Synchronous" ],
-        "description" : "Returns the dataset for the given report ID and dashboard ID filtered by the filters provided in the query.",
-        "operationId" : "configuredApiDatasetForDashboard",
-        "parameters" : [ {
-          "name" : "selectedPage",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 1,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "pageSize",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "integer",
-            "format" : "int64",
-            "default" : 10,
-            "minimum" : 1
-          }
-        }, {
-          "name" : "sortColumn",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "sortedAsc",
-          "in" : "query",
-          "required" : false,
-          "schema" : {
-            "type" : "boolean"
-          }
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        }, {
-          "name" : "reportId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dashboardId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "default" : {
-            "description" : "default response",
-            "headers" : {
-              "x-no-data-warning" : {
-                "description" : "Provides additional information about why no data has been returned.",
-                "style" : "simple",
-                "schema" : {
-                  "type" : "string"
-                }
-              }
-            },
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "type" : "object",
-                    "additionalProperties" : { }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
       }
     },
     "/queue-admin/get-dlq-messages/{dlqName}" : {
@@ -4394,56 +2572,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "OK",
             "content" : {
@@ -4455,163 +2583,6 @@
             }
           }
         }
-      }
-    },
-    "/productCollections" : {
-      "get" : {
-        "tags" : [ "Product Collection API" ],
-        "description" : "Gets all product collections",
-        "operationId" : "getCollections",
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ProductCollectionSummary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/productCollections/{id}" : {
-      "get" : {
-        "tags" : [ "Product Collection API" ],
-        "description" : "Gets product collection by id",
-        "operationId" : "getCollections_1",
-        "parameters" : [ {
-          "name" : "id",
-          "in" : "path",
-          "description" : "The ID of the product collection.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "72c22579-3f77-4e23-8d16-1e5aadcc88c9"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ProductCollectionDTO"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
       }
     },
     "/incident-reports/{id}/with-details" : {
@@ -4643,56 +2614,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns an incident report",
             "content" : {
@@ -4705,6 +2626,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4745,56 +2676,6 @@
           "example" : "11124143"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns an incident report",
             "content" : {
@@ -4807,6 +2688,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4856,56 +2747,6 @@
           }
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns an incident report",
             "content" : {
@@ -4918,6 +2759,16 @@
           },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the VIEW_INCIDENT_REPORTS role",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -4939,484 +2790,12 @@
         }
       }
     },
-    "/definitions" : {
-      "get" : {
-        "tags" : [ "Report Definition API" ],
-        "description" : "Gets summaries of all report definitions",
-        "operationId" : "definitions",
-        "parameters" : [ {
-          "name" : "renderMethod",
-          "in" : "query",
-          "description" : "Set this parameter to filter the list to only include reports for the given rendering method.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "enum" : [ "HTML", "PDF", "SVG" ]
-          },
-          "example" : "HTML"
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "type" : "array",
-                  "items" : {
-                    "$ref" : "#/components/schemas/ReportDefinitionSummary"
-                  }
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/definitions/{reportId}" : {
-      "get" : {
-        "tags" : [ "Report Definition API" ],
-        "description" : "Gets report definition summary",
-        "operationId" : "definitionSummary",
-        "parameters" : [ {
-          "name" : "reportId",
-          "in" : "path",
-          "description" : "The ID of the report definition.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "external-movements"
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ReportDefinitionSummary"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/definitions/{reportId}/{variantId}" : {
-      "get" : {
-        "tags" : [ "Report Definition API" ],
-        "description" : "Gets report definition containing a single variant.",
-        "operationId" : "definition",
-        "parameters" : [ {
-          "name" : "reportId",
-          "in" : "path",
-          "description" : "The ID of the report definition.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "external-movements"
-        }, {
-          "name" : "variantId",
-          "in" : "path",
-          "description" : "The ID of the variant definition.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "list"
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SingleVariantReportDefinition"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
-    "/definitions/{dataProductDefinitionId}/dashboards/{dashboardId}" : {
-      "get" : {
-        "tags" : [ "Metric Definition API" ],
-        "description" : "Gets the metric dashboard definition.",
-        "operationId" : "dashboardDefinition",
-        "parameters" : [ {
-          "name" : "dataProductDefinitionId",
-          "in" : "path",
-          "description" : "The ID of the Data Product Definition.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "external-movements"
-        }, {
-          "name" : "dashboardId",
-          "in" : "path",
-          "description" : "The ID of the dashboard.",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          },
-          "example" : "dashboardId"
-        }, {
-          "name" : "dataProductDefinitionsPath",
-          "in" : "query",
-          "description" : "This optional parameter sets the path of the directory of the data product definition files your application will use.\n      \"This query parameter is intended to be used in conjunction with the `dpr.lib.dataProductDefinitions.host` property to retrieve definition files from another application by using a web client.",
-          "required" : false,
-          "schema" : {
-            "type" : "string",
-            "default" : "definitions/prisons/orphanage"
-          },
-          "example" : "definitions/prisons/orphanage"
-        }, {
-          "name" : "filters",
-          "in" : "query",
-          "description" : "The filter query parameters have to start with the prefix \"filters.\" followed by the name of the filter.\n      For range filters, like date for instance, these need to be followed by a .start or .end suffix accordingly.\n      For multiselect filters, these are passed as one query parameter per filter with a comma separated list of values:\n      filters.someMultiselectFilter=a,b,c\n    ",
-          "required" : true,
-          "schema" : {
-            "type" : "object",
-            "additionalProperties" : {
-              "type" : "string"
-            }
-          },
-          "example" : {
-            "filters.date.start" : "2023-04-25",
-            "filters.date.end" : "2023-05-30",
-            "filters.someMultiselectFilter" : "a,b,c"
-          }
-        } ],
-        "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/DashboardDefinition"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "bearer-jwt" : [ ]
-        } ]
-      }
-    },
     "/constants/user-types" : {
       "get" : {
         "tags" : [ "Constants" ],
         "summary" : "List codes and descriptions of user types",
         "operationId" : "userTypes",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5439,56 +2818,6 @@
         "summary" : "List codes and descriptions of user actions",
         "operationId" : "userActions",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5511,56 +2840,6 @@
         "summary" : "List codes and descriptions of incident types",
         "operationId" : "types",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5583,56 +2862,6 @@
         "summary" : "List codes and descriptions of incident types families",
         "operationId" : "typeFamilies",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5655,56 +2884,6 @@
         "summary" : "List codes and descriptions of incident statuses",
         "operationId" : "statuses",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5727,56 +2906,6 @@
         "summary" : "List codes and descriptions of roles of staff involvement in an incident",
         "operationId" : "staffRoles",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5799,56 +2928,6 @@
         "summary" : "List codes and descriptions of roles of a prisoner’s involvement in an incident",
         "operationId" : "prisonerRoles",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5871,56 +2950,6 @@
         "summary" : "List codes and descriptions of outcomes from a prisoner’s involvement in an incident",
         "operationId" : "prisonerOutcomes",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -5943,56 +2972,6 @@
         "summary" : "List codes and descriptions of information sources for incident reports",
         "operationId" : "informationSource",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes and descriptions",
             "content" : {
@@ -6015,56 +2994,6 @@
         "summary" : "List codes used to discriminate between error types",
         "operationId" : "errorCodes",
         "responses" : {
-          "403" : {
-            "description" : "Forbidden",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "400" : {
-            "description" : "Bad Request",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
           "200" : {
             "description" : "Returns codes",
             "content" : {
@@ -6101,15 +3030,8 @@
           "example" : "11111111-2222-3333-4444-555555555555"
         } ],
         "responses" : {
-          "403" : {
-            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
+          "204" : {
+            "description" : "Incident report deleted"
           },
           "400" : {
             "description" : "Invalid request",
@@ -6121,41 +3043,18 @@
               }
             }
           },
-          "500" : {
-            "description" : "Internal Server Error",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "410" : {
-            "description" : "Gone",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "429" : {
-            "description" : "Too Many Requests",
-            "content" : {
-              "*/*" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/ErrorResponse"
-                }
-              }
-            }
-          },
-          "204" : {
-            "description" : "Incident report deleted"
-          },
           "401" : {
             "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Missing required role. Requires the MIGRATE_INCIDENT_REPORTS role with write scope.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -6180,6 +3079,26 @@
   },
   "components" : {
     "schemas" : {
+      "RetryDlqResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
+      "PurgeQueueResult" : {
+        "type" : "object",
+        "properties" : {
+          "messagesFoundCount" : {
+            "type" : "integer",
+            "format" : "int32"
+          }
+        },
+        "required" : [ "messagesFoundCount" ]
+      },
       "ErrorResponse" : {
         "type" : "object",
         "description" : "Error response",
@@ -6216,26 +3135,6 @@
         },
         "readOnly" : true,
         "required" : [ "developerMessage", "status", "userMessage" ]
-      },
-      "RetryDlqResult" : {
-        "type" : "object",
-        "properties" : {
-          "messagesFoundCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "messagesFoundCount" ]
-      },
-      "PurgeQueueResult" : {
-        "type" : "object",
-        "properties" : {
-          "messagesFoundCount" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "messagesFoundCount" ]
       },
       "AddOrUpdateQuestionResponse" : {
         "type" : "object",
@@ -8048,18 +4947,6 @@
         },
         "required" : [ "content" ]
       },
-      "Count" : {
-        "type" : "object",
-        "properties" : {
-          "count" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "The total number of records",
-            "example" : 501
-          }
-        },
-        "required" : [ "count" ]
-      },
       "DlqMessage" : {
         "type" : "object",
         "properties" : {
@@ -8092,57 +4979,6 @@
           }
         },
         "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
-      },
-      "ProductCollectionSummary" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "version" : {
-            "type" : "string"
-          },
-          "ownerName" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "id", "name", "ownerName", "version" ]
-      },
-      "ProductCollectionDTO" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "version" : {
-            "type" : "string"
-          },
-          "ownerName" : {
-            "type" : "string"
-          },
-          "products" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ProductCollectionProduct"
-            }
-          }
-        },
-        "required" : [ "id", "name", "ownerName", "products", "version" ]
-      },
-      "ProductCollectionProduct" : {
-        "type" : "object",
-        "properties" : {
-          "productId" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "productId" ]
       },
       "SimplePageReportBasic" : {
         "type" : "object",
@@ -8182,551 +5018,21 @@
               "type" : "string"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Number of elements in this page",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Total number of pages",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "Number of elements in this page",
+            "example" : 20
           }
         },
         "readOnly" : true,
         "required" : [ "content", "number", "numberOfElements", "size", "sort", "totalElements", "totalPages" ]
-      },
-      "DashboardDefinitionSummary" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "loadType" : {
-            "type" : "string",
-            "enum" : [ "sync", "async" ]
-          }
-        },
-        "required" : [ "id", "name" ]
-      },
-      "ReportDefinitionSummary" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "variants" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/VariantDefinitionSummary"
-            }
-          },
-          "dashboards" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardDefinitionSummary"
-            }
-          },
-          "authorised" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "authorised", "id", "name", "variants" ]
-      },
-      "VariantDefinitionSummary" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "isMissing" : {
-            "type" : "boolean"
-          },
-          "loadType" : {
-            "type" : "string",
-            "enum" : [ "sync", "async" ]
-          }
-        },
-        "required" : [ "id", "isMissing", "name" ]
-      },
-      "ChildVariantDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "resourceName" : {
-            "type" : "string"
-          },
-          "specification" : {
-            "$ref" : "#/components/schemas/Specification"
-          },
-          "joinFields" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        },
-        "required" : [ "id", "joinFields", "name", "resourceName" ]
-      },
-      "DynamicFilterOption" : {
-        "type" : "object",
-        "properties" : {
-          "minimumLength" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        }
-      },
-      "FieldDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "display" : {
-            "type" : "string"
-          },
-          "wordWrap" : {
-            "type" : "string",
-            "enum" : [ "none", "normal", "break-words" ]
-          },
-          "filter" : {
-            "$ref" : "#/components/schemas/FilterDefinition"
-          },
-          "sortable" : {
-            "type" : "boolean"
-          },
-          "defaultsort" : {
-            "type" : "boolean"
-          },
-          "sortDirection" : {
-            "type" : "string",
-            "enum" : [ "asc", "desc" ]
-          },
-          "type" : {
-            "type" : "string",
-            "enum" : [ "boolean", "date", "double", "HTML", "long", "string", "time" ]
-          },
-          "mandatory" : {
-            "type" : "boolean"
-          },
-          "visible" : {
-            "type" : "boolean"
-          },
-          "calculated" : {
-            "type" : "boolean"
-          },
-          "header" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "calculated", "defaultsort", "display", "header", "mandatory", "name", "sortable", "type", "visible" ]
-      },
-      "FilterDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "type" : {
-            "type" : "string",
-            "enum" : [ "Radio", "Select", "multiselect", "daterange", "autocomplete", "text", "date", "granulardaterange" ]
-          },
-          "mandatory" : {
-            "type" : "boolean"
-          },
-          "pattern" : {
-            "type" : "string"
-          },
-          "staticOptions" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FilterOption"
-            }
-          },
-          "dynamicOptions" : {
-            "$ref" : "#/components/schemas/DynamicFilterOption"
-          },
-          "defaultValue" : {
-            "type" : "string"
-          },
-          "min" : {
-            "type" : "string"
-          },
-          "max" : {
-            "type" : "string"
-          },
-          "interactive" : {
-            "type" : "boolean"
-          },
-          "defaultGranularity" : {
-            "type" : "string",
-            "enum" : [ "hourly", "daily", "weekly", "monthly", "quarterly", "annually" ]
-          },
-          "defaultQuickFilterValue" : {
-            "type" : "string",
-            "enum" : [ "today", "yesterday", "last-seven-days", "last-thirty-days", "last-month", "last-full-month", "last-ninety-days", "last-three-months", "last-full-three-months", "last-year", "last-full-year", "tomorrow", "next-seven-days", "next-thirty-days", "next-month", "next-full-month", "next-ninety-days", "next-three-months", "next-full-three-months", "next-year", "next-full-year" ]
-          },
-          "index" : {
-            "type" : "integer",
-            "format" : "int32"
-          }
-        },
-        "required" : [ "mandatory", "type" ]
-      },
-      "FilterOption" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "display" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "display", "name" ]
-      },
-      "ReportSummary" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "template" : {
-            "type" : "string",
-            "enum" : [ "table-header", "table-footer", "section-header", "section-footer", "page-header", "page-footer" ]
-          },
-          "fields" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/SummaryField"
-            }
-          }
-        },
-        "required" : [ "fields", "id", "template" ]
-      },
-      "SingleVariantReportDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "variant" : {
-            "$ref" : "#/components/schemas/VariantDefinition"
-          }
-        },
-        "required" : [ "id", "name", "variant" ]
-      },
-      "Specification" : {
-        "type" : "object",
-        "properties" : {
-          "template" : {
-            "type" : "string",
-            "enum" : [ "list", "list-section", "list-tab", "summary", "summary-section", "parent-child", "parent-child-section", "row-section", "row-section-child" ]
-          },
-          "fields" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FieldDefinition"
-            }
-          },
-          "sections" : {
-            "type" : "array",
-            "items" : {
-              "type" : "string"
-            }
-          }
-        },
-        "required" : [ "fields", "sections", "template" ]
-      },
-      "SummaryField" : {
-        "type" : "object",
-        "properties" : {
-          "name" : {
-            "type" : "string"
-          },
-          "display" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string",
-            "enum" : [ "boolean", "date", "double", "HTML", "long", "string", "time" ]
-          },
-          "header" : {
-            "type" : "boolean"
-          },
-          "mergeRows" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "name" ]
-      },
-      "VariantDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "resourceName" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "specification" : {
-            "$ref" : "#/components/schemas/Specification"
-          },
-          "classification" : {
-            "type" : "string"
-          },
-          "printable" : {
-            "type" : "boolean"
-          },
-          "summaries" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ReportSummary"
-            }
-          },
-          "interactive" : {
-            "type" : "boolean"
-          },
-          "childVariants" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ChildVariantDefinition"
-            }
-          }
-        },
-        "required" : [ "id", "name", "resourceName" ]
-      },
-      "DashboardBucketDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "min" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "max" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "hexColour" : {
-            "type" : "string"
-          }
-        }
-      },
-      "DashboardDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "name" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "sections" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardSectionDefinition"
-            }
-          },
-          "filterFields" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FieldDefinition"
-            }
-          }
-        },
-        "required" : [ "id", "name", "sections" ]
-      },
-      "DashboardOptionDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "useRagColour" : {
-            "type" : "boolean"
-          },
-          "baseColour" : {
-            "type" : "string"
-          },
-          "buckets" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardBucketDefinition"
-            }
-          },
-          "showLatest" : {
-            "type" : "boolean"
-          },
-          "columnsAsList" : {
-            "type" : "boolean"
-          },
-          "horizontal" : {
-            "type" : "boolean"
-          },
-          "xStacked" : {
-            "type" : "boolean",
-            "writeOnly" : true
-          },
-          "yStacked" : {
-            "type" : "boolean",
-            "writeOnly" : true
-          },
-          "xstacked" : {
-            "type" : "boolean"
-          },
-          "ystacked" : {
-            "type" : "boolean"
-          }
-        }
-      },
-      "DashboardSectionDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "display" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "visualisations" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardVisualisationDefinition"
-            }
-          }
-        },
-        "required" : [ "display", "id", "visualisations" ]
-      },
-      "DashboardVisualisationColumnDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "display" : {
-            "type" : "string"
-          },
-          "aggregate" : {
-            "type" : "string",
-            "enum" : [ "sum", "average" ]
-          },
-          "unit" : {
-            "type" : "string",
-            "enum" : [ "NUMBER", "PERCENTAGE" ]
-          },
-          "displayValue" : {
-            "type" : "boolean"
-          },
-          "axis" : {
-            "type" : "string"
-          },
-          "optional" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "id" ]
-      },
-      "DashboardVisualisationColumnsDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "keys" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardVisualisationColumnDefinition"
-            }
-          },
-          "measures" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/DashboardVisualisationColumnDefinition"
-            }
-          },
-          "filters" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/ValueVisualisationColumnDefinition"
-            }
-          },
-          "expectNulls" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "expectNulls", "measures" ]
-      },
-      "DashboardVisualisationDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "type" : {
-            "type" : "string",
-            "enum" : [ "list", "doughnut", "bar", "bar-timeseries", "line", "scorecard", "scorecard-group", "matrix-timeseries", "line-timeseries" ]
-          },
-          "display" : {
-            "type" : "string"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "columns" : {
-            "$ref" : "#/components/schemas/DashboardVisualisationColumnsDefinition"
-          },
-          "options" : {
-            "$ref" : "#/components/schemas/DashboardOptionDefinition"
-          }
-        },
-        "required" : [ "columns", "display", "id", "type" ]
-      },
-      "ValueVisualisationColumnDefinition" : {
-        "type" : "object",
-        "properties" : {
-          "id" : {
-            "type" : "string"
-          },
-          "equals" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "id" ]
       },
       "UserTypeConstantDescription" : {
         "type" : "object",
