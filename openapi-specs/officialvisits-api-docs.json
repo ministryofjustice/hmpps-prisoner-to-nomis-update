@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-01.649.0918247"
+    "version" : "2026-04-09.657.7d034fe"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -3551,6 +3551,10 @@
           "overrideBanStaffUsername" : {
             "type" : "string",
             "description" : "The staff username who authorised an override for a ban for this visit"
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "The current term marker. True if the visit is associated with the prisoner's latest term in prison, otherwise false"
           }
         },
         "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "officialVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "statusCode", "visitDate", "visitType", "visitors" ]
