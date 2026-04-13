@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2025-12-19.3579.b265353"
+    "version" : "2026-04-10.133.48480d0"
   },
   "servers" : [ {
     "url" : "/",
@@ -5125,6 +5125,66 @@
         }
       }
     },
+    "/prisoner-contact/relationships/summary" : {
+      "post" : {
+        "tags" : [ "Prisoner relationships" ],
+        "summary" : "Relationship summary details for prisoners and contacts",
+        "description" : "Relationship summary details for a list of prisoner number and contact ID pairs",
+        "operationId" : "postPrisonerContactRelationships",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerContactRelationshipsRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "The prisoner and contact relationship summary details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PrisonerContactRelationshipsResponse"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "The request was invalid or empty",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/migrate/prisoner-restrictions" : {
       "post" : {
         "tags" : [ "Migrate and sync" ],
@@ -7232,6 +7292,14 @@
           },
           "example" : "A1234BC"
         }, {
+          "name" : "approvedVisitor",
+          "in" : "query",
+          "description" : "If specified and true then only approved contacts will be returned, or if false only unapproved contacts. If omitted, then it will not influence the query.",
+          "required" : false,
+          "schema" : {
+            "type" : "boolean"
+          }
+        }, {
           "name" : "active",
           "in" : "query",
           "description" : "If specified and true then only relationships that are active will be returned, or if false only inactive ones. If omitted, then all relationships will be returned.",
@@ -7910,16 +7978,15 @@
       "get" : {
         "tags" : [ "Contacts" ],
         "summary" : "Search contacts",
-        "description" : "Search all contacts by their last name or first name or middle name or date of birth or contact id",
+        "description" : "Search contacts by name, date of birth or contact ID",
         "operationId" : "searchContacts",
         "parameters" : [ {
           "name" : "lastName",
           "in" : "query",
           "description" : "Last name of the contact",
-          "required" : true,
+          "required" : false,
           "schema" : {
             "type" : "string",
-            "minLength" : 1,
             "pattern" : "[a-zA-Z\\s,.'-]*"
           },
           "example" : "Jones"
@@ -7946,33 +8013,45 @@
         }, {
           "name" : "contactId",
           "in" : "query",
+          "description" : "The contact ID",
           "required" : false,
           "schema" : {
             "type" : "string"
-          }
+          },
+          "example" : 123456
         }, {
           "name" : "dateOfBirth",
           "in" : "query",
-          "description" : "The contact id",
+          "description" : "Date of birth (dd/mm/yyyy)",
           "required" : false,
           "schema" : {
             "type" : "string",
             "format" : "date"
           },
-          "example" : 123456
+          "example" : "30/12/2010"
         }, {
-          "name" : "soundsLike",
+          "name" : "searchType",
           "in" : "query",
-          "description" : "If true, use sounds-like search (trigram similarity)",
+          "description" : "The search type one of EXACT, PARTIAL or SOUNDS_LIKE",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "pattern" : "(EXACT|PARTIAL|SOUNDS_LIKE)"
+          },
+          "example" : "PARTIAL"
+        }, {
+          "name" : "previousNames",
+          "in" : "query",
+          "description" : "Search for previous names",
           "required" : false,
           "schema" : {
             "type" : "boolean"
           },
           "example" : false
         }, {
-          "name" : "includeAnyExistingRelationshipsToPrisoner",
+          "name" : "includePrisonerRelationships",
           "in" : "query",
-          "description" : "If a prisoner number is specified, check all matching contacts for any existing relationships to the prisoner. All matching contacts are returned regardless of whether they have an existing relationship to the prisoner or not.",
+          "description" : "Prisoner number to check relationships",
           "required" : false,
           "schema" : {
             "type" : "string",
@@ -8008,7 +8087,7 @@
         } ],
         "responses" : {
           "200" : {
-            "description" : "Found contacts",
+            "description" : "A page of contacts and their primary address",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8124,7 +8203,7 @@
           "numberOfChildren" : {
             "type" : "string",
             "description" : "The number of children",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 50,
             "minLength" : 0
           },
@@ -8199,7 +8278,7 @@
           "domesticStatusCode" : {
             "type" : "string",
             "description" : "The domestic status code value",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 12,
             "minLength" : 0
           },
@@ -9079,7 +9158,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "updatedBy" : {
             "type" : "string",
@@ -9124,7 +9203,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -9579,7 +9658,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "updatedBy" : {
             "type" : "string",
@@ -9636,7 +9715,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -10004,7 +10083,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123,
+            "example" : "123",
             "maxLength" : 7,
             "minLength" : 0
           }
@@ -10045,7 +10124,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -10513,7 +10592,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "countyCode" : {
             "type" : "string",
@@ -10619,7 +10698,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123,
+            "example" : "123",
             "maxLength" : 7,
             "minLength" : 0
           }
@@ -10672,7 +10751,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -11136,7 +11215,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -11263,7 +11342,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code - from NOMIS",
-            "example" : 13232
+            "example" : "13232"
           },
           "countyCode" : {
             "type" : "string",
@@ -11349,7 +11428,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           },
           "createdBy" : {
             "type" : "string",
@@ -12120,6 +12199,109 @@
         },
         "required" : [ "prisonerContactRestrictions" ]
       },
+      "PrisonerAndContactId" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The prisoner number",
+            "example" : "A1234AA"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The contact ID",
+            "example" : 1234
+          }
+        },
+        "required" : [ "contactId", "prisonerNumber" ]
+      },
+      "PrisonerContactRelationshipsRequest" : {
+        "type" : "object",
+        "description" : "The prisoner number and contact ID pairs to return relationships for",
+        "properties" : {
+          "identifiers" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAndContactId"
+            }
+          }
+        },
+        "required" : [ "identifiers" ]
+      },
+      "PrisonerContactRelationship" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "Prisoner number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "contactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The unique identifier for the contact",
+            "example" : 654321
+          },
+          "relationships" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/SummaryRelationship"
+            }
+          }
+        },
+        "required" : [ "contactId", "prisonerNumber", "relationships" ]
+      },
+      "PrisonerContactRelationshipsResponse" : {
+        "type" : "object",
+        "description" : "Describes limited details of a group of prisoner and contact relationships",
+        "properties" : {
+          "responses" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerContactRelationship"
+            }
+          }
+        },
+        "required" : [ "responses" ]
+      },
+      "SummaryRelationship" : {
+        "type" : "object",
+        "properties" : {
+          "prisonerContactId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The prisoner contact ID",
+            "example" : 1234
+          },
+          "relationshipTypeCode" : {
+            "type" : "string",
+            "description" : "Coded value indicating either a social (S) or official contact (O)",
+            "example" : "S"
+          },
+          "relationshipToPrisonerCode" : {
+            "type" : "string",
+            "description" : "The relationship with the prisoner coded value",
+            "example" : "FRI"
+          },
+          "isApprovedVisitor" : {
+            "type" : "boolean",
+            "description" : "Is this a approved visitor for the prisoner?",
+            "example" : true
+          },
+          "isRelationshipActive" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship active?",
+            "example" : true
+          },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "Is this prisoner's contact relationship active?",
+            "example" : true
+          }
+        },
+        "required" : [ "currentTerm", "isApprovedVisitor", "isRelationshipActive", "prisonerContactId", "relationshipToPrisonerCode", "relationshipTypeCode" ]
+      },
       "MigratePrisonerRestrictionsRequest" : {
         "type" : "object",
         "description" : "Request to migrate a prisoner's restrictions",
@@ -12271,7 +12453,7 @@
           "numberOfChildren" : {
             "type" : "string",
             "description" : "The number of children",
-            "example" : 1,
+            "example" : "1",
             "maxLength" : 50,
             "minLength" : 0
           },
@@ -12418,7 +12600,7 @@
           "premise" : {
             "type" : "string",
             "description" : "House name or number",
-            "example" : 43
+            "example" : "43"
           },
           "street" : {
             "type" : "string",
@@ -12807,7 +12989,7 @@
           "extension" : {
             "type" : "string",
             "description" : "Extension number (optional)",
-            "example" : 100
+            "example" : "100"
           },
           "type" : {
             "$ref" : "#/components/schemas/CodedValue",
@@ -13080,7 +13262,7 @@
           "contact" : {
             "$ref" : "#/components/schemas/IdPair",
             "description" : "The pair of IDs for this person in NOMIS",
-            "example" : 123456
+            "example" : "123456"
           },
           "lastName" : {
             "type" : "string",
@@ -13191,7 +13373,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code - from NOMIS",
-            "example" : 13232,
+            "example" : "13232",
             "maxLength" : 12,
             "minLength" : 0
           },
@@ -13453,7 +13635,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123,
+            "example" : "123",
             "maxLength" : 7,
             "minLength" : 0
           }
@@ -13514,7 +13696,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "cityDescription" : {
             "type" : "string",
@@ -13844,7 +14026,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123,
+            "example" : "123",
             "maxLength" : 7,
             "minLength" : 0
           }
@@ -13989,7 +14171,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code - from NOMIS",
-            "example" : 13232,
+            "example" : "13232",
             "maxLength" : 12,
             "minLength" : 0
           },
@@ -14085,7 +14267,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123,
+            "example" : "123",
             "maxLength" : 7,
             "minLength" : 0
           }
@@ -14109,22 +14291,22 @@
           "isEmergencyContact" : {
             "type" : "string",
             "description" : "Whether they are the emergency contact for the prisoner",
-            "example" : true
+            "example" : "true"
           },
           "isApprovedVisitor" : {
             "type" : "string",
             "description" : "Whether they are approved to visit the prisoner",
-            "example" : true
+            "example" : "true"
           },
           "isNextOfKin" : {
             "type" : "string",
             "description" : "Whether they are the next of kin for the prisoner",
-            "example" : true
+            "example" : "true"
           },
           "isRelationshipActive" : {
             "type" : "string",
             "description" : "Whether the relationship is active",
-            "example" : true
+            "example" : "true"
           },
           "comments" : {
             "type" : "string",
@@ -14142,7 +14324,7 @@
           "isStaff" : {
             "type" : "string",
             "description" : "Whether the contact is a staff member",
-            "example" : false
+            "example" : "false"
           },
           "domesticStatusCode" : {
             "type" : "string",
@@ -14152,7 +14334,7 @@
           "interpreterRequired" : {
             "type" : "string",
             "description" : "Whether an interpreter is required",
-            "example" : false
+            "example" : "false"
           },
           "languageCode" : {
             "type" : "string",
@@ -14376,7 +14558,7 @@
           "primaryAddress" : {
             "type" : "string",
             "description" : "True if this is the primary address otherwise false",
-            "example" : true
+            "example" : "true"
           },
           "flat" : {
             "type" : "string",
@@ -14437,12 +14619,12 @@
           "verified" : {
             "type" : "string",
             "description" : "Whether the address has been verified by postcode lookup",
-            "example" : false
+            "example" : "false"
           },
           "mailFlag" : {
             "type" : "string",
             "description" : "Whether the address can be used for mailing",
-            "example" : false
+            "example" : "false"
           },
           "startDate" : {
             "type" : "string",
@@ -14457,7 +14639,7 @@
           "noFixedAddress" : {
             "type" : "string",
             "description" : "Flag to indicate this address should be considered as no fixed address",
-            "example" : false
+            "example" : "false"
           },
           "comments" : {
             "type" : "string",
@@ -14685,7 +14867,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           }
         },
         "required" : [ "contactAddressPhoneId", "phoneNumber", "phoneType" ]
@@ -14783,7 +14965,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "Extension number",
-            "example" : 123
+            "example" : "123"
           }
         },
         "required" : [ "contactPhoneId", "phoneNumber", "phoneType" ]
@@ -15145,7 +15327,7 @@
           "property" : {
             "type" : "string",
             "description" : "Property name or number",
-            "example" : 123
+            "example" : "123"
           },
           "street" : {
             "type" : "string",
@@ -15160,7 +15342,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "City code",
-            "example" : 25343
+            "example" : "25343"
           },
           "cityDescription" : {
             "type" : "string",
@@ -15225,7 +15407,7 @@
           "extNumber" : {
             "type" : "string",
             "description" : "The extension number of the latest phone number",
-            "example" : 123
+            "example" : "123"
           },
           "isApprovedVisitor" : {
             "type" : "boolean",
@@ -15769,7 +15951,7 @@
           "cityCode" : {
             "type" : "string",
             "description" : "The city code of the contact address, if known",
-            "example" : 25343
+            "example" : "25343"
           },
           "cityDescription" : {
             "type" : "string",
