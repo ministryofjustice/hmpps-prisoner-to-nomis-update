@@ -463,6 +463,29 @@ class OfficialVisitsToNomisIntTest(
     val nomisVisitId = 92492L
 
     @Nested
+    @DisplayName("when NOMIS is the origin of a official visit delete")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishDeleteOfficialVisitDomainEvent(officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, offenderNo = offenderNo, source = "NOMIS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the delete is ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visit-delete-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["offenderNo"]).isEqualTo(offenderNo)
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     @DisplayName("when visit mapping does not exist")
     inner class WhenVisitMappingDoesNotExists {
 
@@ -481,6 +504,7 @@ class OfficialVisitsToNomisIntTest(
             assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
             assertThat(it["offenderNo"]).isEqualTo(offenderNo)
             assertThat(it["prisonId"]).isEqualTo(prisonId)
+            assertThat(it["reason"]).isEqualTo("Visit mapping not found")
           },
           isNull(),
         )
@@ -903,6 +927,30 @@ class OfficialVisitsToNomisIntTest(
     val prisonId = "MDI"
 
     @Nested
+    @DisplayName("when NOMIS is the origin of a official visitor delete")
+    inner class WhenNomisDeleted {
+      @BeforeEach
+      fun setUp() {
+        publishDeleteOfficialVisitorDomainEvent(officialVisitorId = dpsOfficialVisitorId.toString(), officialVisitId = dpsOfficialVisitId.toString(), prisonId = prisonId, contactId = contactAndPersonId.toString(), source = "DPS")
+        waitForAnyProcessingToComplete()
+      }
+
+      @Test
+      fun `will send telemetry event showing the delete ignored`() {
+        verify(telemetryClient).trackEvent(
+          eq("official-visitor-delete-ignored"),
+          check {
+            assertThat(it["dpsOfficialVisitorId"]).isEqualTo(dpsOfficialVisitorId.toString())
+            assertThat(it["dpsOfficialVisitId"]).isEqualTo(dpsOfficialVisitId.toString())
+            assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
+            assertThat(it["prisonId"]).isEqualTo(prisonId)
+          },
+          isNull(),
+        )
+      }
+    }
+
+    @Nested
     @DisplayName("when visitor mapping does not exists")
     inner class WhenVisitorMappingDoesNotExists {
 
@@ -915,7 +963,7 @@ class OfficialVisitsToNomisIntTest(
       }
 
       @Test
-      fun `will send telemetry event showing the create`() {
+      fun `will send telemetry event showing the delete ignored`() {
         verify(telemetryClient).trackEvent(
           eq("official-visitor-delete-ignored"),
           check {
@@ -924,6 +972,7 @@ class OfficialVisitsToNomisIntTest(
             assertThat(it["nomisVisitId"]).isEqualTo(nomisVisitId.toString())
             assertThat(it["dpsContactId"]).isEqualTo(contactAndPersonId.toString())
             assertThat(it["prisonId"]).isEqualTo(prisonId)
+            assertThat(it["reason"]).isEqualTo("Visit or visitor mapping not found")
           },
           isNull(),
         )
