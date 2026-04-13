@@ -13,6 +13,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpdateOfficialVisitorRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISIT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.MappingRetry.MappingTypes.OFFICIAL_VISITOR
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.didOriginateInDPS
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.AttendanceType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SearchLevelType
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
@@ -25,6 +26,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.synchronise
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.track
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.tryFetchParent
 import java.time.LocalTime
+import kotlin.collections.plus
 
 @Service
 class OfficialVisitsService(
@@ -176,18 +178,23 @@ class OfficialVisitsService(
 
   suspend fun visitDeleted(event: VisitEvent) {
     val telemetry = event.asTelemetry()
-    val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
-      dpsVisitId = event.additionalInformation.officialVisitId,
-    )?.also {
-      telemetry["nomisVisitId"] = it.nomisId.toString()
-    }
 
-    if (visitMapping != null) {
-      track("${OFFICIAL_VISIT.entityName}-delete", telemetry) {
-        nomisApiService.deleteOfficialVisit(
-          visitId = visitMapping.nomisId,
-        )
-        mappingApiService.deleteByVisitNomisId(visitMapping.nomisId)
+    if (event.didOriginateInDPS()) {
+      val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
+        dpsVisitId = event.additionalInformation.officialVisitId,
+      )?.also {
+        telemetry["nomisVisitId"] = it.nomisId.toString()
+      }
+
+      if (visitMapping != null) {
+        track("${OFFICIAL_VISIT.entityName}-delete", telemetry) {
+          nomisApiService.deleteOfficialVisit(
+            visitId = visitMapping.nomisId,
+          )
+          mappingApiService.deleteByVisitNomisId(visitMapping.nomisId)
+        }
+      } else {
+        telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-ignored", telemetry + ("reason" to "Visit mapping not found"))
       }
     } else {
       telemetryClient.trackEvent("${OFFICIAL_VISIT.entityName}-delete-ignored", telemetry)
@@ -272,24 +279,28 @@ class OfficialVisitsService(
   }
   suspend fun visitorDeleted(event: VisitorEvent) {
     val telemetry = event.asTelemetry()
-    val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
-      dpsVisitId = event.additionalInformation.officialVisitId,
-    )?.also {
-      telemetry["nomisVisitId"] = it.nomisId.toString()
-    }
-    val visitorMapping = mappingApiService.getVisitorByDpsIdOrNull(
-      dpsVisitorId = event.additionalInformation.officialVisitorId,
-    )?.also {
-      telemetry["nomisVisitorId"] = it.nomisId.toString()
-    }
+    if (event.didOriginateInDPS()) {
+      val visitMapping = mappingApiService.getVisitByDpsIdOrNull(
+        dpsVisitId = event.additionalInformation.officialVisitId,
+      )?.also {
+        telemetry["nomisVisitId"] = it.nomisId.toString()
+      }
+      val visitorMapping = mappingApiService.getVisitorByDpsIdOrNull(
+        dpsVisitorId = event.additionalInformation.officialVisitorId,
+      )?.also {
+        telemetry["nomisVisitorId"] = it.nomisId.toString()
+      }
 
-    if (visitMapping != null && visitorMapping != null) {
-      track("${OFFICIAL_VISITOR.entityName}-delete", telemetry) {
-        nomisApiService.deleteOfficialVisitor(
-          visitId = visitMapping.nomisId,
-          visitorId = visitorMapping.nomisId,
-        )
-        mappingApiService.deleteByVisitorNomisId(visitorMapping.nomisId)
+      if (visitMapping != null && visitorMapping != null) {
+        track("${OFFICIAL_VISITOR.entityName}-delete", telemetry) {
+          nomisApiService.deleteOfficialVisitor(
+            visitId = visitMapping.nomisId,
+            visitorId = visitorMapping.nomisId,
+          )
+          mappingApiService.deleteByVisitorNomisId(visitorMapping.nomisId)
+        }
+      } else {
+        telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-ignored", telemetry + ("reason" to "Visit or visitor mapping not found"))
       }
     } else {
       telemetryClient.trackEvent("${OFFICIAL_VISITOR.entityName}-delete-ignored", telemetry)
