@@ -48,6 +48,7 @@ jobs:
       gradle-command: 'BUILD_NUMBER=${{ needs.app_version.outputs.version}} ./gradlew assemble ktlintCheck'
       upload-test-artifacts: false
       upload-build-artifacts: ${{ github.ref == 'refs/heads/main' }}
+      java-version: "25"
     needs:
       - app_version
   setup-test-matrix:
