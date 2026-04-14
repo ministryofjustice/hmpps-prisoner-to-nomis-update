@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.microsoft.applicationinsights.TelemetryClient
 import kotlinx.coroutines.Dispatchers
@@ -14,6 +14,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
@@ -29,7 +31,7 @@ import java.util.UUID
 @Service
 class TemporaryAbsencesAllPrisonersReconciliationService(
   private val telemetryClient: TelemetryClient,
-  private val nomisApiService: ExternalMovementsNomisApiService,
+  private val nomisApiService: TapNomisApiService,
   private val dpsApiService: ExternalMovementsDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: ExternalMovementsMappingApiService,

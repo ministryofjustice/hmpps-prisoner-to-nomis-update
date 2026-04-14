@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
@@ -19,9 +19,12 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
@@ -45,7 +48,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffen
 import java.util.UUID
 import kotlin.random.Random
 
-class TemporaryAbsencesAllPrisonersReconciliationIntTest(
+class TapAllPrisonersReconciliationIntTest(
   @Autowired private val reconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
   @Autowired private val nomisApi: ExternalMovementsNomisApiMockServer,
   @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,

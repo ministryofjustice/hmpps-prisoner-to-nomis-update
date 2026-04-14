@@ -7,6 +7,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAuthorisationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapOccurrenceService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
 import java.util.UUID
 import java.util.concurrent.CompletableFuture
@@ -15,10 +17,12 @@ import java.util.concurrent.CompletableFuture
 class ExternalMovementsDomainEventListener(
   jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  val externalMovementsService: ExternalMovementsService,
+  retryService: ExternalMovementsRetryService,
+  private val tapAuthorisationService: TapAuthorisationService,
+  private val tapOccurrenceService: TapOccurrenceService,
   telemetryClient: TelemetryClient,
 ) : DomainEventListener(
-  service = externalMovementsService,
+  service = retryService,
   jsonMapper = jsonMapper,
   eventFeatureSwitch = eventFeatureSwitch,
   telemetryClient = telemetryClient,
@@ -48,7 +52,7 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence-authorisation.transport-changed",
       "person.temporary-absence-authorisation.deferred",
       "person.temporary-absence-authorisation.relocated",
-      -> externalMovementsService.authorisationChanged(message.fromJson())
+      -> tapAuthorisationService.authorisationChanged(message.fromJson())
 
       "person.temporary-absence.scheduled",
       "person.temporary-absence.denied",
@@ -63,14 +67,10 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence.accompaniment-changed",
       "person.temporary-absence.transport-changed",
       "person.temporary-absence.comments-changed",
-      -> externalMovementsService.occurrenceChanged(message.fromJson())
+      -> tapOccurrenceService.occurrenceChanged(message.fromJson())
 
       "person.temporary-absence.unscheduled",
-      -> externalMovementsService.occurrenceDeleted(message.fromJson())
-
-      // TODO external movements domain events with source=DPS are not published yet - these are placeholders
-      "external-movements-api.temporary-absence-external-movement-out.created" -> externalMovementsService.externalMovementOutCreated(message.fromJson())
-      "external-movements-api.temporary-absence-external-movement-in.created" -> externalMovementsService.externalMovementInCreated(message.fromJson())
+      -> tapOccurrenceService.occurrenceDeleted(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)
     }
@@ -85,35 +85,6 @@ data class TemporaryAbsenceEvent(
 
 data class TemporaryAbsenceAdditionalInformation(
   val id: UUID,
-  val source: String,
-)
-
-data class TemporaryAbsenceExternalMovementOutEvent(
-  val description: String?,
-  val eventType: String,
-  val personReference: PersonReference,
-  val additionalInformation: ExternalMovementOutAdditionalInformation,
-)
-
-// TODO External movements domain events are not published yet - these are placeholders - hopefully they'll be the same form at as TemporaryAbsenceEvent so we can delete below
-data class ExternalMovementOutAdditionalInformation(
-  val externalMovementOutId: UUID,
-  val scheduledMovementOutId: UUID? = null,
-  val authorisationId: UUID? = null,
-  val source: String,
-)
-
-data class TemporaryAbsenceExternalMovementInEvent(
-  val description: String?,
-  val eventType: String,
-  val personReference: PersonReference,
-  val additionalInformation: ExternalMovementInAdditionalInformation,
-)
-
-data class ExternalMovementInAdditionalInformation(
-  val externalMovementInId: UUID,
-  val scheduledMovementInId: UUID? = null,
-  val authorisationId: UUID? = null,
   val source: String,
 )
 

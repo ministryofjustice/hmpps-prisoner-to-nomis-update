@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.deleteRequestedFor
@@ -20,6 +20,7 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceRequest
@@ -28,13 +29,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiServi
 
 @SpringAPIServiceTest
 @Import(
-  ExternalMovementsNomisApiService::class,
+  TapNomisApiService::class,
   ExternalMovementsNomisApiMockServer::class,
   RetryApiService::class,
 )
-class ExternalMovementsNomisApiServiceTest {
+class TapNomisApiServiceTest {
   @Autowired
-  private lateinit var apiService: ExternalMovementsNomisApiService
+  private lateinit var apiService: TapNomisApiService
 
   @Autowired
   private lateinit var mockServer: ExternalMovementsNomisApiMockServer
