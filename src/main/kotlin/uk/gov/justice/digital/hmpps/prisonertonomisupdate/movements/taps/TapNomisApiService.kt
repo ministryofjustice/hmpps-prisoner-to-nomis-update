@@ -11,6 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNul
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyWithRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.MovementsResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.TapApplicationResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.TapScheduleResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTemporaryAbsences
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
@@ -19,10 +20,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Cr
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplication
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @Service
@@ -36,12 +37,13 @@ class TapNomisApiService(
 
   private val movementsApi = MovementsResourceApi(webClient)
   private val applicationApi = TapApplicationResourceApi(webClient)
+  private val scheduleApi = TapScheduleResourceApi(webClient)
 
   suspend fun upsertTapApplication(offenderNo: String, request: UpsertTapApplication): UpsertTapApplicationResponse = applicationApi.prepare(applicationApi.upsertTapApplicationRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
-  suspend fun upsertScheduledTemporaryAbsence(offenderNo: String, request: UpsertScheduledTemporaryAbsenceRequest): UpsertScheduledTemporaryAbsenceResponse = movementsApi.prepare(movementsApi.upsertScheduledTemporaryAbsenceRequestConfig(offenderNo, request))
+  suspend fun upsertTapScheduleOut(offenderNo: String, request: UpsertTapScheduleOut): UpsertTapScheduleOutResponse = scheduleApi.prepare(scheduleApi.upsertTapScheduleOutRequestConfig(offenderNo, request))
     .retrieve()
     .awaitBodyOrLogAndRethrowBadRequest()
 
@@ -68,7 +70,7 @@ class TapNomisApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun deleteScheduledTemporaryAbsence(offenderNo: String, eventId: Long) = movementsApi.prepare(movementsApi.deleteScheduledTemporaryAbsenceRequestConfig(offenderNo, eventId))
+  suspend fun deleteTapScheduleOut(offenderNo: String, eventId: Long) = scheduleApi.prepare(scheduleApi.deleteTapScheduleOutRequestConfig(offenderNo, eventId))
     .retrieve()
     .awaitBodilessEntityOrLogAndRethrowBadRequest()
 }

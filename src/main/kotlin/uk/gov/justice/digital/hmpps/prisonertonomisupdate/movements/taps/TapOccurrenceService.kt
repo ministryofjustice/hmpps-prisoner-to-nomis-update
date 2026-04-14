@@ -14,9 +14,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbs
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.AwaitParentEntityRetry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.TelemetryEnabled
@@ -71,7 +71,7 @@ class TapOccurrenceService(
       }.also { telemetryMap["nomisApplicationId"] = it.toString() }
 
       // perform the sync to NOMIS
-      val nomis = nomisApiService.upsertScheduledTemporaryAbsence(
+      val nomis = nomisApiService.upsertTapScheduleOut(
         prisonerNumber,
         dps.toNomisUpsertRequest(nomisApplicationId, existingMapping),
       )
@@ -115,7 +115,7 @@ class TapOccurrenceService(
       val mapping = mappingApiService.getScheduledMovementMapping(dpsOccurrenceId)
         ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
         ?: throw TapOccurrenceSyncException("Cannot find scheduled movement mapping for $dpsOccurrenceId")
-      nomisApiService.deleteScheduledTemporaryAbsence(prisonerNumber, mapping.nomisEventId)
+      nomisApiService.deleteTapScheduleOut(prisonerNumber, mapping.nomisEventId)
     }
   }
 
@@ -147,7 +147,7 @@ class TapOccurrenceService(
 
   private suspend fun createScheduledMovementMapping(
     prisonerNumber: String,
-    nomis: UpsertScheduledTemporaryAbsenceResponse,
+    nomis: UpsertTapScheduleOutResponse,
     dpsOccurrenceId: UUID,
     dps: SyncReadTapOccurrence,
     telemetryMap: MutableMap<String, String>,
@@ -181,7 +181,7 @@ class TapOccurrenceService(
 
   private suspend fun updateScheduledMovementMapping(
     existingMapping: ScheduledMovementSyncMappingDto,
-    nomis: UpsertScheduledTemporaryAbsenceResponse,
+    nomis: UpsertTapScheduleOutResponse,
     dps: SyncReadTapOccurrence,
     telemetryMap: MutableMap<String, String>,
   ): ScheduledMovementSyncMappingDto = existingMapping.copy(
@@ -206,10 +206,10 @@ class TapOccurrenceService(
       )
     }
 
-  private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertScheduledTemporaryAbsenceRequest {
+  private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertTapScheduleOut {
     val (status, returnStatus) = this.statusCode.toNomisSchedulesStatus()
-    return UpsertScheduledTemporaryAbsenceRequest(
-      movementApplicationId = applicationId,
+    return UpsertTapScheduleOut(
+      tapApplicationId = applicationId,
       eventId = existingMapping?.nomisEventId,
       eventDate = this.start.toLocalDate(),
       startTime = this.start,
@@ -242,15 +242,15 @@ class TapOccurrenceService(
 
   private suspend fun Location.populateAddressMapping(
     existingMapping: ScheduledMovementSyncMappingDto?,
-  ): UpsertTemporaryAbsenceAddress {
+  ): UpsertTapAddress {
     if (address.isNullOrEmpty()) throw TapOccurrenceSyncException("No address text received from DPS")
 
     return when {
       // New scheduled movement or new DPS address - tell NOMIS to make sure the address exists
-      existingMapping == null -> UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
-      existingMapping.dpsAddressChanged(this) -> UpsertTemporaryAbsenceAddress(name = description, addressText = address, postalCode = postcode)
+      existingMapping == null -> UpsertTapAddress(name = description, addressText = address, postalCode = postcode)
+      existingMapping.dpsAddressChanged(this) -> UpsertTapAddress(name = description, addressText = address, postalCode = postcode)
       // Address not changed - use the existing NOMIS address
-      else -> UpsertTemporaryAbsenceAddress(id = existingMapping.nomisAddressId)
+      else -> UpsertTapAddress(id = existingMapping.nomisAddressId)
     }
   }
 

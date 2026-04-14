@@ -30,8 +30,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapScheduleOutResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
@@ -103,7 +103,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
           mappingApi.stubCreateScheduledMovementMapping()
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
@@ -151,7 +151,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will upsert the schedule in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out")))
         }
 
         @Test
@@ -159,7 +159,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventId", absent())
-              .withRequestBodyJsonPath("movementApplicationId", nomisApplicationId)
+              .withRequestBodyJsonPath("tapApplicationId", nomisApplicationId)
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("eventStatus", "SCH")
               .withRequestBodyJsonPath("parentEventStatus", absent())
@@ -211,7 +211,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
           mappingApi.stubCreateScheduledMovementMapping()
 
           // stubs for the authorisation sync
@@ -226,7 +226,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will upsert the schedule in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out")))
         }
 
         @Test
@@ -244,7 +244,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId))
           mappingApi.stubCreateScheduledMovementMappingFailureFollowedBySuccess()
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.scheduled")
@@ -281,7 +281,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
               any(),
               isNull(),
             )
-            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/schedule/out")))
           }
         }
       }
@@ -295,7 +295,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId))
           mappingApi.stubCreateScheduledMovementMappingConflict(
             error = DuplicateMappingErrorResponse(
               moreInfo = DuplicateErrorContentObject(
@@ -351,7 +351,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
               any(),
               isNull(),
             )
-            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/schedule/out")))
           }
         }
       }
@@ -372,7 +372,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will not create the application in NOMIS`() {
-          nomisApi.verify(count = 0, postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+          nomisApi.verify(count = 0, postRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out")))
         }
 
         @Test
@@ -449,7 +449,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321))
 
           // publish an update event
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.rescheduled")
@@ -505,7 +505,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will upsert the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out")))
         }
 
         @Test
@@ -513,7 +513,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           nomisApi.verify(
             putRequestedFor(anyUrl())
               .withRequestBodyJsonPath("eventId", nomisEventId)
-              .withRequestBodyJsonPath("movementApplicationId", nomisApplicationId)
+              .withRequestBodyJsonPath("tapApplicationId", nomisApplicationId)
               .withRequestBodyJsonPath("eventSubType", "R2")
               .withRequestBodyJsonPath("eventStatus", "SCH")
               .withRequestBodyJsonPath("parentEventStatus", absent())
@@ -545,7 +545,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 55555)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
-          nomisApi.stubUpsertScheduledTemporaryAbsence(prisonerNumber, upsertScheduledTemporaryAbsenceResponse(eventId = nomisEventId, addressId = 54321))
+          nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321))
           mappingApi.stubUpdateScheduledMovementMappingFailureFollowedBySuccess()
 
           // publish an update event
@@ -580,7 +580,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will update the scheduled movement in NOMIS once`() {
           await untilAsserted {
-            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/schedule/out")))
           }
         }
       }
@@ -639,7 +639,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
     @BeforeEach
     fun setUp() {
       mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
-      nomisApi.stubDeleteScheduledTemporaryAbsences(prisonerNumber, nomisEventId)
+      nomisApi.stubDeleteTapScheduleOut(prisonerNumber, nomisEventId)
     }
 
     private fun publishDeleteEvent(source: String = "DPS", completedTelemetry: String? = null) {
@@ -655,7 +655,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
     fun `should delete the scheduled movement in NOMIS`() {
       publishDeleteEvent()
 
-      nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/temporary-absences/scheduled-temporary-absence/$nomisEventId")))
+      nomisApi.verify(deleteRequestedFor(urlEqualTo("/movements/$prisonerNumber/taps/schedule/out/$nomisEventId")))
     }
 
     @Test
@@ -710,7 +710,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
     @Test
     fun `should end up on DLQ if NOMIS returns a conflict`() {
-      nomisApi.stubDeleteScheduledTemporaryAbsences(prisonerNumber, nomisEventId, status = CONFLICT)
+      nomisApi.stubDeleteTapScheduleOut(prisonerNumber, nomisEventId, status = CONFLICT)
 
       publishDeleteEvent(completedTelemetry = "temporary-absence-schedule-delete-error")
 
@@ -723,7 +723,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         check {
           assertThat(it).containsEntry("offenderNo", prisonerNumber)
           assertThat(it).containsEntry("dpsOccurrenceId", dpsOccurrenceId.toString())
-          assertThat(it).containsEntry("error", "409 Conflict from DELETE http://localhost:8082/movements/$prisonerNumber/temporary-absences/scheduled-temporary-absence/$nomisEventId")
+          assertThat(it).containsEntry("error", "409 Conflict from DELETE http://localhost:8082/movements/$prisonerNumber/taps/schedule/out/$nomisEventId")
         },
         isNull(),
       )

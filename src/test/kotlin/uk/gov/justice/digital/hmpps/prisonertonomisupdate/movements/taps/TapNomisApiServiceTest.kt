@@ -22,8 +22,8 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -88,9 +88,9 @@ class TapNomisApiServiceTest {
     inner class UpsertScheduledTemporaryAbsence {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubUpsertScheduledTemporaryAbsence()
+        mockServer.stubUpsertTapScheduleOut()
 
-        apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
+        apiService.upsertTapScheduleOut("A1234BC", upsertTapScheduleOut())
 
         mockServer.verify(
           putRequestedFor(anyUrl())
@@ -100,12 +100,12 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will call create endpoint`() = runTest {
-        mockServer.stubUpsertScheduledTemporaryAbsence()
+        mockServer.stubUpsertTapScheduleOut()
 
-        apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
+        apiService.upsertTapScheduleOut("A1234BC", upsertTapScheduleOut())
 
         mockServer.verify(
-          putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence"))
+          putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out"))
             .withRequestBody(
               matchingJsonPath("eventSubType", equalTo("C5")),
             ),
@@ -114,10 +114,10 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubUpsertScheduledTemporaryAbsence(status = INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertTapScheduleOut(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.upsertScheduledTemporaryAbsence("A1234BC", upsertScheduledTemporaryAbsenceRequest())
+          apiService.upsertTapScheduleOut("A1234BC", upsertTapScheduleOut())
         }
       }
     }
@@ -416,9 +416,9 @@ class TapNomisApiServiceTest {
   inner class DeleteScheduledTemporaryAbsence {
     @Test
     internal fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L)
+      mockServer.stubDeleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L)
 
-      apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
+      apiService.deleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L)
 
       mockServer.verify(
         deleteRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -427,21 +427,21 @@ class TapNomisApiServiceTest {
 
     @Test
     internal fun `will pass parameters to service`() = runTest {
-      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L)
+      mockServer.stubDeleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L)
 
-      apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
+      apiService.deleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L)
 
       mockServer.verify(
-        deleteRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/scheduled-temporary-absence/4321")),
+        deleteRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/schedule/out/4321")),
       )
     }
 
     @Test
     fun `will throw error when API returns an error`() = runTest {
-      mockServer.stubDeleteScheduledTemporaryAbsences(offenderNo = "A1234BC", eventId = 4321L, status = BAD_REQUEST)
+      mockServer.stubDeleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L, status = BAD_REQUEST)
 
       assertThrows<WebClientResponseException.BadRequest> {
-        apiService.deleteScheduledTemporaryAbsence(offenderNo = "A1234BC", eventId = 4321L)
+        apiService.deleteTapScheduleOut(offenderNo = "A1234BC", eventId = 4321L)
       }
     }
   }
