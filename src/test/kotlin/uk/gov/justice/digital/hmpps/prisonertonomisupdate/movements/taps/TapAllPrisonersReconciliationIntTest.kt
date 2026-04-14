@@ -24,7 +24,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsNomisApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonMovementsCount
@@ -45,12 +44,12 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
-import java.util.UUID
+import java.util.*
 import kotlin.random.Random
 
 class TapAllPrisonersReconciliationIntTest(
   @Autowired private val reconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
-  @Autowired private val nomisApi: ExternalMovementsNomisApiMockServer,
+  @Autowired private val nomisApi: TapNomisApiMockServer,
   @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,
 ) : IntegrationTestBase() {
 
