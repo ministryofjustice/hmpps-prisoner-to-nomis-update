@@ -23,7 +23,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
 @SpringAPIServiceTest
@@ -40,15 +40,15 @@ class TapNomisApiServiceTest {
   private lateinit var mockServer: TapNomisApiMockServer
 
   @Nested
-  inner class TemporaryAbsenceApplication {
+  inner class TapApplication {
 
     @Nested
-    inner class UpsertTemporaryAbsenceApplication {
+    inner class UpsertTapApplicationRequest {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubUpsertTemporaryAbsenceApplication()
+        mockServer.stubUpsertTapApplication()
 
-        apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
+        apiService.upsertTapApplication("A1234BC", upsertTapApplicationRequest())
 
         mockServer.verify(
           putRequestedFor(anyUrl())
@@ -58,12 +58,12 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will call upsert endpoint`() = runTest {
-        mockServer.stubUpsertTemporaryAbsenceApplication()
+        mockServer.stubUpsertTapApplication()
 
-        apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
+        apiService.upsertTapApplication("A1234BC", upsertTapApplicationRequest())
 
         mockServer.verify(
-          putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
+          putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application"))
             .withRequestBody(
               matchingJsonPath("applicationStatus", equalTo("APP-SCH")),
             ),
@@ -72,10 +72,10 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubUpsertTemporaryAbsenceApplication(status = INTERNAL_SERVER_ERROR)
+        mockServer.stubUpsertTapApplication(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.upsertTemporaryAbsenceApplication("A1234BC", upsertTemporaryAbsenceApplicationRequest())
+          apiService.upsertTapApplication("A1234BC", upsertTapApplicationRequest())
         }
       }
     }
