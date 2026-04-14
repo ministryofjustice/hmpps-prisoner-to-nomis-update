@@ -31,7 +31,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMove
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertScheduledTemporaryAbsenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
@@ -217,7 +217,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
           // stubs for the authorisation sync
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
           dpsApi.stubGetTapAuthorisation(dpsAuthorisationId, response = dpsApi.tapAuthorisation(id = dpsAuthorisationId))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           // publish event that triggers authorisation sync
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS", "person.temporary-absence.rescheduled")
@@ -231,7 +231,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will upsert the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")))
         }
       }
 

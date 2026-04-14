@@ -1601,6 +1601,7 @@ class CourtSentencingResourceIntTest : SqsIntegrationTestBase() {
     eventDateTime = eventDateTime,
     courtOrders = emptyList(),
     nextEventDateTime = nextEventDateTime,
+    isClone = false,
   )
 
   fun nomisChargeResponse(

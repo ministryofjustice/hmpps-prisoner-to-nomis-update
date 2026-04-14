@@ -27,9 +27,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Te
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsenceReturn
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertScheduledTemporaryAbsenceResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplication
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
@@ -43,7 +43,7 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     private val tomorrow = now.plusDays(1)
     private val yesterday = now.minusDays(1)
 
-    fun upsertTemporaryAbsenceApplicationRequest() = UpsertTemporaryAbsenceApplicationRequest(
+    fun upsertTapApplicationRequest() = UpsertTapApplication(
       eventSubType = "C5",
       applicationDate = now.toLocalDate(),
       fromDate = now.toLocalDate(),
@@ -57,12 +57,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
       comment = "Temporary absence application comment",
       prisonId = "LEI",
       contactPersonName = "Deek Sanderson",
-      temporaryAbsenceType = "RR",
-      temporaryAbsenceSubType = "RDR",
+      tapType = "RR",
+      tapSubType = "RDR",
       toAddresses = listOf(),
     )
 
-    fun upsertTemporaryAbsenceApplicationResponse() = UpsertTemporaryAbsenceApplicationResponse(12345, 56789)
+    fun upsertTapApplicationResponse() = UpsertTapApplicationResponse(12345, 56789)
 
     fun upsertScheduledTemporaryAbsenceRequest() = UpsertScheduledTemporaryAbsenceRequest(
       movementApplicationId = 56789,
@@ -326,12 +326,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpsertTemporaryAbsenceApplication(
+  fun stubUpsertTapApplication(
     offenderNo: String = "A1234BC",
-    response: UpsertTemporaryAbsenceApplicationResponse = upsertTemporaryAbsenceApplicationResponse(),
+    response: UpsertTapApplicationResponse = upsertTapApplicationResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/application"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -341,13 +341,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubUpsertTemporaryAbsenceApplication(
+  fun stubUpsertTapApplication(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/application"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")

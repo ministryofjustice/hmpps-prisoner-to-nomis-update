@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegra
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTemporaryAbsenceApplicationResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.temporaryAbsenceScheduledMovementMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
@@ -81,7 +81,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will NOT create the application in NOMIS`() {
-        nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+        nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")))
       }
 
       @Test
@@ -101,7 +101,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = tomorrow))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
@@ -142,7 +142,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will create the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")))
         }
 
         @Test
@@ -153,8 +153,8 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("fromDate", today.toLocalDate())
               .withRequestBodyJsonPath("toDate", tomorrow.toLocalDate())
               .withRequestBodyJsonPath("comment", "Some notes")
-              .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("tapType", "SR")
+              .withRequestBodyJsonPath("tapSubType", "RDR")
               .withRequestBodyJsonPath("transportType", "VAN"),
           )
         }
@@ -180,7 +180,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(dpsId)
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess()
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
@@ -212,7 +212,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will create the application in NOMIS once`() {
           await untilAsserted {
-            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/application")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/application")))
           }
         }
       }
@@ -225,7 +225,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(dpsId)
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
           mappingApi.stubCreateTemporaryAbsenceApplicationMappingConflict(
             error = DuplicateMappingErrorResponse(
               moreInfo = DuplicateErrorContentObject(
@@ -272,7 +272,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
               any(),
               isNull(),
             )
-            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/application")))
+            nomisApi.verify(1, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/application")))
           }
         }
       }
@@ -311,7 +311,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
       @Test
       fun `will NOT create the application in NOMIS once`() {
         await untilAsserted {
-          nomisApi.verify(0, putRequestedFor(urlEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(0, putRequestedFor(urlEqualTo("/movements/A1234BC/taps/application")))
         }
       }
     }
@@ -345,7 +345,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will NOT create the application in NOMIS`() {
-        nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+        nomisApi.verify(0, putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")))
       }
 
       @Test
@@ -367,7 +367,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
@@ -409,7 +409,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will update the application in NOMIS`() {
           nomisApi.verify(
-            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application"))
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application"))
               .withRequestBodyJsonPath("escortCode", "U"),
           )
         }
@@ -424,8 +424,8 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
               .withRequestBodyJsonPath("releaseTime", equalToDateTime(startTime.toLocalDate().atStartOfDay()))
               .withRequestBodyJsonPath("returnTime", equalToDateTime(endTime.plusDays(1).toLocalDate().atStartOfDay().minusMinutes(1)))
               .withRequestBodyJsonPath("comment", "Some notes")
-              .withRequestBodyJsonPath("temporaryAbsenceType", "SR")
-              .withRequestBodyJsonPath("temporaryAbsenceSubType", "RDR")
+              .withRequestBodyJsonPath("tapType", "SR")
+              .withRequestBodyJsonPath("tapSubType", "RDR")
               .withRequestBodyJsonPath("transportType", "VAN")
               // Address is only updated when the application update is triggered by synchronising the DPS occurrence
               .withRequestBodyJsonPath("toAddress", absent()),
@@ -443,7 +443,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 1, startTime = startTime, endTime = endTime))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
@@ -471,7 +471,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = startTime, endTime = endTime))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
@@ -514,7 +514,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           val authorisation = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 3, startTime = startTime, endTime = endTime)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = authorisation)
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
           // Create a stub for the first schedule mapping only (which is same as third schedule)
           with(authorisation.occurrences[0]) {
             mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(
@@ -569,7 +569,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 0, startTime = startTime, endTime = endTime, statusCode = "EXPIRED"))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
@@ -598,7 +598,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, upsertTemporaryAbsenceApplicationResponse())
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
           waitForAnyProcessingToComplete()
@@ -616,7 +616,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will update the application in NOMIS`() {
           nomisApi.verify(
-            putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")),
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")),
           )
         }
       }
@@ -628,7 +628,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId)
-          nomisApi.stubUpsertTemporaryAbsenceApplication(prisonerNumber, HttpStatus.INTERNAL_SERVER_ERROR)
+          nomisApi.stubUpsertTapApplication(prisonerNumber, HttpStatus.INTERNAL_SERVER_ERROR)
           mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
@@ -647,7 +647,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
             check {
               assertThat(it).containsEntry("dpsAuthorisationId", dpsId.toString())
               assertThat(it).containsEntry("offenderNo", prisonerNumber)
-              assertThat(it).containsEntry("error", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/temporary-absences/application")
+              assertThat(it).containsEntry("error", "500 Internal Server Error from PUT http://localhost:8082/movements/A1234BC/taps/application")
             },
             isNull(),
           )
@@ -660,7 +660,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will attempt to update the application in NOMIS`() {
-          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/application")))
+          nomisApi.verify(putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")))
         }
 
         @Test

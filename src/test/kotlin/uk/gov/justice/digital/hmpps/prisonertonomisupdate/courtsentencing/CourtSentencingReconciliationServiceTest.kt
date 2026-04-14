@@ -1090,6 +1090,7 @@ fun nomisAppearanceResponse(
   eventDateTime = eventDateTime,
   courtOrders = emptyList(),
   nextEventDateTime = nextEventDateTime,
+  isClone = false,
 )
 
 fun nomisAppearanceResponseWithoutCharges() = nomisAppearanceResponse(charges = emptyList())
