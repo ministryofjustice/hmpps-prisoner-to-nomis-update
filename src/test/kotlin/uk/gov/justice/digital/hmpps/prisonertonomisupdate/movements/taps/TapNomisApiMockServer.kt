@@ -1,13 +1,6 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
-import com.github.tomakehurst.wiremock.client.WireMock.aResponse
-import com.github.tomakehurst.wiremock.client.WireMock.delete
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.post
-import com.github.tomakehurst.wiremock.client.WireMock.put
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -37,13 +30,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTemporaryAbsenceApplicationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDate
 import java.time.LocalDateTime
 
 @Component
-class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
+class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
   companion object {
     private val now = LocalDateTime.now()
     private val today = now.toLocalDate()
@@ -337,10 +330,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: UpsertTemporaryAbsenceApplicationResponse = upsertTemporaryAbsenceApplicationResponse(),
   ) {
-    nomisApi.stubFor(
-      put(urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -353,10 +346,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      put(urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/application"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -368,10 +361,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: UpsertScheduledTemporaryAbsenceResponse = upsertScheduledTemporaryAbsenceResponse(),
   ) {
-    nomisApi.stubFor(
-      put(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -384,10 +377,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      put(urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -399,10 +392,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: CreateTemporaryAbsenceResponse = createTemporaryAbsenceResponse(),
   ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -415,10 +408,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -430,10 +423,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: CreateTemporaryAbsenceReturnResponse = createTemporaryAbsenceReturnResponse(),
   ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -446,10 +439,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      post(urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -461,10 +454,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: OffenderTemporaryAbsenceSummaryResponse = createTemporaryAbsenceSummaryResponse(),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -477,10 +470,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -492,10 +485,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: OffenderTemporaryAbsenceIdsResponse = temporaryAbsenceSummaryIdsResponse(),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -508,10 +501,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -523,10 +516,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     bookingId: Long = 12345L,
     response: BookingTemporaryAbsences = bookingTemporaryAbsences(bookingId = bookingId),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/booking/$bookingId/temporary-absences"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/booking/$bookingId/temporary-absences"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -539,10 +532,10 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/movements/booking/$bookingId/temporary-absences"))
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlEqualTo("/movements/booking/$bookingId/temporary-absences"))
         .willReturn(
-          aResponse()
+          WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -554,9 +547,9 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     response: OffenderTemporaryAbsencesResponse = temporaryAbsencesResponse(),
   ) {
-    nomisApi.stubFor(
-      get(urlPathEqualTo("/movements/$offenderNo/temporary-absences")).willReturn(
-        aResponse()
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlPathEqualTo("/movements/$offenderNo/temporary-absences")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
@@ -565,9 +558,9 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
   }
 
   fun stubGetTemporaryAbsences(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
-    nomisApi.stubFor(
-      get(urlPathMatching("/movements/.*/temporary-absences")).willReturn(
-        aResponse()
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.get(WireMock.urlPathMatching("/movements/.*/temporary-absences")).willReturn(
+        WireMock.aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
           .withBody(jsonMapper.writeValueAsString(error)),
@@ -579,12 +572,13 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     offenderNo: String = "A1234BC",
     eventId: Long = 4321L,
   ) {
-    nomisApi.stubFor(
-      delete(urlPathEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence/$eventId")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(HttpStatus.NO_CONTENT.value()),
-      ),
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.delete(WireMock.urlPathEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence/$eventId"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(HttpStatus.NO_CONTENT.value()),
+        ),
     )
   }
 
@@ -594,16 +588,17 @@ class ExternalMovementsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
-    nomisApi.stubFor(
-      delete(urlPathEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence/$eventId")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
-          .withBody(jsonMapper.writeValueAsString(error)),
-      ),
+    NomisApiExtension.nomisApi.stubFor(
+      WireMock.delete(WireMock.urlPathEqualTo("/movements/$offenderNo/temporary-absences/scheduled-temporary-absence/$eventId"))
+        .willReturn(
+          WireMock.aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(status.value())
+            .withBody(jsonMapper.writeValueAsString(error)),
+        ),
     )
   }
 
-  fun verify(pattern: RequestPatternBuilder) = nomisApi.verify(pattern)
-  fun verify(count: Int, pattern: RequestPatternBuilder) = nomisApi.verify(count, pattern)
+  fun verify(pattern: RequestPatternBuilder) = NomisApiExtension.nomisApi.verify(pattern)
+  fun verify(count: Int, pattern: RequestPatternBuilder) = NomisApiExtension.nomisApi.verify(count, pattern)
 }
