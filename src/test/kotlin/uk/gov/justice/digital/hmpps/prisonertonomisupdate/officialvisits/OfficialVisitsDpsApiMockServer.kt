@@ -87,6 +87,7 @@ class OfficialVisitsDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
       visitType = VisitType.IN_PERSON,
       createdBy = "T.SMITH",
       createdTime = LocalDateTime.parse("2020-01-01T10:00"),
+      currentTerm = true,
     )
 
     fun syncOfficialVisitor() = SyncOfficialVisitor(

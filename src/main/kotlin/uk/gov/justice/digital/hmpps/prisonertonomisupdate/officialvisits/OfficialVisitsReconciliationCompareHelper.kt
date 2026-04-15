@@ -19,6 +19,7 @@ data class OfficialVisitSummary(
   val visitStatus: VisitStatusType,
   val visitOutcome: VisitCompletionType?,
   val visitors: List<VisitorSummary>,
+  val currentTerm: Boolean,
 )
 data class VisitorSummary(val nomisPersonAndDpsContactId: Long, val attendance: AttendanceType?)
 
@@ -35,6 +36,7 @@ internal fun OfficialVisitResponse.toVisit() = OfficialVisitSummary(
       attendance = it.visitorAttendanceOutcome?.code?.toDpsAttendanceType(),
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
+  currentTerm = this.currentTerm,
 )
 internal fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
   startDateTime = this.visitDate.atTime(this.startTime.asTime()),
@@ -47,9 +49,10 @@ internal fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
     VisitorSummary(
       nomisPersonAndDpsContactId = it.contactId!!,
       // treat attended and null as the same since DPS defaults to null and NOMIS to ATTENDED
-      attendance = it.attendanceCode?.takeIf { it != AttendanceType.ATTENDED },
+      attendance = it.attendanceCode?.takeIf { attendanceCode -> attendanceCode != AttendanceType.ATTENDED },
     )
   }.sortedBy { it.nomisPersonAndDpsContactId },
+  currentTerm = this.currentTerm == true,
 )
 
 private fun String.asTime() = LocalTime.parse(this)
