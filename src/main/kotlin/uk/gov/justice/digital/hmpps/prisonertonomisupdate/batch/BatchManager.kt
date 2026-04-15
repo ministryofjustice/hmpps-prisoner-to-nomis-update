@@ -61,8 +61,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesActivePrisonersReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -147,8 +147,8 @@ class BatchManager(
   private val prisonerTransactionsReconciliationService: PrisonerTransactionReconciliationService,
   private val schedulesService: SchedulesService,
   private val sentencingReconciliationService: SentencingReconciliationService,
-  private val temporaryAbsencesActivePrisonersReconciliationService: TemporaryAbsencesActivePrisonersReconciliationService,
-  private val temporaryAbsencesAllPrisonersReconciliationService: TemporaryAbsencesAllPrisonersReconciliationService,
+  private val tapActivePrisonersReconciliationService: TapActivePrisonersReconciliationService,
+  private val tapAllPrisonersReconciliationService: TapAllPrisonersReconciliationService,
   private val visitBalancesReconciliationService: VisitBalanceReconciliationService,
   private val visitSlotsReconciliationService: VisitSlotsReconciliationService,
 ) {
@@ -191,8 +191,8 @@ class BatchManager(
       PURGE_ACTIVITY_DLQ -> purgeQueue(activitiesDlqName)
       SENTENCING_RECON -> sentencingReconciliationService.generateSentencingReconciliationReport()
       SUSPENDED_ALLOCATION_RECON -> activitiesReconService.suspendedAllocationReconciliationReport()
-      TAP_ACTIVE_PRISONERS_RECON -> temporaryAbsencesActivePrisonersReconciliationService.generateTapActivePrisonersReconciliationReportBatch()
-      TAP_ALL_PRISONERS_RECON -> temporaryAbsencesAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
+      TAP_ACTIVE_PRISONERS_RECON -> tapActivePrisonersReconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      TAP_ALL_PRISONERS_RECON -> tapAllPrisonersReconciliationService.generateTapAllPrisonersReconciliationReportBatch()
       VISIT_BALANCE_RECON -> visitBalancesReconciliationService.generateReconciliationReport()
       VISIT_SLOTS_RECON -> visitSlotsReconciliationService.generateVisitSlotsReconciliationReportBatch()
     }

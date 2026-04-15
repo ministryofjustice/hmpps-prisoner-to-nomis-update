@@ -34,26 +34,26 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Reconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.SCHEDULED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.absence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.application
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.scheduledAbsence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.scheduledAbsenceReturn
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.temporaryAbsence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.temporaryAbsenceReturn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tap
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapApplication
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapMovementIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapMovementOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapScheduleIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTemporaryAbsences
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTaps
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerIds
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import java.time.LocalDateTime
 import java.util.*
 
 class TapActivePrisonersReconciliationIntTest(
-  @Autowired private val reconciliationService: TemporaryAbsencesActivePrisonersReconciliationService,
+  @Autowired private val reconciliationService: TapActivePrisonersReconciliationService,
   @Autowired private val nomisMovementsApi: TapNomisApiMockServer,
   @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,
 ) : IntegrationTestBase() {
@@ -75,7 +75,7 @@ class TapActivePrisonersReconciliationIntTest(
         ),
       )
 
-      nomisMovementsApi.stubGetTemporaryAbsences(offenderNo = "A0001TZ")
+      nomisMovementsApi.stubGetOffenderTaps(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
       mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ")
     }
@@ -139,27 +139,27 @@ class TapActivePrisonersReconciliationIntTest(
 
       @BeforeEach
       fun setUp() = runTest {
-        nomisMovementsApi.stubGetTemporaryAbsences(
+        nomisMovementsApi.stubGetOffenderTaps(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryResponse().copy(
+          response = emptyOffenderTapsResponse().copy(
             bookings = listOf(
-              BookingTemporaryAbsences(
+              BookingTaps(
                 bookingId = 12345,
-                temporaryAbsenceApplications = listOf(
-                  application(
+                tapApplications = listOf(
+                  tapApplication(
                     id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId),
-                        scheduledAbsenceReturn = scheduledAbsenceReturn(id = scheduleInId),
-                        temporaryAbsence = temporaryAbsence(seq = scheduledMovementOutSeq),
-                        temporaryAbsenceReturn = temporaryAbsenceReturn(seq = scheduledMovementInSeq),
+                    taps = listOf(
+                      tap(
+                        tapScheduleOut = tapScheduleOut(id = scheduleOutId),
+                        tapScheduleIn = tapScheduleIn(id = scheduleInId),
+                        tapMovementOut = tapMovementOut(seq = scheduledMovementOutSeq),
+                        tapMovementIn = tapMovementIn(seq = scheduledMovementInSeq),
                       ),
                     ),
                   ),
                 ),
-                unscheduledTemporaryAbsences = listOf(temporaryAbsence(seq = unscheduledMovementOutSeq)),
-                unscheduledTemporaryAbsenceReturns = listOf(temporaryAbsenceReturn(seq = unscheduledMovementInSeq)),
+                unscheduledTapMovementOuts = listOf(tapMovementOut(seq = unscheduledMovementOutSeq)),
+                unscheduledTapMovementIns = listOf(tapMovementIn(seq = unscheduledMovementInSeq)),
                 activeBooking = true,
                 latestBooking = true,
               ),
@@ -448,9 +448,9 @@ class TapActivePrisonersReconciliationIntTest(
   }
 
   private fun stubDifferenceIdsEmpty(offenderNo: String = "A0001TZ") {
-    nomisMovementsApi.stubGetTemporaryAbsences(
+    nomisMovementsApi.stubGetOffenderTaps(
       offenderNo = offenderNo,
-      response = emptyTemporaryAbsenceSummaryResponse(),
+      response = emptyOffenderTapsResponse(),
     )
     dpsApi.stubGetTapReconciliationDetail(
       personIdentifier = offenderNo,
@@ -674,35 +674,35 @@ class TapActivePrisonersReconciliationIntTest(
       scheduleIn: Boolean = false,
       scheduleInStatus: String = "SCH",
       movementIn: Boolean = false,
-    ) = nomisMovementsApi.stubGetTemporaryAbsences(
+    ) = nomisMovementsApi.stubGetOffenderTaps(
       offenderNo = "A0001TZ",
-      response = emptyTemporaryAbsenceSummaryResponse().copy(
+      response = emptyOffenderTapsResponse().copy(
         bookings = listOf(
-          BookingTemporaryAbsences(
+          BookingTaps(
             bookingId = 12345,
-            temporaryAbsenceApplications = listOf(
-              application(
+            tapApplications = listOf(
+              tapApplication(
                 id = applicationId,
-                absences = listOf(
-                  absence(
-                    scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                taps = listOf(
+                  tap(
+                    tapScheduleOut = tapScheduleOut(id = scheduleOutId).copy(
                       eventStatus = status,
                       eventSubType = "C5",
                       startTime = startTime,
                       returnTime = endTime,
                       toAddressPostcode = "S1 1AA",
                     ),
-                    scheduledAbsenceReturn = if (scheduleIn) scheduledAbsenceReturn(id = scheduleInId).copy(eventStatus = scheduleInStatus) else null,
-                    temporaryAbsence = if (movementOut) temporaryAbsence().copy(toAddressPostcode = movementOutPostcode) else null,
-                    temporaryAbsenceReturn = if (movementIn) temporaryAbsenceReturn() else null,
+                    tapScheduleIn = if (scheduleIn) tapScheduleIn(id = scheduleInId).copy(eventStatus = scheduleInStatus) else null,
+                    tapMovementOut = if (movementOut) tapMovementOut().copy(toAddressPostcode = movementOutPostcode) else null,
+                    tapMovementIn = if (movementIn) tapMovementIn() else null,
                   ),
                 ),
               ),
             ),
             activeBooking = activeBooking,
             latestBooking = latestBooking,
-            unscheduledTemporaryAbsences = listOf(),
-            unscheduledTemporaryAbsenceReturns = listOf(),
+            unscheduledTapMovementOuts = listOf(),
+            unscheduledTapMovementIns = listOf(),
           ),
         ),
       ),
@@ -771,14 +771,14 @@ class TapActivePrisonersReconciliationIntTest(
         ),
       )
 
-      nomisMovementsApi.stubGetTemporaryAbsences(offenderNo = "A0001TZ")
+      nomisMovementsApi.stubGetOffenderTaps(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
       mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ")
     }
 
     @Test
     fun `will report error if NOMIS prisoner not found`() = runTest {
-      nomisMovementsApi.stubGetTemporaryAbsences(status = HttpStatus.NOT_FOUND)
+      nomisMovementsApi.stubGetOffenderTaps(status = HttpStatus.NOT_FOUND)
 
       reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
       awaitReportFinished()
@@ -808,36 +808,36 @@ class TapActivePrisonersReconciliationIntTest(
 
     @BeforeEach
     fun setUp() = runTest {
-      nomisMovementsApi.stubGetTemporaryAbsences(
+      nomisMovementsApi.stubGetOffenderTaps(
         offenderNo = "A0001TZ",
-        response = emptyTemporaryAbsenceSummaryResponse()
+        response = emptyOffenderTapsResponse()
           .copy(
             bookings = listOf(
-              BookingTemporaryAbsences(
+              BookingTaps(
                 bookingId = 12345,
-                temporaryAbsenceApplications = listOf(
-                  application(
+                tapApplications = listOf(
+                  tapApplication(
                     id = applicationId,
-                    absences = listOf(
-                      absence(
-                        scheduledAbsence = scheduledAbsence(id = scheduleOutId).copy(
+                    taps = listOf(
+                      tap(
+                        tapScheduleOut = tapScheduleOut(id = scheduleOutId).copy(
                           eventStatus = "SCH",
                           eventSubType = "C5",
                           startTime = startTime,
                           returnTime = endTime,
                           toAddressPostcode = "S1 1AA",
                         ),
-                        scheduledAbsenceReturn = null,
-                        temporaryAbsence = null,
-                        temporaryAbsenceReturn = null,
+                        tapScheduleIn = null,
+                        tapMovementOut = null,
+                        tapMovementIn = null,
                       ),
                     ),
                   ),
                 ),
                 activeBooking = true,
                 latestBooking = true,
-                unscheduledTemporaryAbsences = listOf(),
-                unscheduledTemporaryAbsenceReturns = listOf(),
+                unscheduledTapMovementOuts = listOf(),
+                unscheduledTapMovementIns = listOf(),
               ),
             ),
           ),
@@ -1081,13 +1081,13 @@ class TapActivePrisonersReconciliationIntTest(
   }
 }
 
-private fun emptyTemporaryAbsenceSummaryResponse(bookingId: Long = 12345L) = OffenderTemporaryAbsencesResponse(
+private fun emptyOffenderTapsResponse(bookingId: Long = 12345L) = OffenderTapsResponse(
   bookings = listOf(
-    BookingTemporaryAbsences(
+    BookingTaps(
       bookingId = bookingId,
-      temporaryAbsenceApplications = listOf(),
-      unscheduledTemporaryAbsences = listOf(),
-      unscheduledTemporaryAbsenceReturns = listOf(),
+      tapApplications = listOf(),
+      unscheduledTapMovementOuts = listOf(),
+      unscheduledTapMovementIns = listOf(),
       latestBooking = true,
       activeBooking = true,
     ),

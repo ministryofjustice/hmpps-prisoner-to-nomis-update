@@ -30,7 +30,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
 import java.util.*
 
 @Service
-class TemporaryAbsencesAllPrisonersReconciliationService(
+class TapAllPrisonersReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: TapNomisApiService,
   private val dpsApiService: ExternalMovementsDpsApiService,

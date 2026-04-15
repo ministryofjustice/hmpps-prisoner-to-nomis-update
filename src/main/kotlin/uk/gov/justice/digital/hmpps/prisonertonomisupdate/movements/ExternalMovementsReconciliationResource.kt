@@ -7,15 +7,15 @@ import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.RestController
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.MismatchPrisonerTaps
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.MismatchPrisonerTapsSummary
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesActivePrisonersReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 
 @PreAuthorize("hasAnyRole('PRISONER_TO_NOMIS__UPDATE__RW', 'ROLE_PRISONER_FROM_NOMIS__REPAIR_MOVEMENTS__RW')")
 @RestController
 @Tag(name = "External Movements Reconciliation Resource")
 class ExternalMovementsReconciliationResource(
-  private val allPrisonerReconService: TemporaryAbsencesAllPrisonersReconciliationService,
-  private val activePrisonerReconService: TemporaryAbsencesActivePrisonersReconciliationService,
+  private val allPrisonerReconService: TapAllPrisonersReconciliationService,
+  private val activePrisonerReconService: TapActivePrisonersReconciliationService,
 ) {
 
   @GetMapping("/external-movements/all-taps/{offenderNo}/reconciliation")
