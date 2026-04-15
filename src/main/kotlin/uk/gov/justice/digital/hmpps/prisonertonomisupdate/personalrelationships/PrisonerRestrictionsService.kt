@@ -125,7 +125,7 @@ private fun SyncPrisonerRestriction.toNomisCreateRequest() = CreatePrisonerRestr
   effectiveDate = this.effectiveDate,
   expiryDate = this.expiryDate,
   comment = this.commentText,
-  enteredStaffUsername = this.createdBy,
+  enteredStaffUsername = this.createdBy!!,
   authorisedStaffUsername = this.authorisedUsername,
 )
 
@@ -134,6 +134,6 @@ private fun SyncPrisonerRestriction.toNomisUpdateRequest() = UpdatePrisonerRestr
   effectiveDate = this.effectiveDate,
   expiryDate = this.expiryDate,
   comment = this.commentText,
-  enteredStaffUsername = this.updatedBy ?: this.createdBy,
+  enteredStaffUsername = this.updatedBy ?: this.createdBy!!,
   authorisedStaffUsername = this.authorisedUsername,
 )

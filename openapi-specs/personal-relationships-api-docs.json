@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-10.133.48480d0"
+    "version" : "2026-04-14.145.d8c3c07"
   },
   "servers" : [ {
     "url" : "/",
@@ -8201,7 +8201,7 @@
         "description" : "Request to update a prisoner's number of children",
         "properties" : {
           "numberOfChildren" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The number of children",
             "example" : "1",
             "maxLength" : 50,
@@ -8230,7 +8230,7 @@
             "example" : 1
           },
           "numberOfChildren" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The number of children of the prisoner"
           },
           "active" : {
@@ -8238,12 +8238,12 @@
             "description" : "Is this the active number of children of the prisoner"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Creation date and time"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the creator"
           }
         },
@@ -8257,16 +8257,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -8276,7 +8276,7 @@
         "description" : "Request to update a prisoner's domestic status",
         "properties" : {
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code value",
             "example" : "1",
             "maxLength" : 12,
@@ -8305,7 +8305,7 @@
             "example" : 1
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status value of the prisoner"
           },
           "active" : {
@@ -8313,12 +8313,12 @@
             "description" : "Is this the active domestic status code of the prisoner"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Creation date and time"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the creator"
           }
         },
@@ -8348,18 +8348,18 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
           },
           "currentTerm" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "True if this restriction applies to the latest or current term in prison, false if a previous term",
             "example" : true
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed",
             "maxLength" : 240,
@@ -8376,7 +8376,7 @@
             "example" : "JDOE_ADM"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was last updated"
           }
@@ -8410,13 +8410,13 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed"
           },
@@ -8431,22 +8431,22 @@
             "example" : true
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who created the record",
             "example" : "JSMITH_ADM"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was created"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who last updated the record",
             "example" : "JDOE_ADM"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was last updated"
           }
@@ -8489,7 +8489,7 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments about the prisoner contact",
             "example" : "Close family friend"
           },
@@ -8509,18 +8509,18 @@
             "example" : true
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The expiry date of the prisoner contact",
             "example" : "2025-01-01"
           },
           "createdAtPrison" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison where the prisoner contact was created",
             "example" : "HMP Belmarsh"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user who last updated the prisoner contact",
             "example" : "adminUser"
           },
@@ -8575,7 +8575,7 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments about the prisoner contact",
             "example" : "Close family friend"
           },
@@ -8595,13 +8595,13 @@
             "example" : true
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The expiry date of the prisoner contact",
             "example" : "2025-01-01"
           },
           "createdAtPrison" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison where the prisoner contact was created",
             "example" : "HMP Belmarsh"
           },
@@ -8617,12 +8617,12 @@
             "example" : "2024-01-01T12:00:00"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user who last updated the prisoner contact",
             "example" : "adminUser"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp when the prisoner contact was last updated",
             "example" : "2024-02-01T16:00:00Z"
@@ -8640,29 +8640,29 @@
             "example" : "NoContact"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Start date of the restriction",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction, if applicable",
             "example" : "2024-12-31"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments regarding the restriction",
             "example" : "Restriction applied due to safety concerns"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated the restriction record",
             "example" : "editor"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Time when the restriction record was last updated",
             "example" : "2024-10-02T15:30:00Z"
@@ -8698,45 +8698,45 @@
             "example" : "A1234AA"
           },
           "restrictionType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The coded type of restriction that applies to this relationship.\n    This is a coded value from the group RESTRICTION in reference codes.\n    Example values include ACC, BAN, CHILD, CLOSED, RESTRICTED, DIHCON, NONCON.\n    ",
             "example" : "NONCON"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Start date of the restriction",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction, if applicable",
             "example" : "2024-12-31"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments regarding the restriction",
             "example" : "Restriction applied due to safety concerns"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who created the restriction record",
             "example" : "admin"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Time when the restriction record was created",
             "example" : "2024-10-01T12:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated the restriction record",
             "example" : "editor"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Time when the restriction record was last updated",
             "example" : "2024-10-02T15:30:00Z"
@@ -8807,23 +8807,23 @@
             "example" : true
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who created the employment record",
             "example" : "admin"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Time when the employment record was created",
             "example" : "2024-10-01T12:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who last updated the employment record",
             "example" : "editor"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Time when the employment record was last updated",
             "example" : "2024-10-02T15:30:00Z"
@@ -8836,7 +8836,7 @@
         "description" : "Request to update a new contact ",
         "properties" : {
           "title" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The title code for the contact.\n    This is a coded value (from the group code TITLE in reference data).\n    Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n    ",
             "example" : "MR"
           },
@@ -8851,12 +8851,12 @@
             "example" : "John"
           },
           "middleName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -8872,33 +8872,33 @@
             "example" : false
           },
           "deceasedFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the contact is deceased",
             "example" : false
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact was deceased, if applicable",
             "example" : "2023-05-01"
           },
           "gender" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The gender code for the contact.\n    This is a coded value (from the group code GENDER in reference data).\n    Known values are (M) Male, (F) Female, (NK) Not Known, (NS) Not Specified.\n    ",
             "example" : "M"
           },
           "domesticStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the contact",
             "example" : "S"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The language code of the contact",
             "example" : "EN"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required",
             "example" : false
           },
@@ -8931,7 +8931,7 @@
             "example" : 123456
           },
           "title" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The title code for the contact.\n    This is a coded value (from the group code TITLE in reference data).\n    Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n    ",
             "example" : "MR"
           },
@@ -8946,12 +8946,12 @@
             "example" : "John"
           },
           "middleName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -8967,33 +8967,33 @@
             "example" : false
           },
           "deceasedFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the contact is deceased",
             "example" : false
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact was deceased, if applicable",
             "example" : "2023-05-01"
           },
           "gender" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The gender code for the contact.\n    This is a coded value (from the group code GENDER in reference data).\n    Known values are (M) Male, (F) Female, (NK) Not Known, (NS) Not Specified.\n    ",
             "example" : "M"
           },
           "domesticStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the contact",
             "example" : "S"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The language code of the contact",
             "example" : "EN"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required",
             "example" : false
           },
@@ -9009,12 +9009,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9042,19 +9042,19 @@
             "example" : "MOBILE"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction start date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments about the restriction ",
             "example" : "N/A"
           },
@@ -9094,19 +9094,19 @@
             "example" : "MOBILE"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction created date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction ",
             "example" : "N/A"
           },
@@ -9122,12 +9122,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9156,7 +9156,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -9201,7 +9201,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -9217,12 +9217,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9251,7 +9251,7 @@
             "example" : "S99PH898989L"
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Issuing authority",
             "example" : "DVLA",
             "maxLength" : 40
@@ -9297,7 +9297,7 @@
             "example" : "DL090 0909 909"
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Issuing authority",
             "example" : "DVLA"
           },
@@ -9313,12 +9313,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9388,12 +9388,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9412,7 +9412,7 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The type of address.\n    This is a coded value (from the group code ADDRESS_TYPE in reference data).\n    The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
@@ -9422,42 +9422,42 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS reference data",
             "example" : "BIRM"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS reference data",
             "example" : "WMIDS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code - from NOMIS reference data",
             "example" : "UK"
           },
@@ -9467,29 +9467,29 @@
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
@@ -9524,7 +9524,7 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The type of address.\n    This is a coded value (from the group code ADDRESS_TYPE in reference data).\n    The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
@@ -9534,42 +9534,42 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS",
             "example" : "BIRM"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS",
             "example" : "WMIDS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code - from NOMIS",
             "example" : "UK"
           },
@@ -9579,12 +9579,12 @@
             "example" : false
           },
           "verifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Which username ran the postcode lookup check",
             "example" : "NJKG44D"
           },
           "verifiedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the postcode lookup was done",
             "example" : "2024-01-01T00:00:00Z"
@@ -9595,13 +9595,13 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address is to be considered active from",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address is to be considered no longer active",
             "example" : "2024-01-01"
@@ -9612,7 +9612,7 @@
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
@@ -9628,12 +9628,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who last updated the contact address",
             "example" : "JD000001"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the contact address was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -9656,7 +9656,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -9713,7 +9713,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -9729,12 +9729,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9747,7 +9747,7 @@
         "description" : "Request to update prisoner number of children",
         "properties" : {
           "numberOfChildren" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of children",
             "example" : 1,
@@ -9767,7 +9767,7 @@
             "example" : 1
           },
           "numberOfChildren" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The number of children of the prisoner"
           },
           "active" : {
@@ -9775,12 +9775,12 @@
             "description" : "Is this the active number of children of the prisoner"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Creation date and time"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the creator"
           }
         },
@@ -9791,7 +9791,7 @@
         "description" : "Request to create or update prisoner domestic status",
         "properties" : {
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code for DOMESTIC_STS group code",
             "example" : "M",
             "maxLength" : 12,
@@ -9810,11 +9810,11 @@
             "example" : 1
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the prisoner"
           },
           "domesticStatusDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status description of the prisoner"
           },
           "active" : {
@@ -9822,12 +9822,12 @@
             "description" : "Is this the active domestic status code of the prisoner"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Creation date and time"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the creator"
           }
         },
@@ -9849,13 +9849,13 @@
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction",
             "example" : "N/A",
             "maxLength" : 240,
@@ -9902,19 +9902,19 @@
             "example" : "Banned"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction created date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction ",
             "example" : "N/A"
           },
@@ -9940,12 +9940,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -9969,13 +9969,13 @@
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction",
             "example" : "N/A",
             "maxLength" : 240,
@@ -10011,19 +10011,19 @@
             "example" : "Banned"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction created date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction ",
             "example" : "N/A"
           },
@@ -10049,12 +10049,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10081,7 +10081,7 @@
             "minLength" : 0
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123",
             "maxLength" : 7,
@@ -10122,7 +10122,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -10138,12 +10138,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10170,7 +10170,7 @@
             "minLength" : 0
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The authority who issued the identity",
             "example" : "DVLA",
             "maxLength" : 40,
@@ -10196,12 +10196,12 @@
             "example" : 123
           },
           "identityType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of identity",
             "example" : "PASS"
           },
           "identityTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of the type of identity",
             "example" : "Passport number"
           },
@@ -10211,12 +10211,12 @@
             "example" : true
           },
           "identityValue" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Identity ",
             "example" : "GB123456789"
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The authority who issued the identity ",
             "example" : "UK Passport Office"
           },
@@ -10232,12 +10232,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10298,12 +10298,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10325,43 +10325,43 @@
             "type" : "boolean"
           },
           "flat" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "property" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "street" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "area" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "cityCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "cityDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countyCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countyDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "postcode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countryCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countryDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "businessPhoneNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "businessPhoneNumberExtension" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "organisationActive", "organisationId", "organisationName" ]
@@ -10413,12 +10413,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10431,7 +10431,7 @@
         "description" : "Request to update a contact address",
         "properties" : {
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The type of address.\n    This is a coded value (from the group code ADDRESS_TYPE in reference data).\n    The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME",
             "maxLength" : 12,
@@ -10443,49 +10443,49 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B",
             "maxLength" : 30,
             "minLength" : 0
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House",
             "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue",
             "maxLength" : 160,
             "minLength" : 0
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights",
             "maxLength" : 70,
             "minLength" : 0
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS reference data",
             "example" : "BIRM",
             "maxLength" : 12,
             "minLength" : 0
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS reference data",
             "example" : "WMIDS",
             "maxLength" : 12,
             "minLength" : 0
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH",
             "maxLength" : 12,
@@ -10504,29 +10504,29 @@
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -10560,7 +10560,7 @@
             }
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address (optional).\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
@@ -10570,42 +10570,42 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
             "example" : "25343"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "S.YORKSHIRE"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "ENG"
           },
@@ -10615,12 +10615,12 @@
             "example" : false
           },
           "verifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Which username ran the postcode lookup check",
             "example" : "NJKG44D"
           },
           "verifiedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the postcode lookup was done",
             "example" : "2024-01-01T00:00:00Z"
@@ -10631,13 +10631,13 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address is to be considered active from",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address is to be considered no longer active",
             "example" : "2024-01-01"
@@ -10648,7 +10648,7 @@
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
@@ -10664,12 +10664,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who last updated the contact address",
             "example" : "JD000001"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the contact address was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -10696,7 +10696,7 @@
             "minLength" : 0
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123",
             "maxLength" : 7,
@@ -10749,7 +10749,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -10765,12 +10765,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -10802,7 +10802,7 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
@@ -10813,7 +10813,7 @@
             "example" : true
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed",
             "maxLength" : 240,
@@ -10874,7 +10874,7 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments about the prisoner contact",
             "example" : "Close family friend"
           },
@@ -10890,28 +10890,28 @@
             "example" : "2024-01-01T12:00:00"
           },
           "active" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates if the prisoner contact is active",
             "example" : true
           },
           "approvedVisitor" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates if the prisoner contact is an approved visitor",
             "example" : false
           },
           "currentTerm" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates if this relationship is current and applies to the latest booking",
             "example" : true
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The expiry date of the prisoner contact",
             "example" : "2025-01-01"
           },
           "createdAtPrison" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison where the prisoner contact was created",
             "example" : "HMP Belmarsh"
           }
@@ -10934,19 +10934,19 @@
             "example" : "NoContact"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Start date of the restriction",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction, if applicable",
             "example" : "2024-12-31"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments regarding the restriction",
             "example" : "Restriction applied due to safety concerns"
           },
@@ -11033,7 +11033,7 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments about the contacts relationship with the prisoner",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -11053,7 +11053,7 @@
             "example" : 1233323
           },
           "title" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The title code for the contact.\n      This is a coded value (from the group code TITLE in reference data).\n      Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n      ",
             "example" : "MR",
             "maxLength" : 12
@@ -11071,20 +11071,23 @@
             "maxLength" : 35
           },
           "middleName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William",
             "maxLength" : 35
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
           },
           "relationship" : {
-            "$ref" : "#/components/schemas/ContactRelationship",
-            "description" : "A description of the relationship if the contact should be linked to a prisoner"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ContactRelationship"
+            }, {
+              "type" : "null"
+            } ]
           },
           "isStaff" : {
             "type" : "boolean",
@@ -11097,33 +11100,33 @@
             "example" : false
           },
           "deceasedFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the contact is deceased",
             "example" : false
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact was deceased, if applicable",
             "example" : "2023-05-01"
           },
           "gender" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The gender code for the contact.\n    This is a coded value (from the group code GENDER in reference data).\n    Known values are (M) Male, (F) Female, (NK) Not Known, (NS) Not Specified.\n    ",
             "example" : "M"
           },
           "domesticStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the contact",
             "example" : "S"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The language code of the contact",
             "example" : "EN"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required",
             "example" : false
           },
@@ -11162,19 +11165,19 @@
             "example" : "MOBILE"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction start date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction ",
             "example" : "N/A"
           },
@@ -11213,7 +11216,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -11252,7 +11255,7 @@
             "example" : "HP9909SM1883"
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Issuing authority ",
             "example" : "DVLA"
           },
@@ -11310,7 +11313,7 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address.\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
@@ -11320,74 +11323,74 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS",
             "example" : "13232"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS",
             "example" : "WMIDS"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code - from NOMIS",
             "example" : "UK"
           },
           "verified" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address has been verified by postcode lookup",
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
@@ -11426,7 +11429,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           },
@@ -11515,7 +11518,7 @@
             "example" : true
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date that this relationship expired",
             "example" : "2024-03-01"
@@ -11536,7 +11539,7 @@
             "example" : true
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment on this relationship",
             "example" : "This is an optional comment"
           },
@@ -11553,24 +11556,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -11591,7 +11594,7 @@
             "description" : "Coded value indicating the restriction type from reference data"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment on this restriction",
             "example" : "Comment on restriction"
           },
@@ -11602,30 +11605,30 @@
             "example" : "2024-03-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date that this restriction expires",
             "example" : "2024-03-01"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -11790,13 +11793,13 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed",
             "maxLength" : 240,
@@ -11823,12 +11826,12 @@
             "description" : "Timestamp when the record was created"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who last updated the record",
             "example" : "JDOE_ADM"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was last updated"
           }
@@ -11989,12 +11992,12 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional comments",
             "example" : "Close family friend"
           },
           "approvedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the person who approved this contact as a visitor",
             "example" : "Michel Smith"
           }
@@ -12017,13 +12020,13 @@
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction",
             "example" : "N/A",
             "maxLength" : 240,
@@ -12073,19 +12076,19 @@
             "example" : "Banned"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the restriction starts",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the restriction expires",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments for the restriction",
             "example" : "N/A"
           },
@@ -12135,19 +12138,19 @@
             "example" : "Banned"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the restriction starts",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the restriction expires",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments for the restriction",
             "example" : "N/A"
           },
@@ -12361,13 +12364,13 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed",
             "maxLength" : 240,
@@ -12394,12 +12397,12 @@
             "description" : "Timestamp when the record was created"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who last updated the record",
             "example" : "JDOE_ADM"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was last updated"
           }
@@ -12433,8 +12436,11 @@
             "example" : "A1234BC"
           },
           "current" : {
-            "$ref" : "#/components/schemas/NumberOfChildrenDetailsRequest",
-            "description" : "Current number of children details"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/NumberOfChildrenDetailsRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "history" : {
             "type" : "array",
@@ -12451,7 +12457,7 @@
         "description" : "Details of a number of children record",
         "properties" : {
           "numberOfChildren" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The number of children",
             "example" : "1",
             "maxLength" : 50,
@@ -12480,7 +12486,7 @@
             "example" : "A1234BC"
           },
           "current" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The current number of children"
           },
@@ -12500,7 +12506,7 @@
         "description" : "Details of a domestic status record",
         "properties" : {
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code",
             "example" : "M",
             "maxLength" : 12,
@@ -12529,8 +12535,11 @@
             "example" : "A1234BC"
           },
           "current" : {
-            "$ref" : "#/components/schemas/DomesticStatusDetailsRequest",
-            "description" : "Current domestic status details"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DomesticStatusDetailsRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "history" : {
             "type" : "array",
@@ -12552,7 +12561,7 @@
             "example" : "A1234BC"
           },
           "current" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The current domestic status"
           },
@@ -12589,79 +12598,91 @@
             "example" : 123
           },
           "type" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "Address type coded value (from reference data)"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or identifier",
             "example" : "1B"
           },
           "premise" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "House name or number",
             "example" : "43"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road",
             "example" : "Main Street"
           },
           "locality" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Locality",
             "example" : "Keighley"
           },
           "postCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "BD12 8RD"
           },
           "city" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "City - code and description (from reference data)"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "county" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "County - code and description (from reference data)"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "country" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "Country - code and description (from reference data)"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "validatedPAF" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Address validated by postcode lookup",
             "example" : false
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as no fixed address",
             "example" : false
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as the primary residential address",
             "example" : true
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to",
             "example" : true
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments relating to this address",
             "example" : "A comment"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this address should be considered valid from",
             "example" : "2018-10-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this address should be considered valid to",
             "example" : "2022-04-04"
@@ -12674,24 +12695,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -12723,40 +12744,52 @@
             "minLength" : 0
           },
           "middleName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William",
             "maxLength" : 35,
             "minLength" : 0
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
           },
           "gender" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "The gender of the contact"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "title" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "The title of the contact, if any"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "language" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "The main language spoken by this contact"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Interpreter required"
           },
           "domesticStatus" : {
-            "$ref" : "#/components/schemas/CodedValue",
-            "description" : "The domestic status coded value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CodedValue"
+            }, {
+              "type" : "null"
+            } ]
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date this persons was marked as deceased"
           },
@@ -12818,24 +12851,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -12857,24 +12890,24 @@
             "example" : "test@example.com"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -12900,24 +12933,24 @@
             "example" : true
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -12943,29 +12976,29 @@
             "example" : "KJ 45544 JFKJK"
           },
           "issuedAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The issuing authority for this identifier",
             "example" : "DVLA"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -12987,7 +13020,7 @@
             "example" : "098989 98989893"
           },
           "extension" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number (optional)",
             "example" : "100"
           },
@@ -12996,24 +13029,24 @@
             "description" : "Type of phone number (from reference data)"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -13034,7 +13067,7 @@
             "description" : "Coded value indicating the restriction type from reference data"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment on this restriction",
             "example" : "Comment on restriction"
           },
@@ -13045,30 +13078,30 @@
             "example" : "2024-03-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date that this restriction expires",
             "example" : "2024-03-01"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -13104,7 +13137,7 @@
             "example" : true
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date that this relationship expired",
             "example" : "2024-03-01"
@@ -13125,7 +13158,7 @@
             "example" : true
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment on this relationship",
             "example" : "This is an optional comment"
           },
@@ -13142,24 +13175,24 @@
             }
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -13180,7 +13213,7 @@
             "description" : "Coded value for this restriction type"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments relating to this restriction",
             "example" : "A comment"
           },
@@ -13191,30 +13224,30 @@
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date that this restriction expires and stops being enforced",
             "example" : "2024-03-01"
           },
           "createDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The data and time the record was created",
             "example" : "2022-10-01T16:45:45"
           },
           "createUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who created the row",
             "example" : "X999X"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the record was last amended",
             "example" : "2022-10-01T16:45:45"
           },
           "modifyUsername" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username who last modified the row",
             "example" : "X999X"
           }
@@ -13262,7 +13295,7 @@
           "contact" : {
             "$ref" : "#/components/schemas/IdPair",
             "description" : "The pair of IDs for this person in NOMIS",
-            "example" : "123456"
+            "example" : 123456
           },
           "lastName" : {
             "type" : "string",
@@ -13270,7 +13303,7 @@
             "example" : "Doe"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -13318,7 +13351,7 @@
             }
           },
           "employments" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "List of Nomis and DPS IDs for employments (official contact types only)",
             "items" : {
               "$ref" : "#/components/schemas/IdPair"
@@ -13331,7 +13364,7 @@
         "type" : "object",
         "properties" : {
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address.\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME",
             "maxLength" : 12,
@@ -13343,49 +13376,49 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B",
             "maxLength" : 30,
             "minLength" : 0
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House",
             "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue",
             "maxLength" : 160,
             "minLength" : 0
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights",
             "maxLength" : 70,
             "minLength" : 0
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS",
             "example" : "13232",
             "maxLength" : 12,
             "minLength" : 0
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS",
             "example" : "WMIDS",
             "maxLength" : 12,
             "minLength" : 0
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH",
             "maxLength" : 12,
@@ -13399,29 +13432,29 @@
             "minLength" : 0
           },
           "verified" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address has been verified by postcode lookup",
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
@@ -13433,7 +13466,7 @@
             }
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -13447,7 +13480,7 @@
         "description" : "Request to create a new contact",
         "properties" : {
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The title code for the contact.\n      This is a coded value (from the group code TITLE in reference data).\n      Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n      ",
             "example" : "MR",
             "maxLength" : 12,
@@ -13468,14 +13501,14 @@
             "minLength" : 0
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the contact, if any",
             "example" : "William",
             "maxLength" : 35,
             "minLength" : 0
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -13486,34 +13519,37 @@
             "example" : false
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The primary language of the contact.\n      This is a coded value (from the group code LANGUAGE in reference data).\n      ",
             "example" : "ENG",
             "maxLength" : 12,
             "minLength" : 0
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required for this contact",
             "example" : true
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The domestic status of the contact.\n      This is a coded value (from the group code DOMESTIC_STS in reference data).\n      ",
             "example" : "S",
             "maxLength" : 12,
             "minLength" : 0
           },
           "genderCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The domestic status of the contact.\n      This is a coded value (from the group code GENDER in reference data).\n      ",
             "examples" : [ "M", "F" ],
             "maxLength" : 12,
             "minLength" : 0
           },
           "relationship" : {
-            "$ref" : "#/components/schemas/ContactRelationship",
-            "description" : "A description of the relationship if the contact should be linked to a prisoner"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ContactRelationship"
+            }, {
+              "type" : "null"
+            } ]
           },
           "identities" : {
             "type" : "array",
@@ -13605,7 +13641,7 @@
             "minLength" : 0
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The authority who issued the identity",
             "example" : "DVLA",
             "maxLength" : 40,
@@ -13633,7 +13669,7 @@
             "minLength" : 0
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123",
             "maxLength" : 7,
@@ -13659,12 +13695,12 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address (optional).\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME"
           },
           "addressTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the address type",
             "example" : "HOME"
           },
@@ -13674,57 +13710,57 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
             "example" : "25343"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code",
             "example" : "Sheffield"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "S.YORKSHIRE"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code",
             "example" : "South Yorkshire"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "ENG"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of country code",
             "example" : "England"
           },
@@ -13734,12 +13770,12 @@
             "example" : false
           },
           "verifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Which username ran the postcode lookup check",
             "example" : "NJKG44D"
           },
           "verifiedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the postcode lookup was done",
             "example" : "2024-01-01T00:00:00Z"
@@ -13750,13 +13786,13 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address is to be considered active from",
             "example" : "2024-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address is to be considered no longer active",
             "example" : "2024-01-01"
@@ -13767,7 +13803,7 @@
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
@@ -13790,12 +13826,12 @@
             "example" : "2024-01-01T00:00:00Z"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who last updated the contact address",
             "example" : "JD000001"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the contact address was last updated",
             "example" : "2024-01-01T00:00:00Z"
@@ -13812,8 +13848,11 @@
             "description" : "The details of a contact as an individual"
           },
           "createdRelationship" : {
-            "$ref" : "#/components/schemas/PrisonerContactRelationshipDetails",
-            "description" : "Describes the prisoner contact relationship if one was created with the contact"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonerContactRelationshipDetails"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "createdContact" ]
@@ -13829,12 +13868,12 @@
             "example" : 123456
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The title code for the contact.\n      This is a coded value (from the group code TITLE in reference data).\n      Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n      ",
             "example" : "MR"
           },
           "titleDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the title code, if present",
             "example" : "Mr"
           },
@@ -13849,12 +13888,12 @@
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -13865,23 +13904,23 @@
             "example" : false
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact deceased, if known",
             "example" : "1980-01-01"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the contacts language",
             "example" : "ENG"
           },
           "languageDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the language code",
             "example" : "English"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required for this contact",
             "example" : true
           },
@@ -13921,22 +13960,22 @@
             }
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the contacts domestic status",
             "example" : "S"
           },
           "domesticStatusDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the domestic status code",
             "example" : "Single"
           },
           "genderCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the contacts gender. See reference data with group code 'GENDER'",
             "examples" : [ "M", "F" ]
           },
           "genderDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of gender code. See reference data with group code 'GENDER'",
             "examples" : [ "Male", "Female" ]
           },
@@ -13974,13 +14013,13 @@
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date",
             "example" : "2024-01-01"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments for the restriction",
             "example" : "N/A",
             "maxLength" : 240,
@@ -14024,7 +14063,7 @@
             "minLength" : 0
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123",
             "maxLength" : 7,
@@ -14052,7 +14091,7 @@
             "minLength" : 0
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The authority who issued the identity",
             "example" : "DVLA",
             "maxLength" : 40,
@@ -14129,7 +14168,7 @@
         "description" : "Request to create a new contact address",
         "properties" : {
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The type of address.\n      This is a coded value (from the group code ADDRESS_TYPE in reference data).\n      The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME",
             "maxLength" : 12,
@@ -14141,49 +14180,49 @@
             "example" : true
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B",
             "maxLength" : 30,
             "minLength" : 0
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House",
             "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue",
             "maxLength" : 160,
             "minLength" : 0
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights",
             "maxLength" : 70,
             "minLength" : 0
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS",
             "example" : "13232",
             "maxLength" : 12,
             "minLength" : 0
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS",
             "example" : "WMIDS",
             "maxLength" : 12,
             "minLength" : 0
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH",
             "maxLength" : 12,
@@ -14197,29 +14236,29 @@
             "minLength" : 0
           },
           "verified" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address has been verified by postcode lookup",
             "example" : false
           },
           "mailFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the address can be used for mailing",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate this address should be considered as no fixed address",
             "example" : false
           },
@@ -14231,7 +14270,7 @@
             }
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -14265,7 +14304,7 @@
             "minLength" : 0
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123",
             "maxLength" : 7,
@@ -14309,7 +14348,7 @@
             "example" : "true"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments about the contacts relationship with the prisoner",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -14327,7 +14366,7 @@
             "example" : "false"
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the contact",
             "example" : "S"
           },
@@ -14337,36 +14376,36 @@
             "example" : "false"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The language code of the contact",
             "example" : "EN"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The title code for the contact, if any",
             "example" : "MR",
             "maxLength" : 12,
             "minLength" : 0
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the contact, if any",
             "example" : "William",
             "maxLength" : 35,
             "minLength" : 0
           },
           "genderCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The optional gender code for the contact.\n    This is a coded value (from the group code GENDER in reference data).\n    Known values are (M) Male, (F) Female, (NK) Not Known, (NS) Not Specified.\n    ",
             "example" : "M"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The date the contact deceased, if known",
             "example" : "1980-01-01"
           },
@@ -14397,7 +14436,7 @@
             "example" : 123456
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The title code for the contact.\n    This is a coded value (from the group code TITLE in reference data).\n    Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n    ",
             "example" : "MR"
           },
@@ -14412,12 +14451,12 @@
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
@@ -14428,28 +14467,28 @@
             "example" : false
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact was deceased, if applicable",
             "example" : "2023-05-01"
           },
           "genderCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The gender code for the contact.\n    This is a coded value (from the group code GENDER in reference data).\n    Known values are (M) Male, (F) Female, (NK) Not Known, (NS) Not Specified.\n    ",
             "example" : "M"
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The domestic status code of the contact",
             "example" : "S"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The language code of the contact",
             "example" : "EN"
           },
           "interpreterRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether an interpreter is required",
             "example" : false
           },
@@ -14465,12 +14504,12 @@
             "example" : "2023-09-23T10:15:30"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who updated the entry",
             "example" : "admin2"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the entry was updated",
             "example" : "2023-09-24T12:00:00"
@@ -14550,6 +14589,7 @@
         "description" : "Request to patch a contact address",
         "properties" : {
           "addressType" : {
+            "type" : "null",
             "$ref" : "#/components/schemas/JsonNullableString",
             "description" : "\n    The type of address.\n    This is a coded value (from the group code ADDRESS_TYPE in reference data).\n    The known values are HOME, WORK or BUS (business address).\n    ",
             "example" : "HOME",
@@ -14561,49 +14601,49 @@
             "example" : "true"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number or name",
             "example" : "Flat 2B",
             "maxLength" : 30,
             "minLength" : 0
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House",
             "maxLength" : 130,
             "minLength" : 0
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue",
             "maxLength" : 160,
             "minLength" : 0
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights",
             "maxLength" : 70,
             "minLength" : 0
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code - from NOMIS reference data",
             "example" : "BIRM",
             "maxLength" : 12,
             "minLength" : 0
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code - from NOMIS reference data",
             "example" : "WMIDS",
             "maxLength" : 12,
             "minLength" : 0
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postcode",
             "example" : "S13 4FH",
             "maxLength" : 12,
@@ -14627,12 +14667,12 @@
             "example" : "false"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start date when this address can be considered active from",
             "example" : "2023-01-12"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end date when this address can be considered active until",
             "example" : "2023-01-12"
           },
@@ -14642,7 +14682,7 @@
             "example" : "false"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information",
             "maxLength" : 240,
@@ -14667,12 +14707,12 @@
             "example" : 12345
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact first name",
             "example" : "Bob"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact last name",
             "example" : "Smith"
           },
@@ -14737,13 +14777,13 @@
             "example" : "MOBILE"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction created date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
@@ -14790,10 +14830,10 @@
             "format" : "date-time"
           },
           "updatedBy" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           }
         },
@@ -14810,7 +14850,7 @@
             "example" : 123456
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The coded value for type of address",
             "example" : "HOME"
           },
@@ -14820,17 +14860,17 @@
             "example" : true
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Building or house number or name",
             "example" : "Mansion House"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street or road name",
             "example" : "Acacia Avenue"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area",
             "example" : "Morton Heights"
           },
@@ -14865,7 +14905,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           }
@@ -14935,7 +14975,7 @@
             "example" : "DL090 0909 909"
           },
           "issuingAuthority" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Issuing authority",
             "example" : "DVLA"
           }
@@ -14963,7 +15003,7 @@
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Extension number",
             "example" : "123"
           }
@@ -15041,13 +15081,13 @@
             "example" : "MOBILE"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction created date",
             "example" : "2024-01-01"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Restriction end date ",
             "example" : "2024-01-01"
@@ -15076,12 +15116,12 @@
             "example" : "Smith"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Contact middle names",
             "example" : "David"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Contact data of birth",
             "example" : "2001-02-01"
@@ -15263,12 +15303,12 @@
             "example" : "A1234BC"
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The title code for the contact.\n      This is a coded value (from the group code TITLE in reference data).\n      ",
             "example" : "MR"
           },
           "titleDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the title code, if present",
             "example" : "Mr"
           },
@@ -15283,18 +15323,18 @@
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact",
             "example" : "1980-01-01"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact deceased, if known",
             "example" : "1980-01-01"
@@ -15320,92 +15360,92 @@
             "example" : "Friend"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat number in the address, if any",
             "example" : "Flat 1"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Property name or number",
             "example" : "123"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street name",
             "example" : "Baker Street"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Area or locality, if any",
             "example" : "Marylebone"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "City code",
             "example" : "25343"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code",
             "example" : "Sheffield"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County code",
             "example" : "S.YORKSHIRE"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code",
             "example" : "South Yorkshire"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postal code",
             "example" : "NW1 6XE"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country code",
             "example" : "ENG"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of country code",
             "example" : "England"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate whether this address indicates no fixed address",
             "example" : false
           },
           "primaryAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered as the primary residential address",
             "example" : true
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to",
             "example" : true
           },
           "phoneType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Type of the latest phone number",
             "example" : "MOB"
           },
           "phoneTypeDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of the type of the latest phone number",
             "example" : "Mobile"
           },
           "phoneNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The latest phone number, if there are any",
             "example" : "+1234567890"
           },
           "extNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The extension number of the latest phone number",
             "example" : "123"
           },
@@ -15435,7 +15475,7 @@
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional comments",
             "example" : "Close family friend"
           },
@@ -15546,13 +15586,13 @@
             "example" : "2024-06-11"
           },
           "expiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Expiry date of the restriction",
             "example" : "2024-12-31"
           },
           "commentText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment text",
             "example" : "No visits allowed"
           },
@@ -15572,22 +15612,22 @@
             "example" : true
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who created the record",
             "example" : "JSMITH_ADM"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was created"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the person who last updated the record",
             "example" : "JDOE_ADM"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Timestamp when the record was last updated"
           }
@@ -15668,12 +15708,12 @@
         "type" : "object",
         "properties" : {
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n      The title code for the contact.\n      This is a coded value (from the group code TITLE in reference data).\n      Known values are MR, MRS, MISS, DR, MS, REV, SIR, BR, SR.\n      ",
             "example" : "MR"
           },
           "titleDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the title code, if present",
             "example" : "Mr"
           },
@@ -15688,7 +15728,7 @@
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           }
@@ -15711,27 +15751,27 @@
             "example" : 123456
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The last name of the prisoner. Nullable in the case the prisoners details are unavailable.",
             "example" : "Doe"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The first name of the prisoner. Nullable in the case the prisoners details are unavailable.",
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle names of the prisoner, if any",
             "example" : "William"
           },
           "prisonId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the prisoners current prison",
             "example" : "BXI"
           },
           "prisonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the prisoners current prison",
             "example" : "Brixton (HMP)"
           },
@@ -15751,7 +15791,7 @@
             "example" : "FRI"
           },
           "relationshipToPrisonerDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the relationship",
             "example" : "Friend"
           },
@@ -15799,7 +15839,7 @@
             "description" : "Revision timestamp"
           },
           "username" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who performed the change",
             "example" : "read_write_user"
           },
@@ -15810,7 +15850,7 @@
             "example" : 123456
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Title code"
           },
           "lastName" : {
@@ -15822,16 +15862,16 @@
             "description" : "First name"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Middle names"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date of birth"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Deceased date"
           },
@@ -15844,15 +15884,15 @@
             "description" : "Remitter flag"
           },
           "genderCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Gender code"
           },
           "domesticStatusCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Domestic status code"
           },
           "languageCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Language code"
           },
           "interpreterRequired" : {
@@ -15869,11 +15909,11 @@
             "description" : "Created time"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Updated by"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Updated time"
           }
@@ -15901,117 +15941,117 @@
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The middle name of the contact, if any",
             "example" : "William"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of birth of the contact, if known",
             "example" : "1980-01-01"
           },
           "deceasedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date the contact deceased, if known",
             "example" : "1980-01-01"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The id of the user who created the contact",
             "example" : "JD000001"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The timestamp of when the contact was created",
             "example" : "2024-01-01T00:00:00Z"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The flat of the contact address, if known",
             "example" : "01"
           },
           "property" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The property of the contact address, if known",
             "example" : "01"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The street of the contact address, if known",
             "example" : "Bluebell Crescent"
           },
           "area" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The area of the contact address, if known",
             "example" : "Birmingham"
           },
           "cityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The city code of the contact address, if known",
             "example" : "25343"
           },
           "cityDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of city code, if known",
             "example" : "Sheffield"
           },
           "countyCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The county code of the contact address, if known",
             "example" : "S.YORKSHIRE"
           },
           "countyDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of county code, if known",
             "example" : "South Yorkshire"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The postcode of the contact address, if known",
             "example" : "B42 2QJ"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The country code of the contact address, if known",
             "example" : "ENG"
           },
           "countryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of country code, if known",
             "example" : "England"
           },
           "mailAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "If true this address should be considered for sending mail to",
             "example" : true
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date from which this address can be considered active",
             "example" : "2022-10-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date after which this address should be considered inactive",
             "example" : "2023-10-02"
           },
           "noFixedAddress" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "A flag to indicate that this address is effectively no fixed address",
             "example" : false
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any additional information or comments about the address",
             "example" : "Some additional information"
           },
           "existingRelationships" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of existing relationships to a prisoner if a check against the prisoner number was requested. Empty if there are no existing relationships or null if it was not requested.",
             "items" : {
               "$ref" : "#/components/schemas/ExistingRelationshipToPrisoner"
@@ -16045,7 +16085,7 @@
             "example" : "FRI"
           },
           "relationshipToPrisonerDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the relationship",
             "example" : "Friend"
           },
