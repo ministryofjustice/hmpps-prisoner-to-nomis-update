@@ -54,8 +54,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.finance.PrisonerTransa
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incentives.IncentivesReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.IncidentsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.locations.LocationsReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesActivePrisonersReconciliationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TemporaryAbsencesAllPrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapActivePrisonersReconciliationService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAllPrisonersReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nonassociations.NonAssociationsReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsActiveScheduledReconciliationService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsAllMissingFromNOMISReconciliationService
@@ -98,8 +98,8 @@ class BatchManagerTest {
   private val prisonerRestrictionsReconciliationService = mock<PrisonerRestrictionsReconciliationService>()
   private val schedulesService = mock<SchedulesService>()
   private val sentencingReconciliationService = mock<SentencingReconciliationService>()
-  private val temporaryAbsencesActivePrisonersReconciliationService = mock<TemporaryAbsencesActivePrisonersReconciliationService>()
-  private val temporaryAbsencesAllPrisonersReconciliationService = mock<TemporaryAbsencesAllPrisonersReconciliationService>()
+  private val tapActivePrisonersReconciliationService = mock<TapActivePrisonersReconciliationService>()
+  private val tapAllPrisonersReconciliationService = mock<TapAllPrisonersReconciliationService>()
   private val visitBalanceReconciliationService = mock<VisitBalanceReconciliationService>()
   private val visitSlotsReconciliationService = mock<VisitSlotsReconciliationService>()
   private val activityDlqName = "activity-dlq-name"
@@ -450,7 +450,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(temporaryAbsencesActivePrisonersReconciliationService).generateTapActivePrisonersReconciliationReportBatch()
+    verify(tapActivePrisonersReconciliationService).generateTapActivePrisonersReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -460,7 +460,7 @@ class BatchManagerTest {
 
     batchManager.onApplicationEvent(event)
 
-    verify(temporaryAbsencesAllPrisonersReconciliationService).generateTapAllPrisonersReconciliationReportBatch()
+    verify(tapAllPrisonersReconciliationService).generateTapAllPrisonersReconciliationReportBatch()
     verify(context).close()
   }
 
@@ -493,8 +493,8 @@ class BatchManagerTest {
     prisonerRestrictionsReconciliationService = prisonerRestrictionsReconciliationService,
     schedulesService = schedulesService,
     sentencingReconciliationService = sentencingReconciliationService,
-    temporaryAbsencesActivePrisonersReconciliationService = temporaryAbsencesActivePrisonersReconciliationService,
-    temporaryAbsencesAllPrisonersReconciliationService = temporaryAbsencesAllPrisonersReconciliationService,
+    tapActivePrisonersReconciliationService = tapActivePrisonersReconciliationService,
+    tapAllPrisonersReconciliationService = tapAllPrisonersReconciliationService,
     visitBalancesReconciliationService = visitBalanceReconciliationService,
     visitSlotsReconciliationService = visitSlotsReconciliationService,
   )
