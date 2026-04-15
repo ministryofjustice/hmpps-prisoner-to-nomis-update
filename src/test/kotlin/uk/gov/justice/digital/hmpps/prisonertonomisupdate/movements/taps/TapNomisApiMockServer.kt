@@ -1,6 +1,13 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
-import com.github.tomakehurst.wiremock.client.WireMock
+import com.github.tomakehurst.wiremock.client.WireMock.aResponse
+import com.github.tomakehurst.wiremock.client.WireMock.delete
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.post
+import com.github.tomakehurst.wiremock.client.WireMock.put
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.urlPathMatching
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
@@ -330,9 +337,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: UpsertTapApplicationResponse = upsertTapApplicationResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/application"))
+      put(urlEqualTo("/movements/$offenderNo/taps/application"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -346,9 +353,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/application"))
+      put(urlEqualTo("/movements/$offenderNo/taps/application"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -361,9 +368,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: UpsertTapScheduleOutResponse = upsertTapScheduleOutResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/schedule/out"))
+      put(urlEqualTo("/movements/$offenderNo/taps/schedule/out"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -377,9 +384,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.put(WireMock.urlEqualTo("/movements/$offenderNo/taps/schedule/out"))
+      put(urlEqualTo("/movements/$offenderNo/taps/schedule/out"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -392,9 +399,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: CreateTapMovementOutResponse = createTapMovementOutResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/out"))
+      post(urlEqualTo("/movements/$offenderNo/taps/movement/out"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -408,9 +415,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/out"))
+      post(urlEqualTo("/movements/$offenderNo/taps/movement/out"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -423,9 +430,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: CreateTapMovementInResponse = createTapMovementInResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/in"))
+      post(urlEqualTo("/movements/$offenderNo/taps/movement/in"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -439,9 +446,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/in"))
+      post(urlEqualTo("/movements/$offenderNo/taps/movement/in"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -454,9 +461,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: TapSummary = createTapSummary(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/summary"))
+      get(urlEqualTo("/movements/$offenderNo/taps/summary"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -470,9 +477,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/summary"))
+      get(urlEqualTo("/movements/$offenderNo/taps/summary"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -485,9 +492,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: OffenderTapsIdsResponse = tapIdsResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/ids"))
+      get(urlEqualTo("/movements/$offenderNo/taps/ids"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.CREATED.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -501,9 +508,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/ids"))
+      get(urlEqualTo("/movements/$offenderNo/taps/ids"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -516,9 +523,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: BookingTaps = bookingTaps(bookingId = bookingId),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/booking/$bookingId/taps"))
+      get(urlEqualTo("/movements/booking/$bookingId/taps"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.OK.value())
             .withBody(jsonMapper.writeValueAsString(response)),
@@ -532,9 +539,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/booking/$bookingId/taps"))
+      get(urlEqualTo("/movements/booking/$bookingId/taps"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
@@ -547,8 +554,8 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     response: OffenderTapsResponse = offenderTapsResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlPathEqualTo("/movements/$offenderNo/taps")).willReturn(
-        WireMock.aResponse()
+      get(urlPathEqualTo("/movements/$offenderNo/taps")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(HttpStatus.OK.value())
           .withBody(jsonMapper.writeValueAsString(response)),
@@ -558,8 +565,8 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubGetOffenderTaps(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlPathMatching("/movements/.*/taps")).willReturn(
-        WireMock.aResponse()
+      get(urlPathMatching("/movements/.*/taps")).willReturn(
+        aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
           .withBody(jsonMapper.writeValueAsString(error)),
@@ -572,9 +579,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     eventId: Long = 4321L,
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.delete(WireMock.urlPathEqualTo("/movements/$offenderNo/taps/schedule/out/$eventId"))
+      delete(urlPathEqualTo("/movements/$offenderNo/taps/schedule/out/$eventId"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(HttpStatus.NO_CONTENT.value()),
         ),
@@ -588,9 +595,9 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.delete(WireMock.urlPathEqualTo("/movements/$offenderNo/taps/schedule/out/$eventId"))
+      delete(urlPathEqualTo("/movements/$offenderNo/taps/schedule/out/$eventId"))
         .willReturn(
-          WireMock.aResponse()
+          aResponse()
             .withHeader("Content-Type", "application/json")
             .withStatus(status.value())
             .withBody(jsonMapper.writeValueAsString(error)),
