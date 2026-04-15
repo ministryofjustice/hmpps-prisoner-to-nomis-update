@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-02.473.414a07d"
+    "version" : "2026-04-13.484.c7ba131"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -13070,7 +13070,7 @@
             "content" : {
               "application/json" : {
                 "schema" : {
-                  "$ref" : "#/components/schemas/CourtAppearanceAllMappingDto"
+                  "$ref" : "#/components/schemas/CourtAppearanceMappingDto"
                 }
               }
             }
@@ -24112,49 +24112,6 @@
           }
         },
         "required" : [ "dpsRecallId", "nomisCourtAppearanceId" ]
-      },
-      "CourtAppearanceAllMappingDto" : {
-        "type" : "object",
-        "description" : "Court appearance mapping",
-        "properties" : {
-          "nomisCourtAppearanceId" : {
-            "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS court appearance id",
-            "example" : 123456
-          },
-          "dpsCourtAppearanceId" : {
-            "type" : "string",
-            "description" : "DPS court appearance id",
-            "example" : "123456"
-          },
-          "courtCharges" : {
-            "type" : "array",
-            "description" : "Court Charge mappings",
-            "items" : {
-              "$ref" : "#/components/schemas/CourtChargeMappingDto"
-            }
-          },
-          "label" : {
-            "type" : "string",
-            "description" : "Label (a timestamp for migrated ids)",
-            "maxLength" : 20,
-            "minLength" : 0
-          },
-          "mappingType" : {
-            "type" : "string",
-            "default" : "DPS_CREATED",
-            "description" : "Mapping type",
-            "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
-          },
-          "whenCreated" : {
-            "type" : "string",
-            "description" : "Date-time the mapping was created",
-            "example" : "2021-07-05T10:35:17",
-            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
-          }
-        },
-        "required" : [ "courtCharges", "dpsCourtAppearanceId", "nomisCourtAppearanceId" ]
       },
       "PageOrganisationsMappingDto" : {
         "type" : "object",
