@@ -13,14 +13,20 @@ import reactor.util.retry.Retry
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.log
 
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
+suspend inline fun <T : Any> Mono<T>.awaitBodyOrNullForNotFound(): T? = this
   .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
   .awaitSingleOrNull()
 
-suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(retrySpec: Retry): T? = this.bodyToMono<T>()
-  .retryWhen(retrySpec)
+suspend inline fun <T : Any> Mono<T>.awaitBodyOrNullForNotFound(retrySpec: Retry): T? = this
   .onErrorResume(WebClientResponseException.NotFound::class.java) { Mono.empty() }
+  .retryWhen(retrySpec)
   .awaitSingleOrNull()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(): T? = this.bodyToMono<T>()
+  .awaitBodyOrNullForNotFound()
+
+suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(retrySpec: Retry): T? = this.bodyToMono<T>()
+  .awaitBodyOrNullForNotFound(retrySpec)
 
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyWithRetry(retrySpec: Retry): T = when (T::class) {
   Unit::class -> awaitBodilessEntity().let { Unit as T }

@@ -27,6 +27,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Ince
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonersResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.SentencingAdjustmentResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.ServiceAgencySwitchesResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationADAAwardSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AdjudicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AppointmentIdResponse
@@ -103,14 +104,17 @@ class NomisApiService(
   private val sentencingAdjustmentResourceApi = SentencingAdjustmentResourceApi(webClient)
   private val prisonApi = PrisonResourceApi(webClient)
   private val prisonersApi = PrisonersResourceApi(webClient)
+  private val serviceAgencySwitchesResourceApi = ServiceAgencySwitchesResourceApi(webClient)
 
-  suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = webClient.get()
-    .uri("/agency-switches/{serviceCode}/prisoner/{prisonerId}", serviceCode, prisonNumber)
+  suspend fun isAgencySwitchOnForPrisoner(serviceCode: String, prisonNumber: String) = serviceAgencySwitchesResourceApi.prepare(
+    serviceAgencySwitchesResourceApi.checkServicePrisonForPrisonerRequestConfig(serviceCode, prisonNumber),
+  )
     .retrieve()
     .awaitBodilessEntityAsTrueNotFoundAsFalse()
 
-  suspend fun isAgencySwitchOnForAgency(serviceCode: String, agencyId: String) = webClient.get()
-    .uri("/agency-switches/{serviceCode}/agency/{agencyId}", serviceCode, agencyId)
+  suspend fun isAgencySwitchOnForAgency(serviceCode: String, agencyId: String) = serviceAgencySwitchesResourceApi.prepare(
+    serviceAgencySwitchesResourceApi.checkServiceAgencyRequestConfig(serviceCode, agencyId),
+  )
     .retrieve()
     .awaitBodilessEntityAsTrueNotFoundAsFalse()
 
@@ -118,6 +122,82 @@ class NomisApiService(
     .getActivePrisons()
     .retryWhen(backoffSpec)
     .awaitSingle()
+
+  suspend fun getActivePrisoners(
+    pageNumber: Long,
+    pageSize: Long,
+  ): Page<PrisonerIds> = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/active")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active", "page", pageNumber)))
+    .awaitSingle()
+
+  suspend fun getAllPrisonersPaged(
+    pageNumber: Long,
+    pageSize: Long,
+  ): Page<PrisonerId> = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/all")
+        .queryParam("page", pageNumber)
+        .queryParam("size", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all", "page", pageNumber)))
+    .awaitSingle()
+
+  suspend fun getAllPrisoners(
+    fromId: Long,
+    pageSize: Int,
+  ): PrisonerNosWithLast = webClient.get()
+    .uri {
+      it.path("/prisoners/ids/all-from-id")
+        .queryParam("offenderId", fromId)
+        .queryParam("pageSize", pageSize)
+        .build()
+    }
+    .retrieve()
+    .bodyToMono(PrisonerNosWithLast::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
+    .awaitSingle()
+
+  suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
+    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId)
+    .awaitSingle()
+
+  suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
+    .getAllPrisonersIdRanges(pageSize.toInt())
+    .awaitSingle()
+
+  suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = prisonersApi
+    .getPrisonerDetails(offenderNo)
+    .awaitBodyOrNullForNotFound()
+
+  suspend fun getAllLatestBookings(
+    activeOnly: Boolean,
+    lastBookingId: Long,
+    pageSize: Int,
+  ): BookingIdsWithLast = bookingApi
+    .prepare(
+      bookingApi.getAllLatestBookingsFromIdRequestConfig(
+        bookingId = lastBookingId,
+        activeOnly = activeOnly,
+        pageSize = pageSize,
+      ),
+    )
+    .retrieve()
+    .bodyToMono(BookingIdsWithLast::class.java)
+    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
+    .awaitSingle()
+
+  // //////////////////////////////////////////////////
 
   // ////////// VISITS //////////////
 
@@ -311,81 +391,6 @@ class NomisApiService(
   suspend fun globalIncentiveLevelReorder(levels: List<String>) {
     incentivesResourceApi.reorderGlobalIncentiveLevels(ReorderRequest(levels)).awaitSingle()
   }
-
-  suspend fun getActivePrisoners(
-    pageNumber: Long,
-    pageSize: Long,
-  ): Page<PrisonerIds> = webClient.get()
-    .uri {
-      it.path("/prisoners/ids/active")
-        .queryParam("page", pageNumber)
-        .queryParam("size", pageSize)
-        .build()
-    }
-    .retrieve()
-    .bodyToMono(typeReference<RestResponsePage<PrisonerIds>>())
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/active", "page", pageNumber)))
-    .awaitSingle()
-
-  suspend fun getAllPrisonersPaged(
-    pageNumber: Long,
-    pageSize: Long,
-  ): Page<PrisonerId> = webClient.get()
-    .uri {
-      it.path("/prisoners/ids/all")
-        .queryParam("page", pageNumber)
-        .queryParam("size", pageSize)
-        .build()
-    }
-    .retrieve()
-    .bodyToMono(typeReference<RestResponsePage<PrisonerId>>())
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all", "page", pageNumber)))
-    .awaitSingle()
-
-  suspend fun getAllPrisoners(
-    fromId: Long,
-    pageSize: Int,
-  ): PrisonerNosWithLast = webClient.get()
-    .uri {
-      it.path("/prisoners/ids/all-from-id")
-        .queryParam("offenderId", fromId)
-        .queryParam("pageSize", pageSize)
-        .build()
-    }
-    .retrieve()
-    .bodyToMono(PrisonerNosWithLast::class.java)
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/prisoners/ids/all-from-id", "offenderId", fromId)))
-    .awaitSingle()
-
-  suspend fun getAllPrisonersInRange(fromRootOffenderId: Long, toRootOffenderId: Long) = prisonersApi
-    .getAllPrisonersInRange(fromRootOffenderId, toRootOffenderId)
-    .awaitSingle()
-
-  suspend fun getAllPrisonersIdRanges(pageSize: Long) = prisonersApi
-    .getAllPrisonersIdRanges(pageSize.toInt())
-    .awaitSingle()
-
-  suspend fun getPrisonerDetails(offenderNo: String): PrisonerDetails? = webClient.get()
-    .uri("/prisoners/{offenderNo}", offenderNo)
-    .retrieve()
-    .awaitBodyOrNullForNotFound()
-
-  suspend fun getAllLatestBookings(
-    activeOnly: Boolean,
-    lastBookingId: Long,
-    pageSize: Int,
-  ): BookingIdsWithLast = bookingApi
-    .prepare(
-      bookingApi.getAllLatestBookingsFromIdRequestConfig(
-        bookingId = lastBookingId,
-        activeOnly = activeOnly,
-        pageSize = pageSize,
-      ),
-    )
-    .retrieve()
-    .bodyToMono(BookingIdsWithLast::class.java)
-    .retryWhen(backoffSpec.withRetryContext(Context.of("api", "nomis-prisoner-api", "path", "/bookings/ids/latest-from-id", "bookingId", lastBookingId)))
-    .awaitSingle()
 
   suspend fun updatePrisonIncentiveLevel(prison: String, prisonIncentive: PrisonIncentiveLevelRequest): ResponseEntity<Void> = webClient.put()
     .uri("/incentives/prison/{prison}/code/{levelCode}", prison, prisonIncentive.levelCode)

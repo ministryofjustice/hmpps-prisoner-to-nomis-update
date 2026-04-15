@@ -98,7 +98,9 @@ class PrisonerTransactionsReconciliationIntTest(
 
         verify(telemetryClient).trackEvent(
           eq("prisoner-transactions-reconciliation-requested"),
-          any(),
+          check {
+            assertThat(it).containsEntry("date", "2021-02-03")
+          },
           isNull(),
         )
       }
@@ -151,7 +153,9 @@ class PrisonerTransactionsReconciliationIntTest(
 
         verify(telemetryClient).trackEvent(
           eq("prisoner-transactions-reconciliation-requested"),
-          any(),
+          check {
+            assertThat(it).containsEntry("date", "2021-02-03")
+          },
           isNull(),
         )
         awaitReportFinished()

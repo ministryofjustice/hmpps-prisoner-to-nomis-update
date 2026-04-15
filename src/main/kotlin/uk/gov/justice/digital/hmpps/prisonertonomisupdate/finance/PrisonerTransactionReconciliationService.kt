@@ -38,7 +38,7 @@ class PrisonerTransactionReconciliationService(
   }
 
   suspend fun generateReconciliationReportBatch(entryDate: LocalDate = LocalDate.now()) {
-    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf())
+    telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf("date" to entryDate))
 
     runCatching { generateReconciliationReport(entryDate) }
       .onSuccess {
