@@ -6,22 +6,22 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Absence
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Applications
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ApplicationSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTemporaryAbsences
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTemporaryAbsenceReturnResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Movements
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTapMovementIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTapMovementInResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTapMovementOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.CreateTapMovementOutResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementsByDirection
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.NomisAudit
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapMovementId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsencesResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOutSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledTemporaryAbsenceReturn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TapSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsenceApplication
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TemporaryAbsenceReturn
@@ -83,11 +83,11 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
 
     fun upsertTapScheduleOutResponse(eventId: Long = 131415, addressId: Long = 77, addressOwnerClass: String = "OFF") = UpsertTapScheduleOutResponse(12345, 56789, eventId, addressId, addressOwnerClass)
 
-    fun createTemporaryAbsenceRequest(scheduledTemporaryAbsenceId: Long = 131415) = CreateTemporaryAbsenceRequest(
+    fun createTapMovementOut(tapScheduleOutId: Long = 131415) = CreateTapMovementOut(
       movementDate = now.toLocalDate(),
       movementTime = now,
       movementReason = "C5",
-      scheduledTemporaryAbsenceId = scheduledTemporaryAbsenceId,
+      tapScheduleOutId = tapScheduleOutId,
       arrestAgency = "POL",
       escort = "U",
       escortText = "Temporary absence escort text",
@@ -98,13 +98,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
       toAddressId = 76543,
     )
 
-    fun createTemporaryAbsenceResponse(bookingId: Long = 12345, movementSequence: Int = 2) = CreateTemporaryAbsenceResponse(bookingId, movementSequence)
+    fun createTapMovementOutResponse(bookingId: Long = 12345, movementSequence: Int = 2) = CreateTapMovementOutResponse(bookingId, movementSequence)
 
-    fun createTemporaryAbsenceReturnRequest() = CreateTemporaryAbsenceReturnRequest(
+    fun createTapMovementIn() = CreateTapMovementIn(
       movementDate = tomorrow.toLocalDate(),
       movementTime = tomorrow,
       movementReason = "C5",
-      scheduledTemporaryAbsenceReturnId = 161718,
+      tapScheduleInId = 161718,
       arrestAgency = "POL",
       escort = "U",
       escortText = "Temporary absence return escort text",
@@ -114,27 +114,26 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
       fromAddressId = 76543,
     )
 
-    fun createTemporaryAbsenceReturnResponse(bookingId: Long = 12345, movementSequence: Int = 3) = CreateTemporaryAbsenceReturnResponse(bookingId, movementSequence)
+    fun createTapMovementInResponse(bookingId: Long = 12345, movementSequence: Int = 3) = CreateTapMovementInResponse(bookingId, movementSequence)
 
-    fun createTemporaryAbsenceSummaryResponse() = OffenderTemporaryAbsenceSummaryResponse(
-      applications = Applications(count = 1),
-      scheduledOutMovements = ScheduledOut(count = 2),
-      movements = Movements(
+    fun createTapSummary() = TapSummary(
+      applications = ApplicationSummary(count = 1),
+      scheduledOuts = ScheduledOutSummary(count = 2),
+      movements = MovementSummary(
         count = 18,
         scheduled = MovementsByDirection(outCount = 3, inCount = 4),
         unscheduled = MovementsByDirection(outCount = 5, inCount = 6),
       ),
     )
 
-    fun temporaryAbsenceSummaryIdsResponse() = OffenderTemporaryAbsenceIdsResponse(
+    fun tapIdsResponse() = OffenderTapsIdsResponse(
       applicationIds = listOf(1111),
-      scheduleIds = listOf(),
       scheduleOutIds = listOf(2222),
       scheduleInIds = listOf(9999),
-      scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 3)),
-      scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345, 4)),
-      unscheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345, 5)),
-      unscheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345, 6)),
+      scheduledMovementOutIds = listOf(OffenderTapMovementId(12345, 3)),
+      scheduledMovementInIds = listOf(OffenderTapMovementId(12345, 4)),
+      unscheduledMovementOutIds = listOf(OffenderTapMovementId(12345, 5)),
+      unscheduledMovementInIds = listOf(OffenderTapMovementId(12345, 6)),
     )
 
     fun bookingTemporaryAbsences(
@@ -388,12 +387,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateTemporaryAbsence(
+  fun stubCreateTapMovementOut(
     offenderNo: String = "A1234BC",
-    response: CreateTemporaryAbsenceResponse = createTemporaryAbsenceResponse(),
+    response: CreateTapMovementOutResponse = createTapMovementOutResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/out"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -403,13 +402,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateTemporaryAbsence(
+  fun stubCreateTapMovementOut(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence"))
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/out"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -419,12 +418,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateTemporaryAbsenceReturn(
+  fun stubCreateTapMovementIn(
     offenderNo: String = "A1234BC",
-    response: CreateTemporaryAbsenceReturnResponse = createTemporaryAbsenceReturnResponse(),
+    response: CreateTapMovementInResponse = createTapMovementInResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/in"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -434,13 +433,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubCreateTemporaryAbsenceReturn(
+  fun stubCreateTapMovementIn(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/temporary-absence-return"))
+      WireMock.post(WireMock.urlEqualTo("/movements/$offenderNo/taps/movement/in"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -450,12 +449,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetTemporaryAbsencePrisonerSummary(
+  fun stubGetTapCounts(
     offenderNo: String = "A1234BC",
-    response: OffenderTemporaryAbsenceSummaryResponse = createTemporaryAbsenceSummaryResponse(),
+    response: TapSummary = createTapSummary(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/summary"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -465,13 +464,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetTemporaryAbsencePrisonerSummary(
+  fun stubGetTapCounts(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/summary"))
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/summary"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -481,12 +480,12 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetTemporaryAbsencePrisonerSummaryIds(
+  fun stubGetTapIds(
     offenderNo: String = "A1234BC",
-    response: OffenderTemporaryAbsenceIdsResponse = temporaryAbsenceSummaryIdsResponse(),
+    response: OffenderTapsIdsResponse = tapIdsResponse(),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/ids"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")
@@ -496,13 +495,13 @@ class TapNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetTemporaryAbsencePrisonerSummaryIds(
+  fun stubGetTapIds(
     offenderNo: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status),
   ) {
     NomisApiExtension.nomisApi.stubFor(
-      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/temporary-absences/ids"))
+      WireMock.get(WireMock.urlEqualTo("/movements/$offenderNo/taps/ids"))
         .willReturn(
           WireMock.aResponse()
             .withHeader("Content-Type", "application/json")

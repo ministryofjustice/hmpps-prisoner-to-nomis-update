@@ -35,13 +35,13 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Ex
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Applications
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Movements
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ApplicationSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.MovementsByDirection
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOut
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapMovementId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsIdsResponse
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.ScheduledOutSummary
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TapSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.generateOffenderNo
 import java.util.*
@@ -68,11 +68,11 @@ class TapAllPrisonersReconciliationIntTest(
       )
 
       // both same
-      nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0001TZ")
+      nomisApi.stubGetTapCounts(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliation(personIdentifier = "A0001TZ")
 
       // one count different
-      nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0002TZ")
+      nomisApi.stubGetTapCounts(offenderNo = "A0002TZ")
       dpsApi.stubGetTapReconciliation(
         personIdentifier = "A0002TZ",
         response = PersonTapCounts(
@@ -85,7 +85,7 @@ class TapAllPrisonersReconciliationIntTest(
       stubDifferenceIdsEmpty("A0002TZ")
 
       // all counts different
-      nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0003TZ")
+      nomisApi.stubGetTapCounts(offenderNo = "A0003TZ")
       dpsApi.stubGetTapReconciliation(
         personIdentifier = "A0003TZ",
         response = PersonTapCounts(
@@ -241,25 +241,25 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs with unexpected NOMIS application, schedule and movements OUT and IN`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            applications = Applications(1),
-            scheduledOutMovements = ScheduledOut(1),
-            movements = Movements(
+            applications = ApplicationSummary(1),
+            scheduledOuts = ScheduledOutSummary(1),
+            movements = MovementSummary(
               count = 1,
               scheduled = MovementsByDirection(outCount = 1, inCount = 1),
               unscheduled = MovementsByDirection(outCount = 0, inCount = 0),
             ),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             applicationIds = listOf(unexpectedApplicationId),
             scheduleOutIds = listOf(unexpectedScheduleId),
-            scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq)),
-            scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementInSeq)),
+            scheduledMovementOutIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementOutSeq)),
+            scheduledMovementInIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementInSeq)),
           ),
         )
         mappingApi.stubGetTemporaryAbsenceMappingIds(
@@ -361,25 +361,25 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs with unexpected NOMIS application, schedule and movements, BUT no mappings`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            applications = Applications(1),
-            scheduledOutMovements = ScheduledOut(1),
-            movements = Movements(
+            applications = ApplicationSummary(1),
+            scheduledOuts = ScheduledOutSummary(1),
+            movements = MovementSummary(
               count = 1,
               scheduled = MovementsByDirection(outCount = 1, inCount = 1),
               unscheduled = MovementsByDirection(outCount = 0, inCount = 0),
             ),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             applicationIds = listOf(unexpectedApplicationId),
             scheduleOutIds = listOf(unexpectedScheduleId),
-            scheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq)),
-            scheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementInSeq)),
+            scheduledMovementOutIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementOutSeq)),
+            scheduledMovementInIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementInSeq)),
           ),
         )
 
@@ -598,21 +598,21 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs for unexpected NOMIS unscheduled movements`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            movements = Movements(
+            movements = MovementSummary(
               count = 2,
               scheduled = MovementsByDirection(0, 0),
               unscheduled = MovementsByDirection(outCount = 1, inCount = 1),
             ),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
-            unscheduledMovementOutIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq)),
-            unscheduledMovementInIds = listOf(OffenderTemporaryAbsenceId(12345L, unexpectedMovementInSeq)),
+          response = emptyTapsIdsResponse().copy(
+            unscheduledMovementOutIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementOutSeq)),
+            unscheduledMovementInIds = listOf(OffenderTapMovementId(12345L, unexpectedMovementInSeq)),
           ),
         )
         mappingApi.stubGetTemporaryAbsenceMappingIds(
@@ -750,22 +750,22 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs for unexpected NOMIS unscheduled movements`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            movements = Movements(
+            movements = MovementSummary(
               count = 2,
               scheduled = MovementsByDirection(0, 0),
               unscheduled = MovementsByDirection(outCount = 2, inCount = 0),
             ),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             unscheduledMovementOutIds = listOf(
-              OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq1),
-              OffenderTemporaryAbsenceId(12345L, unexpectedMovementOutSeq2),
+              OffenderTapMovementId(12345L, unexpectedMovementOutSeq1),
+              OffenderTapMovementId(12345L, unexpectedMovementOutSeq2),
             ),
           ),
         )
@@ -869,15 +869,15 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs for unexpected NOMIS unscheduled movements`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            applications = Applications(2),
+            applications = ApplicationSummary(2),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             applicationIds = listOf(expectedApplicationId, unexpectedApplicationId),
           ),
         )
@@ -933,15 +933,15 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs for unexpected NOMIS unscheduled movements`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            applications = Applications(1),
+            applications = ApplicationSummary(1),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             applicationIds = listOf(expectedApplicationId),
           ),
         )
@@ -999,15 +999,15 @@ class TapAllPrisonersReconciliationIntTest(
 
       @BeforeEach
       fun `create stubs for an unexpected OUT and IN schedule in NOMIS`() = runTest {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+        nomisApi.stubGetTapCounts(
           offenderNo = "A0001TZ",
           response = emptyTemporaryAbsenceSummaryResponse().copy(
-            scheduledOutMovements = ScheduledOut(1),
+            scheduledOuts = ScheduledOutSummary(1),
           ),
         )
-        nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+        nomisApi.stubGetTapIds(
           offenderNo = "A0001TZ",
-          response = emptyTemporaryAbsenceSummaryIdsResponse().copy(
+          response = emptyTapsIdsResponse().copy(
             scheduleOutIds = listOf(nomisScheduleOutId),
             scheduleInIds = listOf(nomisScheduleInId),
           ),
@@ -1048,7 +1048,7 @@ class TapAllPrisonersReconciliationIntTest(
     inner class RunReport {
       @Test
       fun `no differences found`() {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0001TZ")
+        nomisApi.stubGetTapCounts(offenderNo = "A0001TZ")
         dpsApi.stubGetTapReconciliation(personIdentifier = "A0001TZ")
 
         webTestClient.getAllTapsPrisonerReconOk()
@@ -1059,7 +1059,7 @@ class TapAllPrisonersReconciliationIntTest(
 
       @Test
       fun `one different count`() {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0001TZ")
+        nomisApi.stubGetTapCounts(offenderNo = "A0001TZ")
         dpsApi.stubGetTapReconciliation(
           personIdentifier = "A0001TZ",
           response = PersonTapCounts(
@@ -1083,7 +1083,7 @@ class TapAllPrisonersReconciliationIntTest(
 
       @Test
       fun `one different count should suppress telemetry`() {
-        nomisApi.stubGetTemporaryAbsencePrisonerSummary(offenderNo = "A0001TZ")
+        nomisApi.stubGetTapCounts(offenderNo = "A0001TZ")
         dpsApi.stubGetTapReconciliation(
           personIdentifier = "A0001TZ",
           response = PersonTapCounts(
@@ -1151,7 +1151,7 @@ class TapAllPrisonersReconciliationIntTest(
   }
 
   private fun stubEverythingEmpty(offenderNo: String = "A0001TZ") {
-    nomisApi.stubGetTemporaryAbsencePrisonerSummary(
+    nomisApi.stubGetTapCounts(
       offenderNo = offenderNo,
       response = emptyTemporaryAbsenceSummaryResponse(),
     )
@@ -1164,9 +1164,9 @@ class TapAllPrisonersReconciliationIntTest(
   }
 
   private fun stubDifferenceIdsEmpty(offenderNo: String = "A0001TZ") {
-    nomisApi.stubGetTemporaryAbsencePrisonerSummaryIds(
+    nomisApi.stubGetTapIds(
       offenderNo = offenderNo,
-      response = emptyTemporaryAbsenceSummaryIdsResponse(),
+      response = emptyTapsIdsResponse(),
     )
     dpsApi.stubGetTapReconciliationDetail(
       personIdentifier = offenderNo,
@@ -1179,10 +1179,10 @@ class TapAllPrisonersReconciliationIntTest(
   }
 }
 
-private fun emptyTemporaryAbsenceSummaryResponse() = OffenderTemporaryAbsenceSummaryResponse(
-  applications = Applications(count = 0),
-  scheduledOutMovements = ScheduledOut(count = 0),
-  movements = Movements(
+private fun emptyTemporaryAbsenceSummaryResponse() = TapSummary(
+  applications = ApplicationSummary(count = 0),
+  scheduledOuts = ScheduledOutSummary(count = 0),
+  movements = MovementSummary(
     count = 0,
     scheduled = MovementsByDirection(outCount = 0, inCount = 0),
     unscheduled = MovementsByDirection(outCount = 0, inCount = 0),
@@ -1198,9 +1198,8 @@ private fun emptyPersonTapCounts() = PersonTapCounts(
   ),
 )
 
-private fun emptyTemporaryAbsenceSummaryIdsResponse() = OffenderTemporaryAbsenceIdsResponse(
+private fun emptyTapsIdsResponse() = OffenderTapsIdsResponse(
   applicationIds = listOf(),
-  scheduleIds = listOf(),
   scheduleOutIds = listOf(),
   scheduleInIds = listOf(),
   scheduledMovementOutIds = listOf(),

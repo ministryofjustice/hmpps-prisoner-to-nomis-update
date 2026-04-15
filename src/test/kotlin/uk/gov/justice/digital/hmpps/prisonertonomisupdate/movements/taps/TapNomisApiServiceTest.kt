@@ -20,8 +20,8 @@ import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
 import org.springframework.http.HttpStatus.NOT_FOUND
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceRequest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTemporaryAbsenceReturnRequest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTapMovementIn
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.createTapMovementOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
@@ -130,9 +130,9 @@ class TapNomisApiServiceTest {
     inner class CreateTemporaryAbsence {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateTemporaryAbsence()
+        mockServer.stubCreateTapMovementOut()
 
-        apiService.createTemporaryAbsence("A1234BC", createTemporaryAbsenceRequest())
+        apiService.createTapMovementOut("A1234BC", createTapMovementOut())
 
         mockServer.verify(
           postRequestedFor(anyUrl())
@@ -142,12 +142,12 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateTemporaryAbsence()
+        mockServer.stubCreateTapMovementOut()
 
-        apiService.createTemporaryAbsence("A1234BC", createTemporaryAbsenceRequest())
+        apiService.createTapMovementOut("A1234BC", createTapMovementOut())
 
         mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/temporary-absence"))
+          postRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/movement/out"))
             .withRequestBody(
               matchingJsonPath("movementReason", equalTo("C5")),
             ),
@@ -156,10 +156,10 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsence(status = INTERNAL_SERVER_ERROR)
+        mockServer.stubCreateTapMovementOut(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createTemporaryAbsence("A1234BC", createTemporaryAbsenceRequest())
+          apiService.createTapMovementOut("A1234BC", createTapMovementOut())
         }
       }
     }
@@ -172,9 +172,9 @@ class TapNomisApiServiceTest {
     inner class CreateTemporaryAbsenceReturn {
       @Test
       fun `will pass oath2 token to service`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceReturn()
+        mockServer.stubCreateTapMovementIn()
 
-        apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
+        apiService.createTapMovementIn("A1234BC", createTapMovementIn())
 
         mockServer.verify(
           postRequestedFor(anyUrl())
@@ -184,12 +184,12 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will call create endpoint`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceReturn()
+        mockServer.stubCreateTapMovementIn()
 
-        apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
+        apiService.createTapMovementIn("A1234BC", createTapMovementIn())
 
         mockServer.verify(
-          postRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/temporary-absence-return"))
+          postRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/movement/in"))
             .withRequestBody(
               matchingJsonPath("movementReason", equalTo("C5")),
             ),
@@ -198,10 +198,10 @@ class TapNomisApiServiceTest {
 
       @Test
       fun `will throw if error`() = runTest {
-        mockServer.stubCreateTemporaryAbsenceReturn(status = INTERNAL_SERVER_ERROR)
+        mockServer.stubCreateTapMovementIn(status = INTERNAL_SERVER_ERROR)
 
         assertThrows<WebClientResponseException.InternalServerError> {
-          apiService.createTemporaryAbsenceReturn("A1234BC", createTemporaryAbsenceReturnRequest())
+          apiService.createTapMovementIn("A1234BC", createTapMovementIn())
         }
       }
     }
@@ -211,9 +211,9 @@ class TapNomisApiServiceTest {
   inner class TemporaryAbsencePrisonerSummary {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+      mockServer.stubGetTapCounts()
 
-      apiService.getTemporaryAbsenceSummary("A1234BC")
+      apiService.getTapCounts("A1234BC")
 
       mockServer.verify(
         getRequestedFor(anyUrl())
@@ -223,21 +223,21 @@ class TapNomisApiServiceTest {
 
     @Test
     fun `will call get endpoint`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummary()
+      mockServer.stubGetTapCounts()
 
-      apiService.getTemporaryAbsenceSummary("A1234BC")
+      apiService.getTapCounts("A1234BC")
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/summary")),
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/summary")),
       )
     }
 
     @Test
     fun `will throw if error`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummary(status = INTERNAL_SERVER_ERROR)
+      mockServer.stubGetTapCounts(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getTemporaryAbsenceSummary("A1234BC")
+        apiService.getTapCounts("A1234BC")
       }
     }
   }
@@ -246,9 +246,9 @@ class TapNomisApiServiceTest {
   inner class TemporaryAbsencePrisonerSummaryIds {
     @Test
     fun `will pass oath2 token to service`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+      mockServer.stubGetTapIds()
 
-      apiService.getTemporaryAbsenceIds("A1234BC")
+      apiService.getTapIds("A1234BC")
 
       mockServer.verify(
         getRequestedFor(anyUrl())
@@ -258,20 +258,20 @@ class TapNomisApiServiceTest {
 
     @Test
     fun `will call get endpoint`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+      mockServer.stubGetTapIds()
 
-      apiService.getTemporaryAbsenceIds("A1234BC")
+      apiService.getTapIds("A1234BC")
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/ids")),
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/ids")),
       )
     }
 
     @Test
     fun `will parse response`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds()
+      mockServer.stubGetTapIds()
 
-      apiService.getTemporaryAbsenceIds("A1234BC")
+      apiService.getTapIds("A1234BC")
         .also {
           assertThat(it.applicationIds[0]).isEqualTo(1111)
           assertThat(it.scheduleOutIds[0]).isEqualTo(2222)
@@ -283,16 +283,16 @@ class TapNomisApiServiceTest {
         }
 
       mockServer.verify(
-        getRequestedFor(urlPathEqualTo("/movements/A1234BC/temporary-absences/ids")),
+        getRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/ids")),
       )
     }
 
     @Test
     fun `will throw if error`() = runTest {
-      mockServer.stubGetTemporaryAbsencePrisonerSummaryIds(status = INTERNAL_SERVER_ERROR)
+      mockServer.stubGetTapIds(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getTemporaryAbsenceIds("A1234BC")
+        apiService.getTapIds("A1234BC")
       }
     }
   }
