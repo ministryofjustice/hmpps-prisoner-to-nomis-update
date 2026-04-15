@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-09.1519.2963ce7"
+    "version" : "2026-04-15.1537.f21f852"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -102,6 +102,132 @@
     "description" : "Sentence Type Updates"
   } ],
   "paths" : {
+    "/sentence-type/{sentenceTypeUuid}" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get Sentence type by UUID",
+        "description" : "This endpoint will retrieve sentence type by UUID",
+        "operationId" : "getSentenceTypeByUuid",
+        "parameters" : [ {
+          "name" : "sentenceTypeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns sentence",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at uuid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceType"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Update sentence type",
+        "description" : "This endpoint will update an existing sentence type and migrate any sentence data over that needs to be mapped to the newly updated sentence type",
+        "operationId" : "updateSentenceType",
+        "parameters" : [ {
+          "name" : "sentenceTypeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/CreateSentenceType"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FieldErrorErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/recall/{recallUuid}" : {
       "get" : {
         "tags" : [ "recall-controller" ],
@@ -3571,65 +3697,6 @@
         }
       }
     },
-    "/sentence-type/{sentenceTypeUuid}" : {
-      "get" : {
-        "tags" : [ "sentence-type-controller" ],
-        "summary" : "Get Sentence type by UUID",
-        "description" : "This endpoint will retrieve sentence type by UUID",
-        "operationId" : "getSentenceTypeByUuid",
-        "parameters" : [ {
-          "name" : "sentenceTypeUuid",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string",
-            "format" : "uuid"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "Returns sentence",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SentenceType"
-                }
-              }
-            }
-          },
-          "401" : {
-            "description" : "Unauthorised, requires a valid Oauth2 token",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SentenceType"
-                }
-              }
-            }
-          },
-          "403" : {
-            "description" : "Forbidden, requires an appropriate role",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SentenceType"
-                }
-              }
-            }
-          },
-          "404" : {
-            "description" : "Not found if no sentence type at uuid",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/SentenceType"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/sentence-type/{sentenceTypeUuid}/is-still-valid" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -3698,6 +3765,65 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/SentenceTypeIsValid"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/sentence-type/{sentenceTypeUuid}/details" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get Sentence type details by UUID",
+        "description" : "This endpoint will retrieve sentence type details by UUID",
+        "operationId" : "getSentenceTypeDetailsByUuid",
+        "parameters" : [ {
+          "name" : "sentenceTypeUuid",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Returns sentence type details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not found if no sentence type at uuid",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeDetails"
                 }
               }
             }
@@ -5811,6 +5937,171 @@
   },
   "components" : {
     "schemas" : {
+      "CreateSentenceType" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string",
+            "minLength" : 1
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "isRecallable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "status" ]
+      },
+      "FieldError" : {
+        "type" : "object",
+        "properties" : {
+          "field" : {
+            "type" : "string"
+          },
+          "message" : {
+            "type" : "string"
+          }
+        },
+        "required" : [ "field" ]
+      },
+      "FieldErrorErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : "string"
+          },
+          "userMessage" : {
+            "type" : "string"
+          },
+          "developerMessage" : {
+            "type" : "string"
+          },
+          "moreInfo" : {
+            "type" : "string"
+          },
+          "fieldErrors" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/FieldError"
+            }
+          }
+        },
+        "required" : [ "status" ]
+      },
+      "SentenceTypeDetails" : {
+        "type" : "object",
+        "properties" : {
+          "sentenceTypeUuid" : {
+            "type" : "string",
+            "format" : "uuid"
+          },
+          "description" : {
+            "type" : "string"
+          },
+          "minAgeInclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "maxAgeExclusive" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "minDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "minOffenceDateInclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "maxOffenceDateExclusive" : {
+            "type" : "string",
+            "format" : "date"
+          },
+          "classification" : {
+            "type" : "string",
+            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
+          },
+          "hintText" : {
+            "type" : "string"
+          },
+          "nomisCjaCode" : {
+            "type" : "string"
+          },
+          "nomisSentenceCalcType" : {
+            "type" : "string"
+          },
+          "displayOrder" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "status" : {
+            "type" : "string",
+            "enum" : [ "ACTIVE", "INACTIVE" ]
+          },
+          "isRecallable" : {
+            "type" : "boolean"
+          }
+        },
+        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
+      },
       "CreateRecall" : {
         "type" : "object",
         "properties" : {
@@ -6187,7 +6478,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "outcomeDispositionCode" : {
             "type" : "string"
@@ -6536,7 +6827,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "courtCode" : {
             "type" : "string"
@@ -6725,46 +7016,6 @@
         },
         "required" : [ "displayOrder", "dispositionCode", "nomisCode", "outcomeName", "outcomeType", "status" ]
       },
-      "FieldError" : {
-        "type" : "object",
-        "properties" : {
-          "field" : {
-            "type" : "string"
-          },
-          "message" : {
-            "type" : "string"
-          }
-        },
-        "required" : [ "field" ]
-      },
-      "FieldErrorErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : "string"
-          },
-          "userMessage" : {
-            "type" : "string"
-          },
-          "developerMessage" : {
-            "type" : "string"
-          },
-          "moreInfo" : {
-            "type" : "string"
-          },
-          "fieldErrors" : {
-            "type" : "array",
-            "items" : {
-              "$ref" : "#/components/schemas/FieldError"
-            }
-          }
-        },
-        "required" : [ "status" ]
-      },
       "ChargeOutcome" : {
         "type" : "object",
         "properties" : {
@@ -6939,131 +7190,6 @@
           }
         },
         "required" : [ "sentenceUuid" ]
-      },
-      "CreateSentenceType" : {
-        "type" : "object",
-        "properties" : {
-          "sentenceTypeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "minAgeInclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "maxAgeExclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "minDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "minOffenceDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxOffenceDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "classification" : {
-            "type" : "string",
-            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
-          },
-          "hintText" : {
-            "type" : "string"
-          },
-          "nomisCjaCode" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "nomisSentenceCalcType" : {
-            "type" : "string",
-            "minLength" : 1
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          },
-          "isRecallable" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "status" ]
-      },
-      "SentenceTypeDetails" : {
-        "type" : "object",
-        "properties" : {
-          "sentenceTypeUuid" : {
-            "type" : "string",
-            "format" : "uuid"
-          },
-          "description" : {
-            "type" : "string"
-          },
-          "minAgeInclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "maxAgeExclusive" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "minDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "minOffenceDateInclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "maxOffenceDateExclusive" : {
-            "type" : "string",
-            "format" : "date"
-          },
-          "classification" : {
-            "type" : "string",
-            "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
-          },
-          "hintText" : {
-            "type" : "string"
-          },
-          "nomisCjaCode" : {
-            "type" : "string"
-          },
-          "nomisSentenceCalcType" : {
-            "type" : "string"
-          },
-          "displayOrder" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "status" : {
-            "type" : "string",
-            "enum" : [ "ACTIVE", "INACTIVE" ]
-          },
-          "isRecallable" : {
-            "type" : "boolean"
-          }
-        },
-        "required" : [ "classification", "description", "displayOrder", "isRecallable", "nomisCjaCode", "nomisSentenceCalcType", "sentenceTypeUuid", "status" ]
       },
       "IsRecallPossibleRequest" : {
         "type" : "object",
@@ -9116,7 +9242,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "courtCode" : {
             "type" : "string"
@@ -9764,7 +9890,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "nomisOutcomeCode" : {
             "type" : "string"
@@ -9831,7 +9957,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "courtId" : {
             "type" : "string"
@@ -9971,7 +10097,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "charges" : {
             "type" : "array",
@@ -10001,7 +10127,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "courtId" : {
             "type" : "string"
@@ -10262,6 +10388,10 @@
           "sort" : {
             "$ref" : "#/components/schemas/SortObject"
           },
+          "pageSize" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
           "unpaged" : {
             "type" : "boolean"
           },
@@ -10271,10 +10401,6 @@
           },
           "paged" : {
             "type" : "boolean"
-          },
-          "pageSize" : {
-            "type" : "integer",
-            "format" : "int32"
           }
         }
       },
@@ -10521,7 +10647,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:23:58.525402782"
+            "example" : "09:31:40.437381251"
           },
           "courtCode" : {
             "type" : "string"
@@ -10696,10 +10822,10 @@
           "empty" : {
             "type" : "boolean"
           },
-          "unsorted" : {
+          "sorted" : {
             "type" : "boolean"
           },
-          "sorted" : {
+          "unsorted" : {
             "type" : "boolean"
           }
         }
