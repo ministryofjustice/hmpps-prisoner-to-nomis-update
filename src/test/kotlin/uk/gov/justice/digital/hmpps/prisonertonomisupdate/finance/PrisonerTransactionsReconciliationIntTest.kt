@@ -94,7 +94,7 @@ class PrisonerTransactionsReconciliationIntTest(
 
       @Test
       fun `will reconcile the previous day if no date provided`() = runTest {
-        val  yesterday: LocalDate = LocalDate.now().minusDays(1)
+        val yesterday: LocalDate = LocalDate.now().minusDays(1)
         reconciliationService.generateReconciliationReportBatch()
         awaitReportFinished()
 
