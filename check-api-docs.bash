@@ -19,10 +19,13 @@ export _JAVA_OPTIONS="-Xmx768m -XX:ParallelGCThreads=2 -XX:ConcGCThreads=2 -XX:P
 OLD_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "old_version=$OLD_VERSION" >>"$GITHUB_OUTPUT"
 
-# build the model and grab new json
-./gradlew "$MODEL_TASK" "$JSON_TASK"
+# build the model
+./gradlew "$MODEL_TASK"
 
 mv "${WORKING_DIR}/build/generated/$PROJECT" "${WORKING_DIR}/build/model_copy"
+
+# grab the json and build the model again
+./gradlew "$JSON_TASK" "$MODEL_TASK"
 
 NEW_VERSION=$(jq -r .info.version "$SPECS_JSON")
 echo "new_version=$NEW_VERSION" >>"$GITHUB_OUTPUT"
@@ -33,11 +36,8 @@ if [[ "$OLD_VERSION" == "$NEW_VERSION" ]]; then
   exit 0
 fi
 
-# build the model again
-./gradlew "$MODEL_TASK"
-
 # and compare
-if ! diff -r build/model_copy "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
+if ! diff -r "${WORKING_DIR}/build/model_copy" "${WORKING_DIR}/build/generated/$PROJECT" > "${WORKING_DIR}/build/api.diff"; then
   echo "Found differences between old ($OLD_VERSION) and new ($NEW_VERSION) models"
   echo "differences=true" >>"$GITHUB_OUTPUT"
   PROD_VERSION=$(./gradlew -q "$PROD_VERSION_TASK" | grep -v 'Ignoring init script')
