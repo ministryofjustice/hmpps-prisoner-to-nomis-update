@@ -37,7 +37,8 @@ class PrisonerTransactionReconciliationService(
     private val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun generateReconciliationReportBatch(entryDate: LocalDate = LocalDate.now()) {
+  // Batch job reconciles on the previous day's transactions - but we allow date param for testing
+  suspend fun generateReconciliationReportBatch(entryDate: LocalDate = LocalDate.now().minusDays(1)) {
     telemetryClient.trackEvent("$TELEMETRY_PRISONER_PREFIX-requested", mapOf("date" to entryDate))
 
     runCatching { generateReconciliationReport(entryDate) }

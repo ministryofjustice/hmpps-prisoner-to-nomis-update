@@ -91,6 +91,22 @@ class PrisonerTransactionsReconciliationIntTest(
 
     @Nested
     inner class Match {
+
+      @Test
+      fun `will reconcile the previous day if no date provided`() = runTest {
+        val  yesterday: LocalDate = LocalDate.now().minusDays(1)
+        reconciliationService.generateReconciliationReportBatch()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("prisoner-transactions-reconciliation-requested"),
+          check {
+            assertThat(it).containsEntry("date", yesterday.toString())
+          },
+          isNull(),
+        )
+      }
+
       @Test
       fun `will output report requested telemetry`() = runTest {
         reconciliationService.generateReconciliationReportBatch(LocalDate.parse("2021-02-03"))
