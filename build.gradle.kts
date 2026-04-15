@@ -290,6 +290,8 @@ models.forEachIndexed { i, model ->
     description = "Write JSON for ${model.name}"
     url.set(model.url)
     outputFile.set(buildDirectory.file(model.input))
+    // ensure that the write task happens every time
+    outputs.upToDateWhen { false }
   }
   tasks.register<ReadProductionVersionTask>(model.toReadProductionVersionTaskName()) {
     group = "Read current production version"
