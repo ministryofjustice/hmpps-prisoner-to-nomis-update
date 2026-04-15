@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-03-30.1056.c673e04"
+    "version" : "2026-04-14.1152.188da8e"
   },
   "servers" : [ {
     "url" : "https://activities-api-dev.prison.service.justice.gov.uk",
@@ -1544,6 +1544,86 @@
         "responses" : {
           "204" : {
             "description" : "The allocation was created and added to the schedule.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "object"
+                }
+              }
+            }
+          },
+          "400" : {
+            "description" : "Bad request",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires an appropriate role",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The activity schedule for this ID was not found.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "deprecated" : true
+      }
+    },
+    "/schedules/{scheduleId}/allocations/bulk" : {
+      "post" : {
+        "tags" : [ "activity-schedule-controller" ],
+        "summary" : "Bulk allocate offenders to schedule",
+        "description" : "Allocates the supplied offender allocation requests to the activity schedule.\n\nRequires one of the following roles:\n* ACTIVITY_HUB\n* ACTIVITY_ADMIN",
+        "operationId" : "allocateBulk",
+        "parameters" : [ {
+          "name" : "scheduleId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/BulkPrisonerAllocationRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "204" : {
+            "description" : "The allocations were created and added to the schedule.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8436,17 +8516,17 @@
   "components" : {
     "schemas" : {
       "AddCaseNoteRequest" : {
-        "type" : "object",
+        "type" : "null",
         "description" : "Describes a case note to be added to a prisoner's profile",
         "properties" : {
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Case Note Type",
             "enum" : [ "GEN", "NEG" ],
             "example" : "GEN"
           },
           "text" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The text which will appear on the case note.",
             "maxLength" : 3800,
             "minLength" : 0
@@ -8459,7 +8539,7 @@
         "description" : "The prisoner deallocation request details",
         "properties" : {
           "prisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The prisoner or prisoners to be deallocated. Must be allocated to the schedule affected by the request.",
             "items" : {
               "type" : "string"
@@ -8467,24 +8547,27 @@
             "minItems" : 1
           },
           "reasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason code for the deallocation",
             "enum" : [ "COMPLETED", "TRANSFERRED", "WITHDRAWN_STAFF", "WITHDRAWN_OWN", "DISMISSED", "HEALTH", "OTHER", "SECURITY" ],
             "example" : "RELEASED",
             "minLength" : 1
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The future date on which this allocation will end. Must not exceed the end date of the allocation, schedule or activity.",
             "example" : "2023-05-24"
           },
           "caseNote" : {
-            "$ref" : "#/components/schemas/AddCaseNoteRequest",
-            "description" : "Describes a case note to be added to the prisoner's profile as part of the deallocation."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AddCaseNoteRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "scheduleInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The scheduled instance id required when de-allocation is a session later today"
           }
@@ -8499,17 +8582,17 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -8519,21 +8602,21 @@
         "description" : "The update request with the scheduled instance changes",
         "properties" : {
           "cancelledReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason for cancelling the schedule instance",
             "example" : "No tutor available",
             "maxLength" : 60,
             "minLength" : 0
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A field for any additional comments",
             "example" : "Resume tomorrow",
             "maxLength" : 250,
             "minLength" : 0
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued? Will be ignored if the activity is unpaid.",
             "example" : true
           }
@@ -8563,7 +8646,7 @@
         "description" : "The uncancel scheduled instances request",
         "properties" : {
           "scheduleInstanceIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The scheduled instance ids to uncancel",
             "items" : {
               "type" : "integer",
@@ -8579,7 +8662,7 @@
         "description" : "The cancel scheduled instances request",
         "properties" : {
           "scheduleInstanceIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The scheduled instance ids to cancel",
             "items" : {
               "type" : "integer",
@@ -8601,12 +8684,12 @@
             "minLength" : 1
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A field for any additional comments",
             "example" : "Resume tomorrow"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued? Will be ignored if the activity is unpaid.",
             "example" : true
           }
@@ -8638,7 +8721,7 @@
         "description" : "Request object for updating an attendance record",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internally-generated ID for this attendance",
             "example" : 123456
@@ -8657,34 +8740,34 @@
             "minLength" : 1
           },
           "attendanceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason codes- SICK, REFUSED, NOT_REQUIRED, REST, CLASH, OTHER, SUSPENDED, CANCELLED, ATTENDED",
             "example" : "ATTENDED"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments such as more detail for SICK",
             "example" : "Prisoner has COVID-19"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER. Will be ignored if the activity is unpaid.",
             "example" : true
           },
           "caseNote" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Case note provided for REFUSED",
             "example" : "Prisoner refused to attend the scheduled activity without reasonable excuse",
             "maxLength" : 3800,
             "minLength" : 0
           },
           "incentiveLevelWarningIssued" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was an incentive level warning issued for REFUSED",
             "example" : true
           },
           "otherAbsenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The absence reason for OTHER",
             "example" : "Prisoner has another reason for missing the activity"
           }
@@ -8731,26 +8814,32 @@
             "example" : "CHAP"
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this appointment, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this appointment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this appointment",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -8771,17 +8860,17 @@
             "example" : "13:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending this appointment.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           },
@@ -8796,28 +8885,28 @@
             "example" : "AAA01U"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was last changed.\n    Will be null if this appointment has not been altered since it was created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that edited this appointment.\n    Will be null if this appointment has not been altered since it was created\n    ",
             "example" : "AAA01U"
           },
           "cancelledTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was cancelled.\n    Will be null if this appointment has not been cancelled\n    "
           },
           "cancellationReasonId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The id of the reason why this appointment was cancelled.\n    Will be null if this appointment has not been cancelled\n    ",
             "example" : 12345
           },
           "cancelledBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that cancelled this appointment.\n    Will be null if this appointment has not been cancelled\n    ",
             "example" : "AAA01U"
           },
@@ -8861,42 +8950,42 @@
             "example" : 456
           },
           "addedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this attendee was added appointment.\n    Will be null if this attendee was part of the appointment when the appointment was created\n    "
           },
           "addedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that added this attendee to the appointment.\n    Will be null if this attendee was part of the appointment when the appointment was created\n    ",
             "example" : "AAA01U"
           },
           "attended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "\n    Specifies whether the prisoner attended the specific appointment in an appointment series or set.\n    A null value means that the prisoner's attendance has not been recorded yet. \n    "
           },
           "attendanceRecordedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The latest date and time attendance was recorded. Note that attendance records can be updated and this is the most\n    recent date and time it was recorded. A null value means that the prisoner's attendance has not been recorded yet. \n    "
           },
           "attendanceRecordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that last recorded attendance. Note that attendance records\n    can be updated and this is the most recent user that marked attendance. A null value means that the prisoner's\n    attendance has not been recorded yet. \n    ",
             "example" : "AAA01U"
           },
           "removedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this attendee was removed from the appointment.\n    Will be null if this attendee has not been removed from the appointment\n    "
           },
           "removalReasonId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The id of the reason why this attendee was removed from the appointment.\n    Will be null if this attendee has not been removed from the appointment\n    ",
             "example" : 12345
           },
           "removedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that removed this attendee from the appointment.\n    Will be null if this attendee has not been removed from the appointment\n    ",
             "example" : "AAA01U"
           }
@@ -8930,20 +9019,26 @@
             "example" : "CHAP"
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this appointment, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this appointment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment series. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
@@ -8964,21 +9059,24 @@
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/AppointmentSeriesSchedule",
-            "description" : "\n    Describes the schedule of the appointment series i.e. how the appointments in the series repeat. The frequency of\n    those appointments and how many appointments there are in total in the series.\n    If null, the appointment series has only one appointment. Note that the presence of this property does not mean\n    there is more than one appointment as a number of appointments value of one is valid.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSeriesSchedule"
+            }, {
+              "type" : "null"
+            } ]
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           },
@@ -8993,12 +9091,12 @@
             "example" : "AAA01U"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time one or more appointments in this series was last changed.\n    Will be null if no appointments in the series have been altered since they were created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that last edited one or more appointments in this series.\n    Will be null if no appointments in the series have been altered since they were created\n    ",
             "example" : "AAA01U"
           },
@@ -9010,7 +9108,7 @@
             }
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this appointment series",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -9023,13 +9121,13 @@
         "description" : "\n  Describes the schedule of the appointment i.e. how the appointments in the series will repeat. The frequency of\n  those appointments and how many appointments there will be in total in the series.\n  ",
         "properties" : {
           "frequency" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The frequency of the appointments in the repeating appointment series. When they will repeat and how often\n    ",
             "enum" : [ "WEEKDAY", "DAILY", "WEEKLY", "FORTNIGHTLY", "MONTHLY" ],
             "example" : "WEEKLY"
           },
           "numberOfAppointments" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "\n    The original total number of appointments in the appointment series i.e. the number that were created initially\n    without excluding any that were subsequently cancelled or deleted\n    ",
             "example" : 6,
@@ -9108,7 +9206,7 @@
         "description" : "\n  Describes how to update attendances for multiple appointments.\n  ",
         "properties" : {
           "appointmentId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The appointment id of the appointment which is being marked",
             "example" : 123
@@ -9180,7 +9278,7 @@
           "appointmentParentCategory" : {
             "$ref" : "#/components/schemas/AppointmentParentCategory",
             "description" : "The identifier for the appointment parent category",
-            "example" : "1"
+            "example" : 1
           },
           "status" : {
             "type" : "string",
@@ -9207,7 +9305,7 @@
             "example" : "LEISURE_SOCIAL"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the appointment parent category",
             "example" : "Such as association, library time and social clubs, like music or art"
           }
@@ -9219,7 +9317,7 @@
         "description" : "Request object for creating an advance attendance record",
         "properties" : {
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued?",
             "example" : true
           }
@@ -9248,29 +9346,29 @@
             "example" : "A1234AA"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER",
             "example" : true
           },
           "payAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The amount in pence to pay the prisoner for the activity based on today's date",
             "example" : 100
           },
           "recordedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the attendance was updated",
             "example" : "2023-09-10T09:30:00"
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who updated the attendance",
             "example" : "A.JONES"
           },
           "attendanceHistory" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The attendance history records for this attendance",
             "items" : {
               "$ref" : "#/components/schemas/AdvanceAttendanceHistory"
@@ -9313,25 +9411,25 @@
         "description" : "Search filters",
         "properties" : {
           "applicationDateFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Filter applications with a request date on or after provided date",
             "example" : "2023-06-20"
           },
           "applicationDateTo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Filter applications with a request date on or before provided date",
             "example" : "2023-06-20"
           },
           "activityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The activity to return waiting list applications for.",
             "example" : 3
           },
           "prisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The prisoner or prisoners to retrieve waiting list applications for.",
             "example" : [ "A1234BC" ],
             "items" : {
@@ -9339,7 +9437,7 @@
             }
           },
           "status" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Filter by the status of the application. PENDING, APPROVED or DECLINED.",
             "example" : [ "DECLINED", "PENDING" ],
             "items" : {
@@ -9354,7 +9452,7 @@
         "description" : "Summary of a prisoner's sentence and resulting earliest release date",
         "properties" : {
           "releaseDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The prisoner's earliest release date",
             "example" : "2027-09-20"
@@ -9491,7 +9589,7 @@
             "example" : 222222
           },
           "allocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internally-generated ID for the associated allocation",
             "example" : 333333
@@ -9519,7 +9617,7 @@
             "example" : "PENDING"
           },
           "statusUpdatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the waiting list status was last updated",
             "example" : "2023-06-04T16:30:00"
@@ -9536,12 +9634,12 @@
             "example" : "Fred Bloggs"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any particular comments related to this waiting list",
             "example" : "The prisoner has specifically requested to attend this activity"
           },
           "declinedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason for the waiting list request to be declined (null if status is not declined)",
             "example" : "The prisoner has specifically requested to attend this activity"
           },
@@ -9557,13 +9655,13 @@
             "example" : "Jon Doe"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the waiting list was last updated",
             "example" : "2023-00-04T16:30:00"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who last made changes to the waiting list",
             "example" : "Jane Doe"
           },
@@ -9572,7 +9670,7 @@
             "description" : "The earliest release date of the prisoner"
           },
           "nonAssociations" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Does the prisoner have non-associations? Null implies that non-associations were not retrieved"
           }
         },
@@ -9583,33 +9681,33 @@
         "description" : "\n  Describes a single waiting list application for a prisoner to an activity.\n  ",
         "properties" : {
           "activityScheduleId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internally-generated ID for this activity schedule (assumes 1-2-1 with activity)",
             "example" : 7654321
           },
           "applicationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The past or present date on which the waiting list application was requested",
             "example" : "2023-06-23"
           },
           "requestedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who made the request",
             "example" : "Fred Bloggs",
             "maxLength" : 100,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any particular comments related to the waiting list request",
             "example" : "The prisoner has specifically requested to attend this activity",
             "maxLength" : 500,
             "minLength" : 0
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The status of the application. Only PENDING, APPROVED or DECLINED are allowed when creating.",
             "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
@@ -9643,12 +9741,12 @@
         "description" : "Describes an event to be published to the domain events SNS topic",
         "properties" : {
           "outboundEvent" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The outbound event to be published",
             "enum" : [ "ACTIVITY_SCHEDULE_CREATED", "ACTIVITY_SCHEDULE_UPDATED", "ACTIVITY_SCHEDULED_INSTANCE_AMENDED", "PRISONER_ALLOCATED", "PRISONER_ALLOCATION_AMENDED", "PRISONER_ATTENDANCE_CREATED", "PRISONER_ATTENDANCE_AMENDED", "PRISONER_ATTENDANCE_DELETED", "PRISONER_ATTENDANCE_EXPIRED", "APPOINTMENT_INSTANCE_CREATED", "APPOINTMENT_INSTANCE_UPDATED", "APPOINTMENT_INSTANCE_DELETED", "APPOINTMENT_INSTANCE_CANCELLED", "APPOINTMENT_INSTANCE_UNCANCELLED" ]
           },
           "identifiers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of entity identifiers to be published with the event",
             "example" : [ 1, 2 ],
             "items" : {
@@ -9665,39 +9763,39 @@
         "description" : "The prisoner allocation request details",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (Nomis ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "payBandId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Where a prison uses pay bands to differentiate earnings, this is the pay band code given to this prisoner. Can be null for unpaid activities.",
             "example" : 1
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will start the activity",
             "example" : "2022-09-10"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will stop attending the activity",
             "example" : "2023-09-10"
           },
           "exclusions" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The days and times that the prisoner is excluded from this activity's schedule",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
             }
           },
           "scheduleInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The scheduled instance id required when allocation starts today"
           }
@@ -9742,10 +9840,10 @@
             "type" : "boolean"
           },
           "customStartTime" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "customEndTime" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "daysOfWeek" : {
             "type" : "array",
@@ -9757,6 +9855,21 @@
           }
         },
         "required" : [ "daysOfWeek", "friday", "monday", "saturday", "sunday", "thursday", "timeSlot", "tuesday", "wednesday", "weekNumber" ]
+      },
+      "BulkPrisonerAllocationRequest" : {
+        "type" : "object",
+        "description" : "The bulk prisoner allocation request details",
+        "properties" : {
+          "allocations" : {
+            "type" : "array",
+            "description" : "List of prisoner allocation requests",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAllocationRequest"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "allocations" ]
       },
       "ActivityCategory" : {
         "type" : "object",
@@ -9779,7 +9892,7 @@
             "example" : "Leisure and social"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the activity category",
             "example" : "Such as association, library time and social clubs, like music or art"
           }
@@ -9843,7 +9956,7 @@
             "example" : "Maths level 1"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A detailed description for this activity",
             "example" : "A basic maths course suitable for introduction to the subject"
           },
@@ -9864,7 +9977,7 @@
             }
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
             "example" : "2022-12-21"
@@ -9969,51 +10082,51 @@
             "example" : false
           },
           "cancelledTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date and time this scheduled instance was cancelled (or null if not cancelled)",
             "example" : "2022-09-29T11:20:21"
           },
           "cancelledBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who cancelled this scheduled instance (or null if not cancelled)",
             "example" : "Adam Smith"
           },
           "cancelledReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason this scheduled instance was cancelled",
             "example" : "Staff unavailable"
           },
           "cancelledIssuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for the cancelled scheduled instance?",
             "example" : true
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment on cancelling",
             "example" : "Teacher unavailable"
           },
           "previousScheduledInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id for the previous scheduled instance",
             "example" : 123456
           },
           "previousScheduledInstanceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date for the previous scheduled instance",
             "example" : "2022-09-30"
           },
           "nextScheduledInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id for the next scheduled instance",
             "example" : 123456
           },
           "nextScheduledInstanceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date for the next scheduled instance",
             "example" : "2022-09-30"
@@ -10055,8 +10168,11 @@
             "example" : "Monday AM Houseblock 3"
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/InternalLocation",
-            "description" : "The NOMIS internal location for this schedule"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/InternalLocation"
+            }, {
+              "type" : "null"
+            } ]
           },
           "capacity" : {
             "type" : "integer",
@@ -10088,7 +10204,7 @@
             "example" : "2022-09-21"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this schedule will end. From this date, any schedules will be created as real, planned instances",
             "example" : "2022-10-21"
@@ -10199,22 +10315,25 @@
             "example" : "A1234AA"
           },
           "attendanceReason" : {
-            "$ref" : "#/components/schemas/AttendanceReason",
-            "description" : "The reason for attending or not"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceReason"
+            }, {
+              "type" : "null"
+            } ]
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text to allow comments to be put against the attendance",
             "example" : "Prisoner was too unwell to attend the activity."
           },
           "recordedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the attendance was updated",
             "example" : "2023-09-10T09:30:00"
           },
           "recordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who updated the attendance",
             "example" : "A.JONES"
           },
@@ -10224,43 +10343,43 @@
             "example" : "WAITING"
           },
           "payAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The amount in pence to pay the prisoner for the activity",
             "example" : 100
           },
           "bonusAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The bonus amount in pence to pay the prisoner for the activity",
             "example" : 50
           },
           "pieces" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER",
             "example" : true
           },
           "incentiveLevelWarningIssued" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was an incentive level warning issued for REFUSED",
             "example" : true
           },
           "otherAbsenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text to allow other reasons for non attendance against the attendance",
             "example" : "Prisoner has a valid reason to miss the activity."
           },
           "caseNoteText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text for any case note entered against the attendance record",
             "example" : "Prisoner has refused to attend the activity without a valid reason to miss the activity."
           },
           "attendanceHistory" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The attendance history records for this attendance",
             "items" : {
               "$ref" : "#/components/schemas/AttendanceHistory"
@@ -10290,11 +10409,14 @@
             "example" : 123456
           },
           "attendanceReason" : {
-            "$ref" : "#/components/schemas/AttendanceReason",
-            "description" : "The reason for attending or not"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AttendanceReason"
+            }, {
+              "type" : "null"
+            } ]
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text to allow comments to be put against the attendance",
             "example" : "Prisoner was too unwell to attend the activity."
           },
@@ -10310,22 +10432,22 @@
             "example" : "A.JONES"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER",
             "example" : true
           },
           "incentiveLevelWarningIssued" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was an incentive level warning issued for REFUSED",
             "example" : true
           },
           "otherAbsenceReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text to allow other reasons for non attendance against the attendance",
             "example" : "Prisoner has a valid reason to miss the activity."
           },
           "caseNoteText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text for any case note entered against the attendance record",
             "example" : "Prisoner has refused to attend the activity without a valid reason to miss the activity."
           }
@@ -10387,7 +10509,7 @@
             "example" : false
           },
           "displaySequence" : {
-            "type" : "number",
+            "type" : [ "number", "null" ],
             "description" : "The sequence in which the reason should be displayed in the UI",
             "example" : 1
           },
@@ -10420,7 +10542,7 @@
             "example" : "Education - R1"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this schedule",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -10450,7 +10572,7 @@
             "example" : "GF10101"
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The booking id of the prisoner",
             "example" : 10001
@@ -10473,12 +10595,12 @@
         "description" : "Describes a prisons scheduled events",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code for these scheduled events",
             "example" : "MDI"
           },
           "prisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The set of prisoner numbers for theses scheduled events ",
             "example" : "['GF10101', 'GR123YI']",
             "items" : {
@@ -10487,54 +10609,54 @@
             "uniqueItems" : true
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date for this collection of scheduled events",
             "example" : "2022-11-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date (inclusive) for this collection of scheduled events",
             "example" : "2022-11-28"
           },
           "appointments" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of scheduled appointments for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
             }
           },
           "courtHearings" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of (active) scheduled court hearings for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
             }
           },
           "visits" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of scheduled visits for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
             }
           },
           "activities" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of scheduled activities for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
             }
           },
           "externalTransfers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of external transfers for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
             }
           },
           "adjudications" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of adjudications for this prisoner in this date range",
             "items" : {
               "$ref" : "#/components/schemas/ScheduledEvent"
@@ -10547,100 +10669,100 @@
         "description" : "Describes a scheduled event",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code for this scheduled event",
             "example" : "MDI"
           },
           "eventSource" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The source of this event - valid values are NOMIS or SAA (scheduling activities and appointments)",
             "example" : "NOMIS"
           },
           "eventType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The event type (APPOINTMENT, ACTIVITY, COURT_HEARING, EXTERNAL_TRANSFER, ADJUDICATION_HEARING, VISIT)",
             "example" : "APPOINTMENT"
           },
           "scheduledInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "For activities from SAA the ID for the activity scheduled instance, or null when from NOMIS",
             "example" : 9999
           },
           "appointmentSeriesId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "For appointments from SAA the ID for the appointment series, or null when from NOMIS",
             "example" : 9999
           },
           "appointmentId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "For appointments from SAA the ID for the appointment, or null when from NOMIS",
             "example" : 9999
           },
           "appointmentAttendeeId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "For appointments from SAA the ID for the appointment attendee, or null when from NOMIS",
             "example" : 9999
           },
           "oicHearingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "For adjudication hearings from NOMIS the ID for the OIC hearing, or null for other types",
             "example" : 9999
           },
           "eventId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The event ID for events from NOMIS, otherwise null if from SAA",
             "example" : 10001
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The booking id of the prisoner this event relates to.",
             "example" : 10001
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS internal location id where this event takes place",
             "example" : 10001
           },
           "internalLocationCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS location code for this event",
             "example" : "5-A-SIDE COM"
           },
           "internalLocationUserDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS location user description for this event",
             "example" : "GYM ORDERLY"
           },
           "internalLocationDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS location description for this event",
             "example" : "MDI-GYM-5-A-SIDE COM"
           },
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Event category code (e.g appointment category code, activity category code)",
             "example" : "GOVE"
           },
           "categoryDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Event category description.",
             "example" : "Governor"
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The event summary to show on unlock lists, schedules and calendars",
             "example" : "Court hearing"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any comments supplied that relate to this event",
             "example" : "Reception for 8am please."
           },
@@ -10680,23 +10802,23 @@
             "example" : false
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number",
             "example" : "GF10101"
           },
           "date" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The specific date for this event",
             "example" : "2022-09-30"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time for this scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time for this scheduled instance",
             "example" : "10:00"
           },
@@ -10706,43 +10828,43 @@
             "description" : "The event priority - configurable by prison, or via defaults."
           },
           "appointmentSeriesCancellationStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date of the first appointment cancelled in the series"
           },
           "appointmentSeriesCancellationStartTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time of the first appointment cancelled in the series",
             "example" : "10:30"
           },
           "appointmentSeriesFrequency" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The appointment series frequency",
             "enum" : [ "WEEKDAY", "DAILY", "WEEKLY", "FORTNIGHTLY", "MONTHLY" ],
             "example" : "DAILY"
           },
           "paidActivity" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Set to true if this activity is a paid activity",
             "example" : false
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should activity payment be issued for SICK, REST or OTHER",
             "example" : true
           },
           "attendanceStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The activity attendance status - WAITING or COMPLETED",
             "example" : "WAITING"
           },
           "attendanceReasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The code for the activity (non) attendance reason",
             "example" : "SICK"
           },
           "prisonerComments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any prisoner specific comments supplied that relate to this event",
             "example" : "Please arrive 10 minutes early."
           }
@@ -10913,8 +11035,11 @@
             "description" : "Indicates whether this allocation is to an activity within the 'Not in work' category"
           },
           "prisonPayBand" : {
-            "$ref" : "#/components/schemas/PrisonPayBand",
-            "description" : "Where a prison uses pay bands to differentiate earnings, this is the pay band given to this prisoner. Will be null for unpaid activities."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonPayBand"
+            }, {
+              "type" : "null"
+            } ]
           },
           "startDate" : {
             "type" : "string",
@@ -10923,49 +11048,53 @@
             "example" : "2022-09-10"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will stop attending the activity",
             "example" : "2023-09-10"
           },
           "allocatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the prisoner was allocated to the activity",
             "example" : "2022-09-01T09:00:00"
           },
           "allocatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who allocated the prisoner to the activity",
             "example" : "Mr Blogs"
           },
           "deallocatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the prisoner was deallocated from the activity",
             "example" : "2022-09-02T09:00:00"
           },
           "deallocatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who deallocated the prisoner from the activity",
             "example" : "Mrs Blogs"
           },
           "deallocatedReason" : {
-            "$ref" : "#/components/schemas/DeallocationReason"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/DeallocationReason"
+            }, {
+              "type" : "null"
+            } ]
           },
           "suspendedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the allocation was suspended",
             "example" : "2022-09-02T09:00:00"
           },
           "suspendedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who suspended the prisoner from the activity",
             "example" : "Mrs Blogs"
           },
           "suspendedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The descriptive reason why this prisoner was suspended from the activity",
             "example" : "Temporarily released from prison"
           },
@@ -10976,12 +11105,18 @@
             "example" : "ACTIVE"
           },
           "plannedDeallocation" : {
-            "$ref" : "#/components/schemas/PlannedDeallocation",
-            "description" : "Where an allocation end date has been set, this includes the details of the planned de-allocation"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PlannedDeallocation"
+            }, {
+              "type" : "null"
+            } ]
           },
           "plannedSuspension" : {
-            "$ref" : "#/components/schemas/PlannedSuspension",
-            "description" : "This includes the details of the planned suspension for the allocation if there is one"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PlannedSuspension"
+            }, {
+              "type" : "null"
+            } ]
           },
           "exclusions" : {
             "type" : "array",
@@ -10991,40 +11126,43 @@
             }
           },
           "prisonerName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "deprecated" : true,
             "description" : "The name of the prisoner. Included only if includePrisonerSummary = true"
           },
           "prisonerFirstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner's first name. Included only if includePrisonerSummary = true",
             "example" : "Joe"
           },
           "prisonerLastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner's last name. Included only if includePrisonerSummary = true",
             "example" : "Bloggs"
           },
           "prisonerStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The status of the prisoner. Included only if includePrisonerSummary = true",
             "example" : "ACTIVE IN"
           },
           "prisonerPrisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code of the prison which of the prisoner currently resides. Included only if includePrisonerSummary = true",
             "example" : "MDI"
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The cell location of the prisoner. Included only if includePrisonerSummary = true"
           },
           "earliestReleaseDate" : {
-            "$ref" : "#/components/schemas/EarliestReleaseDate",
-            "description" : "The earliest release date of the prisoner. Included only if includePrisonerSummary = true"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EarliestReleaseDate"
+            }, {
+              "type" : "null"
+            } ]
           },
           "nonAssociations" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Does the prisoner have non-associations?. Included only if includePrisonerSummary = true. Null implies that non-associations could not be retrieved"
           }
         },
@@ -11093,19 +11231,19 @@
             "example" : "2023-07-31"
           },
           "plannedEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The planned end date of the suspension",
             "example" : "2023-07-31"
           },
           "caseNoteId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The optional legacy case note identifier which was added to the prisoner's profile along with the suspension",
             "example" : 123456
           },
           "dpsCaseNoteId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional case note UUID which was added to the prisoner's profile along with the suspension",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -11122,7 +11260,7 @@
             "example" : "2023-07-10 14:54"
           },
           "paid" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the suspension paid or not"
           }
         },
@@ -11166,21 +11304,21 @@
             "example" : "MDI"
           },
           "createdTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time this pay band was created"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the user authenticated via HMPPS auth that created the pay band"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the pay band was last changed"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the user authenticated via HMPPS auth that last edited the pay band"
           }
         },
@@ -11256,7 +11394,7 @@
             "example" : 12332
           },
           "splitRegimeActivityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The alternative activity ID in a split regime",
             "example" : 1322
@@ -11273,12 +11411,12 @@
             "example" : 99098484
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner cell location",
             "example" : "RSI-A-1-2-001"
           },
           "nomisPayBand" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The pay band code from NOMIS",
             "example" : "2"
           },
@@ -11289,13 +11427,13 @@
             "example" : "2022-12-23"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date on which this allocation ended or will end. Nullable.",
             "example" : "2022-12-23"
           },
           "endComment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "If an end date is set there may be a comment. Nullable.",
             "example" : "Due to end in January."
           },
@@ -11305,7 +11443,7 @@
             "example" : true
           },
           "exclusions" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The days and times that the prisoner is excluded from this activity's schedule. All values must match a slot where the activity is scheduled to run, and due to sync to nomis, there can not not be exclusions defined on the same day and time slot over multiple weeks.",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
@@ -11357,13 +11495,13 @@
             "example" : "2022-12-23"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date when this activity ends. Can be null.",
             "example" : "2022-12-23"
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -11426,7 +11564,7 @@
             "minLength" : 1
           },
           "nomisPayBand" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The pay band code from NOMIS. If null, will be defaulted to 1",
             "example" : "2"
           },
@@ -11489,7 +11627,7 @@
             "example" : true
           },
           "timeSlot" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Time slot",
             "enum" : [ "AM", "PM", "ED" ]
           }
@@ -11507,7 +11645,7 @@
             "format" : "int64"
           },
           "splitRegimeActivityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           }
         },
@@ -11518,82 +11656,82 @@
         "description" : "The migration request with the appointment details",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS prison code where this appointment takes place",
             "example" : "PVI",
             "maxLength" : 6,
             "minLength" : 0
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner to allocate to the appointment",
             "example" : "A1234BC",
             "maxLength" : 10,
             "minLength" : 0
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS OFFENDER_BOOKINGS.OFFENDER_BOOK_ID value for mapping to a prisoner booking record in NOMIS",
             "example" : 456
           },
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS reference code for this appointment.",
             "example" : "CHAP",
             "maxLength" : 12,
             "minLength" : 0
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID.",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the appointment"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The starting time of the appointment",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment",
             "example" : "10:30"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Notes relating to the appointment.    \n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "isCancelled" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "\n    Indicates that this appointment has been cancelled\n    ",
             "example" : false
           },
           "created" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time this appointment was created"
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via NOMIS/HMPPS auth that created the appointment\n    ",
             "example" : "AAA01U",
             "maxLength" : 100,
             "minLength" : 0
           },
           "updated" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was last changed\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via NOMIS/HMPPS auth that modified the appointment\n    ",
             "example" : "AAA01U",
             "maxLength" : 100,
@@ -11658,19 +11796,19 @@
             "example" : "CHAP"
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment instance. Used as part of the appointment name with the\n    format \"Appointment description (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this appointment",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -11691,17 +11829,17 @@
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment instance",
             "example" : "10:30"
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner attending this appointment instance.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           },
@@ -11716,12 +11854,12 @@
             "example" : "AAA01U"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment instance was last changed.\n    Will be null if this appointment instance has not been altered since it was created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that edited this appointment instance.\n    Will be null if this appointment instance has not been altered since it was created\n    ",
             "example" : "AAA01U"
           }
@@ -11765,7 +11903,7 @@
         "description" : "The search parameters to use to filter appointments",
         "properties" : {
           "appointmentType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The appointment type (INDIVIDUAL or GROUP) to match with the appointment series. Will restrict the search results to\n    appointments that are part of a series with the matching type when this search parameter is supplied.\n    ",
             "enum" : [ "INDIVIDUAL", "GROUP" ],
             "example" : "INDIVIDUAL"
@@ -11776,12 +11914,12 @@
             "description" : "\n    The start date to match with the appointments. Will restrict the search results to appointments\n    that have the matching start date when this search parameter is supplied but no end date is supplied.\n    When an end date is also supplied, the search uses a date range and will restrict the search results to\n    appointments that have a start date within the date range.\n    "
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "\n    When an end date is supplied alongside the start date, the search uses a date range and will restrict the search results to\n    appointments that have a start date within the date range.\n    "
           },
           "timeSlots" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "\n    The time slot to match with the appointments. Will restrict the search results to appointments that have a start\n    time between the times defined by the prison for that time slot when this search parameter is supplied.\n    ",
             "example" : [ "AM", "PM", "ED" ],
             "items" : {
@@ -11790,30 +11928,30 @@
             }
           },
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The NOMIS reference code to match with the appointments. Will restrict the search results to appointments\n    that have the matching category code when this search parameter is supplied.\n    ",
             "example" : "GYMW"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "deprecated" : true,
             "description" : "\n    The NOMIS internal location id to match with the appointments. Will restrict the search results to\n    appointments that have the matching internal location id when this search parameter is supplied.\n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "\n    The DPS location UUID to match with the appointments. Will restrict the search results to\n    appointments that have the matching location UUID when this search parameter is supplied.\n    ",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "inCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "\n    The in cell flag value to match with the appointments. Will restrict the search results to appointments\n    that have the matching in cell value when this search parameter is supplied.\n    ",
             "example" : false
           },
           "prisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "\n    The allocated prisoner or prisoners to match with the appointments. Will restrict the search results to\n    appointments that have the at least one of the supplied prisoner numbers attending when this search parameter\n    is supplied.\n    ",
             "example" : [ "A1234BC" ],
             "items" : {
@@ -11821,7 +11959,7 @@
             }
           },
           "createdBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth to match with the appointments. Will restrict the\n    search results to appointments that were created by this username when this search parameter is supplied.\n    ",
             "example" : "AAA01U"
           }
@@ -11880,7 +12018,7 @@
             "example" : 27
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -11941,13 +12079,16 @@
             "description" : "\n    The summary of the category of this appointment\n    "
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/AppointmentLocationSummary",
-            "description" : "\n    The summary of the internal location this appointment will take place.\n    Will be null if in cell = true\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentLocationSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inCell" : {
             "type" : "boolean",
@@ -11965,7 +12106,7 @@
             "example" : "13:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -12017,22 +12158,22 @@
             "description" : "The date and time this appointment was created. Will not change"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was last changed.\n    Will be null if this appointment has not been altered since it was created\n    "
           },
           "cancelledTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was cancelled.\n    Will be null if this appointment has not been cancelled\n    "
           },
           "cancelledBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user authenticated via HMPPS auth that cancelled this appointment.\n    Will be null if this appointment has not been cancelled\n    ",
             "example" : "AAA01U"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           }
@@ -12060,52 +12201,52 @@
         "description" : "Set of search filters for searching audit records",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The code of the prison",
             "example" : "PVI"
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number",
             "example" : "A1234AA"
           },
           "username" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the logged-in user",
             "example" : "JONESA"
           },
           "auditType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The top-level audit category",
             "enum" : [ "PRISONER", "ACTIVITY", "APPOINTMENT" ],
             "example" : "ACTIVITY"
           },
           "auditEventType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The specific event type",
             "enum" : [ "ACTIVITY_CREATED", "ACTIVITY_UPDATED", "APPOINTMENT_CANCELLED", "APPOINTMENT_CANCELLED_ON_TRANSFER", "APPOINTMENT_SERIES_CREATED", "APPOINTMENT_DELETED", "APPOINTMENT_EDITED", "APPOINTMENT_UNCANCELLED", "BONUS_PAYMENT_MADE_FOR_ACTIVITY_ATTENDANCE", "APPOINTMENT_SET_CREATED", "INCENTIVE_LEVEL_WARNING_GIVEN_FOR_ACTIVITY_ATTENDANCE", "PRISONER_ACCEPTED_FROM_WAITING_LIST", "PRISONER_ADDED_TO_WAITING_LIST", "PRISONER_ALLOCATED", "PRISONER_DEALLOCATED", "PRISONER_DECLINED_FROM_WAITING_LIST", "PRISONER_REMOVED_FROM_WAITING_LIST", "PRISONER_SUSPENDED_FROM_ACTIVITY", "PRISONER_UNSUSPENDED_FROM_ACTIVITY", "PRISONER_MERGE" ],
             "example" : "ACTIVITY_CREATED"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time on or after which to search for events",
             "example" : "2022-09-01T09:01:02"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time on or before which to search for events",
             "example" : "2022-09-01T09:01:02"
           },
           "activityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The ID of the activity",
             "example" : 123456
           },
           "scheduleId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The ID of the activity schedule",
             "example" : 123456
@@ -12151,18 +12292,18 @@
             "example" : "PVI"
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (if any) to which the event relates",
             "example" : "A1234AA"
           },
           "activityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The ID of the activity (if any) to which the event relates",
             "example" : 123456
           },
           "activityScheduleId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The ID of the activity schedule (if any) to which the event relates",
             "example" : 123456
@@ -12216,16 +12357,16 @@
             "description" : "Summary of the prisoner attending the appointment"
           },
           "attended" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "\n    Specifies whether the prisoner attended the specific appointment in an appointment series or set.\n    A null value means that the prisoner's attendance has not been recorded yet. \n    "
           },
           "attendanceRecordedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The latest date and time attendance was recorded. Note that attendance records can be updated and this is the most\n    recent date and time it was recorded. A null value means that the prisoner's attendance has not been recorded yet. \n    "
           },
           "attendanceRecordedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user that last recorded attendance. Note that attendance records can be updated and this is the\n    most recent user that marked attendance. A null value means that the prisoner's attendance has not been recorded yet.\n    ",
             "example" : "AAA01U"
           }
@@ -12243,12 +12384,18 @@
             "example" : 123456
           },
           "appointmentSeries" : {
-            "$ref" : "#/components/schemas/AppointmentSeriesSummary",
-            "description" : "\n    Summary of the appointment series this appointment is part of.\n    Will be null if this appointment is part of a set of appointments on the same day.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSeriesSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appointmentSet" : {
-            "$ref" : "#/components/schemas/AppointmentSetSummary",
-            "description" : "\n    Summary of the appointment set this appointment is part of\n    Will be null if this appointment is part of a series of an appointments on a schedule.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSetSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appointmentType" : {
             "type" : "string",
@@ -12283,21 +12430,30 @@
             "description" : "\n    The summary of the appointment's category. Can be different to the parent appointment series if this appointment\n    has been edited.\n    "
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this appointment, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this appointment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/AppointmentLocationSummary",
-            "description" : "\n    The summary of the internal location this appointment will take place. Can be different to the parent\n    appointment series if this appointment has been edited.\n    Will be null if in cell = true\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentLocationSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inCell" : {
             "type" : "boolean",
@@ -12315,7 +12471,7 @@
             "example" : "13:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -12325,12 +12481,12 @@
             "example" : false
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending this appointment.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           },
@@ -12349,12 +12505,12 @@
             "example" : false
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was last changed.\n    Will be null if this appointment has not been altered since it was created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user that last edited this appointment.\n    Will be null if this appointment has not been altered since it was created\n    "
           },
           "isCancelled" : {
@@ -12368,12 +12524,12 @@
             "example" : false
           },
           "cancelledTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time this appointment was cancelled.\n    Will be null if this appointment has not been cancelled\n    "
           },
           "cancelledBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user who cancelled this appointment.\n    Will be null if this appointment has not been cancelled\n    "
           }
         },
@@ -12390,8 +12546,11 @@
             "example" : 12345
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/AppointmentSeriesSchedule",
-            "description" : "\n    Describes the schedule of the appointment series i.e. how the appointments in the series repeat. The frequency of\n    those appointments and how many appointments there are in total in the series.\n    If null, the appointment series has only one appointment. Note that the presence of this property does not mean\n    there is more than one appointment as a number of appointments value of one is valid.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSeriesSchedule"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appointmentCount" : {
             "type" : "integer",
@@ -12455,7 +12614,7 @@
             "example" : "Abbot"
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner's status at their current prison",
             "example" : "ACTIVE IN"
           },
@@ -12470,7 +12629,7 @@
             "example" : "A-1-002"
           },
           "category" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The prisoner's category.\n    ",
             "example" : "P"
           }
@@ -12481,29 +12640,29 @@
         "type" : "object",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner attending the appointment",
             "example" : "A1234BC"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The starting time of the appointment",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment",
             "example" : "10:30"
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment. Shown only on the appointments details\n    page and on printed movement slips. Wing staff will be notified there is extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
             "maxLength" : 800,
@@ -12517,46 +12676,46 @@
         "description" : "The create request with the new appointment set details",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS prison code where these appointments takes place",
             "example" : "PVI",
             "maxLength" : 3,
             "minLength" : 0
           },
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS reference code for these appointments. Must exist and be active",
             "example" : "CHAP",
             "minLength" : 1
           },
           "tierCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The tier code for this appointment",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
             "example" : "TIER_1",
             "minLength" : 1
           },
           "organiserCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The organiser code for this appointment",
             "enum" : [ "PRISON_STAFF", "PRISONER", "EXTERNAL_PROVIDER", "OTHER" ],
             "example" : "PRISON_STAFF"
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment series. Will be used to create the appointment name using the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor",
             "maxLength" : 40,
             "minLength" : 0
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this appointment set",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -12567,7 +12726,7 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the appointments"
           },
@@ -12603,26 +12762,32 @@
             "example" : "CHAP"
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this appointment, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this appointment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment set. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The NOMIS AGENCY_INTERNAL_LOCATIONS.INTERNAL_LOCATION_ID value for mapping to NOMIS.\n    Will be null if in cell = true\n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -12662,13 +12827,13 @@
         "description" : "The create request with the new appointment series details",
         "properties" : {
           "appointmentType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The appointment type (INDIVIDUAL or GROUP)",
             "enum" : [ "INDIVIDUAL", "GROUP" ],
             "example" : "INDIVIDUAL"
           },
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS prison code where this appointment series takes place",
             "example" : "PVI",
             "maxLength" : 3,
@@ -12684,39 +12849,39 @@
             "minItems" : 1
           },
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS reference code for this appointment. Must exist and be active",
             "example" : "CHAP",
             "minLength" : 1
           },
           "tierCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The tier code for this appointment",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
             "example" : "TIER_1",
             "minLength" : 1
           },
           "organiserCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The organiser code for this appointment",
             "enum" : [ "PRISON_STAFF", "PRISONER", "EXTERNAL_PROVIDER", "OTHER" ],
             "example" : "PRISON_STAFF"
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment series. Will be used to create the appointment name using the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor",
             "maxLength" : 40,
             "minLength" : 0
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The NOMIS internal location id within the specified prison. This must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property and be active. \n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this appointment series",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
@@ -12727,40 +12892,43 @@
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of the first appointment in the series"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The starting time of the appointment or appointments in the series",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/AppointmentSeriesSchedule",
-            "description" : "\n    Describes the schedule of the appointment series i.e. how the appointments in the series will repeat. The frequency\n    of those appointments and how many appointments there will be in total in the series.\n    Will create a single appointment if not supplied.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSeriesSchedule"
+            }, {
+              "type" : "null"
+            } ]
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
             "maxLength" : 800,
             "minLength" : 0
           },
           "originalAppointmentId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The id of the original appointment that the new appointment was copied from\n    ",
             "example" : 789
@@ -12773,40 +12941,40 @@
         "description" : "The request with the prisoner waiting list details",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "activityScheduleId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internally-generated ID for this activity schedule (assumes 1-2-1 with activity)",
             "example" : 7654321
           },
           "applicationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The past or present date on which the waiting list application was requested",
             "example" : "2023-06-23"
           },
           "requestedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who made the request",
             "example" : "Fred Bloggs",
             "maxLength" : 100,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any particular comments related to the waiting list request",
             "example" : "The prisoner has specifically requested to attend this activity",
             "maxLength" : 500,
             "minLength" : 0
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The status of the application. Only PENDING, APPROVED or DECLINED are allowed when creating.",
             "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
@@ -12819,7 +12987,7 @@
         "description" : "The request with the suspension details",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
@@ -12836,7 +13004,7 @@
             "minItems" : 1
           },
           "suspendUntil" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will be suspended till from the activity",
             "example" : "2023-09-10"
@@ -12849,7 +13017,7 @@
         "description" : "The request with the suspension details",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
@@ -12866,14 +13034,17 @@
             "minItems" : 1
           },
           "suspendFrom" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will be suspended from the activity",
             "example" : "2023-09-10"
           },
           "suspensionCaseNote" : {
-            "$ref" : "#/components/schemas/AddCaseNoteRequest",
-            "description" : "Describes a case note to be added to the prisoner's profile as part of the suspension."
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AddCaseNoteRequest"
+            }, {
+              "type" : "null"
+            } ]
           },
           "status" : {
             "type" : "string",
@@ -12889,20 +13060,20 @@
         "description" : "The create request with the new advance attendance",
         "properties" : {
           "scheduleInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The scheduled instance id",
             "example" : 123
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number (NOMIS ID)",
             "example" : "A1234AA",
             "maxLength" : 7,
             "minLength" : 0
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued?",
             "example" : true
           }
@@ -12914,7 +13085,7 @@
         "description" : "The create request with the new activity details",
         "properties" : {
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code where this activity takes place",
             "example" : "PVI",
             "maxLength" : 3,
@@ -12956,39 +13127,39 @@
             "example" : true
           },
           "payPerSession" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Indicates whether the activity session is a (F)ull day or a (H)alf day (for payment purposes). ",
             "enum" : [ "H", "F" ],
             "example" : "H"
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A brief summary description of this activity for use in forms and lists",
             "example" : "Maths level 1",
             "maxLength" : 50,
             "minLength" : 0
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A detailed description for this activity",
             "example" : "A basic maths course suitable for introduction to the subject",
             "maxLength" : 300,
             "minLength" : 0
           },
           "categoryId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The category id for this activity, one of the high-level categories"
           },
           "tierCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The tier code for this activity, as defined by the Future Prison Regime team",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
             "example" : "TIER_1",
             "minLength" : 1
           },
           "organiserCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The organiser code for the organiser of this activity",
             "example" : "PRISON_STAFF"
           },
@@ -13009,27 +13180,27 @@
             }
           },
           "payChange" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The list of pay rates that can apply to this activity. Must be null or empty if the activity is unpaid",
             "items" : {
               "$ref" : "#/components/schemas/ActivityPayHistoryCreateRequest"
             }
           },
           "riskLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The most recent risk assessment level for this activity",
             "example" : "high",
             "maxLength" : 10,
             "minLength" : 0
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The future date on which this activity will start. From this date, any schedules will be created as real, planned instances",
             "example" : "2022-12-23"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
             "example" : "2022-12-23"
@@ -13042,13 +13213,13 @@
             }
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this schedule",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "capacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum number of prisoners allowed for a scheduled instance of this schedule",
             "example" : 10
@@ -13062,7 +13233,7 @@
             "minimum" : 1
           },
           "slots" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The days and times an activity schedule can take place",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
@@ -13082,28 +13253,28 @@
         "description" : "Describes the minimum education levels to be created for an activity",
         "properties" : {
           "educationLevelCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Education level code",
             "example" : "1",
             "maxLength" : 10,
             "minLength" : 0
           },
           "educationLevelDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The Education level description",
             "example" : "Reading Measure 1.0",
             "maxLength" : 60,
             "minLength" : 0
           },
           "studyAreaCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The study area code",
             "example" : "ENGLA",
             "maxLength" : 10,
             "minLength" : 0
           },
           "studyAreaDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The study area description",
             "example" : "English Language",
             "maxLength" : 60,
@@ -13117,45 +13288,45 @@
         "description" : "Describes the pay rates and bands to be created for an activity",
         "properties" : {
           "incentiveNomisCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the incentive/earned privilege level",
             "example" : "BAS",
             "maxLength" : 3,
             "minLength" : 0
           },
           "incentiveLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The incentive/earned privilege level",
             "example" : "Basic",
             "maxLength" : 50,
             "minLength" : 0
           },
           "payBandId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the prison pay band used",
             "example" : 1
           },
           "rate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
             "example" : 150
           },
           "pieceRate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to produced amounts of a product, this indicates the payment rate (in pence) per pieceRateItems produced",
             "example" : 150
           },
           "pieceRateItems" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to the number of items produced in a batch of a product, this is the batch size that attract 1 x pieceRate",
             "example" : 10
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The effective start date for this pay rate",
             "example" : "2022-12-23"
@@ -13168,46 +13339,46 @@
         "description" : "Describes the pay rates history to be created for an activity",
         "properties" : {
           "incentiveNomisCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the incentive/earned privilege level",
             "example" : "BAS",
             "maxLength" : 3,
             "minLength" : 0
           },
           "incentiveLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The incentive/earned privilege level",
             "example" : "Basic",
             "maxLength" : 50,
             "minLength" : 0
           },
           "payBandId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The id of the prison pay band used",
             "example" : 1
           },
           "rate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
             "example" : 150
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The effective start date for this pay rate",
             "example" : "2022-12-23"
           },
           "changedDetails" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The pay rate change details",
             "example" : "New pay rate added: £1.00",
             "maxLength" : 500,
             "minLength" : 0
           },
           "changedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who changed this pay rate",
             "example" : "joebloggs",
             "maxLength" : 100,
@@ -13273,7 +13444,7 @@
             "example" : "Maths level 1"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A detailed description for this activity",
             "example" : "A basic maths course suitable for introduction to the subject"
           },
@@ -13282,12 +13453,18 @@
             "description" : "The category for this activity, one of the high-level categories"
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this activity, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this activity"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "eligibilityRules" : {
             "type" : "array",
@@ -13325,7 +13502,7 @@
             "example" : "2022-09-21"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
             "example" : "2022-12-21"
@@ -13347,13 +13524,13 @@
             "example" : "Adam Smith"
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time when this activity was updated",
             "example" : "2022-09-01T09:01:02"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who updated this activity",
             "example" : "Adam Smith"
           },
@@ -13414,25 +13591,25 @@
             "description" : "The pay band for this activity pay"
           },
           "rate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
             "example" : 150
           },
           "pieceRate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to produced amounts of a product, this indicates the payment rate (in pence) per pieceRateItems produced",
             "example" : 150
           },
           "pieceRateItems" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to the number of items produced in a batch of a product, this is the batch size that attract 1 x pieceRate",
             "example" : 10
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The effective start date for this pay rate",
             "example" : "2024-06-18"
@@ -13451,45 +13628,45 @@
             "example" : 123456
           },
           "incentiveNomisCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS code for the incentive/earned privilege level",
             "example" : "BAS"
           },
           "incentiveLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The incentive/earned privilege level",
             "example" : "Basic"
           },
           "prisonPayBand" : {
             "$ref" : "#/components/schemas/PrisonPayBand",
             "description" : "The pay band id for this activity pay history",
-            "example" : "123456"
+            "example" : 123456
           },
           "rate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
             "example" : 150
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The effective start date for this pay rate",
             "example" : "2024-06-18"
           },
           "changedDetails" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The actual change to this pay rate",
             "example" : "New pay rate added: £1.00"
           },
           "changedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time when this pay rate was changed",
             "example" : "2022-09-01'T'09:01:02.964"
           },
           "changedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who changed this pay rate",
             "example" : "joebloggs"
           }
@@ -13533,9 +13710,11 @@
             }
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/InternalLocation",
-            "description" : "The NOMIS internal location for this schedule",
-            "example" : "98877667"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/InternalLocation"
+            }, {
+              "type" : "null"
+            } ]
           },
           "capacity" : {
             "type" : "integer",
@@ -13567,7 +13746,7 @@
             "example" : "2022-09-21"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this schedule will end. From this date, any schedules will be created as real, planned instances",
             "example" : "2022-10-21"
@@ -13578,13 +13757,13 @@
             "example" : true
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time when this activity schedule was updated",
             "example" : "2022-09-01T09:01:02"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who updated this activity schedule",
             "example" : "Adam Smith"
           },
@@ -13655,13 +13834,13 @@
             "example" : false
           },
           "cancelledTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date and time this scheduled instance was cancelled (or null if not cancelled)",
             "example" : "2022-09-29T11:20:00"
           },
           "cancelledBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who cancelled this scheduled instance (or null if not cancelled)",
             "example" : "Adam Smith"
           },
@@ -13693,7 +13872,7 @@
             "example" : "2022-09-02"
           },
           "suspendedUntil" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date until which the activity schedule was suspended. If null, the schedule is suspended indefinitely",
             "example" : "2022-09-02"
@@ -13706,27 +13885,27 @@
         "description" : "The update request with the waiting list changes",
         "properties" : {
           "applicationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "\n      The updated past or present date on which the waiting list application was requested.\n      \n      Note this cannot be after the date the waiting list application was first made.\n    ",
             "example" : "2023-06-23"
           },
           "requestedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The updated person who made the request",
             "example" : "Fred Bloggs",
             "maxLength" : 100,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The updated comments related to the waiting list request",
             "example" : "The prisoner has specifically requested to attend this activity",
             "maxLength" : 500,
             "minLength" : 0
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The updated status of the application. Only PENDING, APPROVED or DECLINED are allowed when updating.",
             "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
@@ -13738,13 +13917,13 @@
         "description" : "The prison pay band to update",
         "properties" : {
           "displaySequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The order in which the pay band should be presented within a list e.g. dropdown",
             "example" : 1
           },
           "alias" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alternative text to use in place of the description e.g. Low, Medium, High",
             "example" : "Low",
             "maxLength" : 30,
@@ -13758,70 +13937,70 @@
         "description" : "The update request with the new appointment details and how to apply the update",
         "properties" : {
           "categoryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The updated NOMIS reference code. Must exist and be active.\n    ",
             "example" : "GYMW"
           },
           "tierCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The tier code for this appointment",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
             "example" : "TIER_1"
           },
           "organiserCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The organiser code for this appointment",
             "enum" : [ "PRISON_STAFF", "PRISONER", "EXTERNAL_PROVIDER", "OTHER" ],
             "example" : "PRISON_STAFF"
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "\n    The updated NOMIS internal location id within the specified prison. This or DPS location id must be supplied if inCell is false.\n    The internal location id must exist, must be within the prison specified by the prisonCode property on the\n    appointment and be active. \n    ",
             "example" : 123
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "\n      The updated DPS location id within the specified prison. This or NOMIS internal location id must be supplied if inCell is false.\n      The DPS location UUID must exist, must be within the prison specified by the prisonCode property on the\n      appointment and be active. \n    ",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "inCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "\n    Flag to indicate if the location of the appointment or appointments is in cell rather than an internal prison location.\n    Internal location id will be ignored if inCell is true\n    ",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "\n    The updated date of the appointment. NOTE: this property specifies the start date to use along with the existing\n    schedule frequency to move all appointments that will take place after the appointment when used in conjunction\n    with the applyTo property\n    "
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The updated starting time",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The updated end time",
             "example" : "10:30"
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Updated extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison",
             "maxLength" : 4000,
             "minLength" : 0
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Updated prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early",
             "maxLength" : 800,
             "minLength" : 0
           },
           "removePrisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The prisoner or prisoners to remove from the appointment or appointments",
             "example" : [ "A1234BC" ],
             "items" : {
@@ -13829,7 +14008,7 @@
             }
           },
           "addPrisonerNumbers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The new prisoner or prisoners that will be attending the appointment or appointments",
             "example" : [ "A1234BC" ],
             "items" : {
@@ -13853,42 +14032,42 @@
         "description" : "The update request with the new allocation details",
         "properties" : {
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will start the activity",
             "example" : "2022-09-10"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date when the prisoner will stop attending the activity",
             "example" : "2023-09-10"
           },
           "removeEndDate" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "A flag to indicate that the allocation end date is to be removed",
             "example" : true
           },
           "reasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason code for the deallocation",
             "enum" : [ "OTHER", "PERSONAL", "PROBLEM", "REMOVED", "SECURITY", "UNACCEPTABLE_ATTENDANCE", "UNACCEPTABLE_BEHAVIOUR", "WITHDRAWN" ],
             "example" : "RELEASED"
           },
           "payBandId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Where a prison uses pay bands to differentiate earnings, this is the pay band given to this prisoner"
           },
           "exclusions" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The days and times that the prisoner is excluded from this activity's schedule. All values must match a slot where the activity is scheduled to run, and due to sync to nomis, there can not not be exclusions defined on the same day and time slot over multiple weeks.",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
             }
           },
           "scheduleInstanceId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The scheduled instance id required when allocation starts today"
           }
@@ -13899,107 +14078,107 @@
         "description" : "The update request with the new activity details",
         "properties" : {
           "categoryId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The category id for this activity, one of the high-level categories"
           },
           "tierCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The tier code for this activity, as defined by the Future Prison Regime team",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ],
             "example" : "TIER_1"
           },
           "organiserCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The organiser code for this activity",
             "example" : "PRISON_STAFF"
           },
           "summary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A brief summary description of this activity for use in forms and lists",
             "example" : "Maths level 1",
             "maxLength" : 50,
             "minLength" : 0
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this activity will start. From this date, any schedules will be created as real, planned instances",
             "example" : "2022-12-23"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date on which this activity ends. From this date, there will be no more planned instances of the activity. If null, the activity has no end date and will be scheduled indefinitely.",
             "example" : "2022-12-23"
           },
           "runsOnBankHoliday" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the schedule runs on bank holidays",
             "example" : true
           },
           "capacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum number of prisoners allowed for a scheduled instance of this schedule",
             "example" : 10
           },
           "riskLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The most recent risk assessment level for this activity",
             "example" : "high",
             "maxLength" : 10,
             "minLength" : 0
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this schedule",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "inCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate if the location of the activity is in cell",
             "example" : false
           },
           "onWing" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate if the location of the activity is on wing",
             "example" : false
           },
           "offWing" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate if the location of the activity is off wing and not in a listed location",
             "example" : false
           },
           "attendanceRequired" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate if attendance is required for this activity, e.g. gym induction might not be mandatory attendance",
             "example" : false
           },
           "minimumEducationLevel" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The list of minimum education levels that apply to this activity",
             "items" : {
               "$ref" : "#/components/schemas/ActivityMinimumEducationLevelCreateRequest"
             }
           },
           "pay" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The list of pay rates that can apply to this activity. Must be null or empty if the activity is unpaid",
             "items" : {
               "$ref" : "#/components/schemas/ActivityPayCreateRequest"
             }
           },
           "payChange" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The list of pay rates that can apply to this activity. Must be null or empty if the activity is unpaid",
             "items" : {
               "$ref" : "#/components/schemas/ActivityPayHistoryCreateRequest"
             }
           },
           "scheduleWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of weeks in the schedule",
             "example" : 1,
@@ -14007,7 +14186,7 @@
             "minimum" : 1
           },
           "slots" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The days and times an activity schedule can take place",
             "items" : {
               "$ref" : "#/components/schemas/Slot"
@@ -14020,9 +14199,15 @@
             "example" : true
           },
           "paid" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Flag to indicate if the activity is a paid activity or not. If true then pay rates are required, if false then no pay rates should be provided. Cannot be updated if already allocated.",
             "example" : true
+          },
+          "firstTimeSlotForToday" : {
+            "type" : [ "string", "null" ],
+            "description" : "First time slot for today. May create scheduled instances for today starting at specified time slot and if set.",
+            "enum" : [ "AM", "PM", "ED" ],
+            "example" : "ED"
           }
         }
       },
@@ -14031,30 +14216,30 @@
         "description" : "Represents a historical snapshot of a waiting list application for a given ID.",
         "properties" : {
           "id" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The internally-generated ID for this waiting list",
             "example" : 111111
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The status of this waiting list",
             "enum" : [ "PENDING", "APPROVED", "DECLINED", "ALLOCATED", "REMOVED", "WITHDRAWN" ],
             "example" : "PENDING"
           },
           "applicationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The date of application for this waiting list",
             "example" : "2023-06-23"
           },
           "requestedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person who made the request for this waiting list",
             "example" : "Fred Bloggs"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Any particular comments related to this waiting list",
             "example" : "The prisoner has specifically requested to attend this activity"
           },
@@ -14187,11 +14372,11 @@
             "example" : 123456
           },
           "attendanceReasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason for attending or not"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Free text to allow comments to be put against the attendance",
             "example" : "Prisoner was too unwell to attend the activity."
           },
@@ -14201,19 +14386,19 @@
             "example" : "WAITING"
           },
           "payAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The amount in pence to pay the prisoner for the activity",
             "example" : 100
           },
           "bonusAmount" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The bonus amount in pence to pay the prisoner for the activity",
             "example" : 50
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER",
             "example" : true
           }
@@ -14259,7 +14444,7 @@
             "description" : "The content of the subject access request response"
           },
           "attachments" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The details of any attachments for the subject access request response",
             "items" : {
               "$ref" : "#/components/schemas/Attachment"
@@ -14295,19 +14480,19 @@
             "example" : 123456
           },
           "rate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The earning rate for one half day session for someone of this incentive level and pay band (in pence)",
             "example" : 150
           },
           "pieceRate" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to produced amounts of a product, this indicates the payment rate (in pence) per pieceRateItems produced",
             "example" : 150
           },
           "pieceRateItems" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Where payment is related to the number of items produced in a batch of a product, this is the batch size that attract 1 x pieceRate",
             "example" : 10
@@ -14329,75 +14514,75 @@
             "example" : false
           },
           "addressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Address Id",
             "example" : 543524
           },
           "addressType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Address Type. Note: Reference domain is ADDR_TYPE",
             "example" : "BUS"
           },
           "flat" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Flat",
             "example" : "3B"
           },
           "premise" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Premise",
             "example" : "Liverpool Prison"
           },
           "street" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Street",
             "example" : "Slinn Street"
           },
           "locality" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Locality",
             "example" : "Brincliffe"
           },
           "town" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Town/City. Note: Reference domain is CITY",
             "example" : "Liverpool"
           },
           "postalCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Postal Code",
             "example" : "LI1 5TH"
           },
           "county" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "County. Note: Reference domain is COUNTY",
             "example" : "HEREFORD"
           },
           "country" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Country. Note: Reference domain is COUNTRY",
             "example" : "ENG"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comment",
             "example" : "This is a comment text"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date Added",
             "example" : "Thu May 12 00:00:00 UTC 2005"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date ended",
             "example" : "Fri Feb 12 00:00:00 UTC 2021"
           },
           "phones" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The phone number associated with the address",
             "example" : "null",
             "items" : {
@@ -14405,7 +14590,7 @@
             }
           },
           "addressUsages" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The address usages/types",
             "example" : "null",
             "items" : {
@@ -14419,23 +14604,23 @@
         "type" : "object",
         "properties" : {
           "addressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Address ID of the associated address",
             "example" : 23422313
           },
           "addressUsage" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address usages",
             "example" : "HDC"
           },
           "addressUsageDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address usages description",
             "example" : "HDC Address"
           },
           "activeFlag" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Active Flag",
             "example" : true
           }
@@ -14446,7 +14631,11 @@
         "description" : "Allocation details with activity pay rate if applicable",
         "properties" : {
           "payRate" : {
-            "$ref" : "#/components/schemas/ActivityPayLite"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ActivityPayLite"
+            }, {
+              "type" : "null"
+            } ]
           },
           "allocation" : {
             "$ref" : "#/components/schemas/Allocation"
@@ -14459,20 +14648,32 @@
         "description" : "Cross references prisoners details with activity requirements",
         "properties" : {
           "workplaceRiskAssessment" : {
-            "$ref" : "#/components/schemas/WRASuitability",
-            "description" : "The prisoner's workplace risk assessment suitability"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/WRASuitability"
+            }, {
+              "type" : "null"
+            } ]
           },
           "incentiveLevel" : {
-            "$ref" : "#/components/schemas/IncentiveLevelSuitability",
-            "description" : "The prisoner's incentive level suitability"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/IncentiveLevelSuitability"
+            }, {
+              "type" : "null"
+            } ]
           },
           "education" : {
-            "$ref" : "#/components/schemas/EducationSuitability",
-            "description" : "The prisoner's education suitability"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EducationSuitability"
+            }, {
+              "type" : "null"
+            } ]
           },
           "releaseDate" : {
-            "$ref" : "#/components/schemas/ReleaseDateSuitability",
-            "description" : "The prisoner's release date suitability"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReleaseDateSuitability"
+            }, {
+              "type" : "null"
+            } ]
           },
           "allocations" : {
             "type" : "array",
@@ -14499,7 +14700,7 @@
             "$ref" : "#/components/schemas/Allocation"
           },
           "caseNoteText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "allocation" ]
@@ -14508,44 +14709,44 @@
         "type" : "object",
         "properties" : {
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "studyArea" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "educationLevel" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "numberOfYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "graduationYear" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "comment" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "school" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "isSpecialEducation" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "schedule" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "addresses" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/AddressDto"
             }
@@ -14582,7 +14783,7 @@
             "example" : true
           },
           "incentiveLevel" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner's current incentive level",
             "example" : "standard"
           }
@@ -14619,13 +14820,13 @@
             "example" : "TEL"
           },
           "phoneId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Phone Id",
             "example" : 2234232
           },
           "ext" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Telephone extension number",
             "example" : "123"
           }
@@ -14698,7 +14899,7 @@
             "example" : "2021-07-05T10:35:17"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional free text comments related to the non-association.",
             "example" : "Violent acts"
           }
@@ -14725,7 +14926,7 @@
             "example" : "Bloggs"
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of living unit (e.g. cell) the offender is assigned to.",
             "example" : "PVI-1-2-4"
           }
@@ -14758,7 +14959,7 @@
             "example" : "GF10101"
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The candidate's cell location",
             "example" : "MDI-1-1-101"
           },
@@ -14774,7 +14975,7 @@
             "description" : "The candidate's earliest release date"
           },
           "nonAssociations" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Does the prisoner have non-associations? Null implies that non-associations could not be retrieved"
           }
         },
@@ -14837,31 +15038,31 @@
             "example" : 5
           },
           "attendees" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The number of attendees for this scheduled instance",
             "example" : 5
           },
           "notRecorded" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The number of attendance records not recorded",
             "example" : 2
           },
           "attended" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The number of attendance recorded marked as attended",
             "example" : 2
           },
           "absences" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The number of attendance recorded marked as absence",
             "example" : 1
           },
           "paid" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The number of attendance recorded marked as paid",
             "example" : 2
@@ -14939,11 +15140,14 @@
             "example" : false
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/InternalLocation",
-            "description" : "The NOMIS internal location for this schedule"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/InternalLocation"
+            }, {
+              "type" : "null"
+            } ]
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID for this schedule"
           },
@@ -15045,7 +15249,7 @@
             "example" : 123456
           },
           "activityName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name of the activity",
             "example" : "Maths level 1"
           },
@@ -15107,7 +15311,7 @@
             "type" : "integer",
             "format" : "int64",
             "description" : "Location identifier.",
-            "example" : "null"
+            "example" : null
           },
           "locationType" : {
             "type" : "string",
@@ -15125,40 +15329,40 @@
             "example" : "null"
           },
           "locationUsage" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "What events this room can be used for.",
             "example" : "null"
           },
           "parentLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Identifier of this location's parent location.",
-            "example" : "null"
+            "example" : null
           },
           "currentOccupancy" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Current occupancy of location.",
-            "example" : "null"
+            "example" : null
           },
           "locationPrefix" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location prefix. Defines search prefix that will constrain search to this location and its subordinate locations.",
             "example" : "null"
           },
           "operationalCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Operational capacity of the location.",
-            "example" : "null"
+            "example" : null
           },
           "userDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User-friendly location description.",
             "example" : "null"
           },
           "internalLocationCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "example" : "null"
           }
         },
@@ -15262,12 +15466,12 @@
             "example" : "2022-09-30"
           },
           "startTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The start time for this scheduled instance",
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time for this scheduled instance",
             "example" : "10:00"
           },
@@ -15298,29 +15502,29 @@
             "example" : false
           },
           "internalLocationId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The NOMIS internal location id where this event takes place",
             "example" : 10001
           },
           "dpsLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The optional DPS location UUID",
             "example" : "b7602cc8-e769-4cbb-8194-62d8e655992a"
           },
           "internalLocationCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS location code for this event",
             "example" : "5-A-SIDE COM"
           },
           "internalLocationDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS location description for this event",
             "example" : "MDI-GYM-5-A-SIDE COM"
           },
           "scheduleDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "activityId" : {
             "type" : "integer",
@@ -15333,7 +15537,7 @@
             "description" : "The category for this activity, one of the high-level categories"
           },
           "activitySummary" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The title of the activity for this attendance record",
             "example" : "Math Level 1"
           },
@@ -15359,18 +15563,18 @@
             "example" : "AM"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should activity payment be issued for SICK, REST or OTHER",
             "example" : true
           },
           "attendanceStatus" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The activity attendance status - WAITING or COMPLETED",
             "enum" : [ "WAITING", "COMPLETED" ],
             "example" : "WAITING"
           },
           "attendanceReasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The code for the activity (non) attendance reason",
             "enum" : [ "SICK", "REFUSED", "NOT_REQUIRED", "REST", "CLASH", "OTHER", "AUTO_SUSPENDED", "SUSPENDED", "CANCELLED", "ATTENDED" ],
             "example" : "SICK"
@@ -15427,55 +15631,55 @@
             "example" : 123456
           },
           "serviceIdentifier" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Describes the service which generated this event",
             "example" : "prisoner-offender-search"
           },
           "eventType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The internal name for the event",
             "example" : "prisoner-offender-events.prisoner.cell-move"
           },
           "eventTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time that this event occurred",
             "example" : "2022-10-01T23:11:01"
           },
           "prisonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison code where this event took place",
             "example" : "MDI"
           },
           "prisonerNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prisoner number which this event relates to",
             "example" : "G1234FF"
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The booking ID related to this prisoner",
             "example" : 123456
           },
           "eventData" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the event that occurred",
             "example" : "The prisoner was moved to a different cell."
           },
           "acknowledgedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time that this event was acknowledged.",
             "example" : "2022-10-01T23:11:01"
           },
           "acknowledgedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the person who acknowledged the event.",
             "example" : "U4588F"
           },
           "eventDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "A simple description of the event acton",
             "enum" : [ "ACTIVITY_SUSPENDED", "ACTIVITY_ENDED", "RELEASED", "PERMANENT_RELEASE", "TEMPORARY_RELEASE" ],
             "example" : "ACTIVITY_SUSPENDED"
@@ -15557,11 +15761,11 @@
             "example" : "WAITING"
           },
           "attendanceReasonCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason for attending or not"
           },
           "issuePayment" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Should payment be issued for SICK, REST or OTHER",
             "example" : true
           },
@@ -15593,7 +15797,7 @@
             "example" : "Education"
           },
           "recordedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the attendance was updated",
             "example" : "2023-09-10T09:30:00"
@@ -15604,12 +15808,12 @@
             "example" : true
           },
           "eventTier" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "event tier",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ]
           },
           "incentiveLevelWarningIssued" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Was an incentive level warning issued for REFUSED",
             "example" : true
           }
@@ -15629,7 +15833,7 @@
             "description" : "the activity end time"
           },
           "internalLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "internal location description"
           },
           "inCell" : {
@@ -15746,8 +15950,11 @@
             "description" : "\n    The appointment's name combining the optional custom name with the category description. If custom name has been\n    specified, the name format will be \"Custom name (Category description)\" \n    "
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/AppointmentLocationSummary",
-            "description" : "The summary of the internal location this appointment will take place. Will be null if in cell = true"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentLocationSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inCell" : {
             "type" : "boolean",
@@ -15765,7 +15972,7 @@
             "example" : "13:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
@@ -15806,7 +16013,7 @@
             }
           },
           "eventTierType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "optional event tier",
             "enum" : [ "TIER_1", "TIER_2", "FOUNDATION" ]
           }
@@ -15837,13 +16044,16 @@
             "description" : "\n    The summary of the category used to create the set of appointment series\n    "
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment set. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/AppointmentLocationSummary",
-            "description" : "\n    The summary of the internal location of the appointment series in the set. Will be null if in cell = true\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentLocationSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inCell" : {
             "type" : "boolean",
@@ -15872,12 +16082,12 @@
             "description" : "\n    The username of the user that created this appointment set\n    "
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time one or more appointments in this set was last changed.\n    Will be null if no appointments in the set have been altered since they were created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user that last edited one or more appointments in this set.\n    Will be null if no appointments in the set have been altered since they were created\n    "
           }
         },
@@ -15913,21 +16123,30 @@
             "description" : "\n    The summary of the appointment series' category\n    "
           },
           "tier" : {
-            "$ref" : "#/components/schemas/EventTier",
-            "description" : "The tier for this appointment, as defined by the Future Prison Regime team"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventTier"
+            }, {
+              "type" : "null"
+            } ]
           },
           "organiser" : {
-            "$ref" : "#/components/schemas/EventOrganiser",
-            "description" : "The organiser of this appointment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventOrganiser"
+            }, {
+              "type" : "null"
+            } ]
           },
           "customName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Free text name further describing the appointment series. Used as part of the appointment name with the\n    format \"Custom name (Category description) if specified.\n    ",
             "example" : "Meeting with the governor"
           },
           "internalLocation" : {
-            "$ref" : "#/components/schemas/AppointmentLocationSummary",
-            "description" : "\n    The summary of the internal location this appointment series will take place. Will be null if in cell = true\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentLocationSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inCell" : {
             "type" : "boolean",
@@ -15945,21 +16164,24 @@
             "example" : "09:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of the appointment or appointments in the series",
             "example" : "10:30"
           },
           "schedule" : {
-            "$ref" : "#/components/schemas/AppointmentSeriesSchedule",
-            "description" : "\n    Describes the schedule of the appointment series i.e. how the appointments in the series repeat. The frequency of\n    those appointments and how many appointments there are in total in the series.\n    If null, the appointment series has only one appointment. Note that the presence of this property does not mean\n    there is more than one appointment as a number of appointments value of one is valid.\n    "
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AppointmentSeriesSchedule"
+            }, {
+              "type" : "null"
+            } ]
           },
           "extraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Extra information for the prisoner or prisoners attending the appointment or appointments in the series.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    extra information via the unlock list.\n    ",
             "example" : "This appointment will help adjusting to life outside of prison"
           },
           "prisonerExtraInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    Prisoner extra information for the prisoner or prisoners attending the appointment or appointments.\n    Shown only on the appointments details page and on printed movement slips. Wing staff will be notified there is\n    prisoner extra information via the unlock list.\n    ",
             "example" : "Please arrive 10 minutes early"
           },
@@ -15973,12 +16195,12 @@
             "description" : "\n    The username of the user that created this appointment series\n    "
           },
           "updatedTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "\n    The date and time one or more appointments in this series was last changed.\n    Will be null if no appointments in the series have been altered since they were created\n    "
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "\n    The username of the user that last edited one or more appointments in this series.\n    Will be null if no appointments in the series have been altered since they were created\n    "
           },
           "appointments" : {
@@ -16018,7 +16240,7 @@
             "example" : "13:00"
           },
           "endTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The end time of this appointment",
             "example" : "13:30"
           },
