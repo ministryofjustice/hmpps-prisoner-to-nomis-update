@@ -20,13 +20,14 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapMovementId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceIdsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceSummaryResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TapSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.awaitBoth
-import java.util.UUID
+import java.util.*
 
 @Service
 class TemporaryAbsencesAllPrisonersReconciliationService(
@@ -112,7 +113,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 
   suspend fun checkPrisonerTapsMatch(offenderNo: String, suppressTelemetry: Boolean = false): List<MismatchPrisonerTapsSummary> {
     val (nomisTaps, dpsTaps) = withContext(Dispatchers.Unconfined) {
-      async { nomisApiService.getTemporaryAbsenceSummary(offenderNo) } to
+      async { nomisApiService.getTapCounts(offenderNo) } to
         async { dpsApiService.getTapReconciliation(offenderNo) }
     }.awaitBoth()
     return checkTapsMatch(
@@ -123,13 +124,13 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     )
   }
 
-  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: OffenderTemporaryAbsenceSummaryResponse, suppressTelemetry: Boolean): List<MismatchPrisonerTapsSummary> {
+  private suspend fun checkTapsMatch(offenderNo: String, dpsTaps: PersonTapCounts, nomisTaps: TapSummary, suppressTelemetry: Boolean): List<MismatchPrisonerTapsSummary> {
     val mismatches = mutableListOf<MismatchPrisonerTapsSummary>()
     if (dpsTaps.authorisations.count != nomisTaps.applications.count.toInt()) {
       mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.AUTHORISATIONS, dpsTaps.authorisations.count, nomisTaps.applications.count.toInt())
     }
-    if (dpsTaps.occurrences.count != nomisTaps.scheduledOutMovements.count.toInt()) {
-      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.OCCURRENCES, dpsTaps.occurrences.count, nomisTaps.scheduledOutMovements.count.toInt())
+    if (dpsTaps.occurrences.count != nomisTaps.scheduledOuts.count.toInt()) {
+      mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.OCCURRENCES, dpsTaps.occurrences.count, nomisTaps.scheduledOuts.count.toInt())
     }
     if (dpsTaps.movements.scheduled.outCount != nomisTaps.movements.scheduled.outCount.toInt()) {
       mismatches += MismatchPrisonerTapsSummary(offenderNo, MismatchPrisonerTapsSummary.Types.SCHEDULED_OUT, dpsTaps.movements.scheduled.outCount, nomisTaps.movements.scheduled.outCount.toInt())
@@ -147,7 +148,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     if (mismatches.isEmpty()) return emptyList()
 
     withContext(Dispatchers.Unconfined) {
-      val nomisIds = async { nomisApiService.getTemporaryAbsenceIds(offenderNo) }
+      val nomisIds = async { nomisApiService.getTapIds(offenderNo) }
       val dpsIds = async { dpsApiService.getTapReconciliationDetail(offenderNo) }
       val mappings = async { mappingService.getTapMappingIds(offenderNo) }
 
@@ -177,7 +178,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
   // Checks each NOMIS ID for a mapping to a real DPS ID, and vice versa. Any not found are returned
   private fun findMismatchedIds(
     type: MismatchPrisonerTapsSummary.Types,
-    nomisIds: OffenderTemporaryAbsenceIdsResponse,
+    nomisIds: OffenderTapsIdsResponse,
     dpsIds: PersonTapDetail,
     mappings: TemporaryAbsencesPrisonerMappingIdsDto,
   ): MismatchedIds = when (type) {
@@ -218,7 +219,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
     }
   }.let { MismatchedIds(nomisIds = "${it.first}", dpsIds = "${it.second}") }
 
-  private fun List<OffenderTemporaryAbsenceId>.format() = joinToString(prefix = "[", postfix = "]") { "${it.bookingId}_${it.sequence}" }
+  private fun List<OffenderTapMovementId>.format() = joinToString(prefix = "[", postfix = "]") { "${it.bookingId}_${it.sequence}" }
 
   // This checks each element of `sources` exists in `targets` after transformation by `findTarget`
   private fun <SOURCE, TARGET> findMissing(
@@ -259,7 +260,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
   }
 
   private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedNomisMovements(
-    nomisMovementIds: List<OffenderTemporaryAbsenceId>,
+    nomisMovementIds: List<OffenderTapMovementId>,
     dpsMovementIds: List<UUID>,
   ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisId ->
     this.movements.find { nomisId.bookingId == it.nomisBookingId && nomisId.sequence == it.nomisMovementSeq }?.dpsMovementId
@@ -267,7 +268,7 @@ class TemporaryAbsencesAllPrisonersReconciliationService(
 
   private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedDpsMovements(
     dpsMovementIds: List<UUID>,
-    nomisMovementIds: List<OffenderTemporaryAbsenceId>,
+    nomisMovementIds: List<OffenderTapMovementId>,
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
     movements.find { dpsId == it.dpsMovementId }?.let { OffenderTemporaryAbsenceId(it.nomisBookingId, it.nomisMovementSeq) }
   }
