@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-09.657.7d034fe"
+    "version" : "2026-04-15.674.3c36842"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -5134,9 +5134,14 @@
           "prisoner" : {
             "$ref" : "#/components/schemas/PrisonerVisitedDetails",
             "description" : "The details of the prisoner being visited"
+          },
+          "visitorIssues" : {
+            "type" : "boolean",
+            "description" : "Indicates potential visitor issues with the visit, if there are issues then true, otherwise false.",
+            "example" : false
           }
         },
-        "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "locationDescription", "numberOfVisitors", "officialVisitId", "prisonCode", "prisonDescription", "prisoner", "startTime", "visitDate", "visitSlotId", "visitStatus", "visitStatusDescription", "visitTypeCode", "visitTypeDescription" ]
+        "required" : [ "createdBy", "createdTime", "dpsLocationId", "endTime", "locationDescription", "numberOfVisitors", "officialVisitId", "prisonCode", "prisonDescription", "prisoner", "startTime", "visitDate", "visitSlotId", "visitStatus", "visitStatusDescription", "visitTypeCode", "visitTypeDescription", "visitorIssues" ]
       },
       "PageMetadata" : {
         "type" : "object",
