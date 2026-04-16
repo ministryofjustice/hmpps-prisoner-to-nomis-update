@@ -1,12 +1,12 @@
 {
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.1",
   "info" : {
     "title" : "HMPPS External Movements Api",
     "contact" : {
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-08.1173.c84cded"
+    "version" : "2026-04-15.1196.16e8de7"
   },
   "servers" : [ {
     "url" : "https://external-movements-api-dev.hmpps.service.justice.gov.uk",
@@ -96,9 +96,13 @@
                 }, {
                   "$ref" : "#/components/schemas/MarkOccurrenceOverdue"
                 }, {
+                  "$ref" : "#/components/schemas/PauseOccurrence"
+                }, {
                   "$ref" : "#/components/schemas/RecategoriseOccurrence"
                 }, {
                   "$ref" : "#/components/schemas/RescheduleOccurrence"
+                }, {
+                  "$ref" : "#/components/schemas/ResumeOccurrence"
                 }, {
                   "$ref" : "#/components/schemas/ScheduleOccurrence"
                 } ]
@@ -208,7 +212,11 @@
                 }, {
                   "$ref" : "#/components/schemas/ExpireAuthorisation"
                 }, {
+                  "$ref" : "#/components/schemas/PauseAuthorisation"
+                }, {
                   "$ref" : "#/components/schemas/RecategoriseAuthorisation"
+                }, {
+                  "$ref" : "#/components/schemas/ResumeAuthorisation"
                 } ]
               }
             }
@@ -1055,11 +1063,22 @@
   "components" : {
     "schemas" : {
       "CancelOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "ChangeOccurrenceAccompaniment" : {
+        "required" : [ "accompaniedByCode" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
@@ -1067,24 +1086,35 @@
           "properties" : {
             "accompaniedByCode" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "accompaniedByCode" ]
+        } ]
       },
       "ChangeOccurrenceComments" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
           "type" : "object",
           "properties" : {
             "comments" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
         } ]
       },
       "ChangeOccurrenceContactInformation" : {
+        "required" : [ "information" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
@@ -1092,12 +1122,17 @@
           "properties" : {
             "information" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "information" ]
+        } ]
       },
       "ChangeOccurrenceLocation" : {
+        "required" : [ "location" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
@@ -1105,12 +1140,17 @@
           "properties" : {
             "location" : {
               "$ref" : "#/components/schemas/Location"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "location" ]
+        } ]
       },
       "ChangeOccurrenceTransport" : {
+        "required" : [ "transportCode" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
@@ -1118,59 +1158,109 @@
           "properties" : {
             "transportCode" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "transportCode" ]
+        } ]
       },
       "CommenceOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "CompleteOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "DenyOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "ExpireOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "Location" : {
         "type" : "object",
         "properties" : {
           "description" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "address" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "postcode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "uprn" : {
             "type" : "integer",
-            "format" : "int64"
+            "format" : "int64",
+            "nullable" : true
           }
         }
       },
       "MarkOccurrenceOverdue" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "OccurrenceAction" : {
+        "required" : [ "type" ],
         "type" : "object",
-        "discriminator" : {
-          "propertyName" : "type"
-        },
         "properties" : {
           "reason" : {
             "type" : "string"
@@ -1179,30 +1269,56 @@
             "type" : "string"
           }
         },
-        "required" : [ "type" ]
+        "discriminator" : {
+          "propertyName" : "type"
+        }
+      },
+      "PauseOccurrence" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
       },
       "RecategoriseOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
           "type" : "object",
           "properties" : {
             "absenceTypeCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceSubTypeCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceReasonCategoryCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceReasonCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
         } ]
       },
       "RescheduleOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
         }, {
@@ -1210,21 +1326,51 @@
           "properties" : {
             "start" : {
               "type" : "string",
-              "format" : "date-time"
+              "format" : "date-time",
+              "nullable" : true
             },
             "end" : {
               "type" : "string",
-              "format" : "date-time"
+              "format" : "date-time",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ResumeOccurrence" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
         } ]
       },
       "ScheduleOccurrence" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/OccurrenceAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "AuditHistory" : {
+        "required" : [ "content" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -1233,10 +1379,10 @@
               "$ref" : "#/components/schemas/AuditedAction"
             }
           }
-        },
-        "required" : [ "content" ]
+        }
       },
       "AuditedAction" : {
+        "required" : [ "changes", "domainEvents", "occurredAt", "user" ],
         "type" : "object",
         "properties" : {
           "user" : {
@@ -1253,7 +1399,8 @@
             }
           },
           "reason" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "changes" : {
             "type" : "array",
@@ -1261,21 +1408,27 @@
               "$ref" : "#/components/schemas/Change"
             }
           }
-        },
-        "required" : [ "changes", "domainEvents", "occurredAt", "user" ]
+        }
       },
       "Change" : {
+        "required" : [ "propertyName" ],
         "type" : "object",
         "properties" : {
           "propertyName" : {
             "type" : "string"
           },
-          "previous" : { },
-          "change" : { }
-        },
-        "required" : [ "propertyName" ]
+          "previous" : {
+            "type" : "object",
+            "nullable" : true
+          },
+          "change" : {
+            "type" : "object",
+            "nullable" : true
+          }
+        }
       },
       "User" : {
+        "required" : [ "name", "username" ],
         "type" : "object",
         "properties" : {
           "username" : {
@@ -1284,19 +1437,25 @@
           "name" : {
             "type" : "string"
           }
-        },
-        "required" : [ "name", "username" ]
+        }
       },
       "ApproveAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "AuthorisationAction" : {
+        "required" : [ "type" ],
         "type" : "object",
-        "discriminator" : {
-          "propertyName" : "type"
-        },
         "properties" : {
           "reason" : {
             "type" : "string"
@@ -1305,14 +1464,27 @@
             "type" : "string"
           }
         },
-        "required" : [ "type" ]
+        "discriminator" : {
+          "propertyName" : "type"
+        }
       },
       "CancelAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "ChangeAuthorisationAccompaniment" : {
+        "required" : [ "accompaniedByCode" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
@@ -1320,24 +1492,35 @@
           "properties" : {
             "accompaniedByCode" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "accompaniedByCode" ]
+        } ]
       },
       "ChangeAuthorisationComments" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
           "type" : "object",
           "properties" : {
             "comments" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
         } ]
       },
       "ChangeAuthorisationDateRange" : {
+        "required" : [ "end", "start" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
@@ -1350,12 +1533,17 @@
             "end" : {
               "type" : "string",
               "format" : "date"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "end", "start" ]
+        } ]
       },
       "ChangeAuthorisationLocation" : {
+        "required" : [ "location" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
@@ -1363,29 +1551,39 @@
           "properties" : {
             "location" : {
               "$ref" : "#/components/schemas/Location"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "location" ]
+        } ]
       },
       "ChangeAuthorisationLocations" : {
+        "required" : [ "locations" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
           "type" : "object",
           "properties" : {
             "locations" : {
+              "uniqueItems" : true,
               "type" : "array",
               "items" : {
                 "$ref" : "#/components/schemas/Location"
-              },
-              "uniqueItems" : true
+              }
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "locations" ]
+        } ]
       },
       "ChangeAuthorisationTransport" : {
+        "required" : [ "transportCode" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
@@ -1393,12 +1591,17 @@
           "properties" : {
             "transportCode" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "transportCode" ]
+        } ]
       },
       "ChangePrisonPerson" : {
+        "required" : [ "personIdentifier", "prisonCode" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
@@ -1409,53 +1612,130 @@
             },
             "prisonCode" : {
               "type" : "string"
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "personIdentifier", "prisonCode" ]
+        } ]
       },
       "ClearAuthorisationSchedule" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "DeferAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "DenyAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "ExpireAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "PauseAuthorisation" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
         } ]
       },
       "RecategoriseAuthorisation" : {
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationAction"
         }, {
           "type" : "object",
           "properties" : {
             "absenceTypeCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceSubTypeCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceReasonCategoryCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
             },
             "absenceReasonCode" : {
-              "type" : "string"
+              "type" : "string",
+              "nullable" : true
+            },
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
+            }
+          }
+        } ]
+      },
+      "ResumeAuthorisation" : {
+        "type" : "object",
+        "allOf" : [ {
+          "$ref" : "#/components/schemas/AuthorisationAction"
+        }, {
+          "type" : "object",
+          "properties" : {
+            "reason" : {
+              "type" : "string",
+              "nullable" : true
             }
           }
         } ]
       },
       "SyncAtAndBy" : {
+        "required" : [ "at", "by" ],
         "type" : "object",
         "properties" : {
           "at" : {
@@ -1465,19 +1745,21 @@
           "by" : {
             "type" : "string"
           }
-        },
-        "required" : [ "at", "by" ]
+        }
       },
       "SyncWriteTapMovement" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "occurrenceId" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "occurredAt" : {
             "type" : "string",
@@ -1500,39 +1782,45 @@
             "type" : "string"
           },
           "accompaniedByComments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "string"
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ]
+        }
       },
       "SyncResponse" : {
+        "required" : [ "id" ],
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
             "format" : "uuid"
           }
-        },
-        "required" : [ "id" ]
+        }
       },
       "SyncWriteTapAuthorisation" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "prisonCode" : {
             "type" : "string"
@@ -1541,10 +1829,12 @@
             "type" : "string"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -1573,30 +1863,38 @@
             "type" : "string"
           },
           "location" : {
-            "$ref" : "#/components/schemas/Location"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            } ]
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ]
+        }
       },
       "SyncWriteTapOccurrence" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "start", "transportCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "isCancelled" : {
             "type" : "boolean"
@@ -1613,10 +1911,12 @@
             "$ref" : "#/components/schemas/Location"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -1628,25 +1928,30 @@
             "type" : "string"
           },
           "contactInformation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "start", "transportCode" ]
+        }
       },
       "MigrateTapAuthorisation" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "occurrences", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "prisonCode" : {
@@ -1656,10 +1961,12 @@
             "type" : "string"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -1688,16 +1995,23 @@
             "type" : "string"
           },
           "location" : {
-            "$ref" : "#/components/schemas/Location"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            } ]
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "integer",
@@ -1705,7 +2019,8 @@
           },
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "occurrences" : {
             "type" : "array",
@@ -1713,10 +2028,10 @@
               "$ref" : "#/components/schemas/MigrateTapOccurrence"
             }
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "endTime", "legacyId", "occurrences", "prisonCode", "repeat", "start", "startTime", "statusCode", "transportCode" ]
+        }
       },
       "MigrateTapMovement" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ],
         "type" : "object",
         "properties" : {
           "occurredAt" : {
@@ -1740,28 +2055,34 @@
             "type" : "string"
           },
           "accompaniedByComments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "string"
           },
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "legacyId", "location", "occurredAt", "prisonCode" ]
+        }
       },
       "MigrateTapOccurrence" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "movements", "start", "transportCode" ],
         "type" : "object",
         "properties" : {
           "isCancelled" : {
@@ -1779,10 +2100,12 @@
             "$ref" : "#/components/schemas/Location"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -1794,16 +2117,21 @@
             "type" : "string"
           },
           "contactInformation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "legacyId" : {
             "type" : "integer",
@@ -1811,7 +2139,8 @@
           },
           "id" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "movements" : {
             "type" : "array",
@@ -1819,10 +2148,10 @@
               "$ref" : "#/components/schemas/MigrateTapMovement"
             }
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "isCancelled", "legacyId", "location", "movements", "start", "transportCode" ]
+        }
       },
       "MigrateTapRequest" : {
+        "required" : [ "temporaryAbsences", "unscheduledMovements" ],
         "type" : "object",
         "properties" : {
           "temporaryAbsences" : {
@@ -1837,10 +2166,10 @@
               "$ref" : "#/components/schemas/MigrateTapMovement"
             }
           }
-        },
-        "required" : [ "temporaryAbsences", "unscheduledMovements" ]
+        }
       },
       "MigrateTapResponse" : {
+        "required" : [ "temporaryAbsences", "unscheduledMovements" ],
         "type" : "object",
         "properties" : {
           "temporaryAbsences" : {
@@ -1855,10 +2184,10 @@
               "$ref" : "#/components/schemas/MigratedMovement"
             }
           }
-        },
-        "required" : [ "temporaryAbsences", "unscheduledMovements" ]
+        }
       },
       "MigratedAuthorisation" : {
+        "required" : [ "id", "legacyId", "occurrences" ],
         "type" : "object",
         "properties" : {
           "legacyId" : {
@@ -1875,10 +2204,10 @@
               "$ref" : "#/components/schemas/MigratedOccurrence"
             }
           }
-        },
-        "required" : [ "id", "legacyId", "occurrences" ]
+        }
       },
       "MigratedMovement" : {
+        "required" : [ "id", "legacyId" ],
         "type" : "object",
         "properties" : {
           "legacyId" : {
@@ -1888,10 +2217,10 @@
             "type" : "string",
             "format" : "uuid"
           }
-        },
-        "required" : [ "id", "legacyId" ]
+        }
       },
       "MigratedOccurrence" : {
+        "required" : [ "id", "legacyId", "movements" ],
         "type" : "object",
         "properties" : {
           "legacyId" : {
@@ -1908,10 +2237,10 @@
               "$ref" : "#/components/schemas/MigratedMovement"
             }
           }
-        },
-        "required" : [ "id", "legacyId", "movements" ]
+        }
       },
       "MoveTemporaryAbsencesRequest" : {
+        "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ],
         "type" : "object",
         "properties" : {
           "fromPersonIdentifier" : {
@@ -1921,26 +2250,31 @@
             "type" : "string"
           },
           "authorisationIds" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
               "format" : "uuid"
-            },
-            "uniqueItems" : true
+            }
           },
           "unscheduledMovementIds" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
               "format" : "uuid"
-            },
-            "uniqueItems" : true
+            }
           }
-        },
-        "required" : [ "authorisationIds", "fromPersonIdentifier", "toPersonIdentifier", "unscheduledMovementIds" ]
+        }
       },
       "AuthorisationSchedule" : {
+        "required" : [ "type" ],
         "type" : "object",
+        "properties" : {
+          "type" : {
+            "$ref" : "#/components/schemas/AuthorisationScheduleType"
+          }
+        },
         "description" : "AuthorisationSchedule",
         "discriminator" : {
           "propertyName" : "type",
@@ -1951,19 +2285,14 @@
             "BIWEEKLY" : "#/components/schemas/BiweeklySchedule",
             "SHIFT" : "#/components/schemas/ShiftSchedule"
           }
-        },
-        "properties" : {
-          "type" : {
-            "$ref" : "#/components/schemas/AuthorisationScheduleType"
-          }
-        },
-        "required" : [ "type" ]
+        }
       },
       "AuthorisationScheduleType" : {
         "type" : "string",
         "enum" : [ "SINGLE", "FREEFORM", "WEEKLY", "BIWEEKLY", "SHIFT" ]
       },
       "BiweeklyPattern" : {
+        "required" : [ "weekA", "weekB" ],
         "type" : "object",
         "properties" : {
           "weekA" : {
@@ -1978,10 +2307,11 @@
               "$ref" : "#/components/schemas/WeekDayPattern"
             }
           }
-        },
-        "required" : [ "weekA", "weekB" ]
+        }
       },
       "BiweeklySchedule" : {
+        "required" : [ "biweeklyPattern", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationSchedule"
         }, {
@@ -1992,26 +2322,30 @@
             },
             "absencesPerDay" : {
               "type" : "integer",
-              "format" : "int32"
+              "format" : "int32",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "biweeklyPattern", "type" ]
+        } ]
       },
       "CreateTapAuthorisationRequest" : {
+        "required" : [ "absenceTypeCode", "accompaniedByCode", "end", "occurrences", "repeat", "start", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "absenceTypeCode" : {
             "type" : "string"
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCategoryCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "occurrences" : {
             "type" : "array",
@@ -2021,7 +2355,7 @@
           },
           "statusCode" : {
             "type" : "string",
-            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
+            "enum" : [ "PENDING", "APPROVED", "PAUSED", "CANCELLED", "DENIED", "EXPIRED" ]
           },
           "accompaniedByCode" : {
             "type" : "string"
@@ -2030,7 +2364,8 @@
             "type" : "string"
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "repeat" : {
             "type" : "boolean"
@@ -2044,9 +2379,11 @@
             "format" : "date"
           },
           "contactInformation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "schedule" : {
+            "nullable" : true,
             "oneOf" : [ {
               "$ref" : "#/components/schemas/BiweeklySchedule"
             }, {
@@ -2059,10 +2396,11 @@
               "$ref" : "#/components/schemas/WeeklySchedule"
             } ]
           }
-        },
-        "required" : [ "absenceTypeCode", "accompaniedByCode", "end", "occurrences", "repeat", "start", "statusCode", "transportCode" ]
+        }
       },
       "DayShiftPattern" : {
+        "required" : [ "count", "returnTime", "startTime", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/ShiftPattern"
         }, {
@@ -2075,16 +2413,18 @@
               "type" : "string"
             }
           }
-        } ],
-        "required" : [ "count", "returnTime", "startTime", "type" ]
+        } ]
       },
       "FreeFormSchedule" : {
+        "required" : [ "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationSchedule"
-        } ],
-        "required" : [ "type" ]
+        } ]
       },
       "NightShiftPattern" : {
+        "required" : [ "count", "returnTime", "startTime", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/ShiftPattern"
         }, {
@@ -2097,10 +2437,10 @@
               "type" : "string"
             }
           }
-        } ],
-        "required" : [ "count", "returnTime", "startTime", "type" ]
+        } ]
       },
       "OccurrenceRequest" : {
+        "required" : [ "end", "location", "start" ],
         "type" : "object",
         "properties" : {
           "start" : {
@@ -2114,26 +2454,18 @@
           "location" : {
             "$ref" : "#/components/schemas/Location"
           }
-        },
-        "required" : [ "end", "location", "start" ]
+        }
       },
       "RestShiftPattern" : {
+        "required" : [ "count", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/ShiftPattern"
-        } ],
-        "required" : [ "count", "type" ]
+        } ]
       },
       "ShiftPattern" : {
+        "required" : [ "count", "type" ],
         "type" : "object",
-        "description" : "ShiftPattern",
-        "discriminator" : {
-          "propertyName" : "type",
-          "mapping" : {
-            "DAY" : "#/components/schemas/DayShiftPattern",
-            "NIGHT" : "#/components/schemas/NightShiftPattern",
-            "REST" : "#/components/schemas/RestShiftPattern"
-          }
-        },
         "properties" : {
           "count" : {
             "type" : "integer",
@@ -2143,13 +2475,23 @@
             "$ref" : "#/components/schemas/ShiftPatternType"
           }
         },
-        "required" : [ "count", "type" ]
+        "description" : "ShiftPattern",
+        "discriminator" : {
+          "propertyName" : "type",
+          "mapping" : {
+            "DAY" : "#/components/schemas/DayShiftPattern",
+            "NIGHT" : "#/components/schemas/NightShiftPattern",
+            "REST" : "#/components/schemas/RestShiftPattern"
+          }
+        }
       },
       "ShiftPatternType" : {
         "type" : "string",
         "enum" : [ "DAY", "NIGHT", "REST" ]
       },
       "ShiftSchedule" : {
+        "required" : [ "shiftPattern", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationSchedule"
         }, {
@@ -2168,10 +2510,11 @@
               }
             }
           }
-        } ],
-        "required" : [ "shiftPattern", "type" ]
+        } ]
       },
       "SingleSchedule" : {
+        "required" : [ "returnTime", "startTime", "type" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationSchedule"
         }, {
@@ -2184,10 +2527,10 @@
               "type" : "string"
             }
           }
-        } ],
-        "required" : [ "returnTime", "startTime", "type" ]
+        } ]
       },
       "WeekDayPattern" : {
+        "required" : [ "day", "overnight", "returnTime", "startTime" ],
         "type" : "object",
         "properties" : {
           "day" : {
@@ -2203,10 +2546,11 @@
           "returnTime" : {
             "type" : "string"
           }
-        },
-        "required" : [ "day", "overnight", "returnTime", "startTime" ]
+        }
       },
       "WeeklySchedule" : {
+        "required" : [ "type", "weeklyPattern" ],
+        "type" : "object",
         "allOf" : [ {
           "$ref" : "#/components/schemas/AuthorisationSchedule"
         }, {
@@ -2220,23 +2564,24 @@
             },
             "absencesPerDay" : {
               "type" : "integer",
-              "format" : "int32"
+              "format" : "int32",
+              "nullable" : true
             }
           }
-        } ],
-        "required" : [ "type", "weeklyPattern" ]
+        } ]
       },
       "ReferenceId" : {
+        "required" : [ "id" ],
         "type" : "object",
         "properties" : {
           "id" : {
             "type" : "string",
             "format" : "uuid"
           }
-        },
-        "required" : [ "id" ]
+        }
       },
       "CreateOccurrenceRequest" : {
+        "required" : [ "end", "location", "start" ],
         "type" : "object",
         "properties" : {
           "start" : {
@@ -2251,12 +2596,13 @@
             "$ref" : "#/components/schemas/Location"
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "end", "location", "start" ]
+        }
       },
       "AbsenceCategorisationFilter" : {
+        "required" : [ "codes", "domainCode" ],
         "type" : "object",
         "properties" : {
           "domainCode" : {
@@ -2264,17 +2610,17 @@
             "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
           },
           "codes" : {
+            "minItems" : 1,
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string"
-            },
-            "minItems" : 1,
-            "uniqueItems" : true
+            }
           }
-        },
-        "required" : [ "codes", "domainCode" ]
+        }
       },
       "TapOccurrenceSearchRequest" : {
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ],
         "type" : "object",
         "properties" : {
           "prisonCode" : {
@@ -2282,43 +2628,49 @@
           },
           "start" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "end" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "status" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
-            },
-            "uniqueItems" : true
+              "enum" : [ "PENDING", "SCHEDULED", "PAUSED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+            }
           },
           "absenceCategorisation" : {
-            "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            } ]
           },
           "query" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "page" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "size" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "sort" : {
             "type" : "string"
           }
-        },
-        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
+        }
       },
       "CodedDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
         "properties" : {
           "code" : {
@@ -2328,22 +2680,23 @@
             "type" : "string"
           },
           "hintText" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "code", "description" ]
+        }
       },
       "PageMetadata" : {
+        "required" : [ "totalElements" ],
         "type" : "object",
         "properties" : {
           "totalElements" : {
             "type" : "integer",
             "format" : "int64"
           }
-        },
-        "required" : [ "totalElements" ]
+        }
       },
       "Person" : {
+        "required" : [ "firstName", "lastName", "personIdentifier" ],
         "type" : "object",
         "properties" : {
           "personIdentifier" : {
@@ -2356,15 +2709,17 @@
             "type" : "string"
           },
           "prisonCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "cellLocation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "firstName", "lastName", "personIdentifier" ]
+        }
       },
       "TapOccurrenceAuthorisation" : {
+        "required" : [ "id", "person", "repeat", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2378,21 +2733,34 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "repeat" : {
             "type" : "boolean"
           },
           "schedule" : {
+            "nullable" : true,
             "oneOf" : [ {
               "$ref" : "#/components/schemas/BiweeklySchedule"
             }, {
@@ -2405,10 +2773,10 @@
               "$ref" : "#/components/schemas/WeeklySchedule"
             } ]
           }
-        },
-        "required" : [ "id", "person", "repeat", "status" ]
+        }
       },
       "TapOccurrenceResult" : {
+        "required" : [ "absenceCategorisation", "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "start", "status", "transport" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2422,16 +2790,28 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "start" : {
             "type" : "string",
@@ -2456,10 +2836,10 @@
           "absenceCategorisation" : {
             "type" : "string"
           }
-        },
-        "required" : [ "absenceCategorisation", "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "start", "status", "transport" ]
+        }
       },
       "TapOccurrenceSearchResponse" : {
+        "required" : [ "content", "metadata" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -2471,10 +2851,10 @@
           "metadata" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        },
-        "required" : [ "content", "metadata" ]
+        }
       },
       "TapAuthorisationSearchRequest" : {
+        "required" : [ "page", "prisonCode", "size", "sort", "status" ],
         "type" : "object",
         "properties" : {
           "prisonCode" : {
@@ -2482,43 +2862,49 @@
           },
           "start" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "end" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "status" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
-            },
-            "uniqueItems" : true
+              "enum" : [ "PENDING", "APPROVED", "PAUSED", "CANCELLED", "DENIED", "EXPIRED" ]
+            }
           },
           "absenceCategorisation" : {
-            "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            } ]
           },
           "query" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "page" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "size" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "sort" : {
             "type" : "string"
           }
-        },
-        "required" : [ "page", "prisonCode", "size", "sort", "status" ]
+        }
       },
       "TapAuthorisationResult" : {
+        "required" : [ "absenceCategorisation", "end", "id", "locations", "occurrenceCount", "person", "repeat", "start", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2532,16 +2918,28 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "repeat" : {
             "type" : "boolean"
@@ -2567,10 +2965,10 @@
           "absenceCategorisation" : {
             "type" : "string"
           }
-        },
-        "required" : [ "absenceCategorisation", "end", "id", "locations", "occurrenceCount", "person", "repeat", "start", "status" ]
+        }
       },
       "TapAuthorisationSearchResponse" : {
+        "required" : [ "content", "metadata" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -2582,48 +2980,53 @@
           "metadata" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        },
-        "required" : [ "content", "metadata" ]
+        }
       },
       "PersonTapSearchRequest" : {
+        "required" : [ "page", "size", "sort", "status" ],
         "type" : "object",
         "properties" : {
           "start" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "end" : {
             "type" : "string",
-            "format" : "date"
+            "format" : "date",
+            "nullable" : true
           },
           "status" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
-            },
-            "uniqueItems" : true
+              "enum" : [ "PENDING", "SCHEDULED", "PAUSED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+            }
           },
           "absenceCategorisation" : {
-            "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AbsenceCategorisationFilter"
+            } ]
           },
           "page" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "size" : {
+            "minimum" : 1,
             "type" : "integer",
-            "format" : "int32",
-            "minimum" : 1
+            "format" : "int32"
           },
           "sort" : {
             "type" : "string"
           }
-        },
-        "required" : [ "page", "size", "sort", "status" ]
+        }
       },
       "PersonOccurrenceAuthorisation" : {
+        "required" : [ "id", "repeat", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2634,24 +3037,36 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "repeat" : {
             "type" : "boolean"
           }
-        },
-        "required" : [ "id", "repeat", "status" ]
+        }
       },
       "PersonOccurrenceResult" : {
+        "required" : [ "absenceCategorisation", "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "prison", "start", "status", "transport" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2668,16 +3083,28 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "start" : {
             "type" : "string",
@@ -2702,10 +3129,10 @@
           "absenceCategorisation" : {
             "type" : "string"
           }
-        },
-        "required" : [ "absenceCategorisation", "accompaniedBy", "authorisation", "end", "id", "isCancelled", "location", "prison", "start", "status", "transport" ]
+        }
       },
       "PersonTapSearchResponse" : {
+        "required" : [ "content", "metadata" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -2717,10 +3144,10 @@
           "metadata" : {
             "$ref" : "#/components/schemas/PageMetadata"
           }
-        },
-        "required" : [ "content", "metadata" ]
+        }
       },
       "Prison" : {
+        "required" : [ "code", "name" ],
         "type" : "object",
         "properties" : {
           "code" : {
@@ -2729,10 +3156,10 @@
           "name" : {
             "type" : "string"
           }
-        },
-        "required" : [ "code", "name" ]
+        }
       },
       "TapOccurrence" : {
+        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prison", "start", "status", "totalOccurrences", "transport" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2746,16 +3173,28 @@
             "$ref" : "#/components/schemas/TapOccurrence.Authorisation"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "status" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -2778,10 +3217,12 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "contactInformation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "occurrencePosition" : {
             "type" : "integer",
@@ -2797,10 +3238,10 @@
               "$ref" : "#/components/schemas/TapOccurrence.Movement"
             }
           }
-        },
-        "required" : [ "accompaniedBy", "authorisation", "end", "id", "location", "movements", "occurrencePosition", "prison", "start", "status", "totalOccurrences", "transport" ]
+        }
       },
       "TapOccurrence.Authorisation" : {
+        "required" : [ "accompaniedBy", "end", "id", "person", "repeat", "start", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2822,16 +3263,28 @@
             "format" : "date"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "accompaniedBy" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -2840,9 +3293,11 @@
             "type" : "boolean"
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "schedule" : {
+            "nullable" : true,
             "oneOf" : [ {
               "$ref" : "#/components/schemas/BiweeklySchedule"
             }, {
@@ -2855,10 +3310,10 @@
               "$ref" : "#/components/schemas/WeeklySchedule"
             } ]
           }
-        },
-        "required" : [ "accompaniedBy", "end", "id", "person", "repeat", "start", "status" ]
+        }
       },
       "TapOccurrence.Movement" : {
+        "required" : [ "direction", "id", "location", "occurredAt" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2876,10 +3331,10 @@
           "location" : {
             "$ref" : "#/components/schemas/Location"
           }
-        },
-        "required" : [ "direction", "id", "location", "occurredAt" ]
+        }
       },
       "TapMovement" : {
+        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prison" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2890,7 +3345,10 @@
             "$ref" : "#/components/schemas/Person"
           },
           "occurrence" : {
-            "$ref" : "#/components/schemas/TapMovement.Occurrence"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/TapMovement.Occurrence"
+            } ]
           },
           "occurredAt" : {
             "type" : "string",
@@ -2913,15 +3371,17 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "accompaniedByComments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "absenceReason", "accompaniedBy", "direction", "id", "location", "occurredAt", "person", "prison" ]
+        }
       },
       "TapMovement.Occurrence" : {
+        "required" : [ "end", "id", "start", "status" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2929,16 +3389,28 @@
             "format" : "uuid"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "status" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -2951,10 +3423,10 @@
             "type" : "string",
             "format" : "date-time"
           }
-        },
-        "required" : [ "end", "id", "start", "status" ]
+        }
       },
       "TapAuthorisation" : {
+        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prison", "repeat", "start", "status", "totalOccurrenceCount", "transport" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -2971,16 +3443,28 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "accompaniedBy" : {
             "$ref" : "#/components/schemas/CodedDescription"
@@ -3010,13 +3494,14 @@
             }
           },
           "locations" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "$ref" : "#/components/schemas/Location"
-            },
-            "uniqueItems" : true
+            }
           },
           "schedule" : {
+            "nullable" : true,
             "oneOf" : [ {
               "$ref" : "#/components/schemas/BiweeklySchedule"
             }, {
@@ -3030,12 +3515,13 @@
             } ]
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "accompaniedBy", "end", "id", "locations", "occurrences", "person", "prison", "repeat", "start", "status", "totalOccurrenceCount", "transport" ]
+        }
       },
       "TapAuthorisation.Occurrence" : {
+        "required" : [ "accompaniedBy", "end", "id", "location", "start", "status", "transport" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3046,16 +3532,28 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "absenceType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceSubType" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReasonCategory" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "absenceReason" : {
-            "$ref" : "#/components/schemas/CodedDescription"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/CodedDescription"
+            } ]
           },
           "start" : {
             "type" : "string",
@@ -3075,12 +3573,13 @@
             "$ref" : "#/components/schemas/CodedDescription"
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           }
-        },
-        "required" : [ "accompaniedBy", "end", "id", "location", "start", "status", "transport" ]
+        }
       },
       "SyncReadTapOccurrence" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "end", "id", "location", "start", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3105,10 +3604,12 @@
             "$ref" : "#/components/schemas/Location"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -3120,21 +3621,26 @@
             "type" : "string"
           },
           "contactInformation" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "authorisation", "created", "end", "id", "location", "start", "statusCode", "transportCode" ]
+        }
       },
       "SyncReadTapOccurrenceAuthorisation" : {
+        "required" : [ "id", "personIdentifier", "prisonCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3147,10 +3653,10 @@
           "prisonCode" : {
             "type" : "string"
           }
-        },
-        "required" : [ "id", "personIdentifier", "prisonCode" ]
+        }
       },
       "SyncReadTapMovement" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "id", "location", "occurredAt", "personIdentifier", "prisonCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3159,7 +3665,8 @@
           },
           "occurrenceId" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "personIdentifier" : {
             "type" : "string"
@@ -3185,21 +3692,26 @@
             "type" : "string"
           },
           "accompaniedByComments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "direction", "id", "location", "occurredAt", "personIdentifier", "prisonCode" ]
+        }
       },
       "SyncReadTapAuthorisation" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3216,10 +3728,12 @@
             "type" : "string"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -3245,10 +3759,14 @@
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "occurrences" : {
             "type" : "array",
@@ -3256,10 +3774,10 @@
               "$ref" : "#/components/schemas/SyncReadTapAuthorisationOccurrence"
             }
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "occurrences", "personIdentifier", "prisonCode", "repeat", "start", "statusCode", "transportCode" ]
+        }
       },
       "SyncReadTapAuthorisationOccurrence" : {
+        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "location", "start", "statusCode", "transportCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3281,10 +3799,12 @@
             "$ref" : "#/components/schemas/Location"
           },
           "absenceTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceSubTypeCode" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "absenceReasonCode" : {
             "type" : "string"
@@ -3296,34 +3816,38 @@
             "type" : "string"
           },
           "comments" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "created" : {
             "$ref" : "#/components/schemas/SyncAtAndBy"
           },
           "updated" : {
-            "$ref" : "#/components/schemas/SyncAtAndBy"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/SyncAtAndBy"
+            } ]
           }
-        },
-        "required" : [ "absenceReasonCode", "accompaniedByCode", "created", "end", "id", "location", "start", "statusCode", "transportCode" ]
+        }
       },
       "SearchScheduledMovementsRequest" : {
+        "required" : [ "end", "includeLocation", "includeSensitive", "movementTypes", "personIdentifiers", "start" ],
         "type" : "object",
         "properties" : {
           "movementTypes" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string",
               "enum" : [ "TEMPORARY_ABSENCE" ]
-            },
-            "uniqueItems" : true
+            }
           },
           "personIdentifiers" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string"
-            },
-            "uniqueItems" : true
+            }
           },
           "start" : {
             "type" : "string",
@@ -3339,26 +3863,26 @@
           "includeLocation" : {
             "type" : "boolean"
           }
-        },
-        "required" : [ "end", "includeLocation", "includeSensitive", "movementTypes", "personIdentifiers", "start" ]
+        }
       },
       "Detail" : {
+        "required" : [ "requiredRoles", "uiUrl" ],
         "type" : "object",
         "properties" : {
           "uiUrl" : {
             "type" : "string"
           },
           "requiredRoles" : {
+            "uniqueItems" : true,
             "type" : "array",
             "items" : {
               "type" : "string"
-            },
-            "uniqueItems" : true
+            }
           }
-        },
-        "required" : [ "requiredRoles", "uiUrl" ]
+        }
       },
       "ScheduledMovement" : {
+        "required" : [ "description", "detail", "domain", "end", "id", "location", "personIdentifier", "start", "status", "type" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3394,10 +3918,10 @@
           "detail" : {
             "$ref" : "#/components/schemas/Detail"
           }
-        },
-        "required" : [ "description", "detail", "domain", "end", "id", "location", "personIdentifier", "start", "status", "type" ]
+        }
       },
       "ScheduledMovements" : {
+        "required" : [ "content" ],
         "type" : "object",
         "properties" : {
           "content" : {
@@ -3406,10 +3930,10 @@
               "$ref" : "#/components/schemas/ScheduledMovement"
             }
           }
-        },
-        "required" : [ "content" ]
+        }
       },
       "ReferenceDataResponse" : {
+        "required" : [ "domain", "items" ],
         "type" : "object",
         "properties" : {
           "domain" : {
@@ -3421,10 +3945,10 @@
               "$ref" : "#/components/schemas/CodedDescription"
             }
           }
-        },
-        "required" : [ "domain", "items" ]
+        }
       },
       "MovementInOutCount" : {
+        "required" : [ "inCount", "outCount" ],
         "type" : "object",
         "properties" : {
           "outCount" : {
@@ -3435,20 +3959,20 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "inCount", "outCount" ]
+        }
       },
       "PersonAuthorisationCount" : {
+        "required" : [ "count" ],
         "type" : "object",
         "properties" : {
           "count" : {
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "count" ]
+        }
       },
       "PersonMovementsCount" : {
+        "required" : [ "scheduled", "unscheduled" ],
         "type" : "object",
         "properties" : {
           "scheduled" : {
@@ -3457,20 +3981,20 @@
           "unscheduled" : {
             "$ref" : "#/components/schemas/MovementInOutCount"
           }
-        },
-        "required" : [ "scheduled", "unscheduled" ]
+        }
       },
       "PersonOccurrenceCount" : {
+        "required" : [ "count" ],
         "type" : "object",
         "properties" : {
           "count" : {
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "count" ]
+        }
       },
       "PersonTapCounts" : {
+        "required" : [ "authorisations", "movements", "occurrences" ],
         "type" : "object",
         "properties" : {
           "authorisations" : {
@@ -3482,10 +4006,10 @@
           "movements" : {
             "$ref" : "#/components/schemas/PersonMovementsCount"
           }
-        },
-        "required" : [ "authorisations", "movements", "occurrences" ]
+        }
       },
       "PersonTapDetail" : {
+        "required" : [ "scheduledAbsences", "unscheduledMovements" ],
         "type" : "object",
         "properties" : {
           "scheduledAbsences" : {
@@ -3500,10 +4024,10 @@
               "$ref" : "#/components/schemas/ReconciliationMovement"
             }
           }
-        },
-        "required" : [ "scheduledAbsences", "unscheduledMovements" ]
+        }
       },
       "ReconciliationAuthorisation" : {
+        "required" : [ "id", "occurrences", "prisonCode", "statusCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3512,7 +4036,7 @@
           },
           "statusCode" : {
             "type" : "string",
-            "enum" : [ "PENDING", "APPROVED", "CANCELLED", "DENIED", "EXPIRED" ]
+            "enum" : [ "PENDING", "APPROVED", "PAUSED", "CANCELLED", "DENIED", "EXPIRED" ]
           },
           "prisonCode" : {
             "type" : "string"
@@ -3523,10 +4047,10 @@
               "$ref" : "#/components/schemas/ReconciliationOccurrence"
             }
           }
-        },
-        "required" : [ "id", "occurrences", "prisonCode", "statusCode" ]
+        }
       },
       "ReconciliationMovement" : {
+        "required" : [ "direction", "directionPrisonCode", "id" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3540,10 +4064,10 @@
           "directionPrisonCode" : {
             "type" : "string"
           }
-        },
-        "required" : [ "direction", "directionPrisonCode", "id" ]
+        }
       },
       "ReconciliationOccurrence" : {
+        "required" : [ "end", "id", "movements", "prisonCode", "reasonCode", "start", "statusCode" ],
         "type" : "object",
         "properties" : {
           "id" : {
@@ -3552,7 +4076,7 @@
           },
           "statusCode" : {
             "type" : "string",
-            "enum" : [ "PENDING", "SCHEDULED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
+            "enum" : [ "PENDING", "SCHEDULED", "PAUSED", "IN_PROGRESS", "COMPLETED", "OVERDUE", "EXPIRED", "CANCELLED", "DENIED" ]
           },
           "prisonCode" : {
             "type" : "string"
@@ -3569,7 +4093,10 @@
             "format" : "date-time"
           },
           "location" : {
-            "$ref" : "#/components/schemas/Location"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            } ]
           },
           "movements" : {
             "type" : "array",
@@ -3577,10 +4104,10 @@
               "$ref" : "#/components/schemas/ReconciliationMovement"
             }
           }
-        },
-        "required" : [ "end", "id", "movements", "prisonCode", "reasonCode", "start", "statusCode" ]
+        }
       },
       "Configuration" : {
+        "required" : [ "courtMovementsEnabled", "releasesEnabled", "tapEnabled", "transfersEnabled" ],
         "type" : "object",
         "properties" : {
           "tapEnabled" : {
@@ -3595,10 +4122,10 @@
           "releasesEnabled" : {
             "type" : "boolean"
           }
-        },
-        "required" : [ "courtMovementsEnabled", "releasesEnabled", "tapEnabled", "transfersEnabled" ]
+        }
       },
       "PrisonExternalMovementOverview" : {
+        "required" : [ "configuration", "tapOverview" ],
         "type" : "object",
         "properties" : {
           "configuration" : {
@@ -3607,10 +4134,10 @@
           "tapOverview" : {
             "$ref" : "#/components/schemas/TapOverview"
           }
-        },
-        "required" : [ "configuration", "tapOverview" ]
+        }
       },
       "TapOverview" : {
+        "required" : [ "approvalsRequired", "leavingToday", "returningToday" ],
         "type" : "object",
         "properties" : {
           "leavingToday" : {
@@ -3625,10 +4152,10 @@
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "approvalsRequired", "leavingToday", "returningToday" ]
+        }
       },
       "AbsenceCategorisation" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
         "properties" : {
           "code" : {
@@ -3638,16 +4165,18 @@
             "type" : "string"
           },
           "hintText" : {
-            "type" : "string"
+            "type" : "string",
+            "nullable" : true
           },
           "nextDomain" : {
             "type" : "string",
+            "nullable" : true,
             "enum" : [ "ABSENCE_TYPE", "ABSENCE_SUB_TYPE", "ABSENCE_REASON_CATEGORY", "ABSENCE_REASON", "ACCOMPANIED_BY", "TRANSPORT", "TAP_AUTHORISATION_STATUS", "TAP_OCCURRENCE_STATUS" ]
           }
-        },
-        "required" : [ "code", "description" ]
+        }
       },
       "AbsenceCategorisations" : {
+        "required" : [ "domain", "items" ],
         "type" : "object",
         "properties" : {
           "domain" : {
@@ -3659,10 +4188,10 @@
               "$ref" : "#/components/schemas/AbsenceCategorisation"
             }
           }
-        },
-        "required" : [ "domain", "items" ]
+        }
       },
       "AbsenceCategorisationFilters" : {
+        "required" : [ "reasons", "subTypes", "types", "workTypes" ],
         "type" : "object",
         "properties" : {
           "types" : {
@@ -3689,10 +4218,10 @@
               "$ref" : "#/components/schemas/Option"
             }
           }
-        },
-        "required" : [ "reasons", "subTypes", "types", "workTypes" ]
+        }
       },
       "Option" : {
+        "required" : [ "code", "description", "domainCode" ],
         "type" : "object",
         "properties" : {
           "domainCode" : {
@@ -3705,8 +4234,7 @@
           "description" : {
             "type" : "string"
           }
-        },
-        "required" : [ "code", "description", "domainCode" ]
+        }
       }
     },
     "securitySchemes" : {

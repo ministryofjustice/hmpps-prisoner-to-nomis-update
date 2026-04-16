@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-01-12.146.22c17d3"
+    "version" : "2026-04-15.264.0fc4905"
   },
   "servers" : [ {
     "url" : "https://adjustments-api-dev.hmpps.service.justice.gov.uk",
@@ -22,6 +22,9 @@
   }, {
     "name" : "legacy-controller",
     "description" : "CRUD operations for syncing data from NOMIS into adjustments api database."
+  }, {
+    "name" : "Previous UAL",
+    "description" : "Endpoints for reviewing UAL from previous periods of custody and potentially carrying it forward into the current period."
   }, {
     "name" : "ada-adjudication-controller",
     "description" : "Read operations for additional days logic"
@@ -324,6 +327,84 @@
           },
           "404" : {
             "description" : "Adjustment not found"
+          }
+        }
+      }
+    },
+    "/adjustments/person/{person}/review-previous-ual" : {
+      "get" : {
+        "tags" : [ "Previous UAL" ],
+        "summary" : "Get UAL from previous periods of custody requiring review",
+        "description" : "Get any UAL from a previous period of custody that might still be relevant to the current period and requires review",
+        "operationId" : "findPreviousUalToReview",
+        "parameters" : [ {
+          "name" : "person",
+          "in" : "path",
+          "description" : "The noms ID of the person",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Adjustments found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PreviousUnlawfullyAtLargeAdjustmentForReview"
+                  }
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "type" : "array",
+                  "items" : {
+                    "$ref" : "#/components/schemas/PreviousUnlawfullyAtLargeAdjustmentForReview"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "put" : {
+        "tags" : [ "Previous UAL" ],
+        "summary" : "Confirm or reject previous UAL",
+        "description" : "Confirm or reject previous UAL. Once confirmed or rejected it will not be shown again. Confirming UAL create new adjustments for the current period of custody.",
+        "operationId" : "confirmPreviousUal",
+        "parameters" : [ {
+          "name" : "person",
+          "in" : "path",
+          "description" : "The noms ID of the person",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PreviousUnlawfullyAtLargeReviewRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "202" : {
+            "description" : "Adjustments created or marked as reviewed and rejected"
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token"
           }
         }
       }
@@ -954,7 +1035,7 @@
             "description" : "The NOMIS booking ID of the adjustment"
           },
           "sentenceSequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The NOMIS sentence sequence of the adjustment"
           },
@@ -968,12 +1049,12 @@
             "enum" : [ "ADA", "RADA", "UAL", "LAL", "SREM", "RSR", "RST", "RX", "S240A", "UR", "TCA", "TSA" ]
           },
           "adjustmentDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The NOMIS date of adjustment"
           },
           "adjustmentFromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The NOMIS from date of adjustment"
           },
@@ -983,7 +1064,7 @@
             "description" : "The NOMIS adjustment days"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS comment for this adjustment"
           },
           "active" : {
@@ -996,7 +1077,7 @@
             "description" : "Has the prisoner been released from the NOMIS booking"
           },
           "agencyId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The ID of the agency the prisoner is located"
           },
           "currentTerm" : {
@@ -1028,12 +1109,12 @@
         "description" : "The adjustment and its identifier",
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The ID of the adjustment"
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS booking ID of the adjustment. If not specified, the latest booking is used."
           },
@@ -1047,116 +1128,140 @@
             "enum" : [ "REMAND", "TAGGED_BAIL", "UNLAWFULLY_AT_LARGE", "LAWFULLY_AT_LARGE", "ADDITIONAL_DAYS_AWARDED", "RESTORATION_OF_ADDITIONAL_DAYS_AWARDED", "SPECIAL_REMISSION", "UNUSED_DEDUCTIONS", "CUSTODY_ABROAD", "APPEAL_APPLICANT" ]
           },
           "toDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The end date of the adjustment"
           },
           "fromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The start date of the adjustment"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of days of the adjustment"
           },
           "remand" : {
-            "$ref" : "#/components/schemas/RemandDto",
-            "description" : "The details of a remand adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RemandDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "additionalDaysAwarded" : {
-            "$ref" : "#/components/schemas/AdditionalDaysAwardedDto",
-            "description" : "The details of an additional days awarded adjustments (ADA)"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdditionalDaysAwardedDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "unlawfullyAtLarge" : {
-            "$ref" : "#/components/schemas/UnlawfullyAtLargeDto",
-            "description" : "Additional details of a UAL adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/UnlawfullyAtLargeDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "lawfullyAtLarge" : {
-            "$ref" : "#/components/schemas/LawfullyAtLargeDto",
-            "description" : "Additional info for a LAL adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LawfullyAtLargeDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "specialRemission" : {
-            "$ref" : "#/components/schemas/SpecialRemissionDto",
-            "description" : "Additional info for a Special Remission adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SpecialRemissionDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "taggedBail" : {
-            "$ref" : "#/components/schemas/TaggedBailDto",
-            "description" : "The details of a tagged-bail adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/TaggedBailDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "timeSpentInCustodyAbroad" : {
-            "$ref" : "#/components/schemas/TimeSpentInCustodyAbroadDto",
-            "description" : "The details of a time spent in custody abroad adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/TimeSpentInCustodyAbroadDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "timeSpentAsAnAppealApplicant" : {
-            "$ref" : "#/components/schemas/TimeSpentAsAnAppealApplicantDto",
-            "description" : "The details of a time spent as an appeal applicant adjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/TimeSpentAsAnAppealApplicantDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "sentenceSequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The NOMIS sentence sequence of the adjustment"
           },
           "recallId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The ID of a recall that may be associated to the adjustment"
           },
           "adjustmentTypeText" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Human readable text for type of adjustment",
             "readOnly" : true
           },
           "adjustmentArithmeticType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Indicates whether the adjustment was an addition or deduction",
             "enum" : [ "ADDITION", "DEDUCTION", "NONE" ],
             "readOnly" : true
           },
           "prisonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The name name of the prison where the prisoner was located at the time the adjustment was created ",
             "example" : "Leeds",
             "readOnly" : true
           },
           "prisonId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
             "example" : "LDS",
             "readOnly" : true
           },
           "lastUpdatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person last updating this adjustment",
             "readOnly" : true
           },
           "status" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The status of this adjustment",
             "enum" : [ "ACTIVE", "INACTIVE", "DELETED", "INACTIVE_WHEN_DELETED" ],
             "readOnly" : true
           },
           "lastUpdatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time this adjustment was last updated",
             "readOnly" : true
           },
           "createdDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time this adjustment was last created",
             "readOnly" : true
           },
           "effectiveDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of days effective in a calculation. (for example remand minus any unused deductions)",
             "readOnly" : true
           },
           "source" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Where was the adjustment last changed",
             "enum" : [ "NOMIS", "DPS" ],
             "readOnly" : true
@@ -1169,7 +1274,7 @@
         "description" : "The details of a LAL adjustment",
         "properties" : {
           "affectsDates" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of LAL",
             "enum" : [ "YES", "NO" ]
           }
@@ -1195,7 +1300,7 @@
         "description" : "The details of a Special Remission adjustment",
         "properties" : {
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of Special Remission",
             "enum" : [ "MERITORIOUS_CONDUCT", "RELEASE_DATE_CALCULATED_TOO_EARLY", "RELEASE_IN_ERROR" ]
           }
@@ -1206,12 +1311,12 @@
         "description" : "The details of the tagged bail adjustment",
         "properties" : {
           "caseSequence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The case sequence number this tagged-bail was associated with"
           },
           "courtCaseUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The dps court case id this tagged-bail was associated with"
           }
@@ -1222,7 +1327,7 @@
         "description" : "The details of the time spent as an appeal applicant adjustment",
         "properties" : {
           "courtOfAppealReferenceNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The court of appeal reference number for the time spent as an appeal applicant adjustment"
           },
           "chargeIds" : {
@@ -1241,7 +1346,7 @@
         "description" : "The details of the time spent in custody abroad adjustment",
         "properties" : {
           "documentationSource" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The source document for the time spent in custody abroad information",
             "enum" : [ "COURT_WARRANT", "PPCS_LETTER" ]
           },
@@ -1261,11 +1366,34 @@
         "description" : "The details of a UAL adjustment",
         "properties" : {
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The type of UAL",
             "enum" : [ "RECALL", "ESCAPE", "SENTENCED_IN_ABSENCE", "RELEASE_IN_ERROR", "IMMIGRATION_DETENTION" ]
           }
         }
+      },
+      "PreviousUnlawfullyAtLargeReviewRequest" : {
+        "type" : "object",
+        "description" : "A request to confirm previous UAL adjustments",
+        "properties" : {
+          "acceptedAdjustmentIds" : {
+            "type" : "array",
+            "description" : "The IDs of any adjustments that should be recreated for the latest period of custody",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          },
+          "rejectedAdjustmentIds" : {
+            "type" : "array",
+            "description" : "The IDs of any adjustments that should not be recreated or referenced again in future reviews",
+            "items" : {
+              "type" : "string",
+              "format" : "uuid"
+            }
+          }
+        },
+        "required" : [ "acceptedAdjustmentIds", "rejectedAdjustmentIds" ]
       },
       "LegacyAdjustmentCreatedResponse" : {
         "type" : "object",
@@ -1389,7 +1517,7 @@
         "properties" : {
           "type" : {
             "type" : "string",
-            "enum" : [ "NONE", "FIRST_TIME_WITH_NO_ADJUDICATION", "FIRST_TIME", "UPDATE", "PADAS", "PADA" ]
+            "enum" : [ "NONE", "FIRST_TIME_WITH_NO_ADJUDICATION", "FIRST_TIME", "UPDATE", "PADAS", "PADA", "POTENTIAL" ]
           },
           "number" : {
             "type" : "integer",
@@ -1405,7 +1533,7 @@
             }
           },
           "message" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "anyProspective", "messageArguments", "number", "type" ]
@@ -1420,12 +1548,15 @@
             "type" : "array",
             "items" : {
               "type" : "string",
-              "enum" : [ "ADA_INTERCEPT" ]
+              "enum" : [ "ADA_INTERCEPT", "PREVIOUS_PERIOD_OF_UAL_FOR_REVIEW" ]
             }
           },
           "adaIntercept" : {
-            "$ref" : "#/components/schemas/AdaIntercept",
-            "description" : "Will be populated if there is a ADA_INTERCEPT in the thingsToDo"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/AdaIntercept"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "prisonerId", "thingsToDo" ]
@@ -1480,6 +1611,50 @@
         },
         "required" : [ "calculationAt", "person", "status" ]
       },
+      "PreviousUnlawfullyAtLargeAdjustmentForReview" : {
+        "type" : "object",
+        "description" : "A UAL adjustment from a previous period of custody",
+        "properties" : {
+          "id" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The ID of the adjustment"
+          },
+          "fromDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The start date of the UAL"
+          },
+          "toDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "The end date of the UAL"
+          },
+          "days" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The number of days of the adjustment"
+          },
+          "type" : {
+            "type" : [ "string", "null" ],
+            "description" : "The type of UAL",
+            "enum" : [ "RECALL", "ESCAPE", "SENTENCED_IN_ABSENCE", "RELEASE_IN_ERROR", "IMMIGRATION_DETENTION" ]
+          },
+          "prisonName" : {
+            "type" : [ "string", "null" ],
+            "description" : "The name name of the prison where the prisoner was located at the time the adjustment was created ",
+            "example" : "Leeds",
+            "readOnly" : true
+          },
+          "prisonId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The prison where the prisoner was located at the time the adjustment was created (a 3 character code identifying the prison)",
+            "example" : "LDS",
+            "readOnly" : true
+          }
+        },
+        "required" : [ "days", "fromDate", "id", "toDate" ]
+      },
       "Ada" : {
         "type" : "object",
         "properties" : {
@@ -1491,10 +1666,10 @@
             "type" : "string"
           },
           "toBeServed" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "heardAt" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "status" : {
             "type" : "string",
@@ -1505,7 +1680,7 @@
             "format" : "int32"
           },
           "consecutiveToChargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "chargeNumber", "dateChargeProved", "days", "status" ]
@@ -1577,15 +1752,25 @@
             "type" : "boolean"
           },
           "earliestNonRecallSentenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "earliestRecallDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
+          },
+          "potential" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/AdasByDateCharged"
+            }
+          },
+          "totalPotential" : {
+            "type" : "integer",
+            "format" : "int32"
           }
         },
-        "required" : [ "awaitingApproval", "awarded", "intercept", "prospective", "quashed", "recallWithMissingOutcome", "showExistingAdaMessage", "suspended", "totalAwaitingApproval", "totalAwarded", "totalExistingAdas", "totalProspective", "totalQuashed", "totalSuspended" ]
+        "required" : [ "awaitingApproval", "awarded", "intercept", "potential", "prospective", "quashed", "recallWithMissingOutcome", "showExistingAdaMessage", "suspended", "totalAwaitingApproval", "totalAwarded", "totalExistingAdas", "totalPotential", "totalProspective", "totalQuashed", "totalSuspended" ]
       },
       "AdasByDateCharged" : {
         "type" : "object",
@@ -1601,15 +1786,15 @@
             }
           },
           "total" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "status" : {
-            "type" : "string",
-            "enum" : [ "AWARDED", "PENDING_APPROVAL", "SUSPENDED", "QUASHED", "PROSPECTIVE" ]
+            "type" : [ "string", "null" ],
+            "enum" : [ "POTENTIAL", "AWARDED", "PENDING_APPROVAL", "SUSPENDED", "QUASHED", "PROSPECTIVE" ]
           },
           "adjustmentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },

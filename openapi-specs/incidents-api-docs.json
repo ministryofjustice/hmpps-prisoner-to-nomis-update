@@ -1,5 +1,5 @@
 {
-  "openapi" : "3.1.0",
+  "openapi" : "3.0.1",
   "info" : {
     "title" : "Incident Reporting API",
     "description" : "API for viewing and managing incident reports",
@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-09.655.cdbb9a3"
+    "version" : "2026-04-15.672.df1b159"
   },
   "servers" : [ {
     "url" : "/",
@@ -122,8 +122,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -186,8 +186,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -196,13 +196,12 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "minItems" : 1,
                 "type" : "array",
                 "description" : "List of question and responses to add or update in place",
                 "items" : {
-                  "$ref" : "#/components/schemas/AddOrUpdateQuestionWithResponses",
-                  "minItems" : 1
-                },
-                "minItems" : 1
+                  "$ref" : "#/components/schemas/AddOrUpdateQuestionWithResponses"
+                }
               }
             }
           },
@@ -276,8 +275,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -287,14 +286,15 @@
           "description" : "Codes for questions to delete",
           "required" : false,
           "schema" : {
+            "maxItems" : 2147483647,
+            "minItems" : 1,
             "type" : "array",
             "items" : {
+              "maxLength" : 2147483647,
+              "minLength" : 1,
               "type" : "string",
-              "example" : "40102",
-              "minLength" : 1
-            },
-            "maxItems" : 2147483647,
-            "minItems" : 1
+              "example" : "40102"
+            }
           },
           "example" : [ 40102, 40103 ]
         } ],
@@ -366,14 +366,14 @@
           "content" : {
             "application/json" : {
               "schema" : {
+                "writeOnly" : true,
                 "oneOf" : [ {
                   "$ref" : "#/components/schemas/NomisSyncRequest"
                 }, {
                   "$ref" : "#/components/schemas/NomisSyncCreateRequest"
                 }, {
                   "$ref" : "#/components/schemas/NomisSyncUpdateRequest"
-                } ],
-                "writeOnly" : true
+                } ]
               }
             }
           },
@@ -455,12 +455,13 @@
           "description" : "Filter by given human-readable report reference",
           "required" : false,
           "schema" : {
-            "type" : "string",
-            "description" : "Filter by given human-readable report reference",
-            "example" : "\"11124143\"",
             "maxLength" : 25,
             "minLength" : 1,
-            "pattern" : "^\\d+$"
+            "pattern" : "^\\d+$",
+            "type" : "string",
+            "description" : "Filter by given human-readable report reference",
+            "nullable" : true,
+            "example" : "\"11124143\""
           },
           "example" : "11124143"
         }, {
@@ -470,13 +471,13 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : null,
             "items" : {
-              "type" : "string",
-              "example" : "MDI",
               "maxLength" : 20,
-              "minLength" : 2
-            }
+              "minLength" : 2,
+              "type" : "string",
+              "example" : "MDI"
+            },
+            "default" : null
           },
           "example" : "[LEI,MDI]"
         }, {
@@ -486,9 +487,7 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "description" : "Filter by given information source",
-            "enum" : [ "DPS", "NOMIS" ],
-            "example" : "DPS"
+            "enum" : [ "DPS", "NOMIS" ]
           },
           "example" : "DPS"
         }, {
@@ -498,11 +497,11 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : null,
             "items" : {
               "type" : "string",
               "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
-            }
+            },
+            "default" : null
           },
           "example" : "[CLOSED,DUPLICATE]"
         }, {
@@ -512,11 +511,11 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : null,
             "items" : {
               "type" : "string",
               "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
-            }
+            },
+            "default" : null
           },
           "example" : "[DAMAGE_1]"
         }, {
@@ -526,10 +525,11 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "format" : "date",
-            "default" : null,
             "description" : "Filter for incidents occurring since this date (inclusive)",
-            "example" : "2024-01-01"
+            "format" : "date",
+            "nullable" : true,
+            "example" : "2024-01-01",
+            "default" : null
           },
           "example" : "2024-01-01"
         }, {
@@ -539,10 +539,11 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "format" : "date",
-            "default" : null,
             "description" : "Filter for incidents occurring until this date (inclusive)",
-            "example" : "2024-05-31"
+            "format" : "date",
+            "nullable" : true,
+            "example" : "2024-05-31",
+            "default" : null
           },
           "example" : "2024-05-31"
         }, {
@@ -552,10 +553,11 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "format" : "date",
-            "default" : null,
             "description" : "Filter for incidents reported since this date (inclusive)",
-            "example" : "2024-01-01"
+            "format" : "date",
+            "nullable" : true,
+            "example" : "2024-01-01",
+            "default" : null
           },
           "example" : "2024-01-01"
         }, {
@@ -565,10 +567,11 @@
           "required" : false,
           "schema" : {
             "type" : "string",
-            "format" : "date",
-            "default" : null,
             "description" : "Filter for incidents reported until this date (inclusive)",
-            "example" : "2024-05-31"
+            "format" : "date",
+            "nullable" : true,
+            "example" : "2024-05-31",
+            "default" : null
           },
           "example" : "2024-05-31"
         }, {
@@ -577,11 +580,12 @@
           "description" : "Filter for incidents reported by username",
           "required" : false,
           "schema" : {
+            "maxLength" : 2147483647,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Filter for incidents reported by username",
-            "example" : "abc12a",
-            "maxLength" : 2147483647,
-            "minLength" : 3
+            "nullable" : true,
+            "example" : "abc12a"
           },
           "example" : "abc12a"
         }, {
@@ -590,11 +594,12 @@
           "description" : "Filter for incidents involving staff identified by username",
           "required" : false,
           "schema" : {
+            "maxLength" : 2147483647,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Filter for incidents involving staff identified by username",
-            "example" : "abc12a",
-            "maxLength" : 2147483647,
-            "minLength" : 3
+            "nullable" : true,
+            "example" : "abc12a"
           },
           "example" : "abc12a"
         }, {
@@ -603,11 +608,12 @@
           "description" : "Filter for incidents involving prisoners identified by prisoner number",
           "required" : false,
           "schema" : {
+            "maxLength" : 10,
+            "minLength" : 7,
             "type" : "string",
             "description" : "Filter for incidents involving prisoners identified by prisoner number",
-            "example" : "A1234AA",
-            "maxLength" : 10,
-            "minLength" : 7
+            "nullable" : true,
+            "example" : "A1234AA"
           },
           "example" : "A1234AA"
         }, {
@@ -629,9 +635,9 @@
           "description" : "Zero-based page index (0..N)",
           "required" : false,
           "schema" : {
+            "minimum" : 0,
             "type" : "integer",
-            "default" : 0,
-            "minimum" : 0
+            "default" : 0
           }
         }, {
           "name" : "size",
@@ -639,9 +645,9 @@
           "description" : "The size of the page to be returned",
           "required" : false,
           "schema" : {
+            "minimum" : 1,
             "type" : "integer",
-            "default" : 20,
-            "minimum" : 1
+            "default" : 20
           }
         }, {
           "name" : "sort",
@@ -650,10 +656,10 @@
           "required" : false,
           "schema" : {
             "type" : "array",
-            "default" : [ "incidentDateAndTime,DESC" ],
             "items" : {
               "type" : "string"
-            }
+            },
+            "default" : [ "incidentDateAndTime,DESC" ]
           }
         } ],
         "responses" : {
@@ -781,8 +787,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -845,8 +851,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -931,8 +937,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -995,8 +1001,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1081,8 +1087,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1145,8 +1151,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1231,8 +1237,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1295,8 +1301,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1381,8 +1387,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1393,8 +1399,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to delete (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1457,8 +1463,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1469,8 +1475,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to update (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1555,8 +1561,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1567,8 +1573,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to delete (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1631,8 +1637,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1643,8 +1649,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to update (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1729,8 +1735,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1741,8 +1747,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to delete (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1805,8 +1811,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1817,8 +1823,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to update (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1903,8 +1909,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1915,8 +1921,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to delete (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -1979,8 +1985,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -1991,8 +1997,8 @@
           "required" : true,
           "schema" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "The index of the object to update (starts from 1)",
+            "format" : "int32",
             "example" : 1
           },
           "example" : 1
@@ -2077,8 +2083,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2138,8 +2144,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2209,8 +2215,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The internal ID of the report to update",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2292,8 +2298,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The internal ID of the report to update",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2375,8 +2381,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The internal ID of the report to update",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2598,8 +2604,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The incident report id",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -2671,7 +2677,7 @@
           "schema" : {
             "type" : "string",
             "description" : "The incident report reference",
-            "example" : "11124143"
+            "example" : "\"11124143\""
           },
           "example" : "11124143"
         } ],
@@ -2733,7 +2739,7 @@
           "schema" : {
             "type" : "string",
             "description" : "The incident report reference",
-            "example" : "11124143"
+            "example" : "\"11124143\""
           },
           "example" : "11124143"
         }, {
@@ -3023,8 +3029,8 @@
           "required" : true,
           "schema" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "The internal ID of the report to delete",
+            "format" : "uuid",
             "example" : "11111111-2222-3333-4444-555555555555"
           },
           "example" : "11111111-2222-3333-4444-555555555555"
@@ -3080,33 +3086,33 @@
   "components" : {
     "schemas" : {
       "RetryDlqResult" : {
+        "required" : [ "messagesFoundCount" ],
         "type" : "object",
         "properties" : {
           "messagesFoundCount" : {
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "messagesFoundCount" ]
+        }
       },
       "PurgeQueueResult" : {
+        "required" : [ "messagesFoundCount" ],
         "type" : "object",
         "properties" : {
           "messagesFoundCount" : {
             "type" : "integer",
             "format" : "int32"
           }
-        },
-        "required" : [ "messagesFoundCount" ]
+        }
       },
       "ErrorResponse" : {
+        "required" : [ "developerMessage", "status", "userMessage" ],
         "type" : "object",
-        "description" : "Error response",
         "properties" : {
           "status" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "HTTP status code",
+            "format" : "int32",
             "example" : 500
           },
           "userMessage" : {
@@ -3121,103 +3127,109 @@
           },
           "errorCode" : {
             "type" : "integer",
-            "format" : "int32",
-            "default" : "null",
             "description" : "When present, uniquely identifies the type of error making it easier for clients to discriminate without relying on error description or HTTP status code; see ` uk.gov.justice.digital.hmpps.incidentreporting.resource.ErrorCode` enumeration in hmpps-incident-reporting-api",
-            "example" : 101
+            "format" : "int32",
+            "nullable" : true,
+            "example" : 101,
+            "default" : null
           },
           "moreInfo" : {
             "type" : "string",
-            "default" : "null",
             "description" : "More information about the error",
-            "example" : "[Rarely used, error-specific]"
+            "nullable" : true,
+            "example" : "[Rarely used, error-specific]",
+            "default" : null
           }
         },
-        "readOnly" : true,
-        "required" : [ "developerMessage", "status", "userMessage" ]
+        "description" : "Error response",
+        "readOnly" : true
       },
       "AddOrUpdateQuestionResponse" : {
+        "minLength" : 1,
+        "required" : [ "label", "response" ],
         "type" : "object",
-        "description" : "A response to a question",
         "properties" : {
           "code" : {
-            "type" : "string",
-            "description" : "The response code; used as a unique identifier within one report",
             "maxLength" : 60,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The response code; used as a unique identifier within one report"
           },
           "response" : {
-            "type" : "string",
-            "description" : "The response text as seen by downstream data consumers",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The response text as seen by downstream data consumers"
           },
           "label" : {
-            "type" : "string",
-            "description" : "The response text as seen by the user at the point of entry",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The response text as seen by the user at the point of entry"
           },
           "responseDate" : {
             "type" : "string",
-            "format" : "date",
-            "default" : "null",
             "description" : "Optional response as a date",
-            "example" : "2024-04-29"
+            "format" : "date",
+            "nullable" : true,
+            "example" : "2024-04-29",
+            "default" : null
           },
           "additionalInformation" : {
             "type" : "string",
-            "default" : "null",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true,
+            "default" : null
           }
         },
-        "required" : [ "label", "response" ],
+        "description" : "A response to a question",
         "writeOnly" : true
       },
       "AddOrUpdateQuestionWithResponses" : {
+        "required" : [ "code", "label", "question", "responses" ],
         "type" : "object",
-        "description" : "Payload to add question with responses to an incident report or, if the question code exists in the report, update the question and overwrite responses",
         "properties" : {
           "code" : {
-            "type" : "string",
-            "description" : "The question code; used as a unique identifier within one report",
             "maxLength" : 60,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The question code; used as a unique identifier within one report"
           },
           "question" : {
-            "type" : "string",
-            "description" : "The question text as seen by downstream data consumers",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The question text as seen by downstream data consumers"
           },
           "label" : {
-            "type" : "string",
-            "description" : "The question text as seen by the user at the point of entry",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The question text as seen by the user at the point of entry"
           },
           "responses" : {
+            "minLength" : 1,
+            "maxItems" : 2147483647,
+            "minItems" : 1,
             "type" : "array",
             "description" : "The responses to this question",
             "items" : {
               "$ref" : "#/components/schemas/AddOrUpdateQuestionResponse"
-            },
-            "maxItems" : 2147483647,
-            "minItems" : 1,
-            "minLength" : 1
+            }
           },
           "additionalInformation" : {
             "type" : "string",
-            "default" : "null",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true,
+            "default" : null
           }
         },
-        "required" : [ "code", "label", "question", "responses" ],
+        "description" : "Payload to add question with responses to an incident report or, if the question code exists in the report, update the question and overwrite responses",
         "writeOnly" : true
       },
       "Question" : {
+        "required" : [ "code", "label", "question", "responses", "sequence" ],
         "type" : "object",
-        "description" : "Question with responses making up an incident report",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -3233,9 +3245,9 @@
           },
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the questions",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the questions"
+            "deprecated" : true
           },
           "responses" : {
             "type" : "array",
@@ -3246,19 +3258,21 @@
           },
           "additionalInformation" : {
             "type" : "string",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "label", "question", "responses", "sequence" ]
+        "description" : "Question with responses making up an incident report",
+        "readOnly" : true
       },
       "Response" : {
+        "required" : [ "label", "recordedAt", "recordedBy", "response", "sequence" ],
         "type" : "object",
-        "description" : "Response to a question making up an incident report",
         "properties" : {
           "code" : {
             "type" : "string",
-            "description" : "Unique identifier for a response to a question"
+            "description" : "Unique identifier for a response to a question",
+            "nullable" : true
           },
           "response" : {
             "type" : "string",
@@ -3270,20 +3284,22 @@
           },
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the responses",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the responses"
+            "deprecated" : true
           },
           "responseDate" : {
             "type" : "string",
-            "format" : "date",
             "description" : "Optional response as a date",
+            "format" : "date",
+            "nullable" : true,
             "example" : "2024-04-29"
           },
           "additionalInformation" : {
             "type" : "string",
-            "default" : "null",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true,
+            "default" : null
           },
           "recordedBy" : {
             "type" : "string",
@@ -3291,23 +3307,22 @@
           },
           "recordedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the response was made",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           }
         },
-        "readOnly" : true,
-        "required" : [ "label", "recordedAt", "recordedBy", "response", "sequence" ]
+        "description" : "Response to a question making up an incident report",
+        "readOnly" : true
       },
       "DescriptionAddendum" : {
+        "required" : [ "createdAt", "createdBy", "firstName", "lastName", "sequence", "text" ],
         "type" : "object",
-        "description" : "Addendum to the description of an incident",
         "properties" : {
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the addendums for this report",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the addendums for this report"
+            "deprecated" : true
           },
           "createdBy" : {
             "type" : "string",
@@ -3316,9 +3331,8 @@
           },
           "createdAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When addendum was added",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "firstName" : {
             "type" : "string",
@@ -3335,10 +3349,11 @@
             "description" : "Addendum text"
           }
         },
-        "readOnly" : true,
-        "required" : [ "createdAt", "createdBy", "firstName", "lastName", "sequence", "text" ]
+        "description" : "Addendum to the description of an incident",
+        "readOnly" : true
       },
       "NomisCode" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
         "properties" : {
           "code" : {
@@ -3350,15 +3365,16 @@
             "description" : "Description"
           }
         },
-        "required" : [ "code", "description" ]
+        "description" : "The outcome of the incident"
       },
       "NomisHistory" : {
+        "required" : [ "createDateTime", "createdBy", "incidentChangeStaff", "questionnaireId", "questions", "type" ],
         "type" : "object",
         "properties" : {
           "questionnaireId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The history questionnaire id for the incident"
+            "description" : "The history questionnaire id for the incident",
+            "format" : "int64"
           },
           "type" : {
             "type" : "string",
@@ -3366,7 +3382,8 @@
           },
           "description" : {
             "type" : "string",
-            "description" : "The questionnaire description"
+            "description" : "The questionnaire description",
+            "nullable" : true
           },
           "questions" : {
             "type" : "array",
@@ -3377,37 +3394,38 @@
           },
           "incidentChangeDateTime" : {
             "type" : "string",
+            "description" : "When the questionnaire was changed with time",
             "format" : "date-time",
-            "description" : "When the questionnaire was changed with time"
+            "nullable" : true
           },
           "incidentChangeStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "Who changed the questionnaire"
+            "$ref" : "#/components/schemas/NomisStaff"
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the historical incident questionnaire was created"
+            "description" : "The date and time the historical incident questionnaire was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
             "description" : "The username of the person who created the historical incident questionnaire"
           }
         },
-        "required" : [ "createDateTime", "createdBy", "incidentChangeStaff", "questionnaireId", "questions", "type" ]
+        "description" : "Historical questionnaire details for the incident"
       },
       "NomisHistoryQuestion" : {
+        "required" : [ "answers", "question", "questionId", "sequence" ],
         "type" : "object",
         "properties" : {
           "questionId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The sequence number of the response question for this incident"
+            "description" : "The sequence number of the response question for this incident",
+            "format" : "int64"
           },
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the question for this incident"
+            "description" : "The sequence number of the question for this incident",
+            "format" : "int32"
           },
           "question" : {
             "type" : "string",
@@ -3421,42 +3439,47 @@
             }
           }
         },
-        "required" : [ "answers", "question", "questionId", "sequence" ]
+        "description" : "Questions asked for the questionnaire"
       },
       "NomisHistoryResponse" : {
+        "required" : [ "recordingStaff", "responseSequence" ],
         "type" : "object",
         "properties" : {
           "questionResponseId" : {
             "type" : "integer",
+            "description" : "The id of the questionnaire question answer",
             "format" : "int64",
-            "description" : "The id of the questionnaire question answer"
+            "nullable" : true
           },
           "responseSequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the response for this incident"
+            "description" : "The sequence number of the response for this incident",
+            "format" : "int32"
           },
           "answer" : {
             "type" : "string",
-            "description" : "The answer text"
+            "description" : "The answer text",
+            "nullable" : true
           },
           "responseDate" : {
             "type" : "string",
+            "description" : "Response date added to the response by recording staff",
             "format" : "date",
-            "description" : "Response date added to the response by recording staff"
+            "nullable" : true
           },
           "comment" : {
             "type" : "string",
-            "description" : "Comment added to the response by recording staff"
+            "description" : "Comment added to the response by recording staff",
+            "nullable" : true
           },
           "recordingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "Recording staff"
+            "$ref" : "#/components/schemas/NomisStaff"
           }
         },
-        "required" : [ "recordingStaff", "responseSequence" ]
+        "description" : "Historical list of Responses to this question"
       },
       "NomisOffender" : {
+        "required" : [ "firstName", "lastName", "offenderNo" ],
         "type" : "object",
         "properties" : {
           "offenderNo" : {
@@ -3472,36 +3495,38 @@
             "description" : "Last name of offender"
           }
         },
-        "required" : [ "firstName", "lastName", "offenderNo" ]
+        "description" : "Offender involved in the incident"
       },
       "NomisOffenderParty" : {
+        "required" : [ "createDateTime", "createdBy", "offender", "role", "sequence" ],
         "type" : "object",
         "properties" : {
           "offender" : {
-            "$ref" : "#/components/schemas/NomisOffender",
-            "description" : "Offender involved in the incident"
+            "$ref" : "#/components/schemas/NomisOffender"
           },
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number providing an order for a list of offender parties"
+            "description" : "The sequence number providing an order for a list of offender parties",
+            "format" : "int32"
           },
           "role" : {
-            "$ref" : "#/components/schemas/NomisCode",
-            "description" : "Offender role in the incident"
+            "$ref" : "#/components/schemas/NomisCode"
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/NomisCode",
-            "description" : "The outcome of the incident"
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/NomisCode"
+            } ]
           },
           "comment" : {
             "type" : "string",
-            "description" : "General information about the incident"
+            "description" : "General information about the incident",
+            "nullable" : true
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the offender party was created"
+            "description" : "The date and time the offender party was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3509,33 +3534,36 @@
           },
           "lastModifiedDateTime" : {
             "type" : "string",
+            "description" : "The date and time the offender party was last updated",
             "format" : "date-time",
-            "description" : "The date and time the offender party was last updated"
+            "nullable" : true
           },
           "lastModifiedBy" : {
             "type" : "string",
-            "description" : "The username of the person who last updated the offender party"
+            "description" : "The username of the person who last updated the offender party",
+            "nullable" : true
           }
         },
-        "required" : [ "createDateTime", "createdBy", "offender", "role", "sequence" ]
+        "description" : "Offenders involved in the incident"
       },
       "NomisQuestion" : {
+        "required" : [ "answers", "createDateTime", "createdBy", "question", "questionId", "sequence" ],
         "type" : "object",
         "properties" : {
           "questionId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The questionnaire question id"
+            "description" : "The questionnaire question id",
+            "format" : "int64"
           },
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the question for this incident"
+            "description" : "The sequence number of the question for this incident",
+            "format" : "int32"
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the question was created"
+            "description" : "The date and time the question was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3553,37 +3581,37 @@
             }
           }
         },
-        "required" : [ "answers", "createDateTime", "createdBy", "question", "questionId", "sequence" ]
+        "description" : "Questions asked for the incident"
       },
       "NomisReport" : {
+        "required" : [ "createDateTime", "createdBy", "descriptionParts", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "prison", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ],
         "type" : "object",
-        "description" : "NOMIS Incident Report Details",
         "properties" : {
           "incidentId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The Incident id"
+            "description" : "The Incident id",
+            "format" : "int64"
           },
           "questionnaireId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "The id of the questionnaire associated with this incident"
+            "description" : "The id of the questionnaire associated with this incident",
+            "format" : "int64"
           },
           "title" : {
             "type" : "string",
-            "description" : "A summary of the incident"
+            "description" : "A summary of the incident",
+            "nullable" : true
           },
           "description" : {
             "type" : "string",
-            "description" : "The incident details"
+            "description" : "The incident details",
+            "nullable" : true
           },
           "prison" : {
-            "$ref" : "#/components/schemas/NomisCode",
-            "description" : "Prison where the incident occurred"
+            "$ref" : "#/components/schemas/NomisCode"
           },
           "status" : {
-            "$ref" : "#/components/schemas/NomisStatus",
-            "description" : "Status details"
+            "$ref" : "#/components/schemas/NomisStatus"
           },
           "type" : {
             "type" : "string",
@@ -3595,22 +3623,21 @@
           },
           "incidentDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time of the incident"
+            "description" : "The date and time of the incident",
+            "format" : "date-time"
           },
           "reportingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "The staff member who reported the incident"
+            "$ref" : "#/components/schemas/NomisStaff"
           },
           "reportedDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the incident was reported"
+            "description" : "The date and time the incident was reported",
+            "format" : "date-time"
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the incident was created"
+            "description" : "The date and time the incident was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3618,17 +3645,20 @@
           },
           "lastModifiedDateTime" : {
             "type" : "string",
+            "description" : "The date and time the incident was last updated",
             "format" : "date-time",
-            "description" : "The date and time the incident was last updated"
+            "nullable" : true
           },
           "lastModifiedBy" : {
             "type" : "string",
-            "description" : "The username of the person who last updated the incident"
+            "description" : "The username of the person who last updated the incident",
+            "nullable" : true
           },
           "followUpDate" : {
             "type" : "string",
+            "description" : "The follow up date for the incident",
             "format" : "date",
-            "description" : "The follow up date for the incident"
+            "nullable" : true
           },
           "staffParties" : {
             "type" : "array",
@@ -3669,28 +3699,29 @@
             "$ref" : "#/components/schemas/PairStringListDescriptionAddendum"
           }
         },
-        "required" : [ "createDateTime", "createdBy", "descriptionParts", "history", "incidentDateTime", "incidentId", "lockedResponse", "offenderParties", "prison", "questionnaireId", "questions", "reportedDateTime", "reportingStaff", "requirements", "staffParties", "status", "type" ]
+        "description" : "NOMIS Incident Report Details"
       },
       "NomisRequirement" : {
+        "required" : [ "createDateTime", "createdBy", "prisonId", "recordedDate", "sequence", "staff" ],
         "type" : "object",
         "properties" : {
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number providing an order for a list of requirements"
+            "description" : "The sequence number providing an order for a list of requirements",
+            "format" : "int32"
           },
           "comment" : {
             "type" : "string",
-            "description" : "The update required to the incident report"
+            "description" : "The update required to the incident report",
+            "nullable" : true
           },
           "recordedDate" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "Date and time the requirement was recorded"
+            "description" : "Date and time the requirement was recorded",
+            "format" : "date-time"
           },
           "staff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "The staff member who made the requirement request"
+            "$ref" : "#/components/schemas/NomisStaff"
           },
           "prisonId" : {
             "type" : "string",
@@ -3698,8 +3729,8 @@
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the requirement was created"
+            "description" : "The date and time the requirement was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3707,50 +3738,56 @@
           },
           "lastModifiedDateTime" : {
             "type" : "string",
+            "description" : "The date and time the requirement was last updated",
             "format" : "date-time",
-            "description" : "The date and time the requirement was last updated"
+            "nullable" : true
           },
           "lastModifiedBy" : {
             "type" : "string",
-            "description" : "The username of the person who last updated the requirement"
+            "description" : "The username of the person who last updated the requirement",
+            "nullable" : true
           }
         },
-        "required" : [ "createDateTime", "createdBy", "prisonId", "recordedDate", "sequence", "staff" ]
+        "description" : "Requirements for completing the incident report"
       },
       "NomisResponse" : {
+        "required" : [ "createDateTime", "createdBy", "recordingStaff", "sequence" ],
         "type" : "object",
         "properties" : {
           "questionResponseId" : {
             "type" : "integer",
+            "description" : "The id of the questionnaire question answer",
             "format" : "int64",
-            "description" : "The id of the questionnaire question answer"
+            "nullable" : true
           },
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number of the response for this incident"
+            "description" : "The sequence number of the response for this incident",
+            "format" : "int32"
           },
           "answer" : {
             "type" : "string",
-            "description" : "The answer text"
+            "description" : "The answer text",
+            "nullable" : true
           },
           "responseDate" : {
             "type" : "string",
+            "description" : "Response date added to the response by recording staff",
             "format" : "date",
-            "description" : "Response date added to the response by recording staff"
+            "nullable" : true
           },
           "comment" : {
             "type" : "string",
-            "description" : "Comment added to the response by recording staff"
+            "description" : "Comment added to the response by recording staff",
+            "nullable" : true
           },
           "recordingStaff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "Recording staff"
+            "$ref" : "#/components/schemas/NomisStaff"
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the response was created"
+            "description" : "The date and time the response was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3758,17 +3795,20 @@
           },
           "lastModifiedDateTime" : {
             "type" : "string",
+            "description" : "The date and time the response was last updated",
             "format" : "date-time",
-            "description" : "The date and time the response was last updated"
+            "nullable" : true
           },
           "lastModifiedBy" : {
             "type" : "string",
-            "description" : "The username of the person who last updated the response"
+            "description" : "The username of the person who last updated the response",
+            "nullable" : true
           }
         },
-        "required" : [ "createDateTime", "createdBy", "recordingStaff", "sequence" ]
+        "description" : "List of Responses to this question"
       },
       "NomisStaff" : {
+        "required" : [ "firstName", "lastName", "staffId", "username" ],
         "type" : "object",
         "properties" : {
           "username" : {
@@ -3777,8 +3817,8 @@
           },
           "staffId" : {
             "type" : "integer",
-            "format" : "int64",
-            "description" : "NOMIS staff id"
+            "description" : "NOMIS staff id",
+            "format" : "int64"
           },
           "firstName" : {
             "type" : "string",
@@ -3789,32 +3829,32 @@
             "description" : "Last name of staff member"
           }
         },
-        "required" : [ "firstName", "lastName", "staffId", "username" ]
+        "description" : "Who changed the questionnaire"
       },
       "NomisStaffParty" : {
+        "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ],
         "type" : "object",
         "properties" : {
           "staff" : {
-            "$ref" : "#/components/schemas/NomisStaff",
-            "description" : "Staff involved in the incident"
+            "$ref" : "#/components/schemas/NomisStaff"
           },
           "sequence" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The sequence number providing an order for a list of staff parties"
+            "description" : "The sequence number providing an order for a list of staff parties",
+            "format" : "int32"
           },
           "role" : {
-            "$ref" : "#/components/schemas/NomisCode",
-            "description" : "Staff role in the incident"
+            "$ref" : "#/components/schemas/NomisCode"
           },
           "comment" : {
             "type" : "string",
-            "description" : "General information about the incident"
+            "description" : "General information about the incident",
+            "nullable" : true
           },
           "createDateTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "description" : "The date and time the staff party was created"
+            "description" : "The date and time the staff party was created",
+            "format" : "date-time"
           },
           "createdBy" : {
             "type" : "string",
@@ -3822,17 +3862,20 @@
           },
           "lastModifiedDateTime" : {
             "type" : "string",
+            "description" : "The date and time the staff party was last updated",
             "format" : "date-time",
-            "description" : "The date and time the staff party was last updated"
+            "nullable" : true
           },
           "lastModifiedBy" : {
             "type" : "string",
-            "description" : "The username of the person who last updated the staff party"
+            "description" : "The username of the person who last updated the staff party",
+            "nullable" : true
           }
         },
-        "required" : [ "createDateTime", "createdBy", "role", "sequence", "staff" ]
+        "description" : "Staff involved in the incident"
       },
       "NomisStatus" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
         "properties" : {
           "code" : {
@@ -3844,33 +3887,34 @@
             "description" : "Status Description"
           }
         },
-        "required" : [ "code", "description" ]
+        "description" : "Status details"
       },
       "NomisSyncRequest" : {
+        "required" : [ "incidentReport" ],
         "type" : "object",
-        "description" : "Incident report created or updated in NOMIS",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "Incident report ID, required for updates and must be omitted for initial migration",
+            "format" : "uuid",
+            "nullable" : true,
             "example" : "123e4567-e89b-12d3-a456-426614174000"
           },
           "initialMigration" : {
             "type" : "boolean",
-            "default" : false,
             "description" : "Set to true for initial migration, omit or set to false for updates",
-            "example" : true
+            "example" : true,
+            "default" : false
           },
           "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
+            "$ref" : "#/components/schemas/NomisReport"
           }
         },
-        "required" : [ "incidentReport" ],
+        "description" : "Incident report created or updated in NOMIS",
         "writeOnly" : true
       },
       "PairStringListDescriptionAddendum" : {
+        "required" : [ "first", "second" ],
         "type" : "object",
         "properties" : {
           "first" : {
@@ -3882,66 +3926,63 @@
               "$ref" : "#/components/schemas/DescriptionAddendum"
             }
           }
-        },
-        "required" : [ "first", "second" ]
+        }
       },
       "NomisSyncCreateRequest" : {
+        "required" : [ "incidentReport" ],
         "type" : "object",
-        "description" : "Incident report created in NOMIS",
         "properties" : {
           "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
+            "$ref" : "#/components/schemas/NomisReport"
           },
           "initialMigration" : {
             "type" : "boolean",
-            "default" : false,
             "description" : "Set to true for initial migration",
-            "example" : true
+            "example" : true,
+            "default" : false
           }
         },
-        "required" : [ "incidentReport" ],
+        "description" : "Incident report created in NOMIS",
         "writeOnly" : true
       },
       "NomisSyncUpdateRequest" : {
+        "required" : [ "id", "incidentReport" ],
         "type" : "object",
-        "description" : "Incident report updated in NOMIS",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid",
             "description" : "Incident report ID",
+            "format" : "uuid",
             "example" : "123e4567-e89b-12d3-a456-426614174000"
           },
           "incidentReport" : {
-            "$ref" : "#/components/schemas/NomisReport",
-            "description" : "Complete incident report payload"
+            "$ref" : "#/components/schemas/NomisReport"
           },
           "initialMigration" : {
             "type" : "boolean",
-            "default" : false,
-            "description" : "Omit or set to false for updates"
+            "description" : "Omit or set to false for updates",
+            "default" : false
           }
         },
-        "required" : [ "id", "incidentReport" ],
+        "description" : "Incident report updated in NOMIS",
         "writeOnly" : true
       },
       "NomisSyncReportId" : {
+        "required" : [ "id" ],
         "type" : "object",
-        "description" : "Incident report ID",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid",
-            "description" : "The internal ID of this report"
+            "description" : "The internal ID of this report",
+            "format" : "uuid"
           }
         },
-        "readOnly" : true,
-        "required" : [ "id" ]
+        "description" : "Incident report ID",
+        "readOnly" : true
       },
       "CreateReportRequest" : {
+        "required" : [ "description", "incidentDateAndTime", "location", "title", "type" ],
         "type" : "object",
-        "description" : "Payload to create a new draft incident report",
         "properties" : {
           "type" : {
             "type" : "string",
@@ -3950,42 +3991,41 @@
           },
           "incidentDateAndTime" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the incident took place",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "location" : {
+            "maxLength" : 20,
+            "minLength" : 2,
             "type" : "string",
             "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI",
-            "maxLength" : 20,
-            "minLength" : 2
+            "example" : "MDI"
           },
           "title" : {
-            "type" : "string",
-            "description" : "Brief title describing the incident",
             "maxLength" : 255,
-            "minLength" : 5
+            "minLength" : 5,
+            "type" : "string",
+            "description" : "Brief title describing the incident"
           },
           "description" : {
-            "type" : "string",
-            "description" : "Longer summary of the incident",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Longer summary of the incident"
           }
         },
-        "required" : [ "description", "incidentDateAndTime", "location", "title", "type" ],
+        "description" : "Payload to create a new draft incident report",
         "writeOnly" : true
       },
       "CorrectionRequest" : {
+        "required" : [ "correctionRequestedAt", "correctionRequestedBy", "descriptionOfChange", "sequence" ],
         "type" : "object",
-        "description" : "Request to make a correction to incident report",
         "properties" : {
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the correction requests for this report",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the correction requests for this report"
+            "deprecated" : true
           },
           "descriptionOfChange" : {
             "type" : "string",
@@ -3997,35 +4037,38 @@
           },
           "correctionRequestedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the changes were requested",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "location" : {
             "type" : "string",
-            "description" : "The reporting location of the staff"
+            "description" : "The reporting location of the staff",
+            "nullable" : true
           },
           "userAction" : {
             "type" : "string",
             "description" : "Action taken by the user on the report",
+            "nullable" : true,
             "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
           "originalReportReference" : {
             "type" : "string",
-            "description" : "Reference number of the original report of which this report is a duplicate of"
+            "description" : "Reference number of the original report of which this report is a duplicate of",
+            "nullable" : true
           },
           "userType" : {
             "type" : "string",
             "description" : "Type of user that submitted this action on the report",
+            "nullable" : true,
             "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
-        "readOnly" : true,
-        "required" : [ "correctionRequestedAt", "correctionRequestedBy", "descriptionOfChange", "sequence" ]
+        "description" : "Request to make a correction to incident report",
+        "readOnly" : true
       },
       "HistoricalQuestion" : {
+        "required" : [ "code", "label", "question", "responses", "sequence" ],
         "type" : "object",
-        "description" : "Previous question with responses making up a previous version of an incident report",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -4041,9 +4084,9 @@
           },
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the questions",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the questions"
+            "deprecated" : true
           },
           "responses" : {
             "type" : "array",
@@ -4054,19 +4097,21 @@
           },
           "additionalInformation" : {
             "type" : "string",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "label", "question", "responses", "sequence" ]
+        "description" : "Previous question with responses making up a previous version of an incident report",
+        "readOnly" : true
       },
       "HistoricalResponse" : {
+        "required" : [ "label", "recordedAt", "recordedBy", "response", "sequence" ],
         "type" : "object",
-        "description" : "Previous response to a question making up a previous version of an incident report",
         "properties" : {
           "code" : {
             "type" : "string",
-            "description" : "Unique identifier for a response to a question"
+            "description" : "Unique identifier for a response to a question",
+            "nullable" : true
           },
           "response" : {
             "type" : "string",
@@ -4078,19 +4123,21 @@
           },
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the responses",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the responses"
+            "deprecated" : true
           },
           "responseDate" : {
             "type" : "string",
-            "format" : "date",
             "description" : "Optional response as a date",
+            "format" : "date",
+            "nullable" : true,
             "example" : "2024-04-29"
           },
           "additionalInformation" : {
             "type" : "string",
-            "description" : "Optional additional information"
+            "description" : "Optional additional information",
+            "nullable" : true
           },
           "recordedBy" : {
             "type" : "string",
@@ -4098,17 +4145,16 @@
           },
           "recordedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the response was made",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           }
         },
-        "readOnly" : true,
-        "required" : [ "label", "recordedAt", "recordedBy", "response", "sequence" ]
+        "description" : "Previous response to a question making up a previous version of an incident report",
+        "readOnly" : true
       },
       "History" : {
+        "required" : [ "changedAt", "changedBy", "questions", "type" ],
         "type" : "object",
-        "description" : "Prior version of an incident report",
         "properties" : {
           "type" : {
             "type" : "string",
@@ -4117,9 +4163,8 @@
           },
           "changedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the report type was changed",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "changedBy" : {
             "type" : "string",
@@ -4134,16 +4179,17 @@
           },
           "nomisType" : {
             "type" : "string",
-            "deprecated" : true,
-            "description" : "Previous NOMIS incident report type code, which may be null for newer incident types"
+            "description" : "Previous NOMIS incident report type code, which may be null for newer incident types",
+            "nullable" : true,
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "changedAt", "changedBy", "questions", "type" ]
+        "description" : "Prior version of an incident report",
+        "readOnly" : true
       },
       "IncidentTypeHistory" : {
+        "required" : [ "changedAt", "changedBy", "type" ],
         "type" : "object",
-        "description" : "Previous incident type of an incident report",
         "properties" : {
           "type" : {
             "type" : "string",
@@ -4152,27 +4198,26 @@
           },
           "changedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the report type was changed",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "changedBy" : {
             "type" : "string",
             "description" : "The member of staff who changed the report type"
           }
         },
-        "readOnly" : true,
-        "required" : [ "changedAt", "changedBy", "type" ]
+        "description" : "Previous incident type of an incident report",
+        "readOnly" : true
       },
       "PrisonerInvolvement" : {
+        "required" : [ "firstName", "lastName", "prisonerNumber", "prisonerRole", "sequence" ],
         "type" : "object",
-        "description" : "Prisoner involved in an incident",
         "properties" : {
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the prisoner involvement for this report",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the prisoner involvement for this report"
+            "deprecated" : true
           },
           "prisonerNumber" : {
             "type" : "string",
@@ -4194,19 +4239,21 @@
           "outcome" : {
             "type" : "string",
             "description" : "Optional outcome of prisoner’s involvement",
+            "nullable" : true,
             "enum" : [ "ACCT", "CHARGED_BY_POLICE", "CONVICTED", "CORONER_INFORMED", "DEATH", "FURTHER_CHARGES", "LOCAL_INVESTIGATION", "NEXT_OF_KIN_INFORMED", "PLACED_ON_REPORT", "POLICE_INVESTIGATION", "REMAND", "SEEN_DUTY_GOV", "SEEN_HEALTHCARE", "SEEN_IMB", "SEEN_OUTSIDE_HOSP", "TRANSFER", "TRIAL" ]
           },
           "comment" : {
             "type" : "string",
-            "description" : "Optional comment on prisoner’s involvement"
+            "description" : "Optional comment on prisoner’s involvement",
+            "nullable" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "firstName", "lastName", "prisonerNumber", "prisonerRole", "sequence" ]
+        "description" : "Prisoner involved in an incident",
+        "readOnly" : true
       },
       "ReportWithDetails" : {
+        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "incidentTypeHistory", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ],
         "type" : "object",
-        "description" : "Incident report with all related information",
         "properties" : {
           "id" : {
             "type" : "string",
@@ -4269,10 +4316,12 @@
           },
           "duplicatedReportId" : {
             "type" : "string",
-            "format" : "uuid"
+            "format" : "uuid",
+            "nullable" : true
           },
           "latestUserAction" : {
             "type" : "string",
+            "nullable" : true,
             "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
           "questions" : {
@@ -4334,31 +4383,34 @@
           },
           "nomisStatus" : {
             "type" : "string",
-            "deprecated" : true,
-            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
+            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped",
+            "nullable" : true,
+            "deprecated" : true
           },
           "nomisType" : {
             "type" : "string",
-            "deprecated" : true,
-            "description" : "NOMIS incident report type code, which may be null for newer incident types"
+            "description" : "NOMIS incident report type code, which may be null for newer incident types",
+            "nullable" : true,
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "correctionRequests", "createdAt", "createdInNomis", "description", "descriptionAddendums", "history", "historyOfStatuses", "id", "incidentDateAndTime", "incidentTypeHistory", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "prisonerInvolvementDone", "prisonersInvolved", "questions", "reportReference", "reportedAt", "reportedBy", "staffInvolved", "staffInvolvementDone", "status", "title", "type" ]
+        "description" : "Incident report with all related information",
+        "readOnly" : true
       },
       "StaffInvolvement" : {
+        "required" : [ "firstName", "lastName", "sequence", "staffRole" ],
         "type" : "object",
-        "description" : "Member of staff involved in an incident",
         "properties" : {
           "sequence" : {
             "type" : "integer",
+            "description" : "Sequence of the staff involvement for this report",
             "format" : "int32",
-            "deprecated" : true,
-            "description" : "Sequence of the staff involvement for this report"
+            "deprecated" : true
           },
           "staffUsername" : {
             "type" : "string",
-            "description" : "Username, absent for manually-added staff or those without NOMIS/DPS accounts"
+            "description" : "Username, absent for manually-added staff or those without NOMIS/DPS accounts",
+            "nullable" : true
           },
           "firstName" : {
             "type" : "string",
@@ -4375,15 +4427,16 @@
           },
           "comment" : {
             "type" : "string",
-            "description" : "Optional comment on staff member involvement"
+            "description" : "Optional comment on staff member involvement",
+            "nullable" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "firstName", "lastName", "sequence", "staffRole" ]
+        "description" : "Member of staff involved in an incident",
+        "readOnly" : true
       },
       "StatusHistory" : {
+        "required" : [ "changedAt", "changedBy", "status" ],
         "type" : "object",
-        "description" : "Previous statuses an incident report transitioned to",
         "properties" : {
           "status" : {
             "type" : "string",
@@ -4392,9 +4445,8 @@
           },
           "changedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the report status was changed",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "changedBy" : {
             "type" : "string",
@@ -4402,34 +4454,36 @@
           },
           "nomisStatus" : {
             "type" : "string",
-            "deprecated" : true,
-            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped"
+            "description" : "Previous NOMIS incident report status code, which may be null for statuses that cannot be mapped",
+            "nullable" : true,
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "changedAt", "changedBy", "status" ]
+        "description" : "Previous statuses an incident report transitioned to",
+        "readOnly" : true
       },
       "AddStaffInvolvement" : {
+        "required" : [ "firstName", "lastName", "staffRole" ],
         "type" : "object",
-        "description" : "Add an involved member of staff to an incident report",
         "properties" : {
           "staffUsername" : {
+            "maxLength" : 120,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Username, absent for manually-added staff or those without NOMIS/DPS accounts",
-            "maxLength" : 120,
-            "minLength" : 3
+            "nullable" : true
           },
           "firstName" : {
-            "type" : "string",
-            "description" : "First name",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "First name"
           },
           "lastName" : {
-            "type" : "string",
-            "description" : "Surname",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Surname"
           },
           "staffRole" : {
             "type" : "string",
@@ -4438,34 +4492,35 @@
           },
           "comment" : {
             "type" : "string",
-            "default" : "null",
-            "description" : "Optional comment on staff member involvement"
+            "description" : "Optional comment on staff member involvement",
+            "nullable" : true,
+            "default" : null
           }
         },
-        "required" : [ "firstName", "lastName", "staffRole" ],
+        "description" : "Add an involved member of staff to an incident report",
         "writeOnly" : true
       },
       "AddPrisonerInvolvement" : {
+        "required" : [ "firstName", "lastName", "prisonerNumber", "prisonerRole" ],
         "type" : "object",
-        "description" : "Add an involved prisoner to an incident report",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
-            "description" : "Prisoner’s NOMIS number",
             "maxLength" : 10,
-            "minLength" : 7
+            "minLength" : 7,
+            "type" : "string",
+            "description" : "Prisoner’s NOMIS number"
           },
           "firstName" : {
-            "type" : "string",
-            "description" : "First name",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "First name"
           },
           "lastName" : {
-            "type" : "string",
-            "description" : "Surname",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Surname"
           },
           "prisonerRole" : {
             "type" : "string",
@@ -4474,317 +4529,350 @@
           },
           "outcome" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Optional outcome of prisoner’s involvement",
-            "enum" : [ "ACCT", "CHARGED_BY_POLICE", "CONVICTED", "CORONER_INFORMED", "DEATH", "FURTHER_CHARGES", "LOCAL_INVESTIGATION", "NEXT_OF_KIN_INFORMED", "PLACED_ON_REPORT", "POLICE_INVESTIGATION", "REMAND", "SEEN_DUTY_GOV", "SEEN_HEALTHCARE", "SEEN_IMB", "SEEN_OUTSIDE_HOSP", "TRANSFER", "TRIAL" ]
+            "nullable" : true,
+            "enum" : [ "ACCT", "CHARGED_BY_POLICE", "CONVICTED", "CORONER_INFORMED", "DEATH", "FURTHER_CHARGES", "LOCAL_INVESTIGATION", "NEXT_OF_KIN_INFORMED", "PLACED_ON_REPORT", "POLICE_INVESTIGATION", "REMAND", "SEEN_DUTY_GOV", "SEEN_HEALTHCARE", "SEEN_IMB", "SEEN_OUTSIDE_HOSP", "TRANSFER", "TRIAL" ],
+            "default" : null
           },
           "comment" : {
             "type" : "string",
-            "default" : "null",
-            "description" : "Optional comment on prisoner’s involvement"
+            "description" : "Optional comment on prisoner’s involvement",
+            "nullable" : true,
+            "default" : null
           }
         },
-        "required" : [ "firstName", "lastName", "prisonerNumber", "prisonerRole" ],
+        "description" : "Add an involved prisoner to an incident report",
         "writeOnly" : true
       },
       "AddDescriptionAddendum" : {
+        "required" : [ "firstName", "lastName", "text" ],
         "type" : "object",
-        "description" : "Add to the description of an incident report by appending an addendum",
         "properties" : {
           "createdBy" : {
+            "maxLength" : 120,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Username of user who added this addendum, defaulting to request token user",
-            "example" : "USER_1",
-            "maxLength" : 120,
-            "minLength" : 3
+            "nullable" : true,
+            "example" : "USER_1"
           },
           "createdAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When addendum was added, defaulting to “now”",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time",
+            "nullable" : true
           },
           "firstName" : {
+            "maxLength" : 255,
+            "minLength" : 1,
             "type" : "string",
             "description" : "First name of person that added this addendum",
-            "example" : "John",
-            "maxLength" : 255,
-            "minLength" : 1
+            "example" : "John"
           },
           "lastName" : {
+            "maxLength" : 255,
+            "minLength" : 1,
             "type" : "string",
             "description" : "Last name of person that added this addendum",
-            "example" : "Doe",
-            "maxLength" : 255,
-            "minLength" : 1
+            "example" : "Doe"
           },
           "text" : {
+            "maxLength" : 2147483647,
+            "minLength" : 1,
             "type" : "string",
             "description" : "Addendum text",
-            "example" : "Internal investigation has concluded",
-            "maxLength" : 2147483647,
-            "minLength" : 1
+            "example" : "Internal investigation has concluded"
           }
         },
-        "required" : [ "firstName", "lastName", "text" ],
+        "description" : "Add to the description of an incident report by appending an addendum",
         "writeOnly" : true
       },
       "AddCorrectionRequest" : {
+        "required" : [ "descriptionOfChange", "userAction", "userType" ],
         "type" : "object",
-        "description" : "Add a correction request to an incident report",
         "properties" : {
           "descriptionOfChange" : {
-            "type" : "string",
-            "description" : "The changes being requested",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The changes being requested"
           },
           "location" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "The location where the staff member is raising the correction",
             "maxLength" : 20,
-            "minLength" : 2
+            "minLength" : 2,
+            "type" : "string",
+            "description" : "The location where the staff member is raising the correction",
+            "nullable" : true,
+            "default" : null
           },
           "userAction" : {
             "type" : "string",
             "description" : "Action taken by the user on the report",
+            "nullable" : true,
             "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           },
           "originalReportReference" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Reference number of the original report of which this report is a duplicate of",
             "maxLength" : 25,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Reference number of the original report of which this report is a duplicate of",
+            "nullable" : true,
+            "default" : null
           },
           "userType" : {
             "type" : "string",
             "description" : "Type of user that submitted this action on the report",
+            "nullable" : true,
             "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
-        "required" : [ "descriptionOfChange", "userAction", "userType" ],
+        "description" : "Add a correction request to an incident report",
         "writeOnly" : true
       },
       "UpdateStaffInvolvement" : {
         "type" : "object",
-        "description" : "Update an involved member of staff in an incident report",
         "properties" : {
           "staffUsername" : {
+            "maxLength" : 120,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Username, absent for manually-added staff or those without NOMIS/DPS accounts– omit to preserve existing username, provide null to clear it",
-            "maxLength" : 120,
-            "minLength" : 3
+            "nullable" : true
           },
           "firstName" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "First name",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "First name",
+            "nullable" : true,
+            "default" : null
           },
           "lastName" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Surname",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Surname",
+            "nullable" : true,
+            "default" : null
           },
           "staffRole" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Their role",
-            "enum" : [ "ACTIVELY_INVOLVED", "AUTHORISING_OFFICER", "CR_HEAD", "CR_LEFT_ARM", "CR_LEGS", "CR_RIGHT_ARM", "CR_SUPERVISOR", "DECEASED", "FIRST_ON_SCENE", "HEALTHCARE", "HOSTAGE", "IN_POSSESSION", "NEGOTIATOR", "PRESENT_AT_SCENE", "SUSPECTED_INVOLVEMENT", "VICTIM", "WITNESS" ]
+            "nullable" : true,
+            "enum" : [ "ACTIVELY_INVOLVED", "AUTHORISING_OFFICER", "CR_HEAD", "CR_LEFT_ARM", "CR_LEGS", "CR_RIGHT_ARM", "CR_SUPERVISOR", "DECEASED", "FIRST_ON_SCENE", "HEALTHCARE", "HOSTAGE", "IN_POSSESSION", "NEGOTIATOR", "PRESENT_AT_SCENE", "SUSPECTED_INVOLVEMENT", "VICTIM", "WITNESS" ],
+            "default" : null
           },
           "comment" : {
             "type" : "string",
-            "description" : "Optional comment on staff member involvement – omit to preserve existing comment, provide null to clear it"
+            "description" : "Optional comment on staff member involvement – omit to preserve existing comment, provide null to clear it",
+            "nullable" : true
           }
         },
+        "description" : "Update an involved member of staff in an incident report",
         "writeOnly" : true
       },
       "UpdatePrisonerInvolvement" : {
         "type" : "object",
-        "description" : "Update an involved prisoner in an incident report",
         "properties" : {
           "prisonerNumber" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Prisoner’s NOMIS number",
             "maxLength" : 10,
-            "minLength" : 7
+            "minLength" : 7,
+            "type" : "string",
+            "description" : "Prisoner’s NOMIS number",
+            "nullable" : true,
+            "default" : null
           },
           "firstName" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "First name",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "First name",
+            "nullable" : true,
+            "default" : null
           },
           "lastName" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Surname",
             "maxLength" : 255,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Surname",
+            "nullable" : true,
+            "default" : null
           },
           "prisonerRole" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Their role",
-            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM" ]
+            "nullable" : true,
+            "enum" : [ "ABSCONDER", "ACTIVE_INVOLVEMENT", "ASSAILANT", "ASSISTED_STAFF", "DECEASED", "ESCAPE", "FIGHTER", "HOSTAGE", "IMPEDED_STAFF", "IN_POSSESSION", "INTENDED_RECIPIENT", "LICENSE_FAILURE", "PERPETRATOR", "PRESENT_AT_SCENE", "SUSPECTED_ASSAILANT", "SUSPECTED_INVOLVED", "TEMPORARY_RELEASE_FAILURE", "VICTIM" ],
+            "default" : null
           },
           "outcome" : {
             "type" : "string",
             "description" : "Optional outcome of prisoner’s involvement – omit to preserve existing outcome, provide null to clear it",
+            "nullable" : true,
             "enum" : [ "ACCT", "CHARGED_BY_POLICE", "CONVICTED", "CORONER_INFORMED", "DEATH", "FURTHER_CHARGES", "LOCAL_INVESTIGATION", "NEXT_OF_KIN_INFORMED", "PLACED_ON_REPORT", "POLICE_INVESTIGATION", "REMAND", "SEEN_DUTY_GOV", "SEEN_HEALTHCARE", "SEEN_IMB", "SEEN_OUTSIDE_HOSP", "TRANSFER", "TRIAL" ]
           },
           "comment" : {
             "type" : "string",
-            "description" : "Optional comment on prisoner’s involvement – omit to preserve existing comment, provide null to clear it"
+            "description" : "Optional comment on prisoner’s involvement – omit to preserve existing comment, provide null to clear it",
+            "nullable" : true
           }
         },
+        "description" : "Update an involved prisoner in an incident report",
         "writeOnly" : true
       },
       "UpdateDescriptionAddendum" : {
         "type" : "object",
-        "description" : "Update a description addendum in an incident report",
         "properties" : {
           "createdBy" : {
+            "maxLength" : 120,
+            "minLength" : 3,
             "type" : "string",
             "description" : "Username of user who added this addendum",
-            "example" : "USER_1",
-            "maxLength" : 120,
-            "minLength" : 3
+            "nullable" : true,
+            "example" : "USER_1"
           },
           "createdAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When addendum was added – omit to preserve existing date, provide null to set it to “now”",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time",
+            "nullable" : true
           },
           "firstName" : {
+            "maxLength" : 255,
+            "minLength" : 1,
             "type" : "string",
             "description" : "First name of person that added this addendum",
-            "example" : "John",
-            "maxLength" : 255,
-            "minLength" : 1
+            "nullable" : true,
+            "example" : "John"
           },
           "lastName" : {
+            "maxLength" : 255,
+            "minLength" : 1,
             "type" : "string",
             "description" : "Last name of person that added this addendum",
-            "example" : "Doe",
-            "maxLength" : 255,
-            "minLength" : 1
+            "nullable" : true,
+            "example" : "Doe"
           },
           "text" : {
+            "maxLength" : 2147483647,
+            "minLength" : 1,
             "type" : "string",
             "description" : "Addendum text",
-            "example" : "Correction made to the report",
-            "maxLength" : 2147483647,
-            "minLength" : 1
+            "nullable" : true,
+            "example" : "Correction made to the report"
           }
         },
+        "description" : "Update a description addendum in an incident report",
         "writeOnly" : true
       },
       "UpdateCorrectionRequest" : {
+        "required" : [ "userAction", "userType" ],
         "type" : "object",
-        "description" : "Update a correction request in an incident report",
         "properties" : {
           "descriptionOfChange" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "The changes being requested",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "The changes being requested",
+            "nullable" : true,
+            "default" : null
           },
           "location" : {
+            "maxLength" : 20,
+            "minLength" : 2,
             "type" : "string",
             "description" : "The location where the staff member is raising the correction",
-            "maxLength" : 20,
-            "minLength" : 2
+            "nullable" : true
           },
           "userAction" : {
             "type" : "string",
-            "default" : "null",
             "description" : "Action taken by the user on the report",
-            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
+            "nullable" : true,
+            "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ],
+            "default" : null
           },
           "originalReportReference" : {
+            "maxLength" : 25,
+            "minLength" : 1,
             "type" : "string",
             "description" : "Reference number of the original report of which this report is a duplicate of",
-            "maxLength" : 25,
-            "minLength" : 1
+            "nullable" : true
           },
           "userType" : {
             "type" : "string",
             "description" : "Type of user that submitted this action on the report",
+            "nullable" : true,
             "enum" : [ "REPORTING_OFFICER", "DATA_WARDEN" ]
           }
         },
-        "required" : [ "userAction", "userType" ],
+        "description" : "Update a correction request in an incident report",
         "writeOnly" : true
       },
       "UpdateReportRequest" : {
         "type" : "object",
-        "description" : "Payload to update key properties of an incident report",
         "properties" : {
           "incidentDateAndTime" : {
             "type" : "string",
-            "format" : "date-time",
-            "default" : "null",
             "description" : "When the incident took place",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time",
+            "nullable" : true,
+            "default" : null
           },
           "location" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "The location where incident took place, typically a NOMIS prison ID",
-            "example" : "MDI",
             "maxLength" : 20,
-            "minLength" : 2
+            "minLength" : 2,
+            "type" : "string",
+            "description" : "The location where incident took place, typically a NOMIS prison ID",
+            "nullable" : true,
+            "example" : "MDI",
+            "default" : null
           },
           "title" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Brief title describing the incident",
             "maxLength" : 255,
-            "minLength" : 5
+            "minLength" : 5,
+            "type" : "string",
+            "description" : "Brief title describing the incident",
+            "nullable" : true,
+            "default" : null
           },
           "description" : {
-            "type" : "string",
-            "default" : "null",
-            "description" : "Longer summary of the incident",
             "maxLength" : 2147483647,
-            "minLength" : 1
+            "minLength" : 1,
+            "type" : "string",
+            "description" : "Longer summary of the incident",
+            "nullable" : true,
+            "default" : null
           },
           "staffInvolvementDone" : {
             "type" : "boolean",
-            "default" : false,
-            "description" : "Internal flag which, if false, is used to indicate that addition of staff involvements is unfinished"
+            "description" : "Internal flag which, if false, is used to indicate that addition of staff involvements is unfinished",
+            "nullable" : true,
+            "default" : null
           },
           "prisonerInvolvementDone" : {
             "type" : "boolean",
-            "default" : false,
-            "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished"
+            "description" : "Internal flag which, if false, is used to indicate that addition of prisoner involvements is unfinished",
+            "nullable" : true,
+            "default" : null
           },
           "duplicatedReportId" : {
             "type" : "string",
+            "description" : "ID of the original report of which this report is a duplicate of",
             "format" : "uuid",
-            "description" : "ID of the original report of which this report is a duplicate of"
+            "nullable" : true
           }
         },
+        "description" : "Payload to update key properties of an incident report",
         "writeOnly" : true
       },
       "ReportBasic" : {
+        "required" : [ "createdAt", "createdInNomis", "description", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "reportReference", "reportedAt", "reportedBy", "status", "title", "type" ],
         "type" : "object",
-        "description" : "Incident report with only key information",
         "properties" : {
           "id" : {
             "type" : "string",
-            "format" : "uuid",
-            "description" : "The internal ID of this report"
+            "description" : "The internal ID of this report",
+            "format" : "uuid"
           },
           "reportReference" : {
             "type" : "string",
@@ -4797,9 +4885,8 @@
           },
           "incidentDateAndTime" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the incident took place",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "location" : {
             "type" : "string",
@@ -4820,27 +4907,24 @@
           },
           "reportedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the incident report was created",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "status" : {
             "type" : "string",
             "description" : "The current status of this report",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
-            "example" : "DRAFT"
+            "example" : "DRAFT",
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
           },
           "createdAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the report was first created",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "modifiedAt" : {
             "type" : "string",
-            "format" : "date-time",
             "description" : "When the report was last changed",
-            "example" : "2024-04-29T12:34:56.789012"
+            "format" : "date-time"
           },
           "modifiedBy" : {
             "type" : "string",
@@ -4854,58 +4938,62 @@
           },
           "duplicatedReportId" : {
             "type" : "string",
+            "description" : "ID of the original report of which this report is a duplicate of",
             "format" : "uuid",
-            "description" : "ID of the original report of which this report is a duplicate of"
+            "nullable" : true
           },
           "latestUserAction" : {
             "type" : "string",
             "description" : "Latest user action from the most recent correction request",
+            "nullable" : true,
             "enum" : [ "REQUEST_REVIEW", "REQUEST_DUPLICATE", "REQUEST_NOT_REPORTABLE", "REQUEST_CORRECTION", "RECALL", "CLOSE", "MARK_DUPLICATE", "MARK_NOT_REPORTABLE", "HOLD" ]
           }
         },
-        "readOnly" : true,
-        "required" : [ "createdAt", "createdInNomis", "description", "id", "incidentDateAndTime", "lastModifiedInNomis", "location", "modifiedAt", "modifiedBy", "reportReference", "reportedAt", "reportedBy", "status", "title", "type" ]
+        "description" : "Incident report with only key information",
+        "readOnly" : true
       },
       "ChangeTypeRequest" : {
+        "required" : [ "newType" ],
         "type" : "object",
-        "description" : "Changes an incident report’s type",
         "properties" : {
           "newType" : {
             "type" : "string",
             "description" : "The new type",
-            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ],
-            "example" : "DAMAGE"
+            "example" : "DAMAGE",
+            "enum" : [ "ABSCOND_1", "ASSAULT_1", "ASSAULT_2", "ASSAULT_3", "ASSAULT_4", "ASSAULT_5", "ATTEMPTED_ESCAPE_FROM_ESCORT_1", "ATTEMPTED_ESCAPE_FROM_PRISON_1", "BARRICADE_1", "BOMB_1", "BREACH_OF_SECURITY_1", "BC_DISRUPT_3RD_PTY_1", "BC_FUEL_SHORTAGE_1", "BC_LOSS_ACCESS_EGRESS_1", "BC_LOSS_COMMS_1", "BC_LOSS_UTILS_1", "BC_SERV_WEATHER_1", "BC_STAFF_SHORTAGES_1", "BC_WIDESPREAD_ILLNESS_1", "CLOSE_DOWN_SEARCH_1", "DEATH_OTHER_1", "DEATH_PRISONER_1", "DAMAGE_1", "DIRTY_PROTEST_1", "DISORDER_1", "DISORDER_2", "DRONE_SIGHTING_1", "DRONE_SIGHTING_2", "DRONE_SIGHTING_3", "DRUGS_1", "ESCAPE_FROM_ESCORT_1", "ESCAPE_FROM_PRISON_1", "FIND_1", "FIND_2", "FIND_3", "FIND_4", "FIND_5", "FIND_6", "FIRE_1", "FIREARM_1", "FOOD_REFUSAL_1", "HOSTAGE_1", "INCIDENT_AT_HEIGHT_1", "CONCERTED_INDISCIPLINE_1", "KEY_OR_LOCK_1", "KEY_OR_LOCK_2", "MISCELLANEOUS_1", "MOBILE_PHONE_1", "RADIO_COMPROMISE_1", "RELEASE_IN_ERROR_1", "SELF_HARM_1", "TEMPORARY_RELEASE_FAILURE_1", "TEMPORARY_RELEASE_FAILURE_2", "TEMPORARY_RELEASE_FAILURE_3", "TEMPORARY_RELEASE_FAILURE_4", "TOOL_LOSS_1" ]
           }
         },
-        "required" : [ "newType" ],
+        "description" : "Changes an incident report’s type",
         "writeOnly" : true
       },
       "ChangeStatusRequest" : {
+        "required" : [ "newStatus" ],
         "type" : "object",
-        "description" : "Changes an incident report’s status",
         "properties" : {
           "newStatus" : {
             "type" : "string",
             "description" : "The new status",
-            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ],
-            "example" : "CLOSED"
+            "example" : "CLOSED",
+            "enum" : [ "DRAFT", "AWAITING_REVIEW", "ON_HOLD", "NEEDS_UPDATING", "UPDATED", "CLOSED", "DUPLICATE", "NOT_REPORTABLE", "REOPENED", "WAS_CLOSED" ]
           },
           "correctionRequest" : {
-            "$ref" : "#/components/schemas/AddCorrectionRequest",
-            "description" : "The associated correction request associated with the status change",
-            "writeOnly" : true
+            "nullable" : true,
+            "allOf" : [ {
+              "$ref" : "#/components/schemas/AddCorrectionRequest"
+            } ]
           }
         },
-        "required" : [ "newStatus" ],
+        "description" : "Changes an incident report’s status",
         "writeOnly" : true
       },
       "Attachment" : {
+        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ],
         "type" : "object",
         "properties" : {
           "attachmentNumber" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The number of the attachment which will match any corresponding reference in the content section"
+            "description" : "The number of the attachment which will match any corresponding reference in the content section",
+            "format" : "int32"
           },
           "name" : {
             "type" : "string",
@@ -4921,46 +5009,51 @@
           },
           "filesize" : {
             "type" : "integer",
-            "format" : "int32",
-            "description" : "The size of the attachment file in bytes"
+            "description" : "The size of the attachment file in bytes",
+            "format" : "int32"
           },
           "filename" : {
             "type" : "string",
             "description" : "The filename of attachment file"
           }
         },
-        "required" : [ "attachmentNumber", "contentType", "filename", "filesize", "name", "url" ]
+        "description" : "The details of any attachments for the subject access request response"
       },
       "HmppsSubjectAccessRequestContent" : {
+        "required" : [ "content" ],
         "type" : "object",
         "properties" : {
           "content" : {
+            "type" : "object",
             "description" : "The content of the subject access request response"
           },
           "attachments" : {
             "type" : "array",
             "description" : "The details of any attachments for the subject access request response",
+            "nullable" : true,
             "items" : {
               "$ref" : "#/components/schemas/Attachment"
             }
           }
-        },
-        "required" : [ "content" ]
+        }
       },
       "DlqMessage" : {
+        "required" : [ "body", "messageId" ],
         "type" : "object",
         "properties" : {
           "body" : {
             "type" : "object",
-            "additionalProperties" : { }
+            "additionalProperties" : {
+              "type" : "object"
+            }
           },
           "messageId" : {
             "type" : "string"
           }
-        },
-        "required" : [ "body", "messageId" ]
+        }
       },
       "GetDlqResult" : {
+        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ],
         "type" : "object",
         "properties" : {
           "messagesFoundCount" : {
@@ -4977,12 +5070,11 @@
               "$ref" : "#/components/schemas/DlqMessage"
             }
           }
-        },
-        "required" : [ "messages", "messagesFoundCount", "messagesReturnedCount" ]
+        }
       },
       "SimplePageReportBasic" : {
+        "required" : [ "content", "number", "numberOfElements", "size", "sort", "totalElements", "totalPages" ],
         "type" : "object",
-        "description" : "Page of results",
         "properties" : {
           "content" : {
             "type" : "array",
@@ -4994,20 +5086,20 @@
           },
           "number" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "Page number (0-based)",
+            "format" : "int32",
             "example" : 0
           },
           "size" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "Page size",
+            "format" : "int32",
             "example" : 20
           },
           "totalElements" : {
             "type" : "integer",
-            "format" : "int64",
             "description" : "Total number of elements in all pages",
+            "format" : "int64",
             "example" : 55
           },
           "sort" : {
@@ -5015,28 +5107,30 @@
             "description" : "Sort orders",
             "example" : [ "property,ASC" ],
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "description" : "Sort orders",
+              "example" : "[\"property,ASC\"]"
             }
-          },
-          "totalPages" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "Total number of pages",
-            "example" : 3
           },
           "numberOfElements" : {
             "type" : "integer",
-            "format" : "int32",
             "description" : "Number of elements in this page",
+            "format" : "int32",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "description" : "Total number of pages",
+            "format" : "int32",
+            "example" : 3
           }
         },
-        "readOnly" : true,
-        "required" : [ "content", "number", "numberOfElements", "size", "sort", "totalElements", "totalPages" ]
+        "description" : "Page of results",
+        "readOnly" : true
       },
       "UserTypeConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "User action constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5049,12 +5143,12 @@
             "example" : "Reporting officer"
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "User action constant",
+        "readOnly" : true
       },
       "UserActionConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "User type constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5067,12 +5161,12 @@
             "example" : "Request correction"
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "User type constant",
+        "readOnly" : true
       },
       "TypeConstantDescription" : {
+        "required" : [ "active", "code", "description", "familyCode" ],
         "type" : "object",
-        "description" : "Report incident type constant",
         "properties" : {
           "familyCode" : {
             "type" : "string",
@@ -5096,17 +5190,18 @@
           },
           "nomisCode" : {
             "type" : "string",
-            "deprecated" : true,
             "description" : "Machine-readable NOMIS identifier of this incident type, which may be null for newer ones",
-            "example" : "DISORDER1"
+            "nullable" : true,
+            "example" : "DISORDER1",
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "active", "code", "description", "familyCode" ]
+        "description" : "Report incident type constant",
+        "readOnly" : true
       },
       "TypeFamilyConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "Report incident type family constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5119,12 +5214,12 @@
             "example" : "Drone sighting"
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "Report incident type family constant",
+        "readOnly" : true
       },
       "StatusConstantDescription" : {
+        "required" : [ "code", "description", "ignoreDownstream" ],
         "type" : "object",
-        "description" : "Report status constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5143,17 +5238,18 @@
           },
           "nomisCode" : {
             "type" : "string",
-            "deprecated" : true,
             "description" : "Machine-readable NOMIS identifier of this value, which may be null for statuses that cannot be mapped",
-            "example" : "INAN"
+            "nullable" : true,
+            "example" : "INAN",
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description", "ignoreDownstream" ]
+        "description" : "Report status constant",
+        "readOnly" : true
       },
       "StaffRoleConstantDescription" : {
+        "required" : [ "code", "description", "nomisCodes" ],
         "type" : "object",
-        "description" : "Staff role constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5167,20 +5263,23 @@
           },
           "nomisCodes" : {
             "type" : "array",
-            "deprecated" : true,
             "description" : "Machine-readable NOMIS identifiers of this value, which may be empty for newer staff roles",
             "example" : "[AI, INV]",
+            "deprecated" : true,
             "items" : {
-              "type" : "string"
+              "type" : "string",
+              "description" : "Machine-readable NOMIS identifiers of this value, which may be empty for newer staff roles",
+              "example" : "[AI, INV]",
+              "deprecated" : true
             }
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description", "nomisCodes" ]
+        "description" : "Staff role constant",
+        "readOnly" : true
       },
       "PrisonerRoleConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "Prisoner role constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5194,17 +5293,18 @@
           },
           "nomisCode" : {
             "type" : "string",
-            "deprecated" : true,
             "description" : "Machine-readable NOMIS identifier of this value, which may be null for newer prisoner roles",
-            "example" : "IMPED"
+            "nullable" : true,
+            "example" : "IMPED",
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "Prisoner role constant",
+        "readOnly" : true
       },
       "PrisonerOutcomeConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "Prisoner outcome constant",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5218,17 +5318,18 @@
           },
           "nomisCode" : {
             "type" : "string",
-            "deprecated" : true,
             "description" : "Machine-readable NOMIS identifier of this value, which may be null for newer prisoner outcomes",
-            "example" : "IPOL"
+            "nullable" : true,
+            "example" : "IPOL",
+            "deprecated" : true
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "Prisoner outcome constant",
+        "readOnly" : true
       },
       "ConstantDescription" : {
+        "required" : [ "code", "description" ],
         "type" : "object",
-        "description" : "Code and description of a constant or enumeration member",
         "properties" : {
           "code" : {
             "type" : "string",
@@ -5241,8 +5342,8 @@
             "example" : "Victim"
           }
         },
-        "readOnly" : true,
-        "required" : [ "code", "description" ]
+        "description" : "Code and description of a constant or enumeration member",
+        "readOnly" : true
       }
     },
     "securitySchemes" : {

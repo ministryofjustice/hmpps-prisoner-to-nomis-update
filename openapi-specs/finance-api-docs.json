@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-09.717.ef8c287"
+    "version" : "2026-04-15.724.e530fd8"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -1099,7 +1099,7 @@
             "type" : "number",
             "format" : "decimal",
             "description" : "The monetary amount of the general ledger entry.",
-            "example" : "162.00"
+            "example" : 162.0
           }
         },
         "required" : [ "amount", "code", "entrySequence", "postingType" ]
@@ -1127,7 +1127,7 @@
             "pattern" : "^[A-Za-z]\\d{4}[A-Za-z]{2}$"
           },
           "offenderBookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The booking ID of the offender transaction.",
             "example" : 455987
@@ -1157,17 +1157,17 @@
           "amount" : {
             "type" : "number",
             "description" : "The monetary amount of the transaction entry.",
-            "example" : "162.00"
+            "example" : 162.0
           },
           "reference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "An optional reference number for the transaction."
           },
           "generalLedgerEntries" : {
             "type" : "array",
             "format" : "decimal",
             "description" : "A list of general ledger entries associated with this offender transaction.",
-            "example" : "162.00",
+            "example" : 162.0,
             "items" : {
               "$ref" : "#/components/schemas/GeneralLedgerEntry"
             }
@@ -1224,20 +1224,20 @@
             "minLength" : 1
           },
           "lastModifiedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation.",
             "example" : "2022-07-15T23:03:01.123456"
           },
           "lastModifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user id of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "AB11DZ",
             "maxLength" : 32,
             "minLength" : 0
           },
           "lastModifiedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "U Dated",
             "maxLength" : 255,
@@ -1286,16 +1286,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -1322,7 +1322,7 @@
             "example" : "General Ledger Account Transfer"
           },
           "reference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "An optional reference number for the transaction.",
             "example" : "REF12345"
           },
@@ -1365,20 +1365,20 @@
             "minLength" : 1
           },
           "lastModifiedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation. (ISO 8601 format with offset)",
             "example" : "2022-07-15T23:03:01.123456"
           },
           "lastModifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user ID of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "AB11DZ",
             "maxLength" : 32,
             "minLength" : 0
           },
           "lastModifiedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "U Dated",
             "maxLength" : 255,
@@ -1411,16 +1411,16 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance at the specified time.",
-            "example" : "123.45"
+            "example" : 123.45
           },
           "holdBalance" : {
             "type" : "number",
             "format" : "decimal",
             "description" : "The amount on hold for the sub-account.",
-            "example" : "10.00"
+            "example" : 10.0
           },
           "transactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The transaction ID that resulted in the last update to the prisoner balance."
           },
@@ -1475,7 +1475,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The account balance at the specified time.",
-            "example" : "123.45"
+            "example" : 123.45
           },
           "asOfTimestamp" : {
             "type" : "string",
@@ -1497,7 +1497,7 @@
             "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
           },
           "legacyTransactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The legacy ID of the transaction from the source system. This is only present if the transaction was originally generated by the legacy system.",
             "example" : 123456
@@ -1534,20 +1534,20 @@
             "minLength" : 1
           },
           "lastModifiedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation.",
             "example" : "2022-07-15T23:03:01.123456"
           },
           "lastModifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user id of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "AB11DZ",
             "maxLength" : 32,
             "minLength" : 0
           },
           "lastModifiedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "U Dated",
             "maxLength" : 255,
@@ -1570,8 +1570,7 @@
             "type" : "array",
             "description" : "The list of offender transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse",
-              "description" : "The list of offender transactions on the current page"
+              "$ref" : "#/components/schemas/SyncOffenderTransactionResponse"
             }
           },
           "page" : {
@@ -1607,7 +1606,7 @@
             "example" : "f1e2d3c4-b5a6-9876-5432-10fedcba9876"
           },
           "legacyTransactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The legacy ID of the transaction from the source system. This is only present if the transaction was originally generated by the legacy system.",
             "example" : 123456
@@ -1618,7 +1617,7 @@
             "example" : "General Ledger Account Transfer"
           },
           "reference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "An optional reference number for the transaction.",
             "example" : "REF12345"
           },
@@ -1659,20 +1658,20 @@
             "minLength" : 1
           },
           "lastModifiedAt" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The date and time the transaction was last modified. Only provided if the transaction has been modified since creation. (ISO 8601 format with offset)",
             "example" : "2022-07-15T23:03:01.123456"
           },
           "lastModifiedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The user ID of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "AB11DZ",
             "maxLength" : 32,
             "minLength" : 0
           },
           "lastModifiedByDisplayName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The displayable name of the person who last modified the transaction. Required if lastModifiedAt has been supplied.",
             "example" : "U Dated",
             "maxLength" : 255,
@@ -1696,8 +1695,7 @@
             "type" : "array",
             "description" : "The list of general ledger transactions on the current page",
             "items" : {
-              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse",
-              "description" : "The list of general ledger transactions on the current page"
+              "$ref" : "#/components/schemas/SyncGeneralLedgerTransactionResponse"
             }
           },
           "page" : {
@@ -1740,13 +1738,13 @@
           "totalBalance" : {
             "type" : "number",
             "description" : "The current monetary balance of the sub account at this establishment. This value can be positive or negative.",
-            "example" : "32.00"
+            "example" : 32.0
           },
           "holdBalance" : {
             "type" : "number",
             "format" : "decimal",
             "description" : "The total amount on hold for this sub account at this establishment.",
-            "example" : "8.00"
+            "example" : 8.0
           }
         },
         "required" : [ "accountCode", "holdBalance", "prisonId", "totalBalance" ]
@@ -1777,7 +1775,7 @@
           "balance" : {
             "type" : "number",
             "description" : "The current monetary balance of the prison general ledger account. This value can be positive or negative.",
-            "example" : "1234.56"
+            "example" : 1234.56
           }
         },
         "required" : [ "accountCode", "balance" ]
@@ -1838,7 +1836,7 @@
             }
           },
           "nextCursor" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "totalElements" : {
             "type" : "integer",
@@ -1862,20 +1860,6 @@
             "type" : "string",
             "format" : "date-time"
           },
-          "transactionTimestamp" : {
-            "type" : "string",
-            "format" : "date-time"
-          },
-          "caseloadId" : {
-            "type" : "string"
-          },
-          "legacyTransactionId" : {
-            "type" : "integer",
-            "format" : "int64"
-          },
-          "requestTypeIdentifier" : {
-            "type" : "string"
-          },
           "requestId" : {
             "type" : "string",
             "format" : "uuid"
@@ -1885,7 +1869,21 @@
             "format" : "uuid"
           },
           "transactionType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
+          },
+          "transactionTimestamp" : {
+            "type" : [ "string", "null" ],
+            "format" : "date-time"
+          },
+          "caseloadId" : {
+            "type" : [ "string", "null" ]
+          },
+          "legacyTransactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64"
+          },
+          "requestTypeIdentifier" : {
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "id", "requestId", "synchronizedTransactionId", "timestamp" ]
@@ -1898,7 +1896,7 @@
             "format" : "date-time"
           },
           "legacyTransactionId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "synchronizedTransactionId" : {
@@ -1910,13 +1908,13 @@
             "format" : "uuid"
           },
           "caseloadId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "requestTypeIdentifier" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "transactionTimestamp" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "transactionType" : {
