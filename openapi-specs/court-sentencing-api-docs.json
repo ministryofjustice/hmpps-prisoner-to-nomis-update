@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.1537.f21f852"
+    "version" : "2026-04-15.1542.4f8e889"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -5941,7 +5941,7 @@
         "type" : "object",
         "properties" : {
           "sentenceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "description" : {
@@ -5949,27 +5949,27 @@
             "minLength" : 1
           },
           "minAgeInclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "maxAgeExclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "minDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "minOffenceDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxOffenceDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "classification" : {
@@ -5977,7 +5977,7 @@
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "hintText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nomisCjaCode" : {
             "type" : "string",
@@ -6008,7 +6008,7 @@
             "type" : "string"
           },
           "message" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "field" ]
@@ -6021,19 +6021,19 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "fieldErrors" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/FieldError"
             }
@@ -6052,27 +6052,27 @@
             "type" : "string"
           },
           "minAgeInclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "maxAgeExclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "minDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "minOffenceDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxOffenceDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "classification" : {
@@ -6080,7 +6080,7 @@
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "hintText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nomisCjaCode" : {
             "type" : "string"
@@ -6113,11 +6113,11 @@
             "format" : "date"
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "inPrisonOnRevocationDate" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "recallTypeCode" : {
             "type" : "string",
@@ -6130,14 +6130,14 @@
             "type" : "string"
           },
           "sentenceIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string",
               "format" : "uuid"
             }
           },
           "calculationRequestId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           }
         },
@@ -6197,10 +6197,14 @@
             "format" : "uuid"
           },
           "fine" : {
-            "$ref" : "#/components/schemas/LegacyCreateFine"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LegacyCreateFine"
+            }, {
+              "type" : "null"
+            } ]
           },
           "consecutiveToLifetimeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "active" : {
@@ -6210,11 +6214,11 @@
             "$ref" : "#/components/schemas/SentenceLegacyData"
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "active", "appearanceUuid", "chargeUuids", "legacyData" ]
@@ -6223,25 +6227,25 @@
         "type" : "object",
         "properties" : {
           "sentenceCalcType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceCategory" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceTypeDesc" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "postedDate" : {
             "type" : "string"
           },
           "active" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "nomisLineReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           }
         },
@@ -6256,26 +6260,26 @@
             "format" : "uuid"
           },
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/PeriodLengthLegacyData"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "legacyData", "sentenceUuid" ]
@@ -6284,13 +6288,13 @@
         "type" : "object",
         "properties" : {
           "lifeSentence" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "sentenceTermCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceTermDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -6298,7 +6302,7 @@
         "type" : "object",
         "properties" : {
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -6309,44 +6313,44 @@
             "type" : "string"
           },
           "courtCaseId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtAppearanceId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "chargeId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "recallId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "eventType" : {
             "type" : "string",
             "enum" : [ "COURT_CASE_INSERTED", "COURT_CASE_UPDATED", "CHARGE_INSERTED", "CHARGE_UPDATED", "COURT_APPEARANCE_INSERTED", "COURT_APPEARANCE_UPDATED", "SENTENCE_INSERTED", "SENTENCE_FIX_SINGLE_CHARGE_INSERTED", "SENTENCE_UPDATED", "LEGACY_COURT_CASE_REFERENCES_UPDATED", "RECALL_INSERTED", "RECALL_UPDATED", "PERIOD_LENGTH_INSERTED", "PERIOD_LENGTH_UPDATED", "PERIOD_LENGTH_DELETED", "RECALL_DELETED", "SENTENCE_DELETED", "CHARGE_DELETED", "COURT_APPEARANCE_DELETED", "COURT_CASE_DELETED", "METADATA_ONLY" ]
           },
           "periodLengthId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string"
             }
           },
           "previousRecallId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "previousSentenceIds" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "type" : "string"
             }
           },
           "originalSentenceId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "eventType", "prisonerId" ]
@@ -6355,7 +6359,11 @@
         "type" : "object",
         "properties" : {
           "courtCaseEventMetadata" : {
-            "$ref" : "#/components/schemas/EventMetadata"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/EventMetadata"
+            }, {
+              "type" : "null"
+            } ]
           },
           "chargesEventMetadata" : {
             "type" : "array",
@@ -6370,11 +6378,11 @@
         "type" : "object",
         "properties" : {
           "linkedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -6401,7 +6409,7 @@
             "format" : "date-time"
           },
           "source" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "NOMIS", "DPS" ]
           }
         },
@@ -6417,7 +6425,7 @@
             }
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           }
         },
@@ -6436,11 +6444,11 @@
             "$ref" : "#/components/schemas/CourtCaseLegacyData"
           },
           "bookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "active", "legacyData", "prisonerId" ]
@@ -6455,7 +6463,7 @@
             }
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "caseReferences" ]
@@ -6464,30 +6472,30 @@
         "type" : "object",
         "properties" : {
           "postedDate" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "outcomeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nextEventDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "outcomeDispositionCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "outcomeConvictionFlag" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "nomisAppearanceTypeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -6508,11 +6516,11 @@
             "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "appearanceDate", "courtCaseUuid", "courtCode", "legacyData" ]
@@ -6521,22 +6529,22 @@
         "type" : "object",
         "properties" : {
           "postedDate" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "outcomeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "outcomeDispositionCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "outcomeConvictionFlag" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "offenceDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -6544,21 +6552,21 @@
         "type" : "object",
         "properties" : {
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/ChargeLegacyData"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "offenceCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "legacyData" ]
@@ -6574,7 +6582,7 @@
             "format" : "date"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "linkedDate", "sourceCourtCaseUuid" ]
@@ -6615,7 +6623,7 @@
             "type" : "string"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "offenceCode" ]
@@ -6639,14 +6647,14 @@
             "format" : "date"
           },
           "homeOfficeReferenceNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "noLongerOfInterestReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "BRITISH_CITIZEN", "RIGHT_TO_REMAIN", "OTHER_REASON" ]
           },
           "noLongerOfInterestComment" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "createdByUsername" : {
             "type" : "string"
@@ -6655,7 +6663,7 @@
             "type" : "string"
           },
           "courtAppearanceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -6669,7 +6677,7 @@
             "format" : "uuid"
           },
           "courtAppearanceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -6679,7 +6687,7 @@
         "type" : "object",
         "properties" : {
           "appearanceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "chargeUuid" : {
@@ -6694,37 +6702,45 @@
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "outcomeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "terrorRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "foreignPowerRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "domesticViolenceRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/CreateSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CreateSentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "prisonId" : {
             "type" : "string"
           },
           "replacingChargeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "createChargeOrder" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           }
         },
@@ -6734,21 +6750,21 @@
         "type" : "object",
         "properties" : {
           "courtCaseUuid" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceUuid" : {
             "type" : "string",
             "format" : "uuid"
           },
           "outcomeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "courtCode" : {
             "type" : "string"
           },
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
@@ -6758,10 +6774,18 @@
             "type" : "string"
           },
           "overallSentenceLength" : {
-            "$ref" : "#/components/schemas/CreatePeriodLength"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CreatePeriodLength"
+            }, {
+              "type" : "null"
+            } ]
           },
           "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/CreateNextCourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CreateNextCourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "charges" : {
             "type" : "array",
@@ -6770,17 +6794,21 @@
             }
           },
           "overallConvictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "prisonId" : {
             "type" : "string"
           },
           "documents" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/UploadedDocument"
             }
@@ -6804,7 +6832,11 @@
             }
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "appearances", "prisonId", "prisonerId" ]
@@ -6826,8 +6858,8 @@
             "format" : "date"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "courtCode" : {
             "type" : "string"
@@ -6840,7 +6872,7 @@
             "type" : "string"
           },
           "courtAppearanceSubtypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -6854,19 +6886,19 @@
             "format" : "uuid"
           },
           "years" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "weeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodOrder" : {
@@ -6880,7 +6912,11 @@
             "type" : "string"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "periodOrder", "prisonId", "type" ]
@@ -6893,7 +6929,7 @@
             "format" : "uuid"
           },
           "chargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -6905,22 +6941,26 @@
             "type" : "string"
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "sentenceTypeId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "fineAmount" : {
-            "$ref" : "#/components/schemas/CreateFineAmount"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CreateFineAmount"
+            }, {
+              "type" : "null"
+            } ]
           },
           "prisonId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "periodLengths", "sentenceServeType", "sentenceUuid" ]
@@ -6986,7 +7026,7 @@
         "type" : "object",
         "properties" : {
           "outcomeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "outcomeName" : {
@@ -7050,7 +7090,7 @@
         "type" : "object",
         "properties" : {
           "outcomeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "outcomeName" : {
@@ -7135,7 +7175,7 @@
         "type" : "object",
         "properties" : {
           "appearanceUUID" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "documents" : {
@@ -7185,7 +7225,7 @@
             "format" : "uuid"
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -7293,21 +7333,21 @@
             "type" : "string"
           },
           "consecutiveToLifetimeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "chargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "fineAmount" : {
-            "type" : "number"
+            "type" : [ "number", "null" ]
           },
           "sentenceStartDate" : {
             "type" : "string",
             "format" : "date"
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -7361,25 +7401,29 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/ChargeLegacyData"
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/MigrationCreateSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MigrationCreateSentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCaseId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "mergedFromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -7400,7 +7444,7 @@
             "format" : "date"
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "legacyData" : {
@@ -7471,19 +7515,19 @@
             "$ref" : "#/components/schemas/NomisPeriodLengthId"
           },
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "legacyData" : {
@@ -7499,7 +7543,11 @@
             "$ref" : "#/components/schemas/MigrationSentenceId"
           },
           "fine" : {
-            "$ref" : "#/components/schemas/MigrationCreateFine"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MigrationCreateFine"
+            }, {
+              "type" : "null"
+            } ]
           },
           "active" : {
             "type" : "boolean"
@@ -7508,7 +7556,11 @@
             "$ref" : "#/components/schemas/SentenceLegacyData"
           },
           "consecutiveToSentenceId" : {
-            "$ref" : "#/components/schemas/MigrationSentenceId"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MigrationSentenceId"
+            }, {
+              "type" : "null"
+            } ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -7517,7 +7569,7 @@
             }
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -7694,25 +7746,29 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/ChargeLegacyData"
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/MergeCreateSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergeCreateSentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCaseId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "mergedFromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -7733,7 +7789,7 @@
             "format" : "date"
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "legacyData" : {
@@ -7789,19 +7845,19 @@
             "$ref" : "#/components/schemas/NomisPeriodLengthId"
           },
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "legacyData" : {
@@ -7817,7 +7873,11 @@
             "$ref" : "#/components/schemas/MergeSentenceId"
           },
           "fine" : {
-            "$ref" : "#/components/schemas/MergeCreateFine"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergeCreateFine"
+            }, {
+              "type" : "null"
+            } ]
           },
           "active" : {
             "type" : "boolean"
@@ -7826,7 +7886,11 @@
             "$ref" : "#/components/schemas/SentenceLegacyData"
           },
           "consecutiveToSentenceId" : {
-            "$ref" : "#/components/schemas/MergeSentenceId"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergeSentenceId"
+            }, {
+              "type" : "null"
+            } ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -7835,7 +7899,7 @@
             }
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -7848,7 +7912,7 @@
             "type" : "string"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "casesCreated" : {
             "type" : "array",
@@ -7999,25 +8063,29 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/ChargeLegacyData"
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/BookingCreateSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BookingCreateSentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCaseId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64"
           },
           "mergedFromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -8038,7 +8106,7 @@
             "format" : "date"
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "legacyData" : {
@@ -8109,19 +8177,19 @@
             "$ref" : "#/components/schemas/NomisPeriodLengthId"
           },
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "legacyData" : {
@@ -8137,7 +8205,11 @@
             "$ref" : "#/components/schemas/BookingSentenceId"
           },
           "fine" : {
-            "$ref" : "#/components/schemas/BookingCreateFine"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BookingCreateFine"
+            }, {
+              "type" : "null"
+            } ]
           },
           "active" : {
             "type" : "boolean"
@@ -8146,7 +8218,11 @@
             "$ref" : "#/components/schemas/SentenceLegacyData"
           },
           "consecutiveToSentenceId" : {
-            "$ref" : "#/components/schemas/BookingSentenceId"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/BookingSentenceId"
+            }, {
+              "type" : "null"
+            } ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -8155,7 +8231,7 @@
             }
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -8305,18 +8381,18 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
             "$ref" : "#/components/schemas/ChargeLegacyData"
           },
           "performedByUser" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "appearanceLifetimeUuid", "legacyData", "offenceCode" ]
@@ -8386,19 +8462,19 @@
         "type" : "object",
         "properties" : {
           "years" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "weeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodOrder" : {
@@ -8409,7 +8485,11 @@
             "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "periodLengthUuid" : {
             "type" : "string",
@@ -8426,7 +8506,7 @@
             "format" : "uuid"
           },
           "chargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -8438,20 +8518,32 @@
             "type" : "string"
           },
           "sentenceType" : {
-            "$ref" : "#/components/schemas/SentenceType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "fineAmount" : {
-            "$ref" : "#/components/schemas/FineAmount"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/FineAmount"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/SentenceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "hasRecall" : {
@@ -8475,7 +8567,7 @@
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "hintText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "displayOrder" : {
             "type" : "integer",
@@ -8488,7 +8580,7 @@
         "type" : "object",
         "properties" : {
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -8498,7 +8590,7 @@
             "format" : "date"
           },
           "mergedFromDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -8512,7 +8604,7 @@
             "format" : "uuid"
           },
           "chargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -8524,20 +8616,32 @@
             "type" : "string"
           },
           "sentenceType" : {
-            "$ref" : "#/components/schemas/SentenceType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "fineAmount" : {
-            "$ref" : "#/components/schemas/FineAmount"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/FineAmount"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/SentenceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "hasRecall" : {
@@ -8560,21 +8664,33 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/ChargeOutcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeOutcome"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCase" : {
-            "$ref" : "#/components/schemas/MergedFromCase"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergedFromCase"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "chargeUuid", "offenceCode" ]
@@ -8589,7 +8705,7 @@
             "type" : "string"
           },
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
@@ -8611,7 +8727,7 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentenceUuid" : {
@@ -8623,7 +8739,7 @@
             "format" : "uuid"
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceType" : {
             "type" : "string"
@@ -8638,7 +8754,7 @@
             "type" : "string"
           },
           "convictedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -8652,7 +8768,7 @@
             "format" : "uuid"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
@@ -8689,7 +8805,7 @@
         "type" : "object",
         "properties" : {
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -8702,11 +8818,11 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentenceUuid" : {
@@ -8714,10 +8830,14 @@
             "format" : "uuid"
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "chargeLegacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "appearanceDate", "courtCode", "offenceCode", "sentenceUuid" ]
@@ -8766,15 +8886,15 @@
             "type" : "string"
           },
           "revocationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "inPrisonOnRevocationDate" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "recallType" : {
             "type" : "string",
@@ -8788,7 +8908,7 @@
             "type" : "string"
           },
           "createdByPrison" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "source" : {
             "type" : "string",
@@ -8801,10 +8921,14 @@
             }
           },
           "ual" : {
-            "$ref" : "#/components/schemas/RecallUALAdjustment"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/RecallUALAdjustment"
+            }, {
+              "type" : "null"
+            } ]
           },
           "calculationRequestId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "isManual" : {
@@ -8818,16 +8942,16 @@
         "type" : "object",
         "properties" : {
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCaseUuid" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentencingAppearanceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentences" : {
@@ -8863,22 +8987,22 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "lineNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -8890,10 +9014,10 @@
             "type" : "string"
           },
           "sentenceTypeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           }
         },
@@ -8945,20 +9069,20 @@
             "type" : "string"
           },
           "establishment" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "cellNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "dateOfBirth" : {
             "type" : "string",
             "format" : "date"
           },
           "pncNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "status" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "dateOfBirth", "firstName", "lastName", "personId" ]
@@ -8970,7 +9094,7 @@
             "type" : "string"
           },
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
@@ -8996,11 +9120,11 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "chargeUuid" : {
@@ -9012,10 +9136,14 @@
             "format" : "uuid"
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "chargeLegacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "chargeUuid", "offenceCode", "sentenceUuid" ]
@@ -9063,30 +9191,46 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/ChargeOutcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeOutcome"
+            }, {
+              "type" : "null"
+            } ]
           },
           "terrorRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "foreignPowerRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/Sentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Sentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCase" : {
-            "$ref" : "#/components/schemas/MergedFromCase"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergedFromCase"
+            }, {
+              "type" : "null"
+            } ]
           },
           "createdAt" : {
             "type" : "string",
@@ -9103,13 +9247,17 @@
             "format" : "uuid"
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceOutcome"
+            }, {
+              "type" : "null"
+            } ]
           },
           "courtCode" : {
             "type" : "string"
           },
           "courtCaseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
@@ -9119,7 +9267,11 @@
             "type" : "string"
           },
           "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/NextCourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/NextCourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "charges" : {
             "type" : "array",
@@ -9128,14 +9280,22 @@
             }
           },
           "overallSentenceLength" : {
-            "$ref" : "#/components/schemas/PeriodLength"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLength"
+            }, {
+              "type" : "null"
+            } ]
           },
           "overallConvictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "documents" : {
             "type" : "array",
@@ -9185,7 +9345,11 @@
             "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ]
           },
           "latestAppearance" : {
-            "$ref" : "#/components/schemas/CourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearances" : {
             "type" : "array",
@@ -9194,10 +9358,18 @@
             }
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedToCaseDetails" : {
-            "$ref" : "#/components/schemas/MergedToCaseDetails"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergedToCaseDetails"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "appearances", "courtCaseUuid", "prisonerId", "status" ]
@@ -9218,17 +9390,17 @@
         "type" : "object",
         "properties" : {
           "mergedToDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "warrantDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         }
@@ -9241,8 +9413,8 @@
             "format" : "date"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "courtCode" : {
             "type" : "string"
@@ -9255,7 +9427,11 @@
             "format" : "uuid"
           },
           "courtAppearanceSubType" : {
-            "$ref" : "#/components/schemas/CourtAppearanceSubtype"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceSubtype"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "appearanceDate", "appearanceType", "courtCode", "futureSkeletonAppearanceUuid" ]
@@ -9280,19 +9456,19 @@
         "type" : "object",
         "properties" : {
           "years" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "weeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodOrder" : {
@@ -9306,7 +9482,11 @@
             "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "periodLengthUuid" : {
             "type" : "string",
@@ -9326,27 +9506,27 @@
             "type" : "string"
           },
           "offenceDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceOutcome" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "lineNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "periodLengths" : {
@@ -9359,27 +9539,31 @@
             "type" : "string"
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "fineAmount" : {
-            "type" : "number"
+            "type" : [ "number", "null" ]
           },
           "courtCode" : {
             "type" : "string"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceDate" : {
             "type" : "string",
             "format" : "date"
           },
           "sentenceTypeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mergedFromCase" : {
-            "$ref" : "#/components/schemas/MergedFromCase"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/MergedFromCase"
+            }, {
+              "type" : "null"
+            } ]
           },
           "orderInChain" : {
             "type" : "integer",
@@ -9419,7 +9603,7 @@
             }
           },
           "keyword" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCodes" : {
             "type" : "array",
@@ -9448,7 +9632,7 @@
             "format" : "date"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -9466,7 +9650,11 @@
             "type" : "string"
           },
           "latestAppearance" : {
-            "$ref" : "#/components/schemas/CourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearanceDocumentsByType" : {
             "type" : "object",
@@ -9525,7 +9713,7 @@
             "type" : "boolean"
           },
           "nomisExpiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -9561,20 +9749,32 @@
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "classificationPeriodDefinition" : {
-            "$ref" : "#/components/schemas/SentenceTypePeriodDefinitions"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceTypePeriodDefinitions"
+            }, {
+              "type" : "null"
+            } ]
           },
           "sentencingAct" : {
             "type" : "integer",
             "format" : "int32"
           },
           "eligibility" : {
-            "$ref" : "#/components/schemas/SentenceEligibility"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceEligibility"
+            }, {
+              "type" : "null"
+            } ]
           },
           "recallType" : {
             "$ref" : "#/components/schemas/RecallType"
           },
           "inputSentenceType" : {
-            "$ref" : "#/components/schemas/SentenceTypeDetail"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceTypeDetail"
+            }, {
+              "type" : "null"
+            } ]
           },
           "nomisActive" : {
             "type" : "boolean"
@@ -9583,7 +9783,7 @@
             "type" : "string"
           },
           "nomisExpiryDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "nomisTermTypes" : {
@@ -9606,7 +9806,11 @@
             "type" : "boolean"
           },
           "periodLength" : {
-            "$ref" : "#/components/schemas/PeriodLengthDetail"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthDetail"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "auto", "type" ]
@@ -9637,11 +9841,11 @@
         "type" : "object",
         "properties" : {
           "toreraEligibilityType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "NONE", "SOPC", "SDS" ]
           },
           "sdsPlusEligibilityType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "NONE", "SECTION250", "SDS" ]
           }
         }
@@ -9657,27 +9861,27 @@
             "type" : "string"
           },
           "minAgeInclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "maxAgeExclusive" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "minDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "minOffenceDateInclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "maxOffenceDateExclusive" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "classification" : {
@@ -9685,7 +9889,7 @@
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "hintText" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "nomisCjaCode" : {
             "type" : "string"
@@ -9727,11 +9931,11 @@
             "type" : "string"
           },
           "returnToCustodyDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "revocationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentenceIds" : {
@@ -9767,23 +9971,23 @@
         "type" : "object",
         "properties" : {
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "isLifeSentence" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "sentenceTermCode" : {
             "type" : "string"
@@ -9826,14 +10030,14 @@
             "type" : "boolean"
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "courtId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "caseReferences" : {
             "type" : "array",
@@ -9855,21 +10059,29 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/ReconciliationSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReconciliationSentence"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "chargeUuid", "offenceCode" ]
@@ -9890,19 +10102,27 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:31:40.437381251"
+            "example" : "07:23:58.79062298"
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/ReconciliationNextCourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ReconciliationNextCourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "nomisAppearanceTypeCode" : {
@@ -9937,7 +10157,11 @@
             "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ]
           },
           "courtCaseLegacyData" : {
-            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearances" : {
             "type" : "array",
@@ -9956,8 +10180,8 @@
             "format" : "date"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "courtId" : {
             "type" : "string"
@@ -9973,29 +10197,33 @@
             "format" : "uuid"
           },
           "periodYears" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodMonths" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodWeeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "periodDays" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "lifeSentence" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "sentenceTermCode" : {
             "type" : "string"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "periodLengthUuid", "sentenceTermCode" ]
@@ -10008,13 +10236,13 @@
             "format" : "uuid"
           },
           "fineAmount" : {
-            "type" : "number"
+            "type" : [ "number", "null" ]
           },
           "sentenceCalcType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceCategory" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "active" : {
             "type" : "boolean"
@@ -10024,10 +10252,14 @@
             "format" : "date"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/SentenceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "periodLengths" : {
@@ -10053,21 +10285,25 @@
             "format" : "uuid"
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "offenceCode" : {
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "courtCaseUuid", "lifetimeUuid", "offenceCode", "prisonerId" ]
@@ -10086,7 +10322,7 @@
             "type" : "string"
           },
           "nomisOutcomeCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -10097,7 +10333,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "09:31:40.437381251"
+            "example" : "07:23:58.79062298"
           },
           "charges" : {
             "type" : "array",
@@ -10106,10 +10342,14 @@
             }
           },
           "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/LegacyNextCourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LegacyNextCourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearanceTypeUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "nomisAppearanceTypeCode" : {
@@ -10126,8 +10366,8 @@
             "format" : "date"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "courtId" : {
             "type" : "string"
@@ -10158,14 +10398,14 @@
             "format" : "date"
           },
           "homeOfficeReferenceNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "noLongerOfInterestReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "BRITISH_CITIZEN", "RIGHT_TO_REMAIN", "OTHER_REASON" ]
           },
           "noLongerOfInterestComment" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "createdAt" : {
             "type" : "string",
@@ -10208,7 +10448,7 @@
             "format" : "date"
           },
           "firstDayInCustody" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         },
@@ -10222,31 +10462,31 @@
             "format" : "uuid"
           },
           "offenceCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "outcome" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "classification" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "STANDARD", "EXTENDED", "SOPC", "INDETERMINATE", "BOTUS", "CIVIL", "DTO", "FINE", "LEGACY", "NON_CUSTODIAL", "LEGACY_RECALL", "UNKNOWN" ]
           },
           "systemOfRecord" : {
             "type" : "string"
           },
           "fineAmount" : {
-            "type" : "number"
+            "type" : [ "number", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -10255,26 +10495,34 @@
             }
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "chargeLegacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "countNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "lineNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceServeType" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceLegacyData" : {
-            "$ref" : "#/components/schemas/SentenceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "outcomeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "isRecallable" : {
             "type" : "boolean"
@@ -10283,11 +10531,11 @@
             "type" : "string"
           },
           "sentenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "createdAt" : {
@@ -10313,15 +10561,15 @@
         "type" : "object",
         "properties" : {
           "offenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "latestRemandAppearanceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "latestSentenceAppearanceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         }
@@ -10330,7 +10578,7 @@
         "type" : "object",
         "properties" : {
           "offenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           }
         }
@@ -10412,19 +10660,19 @@
             "format" : "uuid"
           },
           "years" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "weeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "order" : {
@@ -10448,30 +10696,46 @@
             "type" : "string"
           },
           "offenceStartDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "offenceEndDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "terrorRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "foreignPowerRelated" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "outcome" : {
-            "$ref" : "#/components/schemas/PagedChargeOutcome"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedChargeOutcome"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/ChargeLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ChargeLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "sentence" : {
-            "$ref" : "#/components/schemas/PagedSentence"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedSentence"
+            }, {
+              "type" : "null"
+            } ]
           },
           "mergedFromCase" : {
-            "$ref" : "#/components/schemas/PagedMergedFromCase"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedMergedFromCase"
+            }, {
+              "type" : "null"
+            } ]
           },
           "createdAt" : {
             "type" : "string",
@@ -10488,7 +10752,7 @@
             "format" : "uuid"
           },
           "outcomeName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "outcomeUuid" ]
@@ -10507,7 +10771,11 @@
             "enum" : [ "ACTIVE", "DUPLICATE", "DELETED", "MERGED", "INACTIVE" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtCaseLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "appearanceCount" : {
             "type" : "integer",
@@ -10525,7 +10793,11 @@
             "format" : "date"
           },
           "overallSentenceLength" : {
-            "$ref" : "#/components/schemas/PagedAppearancePeriodLength"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedAppearancePeriodLength"
+            }, {
+              "type" : "null"
+            } ]
           },
           "latestCourtAppearance" : {
             "$ref" : "#/components/schemas/PagedLatestCourtAppearance"
@@ -10540,7 +10812,11 @@
             "type" : "boolean"
           },
           "mergedToCase" : {
-            "$ref" : "#/components/schemas/PagedMergedToCase"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedMergedToCase"
+            }, {
+              "type" : "null"
+            } ]
           },
           "firstDayInCustodyWarrantType" : {
             "type" : "string"
@@ -10556,7 +10832,7 @@
             "format" : "uuid"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -10569,17 +10845,25 @@
             "type" : "string"
           },
           "outcome" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CourtAppearanceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "nextCourtAppearance" : {
-            "$ref" : "#/components/schemas/PagedNextCourtAppearance"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedNextCourtAppearance"
+            }, {
+              "type" : "null"
+            } ]
           },
           "charges" : {
             "type" : "array",
@@ -10598,7 +10882,7 @@
             "format" : "uuid"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -10622,7 +10906,7 @@
             "format" : "uuid"
           },
           "caseReference" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "courtCode" : {
             "type" : "string"
@@ -10646,17 +10930,17 @@
             "format" : "date"
           },
           "appearanceTime" : {
-            "type" : "string",
-            "example" : "09:31:40.437381251"
+            "type" : [ "string", "null" ],
+            "example" : "07:23:58.79062298"
           },
           "courtCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "appearanceTypeDescription" : {
             "type" : "string"
           },
           "appearanceSubtypeDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "futureSkeletonAppearanceUuid" : {
             "type" : "string",
@@ -10673,27 +10957,35 @@
             "format" : "uuid"
           },
           "chargeNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "sentenceServeType" : {
             "type" : "string"
           },
           "consecutiveToSentenceUuid" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid"
           },
           "convictionDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "sentenceType" : {
-            "$ref" : "#/components/schemas/PagedSentenceType"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PagedSentenceType"
+            }, {
+              "type" : "null"
+            } ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/SentenceLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/SentenceLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           },
           "fineAmount" : {
-            "type" : "number"
+            "type" : [ "number", "null" ]
           },
           "periodLengths" : {
             "type" : "array",
@@ -10715,30 +11007,34 @@
             "format" : "uuid"
           },
           "years" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "months" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "weeks" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "days" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "order" : {
             "type" : "string"
           },
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "enum" : [ "SENTENCE_LENGTH", "CUSTODIAL_TERM", "LICENCE_PERIOD", "TARIFF_LENGTH", "TERM_LENGTH", "OVERALL_SENTENCE_LENGTH", "UNSUPPORTED" ]
           },
           "legacyData" : {
-            "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PeriodLengthLegacyData"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "order", "periodLengthUuid" ]
@@ -10800,11 +11096,11 @@
             "type" : "integer",
             "format" : "int32"
           },
-          "sort" : {
-            "$ref" : "#/components/schemas/SortObject"
-          },
           "first" : {
             "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
           },
           "numberOfElements" : {
             "type" : "integer",
