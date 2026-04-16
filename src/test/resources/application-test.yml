@@ -333,12 +333,10 @@ hmpps.sqs:
         { "eventType":[
           "person.temporary-absence-authorisation.approved",
           "person.temporary-absence-authorisation.relocated",
-          "external-movements-api.temporary-absence-outside-movement.created",
+          "person.temporary-absence-authorisation.paused",
           "person.temporary-absence.scheduled",
           "person.temporary-absence.rescheduled",
-          "person.temporary-absence.unscheduled",
-          "external-movements-api.temporary-absence-external-movement-out.created",
-          "external-movements-api.temporary-absence-external-movement-in.created"
+          "person.temporary-absence.unscheduled"
         ]}
       dlqMaxReceiveCount: 1
       visibilityTimeout: 120

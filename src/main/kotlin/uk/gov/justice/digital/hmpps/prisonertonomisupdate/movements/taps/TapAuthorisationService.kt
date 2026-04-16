@@ -167,7 +167,7 @@ class TapAuthorisationService(
     .mapNotNull { occurrenceId -> mappingApiService.getScheduledMovementMapping(occurrenceId) }
 
   private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
-    "EXPIRED", "PENDING" -> "PEN"
+    "EXPIRED", "PAUSED", "PENDING" -> "PEN"
     "APPROVED" if (occurrenceCount == 0) -> "APP-UNSCH"
     "APPROVED" -> "APP-SCH"
     "DENIED" -> "DEN"
