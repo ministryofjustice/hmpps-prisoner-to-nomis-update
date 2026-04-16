@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-14.145.d8c3c07"
+    "version" : "2026-04-15.149.2f32a3f"
   },
   "servers" : [ {
     "url" : "/",
@@ -8431,7 +8431,7 @@
             "example" : true
           },
           "createdBy" : {
-            "type" : [ "string", "null" ],
+            "type" : "string",
             "description" : "Username of the person who created the record",
             "example" : "JSMITH_ADM"
           },
