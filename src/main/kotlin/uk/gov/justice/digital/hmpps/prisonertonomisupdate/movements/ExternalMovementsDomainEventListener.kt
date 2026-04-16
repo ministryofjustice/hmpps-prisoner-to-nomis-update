@@ -52,6 +52,8 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence-authorisation.transport-changed",
       "person.temporary-absence-authorisation.deferred",
       "person.temporary-absence-authorisation.relocated",
+      "person.temporary-absence-authorisation.paused",
+      "person.temporary-absence-authorisation.resumed",
       -> tapAuthorisationService.authorisationChanged(message.fromJson())
 
       "person.temporary-absence.scheduled",
@@ -67,9 +69,11 @@ class ExternalMovementsDomainEventListener(
       "person.temporary-absence.accompaniment-changed",
       "person.temporary-absence.transport-changed",
       "person.temporary-absence.comments-changed",
+      "person.temporary-absence.resumed",
       -> tapOccurrenceService.occurrenceChanged(message.fromJson())
 
       "person.temporary-absence.unscheduled",
+      "person.temporary-absence.paused",
       -> tapOccurrenceService.occurrenceDeleted(message.fromJson())
 
       else -> log.info("Received a message I wasn't expecting: {}", eventType)

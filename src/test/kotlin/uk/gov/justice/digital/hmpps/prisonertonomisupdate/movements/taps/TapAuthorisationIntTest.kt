@@ -356,7 +356,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
     @Nested
     @DisplayName("when DPS is the origin of an authorisation approval")
-    inner class WhenDpsCreated {
+    inner class WhenDpsUpdated {
       @Nested
       @DisplayName("when all goes ok")
       inner class HappyPath {
@@ -617,6 +617,37 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun `will update the application in NOMIS`() {
           nomisApi.verify(
             putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application")),
+          )
+        }
+      }
+
+      @Nested
+      @DisplayName("when we receive an authorisation paused status")
+      inner class UpdateForAuthorisationPaused {
+        @BeforeEach
+        fun setUp() {
+          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 1, statusCode = "PAUSED"))
+          nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
+
+          publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.paused")
+          waitForAnyProcessingToComplete()
+        }
+
+        @Test
+        fun `will send telemetry event showing the update`() {
+          verify(telemetryClient).trackEvent(
+            eq("temporary-absence-application-update-success"),
+            any(),
+            isNull(),
+          )
+        }
+
+        @Test
+        fun `will update the application to pending in NOMIS`() {
+          nomisApi.verify(
+            putRequestedFor(urlPathEqualTo("/movements/A1234BC/taps/application"))
+              .withRequestBodyJsonPath("applicationStatus", "PEN"),
           )
         }
       }
