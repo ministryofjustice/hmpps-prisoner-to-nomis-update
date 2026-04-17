@@ -15,4 +15,8 @@ class OfficialVisitsReconciliationResource(
   @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
   @GetMapping("/official-visits/nomis-visit-id/{nomisVisitId}/reconciliation")
   suspend fun getOfficialVisitsReconciliationByNomisId(@PathVariable nomisVisitId: Long): MismatchVisit? = reconciliationService.checkVisitsMatch(nomisVisitId)
+
+  @PreAuthorize("hasRole('PRISONER_TO_NOMIS__UPDATE__RW')")
+  @GetMapping("/prisoners/{offenderNo}/official-visits/reconciliation")
+  suspend fun getOfficialVisitsReconciliationByPrisonerNumber(@PathVariable offenderNo: String): List<MismatchVisit> = reconciliationService.checkVisitsMatch(offenderNo)
 }
