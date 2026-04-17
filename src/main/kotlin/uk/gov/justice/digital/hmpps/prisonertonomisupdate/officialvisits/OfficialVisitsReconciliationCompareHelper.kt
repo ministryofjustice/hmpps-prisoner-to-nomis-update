@@ -57,7 +57,7 @@ internal fun SyncOfficialVisit.toVisit() = OfficialVisitSummary(
 
 private fun String.asTime() = LocalTime.parse(this)
 
-private fun String.toDpsVisitStatusType(): VisitStatusType = when (this) {
+fun String.toDpsVisitStatusType(): VisitStatusType = when (this) {
   "CANC" -> VisitStatusType.CANCELLED
   "VDE" -> VisitStatusType.COMPLETED
   "HMPOP" -> VisitStatusType.COMPLETED

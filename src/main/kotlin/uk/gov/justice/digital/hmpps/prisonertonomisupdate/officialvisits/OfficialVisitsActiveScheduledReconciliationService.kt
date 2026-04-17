@@ -62,7 +62,7 @@ class OfficialVisitsActiveScheduledReconciliationService(
 
   suspend fun generateActiveScheduledVisitsReconciliationReport(): ReconciliationResult<MismatchPrisonerVisit> = generateReconciliationReport(
     threadCount = pageSize,
-    checkMatch = ::checkPrisonerContactsMatch,
+    checkMatch = ::checkPrisonerVisitsMatch,
     nextPage = ::getNextBookingsForPage,
   )
 
@@ -86,7 +86,7 @@ class OfficialVisitsActiveScheduledReconciliationService(
     .getOrElse { ReconciliationErrorPageResult(it) }
     .also { log.info("Page requested from booking: $lastBookingId, with $pageSize bookings") }
 
-  suspend fun checkPrisonerContactsMatch(prisonerId: PrisonerIds): MismatchPrisonerVisit? = runCatching {
+  suspend fun checkPrisonerVisitsMatch(prisonerId: PrisonerIds): MismatchPrisonerVisit? = runCatching {
     val (nomisVisits, dpsVisits) = withContext(Dispatchers.Unconfined) {
       async { nomisApiService.getOfficialVisitsForPrisoner(prisonerId.offenderNo, fromDate = LocalDate.now(), toDate = LocalDate.now().plusMonths(1)) } to
         async { dpsApiService.getOfficialVisitsForPrisoner(prisonerId.offenderNo, fromDate = LocalDate.now(), toDate = LocalDate.now().plusMonths(1)) }

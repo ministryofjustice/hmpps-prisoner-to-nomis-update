@@ -141,6 +141,58 @@ class OfficialVisitsAllReconciliationService(
     )
   }.getOrNull()
 
+  suspend fun checkVisitsMatch(offenderNo: String): List<MismatchVisit> {
+    val (nomisVisits, dpsVisits) = withContext(Dispatchers.Unconfined) {
+      async { nomisApiService.getOfficialVisitsForPrisoner(offenderNo) } to
+        async { dpsApiService.getOfficialVisitsForPrisoner(offenderNo) }
+    }.awaitBoth()
+    return checkVisitsMatch(
+      dpsVisits = dpsVisits.map { it.toVisit() },
+      nomisVisits = nomisVisits.map { it.toVisit() },
+      nomisRawVisits = nomisVisits,
+    )
+  }
+
+  private fun checkVisitsMatch(dpsVisits: List<OfficialVisitSummary>, nomisVisits: List<OfficialVisitSummary>, nomisRawVisits: List<OfficialVisitResponse>): List<MismatchVisit> = if (dpsVisits.size != nomisVisits.size) {
+    listOf(
+      MismatchVisit(
+        nomisVisitId = 0,
+        reason = "Counts differ: DPS count is ${dpsVisits.size} and NOMIS count is ${nomisVisits.size}",
+      ),
+    )
+  } else {
+    val sortedDpsVisits = dpsVisits.sortedWith(
+      compareBy(
+        OfficialVisitSummary::startDateTime,
+        OfficialVisitSummary::prisonId,
+        OfficialVisitSummary::visitStatus,
+      ),
+    )
+    val sortedNomisVisits = nomisVisits.sortedWith(
+      compareBy(
+        OfficialVisitSummary::startDateTime,
+        OfficialVisitSummary::prisonId,
+        OfficialVisitSummary::visitStatus,
+      ),
+    )
+
+    val sortedNomisRawVisits = nomisRawVisits.sortedWith(
+      compareBy(
+        OfficialVisitResponse::startDateTime,
+        OfficialVisitResponse::prisonId,
+        { it.visitStatus.code.toDpsVisitStatusType() },
+      ),
+    )
+
+    sortedNomisVisits.zip(sortedDpsVisits).mapIndexed { index, (nomisVisit, dpsVisit) ->
+      checkVisitsMatch(
+        nomisVisitId = sortedNomisRawVisits[index].visitId,
+        dpsVisit = dpsVisit,
+        nomisVisit = nomisVisit,
+      )
+    }.filterNotNull()
+  }
+
   private suspend fun nomisVisitToPossibleDpsVisit(nomisVisitId: Long): Pair<OfficialVisitResponse, DpsOfficialVisitResult> = withContext(Dispatchers.Unconfined) {
     async { nomisApiService.getOfficialVisit(nomisVisitId) } to
       async {

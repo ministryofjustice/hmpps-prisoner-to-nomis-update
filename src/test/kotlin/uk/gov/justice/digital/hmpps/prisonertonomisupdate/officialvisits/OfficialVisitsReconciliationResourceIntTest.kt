@@ -11,6 +11,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Of
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
+import java.time.LocalDate
+import java.time.LocalDateTime
 
 class OfficialVisitsReconciliationResourceIntTest(
   @Autowired
@@ -70,6 +72,79 @@ class OfficialVisitsReconciliationResourceIntTest(
           .jsonPath("$.reason").isEqualTo("different-visit-details")
           .jsonPath("$.nomisVisit.prisonId").isEqualTo("WWI")
           .jsonPath("$.dpsVisit.prisonId").isEqualTo("BXI")
+      }
+    }
+  }
+
+  @DisplayName("GET /prisoners/{offenderNo}/official-visits/reconciliation")
+  @Nested
+  inner class GetOfficialVisitsReconciliationByPrisonerNumber {
+
+    @BeforeEach
+    fun setUp() {
+      nomisApi.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A0003TZ",
+        response = listOf(
+          officialVisitResponse().copy(
+            visitId = 4,
+            offenderNo = "A0003TZ",
+            startDateTime = LocalDateTime.parse("2020-01-01T17:01"),
+          ),
+          officialVisitResponse().copy(visitId = 5, offenderNo = "A0003TZ"),
+        ),
+      )
+      dpsApi.stubGetOfficialVisitsForPrisoner(
+        offenderNo = "A0003TZ",
+        response = listOf(
+          syncOfficialVisit().copy(
+            officialVisitId = 4,
+            prisonerNumber = "A0003TZ",
+            startTime = "17:00",
+            visitDate = LocalDate.parse("2020-01-01"),
+          ),
+          syncOfficialVisit().copy(officialVisitId = 5, prisonerNumber = "A0003TZ"),
+        ),
+      )
+    }
+
+    @Nested
+    inner class Security {
+      @Test
+      fun `access forbidden when no role`() {
+        webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
+          .headers(setAuthorisation(roles = listOf()))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access forbidden with wrong role`() {
+        webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
+          .headers(setAuthorisation(roles = listOf("ROLE_BANANAS")))
+          .exchange()
+          .expectStatus().isForbidden
+      }
+
+      @Test
+      fun `access unauthorised with no auth token`() {
+        webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
+          .exchange()
+          .expectStatus().isUnauthorized
+      }
+    }
+
+    @Nested
+    inner class HappyPath {
+      @Test
+      fun `will return mismatches`() {
+        webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
+          .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
+          .exchange()
+          .expectStatus().isOk
+          .expectBody()
+          .jsonPath("$.size()").isEqualTo(1)
+          .jsonPath("$[0].reason").isEqualTo("different-visit-details")
+          .jsonPath("$[0].nomisVisitId").isEqualTo("4")
       }
     }
   }
