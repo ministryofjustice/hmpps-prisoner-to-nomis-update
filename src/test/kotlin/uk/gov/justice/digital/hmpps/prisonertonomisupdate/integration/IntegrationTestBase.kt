@@ -92,3 +92,7 @@ abstract class IntegrationTestBase {
     }
   }
 }
+
+@Suppress("unused")
+inline fun <reified B : Any> WebTestClient.ResponseSpec.expectBodyResponse(): B = this.expectStatus().is2xxSuccessful.expectBody(B::class.java).returnResult().responseBody!!
+inline fun <reified B : Any> WebTestClient.ResponseSpec.expectBodyListResponse() = this.expectStatus().is2xxSuccessful.expectBodyList(B::class.java).returnResult().responseBody!!

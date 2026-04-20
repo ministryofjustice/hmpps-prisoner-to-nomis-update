@@ -1,18 +1,18 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.expectBodyListResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.OfficialVisitMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OfficialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsDpsApiMockServer.Companion.syncOfficialVisit
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.OfficialVisitsNomisApiMockServer.Companion.officialVisitResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.officialvisits.model.SyncOfficialVisit
-import java.time.LocalDate
-import java.time.LocalDateTime
 
 class OfficialVisitsReconciliationResourceIntTest(
   @Autowired
@@ -82,29 +82,17 @@ class OfficialVisitsReconciliationResourceIntTest(
 
     @BeforeEach
     fun setUp() {
-      nomisApi.stubGetOfficialVisitsForPrisoner(
-        offenderNo = "A0003TZ",
-        response = listOf(
-          officialVisitResponse().copy(
-            visitId = 4,
-            offenderNo = "A0003TZ",
-            startDateTime = LocalDateTime.parse("2020-01-01T17:01"),
-          ),
-          officialVisitResponse().copy(visitId = 5, offenderNo = "A0003TZ"),
-        ),
-      )
-      dpsApi.stubGetOfficialVisitsForPrisoner(
-        offenderNo = "A0003TZ",
-        response = listOf(
-          syncOfficialVisit().copy(
-            officialVisitId = 4,
-            prisonerNumber = "A0003TZ",
-            startTime = "17:00",
-            visitDate = LocalDate.parse("2020-01-01"),
-          ),
-          syncOfficialVisit().copy(officialVisitId = 5, prisonerNumber = "A0003TZ"),
-        ),
-      )
+      val nomisVisit100 = officialVisitResponse().copy(visitId = 100, prisonId = "WWI")
+      val nomisVisit101 = officialVisitResponse().copy(visitId = 101)
+      val dpsVisit1000 = syncOfficialVisit().copy(officialVisitId = 1000, prisonCode = "BXI")
+      val dpsVisit1001 = syncOfficialVisit().copy(officialVisitId = 1001)
+      val dpsVisit1002 = syncOfficialVisit().copy(officialVisitId = 1002)
+
+      nomisApi.stubGetOfficialVisitsForPrisoner(offenderNo = "A0003TZ", response = listOf(nomisVisit100, nomisVisit101))
+      dpsApi.stubGetOfficialVisitsForPrisoner(offenderNo = "A0003TZ", response = listOf(dpsVisit1000, dpsVisit1001, dpsVisit1002))
+      stubVisits(100, 1000, nomisVisit100, dpsVisit1000)
+      stubVisits(101, 1001, nomisVisit101, dpsVisit1001)
+      dpsApi.stubGetOfficialVisit(1002, response = dpsVisit1002)
     }
 
     @Nested
@@ -137,14 +125,19 @@ class OfficialVisitsReconciliationResourceIntTest(
     inner class HappyPath {
       @Test
       fun `will return mismatches`() {
-        webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
+        val result: List<MismatchVisit> = webTestClient.get().uri("/prisoners/A0003TZ/official-visits/reconciliation")
           .headers(setAuthorisation(roles = listOf("PRISONER_TO_NOMIS__UPDATE__RW")))
           .exchange()
           .expectStatus().isOk
-          .expectBody()
-          .jsonPath("$.size()").isEqualTo(1)
-          .jsonPath("$[0].reason").isEqualTo("different-visit-details")
-          .jsonPath("$[0].nomisVisitId").isEqualTo("4")
+          .expectBodyListResponse()
+
+        assertThat(result).hasSize(2)
+
+        assertThat(result[0].reason).isEqualTo("different-visit-details")
+        assertThat(result[0].nomisVisit?.prisonId).isEqualTo("WWI")
+        assertThat(result[0].dpsVisit?.prisonId).isEqualTo("BXI")
+
+        assertThat(result[1].reason).isEqualTo("Counts differ: DPS count is 3 and NOMIS count is 2")
       }
     }
   }
