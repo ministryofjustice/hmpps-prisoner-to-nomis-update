@@ -8,10 +8,6 @@ import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
 import com.github.tomakehurst.wiremock.client.WireMock.urlMatching
 import org.assertj.core.api.Assertions.assertThat
-import org.awaitility.kotlin.await
-import org.awaitility.kotlin.matches
-import org.awaitility.kotlin.untilAsserted
-import org.awaitility.kotlin.untilCallTo
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
@@ -32,9 +28,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.Al
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AlertId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.DuplicateAlertErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
-import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDate
-import java.util.UUID
+import java.util.*
 
 class AlertsToNomisIntTest : SqsIntegrationTestBase() {
   @Autowired
@@ -197,47 +192,36 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
           fun setUp() {
             alertsMappingApi.stubPostMappingFollowedBySuccess(HttpStatus.INTERNAL_SERVER_ERROR)
             publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
+            waitForAnyProcessingToComplete("alert-create-success")
           }
 
           @Test
           fun `will eventually send telemetry for success`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("alert-create-success"),
-                any(),
-                isNull(),
-              )
-            }
+            verify(telemetryClient).trackEvent(
+              eq("alert-create-success"),
+              any(),
+              isNull(),
+            )
           }
 
           @Test
           fun `will create the alert in NOMIS once`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("alert-create-success"),
-                any(),
-                isNull(),
-              )
-            }
-
             alertsNomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
           }
 
           @Test
           fun `telemetry will contain key facts about the alert created`() {
-            await untilAsserted {
-              verify(telemetryClient).trackEvent(
-                eq("alert-create-success"),
-                check {
-                  assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
-                  assertThat(it).containsEntry("offenderNo", offenderNo)
-                  assertThat(it).containsEntry("alertCode", "HPI")
-                  assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
-                  assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
-                },
-                isNull(),
-              )
-            }
+            verify(telemetryClient).trackEvent(
+              eq("alert-create-success"),
+              check {
+                assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+                assertThat(it).containsEntry("offenderNo", offenderNo)
+                assertThat(it).containsEntry("alertCode", "HPI")
+                assertThat(it).containsEntry("nomisAlertSequence", "$nomisAlertSequence")
+                assertThat(it).containsEntry("nomisBookingId", "$nomisBookingId")
+              },
+              isNull(),
+            )
           }
         }
 
@@ -248,21 +232,11 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
           fun setUp() {
             alertsMappingApi.stubPostMapping(HttpStatus.INTERNAL_SERVER_ERROR)
             publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
-          }
-
-          @Test
-          fun `will add message to dead letter queue`() {
-            await untilCallTo {
-              awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
-            } matches { it == 1 }
+            waitForAnyProcessingToComplete("RETRY_CREATE_MAPPING-sent-to-dlq")
           }
 
           @Test
           fun `will create the alert in NOMIS once`() {
-            await untilCallTo {
-              awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
-            } matches { it == 1 }
-
             alertsNomisApi.verify(1, postRequestedFor(urlEqualTo("/prisoners/$offenderNo/alerts")))
           }
         }
@@ -284,7 +258,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
               offenderNo = "A1234AA",
-              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -305,8 +278,8 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
       }
 
       @Nested
-      @DisplayName("when alert has already been created in NOMIS but mapping does not exist")
-      inner class WhenAlertAlreadyCreatedWithNoMapping {
+      @DisplayName("when alert has already been created in NOMIS")
+      inner class WhenAlertAlreadyCreatedInNOMIS {
         private val dpsAlertId = UUID.randomUUID().toString()
         private val nomisBookingId = 43217L
         private val nomisAlertSequence = 3L
@@ -334,20 +307,20 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               moreInfo = AlertId(bookingId = nomisBookingId, sequence = nomisAlertSequence),
             ),
           )
-          alertsMappingApi.stubPostMapping()
           publishCreateAlertDomainEvent(offenderNo = offenderNo, alertUuid = dpsAlertId)
-          waitForAnyProcessingToComplete()
+          waitForAnyProcessingToComplete("person.alert.created-sent-to-dlq")
         }
 
         @Test
-        fun `will create a mapping between the NOMIS and DPS ids`() {
-          alertsMappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/alerts"))
-              .withRequestBodyJsonPath("offenderNo", offenderNo)
-              .withRequestBodyJsonPath("mappingType", "DPS_CREATED")
-              .withRequestBodyJsonPath("dpsAlertId", dpsAlertId)
-              .withRequestBodyJsonPath("nomisAlertSequence", nomisAlertSequence)
-              .withRequestBodyJsonPath("nomisBookingId", nomisBookingId),
+        fun `telemetry will contain key facts about the alert failure`() {
+          verify(telemetryClient, times(2)).trackEvent(
+            eq("alert-create-failed"),
+            check {
+              assertThat(it).containsEntry("dpsAlertId", dpsAlertId)
+              assertThat(it).containsEntry("offenderNo", offenderNo)
+              assertThat(it).containsEntry("alertCode", "HPI")
+            },
+            isNull(),
           )
         }
       }
@@ -391,24 +364,16 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           alertsMappingApi.stubGetByDpsId(HttpStatus.NOT_FOUND)
           publishUpdateAlertDomainEvent()
-        }
-
-        @Test
-        fun `will treat this as an error and message will go on DLQ`() {
-          await untilCallTo {
-            awsSqsAlertsDlqClient!!.countAllMessagesOnQueue(alertsDlqUrl!!).get()
-          } matches { it == 1 }
+          waitForAnyProcessingToComplete("person.alert.updated-sent-to-dlq")
         }
 
         @Test
         fun `will send telemetry event showing it failed to update for each retry`() {
-          await untilAsserted {
-            verify(telemetryClient, times(3)).trackEvent(
-              eq("alert-updated-failed"),
-              any(),
-              isNull(),
-            )
-          }
+          verify(telemetryClient, times(2)).trackEvent(
+            eq("alert-updated-failed"),
+            any(),
+            isNull(),
+          )
         }
       }
 
@@ -428,7 +393,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
               offenderNo = "A1234AA",
-              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -574,7 +538,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
               offenderNo = "A1234AA",
-              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -641,7 +604,6 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
               dpsAlertId = dpsAlertId,
               nomisBookingId = nomisBookingId,
               offenderNo = "A1234AA",
-              // TODO
               nomisAlertSequence = nomisAlertSequence,
               mappingType = AlertMappingDto.MappingType.DPS_CREATED,
             ),
@@ -649,13 +611,7 @@ class AlertsToNomisIntTest : SqsIntegrationTestBase() {
           alertsNomisApi.stubDeleteAlert(bookingId = nomisBookingId, alertSequence = nomisAlertSequence)
           alertsMappingApi.stubDeleteByDpsId(status = HttpStatus.INTERNAL_SERVER_ERROR)
           publishDeleteAlertDomainEvent(alertUuid = dpsAlertId, offenderNo = offenderNo)
-          await untilAsserted {
-            verify(telemetryClient).trackEvent(
-              eq("alert-deleted-success"),
-              any(),
-              isNull(),
-            )
-          }
+          waitForAnyProcessingToComplete("alert-deleted-success")
         }
 
         @Test

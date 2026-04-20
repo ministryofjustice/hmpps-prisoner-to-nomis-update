@@ -49,26 +49,14 @@ class AlertsService(
         transform {
           dpsApiService.getAlert(dpsAlertId)
             .let { dpsAlert ->
-              val nomisAlertResponse = nomisApiService.createAlert(offenderNo, dpsAlert.toNomisCreateRequest())
-              if (nomisAlertResponse.isDuplicate) {
-                val nomisAlertId = nomisAlertResponse.duplicateResponse!!
-                AlertMappingDto(
-                  dpsAlertId = dpsAlertId,
-                  nomisBookingId = nomisAlertId.moreInfo.bookingId,
-                  nomisAlertSequence = nomisAlertId.moreInfo.sequence,
-                  offenderNo = offenderNo,
-                  mappingType = AlertMappingDto.MappingType.DPS_CREATED,
-                )
-              } else {
-                val nomisAlert = nomisAlertResponse.successResponse!!
-                AlertMappingDto(
-                  dpsAlertId = dpsAlertId,
-                  nomisBookingId = nomisAlert.bookingId,
-                  nomisAlertSequence = nomisAlert.alertSequence,
-                  offenderNo = offenderNo,
-                  mappingType = AlertMappingDto.MappingType.DPS_CREATED,
-                )
-              }
+              val nomisAlert = nomisApiService.createAlert(offenderNo, dpsAlert.toNomisCreateRequest())
+              AlertMappingDto(
+                dpsAlertId = dpsAlertId,
+                nomisBookingId = nomisAlert.bookingId,
+                nomisAlertSequence = nomisAlert.alertSequence,
+                offenderNo = offenderNo,
+                mappingType = AlertMappingDto.MappingType.DPS_CREATED,
+              )
             }
         }
         saveMapping { mappingApiService.createMapping(it) }

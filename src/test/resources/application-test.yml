@@ -209,7 +209,7 @@ hmpps.sqs:
           "prisoner-alerts.alert-type-reactivated",
           "prisoner-alerts.alert-type-updated"
         ]}
-      dlqMaxReceiveCount: 3
+      dlqMaxReceiveCount: 2
       visibilityTimeout: 120
     casenotes:
       queueName: "casenotes-${random.uuid}"
