@@ -146,51 +146,36 @@ class OfficialVisitsAllReconciliationService(
       async { nomisApiService.getOfficialVisitsForPrisoner(offenderNo) } to
         async { dpsApiService.getOfficialVisitsForPrisoner(offenderNo) }
     }.awaitBoth()
-    return checkVisitsMatch(
-      dpsVisits = dpsVisits.map { it.toVisit() },
-      nomisVisits = nomisVisits.map { it.toVisit() },
-      nomisRawVisits = nomisVisits,
-    )
-  }
 
-  private fun checkVisitsMatch(dpsVisits: List<OfficialVisitSummary>, nomisVisits: List<OfficialVisitSummary>, nomisRawVisits: List<OfficialVisitResponse>): List<MismatchVisit> = if (dpsVisits.size != nomisVisits.size) {
-    listOf(
-      MismatchVisit(
-        nomisVisitId = 0,
-        reason = "Counts differ: DPS count is ${dpsVisits.size} and NOMIS count is ${nomisVisits.size}",
-      ),
-    )
-  } else {
-    val sortedDpsVisits = dpsVisits.sortedWith(
-      compareBy(
-        OfficialVisitSummary::startDateTime,
-        OfficialVisitSummary::prisonId,
-        OfficialVisitSummary::visitStatus,
-      ),
-    )
-    val sortedNomisVisits = nomisVisits.sortedWith(
-      compareBy(
-        OfficialVisitSummary::startDateTime,
-        OfficialVisitSummary::prisonId,
-        OfficialVisitSummary::visitStatus,
-      ),
-    )
+    return nomisVisits.map { it.visitId }.mapNotNull { nomisVisitId ->
+      val (nomisVisit, dpsResult: DpsOfficialVisitResult) = nomisVisitToPossibleDpsVisit(nomisVisitId)
+      when (dpsResult) {
+        is NoMapping -> {
+          MismatchVisit(nomisVisitId = nomisVisitId, reason = "official-visit-mapping-missing")
+        }
 
-    val sortedNomisRawVisits = nomisRawVisits.sortedWith(
-      compareBy(
-        OfficialVisitResponse::startDateTime,
-        OfficialVisitResponse::prisonId,
-        { it.visitStatus.code.toDpsVisitStatusType() },
-      ),
-    )
+        is NoOfficialVisit -> {
+          MismatchVisit(nomisVisitId = nomisVisitId, reason = "dps-record-missing")
+        }
 
-    sortedNomisVisits.zip(sortedDpsVisits).mapIndexed { index, (nomisVisit, dpsVisit) ->
-      checkVisitsMatch(
-        nomisVisitId = sortedNomisRawVisits[index].visitId,
-        dpsVisit = dpsVisit,
-        nomisVisit = nomisVisit,
-      )
-    }.filterNotNull()
+        is OfficialVisit -> {
+          checkVisitsMatch(
+            nomisVisitId = nomisVisitId,
+            dpsVisit = dpsResult.visit.toVisit(),
+            nomisVisit = nomisVisit.toVisit(),
+          )
+        }
+      }
+    }.let {
+      if (dpsVisits.size != nomisVisits.size) {
+        it.toMutableList() + MismatchVisit(
+          nomisVisitId = 0,
+          reason = "Counts differ: DPS count is ${dpsVisits.size} and NOMIS count is ${nomisVisits.size}",
+        )
+      } else {
+        it
+      }
+    }
   }
 
   private suspend fun nomisVisitToPossibleDpsVisit(nomisVisitId: Long): Pair<OfficialVisitResponse, DpsOfficialVisitResult> = withContext(Dispatchers.Unconfined) {
