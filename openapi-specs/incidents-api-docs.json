@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.672.df1b159"
+    "version" : "2026-04-20.677.e327070"
   },
   "servers" : [ {
     "url" : "/",
@@ -4002,7 +4002,7 @@
             "example" : "MDI"
           },
           "title" : {
-            "maxLength" : 255,
+            "maxLength" : 2147483647,
             "minLength" : 5,
             "type" : "string",
             "description" : "Brief title describing the incident"
@@ -4828,7 +4828,7 @@
             "default" : null
           },
           "title" : {
-            "maxLength" : 255,
+            "maxLength" : 2147483647,
             "minLength" : 5,
             "type" : "string",
             "description" : "Brief title describing the incident",
@@ -5112,17 +5112,17 @@
               "example" : "[\"property,ASC\"]"
             }
           },
-          "numberOfElements" : {
-            "type" : "integer",
-            "description" : "Number of elements in this page",
-            "format" : "int32",
-            "example" : 20
-          },
           "totalPages" : {
             "type" : "integer",
             "description" : "Total number of pages",
             "format" : "int32",
             "example" : 3
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "description" : "Number of elements in this page",
+            "format" : "int32",
+            "example" : 20
           }
         },
         "description" : "Page of results",
