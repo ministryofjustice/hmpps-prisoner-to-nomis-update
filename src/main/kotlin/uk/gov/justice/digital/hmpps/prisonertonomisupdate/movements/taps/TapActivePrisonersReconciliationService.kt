@@ -14,7 +14,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
@@ -33,7 +32,7 @@ import java.util.*
 class TapActivePrisonersReconciliationService(
   private val telemetryClient: TelemetryClient,
   private val nomisApiService: TapNomisApiService,
-  private val dpsApiService: ExternalMovementsDpsApiService,
+  private val dpsApiService: TapDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
   private val mappingService: ExternalMovementsMappingApiService,
   @param:Value($$"${reports.temporary-absences.active-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,

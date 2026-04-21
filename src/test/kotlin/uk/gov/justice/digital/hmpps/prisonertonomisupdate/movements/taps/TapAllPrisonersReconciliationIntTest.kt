@@ -19,10 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.test.web.reactive.server.WebTestClient
 import org.springframework.test.web.reactive.server.expectBody
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconAuthorisation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconMovement
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiMockServer.Companion.reconOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.MovementInOutCount
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonAuthorisationCount
@@ -31,6 +27,9 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Person
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.reconAuthorisation
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.reconMovement
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.reconOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
@@ -53,7 +52,7 @@ class TapAllPrisonersReconciliationIntTest(
   @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,
 ) : IntegrationTestBase() {
 
-  private val dpsApi = ExternalMovementsDpsApiExtension.dpsExternalMovementsServer
+  private val dpsApi = TapDpsApiExtension.dpsExternalMovementsServer
 
   @DisplayName("Temporary absences all prisoners reconciliation report")
   @Nested

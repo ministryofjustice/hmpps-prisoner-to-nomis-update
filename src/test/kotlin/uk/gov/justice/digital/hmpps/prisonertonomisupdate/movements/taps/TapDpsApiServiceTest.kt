@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
@@ -13,20 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiExtension.Companion.dpsExternalMovementsServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapConfiguration
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.util.UUID
+import java.util.*
 
 @SpringAPIServiceTest
 @Import(
-  ExternalMovementsDpsApiService::class,
-  ExternalMovementsDpsApiMockServer::class,
-  ExternalMovementsConfiguration::class,
+  TapDpsApiService::class,
+  TapDpsApiMockServer::class,
+  TapConfiguration::class,
   RetryApiService::class,
 )
-class ExternalMovementsDpsApiServiceTest {
+class TapDpsApiServiceTest {
   @Autowired
-  private lateinit var apiService: ExternalMovementsDpsApiService
+  private lateinit var apiService: TapDpsApiService
 
   @Nested
   inner class GetTapAuthorisation {
@@ -228,7 +229,10 @@ class ExternalMovementsDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier, status = 500)
+      dpsExternalMovementsServer.stubGetTapReconciliation(
+        personIdentifier,
+        status = 500,
+      )
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapReconciliation(personIdentifier)
@@ -241,7 +245,9 @@ class ExternalMovementsDpsApiServiceTest {
     @Test
     fun `will pass oath2 token to service`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+        personIdentifier,
+      )
 
       apiService.getTapReconciliationDetail(personIdentifier)
 
@@ -254,7 +260,9 @@ class ExternalMovementsDpsApiServiceTest {
     @Test
     fun `will call get endpoint`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+        personIdentifier,
+      )
 
       apiService.getTapReconciliationDetail(personIdentifier)
 
@@ -266,7 +274,9 @@ class ExternalMovementsDpsApiServiceTest {
     @Test
     fun `will return data`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier)
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+        personIdentifier,
+      )
 
       with(apiService.getTapReconciliationDetail(personIdentifier)) {
         assertThat(scheduledAbsences.size).isEqualTo(1)
@@ -285,7 +295,10 @@ class ExternalMovementsDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(personIdentifier, status = 500)
+      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+        personIdentifier,
+        status = 500,
+      )
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapReconciliationDetail(personIdentifier)

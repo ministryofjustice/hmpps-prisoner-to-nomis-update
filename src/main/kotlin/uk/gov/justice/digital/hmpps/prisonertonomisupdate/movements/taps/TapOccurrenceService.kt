@@ -5,14 +5,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryQueueService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.SCHEDULE_CREATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.SCHEDULE_UPDATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsenceEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_CREATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_UPDATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOut
@@ -32,8 +29,8 @@ internal val NULL_NOMIS_ESCORT_CODE = "NOT_PROVIDED"
 class TapOccurrenceService(
   private val mappingApiService: ExternalMovementsMappingApiService,
   private val nomisApiService: TapNomisApiService,
-  private val dpsApiService: ExternalMovementsDpsApiService,
-  private val retryQueueService: ExternalMovementsRetryQueueService,
+  private val dpsApiService: TapDpsApiService,
+  private val retryQueueService: TapRetryQueueService,
   override val telemetryClient: TelemetryClient,
   private val tapAuthorisationService: TapAuthorisationService,
 ) : TelemetryEnabled {

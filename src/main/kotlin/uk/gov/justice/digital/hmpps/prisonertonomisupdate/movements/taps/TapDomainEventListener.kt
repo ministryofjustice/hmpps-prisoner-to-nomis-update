@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.microsoft.applicationinsights.TelemetryClient
 import io.awspring.cloud.sqs.annotation.SqsListener
@@ -7,17 +7,15 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.listeners.EventFeatureSwitch
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAuthorisationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapOccurrenceService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.DomainEventListener
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.CompletableFuture
 
 @Service
-class ExternalMovementsDomainEventListener(
+class TapDomainEventListener(
   jsonMapper: JsonMapper,
   eventFeatureSwitch: EventFeatureSwitch,
-  retryService: ExternalMovementsRetryService,
+  retryService: TapRetryService,
   private val tapAuthorisationService: TapAuthorisationService,
   private val tapOccurrenceService: TapOccurrenceService,
   telemetryClient: TelemetryClient,

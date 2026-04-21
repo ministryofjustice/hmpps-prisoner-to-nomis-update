@@ -1,18 +1,16 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import org.springframework.stereotype.Service
 import tools.jackson.databind.json.JsonMapper
 import tools.jackson.module.kotlin.readValue
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.APPLICATION
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.SCHEDULE_CREATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.SCHEDULE_UPDATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapAuthorisationService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapOccurrenceService
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.APPLICATION
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_CREATE
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_UPDATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryable
 
 @Service
-class ExternalMovementsRetryService(
+class TapRetryService(
   private val jsonMapper: JsonMapper,
   private val tapAuthorisationService: TapAuthorisationService,
   private val tapOccurrenceService: TapOccurrenceService,
