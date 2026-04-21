@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.microsoft.applicationinsights.TelemetryClient
 import org.springframework.stereotype.Service
@@ -7,7 +7,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryQueueSer
 import uk.gov.justice.hmpps.sqs.HmppsQueueService
 
 @Service
-class ExternalMovementsRetryQueueService(
+class TapRetryQueueService(
   hmppsQueueService: HmppsQueueService,
   telemetryClient: TelemetryClient,
   queueService: QueueService,

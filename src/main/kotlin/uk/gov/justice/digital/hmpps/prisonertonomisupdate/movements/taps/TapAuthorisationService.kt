@@ -5,14 +5,11 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsDpsApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryQueueService
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsRetryService.Companion.MappingTypes.APPLICATION
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.TemporaryAbsenceEvent
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.APPLICATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
@@ -28,8 +25,8 @@ private val AUTHORISATION_EVENTS_UPDATES_ONLY = listOf("person.temporary-absence
 class TapAuthorisationService(
   private val mappingApiService: ExternalMovementsMappingApiService,
   private val nomisApiService: TapNomisApiService,
-  private val dpsApiService: ExternalMovementsDpsApiService,
-  private val retryQueueService: ExternalMovementsRetryQueueService,
+  private val dpsApiService: TapDpsApiService,
+  private val retryQueueService: TapRetryQueueService,
   override val telemetryClient: TelemetryClient,
 ) : TelemetryEnabled {
 

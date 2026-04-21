@@ -1,4 +1,4 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.stereotype.Service
@@ -13,15 +13,15 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncRe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
-import java.util.*
+import java.util.UUID
 
 @Service
-class ExternalMovementsDpsApiService(
-  @Qualifier("movementsApiWebClient") private val webClient: WebClient,
+class TapDpsApiService(
+  @Qualifier("tapsApiWebClient") private val webClient: WebClient,
   retryApiService: RetryApiService,
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "ExternalMovementsDpsApiService"),
+    Context.of("api", "TapsDpsApiService"),
   )
 
   private val syncApi = SyncApi(webClient)
