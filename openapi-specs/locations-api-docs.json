@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-16.671.918c234"
+    "version" : "2026-04-20.677.9be3ead"
   },
   "servers" : [ {
     "url" : "/",
@@ -7423,13 +7423,13 @@
             "example" : "[Details, sometimes a stack trace]"
           },
           "errorCode" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "When present, uniquely identifies the type of error making it easier for clients to discriminate without relying on error description or HTTP status code; see `uk.gov.justice.digital.hmpps.locationsinsideprison.resources.ErrorCode` enumeration in hmpps-locations-inside-prison-api",
             "example" : 101
           },
           "moreInfo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "More information about the error",
             "example" : "[Rarely used, error-specific]"
           }
@@ -7491,7 +7491,7 @@
             "maximum" : 99
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "CNA of the cell",
             "example" : 2,
@@ -7515,25 +7515,25 @@
             "example" : "A-1-001"
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Capacity of certified cell",
             "example" : 2
           },
           "workingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Working capacity",
             "example" : 1
           },
           "maxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Max capacity",
             "example" : 2
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the cell has in-cell sanitation",
             "example" : true
           },
@@ -7544,7 +7544,7 @@
             "example" : "CELL"
           },
           "accommodationTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Accommodation Types",
             "items" : {
               "type" : "string",
@@ -7553,7 +7553,7 @@
             }
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -7562,7 +7562,7 @@
             }
           },
           "usedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Usage For",
             "items" : {
               "type" : "string",
@@ -7571,12 +7571,12 @@
             }
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Local name for the location, not used in cells",
             "example" : "Houseblock A"
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark",
             "example" : "T-01"
           },
@@ -7587,12 +7587,12 @@
             "example" : 3
           },
           "convertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "If converted, the type of cell this location has been converted to",
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
           },
           "subLocations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Sub locations within this cell certificate location",
             "items" : {
               "$ref" : "#/components/schemas/CellCertificateLocationDto"
@@ -7618,7 +7618,7 @@
             "example" : 1
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "deprecated" : true,
             "description" : "CNA (Certified normal accommodation)",
@@ -7632,13 +7632,13 @@
         "description" : "Change History",
         "properties" : {
           "transactionId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Transaction ID",
             "example" : "019464e9-05da-77b3-810b-887e199d8190"
           },
           "transactionType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Transaction type",
             "enum" : [ "LOCATION_CREATE", "LOCATION_CREATE_NON_RESI", "LOCATION_UPDATE", "LOCATION_UPDATE_NON_RESI", "SYNC", "SYNC_NON_RESIDENTIAL", "DELETE", "CAPACITY_CHANGE", "CELL_TYPE_CHANGES", "DEACTIVATION", "PERMANENT_DEACTIVATION", "REACTIVATION", "CELL_CONVERTION_TO_ROOM", "ROOM_CONVERTION_TO_CELL", "SIGNED_OP_CAP", "RESI_SERVICE_ACTIVATION", "NON_RESI_SERVICE_ACTIVATION", "INCLUDE_SEG_IN_ROLL_COUNT_ACTIVATION", "APPROVAL_PROCESS_ACTIVATION", "REQUEST_CERTIFICATION_APPROVAL", "APPROVE_CERTIFICATION_REQUEST", "REJECT_CERTIFICATION_REQUEST", "WITHDRAW_CERTIFICATION_REQUEST", "CERTIFICATE_BASELINE" ],
             "example" : "CAPACITY_CHANGE"
@@ -7649,7 +7649,7 @@
             "example" : "Location Type"
           },
           "oldValues" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Previous values of this attribute",
             "example" : [ "Dry cell", "Safe cell" ],
             "items" : {
@@ -7657,7 +7657,7 @@
             }
           },
           "newValues" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "New values of this attribute",
             "example" : [ "Dry cell", "Safe cell" ],
             "items" : {
@@ -7699,7 +7699,7 @@
             "example" : "001"
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark",
             "example" : "A1"
           },
@@ -7715,12 +7715,12 @@
             "example" : "CELL"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location, (Not Cells)",
             "example" : "Wing A"
           },
           "wingStructure" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The structure of the wing",
             "items" : {
               "type" : "string",
@@ -7728,7 +7728,7 @@
             }
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           },
@@ -7738,53 +7738,61 @@
             "example" : false
           },
           "permanentlyInactiveReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for permanently deactivating",
             "example" : "Demolished"
           },
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "Capacity details of the location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "pendingChanges" : {
-            "$ref" : "#/components/schemas/PendingChangeDto",
-            "description" : "Pending changes of draft or pending approval location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PendingChangeDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "oldWorkingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "When a cell is inactive, show the active working capacity value"
           },
           "certifiedCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a cell",
             "example" : true
           },
           "certification" : {
-            "$ref" : "#/components/schemas/Certification",
-            "deprecated" : true,
-            "description" : "Indicates that this location is certified for use as a residential location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Certification"
+            }, {
+              "type" : "null"
+            } ]
           },
           "usage" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Location Usage",
             "items" : {
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             }
           },
           "servicesUsingLocation" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Services that use this location",
             "items" : {
               "$ref" : "#/components/schemas/ServiceUsingLocationDto"
             }
           },
           "internalMovementAllowed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location can used for internal movements"
           },
           "accommodationTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Accommodation Types",
             "items" : {
               "type" : "string",
@@ -7793,7 +7801,7 @@
             }
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -7802,7 +7810,7 @@
             }
           },
           "usedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Usage For",
             "items" : {
               "type" : "string",
@@ -7822,12 +7830,12 @@
             "example" : false
           },
           "convertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Convert Cell Type",
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ]
           },
           "otherConvertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Convert Cell Type (Other)"
           },
           "active" : {
@@ -7837,7 +7845,7 @@
             "example" : true
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "In-cell sanitation",
             "example" : true
           },
@@ -7847,34 +7855,34 @@
             "example" : false
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date the location was deactivated",
             "example" : "2023-01-23T12:23:00"
           },
           "deactivatedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "For OTHER deactivation reason, a free text comment is provided",
             "example" : "Window damage"
           },
           "deactivatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Staff username who deactivated the location"
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date for location reactivation",
             "example" : "2026-01-24"
           },
           "planetFmReference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Planet FM reference number",
             "example" : "2323/45M"
           },
@@ -7888,7 +7896,7 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-            "examples" : [ "1", "2", "3" ]
+            "examples" : [ 1, 2, 3 ]
           },
           "leafLevel" : {
             "type" : "boolean",
@@ -7896,62 +7904,68 @@
             "example" : false
           },
           "topLevelApprovalLocationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Location Id where approvals can be requested, below this level approval request will not be allowed",
             "example" : "57718979-573c-433a-9e51-2d83f087c11c"
           },
           "pendingApprovalRequestId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Indicates that this location this one has a pending approval, the approval will be for the location held in topLevelApprovalLocationId`",
             "example" : "57818979-573c-433a-9e51-2d83f087c11c"
           },
           "lastDeactivationReasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for the last deactivation change",
             "example" : "Cell damaged"
           },
           "currentCellCertificate" : {
-            "$ref" : "#/components/schemas/CellCertificateLocationDto",
-            "description" : "Cells only, the current certificate data"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CellCertificateLocationDto"
+            }, {
+              "type" : "null"
+            } ]
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Parent Location Id",
             "example" : "57718979-573c-433a-9e51-2d83f887c11c"
           },
           "parentLocation" : {
-            "$ref" : "#/components/schemas/Location",
-            "description" : "Parent Location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            }, {
+              "type" : "null"
+            } ]
           },
           "inactiveCells" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Number of inactive cells below this location"
           },
           "numberOfCellLocations" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Total number of non-structural locations are below this level, e.g. cells and rooms"
           },
           "childLocations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Child Locations",
             "items" : {
               "$ref" : "#/components/schemas/Location"
             }
           },
           "changeHistory" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "History of changes",
             "items" : {
               "$ref" : "#/components/schemas/ChangeHistory"
             }
           },
           "transactionHistory" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "A list of transactions applied to this location",
             "items" : {
               "$ref" : "#/components/schemas/TransactionHistory"
@@ -7988,7 +8002,7 @@
             "enum" : [ "ADJUDICATION_HEARING", "APPOINTMENT", "MOVEMENT", "OCCURRENCE", "PROGRAMMES_ACTIVITIES", "PROPERTY", "VISIT", "OTHER" ]
           },
           "capacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32"
           },
           "sequence" : {
@@ -8003,31 +8017,31 @@
         "description" : "Pending changes",
         "properties" : {
           "maxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending max capacity",
             "example" : 2
           },
           "workingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending working capacity",
             "example" : 1
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending CNA",
             "example" : 2
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Pending cell mark of the location",
             "example" : "A1",
             "minLength" : 1
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Pending in-cell sanitation",
             "example" : true
           }
@@ -8085,7 +8099,7 @@
             "example" : "2023-01-23T10:15:30"
           },
           "oldValues" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Previous values of this attribute",
             "example" : [ "Dry cell", "Safe cell" ],
             "items" : {
@@ -8093,7 +8107,7 @@
             }
           },
           "newValues" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "New values of this attribute",
             "example" : [ "Dry cell", "Safe cell" ],
             "items" : {
@@ -8140,7 +8154,7 @@
             "description" : "Date and time the transaction started"
           },
           "txEndTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date and time the transaction ended"
           },
@@ -8165,20 +8179,20 @@
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information on deactivation, for OTHER DeactivatedReason must be provided",
             "example" : "Window broken",
             "maxLength" : 255,
             "minLength" : 0
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date",
             "example" : "2025-01-05"
           },
           "planetFmReference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Planet FM reference number",
             "example" : "23423TH/5",
             "maxLength" : 60,
@@ -8190,7 +8204,7 @@
             "example" : false
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Explanation of why the capacity need to be decreased",
             "example" : "The cell is damaged and will be take 6 months to repair"
           }
@@ -8208,7 +8222,7 @@
             "example" : "SHOWER"
           },
           "otherConvertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "When other, the cell type name",
             "example" : "Hot Tub",
             "maxLength" : 255,
@@ -8242,7 +8256,7 @@
             "example" : "NORMAL_ACCOMMODATION"
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist cell types",
             "example" : [ "BIOHAZARD_DIRTY_PROTEST", "ACCESSIBLE_CELL" ],
             "items" : {
@@ -8267,7 +8281,7 @@
             "maximum" : 99
           },
           "usedForTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Used For list",
             "example" : [ "STANDARD_ACCOMMODATION", "PERSONALITY_DISORDER" ],
             "items" : {
@@ -8290,7 +8304,7 @@
             "example" : "SHOWER"
           },
           "otherConvertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Other type of converted cell",
             "example" : "Swimming pool",
             "maxLength" : 255,
@@ -8304,14 +8318,14 @@
         "description" : "Request to update the local name of a location",
         "properties" : {
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 40,
             "minLength" : 0
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the staff updating the location"
           }
         }
@@ -8341,7 +8355,7 @@
             "maximum" : 99
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "CNA of the cell",
             "example" : 2,
@@ -8360,7 +8374,7 @@
             "example" : true
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason why the approval was requested, mandatory if the cell change must be approved",
             "example" : "The toilet is broken"
           }
@@ -8378,7 +8392,7 @@
             "minLength" : 1
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason why the approval was requested, mandatory if the cell change must be approved",
             "example" : "The door mark has been updated"
           }
@@ -8390,7 +8404,7 @@
         "description" : "Request to create or update non-residential location",
         "properties" : {
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description of the non-residential locations, mandatory for create",
             "example" : "Adj Room",
             "maxLength" : 80,
@@ -8406,7 +8420,7 @@
             "uniqueItems" : true
           },
           "active" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Status, if false will be marked as inactive, true will make active or null untouched",
             "example" : true
           }
@@ -8429,7 +8443,7 @@
             "example" : "MDI"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Description to display for location",
             "example" : "Gym"
           },
@@ -8460,7 +8474,7 @@
             "example" : false
           },
           "permanentlyInactiveReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for permanently deactivating",
             "example" : "Demolished"
           },
@@ -8487,34 +8501,34 @@
             "example" : "ACTIVE"
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date the location was deactivated",
             "example" : "2023-01-23T12:23:00"
           },
           "deactivatedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
           },
           "deactivationReasonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "For OTHER deactivation reason, a free text comment is provided",
             "example" : "Window damage"
           },
           "deactivatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Staff username who deactivated the location"
           },
           "level" : {
             "type" : "integer",
             "format" : "int32",
             "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-            "examples" : [ "1", "2", "3" ]
+            "examples" : [ 1, 2, 3 ]
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Parent Location Id",
             "example" : "57718979-573c-433a-9e51-2d83f887c11c"
@@ -8545,7 +8559,7 @@
             "description" : "Parent location under which cells is to be updated, this location must be DRAFT"
           },
           "cellsUsedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Used for types for all cells",
             "items" : {
               "type" : "string",
@@ -8577,7 +8591,7 @@
         "description" : "Information about cells to be created or updated",
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of the location, update only",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
@@ -8589,7 +8603,7 @@
             "minLength" : 1
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark of the location",
             "example" : "A1",
             "minLength" : 1
@@ -8618,7 +8632,7 @@
             "maximum" : 99
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist cell types",
             "items" : {
               "type" : "string",
@@ -8677,16 +8691,14 @@
             "example" : true
           },
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "New capacity of the location, if null the old values are used",
-            "example" : {
-              "workingCapacity" : 1,
-              "maxCapacity" : 2,
-              "certifiedNormalAccommodation" : 2
-            }
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -8709,20 +8721,20 @@
             "example" : "MOTHBALLED"
           },
           "deactivationReasonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information on deactivation, for OTHER DeactivatedReason must be provided",
             "example" : "Window broken",
             "maxLength" : 255,
             "minLength" : 0
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date",
             "example" : "2025-01-05"
           },
           "planetFmReference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Planet FM reference number",
             "example" : "23423TH/5",
             "maxLength" : 60,
@@ -8753,12 +8765,12 @@
             "example" : false
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Explanation of why the capacity need to be decreased",
             "example" : "The cell is damaged and will be take 6 months to repair"
           },
           "updatedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the user requesting to deactivate the locations, if not provided the token username or client id will be used",
             "example" : "TESTUSER",
             "maxLength" : 80,
@@ -8788,7 +8800,7 @@
             "minItems" : 1
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason why the approval was requested, mandatory if it must be approved",
             "example" : "The cell is no longer needed"
           }
@@ -8814,21 +8826,21 @@
             "maximum" : 99
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Indicates the capacity of the certified location (cell)",
             "example" : 1,
             "maximum" : 99
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Working capacity of the location",
             "example" : "A1-03",
             "maxLength" : 12,
             "minLength" : 0
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicate that the cell as in-cell sanitation",
             "example" : true
           }
@@ -8859,7 +8871,7 @@
             }
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason why the approval was requested, mandatory if it must be approved",
             "example" : "The cell capacity has changed"
           }
@@ -8881,18 +8893,18 @@
             "example" : "Working capacity from 2 ==> 1"
           },
           "type" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Attribute changed in the update",
             "example" : "workingCapacity"
           },
           "previousValue" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Old value of this attribute",
             "example" : 2
           },
           "newValue" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "New value of this attribute",
             "example" : 1
@@ -8934,7 +8946,7 @@
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
           },
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Location Id",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
@@ -8951,7 +8963,7 @@
             "example" : "MDI"
           },
           "locationKey" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location key",
             "example" : "MDI-A-1-001"
           },
@@ -8972,130 +8984,130 @@
             "description" : "Date and time of the request"
           },
           "approvedOrRejectedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User who approved or rejected the request",
             "example" : "USER2"
           },
           "approvedOrRejectedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date and time of the approval or rejection"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Comments about the approval or rejection"
           },
           "certifiedNormalAccommodationChange" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Change in certified normal accommodation",
             "example" : 1
           },
           "workingCapacityChange" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Change in working capacity",
             "example" : 1
           },
           "maxCapacityChange" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Change in maximum capacity",
             "example" : 1
           },
           "currentSignedOperationCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Current value of signed operational capacity",
             "example" : 1
           },
           "signedOperationCapacityChange" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Change signed operational capacity",
             "example" : 1
           },
           "reasonForSignedOpChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "deprecated" : true,
             "description" : "The reason why the signed op cap was changed",
             "example" : "Change in number of cells"
           },
           "reasonForChange" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The reason why the approval was requested",
             "example" : "Change in number of cells"
           },
           "locations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Locations affected by the approval",
             "items" : {
               "$ref" : "#/components/schemas/CertificationApprovalRequestLocationDto"
             }
           },
           "certificateId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "The ID of the certificate once approved"
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark of the location",
             "example" : "A1",
             "minLength" : 1
           },
           "currentCellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Current cell mark",
             "example" : "A1-001"
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the cell has in-cell sanitation",
             "example" : true
           },
           "currentInCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Whether the current cell has in-cell sanitation",
             "example" : false
           },
           "deactivatedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
           },
           "maxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending max capacity",
             "example" : 2
           },
           "workingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending working capacity",
             "example" : 1
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Pending CNA",
             "example" : 2
           },
           "deactivationReasonDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "For OTHER deactivation reason, a free text comment is provided",
             "example" : "Window damage"
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date for location reactivation",
             "example" : "2026-01-24"
           },
           "planetFmReference" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Planet FM reference number",
             "example" : "2323/45M"
           }
@@ -9118,12 +9130,12 @@
             "example" : "MDI-A-1-001"
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark",
             "example" : "Standard"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Local name",
             "example" : "Cell 1"
           },
@@ -9139,43 +9151,43 @@
             "example" : 3
           },
           "certifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Capacity of certified cell",
             "example" : 2
           },
           "workingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Working capacity",
             "example" : 2
           },
           "maxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Maximum capacity",
             "example" : 2
           },
           "currentCertifiedNormalAccommodation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Current capacity of certified cell",
             "example" : 2
           },
           "currentWorkingCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Current working capacity",
             "example" : 2
           },
           "currentMaxCapacity" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Current maximum capacity",
             "example" : 2
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "In-cell sanitation",
             "example" : true
           },
@@ -9186,7 +9198,7 @@
             "example" : "CELL"
           },
           "accommodationTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Accommodation Types",
             "items" : {
               "type" : "string",
@@ -9195,7 +9207,7 @@
             }
           },
           "currentSpecialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Current specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -9204,7 +9216,7 @@
             }
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -9213,7 +9225,7 @@
             }
           },
           "usedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Usage For",
             "items" : {
               "type" : "string",
@@ -9222,13 +9234,13 @@
             }
           },
           "convertedCellType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Converted cell type",
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ],
             "example" : "OFFICE"
           },
           "subLocations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Sub-locations",
             "items" : {
               "$ref" : "#/components/schemas/CertificationApprovalRequestLocationDto"
@@ -9289,15 +9301,14 @@
         "description" : "Cell reactivation details",
         "properties" : {
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "New capacity of the location, if null the old values are used",
-            "example" : {
-              "workingCapacity" : 1,
-              "maxCapacity" : 2
-            }
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -9325,7 +9336,7 @@
             "example" : true
           },
           "cellReactivationChanges" : {
-            "type" : "object",
+            "type" : [ "object", "null" ],
             "additionalProperties" : {
               "$ref" : "#/components/schemas/CellReactivationDetail"
             },
@@ -9370,7 +9381,7 @@
         "description" : "Request to upsert/sync a location from NOMIS to the Locations API",
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Location UUID, provided if already exists",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4d"
@@ -9396,75 +9407,80 @@
             "example" : "CELL"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 80,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used",
             "maxLength" : 255,
             "minLength" : 0
           },
           "orderWithinParentLocation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Sequence of locations within the current parent location",
             "example" : 1
           },
           "residentialHousingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "If residential location, its type",
             "enum" : [ "HEALTHCARE", "HOLDING_CELL", "NORMAL_ACCOMMODATION", "RECEPTION", "SEGREGATION", "SPECIALIST_CELL", "OTHER_USE" ],
             "example" : "NORMAL_ACCOMMODATION"
           },
           "deactivationReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "REFURBISHMENT", "LOCAL_WORK", "STAFF_SHORTAGE", "MOTHBALLED", "DAMAGED", "NEW_BUILDING", "CELL_RECLAIMS", "CHANGE_OF_USE", "CLOSURE", "OUT_OF_USE", "CELLS_RETURNING_TO_USE", "OTHER" ],
             "example" : "DAMAGED"
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date",
             "example" : "2025-01-05"
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date deactivation occurred",
             "example" : "2023-01-05"
           },
           "parentLocationPath" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Path hierarchy of the parent (if one exists)",
             "example" : "A-1"
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Parent UUID of the parent location (if one exists)",
             "example" : "2475f250-434a-4257-afe7-b911f1773a4e"
           },
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "Capacity details of the location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "certifiedCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "certification" : {
-            "$ref" : "#/components/schemas/Certification",
-            "deprecated" : true,
-            "description" : "Deprecated mechanism for displaying and updating CNA and certified status"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Certification"
+            }, {
+              "type" : "null"
+            } ]
           },
           "attributes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Location Attributes",
             "items" : {
               "type" : "string",
@@ -9473,7 +9489,7 @@
             "uniqueItems" : true
           },
           "usage" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Location Usage",
             "items" : {
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
@@ -9481,16 +9497,16 @@
             "uniqueItems" : true
           },
           "internalMovementAllowed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location can used for internal movements"
           },
           "createDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date location was created, if not provided then the current time will be used for a new location"
           },
           "lastModifiedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Last updated, if not provided then the current time will be used"
           },
@@ -9536,18 +9552,18 @@
             "example" : "CELL"
           },
           "residentialHousingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "If residential location, its type",
             "enum" : [ "HEALTHCARE", "HOLDING_CELL", "NORMAL_ACCOMMODATION", "RECEPTION", "SEGREGATION", "SPECIALIST_CELL", "OTHER_USE" ],
             "example" : "NORMAL_ACCOMMODATION"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location, (Not Cells)",
             "example" : "Wing A"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           },
@@ -9557,21 +9573,26 @@
             "description" : "When set to true DO NOT SYNC the working capacity"
           },
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "Capacity details of the location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "certifiedCell" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location is certified for use as a cell",
             "example" : true
           },
           "certification" : {
-            "$ref" : "#/components/schemas/Certification",
-            "deprecated" : true,
-            "description" : "Indicates that this location is certified for use as a residential location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Certification"
+            }, {
+              "type" : "null"
+            } ]
           },
           "attributes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Location Attributes",
             "items" : {
               "type" : "string",
@@ -9579,18 +9600,18 @@
             }
           },
           "usage" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Location Usage",
             "items" : {
               "$ref" : "#/components/schemas/NonResidentialUsageDto"
             }
           },
           "internalMovementAllowed" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this location can used for internal movements"
           },
           "orderWithinParentLocation" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Sequence of locations within the current parent location",
             "example" : 1
@@ -9601,19 +9622,19 @@
             "example" : true
           },
           "deactivatedDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Date the location was deactivated",
             "example" : "2023-01-23"
           },
           "deactivatedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
           },
           "proposedReactivationDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "Estimated reactivation date for location reactivation",
             "example" : "2026-01-24"
@@ -9625,13 +9646,13 @@
             "example" : false
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Parent Location Id",
             "example" : "57718979-573c-433a-9e51-2d83f887c11c"
           },
           "changeHistory" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "History of changes",
             "items" : {
               "$ref" : "#/components/schemas/ChangeHistory"
@@ -9731,7 +9752,7 @@
             "minLength" : 1
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark of the location",
             "example" : "A1",
             "minLength" : 1
@@ -9749,26 +9770,29 @@
             "example" : "CELL"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 80,
             "minLength" : 0
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of parent location",
             "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
           },
           "parentLocationKey" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Key of parent location (can be used instead of parentId)",
             "example" : "MDI-B-1"
           },
           "capacity" : {
-            "$ref" : "#/components/schemas/Capacity",
-            "description" : "Capacity of the residential location"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Capacity"
+            }, {
+              "type" : "null"
+            } ]
           },
           "certified" : {
             "type" : "boolean",
@@ -9776,7 +9800,7 @@
             "description" : "Certified status of the residential location"
           },
           "usedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Used For Types",
             "items" : {
               "type" : "string",
@@ -9786,7 +9810,7 @@
             "uniqueItems" : true
           },
           "specialistCellTypes" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Specialist Cell Types",
             "items" : {
               "type" : "string",
@@ -9839,20 +9863,20 @@
             "example" : "ADJUDICATION_ROOM"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Adj Room",
             "maxLength" : 80,
             "minLength" : 0
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of parent location",
             "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
           },
           "servicesUsingLocation" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
@@ -9889,7 +9913,7 @@
             "minLength" : 0
           },
           "wingDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 80,
@@ -9919,16 +9943,19 @@
             "pattern" : "^[A-Z]{2}I|ZZGHI$"
           },
           "parentLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "Parent location under which the structure and/or cells should be created, if not specified then will add to the top level of the prison, is specified but no `newLevelAboveCells` is specified then cells will be created under this location"
           },
           "newLevelAboveCells" : {
-            "$ref" : "#/components/schemas/LevelAboveCells",
-            "description" : "The location to create above the cells, this is normally a landing or spur, if the location where cells should be created under already exists then leave null"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/LevelAboveCells"
+            }, {
+              "type" : "null"
+            } ]
           },
           "cellsUsedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Used For Types for all cells",
             "items" : {
               "type" : "string",
@@ -9945,7 +9972,7 @@
             "example" : "NORMAL_ACCOMMODATION"
           },
           "cells" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Set of cells that are to be created",
             "items" : {
               "$ref" : "#/components/schemas/CellInformation"
@@ -9967,7 +9994,7 @@
             "minLength" : 0
           },
           "levelLocalName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Landing A",
             "maxLength" : 80,
@@ -9988,37 +10015,37 @@
         "description" : "Request to update a residential location",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Code of the location",
             "example" : "001",
             "minLength" : 1
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of parent location",
             "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
           },
           "parentLocationKey" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Key of parent location",
             "example" : "MDI-B-1",
             "maxLength" : 80,
             "minLength" : 0
           },
           "removeParent" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates this location should move to the top of the hierarchy",
             "example" : false
           },
           "accommodationType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Accommodation type",
             "enum" : [ "CARE_AND_SEPARATION", "HEALTHCARE_INPATIENTS", "NORMAL_ACCOMMODATION", "OTHER_NON_RESIDENTIAL" ],
             "example" : "NORMAL_ACCOMMODATION"
           },
           "usedFor" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "used For types",
             "items" : {
               "type" : "string",
@@ -10028,31 +10055,31 @@
             "uniqueItems" : true
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 40,
             "minLength" : 0
           },
           "locationType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location Type",
             "enum" : [ "WING", "SPUR", "LANDING", "CELL", "ROOM", "RESIDENTIAL_UNIT", "HOLDING_CELL", "MEDICAL", "ADJUDICATION_ROOM", "FAITH_AREA", "GROUP", "STORE", "AREA", "HOLDING_AREA", "MOVEMENT_AREA", "EXTERNAL_GROUNDS" ],
             "example" : "CELL"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           },
           "cellMark" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell mark of the location, this can only be used in Draft or a prison that does not require approval to change the certificate",
             "example" : "A1",
             "minLength" : 1
           },
           "inCellSanitation" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "In-cell sanitation, this can only be used in Draft or a prison that does not require approval to change the certificate",
             "example" : true
           }
@@ -10063,35 +10090,35 @@
         "description" : "Request to update a non-res location",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Code of the location",
             "example" : "001",
             "minLength" : 1
           },
           "locationType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Location Type",
             "enum" : [ "GROUP", "OFFICE", "ADMINISTRATION_AREA", "BOOTH", "BOX", "RETURN_TO_UNIT", "CLASSROOM", "TRAINING_AREA", "TRAINING_ROOM", "EXERCISE_AREA", "SPORTS", "WORKSHOP", "INSIDE_PARTY", "OUTSIDE_PARTY", "FAITH_AREA", "ADJUDICATION_ROOM", "APPOINTMENTS", "VISITS", "VIDEO_LINK", "ASSOCIATION", "INTERNAL_GROUNDS", "INTERVIEW", "LOCATION", "POSITION", "SHELF", "STORE", "TABLE" ],
             "example" : "APPOINTMENTS"
           },
           "parentId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of parent location",
             "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
           },
           "parentLocationKey" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Key of parent location",
             "example" : "MDI-B-1"
           },
           "removeParent" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates this location should move to the top of the hierarchy",
             "example" : false
           },
           "servicesUsingLocation" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Services that use this location",
             "items" : {
               "type" : "string",
@@ -10100,14 +10127,14 @@
             "uniqueItems" : true
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A",
             "maxLength" : 40,
             "minLength" : 0
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional comments that can be made about this location",
             "example" : "Not to be used"
           }
@@ -10182,17 +10209,17 @@
             "example" : "A1234AA"
           },
           "prisonId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prison ID",
             "example" : "LEI"
           },
           "prisonName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prison Name",
             "example" : "HMP Leeds"
           },
           "cellLocation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Cell location of the prisoner",
             "example" : "1-1-001"
           },
@@ -10222,24 +10249,24 @@
             "example" : "IN"
           },
           "csra" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner CSRA",
             "example" : "High"
           },
           "category" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner category",
             "example" : "C"
           },
           "alerts" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Prisoner alerts",
             "items" : {
               "$ref" : "#/components/schemas/Alert"
             }
           },
           "lastMovementTypeCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Last Movement Type Code of prisoner",
             "example" : "CRT"
           }
@@ -10391,7 +10418,7 @@
             "example" : "A-1-001"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location, (Not Cells)",
             "example" : "Wing A"
           },
@@ -10400,7 +10427,7 @@
             "description" : "Indicates that this location is certified for use as a residential location"
           },
           "deactivatedReason" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Reason for deactivation",
             "enum" : [ "DAMAGED", "DAMP", "MAINTENANCE", "MOTHBALLED", "PEST", "REFURBISHMENT", "SECURITY_SEALED", "STAFF_SHORTAGE", "OTHER" ],
             "example" : "DAMAGED"
@@ -10410,7 +10437,7 @@
             "description" : "Roll count details"
           },
           "subLocations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Sub Locations",
             "items" : {
               "$ref" : "#/components/schemas/ResidentialLocationRollCount"
@@ -10424,7 +10451,7 @@
         "description" : "Location Hierarchy Summary",
         "properties" : {
           "id" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "uuid",
             "description" : "ID of location",
             "example" : "c73e8ad1-191b-42b8-bfce-2550cc858dab"
@@ -10450,12 +10477,12 @@
             "example" : "WING"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location",
             "example" : "Wing A"
           },
           "pathHierarchy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Full path of the location within the prison",
             "example" : "A-1-001"
           },
@@ -10463,7 +10490,7 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-            "examples" : [ "1", "2", "3" ]
+            "examples" : [ 1, 2, 3 ]
           }
         },
         "required" : [ "code", "level", "pathHierarchy", "prisonId", "type" ]
@@ -10473,7 +10500,7 @@
         "description" : "Establishment Roll Count for Cells",
         "properties" : {
           "locationHierarchy" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Parent locations, top to bottom",
             "items" : {
               "$ref" : "#/components/schemas/LocationSummary"
@@ -10661,7 +10688,7 @@
             "description" : "The approval request that created the certificate"
           },
           "locations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Locations in the certificate",
             "items" : {
               "$ref" : "#/components/schemas/CellCertificateLocationDto"
@@ -10699,8 +10726,11 @@
             "description" : "Total number of non-structural locations  e.g. cells and rooms"
           },
           "currentCertificate" : {
-            "$ref" : "#/components/schemas/CellCertificateDto",
-            "description" : "Current approved certificate"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/CellCertificateDto"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "maxCapacity", "numberOfCellLocations", "prisonName", "signedOperationalCapacity", "workingCapacity" ]
@@ -10710,8 +10740,11 @@
         "description" : "Residential Summary",
         "properties" : {
           "prisonSummary" : {
-            "$ref" : "#/components/schemas/PrisonSummary",
-            "description" : "Prison summary for top level view"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/PrisonSummary"
+            }, {
+              "type" : "null"
+            } ]
           },
           "topLevelLocationType" : {
             "type" : "string",
@@ -10719,12 +10752,12 @@
             "example" : "Wings"
           },
           "subLocationName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The description of the type of sub locations most common",
             "examples" : [ "Wings", "Landings", "Spurs", "Cells" ]
           },
           "wingStructure" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The structure of the wing",
             "items" : {
               "type" : "string",
@@ -10732,15 +10765,18 @@
             }
           },
           "locationHierarchy" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Parent locations, top to bottom",
             "items" : {
               "$ref" : "#/components/schemas/LocationSummary"
             }
           },
           "parentLocation" : {
-            "$ref" : "#/components/schemas/Location",
-            "description" : "The current parent location (e.g Wing or Landing) details"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Location"
+            }, {
+              "type" : "null"
+            } ]
           },
           "subLocations" : {
             "type" : "array",
@@ -10779,7 +10815,7 @@
             "example" : "A-1-001"
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Alternative description to display for location, (Not Cells)",
             "example" : "Wing A"
           },
@@ -10787,7 +10823,7 @@
             "type" : "integer",
             "format" : "int32",
             "description" : "Current Level within hierarchy, starts at 1, e.g Wing = 1",
-            "examples" : [ "1", "2", "3" ]
+            "examples" : [ 1, 2, 3 ]
           },
           "status" : {
             "type" : "string",
@@ -10796,7 +10832,7 @@
             "example" : "ACTIVE"
           },
           "subLocations" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "Sub residential locations",
             "items" : {
               "$ref" : "#/components/schemas/PrisonHierarchyDto"
@@ -10809,7 +10845,7 @@
         "type" : "object",
         "properties" : {
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Group name",
             "example" : "Block A"
           },
@@ -10819,7 +10855,7 @@
             "example" : "A"
           },
           "children" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The child groups of this group",
             "example" : [ {
               "name" : "Landing A/1",
@@ -10952,7 +10988,7 @@
             "title" : "Working capacity of the location."
           },
           "localName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "example" : "RES-HB1-ALE",
             "title" : "Local Name of the location."
           },
@@ -10979,7 +11015,7 @@
             "title" : "List of the old location attributes."
           },
           "prisonersInCell" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/Prisoner"
             },
@@ -11024,11 +11060,11 @@
             "example" : "Accessible cell"
           },
           "attributes" : {
-            "type" : "object",
+            "type" : [ "object", "null" ],
             "additionalProperties" : { }
           },
           "additionalInformation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Additional information about this reference code",
             "example" : "Some useful extra info"
           }
