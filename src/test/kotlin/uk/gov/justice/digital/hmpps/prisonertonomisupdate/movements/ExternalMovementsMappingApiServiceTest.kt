@@ -25,8 +25,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 import java.util.*
@@ -178,13 +178,13 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
-  inner class CreateScheduledMovementMappings {
+  inner class CreateTapScheduleMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubCreateScheduledMovementMapping()
+      mappingApi.stubCreateTapScheduleMapping()
 
-      apiService.createScheduledMovementMapping(
-        temporaryAbsenceScheduledMovementMapping(),
+      apiService.createTapScheduleMapping(
+        tapScheduleMapping(),
       )
 
       mappingApi.verify(
@@ -194,10 +194,10 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     internal fun `should pass data to service`() = runTest {
-      mappingApi.stubCreateScheduledMovementMapping()
+      mappingApi.stubCreateTapScheduleMapping()
 
-      apiService.createScheduledMovementMapping(
-        temporaryAbsenceScheduledMovementMapping(),
+      apiService.createTapScheduleMapping(
+        tapScheduleMapping(),
       )
 
       mappingApi.verify(
@@ -221,27 +221,27 @@ class ExternalMovementsMappingApiServiceTest {
     @Test
     fun `should return error for 409 conflict`() = runTest {
       val dpsScheduledMovementId = UUID.randomUUID()
-      mappingApi.stubCreateScheduledMovementMappingConflict(
+      mappingApi.stubCreateTapScheduleMappingConflict(
         error = DuplicateMappingErrorResponse(
           moreInfo = DuplicateErrorContentObject(
-            existing = ScheduledMovementSyncMappingDto(
+            existing = TapScheduleMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisEventId = 1L,
               dpsOccurrenceId = dpsScheduledMovementId,
-              mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              mappingType = TapScheduleMappingDto.MappingType.NOMIS_CREATED,
               // TODO add address mapping details
               nomisAddressId = 0,
               nomisAddressOwnerClass = "",
               dpsAddressText = "",
               eventTime = "",
             ),
-            duplicate = ScheduledMovementSyncMappingDto(
+            duplicate = TapScheduleMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisEventId = 2L,
               dpsOccurrenceId = dpsScheduledMovementId,
-              mappingType = ScheduledMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              mappingType = TapScheduleMappingDto.MappingType.NOMIS_CREATED,
               // TODO add address mapping details
               nomisAddressId = 0,
               nomisAddressOwnerClass = "",
@@ -256,8 +256,8 @@ class ExternalMovementsMappingApiServiceTest {
       )
 
       assertThrows<DuplicateMappingException> {
-        apiService.createScheduledMovementMapping(
-          temporaryAbsenceScheduledMovementMapping(),
+        apiService.createTapScheduleMapping(
+          tapScheduleMapping(),
         )
       }.error.apply {
         assertThat(moreInfo.existing!!["nomisEventId"]).isEqualTo(1)
@@ -267,24 +267,24 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateScheduledMovementMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubCreateTapScheduleMapping(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.createScheduledMovementMapping(
-          temporaryAbsenceScheduledMovementMapping(),
+        apiService.createTapScheduleMapping(
+          tapScheduleMapping(),
         )
       }
     }
   }
 
   @Nested
-  inner class UpdateScheduledMovementMappings {
+  inner class UpdateTapScheduleMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubUpdateScheduledMovementMapping()
+      mappingApi.stubUpdateTapScheduleMapping()
 
-      apiService.updateScheduledMovementMapping(
-        temporaryAbsenceScheduledMovementMapping(),
+      apiService.updateTapScheduledMapping(
+        tapScheduleMapping(),
       )
 
       mappingApi.verify(
@@ -294,10 +294,10 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     internal fun `should pass data to service`() = runTest {
-      mappingApi.stubUpdateScheduledMovementMapping()
+      mappingApi.stubUpdateTapScheduleMapping()
 
-      apiService.updateScheduledMovementMapping(
-        temporaryAbsenceScheduledMovementMapping(),
+      apiService.updateTapScheduledMapping(
+        tapScheduleMapping(),
       )
 
       mappingApi.verify(
@@ -319,25 +319,25 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubUpdateScheduledMovementMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubUpdateTapScheduleMapping(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.updateScheduledMovementMapping(
-          temporaryAbsenceScheduledMovementMapping(),
+        apiService.updateTapScheduledMapping(
+          tapScheduleMapping(),
         )
       }
     }
   }
 
   @Nested
-  inner class GetScheduledMovementMappings {
+  inner class GetATapScheduleMappings {
     private val dpsId = UUID.randomUUID()
 
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId)
+      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId)
 
-      apiService.getScheduledMovementMapping(dpsId)
+      apiService.getTapScheduleMapping(dpsId)
 
       mappingApi.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -346,18 +346,18 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = NOT_FOUND)
 
-      apiService.getScheduledMovementMapping(dpsId)
+      apiService.getTapScheduleMapping(dpsId)
         .also { assertThat(it).isNull() }
     }
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getScheduledMovementMapping(dpsId)
+        apiService.getTapScheduleMapping(dpsId)
       }
     }
   }
