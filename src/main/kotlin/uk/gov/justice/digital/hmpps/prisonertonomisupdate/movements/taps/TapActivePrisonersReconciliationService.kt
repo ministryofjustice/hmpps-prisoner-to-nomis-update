@@ -282,6 +282,30 @@ class TapActivePrisonersReconciliationService(
       )
     }
 
+    /*
+     * Check for missing schedule mappings.
+     *
+     * Usually missing mappings would cause sync problems and we'd spot them there. However, after a merge we could end
+     * up missing mappings from old bookings. If these old bookings are then moved to another prisoner we only move
+     * records which have mappings - history would be corrupted. So we attempt to spot this class of error early by
+     * checking the schedule mappings. If this proves insufficient, we may also add checks for applications and movements.
+     */
+    val matchedIds = mappings.matchingSchedulesOut(nomisScheduleOutIds, dpsOccurrenceIds)
+    if (nomisScheduleOutIds.size != matchedIds.size || dpsOccurrenceIds.size != matchedIds.size) {
+      val missingNomisIds = nomisScheduleOutIds - matchedIds.map { it.first }.toSet()
+      val missingDpsIds = dpsOccurrenceIds - matchedIds.map { it.second }.toSet()
+      mismatchedDetails.add(
+        MismatchedPrisonerTapIds(
+          offenderNo = offenderNo,
+          type = MismatchedPrisonerTapIds.Type.MISSING_SCHEDULE_MAPPINGS,
+          nomisCount = missingNomisIds.size,
+          dpsCount = missingDpsIds.size,
+          unexpectedNomisIds = missingNomisIds.toString(),
+          unexpectedDpsIds = missingDpsIds.toString(),
+        ),
+      )
+    }
+
     return mismatchedDetails
   }
 
@@ -438,6 +462,7 @@ class MismatchedPrisonerTapIds(
 ) : MismatchPrisonerTaps(offenderNo, type.name) {
   enum class Type {
     AUTHORISATIONS,
+    MISSING_SCHEDULE_MAPPINGS,
     OCCURRENCES,
     SCHEDULED_OUT,
     SCHEDULED_IN,
