@@ -33,7 +33,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.temporaryAbsenceScheduledMovementMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.withRequestBodyJsonPath
 import uk.gov.justice.hmpps.sqs.countAllMessagesOnQueue
 import java.time.LocalDateTime
@@ -85,7 +85,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will NOT create any mappings`() {
-        mappingApi.verify(0, postRequestedFor(urlEqualTo("/mapping/temporary-absence/application")))
+        mappingApi.verify(0, postRequestedFor(urlEqualTo("/mapping/taps/application")))
       }
     }
 
@@ -98,10 +98,10 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = today, endTime = tomorrow))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
-          mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
+          mappingApi.stubCreateTapApplicationMapping()
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete()
         }
@@ -117,7 +117,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will check if the application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsId")))
         }
 
         @Test
@@ -161,9 +161,9 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         @Test
         fun `will create a mapping between the NOMIS and DPS ids`() {
           mappingApi.verify(
-            postRequestedFor(urlEqualTo("/mapping/temporary-absence/application"))
-              .withRequestBodyJsonPath("dpsMovementApplicationId", "$dpsId")
-              .withRequestBodyJsonPath("nomisMovementApplicationId", "$nomisId")
+            postRequestedFor(urlEqualTo("/mapping/taps/application"))
+              .withRequestBodyJsonPath("dpsAuthorisationId", "$dpsId")
+              .withRequestBodyJsonPath("nomisApplicationId", "$nomisId")
               .withRequestBodyJsonPath("prisonerNumber", "A1234BC")
               .withRequestBodyJsonPath("bookingId", "12345")
               .withRequestBodyJsonPath("mappingType", "DPS_CREATED"),
@@ -177,10 +177,10 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
-          mappingApi.stubCreateTemporaryAbsenceApplicationMappingFailureFollowedBySuccess()
+          mappingApi.stubCreateTapApplicationMappingFailureFollowedBySuccess()
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
         }
 
@@ -190,7 +190,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
             verify(telemetryClient).trackEvent(
               eq("temporary-absence-application-mapping-create-error"),
               check {
-                assertThat(it).containsEntry("error", "500 Internal Server Error from POST http://localhost:8084/mapping/temporary-absence/application")
+                assertThat(it).containsEntry("error", "500 Internal Server Error from POST http://localhost:8084/mapping/taps/application")
               },
               isNull(),
             )
@@ -222,25 +222,25 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, NOT_FOUND)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, NOT_FOUND)
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
-          mappingApi.stubCreateTemporaryAbsenceApplicationMappingConflict(
+          mappingApi.stubCreateTapApplicationMappingConflict(
             error = DuplicateMappingErrorResponse(
               moreInfo = DuplicateErrorContentObject(
-                existing = TemporaryAbsenceApplicationSyncMappingDto(
+                existing = TapApplicationMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
-                  nomisMovementApplicationId = nomisId,
-                  dpsMovementApplicationId = dpsId,
-                  mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.NOMIS_CREATED,
+                  nomisApplicationId = nomisId,
+                  dpsAuthorisationId = dpsId,
+                  mappingType = TapApplicationMappingDto.MappingType.NOMIS_CREATED,
                 ),
-                duplicate = TemporaryAbsenceApplicationSyncMappingDto(
+                duplicate = TapApplicationMappingDto(
                   prisonerNumber = "A1234BC",
                   bookingId = 12345L,
-                  nomisMovementApplicationId = nomisId + 1,
-                  dpsMovementApplicationId = dpsId,
-                  mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.NOMIS_CREATED,
+                  nomisApplicationId = nomisId + 1,
+                  dpsAuthorisationId = dpsId,
+                  mappingType = TapApplicationMappingDto.MappingType.NOMIS_CREATED,
                 ),
               ),
               errorCode = 1409,
@@ -283,7 +283,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @BeforeEach
       fun setUp() {
-        mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+        mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
 
         publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS", "person.temporary-absence-authorisation.relocated")
         waitForAnyProcessingToComplete()
@@ -291,7 +291,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will check if the application mapping exists`() {
-        mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+        mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsId")))
       }
 
       @Test
@@ -349,7 +349,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
       @Test
       fun `will NOT create any mappings`() {
-        mappingApi.verify(0, postRequestedFor(urlEqualTo("/mapping/temporary-absence/application")))
+        mappingApi.verify(0, postRequestedFor(urlEqualTo("/mapping/taps/application")))
       }
     }
 
@@ -364,7 +364,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -383,7 +383,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will check if the application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsId")))
         }
 
         @Test
@@ -440,7 +440,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 1, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -468,7 +468,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 2, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -510,7 +510,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           val authorisation = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 3, startTime = startTime, endTime = endTime)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = authorisation)
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
@@ -566,7 +566,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(id = dpsId, response = dpsApi.tapAuthorisation(id = dpsId, repeat = false, occurrenceCount = 0, startTime = startTime, endTime = endTime, statusCode = "EXPIRED"))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -595,7 +595,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 0, startTime = startTime, endTime = endTime))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -625,7 +625,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
       inner class UpdateForAuthorisationPaused {
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId, response = dpsApi.tapAuthorisation(id = dpsId, occurrenceCount = 1, statusCode = "PAUSED"))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -656,10 +656,10 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @BeforeEach
         fun setUp() {
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsId, nomisMovementApplicationId = nomisId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, nomisApplicationId = nomisId)
           dpsApi.stubGetTapAuthorisation(dpsId)
           nomisApi.stubUpsertTapApplication(prisonerNumber, HttpStatus.INTERNAL_SERVER_ERROR)
-          mappingApi.stubCreateTemporaryAbsenceApplicationMapping()
+          mappingApi.stubCreateTapApplicationMapping()
 
           publishAuthorisationDomainEvent(dpsId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete("temporary-absence-application-update-error")
@@ -667,7 +667,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will check if the application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsId")))
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsId")))
         }
 
         @Test

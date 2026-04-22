@@ -11,7 +11,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncRe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.APPLICATION
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplication
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -59,7 +59,7 @@ class TapAuthorisationService(
     }
 
     runCatching {
-      val existingMapping = mappingApiService.getApplicationMapping(dpsAuthorisationId)
+      val existingMapping = mappingApiService.getTapApplicationMapping(dpsAuthorisationId)
       if (existingMapping != null) telemetryKey = TELEMETRY_KEY_UPDATE
       if (existingMapping == null && updatesOnly) {
         telemetryClient.trackEvent(
@@ -73,24 +73,24 @@ class TapAuthorisationService(
       val addressScheduleMappings = dps.occurrences.findAddressScheduleMappings()
       val nomis = nomisApiService.upsertTapApplication(
         prisonerNumber,
-        dps.toNomisUpsertRequest(existingMapping?.nomisMovementApplicationId, addressScheduleMappings),
+        dps.toNomisUpsertRequest(existingMapping?.nomisApplicationId, addressScheduleMappings),
       )
         .also { telemetryMap["bookingId"] = it.bookingId.toString() }
         .also { telemetryMap["nomisApplicationId"] = it.tapApplicationId.toString() }
 
       if (existingMapping == null) {
-        TemporaryAbsenceApplicationSyncMappingDto(
+        TapApplicationMappingDto(
           prisonerNumber = prisonerNumber,
           bookingId = nomis.bookingId,
-          nomisMovementApplicationId = nomis.tapApplicationId,
-          dpsMovementApplicationId = dpsAuthorisationId,
-          mappingType = TemporaryAbsenceApplicationSyncMappingDto.MappingType.DPS_CREATED,
+          nomisApplicationId = nomis.tapApplicationId,
+          dpsAuthorisationId = dpsAuthorisationId,
+          mappingType = TapApplicationMappingDto.MappingType.DPS_CREATED,
         )
           .also { mapping ->
             createMapping(
               mapping,
               telemetryClient,
-              { createApplicationMapping(mapping, telemetryMap) },
+              { createTapApplicationMapping(mapping, telemetryMap) },
               telemetryMap,
               retryQueueService,
               APPLICATION.entityName,
@@ -111,12 +111,12 @@ class TapAuthorisationService(
       }
   }
 
-  suspend fun createApplicationMapping(message: CreateMappingRetryMessage<TemporaryAbsenceApplicationSyncMappingDto>) {
-    createApplicationMapping(message.mapping, message.telemetryAttributes)
+  suspend fun createTapApplicationMapping(message: CreateMappingRetryMessage<TapApplicationMappingDto>) {
+    createTapApplicationMapping(message.mapping, message.telemetryAttributes)
   }
 
-  suspend fun createApplicationMapping(mapping: TemporaryAbsenceApplicationSyncMappingDto, telemetry: Map<String, String>) {
-    mappingApiService.createApplicationMapping(mapping).also {
+  suspend fun createTapApplicationMapping(mapping: TapApplicationMappingDto, telemetry: Map<String, String>) {
+    mappingApiService.createTapApplicationMapping(mapping).also {
       telemetryClient.trackEvent(
         "$TELEMETRY_KEY_CREATE-success",
         telemetry,
