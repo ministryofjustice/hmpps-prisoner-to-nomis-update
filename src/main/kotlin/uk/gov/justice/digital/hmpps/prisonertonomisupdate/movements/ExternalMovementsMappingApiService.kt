@@ -7,10 +7,11 @@ import org.springframework.web.reactive.function.client.WebClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodilessEntityOrThrowOnConflict
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.awaitBodyOrNullForNotFound
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.TapApplicationResourceApi
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.TapScheduleResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.api.TemporaryAbsenceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import java.util.*
 
@@ -20,6 +21,7 @@ class ExternalMovementsMappingApiService(
 ) {
   private val mappingApi = TemporaryAbsenceResourceApi(webClient)
   private val applicationApi = TapApplicationResourceApi(webClient)
+  private val scheduleApi = TapScheduleResourceApi(webClient)
 
   suspend fun createTapApplicationMapping(mapping: TapApplicationMappingDto) = applicationApi
     .prepare(applicationApi.createTapApplicationMappingRequestConfig(mapping))
@@ -31,17 +33,17 @@ class ExternalMovementsMappingApiService(
     .retrieve()
     .awaitBodyOrNullForNotFound()
 
-  suspend fun createScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto) = mappingApi
-    .prepare(mappingApi.createScheduledMovementSyncMappingRequestConfig(mapping))
+  suspend fun createTapScheduleMapping(mapping: TapScheduleMappingDto) = scheduleApi
+    .prepare(scheduleApi.createTapScheduleMappingRequestConfig(mapping))
     .retrieve()
     .awaitBodilessEntityOrThrowOnConflict()
 
-  suspend fun updateScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto): Unit = mappingApi
-    .updateScheduledMovementSyncMapping(mapping)
+  suspend fun updateTapScheduledMapping(mapping: TapScheduleMappingDto): Unit = scheduleApi
+    .updateTapScheduleMapping(mapping)
     .awaitSingle()
 
-  suspend fun getScheduledMovementMapping(dpsId: UUID): ScheduledMovementSyncMappingDto? = mappingApi
-    .prepare(mappingApi.getScheduledMovementSyncMappingByDpsIdRequestConfig(dpsId))
+  suspend fun getTapScheduleMapping(dpsId: UUID): TapScheduleMappingDto? = scheduleApi
+    .prepare(scheduleApi.getTapScheduleMappingByDpsIdRequestConfig(dpsId))
     .retrieve()
     .awaitBodyOrNullForNotFound()
 

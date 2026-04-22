@@ -28,9 +28,9 @@ import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.tapScheduleMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.temporaryAbsenceScheduledMovementMapping
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
@@ -516,9 +516,9 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
           // Create a stub for the first schedule mapping only (which is same as third schedule)
           with(authorisation.occurrences[0]) {
-            mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(
+            mappingApi.stubGetTapScheduleMapping(
               dpsId = id,
-              mapping = temporaryAbsenceScheduledMovementMapping().copy(
+              mapping = tapScheduleMapping().copy(
                 prisonerNumber = prisonerNumber,
                 dpsOccurrenceId = id,
                 nomisAddressId = 1,
@@ -537,7 +537,7 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
         fun `we get the occurrence mappings for the 2 unique addresses`() {
           mappingApi.verify(
             2,
-            getRequestedFor(urlMatching("/mapping/temporary-absence/scheduled-movement/dps-id/.*")),
+            getRequestedFor(urlMatching("/mapping/taps/schedule/dps-id/.*")),
           )
         }
 

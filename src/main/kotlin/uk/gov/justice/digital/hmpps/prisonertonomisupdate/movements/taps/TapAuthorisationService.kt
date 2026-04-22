@@ -10,8 +10,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.APPLICATION
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapApplication
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreateMappingRetryMessage
@@ -126,7 +126,7 @@ class TapAuthorisationService(
 
   private fun SyncReadTapAuthorisation.toNomisUpsertRequest(
     nomisApplicationId: Long?,
-    addressScheduleMappings: List<ScheduledMovementSyncMappingDto>,
+    addressScheduleMappings: List<TapScheduleMappingDto>,
   ): UpsertTapApplication {
     val releaseTime = when (repeat) {
       // If a schedule in NOMIS is deleted and re-created its start time is taken from the application releaseTime - so save it on the application
@@ -161,7 +161,7 @@ class TapAuthorisationService(
   private suspend fun List<SyncReadTapAuthorisationOccurrence>.findAddressScheduleMappings() = groupBy { it.location }
     .map { uniqueLocations -> uniqueLocations.value.first() }
     .map { occurrence -> occurrence.id }
-    .mapNotNull { occurrenceId -> mappingApiService.getScheduledMovementMapping(occurrenceId) }
+    .mapNotNull { occurrenceId -> mappingApiService.getTapScheduleMapping(occurrenceId) }
 
   private fun String.toNomisApplicationStatus(occurrenceCount: Int) = when (this) {
     "EXPIRED", "PAUSED", "PENDING" -> "PEN"
@@ -172,7 +172,7 @@ class TapAuthorisationService(
     else -> throw IllegalArgumentException("Unknown authorisation status: $this")
   }
 
-  private fun Location.toTapAddress(knownAddresses: List<ScheduledMovementSyncMappingDto>) = knownAddresses.find { knownAddress ->
+  private fun Location.toTapAddress(knownAddresses: List<TapScheduleMappingDto>) = knownAddresses.find { knownAddress ->
     address == knownAddress.dpsAddressText &&
       description == knownAddress.dpsDescription &&
       postcode == knownAddress.dpsPostcode

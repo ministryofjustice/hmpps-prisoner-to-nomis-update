@@ -10,7 +10,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Locati
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_CREATE
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_UPDATE
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementSyncMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapAddress
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertTapScheduleOutResponse
@@ -59,7 +59,7 @@ class TapOccurrenceService(
     }
 
     runCatching {
-      val existingMapping = mappingApiService.getScheduledMovementMapping(dpsOccurrenceId)
+      val existingMapping = mappingApiService.getTapScheduleMapping(dpsOccurrenceId)
       if (existingMapping != null) telemetryKey = TELEMETRY_KEY_UPDATE
       val dps = dpsApiService.getTapOccurrence(dpsOccurrenceId)
         .also { telemetryMap["dpsAuthorisationId"] = "${it.authorisation.id}" }
@@ -109,19 +109,19 @@ class TapOccurrenceService(
     }
 
     track(TELEMETRY_KEY_DELETE, telemetryMap) {
-      val mapping = mappingApiService.getScheduledMovementMapping(dpsOccurrenceId)
+      val mapping = mappingApiService.getTapScheduleMapping(dpsOccurrenceId)
         ?.also { telemetryMap["nomisEventId"] = it.nomisEventId.toString() }
         ?: throw TapOccurrenceSyncException("Cannot find scheduled movement mapping for $dpsOccurrenceId")
       nomisApiService.deleteTapScheduleOut(prisonerNumber, mapping.nomisEventId)
     }
   }
 
-  suspend fun createScheduledMovementMapping(message: CreateMappingRetryMessage<ScheduledMovementSyncMappingDto>) {
+  suspend fun createScheduledMovementMapping(message: CreateMappingRetryMessage<TapScheduleMappingDto>) {
     createScheduledMovementMapping(message.mapping, message.telemetryAttributes)
   }
 
-  suspend fun createScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto, telemetry: Map<String, String>) {
-    mappingApiService.createScheduledMovementMapping(mapping).also {
+  suspend fun createScheduledMovementMapping(mapping: TapScheduleMappingDto, telemetry: Map<String, String>) {
+    mappingApiService.createTapScheduleMapping(mapping).also {
       telemetryClient.trackEvent(
         "$TELEMETRY_KEY_CREATE-success",
         telemetry,
@@ -129,12 +129,12 @@ class TapOccurrenceService(
     }
   }
 
-  suspend fun updateScheduledMovementMapping(message: CreateMappingRetryMessage<ScheduledMovementSyncMappingDto>) {
+  suspend fun updateScheduledMovementMapping(message: CreateMappingRetryMessage<TapScheduleMappingDto>) {
     updateScheduledMovementMapping(message.mapping, message.telemetryAttributes)
   }
 
-  suspend fun updateScheduledMovementMapping(mapping: ScheduledMovementSyncMappingDto, telemetry: Map<String, String>) {
-    mappingApiService.updateScheduledMovementMapping(mapping).also {
+  suspend fun updateScheduledMovementMapping(mapping: TapScheduleMappingDto, telemetry: Map<String, String>) {
+    mappingApiService.updateTapScheduledMapping(mapping).also {
       telemetryClient.trackEvent(
         "$TELEMETRY_KEY_UPDATE-success",
         telemetry,
@@ -148,12 +148,12 @@ class TapOccurrenceService(
     dpsOccurrenceId: UUID,
     dps: SyncReadTapOccurrence,
     telemetryMap: MutableMap<String, String>,
-  ): ScheduledMovementSyncMappingDto = ScheduledMovementSyncMappingDto(
+  ): TapScheduleMappingDto = TapScheduleMappingDto(
     prisonerNumber = prisonerNumber,
     bookingId = nomis.bookingId,
     nomisEventId = nomis.eventId,
     dpsOccurrenceId = dpsOccurrenceId,
-    mappingType = ScheduledMovementSyncMappingDto.MappingType.DPS_CREATED,
+    mappingType = TapScheduleMappingDto.MappingType.DPS_CREATED,
     dpsAddressText = dps.location.address!!,
     eventTime = "${dps.start}",
     nomisAddressId = nomis.addressId,
@@ -177,11 +177,11 @@ class TapOccurrenceService(
     }
 
   private suspend fun updateScheduledMovementMapping(
-    existingMapping: ScheduledMovementSyncMappingDto,
+    existingMapping: TapScheduleMappingDto,
     nomis: UpsertTapScheduleOutResponse,
     dps: SyncReadTapOccurrence,
     telemetryMap: MutableMap<String, String>,
-  ): ScheduledMovementSyncMappingDto = existingMapping.copy(
+  ): TapScheduleMappingDto = existingMapping.copy(
     nomisAddressId = nomis.addressId,
     nomisAddressOwnerClass = nomis.addressOwnerClass,
     dpsAddressText = dps.location.address!!,
@@ -203,7 +203,7 @@ class TapOccurrenceService(
       )
     }
 
-  private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: ScheduledMovementSyncMappingDto?): UpsertTapScheduleOut {
+  private suspend fun SyncReadTapOccurrence.toNomisUpsertRequest(applicationId: Long, existingMapping: TapScheduleMappingDto?): UpsertTapScheduleOut {
     val (status, returnStatus) = this.statusCode.toNomisSchedulesStatus()
     return UpsertTapScheduleOut(
       tapApplicationId = applicationId,
@@ -238,7 +238,7 @@ class TapOccurrenceService(
   }
 
   private suspend fun Location.populateAddressMapping(
-    existingMapping: ScheduledMovementSyncMappingDto?,
+    existingMapping: TapScheduleMappingDto?,
   ): UpsertTapAddress {
     if (address.isNullOrEmpty()) throw TapOccurrenceSyncException("No address text received from DPS")
 
@@ -251,7 +251,7 @@ class TapOccurrenceService(
     }
   }
 
-  private fun ScheduledMovementSyncMappingDto.dpsAddressChanged(dpsLocation: Location) = dpsAddressText != dpsLocation.address || dpsPostcode != dpsLocation.postcode || dpsUprn != dpsLocation.uprn
+  private fun TapScheduleMappingDto.dpsAddressChanged(dpsLocation: Location) = dpsAddressText != dpsLocation.address || dpsPostcode != dpsLocation.postcode || dpsUprn != dpsLocation.uprn
 }
 
 class TapOccurrenceSyncException(message: String) : RuntimeException(message)
