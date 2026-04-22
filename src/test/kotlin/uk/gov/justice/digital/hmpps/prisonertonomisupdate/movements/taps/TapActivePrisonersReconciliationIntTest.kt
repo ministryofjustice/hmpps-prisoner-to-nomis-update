@@ -102,7 +102,7 @@ class TapActivePrisonersReconciliationIntTest(
         eq("temporary-absences-active-reconciliation-report"),
         check {
           assertThat(it).containsEntry("prisoners-count", "1")
-          assertThat(it).containsEntry("mismatch-count", "0")
+          assertThat(it).containsEntry("mismatch-count", "1")
           assertThat(it).containsEntry("pages-count", "1")
         },
         isNull(),
@@ -753,6 +753,124 @@ class TapActivePrisonersReconciliationIntTest(
         movements = listOfNotNull(
           if (movementOut) ExternalMovementMappingIdsDto(12345L, movementOutSeq, movementId) else null,
         ),
+      ),
+    )
+  }
+
+  @Nested
+  @DisplayName("Active Detail Reconciliation Missing Mappings")
+  inner class ActivePrisonersReconciliationMissingMappings {
+    private val applicationId = 1111L
+    private val scheduleOutId = 2222L
+    private val authorisationId = UUID.randomUUID()
+    private val occurrenceId = UUID.randomUUID()
+    private val defaultStartTime = LocalDateTime.now().plusDays(1)
+    private val defaultEndTime = LocalDateTime.now().plusDays(2)
+
+    @BeforeEach
+    fun setUp() {
+      reset(telemetryClient)
+      nomisApi.stubGetAllLatestBookings(
+        activeOnly = true,
+        response = BookingIdsWithLast(
+          lastBookingId = 12345,
+          prisonerIds = listOf(PrisonerIds(offenderNo = "A0001TZ", bookingId = 12345)),
+        ),
+      )
+    }
+
+    @Test
+    fun `should publish telemetry if mappings not found`() = runTest {
+      stubNomisTaps()
+      stubDpsTaps()
+      // There are no mappings for the prisoner - this happened in a real incident where the mappings were not moved after a merge
+      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ", response = emptyPrisonerMappingIdsDto())
+
+      reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
+      awaitReportFinished()
+
+      verify(telemetryClient).trackEvent(
+        eq("temporary-absences-active-reconciliation-mismatch"),
+        eq(
+          mapOf(
+            "offenderNo" to "A0001TZ",
+            "type" to "MISSING_SCHEDULE_MAPPINGS",
+            "dpsCount" to "1",
+            "nomisCount" to "1",
+            "unexpected-dps-ids" to "[$occurrenceId]",
+            "unexpected-nomis-ids" to "[$scheduleOutId]",
+          ),
+        ),
+        isNull(),
+      )
+    }
+
+    private fun stubNomisTaps(
+      prisonerNumber: String = "A0001TZ",
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      latestBooking: Boolean = true,
+      activeBooking: Boolean = true,
+      status: String = "SCH",
+    ) = nomisMovementsApi.stubGetOffenderTaps(
+      offenderNo = prisonerNumber,
+      response = emptyOffenderTapsResponse().copy(
+        bookings = listOf(
+          BookingTaps(
+            bookingId = 12345,
+            tapApplications = listOf(
+              tapApplication(
+                id = applicationId,
+                taps = listOf(
+                  tap(
+                    tapScheduleOut = tapScheduleOut(id = scheduleOutId).copy(
+                      eventStatus = status,
+                      eventSubType = "C5",
+                      startTime = startTime,
+                      returnTime = endTime,
+                      toAddressPostcode = "S1 1AA",
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            activeBooking = activeBooking,
+            latestBooking = latestBooking,
+            unscheduledTapMovementOuts = listOf(),
+            unscheduledTapMovementIns = listOf(),
+          ),
+        ),
+      ),
+    )
+
+    private fun stubDpsTaps(
+      prisonerNumber: String = "A0001TZ",
+      startTime: LocalDateTime = defaultStartTime,
+      endTime: LocalDateTime = defaultEndTime,
+      status: ReconciliationOccurrence.StatusCode = SCHEDULED,
+      reasonCode: String = "C5",
+      postCode: String = "S1 1AA",
+    ) = dpsApi.stubGetTapReconciliationDetail(
+      personIdentifier = prisonerNumber,
+      response = personTapDetail().copy(
+        scheduledAbsences = listOf(
+          reconAuthorisation(id = authorisationId).copy(
+            occurrences = listOf(
+              reconOccurrence(id = occurrenceId).copy(
+                statusCode = status,
+                reasonCode = reasonCode,
+                start = startTime,
+                end = endTime,
+                location = Location(
+                  address = "1 street",
+                  postcode = postCode,
+                ),
+                movements = listOf(),
+              ),
+            ),
+          ),
+        ),
+        unscheduledMovements = listOf(),
       ),
     )
   }
