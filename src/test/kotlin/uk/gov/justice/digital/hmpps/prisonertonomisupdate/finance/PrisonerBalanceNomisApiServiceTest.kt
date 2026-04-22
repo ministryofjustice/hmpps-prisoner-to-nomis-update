@@ -13,8 +13,10 @@ import org.junit.jupiter.api.Test
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.AccountSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerAccountDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.math.BigDecimal
@@ -22,7 +24,7 @@ import java.time.LocalDateTime
 
 @SpringAPIServiceTest
 @Import(FinanceNomisApiService::class, FinanceNomisApiMockServer::class, RetryApiService::class)
-class FinanceNomisApiServiceTest {
+class PrisonerBalanceNomisApiServiceTest {
   @Autowired
   private lateinit var apiService: FinanceNomisApiService
 
@@ -125,6 +127,52 @@ class FinanceNomisApiServiceTest {
       mockServer.stubGetPrisonerAccountDetails(35L, sampleDto)
 
       val data = apiService.getPrisonerAccountDetails(35L)
+
+      assertThat(data).isEqualTo(sampleDto)
+    }
+  }
+
+  @Nested
+  @DisplayName("GET /finance/prisoners/{rootOffenderId}/balance/summary")
+  inner class GetPrisonerAccountSummary {
+
+    private val sampleDto = PrisonerBalanceSummaryDto(
+      rootOffenderId = 35L,
+      prisonNumber = "A1234AA",
+      accounts = listOf(
+        AccountSummaryDto(
+          accountCode = 1001,
+          balance = BigDecimal.valueOf(100.00),
+          holdBalance = BigDecimal.valueOf(50.00),
+        ),
+      ),
+    )
+
+    @Test
+    fun `will pass oath2 token to service`() = runTest {
+      apiService.getPrisonerAccountSummary(35L)
+
+      mockServer.verify(
+        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+      )
+    }
+
+    @Test
+    fun `will call the get endpoint`() = runTest {
+      mockServer.stubGetPrisonerAccountSummary(35L, sampleDto)
+
+      apiService.getPrisonerAccountSummary(35L)
+
+      mockServer.verify(
+        getRequestedFor(urlPathEqualTo("/finance/prisoners/35/balance/summary")),
+      )
+    }
+
+    @Test
+    fun `will return data`() = runTest {
+      mockServer.stubGetPrisonerAccountSummary(35L, sampleDto)
+
+      val data = apiService.getPrisonerAccountSummary(35L)
 
       assertThat(data).isEqualTo(sampleDto)
     }

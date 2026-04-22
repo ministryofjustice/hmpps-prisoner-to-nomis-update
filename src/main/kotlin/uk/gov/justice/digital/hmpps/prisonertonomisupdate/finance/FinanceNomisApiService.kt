@@ -9,6 +9,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.Pris
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.api.PrisonerBalanceResourceApi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 
@@ -45,6 +46,11 @@ class FinanceNomisApiService(
 
   suspend fun getPrisonerAccountDetails(rootOffenderId: Long): PrisonerBalanceDto = prisonerBalanceApi
     .getPrisonerAccountDetails(rootOffenderId)
+    .retryWhen(backoffSpec)
+    .awaitSingle()
+
+  suspend fun getPrisonerAccountSummary(rootOffenderId: Long): PrisonerBalanceSummaryDto = prisonerBalanceApi
+    .getPrisonerAccountSummary(rootOffenderId)
     .retryWhen(backoffSpec)
     .awaitSingle()
 }
