@@ -51,7 +51,7 @@ class OfficialVisitsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       visitSlotId = 20,
       prisonId = "MDI",
       offenderNo = "A1234KT",
-      bookingId = 30,
+      bookingId = 20,
       currentTerm = true,
       startDateTime = LocalDateTime.parse("2020-01-01T10:00"),
       endDateTime = LocalDateTime.parse("2020-01-01T11:00"),
