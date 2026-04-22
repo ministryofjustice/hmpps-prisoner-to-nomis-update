@@ -31,8 +31,7 @@ class ExternalMovementsMappingApiService(
     .awaitBodilessEntityOrThrowOnConflict()
 
   suspend fun getTapApplicationMapping(dpsId: UUID): TapApplicationMappingDto? = applicationApi
-    .prepare(applicationApi.getTapApplicationSyncMappingByDpsIdRequestConfig(dpsId))
-    .retrieve()
+    .getTapApplicationSyncMappingByDpsId(dpsId)
     .awaitBodyOrNullForNotFound()
 
   suspend fun createTapScheduleMapping(mapping: TapScheduleMappingDto) = scheduleApi
@@ -45,8 +44,7 @@ class ExternalMovementsMappingApiService(
     .awaitSingle()
 
   suspend fun getTapScheduleMapping(dpsId: UUID): TapScheduleMappingDto? = scheduleApi
-    .prepare(scheduleApi.getTapScheduleMappingByDpsIdRequestConfig(dpsId))
-    .retrieve()
+    .getTapScheduleMappingByDpsId(dpsId)
     .awaitBodyOrNullForNotFound()
 
   suspend fun createTapMovementMapping(mapping: TapMovementMappingDto) = movementApi
@@ -55,8 +53,7 @@ class ExternalMovementsMappingApiService(
     .awaitBodilessEntityOrThrowOnConflict()
 
   suspend fun getTapMovementMapping(dpsId: UUID): TapMovementMappingDto? = movementApi
-    .prepare(movementApi.getTapMovementMappingByDpsIdRequestConfig(dpsId))
-    .retrieve()
+    .getTapMovementMappingByDpsId(dpsId)
     .awaitBodyOrNullForNotFound()
 
   suspend fun getTapMappingIds(offenderNo: String): TemporaryAbsencesPrisonerMappingIdsDto = mappingApi

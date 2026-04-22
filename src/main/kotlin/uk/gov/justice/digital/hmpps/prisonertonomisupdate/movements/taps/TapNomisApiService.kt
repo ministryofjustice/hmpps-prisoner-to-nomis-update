@@ -68,11 +68,7 @@ class TapNomisApiService(
   suspend fun getTapIds(offenderNo: String): OffenderTapsIdsResponse = offenderApi.getTapsIds(offenderNo)
     .awaitSingle()
 
-  suspend fun getAllBookingTaps(bookingId: Long): BookingTaps? = offenderApi.prepare(offenderApi.getAllBookingTapsRequestConfig(bookingId))
-    .retrieve()
-    .awaitBodyOrNullForNotFound()
+  suspend fun getAllBookingTaps(bookingId: Long): BookingTaps? = offenderApi.getAllBookingTaps(bookingId).awaitBodyOrNullForNotFound()
 
-  suspend fun getAllOffenderTapsOrNull(offenderNo: String): OffenderTapsResponse? = offenderApi.prepare(offenderApi.getAllOffenderTapsRequestConfig(offenderNo))
-    .retrieve()
-    .awaitBodyOrNullForNotFound()
+  suspend fun getAllOffenderTapsOrNull(offenderNo: String): OffenderTapsResponse? = offenderApi.getAllOffenderTaps(offenderNo).awaitBodyOrNullForNotFound()
 }
