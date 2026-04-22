@@ -32,7 +32,7 @@ class TapRetryService(
   override suspend fun retryCreateMapping(message: String) {
     val baseMapping: CreateMappingRetryMessage<*> = message.fromJson()
     when (MappingTypes.fromEntityName(baseMapping.entityName)) {
-      APPLICATION -> tapAuthorisationService.createApplicationMapping(message.fromJson())
+      APPLICATION -> tapAuthorisationService.createTapApplicationMapping(message.fromJson())
       SCHEDULE_CREATE -> tapOccurrenceService.createScheduledMovementMapping(message.fromJson())
       SCHEDULE_UPDATE -> tapOccurrenceService.updateScheduledMovementMapping(message.fromJson())
     }

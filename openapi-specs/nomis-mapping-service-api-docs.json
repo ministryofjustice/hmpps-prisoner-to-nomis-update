@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-13.484.c7ba131"
+    "version" : "2026-04-22.497.bc36aa0"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -2237,6 +2237,60 @@
             "application/json" : {
               "schema" : {
                 "$ref" : "#/components/schemas/TemporaryAbsenceApplicationSyncMappingDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Application mapping created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409" : {
+            "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/application" : {
+      "post" : {
+        "tags" : [ "tap-application-resource" ],
+        "summary" : "Creates a mapping for a single tap application",
+        "description" : "Creates a mapping for a single tap application. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createTapApplicationMapping",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TapApplicationMappingDto"
               }
             }
           },
@@ -8485,6 +8539,174 @@
               "application/json" : {
                 "schema" : {
                   "$ref" : "#/components/schemas/TemporaryAbsenceApplicationSyncMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/application/nomis-id/{nomisApplicationId}" : {
+      "get" : {
+        "tags" : [ "tap-application-resource" ],
+        "summary" : "Gets a mapping for a single tap application by NOMIS ID",
+        "description" : "Gets a mapping for a single tap application by NOMIS ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getTapApplicationMappingByNomisId",
+        "parameters" : [ {
+          "name" : "nomisApplicationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Application mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapApplicationMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete" : {
+        "tags" : [ "tap-application-resource" ],
+        "summary" : "Deletes a mapping for a single tap application by NOMIS ID",
+        "description" : "Deletes a mapping for a single tap application by NOMIS ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "deleteTapApplicationByNomisId",
+        "parameters" : [ {
+          "name" : "nomisApplicationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TemporaryAbsenceApplicationSyncMappingDto"
+              }
+            }
+          }
+        },
+        "responses" : {
+          "204" : {
+            "description" : "Application does not exist",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/application/dps-id/{dpsAuthorisationId}" : {
+      "get" : {
+        "tags" : [ "tap-application-resource" ],
+        "summary" : "Gets a mapping for a single tap application by DPS ID",
+        "description" : "Gets a mapping for a single tap application by DPS ID. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getTapApplicationSyncMappingByDpsId",
+        "parameters" : [ {
+          "name" : "dpsAuthorisationId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "format" : "uuid"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Application mapping returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapApplicationMappingDto"
                 }
               }
             }
@@ -21284,6 +21506,40 @@
           }
         },
         "required" : [ "bookingId", "dpsMovementApplicationId", "mappingType", "nomisMovementApplicationId", "prisonerNumber" ]
+      },
+      "TapApplicationMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single temporary absence application",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "nomisApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS tap application id"
+          },
+          "dpsAuthorisationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS tap authorisation id"
+          },
+          "mappingType" : {
+            "type" : "string",
+            "description" : "The source of the mapping",
+            "enum" : [ "MIGRATED", "NOMIS_CREATED", "DPS_CREATED" ],
+            "example" : "NOMIS_CREATED"
+          }
+        },
+        "required" : [ "bookingId", "dpsAuthorisationId", "mappingType", "nomisApplicationId", "prisonerNumber" ]
       },
       "SentencingAdjustmentMappingDto" : {
         "type" : "object",

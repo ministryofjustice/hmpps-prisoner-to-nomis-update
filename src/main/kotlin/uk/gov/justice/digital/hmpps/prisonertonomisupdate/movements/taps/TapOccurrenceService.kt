@@ -64,7 +64,7 @@ class TapOccurrenceService(
       val dps = dpsApiService.getTapOccurrence(dpsOccurrenceId)
         .also { telemetryMap["dpsAuthorisationId"] = "${it.authorisation.id}" }
       val nomisApplicationId = tryFetchParent {
-        mappingApiService.getApplicationMapping(dps.authorisation.id)?.nomisMovementApplicationId
+        mappingApiService.getTapApplicationMapping(dps.authorisation.id)?.nomisApplicationId
       }.also { telemetryMap["nomisApplicationId"] = it.toString() }
 
       // perform the sync to NOMIS

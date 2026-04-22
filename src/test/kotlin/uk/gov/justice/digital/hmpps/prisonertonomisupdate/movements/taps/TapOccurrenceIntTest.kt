@@ -101,7 +101,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, nomisApplicationId = nomisApplicationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
           mappingApi.stubCreateScheduledMovementMapping()
 
@@ -140,7 +140,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will check if the parent application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsAuthorisationId")))
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsAuthorisationId")))
         }
 
         @Test
@@ -209,12 +209,12 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, nomisApplicationId = nomisApplicationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321, addressOwnerClass = "OFF"))
           mappingApi.stubCreateScheduledMovementMapping()
 
           // stubs for the authorisation sync
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, nomisApplicationId = nomisApplicationId)
           dpsApi.stubGetTapAuthorisation(dpsAuthorisationId, response = dpsApi.tapAuthorisation(id = dpsAuthorisationId))
           nomisApi.stubUpsertTapApplication(prisonerNumber, upsertTapApplicationResponse())
 
@@ -241,7 +241,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         @BeforeEach
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId))
           mappingApi.stubCreateScheduledMovementMappingFailureFollowedBySuccess()
@@ -293,7 +293,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId))
           mappingApi.stubCreateScheduledMovementMappingConflict(
             error = DuplicateMappingErrorResponse(
@@ -363,7 +363,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, status = NOT_FOUND)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete("temporary-absence-schedule-create-awaiting-parent")
@@ -447,7 +447,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 54321)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, nomisApplicationId = nomisApplicationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321))
 
           // publish an update event
@@ -486,7 +486,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
 
         @Test
         fun `will check if the parent application mapping exists`() {
-          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/temporary-absence/application/dps-id/$dpsAuthorisationId")))
+          mappingApi.verify(getRequestedFor(urlEqualTo("/mapping/taps/application/dps-id/$dpsAuthorisationId")))
         }
 
         @Test
@@ -543,7 +543,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId, addressId = 55555)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, nomisMovementApplicationId = nomisApplicationId)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, nomisApplicationId = nomisApplicationId)
           nomisApi.stubUpsertTapScheduleOut(prisonerNumber, upsertTapScheduleOutResponse(eventId = nomisEventId, addressId = 54321))
           mappingApi.stubUpdateScheduledMovementMappingFailureFollowedBySuccess()
 
@@ -593,7 +593,7 @@ class TapOccurrenceIntTest : SqsIntegrationTestBase() {
         fun setUp() {
           mappingApi.stubGetTemporaryAbsenceScheduledMovementMapping(dpsId = dpsOccurrenceId, nomisEventId = nomisEventId)
           dpsApi.stubGetTapOccurrence(dpsOccurrenceId, dpsAuthorisationId, dpsLocation)
-          mappingApi.stubGetTemporaryAbsenceApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
+          mappingApi.stubGetTapApplicationMapping(dpsId = dpsAuthorisationId, status = NOT_FOUND)
 
           publishTapOccurrenceDomainEvent(dpsOccurrenceId, prisonerNumber, "DPS")
           waitForAnyProcessingToComplete("temporary-absence-schedule-update-awaiting-parent")
