@@ -14,9 +14,9 @@ import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapMovementMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
@@ -175,9 +175,9 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubCreateExternalMovementMapping() {
+  fun stubCreateTapMovementMapping() {
     mappingServer.stubFor(
-      post("/mapping/temporary-absence/external-movement")
+      post("/mapping/taps/movement")
         .willReturn(
           aResponse()
             .withHeader("Content-Type", "application/json")
@@ -186,9 +186,9 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubCreateExternalMovementMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubCreateTapMovementMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
-      post("/mapping/temporary-absence/external-movement").willReturn(
+      post("/mapping/taps/movement").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -197,9 +197,9 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubCreateExternalMovementMappingConflict(error: DuplicateMappingErrorResponse) {
+  fun stubCreateTapMovementMappingConflict(error: DuplicateMappingErrorResponse) {
     mappingServer.stubFor(
-      post("/mapping/temporary-absence/external-movement").willReturn(
+      post("/mapping/taps/movement").willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(409)
@@ -208,21 +208,21 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubCreateExternalMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/temporary-absence/external-movement")
+  fun stubCreateTapMovementMappingFailureFollowedBySuccess() = mappingServer.stubMappingCreateFailureFollowedBySuccess("/mapping/taps/movement")
 
-  fun stubGetTemporaryAbsenceExternalMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
+  fun stubGetTapMovementMapping(prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) {
     mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
+      get(urlPathMatching("/mapping/taps/movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
-          .withBody(jsonMapper.writeValueAsString(temporaryAbsenceExternalMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
+          .withBody(jsonMapper.writeValueAsString(tapMovementMapping(prisonerNumber = prisonerNumber, dpsId = dpsId))),
       ),
     )
   }
 
-  fun stubGetTemporaryAbsenceExternalMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
+  fun stubGetTapMovementMapping(dpsId: UUID = UUID.randomUUID(), status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
     mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/external-movement/dps-id/$dpsId")).willReturn(
+      get(urlPathMatching("/mapping/taps/movement/dps-id/$dpsId")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -291,12 +291,12 @@ fun tapScheduleMapping(nomisEventId: Long = 1L, prisonerNumber: String = "A1234B
   dpsPostcode = "SW1A 1AA",
 )
 
-fun temporaryAbsenceExternalMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = ExternalMovementSyncMappingDto(
+fun tapMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerNumber: String = "A1234BC", dpsId: UUID = UUID.randomUUID()) = TapMovementMappingDto(
   prisonerNumber = prisonerNumber,
   bookingId = bookingId,
   nomisMovementSeq = movementSeq,
   dpsMovementId = dpsId,
-  mappingType = ExternalMovementSyncMappingDto.MappingType.MIGRATED,
+  mappingType = TapMovementMappingDto.MappingType.MIGRATED,
   // TODO add address mapping details
   nomisAddressId = 0,
   nomisAddressOwnerClass = "",

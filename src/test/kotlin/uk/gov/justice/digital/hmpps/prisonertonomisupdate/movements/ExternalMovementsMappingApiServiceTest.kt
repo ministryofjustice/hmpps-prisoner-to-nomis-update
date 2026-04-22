@@ -366,9 +366,9 @@ class ExternalMovementsMappingApiServiceTest {
   inner class CreateExternalMovementMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubCreateExternalMovementMapping()
+      mappingApi.stubCreateTapMovementMapping()
 
-      apiService.createExternalMovementMapping(temporaryAbsenceExternalMovementMapping())
+      apiService.createTapMovementMapping(tapMovementMapping())
 
       mappingApi.verify(
         postRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -377,9 +377,9 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     internal fun `should pass data to service`() = runTest {
-      mappingApi.stubCreateExternalMovementMapping()
+      mappingApi.stubCreateTapMovementMapping()
 
-      apiService.createExternalMovementMapping(temporaryAbsenceExternalMovementMapping())
+      apiService.createTapMovementMapping(tapMovementMapping())
 
       mappingApi.verify(
         postRequestedFor(anyUrl())
@@ -395,7 +395,7 @@ class ExternalMovementsMappingApiServiceTest {
     @Test
     fun `should return error for 409 conflict`() = runTest {
       val dpsExternalMovementId = UUID.randomUUID()
-      mappingApi.stubCreateExternalMovementMappingConflict(
+      mappingApi.stubCreateTapMovementMappingConflict(
         error = DuplicateMappingErrorResponse(
           moreInfo = DuplicateErrorContentObject(
             existing = ExternalMovementSyncMappingDto(
@@ -428,7 +428,7 @@ class ExternalMovementsMappingApiServiceTest {
       )
 
       assertThrows<DuplicateMappingException> {
-        apiService.createExternalMovementMapping(temporaryAbsenceExternalMovementMapping())
+        apiService.createTapMovementMapping(tapMovementMapping())
       }.error.apply {
         assertThat(moreInfo.existing!!["nomisMovementSeq"]).isEqualTo(1)
         assertThat(moreInfo.duplicate["nomisMovementSeq"]).isEqualTo(2)
@@ -437,10 +437,10 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateExternalMovementMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubCreateTapMovementMapping(status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.createExternalMovementMapping(temporaryAbsenceExternalMovementMapping())
+        apiService.createTapMovementMapping(tapMovementMapping())
       }
     }
   }
@@ -451,9 +451,9 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId)
+      mappingApi.stubGetTapMovementMapping(dpsId = dpsId)
 
-      apiService.getExternalMovementMapping(dpsId)
+      apiService.getTapMovementMapping(dpsId)
 
       mappingApi.verify(
         getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
@@ -462,18 +462,18 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = NOT_FOUND)
 
-      apiService.getExternalMovementMapping(dpsId)
+      apiService.getTapMovementMapping(dpsId)
         .also { assertThat(it).isNull() }
     }
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceExternalMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
-        apiService.getExternalMovementMapping(dpsId)
+        apiService.getTapMovementMapping(dpsId)
       }
     }
   }
