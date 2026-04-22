@@ -21,7 +21,6 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Reconc
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsIdsResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTemporaryAbsenceId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.TapSummary
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
@@ -269,7 +268,7 @@ class TapAllPrisonersReconciliationService(
     dpsMovementIds: List<UUID>,
     nomisMovementIds: List<OffenderTapMovementId>,
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->
-    movements.find { dpsId == it.dpsMovementId }?.let { OffenderTemporaryAbsenceId(it.nomisBookingId, it.nomisMovementSeq) }
+    movements.find { dpsId == it.dpsMovementId }?.let { OffenderTapMovementId(it.nomisBookingId, it.nomisMovementSeq) }
   }
 }
 

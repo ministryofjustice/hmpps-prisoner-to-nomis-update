@@ -10,10 +10,10 @@ import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder
 import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.ErrorResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonAccountBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonBalanceDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerBalanceSummaryDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.RootOffenderIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.NomisApiExtension.Companion.nomisApi
 import java.math.BigDecimal
@@ -40,6 +40,13 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
   fun stubGetPrisonerAccountDetails(rootOffenderId: Long, response: PrisonerBalanceDto) {
     nomisApi.stubFor(
       get(urlPathEqualTo("/finance/prisoners/$rootOffenderId/balance"))
+        .willReturn(okJson(jsonMapper.writeValueAsString(response))),
+    )
+  }
+
+  fun stubGetPrisonerAccountSummary(rootOffenderId: Long, response: PrisonerBalanceSummaryDto) {
+    nomisApi.stubFor(
+      get(urlPathEqualTo("/finance/prisoners/$rootOffenderId/balance/summary"))
         .willReturn(okJson(jsonMapper.writeValueAsString(response))),
     )
   }
@@ -100,23 +107,6 @@ class FinanceNomisApiMockServer(private val jsonMapper: JsonMapper) {
           .withStatus(HttpStatus.OK.value())
           .withBody(
             jsonMapper.writeValueAsString(prisonBalance),
-          ),
-      ),
-    )
-  }
-
-  fun stubGetPrisonBalance(
-    prisonId: String = "MDI",
-    status: HttpStatus = HttpStatus.NOT_FOUND,
-    error: ErrorResponse = ErrorResponse(status = status.value()),
-  ) {
-    nomisApi.stubFor(
-      get(urlEqualTo("/finance/prison/$prisonId/balance")).willReturn(
-        aResponse()
-          .withHeader("Content-Type", "application/json")
-          .withStatus(status.value())
-          .withBody(
-            jsonMapper.writeValueAsString(error),
           ),
       ),
     )
