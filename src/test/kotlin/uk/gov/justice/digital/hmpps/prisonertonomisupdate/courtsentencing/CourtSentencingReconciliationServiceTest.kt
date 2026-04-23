@@ -976,6 +976,7 @@ internal class CourtSentencingReconciliationServiceTest {
                       dpsPeriodLengthResponse(),
                       dpsPeriodLengthResponse(),
                       dpsPeriodLengthResponse().copy(
+                        periodDays = 5,
                         periodYears = 20,
                         periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_ID),
                       ),
@@ -1001,8 +1002,65 @@ internal class CourtSentencingReconciliationServiceTest {
             nomis = 6,
             id = DPS_PERIOD_LENGTH_ID,
           ),
+          Difference(
+            property = "case.sentences[0].terms[2].days",
+            dps = 5,
+            nomis = 3,
+            id = DPS_PERIOD_LENGTH_ID,
+          ),
         ),
       )
+    }
+
+    @Test
+    fun `will ignore a sentence term units if life sentence`() = runTest {
+      stubCase(
+        nomisCase = nomisCaseResponse().copy(
+          sentences = listOf(
+            nomisSentenceResponse().copy(
+              sentenceTerms = listOf(
+                nomisSentenceTermResponse(lifeSentence = true, years = 35),
+                nomisSentenceTermResponse(lifeSentence = true),
+                nomisSentenceTermResponse(lifeSentence = true),
+              ),
+            ),
+          ),
+        ),
+        dpsCase = dpsCourtCaseResponse().copy(
+          appearances = listOf(
+            dpsAppearanceResponse().copy(
+              charges = listOf(
+                dpsChargeResponse().copy(
+                  sentence = dpsSentenceResponse().copy(
+                    periodLengths = listOf(
+                      dpsPeriodLengthResponse().copy(
+                        lifeSentence = true,
+                        periodMonths = 20,
+                      ),
+                      dpsPeriodLengthResponse().copy(
+                        lifeSentence = true,
+                        periodYears = null,
+                      ),
+                      dpsPeriodLengthResponse().copy(
+                        lifeSentence = true,
+                        periodYears = 6,
+                        periodLengthUuid = UUID.fromString(DPS_PERIOD_LENGTH_ID),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      )
+      assertThat(
+        service.checkCase(
+          nomisCaseId = NOMIS_COURT_CASE_ID,
+          dpsCaseId = DPS_COURT_CASE_ID,
+          offenderNo = OFFENDER_NO,
+        )?.differences,
+      ).isNull()
     }
   }
 }
@@ -1198,11 +1256,12 @@ fun nomisSentenceResponse(
 
 fun nomisSentenceTermResponse(
   months: Int = MONTHS,
+  years: Int = YEARS,
   termType: String = SENTENCE_TERM_TYPE,
   lifeSentence: Boolean = false,
 ) = SentenceTermResponse(
-  years = YEARS,
-  months = MONTHS,
+  years = years,
+  months = months,
   weeks = WEEKS,
   days = DAYS,
   sentenceTermType = CodeDescription(termType, "desc"),

@@ -313,10 +313,10 @@ class CourtSentencingReconciliationService(
         SentenceTermFields(
           sentenceTermCode = term.sentenceTermCode,
           lifeSentenceFlag = term.lifeSentence,
-          years = term.periodYears,
-          months = term.periodMonths,
-          weeks = term.periodWeeks,
-          days = term.periodDays,
+          years = term.periodYears.takeIf { term.lifeSentence != true },
+          months = term.periodMonths.takeIf { term.lifeSentence != true },
+          weeks = term.periodWeeks.takeIf { term.lifeSentence != true },
+          days = term.periodDays.takeIf { term.lifeSentence != true },
           id = term.periodLengthUuid.toString(),
         )
       }
@@ -395,10 +395,10 @@ class CourtSentencingReconciliationService(
             .joinToString(",")
         val terms = sentenceResponse.sentenceTerms.map { term ->
           SentenceTermFields(
-            years = term.years,
-            months = term.months,
-            weeks = term.weeks,
-            days = term.days,
+            years = term.years.takeIf { !term.lifeSentenceFlag },
+            months = term.months.takeIf { !term.lifeSentenceFlag },
+            weeks = term.weeks.takeIf { !term.lifeSentenceFlag },
+            days = term.days.takeIf { !term.lifeSentenceFlag },
             sentenceTermCode = term.sentenceTermType?.code,
             lifeSentenceFlag = term.lifeSentenceFlag,
             id = term.termSequence.toString(),
