@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-22.501.82ab655"
+    "version" : "2026-04-22.503.25767ff"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -20689,16 +20689,16 @@
             "format" : "int32"
           },
           "errorCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "userMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "moreInfo" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "status" ]
@@ -20717,16 +20717,16 @@
             "description" : "Transaction id in Nomis"
           },
           "offenderNo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Prisoner number in Nomis"
           },
           "nomisBookingId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Nomis booking id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -20777,12 +20777,12 @@
             "example" : "NOMIS_CREATED"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -20790,16 +20790,16 @@
             "description" : "The DPS address"
           },
           "dpsUprn" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS address unique ID"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           },
           "eventTime" : {
@@ -20826,12 +20826,12 @@
             "description" : "The DPS movement id"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -20839,11 +20839,11 @@
             "description" : "The DPS address"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS address description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           }
         },
@@ -20864,12 +20864,12 @@
             "description" : "The DPS scheduled movement id"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -20877,11 +20877,11 @@
             "description" : "The DPS address"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS address description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           },
           "eventTime" : {
@@ -20973,7 +20973,7 @@
             "example" : "2025-08-11T15:34:43"
           },
           "whenCreated" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The created time of the mappings",
             "example" : "2025-08-11T15:34:43"
           }
@@ -21012,12 +21012,12 @@
             "example" : "NOMIS_CREATED"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -21025,15 +21025,15 @@
             "description" : "The DPS address"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           },
           "dpsUprn" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS address unique ID"
           }
@@ -21072,12 +21072,12 @@
             "example" : "NOMIS_CREATED"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -21085,16 +21085,16 @@
             "description" : "The DPS address"
           },
           "dpsUprn" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS address unique ID"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           },
           "eventTime" : {
@@ -21138,12 +21138,12 @@
             "example" : "NOMIS_CREATED"
           },
           "nomisAddressId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The NOMIS address id"
           },
           "nomisAddressOwnerClass" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The NOMIS address owner class"
           },
           "dpsAddressText" : {
@@ -21151,15 +21151,15 @@
             "description" : "The DPS address"
           },
           "dpsDescription" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS description"
           },
           "dpsPostcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The DPS postcode"
           },
           "dpsUprn" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The DPS address unique ID"
           }
@@ -21208,13 +21208,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "ADJUDICATION_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
@@ -21272,7 +21272,7 @@
             "description" : "Prisoner number in Nomis"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -21328,13 +21328,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -21377,13 +21377,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -21437,7 +21437,7 @@
             }
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -21527,18 +21527,18 @@
             "example" : "123456"
           },
           "offenderNo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "NOMIS offender no/nomisId",
             "example" : "AA12345"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -21612,13 +21612,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -21673,13 +21673,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -21730,7 +21730,7 @@
             "description" : "Nomis booking id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -21789,7 +21789,7 @@
         "description" : "Mappings for a prisoner created during migration",
         "properties" : {
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -21836,7 +21836,7 @@
             "description" : "Prisoner number"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -21875,7 +21875,7 @@
             "description" : "Activity schedule id"
           },
           "activityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Activity id"
           },
@@ -21972,7 +21972,7 @@
             "minLength" : 0
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22019,7 +22019,7 @@
             "type" : "string"
           },
           "developerMessage" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "errorCode", "moreInfo", "status", "userMessage" ]
@@ -22035,7 +22035,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22066,7 +22066,7 @@
             "format" : "int32"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22116,7 +22116,7 @@
             }
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22144,7 +22144,7 @@
             "description" : "DPS representation of the offender"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22250,7 +22250,7 @@
             "description" : "Adjustment id from sentencing service"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22300,7 +22300,7 @@
             "description" : "DPS representation of the offender"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22334,7 +22334,7 @@
             "example" : "MDI"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22364,7 +22364,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22389,7 +22389,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22420,7 +22420,7 @@
             }
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22484,7 +22484,7 @@
             "description" : "NOMIS type sequence"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22519,7 +22519,7 @@
             "description" : "Location id in Nomis"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22554,7 +22554,7 @@
             "description" : "DPS Incident id from incident reporting service"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22595,7 +22595,7 @@
             "description" : "Incentive id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22638,13 +22638,13 @@
             "example" : "123456/1"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "ADJUDICATION_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
@@ -22676,13 +22676,13 @@
             "example" : "123456"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "ADJUDICATION_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
@@ -22724,7 +22724,7 @@
         "description" : "Mappings for a prisoner created during migration",
         "properties" : {
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -22766,7 +22766,7 @@
             "description" : "DPS CSIP Report id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -22799,7 +22799,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22836,7 +22836,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22873,7 +22873,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22910,7 +22910,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -22947,7 +22947,7 @@
             "description" : "DPS CSIP Report id from DPS CSIP service"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -23015,7 +23015,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23052,7 +23052,7 @@
             "description" : "CSIP Report id from DPS CSIP service"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
@@ -23082,7 +23082,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23139,7 +23139,7 @@
             "format" : "int32"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23181,7 +23181,7 @@
             "format" : "int32"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23215,7 +23215,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23317,13 +23317,13 @@
             }
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -23358,13 +23358,13 @@
             "minLength" : 1
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -23387,7 +23387,7 @@
             "format" : "int64"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23423,7 +23423,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -23486,7 +23486,7 @@
             "type" : "string"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23530,7 +23530,7 @@
         "description" : "Mappings for a Core Person and its associated child entities",
         "properties" : {
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -23648,7 +23648,7 @@
             }
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23676,7 +23676,7 @@
             "type" : "string"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",
@@ -23782,7 +23782,7 @@
         "description" : "Mappings for a Person and there associated child entities",
         "properties" : {
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -23918,7 +23918,7 @@
             "description" : "Prisoner number"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -23953,7 +23953,7 @@
             "enum" : [ "ADDRESS", "PERSON" ]
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -23983,7 +23983,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24013,7 +24013,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24048,7 +24048,7 @@
             "description" : "NOMIS sequence"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24083,7 +24083,7 @@
             "description" : "NOMIS sequence"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24113,7 +24113,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24143,7 +24143,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24173,7 +24173,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24203,7 +24203,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -24235,13 +24235,13 @@
             "description" : "NOMIS course activity id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "APPOINTMENT_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "APPOINTMENT_CREATED" ],
@@ -24346,7 +24346,7 @@
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "MIGRATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "ADJUDICATION_CREATED" ],
@@ -24366,12 +24366,12 @@
             "description" : "NOMIS course activity id"
           },
           "activityId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "Activity id"
           },
           "activityId2" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "2nd Activity id"
           },
@@ -24528,12 +24528,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -24783,7 +24783,7 @@
             "example" : "A1234BC"
           },
           "migrationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The migration unique identifier",
             "example" : "2025-08-11T15:34:43"
           },
@@ -24971,7 +24971,7 @@
             "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
           },
           "migrationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "the migration the offender was migrated in"
           }
         },
@@ -25039,13 +25039,13 @@
             "example" : "89442cf5-a22d-4113-b9d8-63daa757c962"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)",
             "maxLength" : 20,
             "minLength" : 0
           },
           "mappingType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "DPS_CREATED",
             "description" : "Mapping type",
             "enum" : [ "MIGRATED", "DPS_CREATED", "NOMIS_CREATED" ]
@@ -25126,7 +25126,7 @@
             "description" : "NOMIS Prison number aka Offender number"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -25161,7 +25161,7 @@
             "enum" : [ "ADDRESS", "CORE_PERSON" ]
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -25190,7 +25190,7 @@
             "description" : "NOMIS Prison number aka Offender number"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -25266,7 +25266,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -25296,7 +25296,7 @@
             "description" : "NOMIS id"
           },
           "label" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Label (a timestamp for migrated ids)"
           },
           "mappingType" : {
@@ -25323,7 +25323,7 @@
             "type" : "string"
           },
           "label" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mappingType" : {
             "type" : "string",

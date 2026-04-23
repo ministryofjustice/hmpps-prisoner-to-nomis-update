@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-17.1558.d63352e"
+    "version" : "2026-04-22.1567.a325568"
   },
   "servers" : [ {
     "url" : "https://remand-and-sentencing-api.hmpps.service.justice.gov.uk",
@@ -3986,6 +3986,36 @@
         }
       }
     },
+    "/sentence-type/charge-outcome/all" : {
+      "get" : {
+        "tags" : [ "sentence-type-controller" ],
+        "summary" : "Get all charge outcomes associated to sentence types",
+        "description" : "This endpoint will retrieve all charge outcomes which have an association to at least one sentence type",
+        "operationId" : "getAllChargeOutcomes",
+        "responses" : {
+          "200" : {
+            "description" : "Returns sentence type details",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeChargeOutcomes"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorised, requires a valid Oauth2 token",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/SentenceTypeChargeOutcomes"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/sentence-type/all" : {
       "get" : {
         "tags" : [ "sentence-type-controller" ],
@@ -5621,7 +5651,7 @@
         "tags" : [ "charge-outcome-controller" ],
         "summary" : "Get all charge outcomes by statuses",
         "description" : "This endpoint will get all charge outcomes by statuses",
-        "operationId" : "getAllChargeOutcomes",
+        "operationId" : "getAllChargeOutcomes_1",
         "parameters" : [ {
           "name" : "statuses",
           "in" : "query",
@@ -6494,7 +6524,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "outcomeDispositionCode" : {
             "type" : [ "string", "null" ]
@@ -6867,7 +6897,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "courtCode" : {
             "type" : "string"
@@ -8871,6 +8901,18 @@
         },
         "required" : [ "isStillValid" ]
       },
+      "SentenceTypeChargeOutcomes" : {
+        "type" : "object",
+        "properties" : {
+          "chargeOutcomes" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/ChargeOutcome"
+            }
+          }
+        },
+        "required" : [ "chargeOutcomes" ]
+      },
       "AllSentenceTypes" : {
         "type" : "object",
         "properties" : {
@@ -9422,7 +9464,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "courtCode" : {
             "type" : "string"
@@ -10110,7 +10152,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "nomisOutcomeCode" : {
             "type" : [ "string", "null" ]
@@ -10189,7 +10231,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "courtId" : {
             "type" : "string"
@@ -10341,7 +10383,7 @@
           },
           "appearanceTime" : {
             "type" : "string",
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "charges" : {
             "type" : "array",
@@ -10375,7 +10417,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "courtId" : {
             "type" : "string"
@@ -10648,15 +10690,15 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "unpaged" : {
+            "type" : "boolean"
+          },
           "paged" : {
             "type" : "boolean"
           },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "unpaged" : {
-            "type" : "boolean"
           }
         }
       },
@@ -10939,7 +10981,7 @@
           },
           "appearanceTime" : {
             "type" : [ "string", "null" ],
-            "example" : "07:24:03.766055375"
+            "example" : "07:24:01.167168572"
           },
           "courtCode" : {
             "type" : [ "string", "null" ]
