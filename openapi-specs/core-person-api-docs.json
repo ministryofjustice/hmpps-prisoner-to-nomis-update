@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-08.2890.b765b5e"
+    "version" : "2026-04-22.3140.4249b9e"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -545,9 +545,6 @@
                 }
               }
             }
-          },
-          "301" : {
-            "description" : "Permanent Redirect"
           }
         },
         "security" : [ {
@@ -578,6 +575,9 @@
                 }
               }
             }
+          },
+          "301" : {
+            "description" : "Permanent Redirect"
           }
         },
         "security" : [ {
@@ -616,6 +616,24 @@
         "security" : [ {
           "api-role" : [ ]
         } ]
+      },
+      "delete" : {
+        "tags" : [ "HMPPS Person API" ],
+        "operationId" : "deleteByPrisonNumber",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : { }
+          }
+        }
       }
     },
     "/person/prison/dps/{prisonNumber}" : {
