@@ -174,6 +174,41 @@ class SentencingAdjustmentsToNomisTest : SqsIntegrationTestBase() {
       }
 
       @Nested
+      inner class WhenSREMAdjustment {
+        private val nomisAdjustmentId = 98765L
+
+        @BeforeEach
+        fun setUp() {
+          nomisApi.stubKeyDateAdjustmentCreate(
+            bookingId = BOOKING_ID,
+            adjustmentId = nomisAdjustmentId,
+          )
+
+          sentencingAdjustmentsApi.stubAdjustmentGet(
+            adjustmentId = ADJUSTMENT_ID,
+            sentenceSequence = null,
+            active = true,
+            adjustmentDays = 99,
+            adjustmentDate = "2022-01-01",
+            adjustmentType = "SREM",
+            adjustmentFromDate = null,
+            comment = "Meritorious conduct",
+            bookingId = BOOKING_ID,
+          )
+          publishCreateAdjustmentDomainEvent().also { waitForAnyProcessingToComplete() }
+        }
+
+        @Test
+        fun `will create a sentence adjustment in NOMIS with start date equal to adjustment date`() {
+          nomisApi.verify(
+            postRequestedFor(urlEqualTo("/prisoners/booking-id/$BOOKING_ID/adjustments"))
+              .withRequestBody(matchingJsonPath("adjustmentDate", equalTo("2022-01-01")))
+              .withRequestBody(matchingJsonPath("adjustmentFromDate", equalTo("2022-01-01"))),
+          )
+        }
+      }
+
+      @Nested
       inner class WhenSentenceSequenceIsNotProvided {
         private val nomisAdjustmentId = 98765L
 

@@ -88,7 +88,7 @@ class SentencingAdjustmentsService(
       CreateKeyDateAdjustmentRequest(
         adjustmentTypeCode = CreateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
         adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-        adjustmentFromDate = adjustment.adjustmentFromDate!!,
+        adjustmentFromDate = adjustment.adjustmentFromDate ?: adjustment.adjustmentDate ?: LocalDate.now(),
         adjustmentDays = adjustment.adjustmentDays.toLong(),
         comment = adjustment.comment,
       ),
@@ -178,7 +178,7 @@ class SentencingAdjustmentsService(
         UpdateKeyDateAdjustmentRequest(
           adjustmentTypeCode = UpdateKeyDateAdjustmentRequest.AdjustmentTypeCode.valueOf(adjustment.adjustmentType.value),
           adjustmentDate = adjustment.adjustmentDate ?: LocalDate.now(),
-          adjustmentFromDate = adjustment.adjustmentFromDate!!,
+          adjustmentFromDate = adjustment.adjustmentFromDate ?: adjustment.adjustmentDate ?: LocalDate.now(),
           adjustmentDays = adjustment.adjustmentDays.toLong(),
           comment = adjustment.comment,
           active = active,
