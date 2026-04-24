@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-22.3140.4249b9e"
+    "version" : "2026-04-23.3153.206e634"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -25,15 +25,11 @@
   "security" : [ {
     "bearer-jwt" : [ "read" ]
   } ],
-  "tags" : [ {
-    "name" : "Search",
-    "description" : "APIs for person search"
-  } ],
   "paths" : {
     "/syscon-sync/person/{prisonNumber}" : {
       "put" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Update a prison record by prison number",
+        "description" : "Update a prison record by prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "update",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -144,7 +140,7 @@
     },
     "/person/probation/{defendantId}" : {
       "put" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Probation" ],
         "description" : "Create person record by CRN. Role required is **ROLE_CORE_PERSON_RECORD_API__PROBATION_RW** . \n      Includes all fields relating to core person information",
         "operationId" : "createProbationPerson",
         "parameters" : [ {
@@ -177,7 +173,7 @@
     },
     "/person/prison/{prisonNumber}/religion/{cprReligionId}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "description" : "Get prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "getPrisonReligion",
         "parameters" : [ {
@@ -212,7 +208,7 @@
         } ]
       },
       "put" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "description" : "Update prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "updatePrisonReligion",
         "parameters" : [ {
@@ -335,7 +331,7 @@
     "/syscon-sync/nationality/{prisonNumber}" : {
       "post" : {
         "tags" : [ "Syscon Sync" ],
-        "description" : "Upserts a nationality record on a matching prison number",
+        "description" : "Upserts a nationality record on a matching prison number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "saveNationality",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -448,7 +444,7 @@
     },
     "/person/prison/{prisonNumber}/religion" : {
       "post" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "description" : "Save prison religion record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__SYSCON_SYNC_RW**.",
         "operationId" : "savePrisonReligion",
         "parameters" : [ {
@@ -523,7 +519,7 @@
     },
     "/person/{uuid}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Canonical" ],
         "description" : "**Note: This API endpoint is scheduled for deprecation.**\n\n Retrieve person record by UUID. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**",
         "operationId" : "getCanonicalRecord",
         "parameters" : [ {
@@ -547,6 +543,7 @@
             }
           }
         },
+        "deprecated" : true,
         "security" : [ {
           "api-role" : [ ]
         } ]
@@ -554,7 +551,7 @@
     },
     "/person/probation/{crn}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Probation" ],
         "description" : "Retrieve person record by CRN. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
         "operationId" : "getProbationPerson",
         "parameters" : [ {
@@ -587,7 +584,7 @@
     },
     "/person/prison/{prisonNumber}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "description" : "Retrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
         "operationId" : "getByPrisonNumber",
         "parameters" : [ {
@@ -618,7 +615,7 @@
         } ]
       },
       "delete" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "operationId" : "deleteByPrisonNumber",
         "parameters" : [ {
           "name" : "prisonNumber",
@@ -638,7 +635,7 @@
     },
     "/person/prison/dps/{prisonNumber}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Prison" ],
         "description" : "**NOTE: Use this only if you want to retrieve Prison Religion history & Alias References.**\n\nRetrieve person record by Prison Number. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person. The other Identifiers come from just this person **cprUUID is not supplied on this endpoint.** In addition to the person data being returned, the response also includes a list of the prison religions associated with the person and a prison specific representation of alias & identifiers.",
         "operationId" : "getByPrisonNumberDps",
         "parameters" : [ {
@@ -671,7 +668,7 @@
     },
     "/person/libra/{cId}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Court" ],
         "description" : "Retrieve person record by C_ID coming from Libra. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
         "operationId" : "getLibraPerson",
         "parameters" : [ {
@@ -701,7 +698,7 @@
     },
     "/person/commonplatform/{defendantId}" : {
       "get" : {
-        "tags" : [ "HMPPS Person API" ],
+        "tags" : [ "Court" ],
         "description" : "Retrieve person record by Defendant ID. Role required is **ROLE_CORE_PERSON_RECORD_API__RO** . \n      For Identifiers the crn, prisonNumber, defendantId, cids come from all records related to this person.\n      The other Identifiers come from just this person\n      **cprUUID is not supplied on this endpoint.**",
         "operationId" : "getCommonPlatformPerson",
         "parameters" : [ {
@@ -731,7 +728,7 @@
     },
     "/person/commonplatform/{defendantId}/match-details" : {
       "get" : {
-        "tags" : [ "person-common-platform-controller" ],
+        "tags" : [ "Court" ],
         "operationId" : "getMatchDetails",
         "parameters" : [ {
           "name" : "defendantId",
