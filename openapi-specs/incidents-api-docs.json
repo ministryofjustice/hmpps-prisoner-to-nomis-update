@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-20.677.e327070"
+    "version" : "2026-04-21.681.22598d7"
   },
   "servers" : [ {
     "url" : "/",
@@ -5112,17 +5112,17 @@
               "example" : "[\"property,ASC\"]"
             }
           },
-          "totalPages" : {
-            "type" : "integer",
-            "description" : "Total number of pages",
-            "format" : "int32",
-            "example" : 3
-          },
           "numberOfElements" : {
             "type" : "integer",
             "description" : "Number of elements in this page",
             "format" : "int32",
             "example" : 20
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "description" : "Total number of pages",
+            "format" : "int32",
+            "example" : 3
           }
         },
         "description" : "Page of results",

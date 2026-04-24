@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.674.3c36842"
+    "version" : "2026-04-23.708.165e4a1"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -3365,6 +3365,11 @@
             "description" : "The visit comment text",
             "example" : "This is a comment"
           },
+          "currentTerm" : {
+            "type" : "boolean",
+            "description" : "The current term flag from NOMIS. Default is true if not provided.",
+            "example" : true
+          },
           "searchTypeCode" : {
             "$ref" : "#/components/schemas/SearchLevelType",
             "description" : "The prisoner search type code. Maps to the same reference code values in both NOMIS and DPS.",
@@ -3403,7 +3408,7 @@
             "example" : "X999X"
           }
         },
-        "required" : [ "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "updateDateTime", "updateUsername", "visitDate", "visitStatusCode" ]
+        "required" : [ "currentTerm", "dpsLocationId", "endTime", "offenderBookId", "offenderVisitId", "prisonCode", "prisonVisitSlotId", "prisonerNumber", "startTime", "updateDateTime", "updateUsername", "visitDate", "visitStatusCode" ]
       },
       "VisitCompletionType" : {
         "type" : "string",
@@ -4218,7 +4223,8 @@
           "prisonCode" : {
             "type" : "string",
             "description" : "The prison code where the visit takes place",
-            "example" : "PVI"
+            "example" : "PVI",
+            "minLength" : 1
           },
           "offenderBookId" : {
             "type" : "integer",
@@ -4419,7 +4425,8 @@
           "prisonCode" : {
             "type" : "string",
             "description" : "The prison code where the visit takes place",
-            "example" : "PVI"
+            "example" : "PVI",
+            "minLength" : 1
           },
           "offenderBookId" : {
             "type" : "integer",
@@ -5184,7 +5191,7 @@
           "prisonerNumber" : {
             "type" : "string",
             "description" : "The official visitor - prisoner number",
-            "example" : 1
+            "example" : "1"
           },
           "prisonCode" : {
             "type" : "string",

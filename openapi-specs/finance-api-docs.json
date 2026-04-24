@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-15.724.e530fd8"
+    "version" : "2026-04-23.747.fa309b7"
   },
   "servers" : [ {
     "url" : "https://prisoner-finance-sync-api-dev.hmpps.service.justice.gov.uk/",
@@ -101,6 +101,90 @@
             }
           }
         }
+      }
+    },
+    "/validate/prisoner-balances/{prisonNumber}" : {
+      "post" : {
+        "tags" : [ "NOMIS Sync" ],
+        "summary" : "Validate a prisoners balances",
+        "description" : "Validate a prisoners sub-accounts (e.g., Spends, Private Cash) to a given balance from a legacy system.",
+        "operationId" : "validatePrisonerBalances",
+        "parameters" : [ {
+          "name" : "prisonNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/PrisonerBalancesSyncRequest"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner balances validation request received successfully."
+          },
+          "400" : {
+            "description" : "Bad request - invalid input data.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized - requires a valid OAuth2 token",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden - requires an appropriate role",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Not Found - Prison Number not found",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500" : {
+            "description" : "Internal Server Error - An unexpected error occurred.",
+            "content" : {
+              "*/*" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        },
+        "security" : [ {
+          "bearer-jwt" : [ "ROLE_PRISONER_FINANCE_SYNC__RW" ]
+        } ]
       }
     },
     "/sync/offender-transactions" : {
@@ -1073,6 +1157,82 @@
         },
         "required" : [ "messagesFoundCount" ]
       },
+      "PrisonerAccountPointInTimeBalance" : {
+        "type" : "object",
+        "description" : "Represents a prisoner balance at a specific point in time for synchronization from a legacy system.",
+        "properties" : {
+          "prisonId" : {
+            "type" : "string",
+            "description" : "The prison code (e.g., 'MDI') where this specific account balance is held.",
+            "minLength" : 1
+          },
+          "accountCode" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The account code for the prisoner account."
+          },
+          "balance" : {
+            "type" : "number",
+            "description" : "The account balance at the specified time.",
+            "example" : 123.45
+          },
+          "holdBalance" : {
+            "type" : "number",
+            "format" : "decimal",
+            "description" : "The amount on hold for the sub-account.",
+            "example" : 10.0
+          },
+          "transactionId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The transaction ID that resulted in the last update to the prisoner balance."
+          },
+          "asOfTimestamp" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "The local date and time from the legacy system when this balance was valid.",
+            "example" : "2025-09-24T10:00:00"
+          }
+        },
+        "required" : [ "accountCode", "asOfTimestamp", "balance", "holdBalance", "prisonId", "transactionId" ]
+      },
+      "PrisonerBalancesSyncRequest" : {
+        "type" : "object",
+        "description" : "A request to synchronize all balances for a single prisoner across their sub-accounts.",
+        "properties" : {
+          "accountBalances" : {
+            "type" : "array",
+            "description" : "A list of sub-account balances to be synchronized for the prisoner.",
+            "items" : {
+              "$ref" : "#/components/schemas/PrisonerAccountPointInTimeBalance"
+            },
+            "minItems" : 1
+          }
+        },
+        "required" : [ "accountBalances" ]
+      },
+      "ErrorResponse" : {
+        "type" : "object",
+        "properties" : {
+          "status" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "errorCode" : {
+            "type" : [ "string", "null" ]
+          },
+          "userMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "developerMessage" : {
+            "type" : [ "string", "null" ]
+          },
+          "moreInfo" : {
+            "type" : [ "string", "null" ]
+          }
+        },
+        "required" : [ "status" ]
+      },
       "GeneralLedgerEntry" : {
         "type" : "object",
         "description" : "Represents a general ledger entry.",
@@ -1278,28 +1438,6 @@
         },
         "required" : [ "action", "requestId", "synchronizedTransactionId" ]
       },
-      "ErrorResponse" : {
-        "type" : "object",
-        "properties" : {
-          "status" : {
-            "type" : "integer",
-            "format" : "int32"
-          },
-          "errorCode" : {
-            "type" : [ "string", "null" ]
-          },
-          "userMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "developerMessage" : {
-            "type" : [ "string", "null" ]
-          },
-          "moreInfo" : {
-            "type" : [ "string", "null" ]
-          }
-        },
-        "required" : [ "status" ]
-      },
       "SyncGeneralLedgerTransactionRequest" : {
         "type" : "object",
         "description" : "Request body for synchronizing general ledger transactions. Please note these are for non-offender accounts only.",
@@ -1393,60 +1531,6 @@
           }
         },
         "required" : [ "caseloadId", "createdAt", "createdBy", "createdByDisplayName", "description", "generalLedgerEntries", "requestId", "transactionId", "transactionTimestamp", "transactionType" ]
-      },
-      "PrisonerAccountPointInTimeBalance" : {
-        "type" : "object",
-        "description" : "Represents a prisoner balance at a specific point in time for synchronization from a legacy system.",
-        "properties" : {
-          "prisonId" : {
-            "type" : "string",
-            "description" : "The prison code (e.g., 'MDI') where this specific account balance is held.",
-            "minLength" : 1
-          },
-          "accountCode" : {
-            "type" : "integer",
-            "format" : "int32",
-            "description" : "The account code for the prisoner account."
-          },
-          "balance" : {
-            "type" : "number",
-            "description" : "The account balance at the specified time.",
-            "example" : 123.45
-          },
-          "holdBalance" : {
-            "type" : "number",
-            "format" : "decimal",
-            "description" : "The amount on hold for the sub-account.",
-            "example" : 10.0
-          },
-          "transactionId" : {
-            "type" : [ "integer", "null" ],
-            "format" : "int64",
-            "description" : "The transaction ID that resulted in the last update to the prisoner balance."
-          },
-          "asOfTimestamp" : {
-            "type" : "string",
-            "format" : "date-time",
-            "description" : "The local date and time from the legacy system when this balance was valid.",
-            "example" : "2025-09-24T10:00:00"
-          }
-        },
-        "required" : [ "accountCode", "asOfTimestamp", "balance", "holdBalance", "prisonId", "transactionId" ]
-      },
-      "PrisonerBalancesSyncRequest" : {
-        "type" : "object",
-        "description" : "A request to synchronize all balances for a single prisoner across their sub-accounts.",
-        "properties" : {
-          "accountBalances" : {
-            "type" : "array",
-            "description" : "A list of sub-account balances to be synchronized for the prisoner.",
-            "items" : {
-              "$ref" : "#/components/schemas/PrisonerAccountPointInTimeBalance"
-            },
-            "minItems" : 1
-          }
-        },
-        "required" : [ "accountBalances" ]
       },
       "GeneralLedgerBalancesSyncRequest" : {
         "type" : "object",

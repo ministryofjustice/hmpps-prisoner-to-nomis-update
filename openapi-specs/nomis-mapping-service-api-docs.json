@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-22.503.25767ff"
+    "version" : "2026-04-23.511.f21d78d"
   },
   "servers" : [ {
     "url" : "https://nomis-sync-prisoner-mapping.hmpps.service.justice.gov.uk",
@@ -717,6 +717,127 @@
           },
           "409" : {
             "description" : "The mapping already exists.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/move-booking/{bookingId}/from/{fromOffenderNo}/to/{toOffenderNo}" : {
+      "put" : {
+        "tags" : [ "tap-prisoner-resource" ],
+        "summary" : "Move all mappings for a booking from one offender to another",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "movePrisonerBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "fromOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "toOffenderNo",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Bookings moved",
+            "content" : { }
+          },
+          "400" : {
+            "description" : "We were unable to move the bookings",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "There are no mappings for the booking",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/migrate" : {
+      "put" : {
+        "tags" : [ "tap-migration-resource" ],
+        "summary" : "Creates all mappings for prisoner temporary absences which are all migrated at the same time",
+        "description" : "Creates mappings for prisoner temporary absences including movement applications, scheduled movements and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "createPrisonerTapMappings",
+        "requestBody" : {
+          "content" : {
+            "application/json" : {
+              "schema" : {
+                "$ref" : "#/components/schemas/TapPrisonerMappingsDto"
+              }
+            }
+          },
+          "required" : true
+        },
+        "responses" : {
+          "201" : {
+            "description" : "Mappings created",
+            "content" : { }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -8788,6 +8909,54 @@
         }
       }
     },
+    "/mapping/taps/{prisonerNumber}/ids" : {
+      "get" : {
+        "tags" : [ "tap-prisoner-resource" ],
+        "summary" : "Gets all mappings for prisoner temporary absences",
+        "description" : "Gets mappings for prisoner temporary absences including movement applications, scheduled movements and movements. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getAllPrisonerMappingIds",
+        "parameters" : [ {
+          "name" : "prisonerNumber",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Prisoner mapping IDs returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapPrisonerMappingIdsDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/mapping/taps/schedule/nomis-id/{nomisEventId}" : {
       "get" : {
         "tags" : [ "tap-schedule-resource" ],
@@ -8886,6 +9055,73 @@
           },
           "403" : {
             "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/schedule/nomis-address-id/{nomisAddressId}" : {
+      "get" : {
+        "tags" : [ "tap-schedule-resource" ],
+        "summary" : "Finds tap schedules by NOMIS address ID",
+        "description" : "Finds tap schedules by NOMIS address ID after the passed date. If no date is passed the default value is today. Requires ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "findTapScheduleMappingsByNomisAddressId",
+        "parameters" : [ {
+          "name" : "nomisAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        }, {
+          "name" : "fromDate",
+          "in" : "query",
+          "required" : false,
+          "schema" : {
+            "type" : "string",
+            "format" : "date"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "List of tap schedules returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/FindTapScheduleMappingsForAddressResponse"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Access forbidden for this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "The mapping does not exist.",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -9129,6 +9365,114 @@
           },
           "404" : {
             "description" : "The mapping does not exist.",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/move-booking/{bookingId}" : {
+      "get" : {
+        "tags" : [ "tap-prisoner-resource" ],
+        "summary" : "Get all mappings for a booking",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getPrisonerBookingMappings",
+        "parameters" : [ {
+          "name" : "bookingId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Temporary absence mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/TapMoveBookingMappingDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/mapping/taps/migration-id/{migrationId}" : {
+      "get" : {
+        "tags" : [ "tap-migration-resource" ],
+        "summary" : "Get a page of temporary absence migration mappings, which is just the prisoner numbers that have been migrated.",
+        "description" : "Requires role ROLE_NOMIS_MAPPING_API__SYNCHRONISATION__RW",
+        "operationId" : "getTapMappingsCount",
+        "parameters" : [ {
+          "name" : "pageRequest",
+          "in" : "query",
+          "required" : true,
+          "schema" : {
+            "$ref" : "#/components/schemas/Pageable"
+          }
+        }, {
+          "name" : "migrationId",
+          "in" : "path",
+          "description" : "Migration Id",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Migration Id",
+            "example" : "2020-03-24T12:00:00"
+          },
+          "example" : "2020-03-24T12:00:00"
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Temporary absence mapping page returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/PageTapMigrationDto"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden to access this endpoint",
             "content" : {
               "application/json" : {
                 "schema" : {
@@ -21166,6 +21510,175 @@
         },
         "required" : [ "bookingId", "dpsAddressText", "dpsMovementId", "mappingType", "nomisMovementSeq", "prisonerNumber" ]
       },
+      "TapApplicationMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single temporary absence application and its children",
+        "properties" : {
+          "nomisApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS temporary absence application id"
+          },
+          "dpsAuthorisationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS temporary absence application id"
+          },
+          "schedules" : {
+            "type" : "array",
+            "description" : "All scheduled movement mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/TapScheduleMappingsDto"
+            }
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "All actual external movement mappings",
+            "items" : {
+              "$ref" : "#/components/schemas/TapMovementMappingsDto"
+            }
+          }
+        },
+        "required" : [ "dpsAuthorisationId", "movements", "nomisApplicationId", "schedules" ]
+      },
+      "TapBookingMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's entire temporary absence history",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS ID of the booking",
+            "example" : 12345
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "Mappings for a single temporary absence application",
+            "items" : {
+              "$ref" : "#/components/schemas/TapApplicationMappingsDto"
+            }
+          },
+          "unscheduledMovements" : {
+            "type" : "array",
+            "description" : "Mappings for unscheduled external movements, e.g. no application",
+            "items" : {
+              "$ref" : "#/components/schemas/TapMovementMappingsDto"
+            }
+          }
+        },
+        "required" : [ "applications", "bookingId", "unscheduledMovements" ]
+      },
+      "TapMovementMappingsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single external movement",
+        "properties" : {
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement id"
+          },
+          "nomisAddressId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : [ "string", "null" ],
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "dpsDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "The DPS address description"
+          },
+          "dpsPostcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The DPS postcode"
+          }
+        },
+        "required" : [ "dpsAddressText", "dpsMovementId", "nomisMovementSeq" ]
+      },
+      "TapPrisonerMappingsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "bookings" : {
+            "type" : "array",
+            "description" : "The mappings for each booking",
+            "items" : {
+              "$ref" : "#/components/schemas/TapBookingMappingsDto"
+            }
+          },
+          "migrationId" : {
+            "type" : "string",
+            "description" : "The migration unique identifier",
+            "example" : "2025-08-11T15:34:43"
+          },
+          "whenCreated" : {
+            "type" : [ "string", "null" ],
+            "description" : "The created time of the mappings",
+            "example" : "2025-08-11T15:34:43"
+          }
+        },
+        "required" : [ "bookings", "migrationId", "prisonerNumber" ]
+      },
+      "TapScheduleMappingsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single scheduled movement",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS scheduled movement id"
+          },
+          "dpsOccurrenceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS scheduled movement id"
+          },
+          "nomisAddressId" : {
+            "type" : [ "integer", "null" ],
+            "format" : "int64",
+            "description" : "The NOMIS address id"
+          },
+          "nomisAddressOwnerClass" : {
+            "type" : [ "string", "null" ],
+            "description" : "The NOMIS address owner class"
+          },
+          "dpsAddressText" : {
+            "type" : "string",
+            "description" : "The DPS address"
+          },
+          "dpsDescription" : {
+            "type" : [ "string", "null" ],
+            "description" : "The DPS address description"
+          },
+          "dpsPostcode" : {
+            "type" : [ "string", "null" ],
+            "description" : "The DPS postcode"
+          },
+          "eventTime" : {
+            "type" : "string",
+            "description" : "The scheduled event time",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "dpsAddressText", "dpsOccurrenceId", "eventTime", "nomisEventId" ]
+      },
       "AdjudicationPunishmentBatchUpdateMappingDto" : {
         "type" : "object",
         "description" : "Batch of Adjudication punishment (aka award) mappings to create and delete",
@@ -24774,6 +25287,234 @@
         }
       },
       "TemporaryAbsenceMigrationDto" : {
+        "type" : "object",
+        "description" : "Mappings for a migration",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "migrationId" : {
+            "type" : [ "string", "null" ],
+            "description" : "The migration unique identifier",
+            "example" : "2025-08-11T15:34:43"
+          },
+          "whenCreated" : {
+            "type" : "string",
+            "description" : "Date-time the mapping was created",
+            "example" : "2021-07-05T10:35:17",
+            "pattern" : "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}$"
+          }
+        },
+        "required" : [ "prisonerNumber" ]
+      },
+      "TapApplicationMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a single temporary absence application and its children",
+        "properties" : {
+          "nomisApplicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS temporary absence application id"
+          },
+          "dpsAuthorisationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS temporary absence application id"
+          }
+        },
+        "required" : [ "dpsAuthorisationId", "nomisApplicationId" ]
+      },
+      "TapMovementMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single external movement",
+        "properties" : {
+          "nomisBookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS booking id"
+          },
+          "nomisMovementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The NOMIS movement sequence"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement id"
+          }
+        },
+        "required" : [ "dpsMovementId", "nomisBookingId", "nomisMovementSeq" ]
+      },
+      "TapPrisonerMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "prisonerNumber" : {
+            "type" : "string",
+            "description" : "The NOMIS offender number",
+            "example" : "A1234BC"
+          },
+          "applications" : {
+            "type" : "array",
+            "description" : "Mappings for application IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TapApplicationMappingIdsDto"
+            }
+          },
+          "schedules" : {
+            "type" : "array",
+            "description" : "Mappings for schedule IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TapScheduleMappingIdsDto"
+            }
+          },
+          "movements" : {
+            "type" : "array",
+            "description" : "Mappings for movement IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TapMovementMappingIdsDto"
+            }
+          }
+        },
+        "required" : [ "applications", "movements", "prisonerNumber", "schedules" ]
+      },
+      "TapScheduleMappingIdsDto" : {
+        "type" : "object",
+        "description" : "Mapping for a single scheduled movement",
+        "properties" : {
+          "nomisEventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS scheduled movement id"
+          },
+          "dpsOccurrenceId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS scheduled movement id"
+          }
+        },
+        "required" : [ "dpsOccurrenceId", "nomisEventId" ]
+      },
+      "FindTapScheduleMappingsForAddressResponse" : {
+        "type" : "object",
+        "description" : "Tap schedule mappings affected by a change of address",
+        "properties" : {
+          "scheduleMappings" : {
+            "type" : "array",
+            "description" : "All tap schedule mappings related to the passed NOMIS address ID and date. Note historical sync mappings are not included by default.",
+            "items" : {
+              "$ref" : "#/components/schemas/TapScheduleMappingDto"
+            }
+          }
+        },
+        "required" : [ "scheduleMappings" ]
+      },
+      "TapApplicationIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's applications",
+        "properties" : {
+          "applicationId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "The NOMIS application ID",
+            "example" : 12345
+          },
+          "authorisationId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS authorisation ID"
+          }
+        },
+        "required" : [ "applicationId", "authorisationId" ]
+      },
+      "TapMoveBookingMappingDto" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner's entire temporary absence history",
+        "properties" : {
+          "applicationIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS application IDs to DPS authorisation IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TapApplicationIdMapping"
+            }
+          },
+          "movementIds" : {
+            "type" : "array",
+            "description" : "A list mapping NOMIS movement sequence numbers to DPS movement IDs",
+            "items" : {
+              "$ref" : "#/components/schemas/TapMovementIdMapping"
+            }
+          }
+        },
+        "required" : [ "applicationIds", "movementIds" ]
+      },
+      "TapMovementIdMapping" : {
+        "type" : "object",
+        "description" : "Mappings for a prisoner booking's movements",
+        "properties" : {
+          "movementSeq" : {
+            "type" : "integer",
+            "format" : "int32",
+            "description" : "The movement's movement sequence"
+          },
+          "dpsMovementId" : {
+            "type" : "string",
+            "format" : "uuid",
+            "description" : "The DPS movement ID"
+          }
+        },
+        "required" : [ "dpsMovementId", "movementSeq" ]
+      },
+      "PageTapMigrationDto" : {
+        "type" : "object",
+        "properties" : {
+          "totalElements" : {
+            "type" : "integer",
+            "format" : "int64"
+          },
+          "totalPages" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "size" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "content" : {
+            "type" : "array",
+            "items" : {
+              "$ref" : "#/components/schemas/TapMigrationDto"
+            }
+          },
+          "number" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "first" : {
+            "type" : "boolean"
+          },
+          "last" : {
+            "type" : "boolean"
+          },
+          "sort" : {
+            "$ref" : "#/components/schemas/SortObject"
+          },
+          "numberOfElements" : {
+            "type" : "integer",
+            "format" : "int32"
+          },
+          "pageable" : {
+            "$ref" : "#/components/schemas/PageableObject"
+          },
+          "empty" : {
+            "type" : "boolean"
+          }
+        }
+      },
+      "TapMigrationDto" : {
         "type" : "object",
         "description" : "Mappings for a migration",
         "properties" : {
