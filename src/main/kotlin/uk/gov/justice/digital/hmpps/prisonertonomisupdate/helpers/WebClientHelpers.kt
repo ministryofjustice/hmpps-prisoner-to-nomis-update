@@ -28,6 +28,7 @@ suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNo
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyOrNullForNotFound(retrySpec: Retry): T? = this.bodyToMono<T>()
   .awaitBodyOrNullForNotFound(retrySpec)
 
+suspend inline fun <T : Any> Mono<T>.awaitBodyWithRetry(retrySpec: Retry): T = this.retryWhen(retrySpec).awaitSingle()
 suspend inline fun <reified T : Any> WebClient.ResponseSpec.awaitBodyWithRetry(retrySpec: Retry): T = when (T::class) {
   Unit::class -> awaitBodilessEntity().let { Unit as T }
   else -> bodyToMono<T>().retryWhen(retrySpec).awaitSingle()

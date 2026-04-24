@@ -18,6 +18,7 @@ import org.mockito.kotlin.check
 import org.mockito.kotlin.isNull
 import org.mockito.kotlin.verify
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.http.HttpStatus
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents.model.CorrectionRequest
@@ -135,184 +136,210 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               ),
 
             )
-            incidentsNomisApi.stubUpsertIncident(nomisId)
             nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
-            publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
-            waitForAnyProcessingToComplete()
           }
 
-          @Test
-          fun `will send telemetry event showing the create`() {
-            verify(telemetryClient).trackEvent(
-              eq("incident-upsert-success"),
-              any(),
-              isNull(),
-            )
+          @Nested
+          inner class HappyPathNoRetries {
+            @BeforeEach
+            fun setUp() {
+              incidentsNomisApi.stubUpsertIncident(nomisId)
+              nomisApi.stubCheckAgencySwitchForAgency("INCIDENTS", "ASI")
+              publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
+              waitForAnyProcessingToComplete()
+            }
+
+            @Test
+            fun `will send telemetry event showing the create`() {
+              verify(telemetryClient).trackEvent(
+                eq("incident-upsert-success"),
+                any(),
+                isNull(),
+              )
+            }
+
+            @Test
+            fun `telemetry will contain key facts about the incident created`() {
+              verify(telemetryClient).trackEvent(
+                eq("incident-upsert-success"),
+                check {
+                  assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
+                  assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+                },
+                isNull(),
+              )
+            }
+
+            @Test
+            fun `will call back to DPS to get incident details`() {
+              dpsApi.verify(getRequestedFor(urlEqualTo("/incident-reports/$dpsId/with-details")))
+            }
+
+            @Test
+            fun `will create the incident in NOMIS`() {
+              incidentsNomisApi.verify(1, putRequestedFor(urlEqualTo("/incidents/$nomisId")))
+            }
+
+            @Test
+            fun `the created incident will contain details of the DPS incident`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("location", "ASI")
+                  .withRequestBodyJsonPath("statusCode", "AWAN")
+                  .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
+                  .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
+                  .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
+                  .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
+                  .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
+                  .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the DPS amendment`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("descriptionAmendments[0].text", "There was an amendment")
+                  .withRequestBodyJsonPath("descriptionAmendments[0].firstName", "Dave")
+                  .withRequestBodyJsonPath("descriptionAmendments[0].lastName", "Jones")
+                  .withRequestBodyJsonPath("descriptionAmendments[0].createdDateTime", "2021-07-05T10:35:17"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the DPS correction requests`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
+                  .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
+                  .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
+                  .withRequestBodyJsonPath("requirements[0].location", "MDI")
+                  .withRequestBodyJsonPath("requirements.length()", "3"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain the correct location for DPS correction request with userType DATA_WARDEN`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("requirements[1].comment", "Data warden request")
+                  .withRequestBodyJsonPath("requirements[1].username", "Jim Blue")
+                  .withRequestBodyJsonPath("requirements[1].date", "2021-07-08T10:35:17")
+                  .withRequestBodyJsonPath("requirements[1].location", "NOU"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain the correct location for DPS correction request with userType REPORTING_OFFICER`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("requirements[2].comment", "Reporting Officer request")
+                  .withRequestBodyJsonPath("requirements[2].username", "Bob Green")
+                  .withRequestBodyJsonPath("requirements[2].date", "2021-07-12T10:35:17")
+                  .withRequestBodyJsonPath("requirements[2].location", "ASI"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the DPS prisoners involved`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
+                  .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
+                  .withRequestBodyJsonPath("offenderParties[0].role", "ABS")
+                  .withRequestBodyJsonPath("offenderParties[0].outcome", "POR")
+                  .withRequestBody(matchingJsonPath("offenderParties[1].comment", absent()))
+                  .withRequestBodyJsonPath("offenderParties[1].prisonNumber", "A1234BD")
+                  .withRequestBodyJsonPath("offenderParties[1].role", "FIGHT")
+                  .withRequestBodyJsonPath("offenderParties[1].outcome", "IPOL")
+                  .withRequestBodyJsonPath("offenderParties.length()", "2"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the DPS staff involved`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
+                  .withRequestBodyJsonPath("staffParties[0].username", "DJONES")
+                  .withRequestBodyJsonPath("staffParties[0].role", "AI")
+                  .withRequestBodyJsonPath("staffParties.length()", "2"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the questions`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("questions[0].questionId", "1234")
+                  .withRequestBodyJsonPath("questions[1].questionId", "12345")
+                  .withRequestBodyJsonPath("questions.length()", "2"),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the responses`() {
+              incidentsNomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("questions[0].questionId", "1234")
+                  .withRequestBodyJsonPath("questions[0].responses[0].answerId", "123")
+                  .withRequestBodyJsonPath("questions[0].responses[0].sequence", 0)
+                  .withRequestBodyJsonPath("questions[0].responses[0].recordingUsername", "JSMITH")
+                  .withRequestBodyJsonPath("questions[0].responses[0].responseDate", "2021-06-05")
+                  .withRequestBody(matchingJsonPath("questions[0].responses[0].comment", absent()))
+                  .withRequestBodyJsonPath("questions[1].questionId", "12345")
+                  .withRequestBodyJsonPath("questions[1].responses[0].answerId", "456")
+                  .withRequestBodyJsonPath("questions[1].responses[0].sequence", 1)
+                  .withRequestBodyJsonPath("questions[1].responses[0].recordingUsername", "JSMITH")
+                  .withRequestBodyJsonPath("questions[1].responses[0].comment", "some comment")
+                  .withRequestBody(matchingJsonPath("questions[1].responses[0].responseDate", absent()))
+                  .withRequestBodyJsonPath("questions[1].responses[1].answerId", "789")
+                  .withRequestBodyJsonPath("questions[1].responses[1].sequence", 2)
+                  .withRequestBodyJsonPath("questions[1].responses[1].recordingUsername", "JSMITH")
+                  .withRequestBodyJsonPath("questions[1].responses[1].comment", "some additional comment")
+                  .withRequestBody(matchingJsonPath("questions[1].responses[1].responseDate", absent())),
+              )
+            }
+
+            @Test
+            fun `the created incident will contain details of the history`() {
+              nomisApi.verify(
+                putRequestedFor(anyUrl())
+                  .withRequestBodyJsonPath("history[0].typeCode", "ABSCOND")
+                  .withRequestBodyJsonPath("history[0].incidentChangeDateTime", "2021-07-05T10:35:17")
+                  .withRequestBodyJsonPath("history[0].incidentChangeUsername", "JSMITH")
+                  .withRequestBodyJsonPath("history[0].questions[0].questionId", "998")
+                  .withRequestBodyJsonPath("history[0].questions[0].responses[0].answerId", "123")
+                  .withRequestBodyJsonPath("history[0].questions[0].responses[0].sequence", 0)
+                  .withRequestBodyJsonPath("history[0].questions[0].responses[0].recordingUsername", "Fred Jones")
+                  .withRequestBodyJsonPath("history[0].questions[0].responses[0].comment", "more info")
+                  .withRequestBody(matchingJsonPath("history[0].questions[0].responses[0].responseDate", absent()))
+                  .withRequestBodyJsonPath("history[0].questions[1].questionId", "999")
+                  .withRequestBodyJsonPath("history[0].questions[1].responses[0].answerId", "456")
+                  .withRequestBodyJsonPath("history[0].questions[1].responses[0].sequence", 1)
+                  .withRequestBodyJsonPath("history[0].questions[1].responses[0].recordingUsername", "Fred Jones")
+                  .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].comment", absent()))
+                  .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].responseDate", absent())),
+              )
+            }
           }
 
-          @Test
-          fun `telemetry will contain key facts about the incident created`() {
-            verify(telemetryClient).trackEvent(
-              eq("incident-upsert-success"),
-              check {
-                assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
-                assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
-              },
-              isNull(),
-            )
-          }
+          @Nested
+          inner class HappyPathRetries {
+            @Test
+            fun `will retry on locking error`() {
+              incidentsNomisApi.stubLockedFollowedBySuccess(incidentId = nomisId, status = HttpStatus.LOCKED)
+              publishCreateIncidentDomainEvent(dpsId = dpsId.toString(), nomisId = nomisId)
+              waitForAnyProcessingToComplete()
 
-          @Test
-          fun `will call back to DPS to get incident details`() {
-            dpsApi.verify(getRequestedFor(urlEqualTo("/incident-reports/$dpsId/with-details")))
-          }
+              incidentsNomisApi.verify(2, putRequestedFor(urlEqualTo("/incidents/$nomisId")))
 
-          @Test
-          fun `will create the incident in NOMIS`() {
-            incidentsNomisApi.verify(putRequestedFor(urlEqualTo("/incidents/$nomisId")))
-          }
-
-          @Test
-          fun `the created incident will contain details of the DPS incident`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("location", "ASI")
-                .withRequestBodyJsonPath("statusCode", "AWAN")
-                .withRequestBodyJsonPath("typeCode", "ATT_ESC_E")
-                .withRequestBodyJsonPath("incidentDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("reportedDateTime", "2021-07-07T10:35:17.12345")
-                .withRequestBodyJsonPath("reportedBy", "FSTAFF_GEN")
-                .withRequestBodyJsonPath("title", "There was an incident in the exercise yard")
-                .withRequestBodyJsonPath("description", "Fred and Jimmy were fighting outside."),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the DPS amendment`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("descriptionAmendments[0].text", "There was an amendment")
-                .withRequestBodyJsonPath("descriptionAmendments[0].firstName", "Dave")
-                .withRequestBodyJsonPath("descriptionAmendments[0].lastName", "Jones")
-                .withRequestBodyJsonPath("descriptionAmendments[0].createdDateTime", "2021-07-05T10:35:17"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the DPS correction requests`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("requirements[0].comment", "There was a change")
-                .withRequestBodyJsonPath("requirements[0].username", "Fred Black")
-                .withRequestBodyJsonPath("requirements[0].date", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("requirements[0].location", "MDI")
-                .withRequestBodyJsonPath("requirements.length()", "3"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain the correct location for DPS correction request with userType DATA_WARDEN`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("requirements[1].comment", "Data warden request")
-                .withRequestBodyJsonPath("requirements[1].username", "Jim Blue")
-                .withRequestBodyJsonPath("requirements[1].date", "2021-07-08T10:35:17")
-                .withRequestBodyJsonPath("requirements[1].location", "NOU"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain the correct location for DPS correction request with userType REPORTING_OFFICER`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("requirements[2].comment", "Reporting Officer request")
-                .withRequestBodyJsonPath("requirements[2].username", "Bob Green")
-                .withRequestBodyJsonPath("requirements[2].date", "2021-07-12T10:35:17")
-                .withRequestBodyJsonPath("requirements[2].location", "ASI"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the DPS prisoners involved`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("offenderParties[0].comment", "There were issues")
-                .withRequestBodyJsonPath("offenderParties[0].prisonNumber", "A1234BC")
-                .withRequestBodyJsonPath("offenderParties[0].role", "ABS")
-                .withRequestBodyJsonPath("offenderParties[0].outcome", "POR")
-                .withRequestBody(matchingJsonPath("offenderParties[1].comment", absent()))
-                .withRequestBodyJsonPath("offenderParties[1].prisonNumber", "A1234BD")
-                .withRequestBodyJsonPath("offenderParties[1].role", "FIGHT")
-                .withRequestBodyJsonPath("offenderParties[1].outcome", "IPOL")
-                .withRequestBodyJsonPath("offenderParties.length()", "2"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the DPS staff involved`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("staffParties[0].comment", "Dave was hit")
-                .withRequestBodyJsonPath("staffParties[0].username", "DJONES")
-                .withRequestBodyJsonPath("staffParties[0].role", "AI")
-                .withRequestBodyJsonPath("staffParties.length()", "2"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the questions`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("questions[0].questionId", "1234")
-                .withRequestBodyJsonPath("questions[1].questionId", "12345")
-                .withRequestBodyJsonPath("questions.length()", "2"),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the responses`() {
-            incidentsNomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("questions[0].questionId", "1234")
-                .withRequestBodyJsonPath("questions[0].responses[0].answerId", "123")
-                .withRequestBodyJsonPath("questions[0].responses[0].sequence", 0)
-                .withRequestBodyJsonPath("questions[0].responses[0].recordingUsername", "JSMITH")
-                .withRequestBodyJsonPath("questions[0].responses[0].responseDate", "2021-06-05")
-                .withRequestBody(matchingJsonPath("questions[0].responses[0].comment", absent()))
-                .withRequestBodyJsonPath("questions[1].questionId", "12345")
-                .withRequestBodyJsonPath("questions[1].responses[0].answerId", "456")
-                .withRequestBodyJsonPath("questions[1].responses[0].sequence", 1)
-                .withRequestBodyJsonPath("questions[1].responses[0].recordingUsername", "JSMITH")
-                .withRequestBodyJsonPath("questions[1].responses[0].comment", "some comment")
-                .withRequestBody(matchingJsonPath("questions[1].responses[0].responseDate", absent()))
-                .withRequestBodyJsonPath("questions[1].responses[1].answerId", "789")
-                .withRequestBodyJsonPath("questions[1].responses[1].sequence", 2)
-                .withRequestBodyJsonPath("questions[1].responses[1].recordingUsername", "JSMITH")
-                .withRequestBodyJsonPath("questions[1].responses[1].comment", "some additional comment")
-                .withRequestBody(matchingJsonPath("questions[1].responses[1].responseDate", absent())),
-            )
-          }
-
-          @Test
-          fun `the created incident will contain details of the history`() {
-            nomisApi.verify(
-              putRequestedFor(anyUrl())
-                .withRequestBodyJsonPath("history[0].typeCode", "ABSCOND")
-                .withRequestBodyJsonPath("history[0].incidentChangeDateTime", "2021-07-05T10:35:17")
-                .withRequestBodyJsonPath("history[0].incidentChangeUsername", "JSMITH")
-                .withRequestBodyJsonPath("history[0].questions[0].questionId", "998")
-                .withRequestBodyJsonPath("history[0].questions[0].responses[0].answerId", "123")
-                .withRequestBodyJsonPath("history[0].questions[0].responses[0].sequence", 0)
-                .withRequestBodyJsonPath("history[0].questions[0].responses[0].recordingUsername", "Fred Jones")
-                .withRequestBodyJsonPath("history[0].questions[0].responses[0].comment", "more info")
-                .withRequestBody(matchingJsonPath("history[0].questions[0].responses[0].responseDate", absent()))
-                .withRequestBodyJsonPath("history[0].questions[1].questionId", "999")
-                .withRequestBodyJsonPath("history[0].questions[1].responses[0].answerId", "456")
-                .withRequestBodyJsonPath("history[0].questions[1].responses[0].sequence", 1)
-                .withRequestBodyJsonPath("history[0].questions[1].responses[0].recordingUsername", "Fred Jones")
-                .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].comment", absent()))
-                .withRequestBody(matchingJsonPath("history[0].questions[1].responses[0].responseDate", absent())),
-            )
+              verify(telemetryClient).trackEvent(
+                eq("incident-upsert-success"),
+                any(),
+                isNull(),
+              )
+            }
           }
         }
       }
