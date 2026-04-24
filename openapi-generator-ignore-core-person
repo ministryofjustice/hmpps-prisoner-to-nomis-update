@@ -9,4 +9,4 @@
 **/client/infrastructure/
 **/src/test/
 **/api/*
-!**/HMPPSPersonAPIApi.kt
+!**/PrisonApi.kt
