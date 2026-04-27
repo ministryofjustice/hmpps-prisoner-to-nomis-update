@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-24.3173.c02418e"
+    "version" : "2026-04-24.3186.12d2aca"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -1805,16 +1805,68 @@
             "example" : "Greater London"
           },
           "country" : {
-            "type" : "string",
-            "description" : "Person address country",
-            "example" : "United Kingdom"
+            "$ref" : "#/components/schemas/CanonicalCountry",
+            "description" : "Person address country"
           },
           "uprn" : {
             "type" : "string",
             "description" : "Person address uprn",
             "example" : "100120991537"
+          },
+          "status" : {
+            "$ref" : "#/components/schemas/CanonicalAddressStatus",
+            "description" : "Person address status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Person address comment",
+            "example" : "United Kingdom"
+          },
+          "usages" : {
+            "type" : "array",
+            "description" : "List of person address usages",
+            "items" : {
+              "$ref" : "#/components/schemas/CanonicalAddressUsage"
+            }
+          }
+        },
+        "required" : [ "country", "status", "usages" ]
+      },
+      "CanonicalAddressStatus" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Address status code",
+            "example" : "M"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Address status description",
+            "example" : "Main"
           }
         }
+      },
+      "CanonicalAddressUsage" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Address usage code",
+            "example" : "CURFEW"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Address usage description",
+            "example" : "Curfew Order"
+          },
+          "isActive" : {
+            "type" : "boolean",
+            "description" : "Address usage active flag",
+            "example" : true
+          }
+        },
+        "required" : [ "isActive" ]
       },
       "CanonicalAlias" : {
         "type" : "object",
@@ -1844,6 +1896,21 @@
           }
         },
         "required" : [ "sex", "title" ]
+      },
+      "CanonicalCountry" : {
+        "type" : "object",
+        "properties" : {
+          "code" : {
+            "type" : "string",
+            "description" : "Country code",
+            "example" : "GBR"
+          },
+          "description" : {
+            "type" : "string",
+            "description" : "Country description",
+            "example" : "United Kingdom of Great Britain and Northern Ireland (the)"
+          }
+        }
       },
       "CanonicalEthnicity" : {
         "type" : "object",
