@@ -1,5 +1,7 @@
 package uk.gov.justice.digital.hmpps.prisonertonomisupdate.incidents
 import com.microsoft.applicationinsights.TelemetryClient
+import org.slf4j.Logger
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.BadRequestException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.telemetryOf
@@ -34,7 +36,9 @@ class IncidentsService(
   private val dpsApiService: IncidentsDpsApiService,
   private val telemetryClient: TelemetryClient,
 ) {
-
+  companion object {
+    val log: Logger = LoggerFactory.getLogger(this::class.java)
+  }
   suspend fun incidentUpsert(event: IncidentEvent) {
     val dpsId = event.dpsId
     val nomisId = event.nomisId
@@ -44,6 +48,7 @@ class IncidentsService(
     )
 
     if (event.didOriginateInDPS()) {
+      log.info("Incident upsert due to ${event.additionalInformation.whatChanged}")
       try {
         val dps = dpsApiService.getIncident(dpsId)
         if (nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
