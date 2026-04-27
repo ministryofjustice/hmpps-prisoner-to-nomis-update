@@ -79,13 +79,13 @@ class TapDomainEventListener(
   }
 }
 
-data class TemporaryAbsenceEvent(
+data class TapEvent(
   val eventType: String,
   val personReference: PersonReference,
-  val additionalInformation: TemporaryAbsenceAdditionalInformation,
+  val additionalInformation: TapAdditionalInformation,
 )
 
-data class TemporaryAbsenceAdditionalInformation(
+data class TapAdditionalInformation(
   val id: UUID,
   val source: String,
 )

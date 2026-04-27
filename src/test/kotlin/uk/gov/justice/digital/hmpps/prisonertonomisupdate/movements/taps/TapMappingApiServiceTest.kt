@@ -1,15 +1,12 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
+import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.absent
 import com.github.tomakehurst.wiremock.client.WireMock.anyUrl
-import com.github.tomakehurst.wiremock.client.WireMock.containing
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
 import com.github.tomakehurst.wiremock.client.WireMock.matchingJsonPath
 import com.github.tomakehurst.wiremock.client.WireMock.not
 import com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.putRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlPathEqualTo
 import kotlinx.coroutines.test.runTest
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Nested
@@ -17,28 +14,27 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
-import org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR
-import org.springframework.http.HttpStatus.NOT_FOUND
+import org.springframework.http.HttpStatus
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.DuplicateMappingException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementSyncMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapMovementMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.time.LocalDate
 import java.util.*
 
 @SpringAPIServiceTest
-@Import(ExternalMovementsMappingApiService::class, ExternalMovementsMappingApiMockServer::class, RetryApiService::class)
-class ExternalMovementsMappingApiServiceTest {
+@Import(TapMappingApiService::class, TapMappingApiMockServer::class, RetryApiService::class)
+class TapMappingApiServiceTest {
   @Autowired
-  private lateinit var apiService: ExternalMovementsMappingApiService
+  private lateinit var apiService: TapMappingApiService
 
   @Autowired
-  private lateinit var mappingApi: ExternalMovementsMappingApiMockServer
+  private lateinit var mappingApi: TapMappingApiMockServer
 
   @Nested
   inner class CreateApplicationMappings {
@@ -112,7 +108,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateTapApplicationMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubCreateTapApplicationMapping(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createTapApplicationMapping(
@@ -133,7 +129,7 @@ class ExternalMovementsMappingApiServiceTest {
       apiService.getTapApplicationMapping(dpsId)
 
       mappingApi.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        WireMock.getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -144,7 +140,7 @@ class ExternalMovementsMappingApiServiceTest {
       apiService.getTapApplicationMapping(dpsId)
 
       mappingApi.verify(
-        getRequestedFor(urlPathEqualTo("/mapping/taps/application/dps-id/$dpsId")),
+        WireMock.getRequestedFor(WireMock.urlPathEqualTo("/mapping/taps/application/dps-id/$dpsId")),
       )
     }
 
@@ -161,7 +157,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = NOT_FOUND)
+      mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = HttpStatus.NOT_FOUND)
 
       apiService.getTapApplicationMapping(dpsId)
         .also { assertThat(it).isNull() }
@@ -169,7 +165,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapApplicationMapping(dpsId = dpsId, status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapApplicationMapping(dpsId)
@@ -208,7 +204,7 @@ class ExternalMovementsMappingApiServiceTest {
           .withRequestBody(matchingJsonPath("dpsOccurrenceId", not(absent())))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED")))
           .withRequestBody(matchingJsonPath("dpsAddressText", equalTo("some address")))
-          .withRequestBody(matchingJsonPath("eventTime", containing("${LocalDate.now()}")))
+          .withRequestBody(matchingJsonPath("eventTime", WireMock.containing("${LocalDate.now()}")))
           .withRequestBody(matchingJsonPath("nomisAddressId", equalTo("54321")))
           .withRequestBody(matchingJsonPath("nomisAddressOwnerClass", equalTo("OFF")))
           .withRequestBody(matchingJsonPath("dpsUprn", equalTo("654")))
@@ -267,7 +263,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateTapScheduleMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubCreateTapScheduleMapping(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createTapScheduleMapping(
@@ -288,7 +284,7 @@ class ExternalMovementsMappingApiServiceTest {
       )
 
       mappingApi.verify(
-        putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        WireMock.putRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
@@ -301,14 +297,14 @@ class ExternalMovementsMappingApiServiceTest {
       )
 
       mappingApi.verify(
-        putRequestedFor(anyUrl())
+        WireMock.putRequestedFor(anyUrl())
           .withRequestBody(matchingJsonPath("prisonerNumber", equalTo("A1234BC")))
           .withRequestBody(matchingJsonPath("bookingId", equalTo("12345")))
           .withRequestBody(matchingJsonPath("nomisEventId", equalTo("1")))
           .withRequestBody(matchingJsonPath("dpsOccurrenceId", not(absent())))
           .withRequestBody(matchingJsonPath("mappingType", equalTo("MIGRATED")))
           .withRequestBody(matchingJsonPath("dpsAddressText", equalTo("some address")))
-          .withRequestBody(matchingJsonPath("eventTime", containing("${LocalDate.now()}")))
+          .withRequestBody(matchingJsonPath("eventTime", WireMock.containing("${LocalDate.now()}")))
           .withRequestBody(matchingJsonPath("nomisAddressId", equalTo("54321")))
           .withRequestBody(matchingJsonPath("nomisAddressOwnerClass", equalTo("OFF")))
           .withRequestBody(matchingJsonPath("dpsUprn", equalTo("654")))
@@ -319,7 +315,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubUpdateTapScheduleMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubUpdateTapScheduleMapping(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.updateTapScheduledMapping(
@@ -340,13 +336,13 @@ class ExternalMovementsMappingApiServiceTest {
       apiService.getTapScheduleMapping(dpsId)
 
       mappingApi.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        WireMock.getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = NOT_FOUND)
+      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = HttpStatus.NOT_FOUND)
 
       apiService.getTapScheduleMapping(dpsId)
         .also { assertThat(it).isNull() }
@@ -354,7 +350,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapScheduleMapping(dpsId = dpsId, status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapScheduleMapping(dpsId)
@@ -363,7 +359,7 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
-  inner class CreateExternalMovementMappings {
+  inner class CreateTapMappings {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
       mappingApi.stubCreateTapMovementMapping()
@@ -394,27 +390,27 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should return error for 409 conflict`() = runTest {
-      val dpsExternalMovementId = UUID.randomUUID()
+      val dpsMovementId = UUID.randomUUID()
       mappingApi.stubCreateTapMovementMappingConflict(
         error = DuplicateMappingErrorResponse(
           moreInfo = DuplicateErrorContentObject(
-            existing = ExternalMovementSyncMappingDto(
+            existing = TapMovementMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisMovementSeq = 1,
-              dpsMovementId = dpsExternalMovementId,
-              mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              dpsMovementId = dpsMovementId,
+              mappingType = TapMovementMappingDto.MappingType.NOMIS_CREATED,
               // TODO add address mapping details
               nomisAddressId = 0,
               nomisAddressOwnerClass = "",
               dpsAddressText = "",
             ),
-            duplicate = ExternalMovementSyncMappingDto(
+            duplicate = TapMovementMappingDto(
               prisonerNumber = "A1234BC",
               bookingId = 12345L,
               nomisMovementSeq = 2,
-              dpsMovementId = dpsExternalMovementId,
-              mappingType = ExternalMovementSyncMappingDto.MappingType.NOMIS_CREATED,
+              dpsMovementId = dpsMovementId,
+              mappingType = TapMovementMappingDto.MappingType.NOMIS_CREATED,
               // TODO add address mapping details
               nomisAddressId = 0,
               nomisAddressOwnerClass = "",
@@ -437,7 +433,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubCreateTapMovementMapping(status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubCreateTapMovementMapping(status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.createTapMovementMapping(tapMovementMapping())
@@ -446,7 +442,7 @@ class ExternalMovementsMappingApiServiceTest {
   }
 
   @Nested
-  inner class GetExternalMovementMappings {
+  inner class GetTapMovementMappings {
     private val dpsId = UUID.randomUUID()
 
     @Test
@@ -456,13 +452,13 @@ class ExternalMovementsMappingApiServiceTest {
       apiService.getTapMovementMapping(dpsId)
 
       mappingApi.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        WireMock.getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `should return null if not found`() = runTest {
-      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = NOT_FOUND)
+      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = HttpStatus.NOT_FOUND)
 
       apiService.getTapMovementMapping(dpsId)
         .also { assertThat(it).isNull() }
@@ -470,7 +466,7 @@ class ExternalMovementsMappingApiServiceTest {
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapMovementMapping(dpsId = dpsId, status = HttpStatus.INTERNAL_SERVER_ERROR)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapMovementMapping(dpsId)
@@ -482,29 +478,32 @@ class ExternalMovementsMappingApiServiceTest {
   inner class GetMappingIds {
     @Test
     internal fun `should pass oath2 token to service`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC")
+      mappingApi.stubGetTapMappingIds(prisonerNumber = "A1234BC")
 
       apiService.getTapMappingIds("A1234BC")
 
       mappingApi.verify(
-        getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
+        WireMock.getRequestedFor(anyUrl()).withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
     }
 
     @Test
     fun `should send prisoner in url`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC")
+      mappingApi.stubGetTapMappingIds(prisonerNumber = "A1234BC")
 
       apiService.getTapMappingIds("A1234BC")
 
       mappingApi.verify(
-        getRequestedFor(urlPathEqualTo("/mapping/temporary-absence/A1234BC/ids")),
+        WireMock.getRequestedFor(WireMock.urlPathEqualTo("/mapping/taps/A1234BC/ids")),
       )
     }
 
     @Test
     fun `should throw if API calls fail`() = runTest {
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A1234BC", status = INTERNAL_SERVER_ERROR)
+      mappingApi.stubGetTapMappingIds(
+        prisonerNumber = "A1234BC",
+        status = HttpStatus.INTERNAL_SERVER_ERROR,
+      )
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapMappingIds("A1234BC")

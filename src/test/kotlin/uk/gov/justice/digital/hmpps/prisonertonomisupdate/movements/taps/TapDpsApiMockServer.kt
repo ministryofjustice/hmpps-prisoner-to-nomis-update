@@ -26,8 +26,8 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncRe
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrenceAuthorisation
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.jsonMapper
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.tapDpsApiServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.*
@@ -38,21 +38,21 @@ class TapDpsApiExtension :
   BeforeEachCallback {
   companion object {
     @JvmField
-    val dpsExternalMovementsServer = TapDpsApiMockServer()
+    val tapDpsApiServer = TapDpsApiMockServer()
     lateinit var jsonMapper: JsonMapper
   }
 
   override fun beforeAll(context: ExtensionContext) {
-    dpsExternalMovementsServer.start()
+    tapDpsApiServer.start()
     jsonMapper = (SpringExtension.getApplicationContext(context).getBean("jacksonJsonMapper") as JsonMapper)
   }
 
   override fun beforeEach(context: ExtensionContext) {
-    dpsExternalMovementsServer.resetAll()
+    tapDpsApiServer.resetAll()
   }
 
   override fun afterAll(context: ExtensionContext) {
-    dpsExternalMovementsServer.stop()
+    tapDpsApiServer.stop()
   }
 }
 
@@ -208,7 +208,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   )
 
   fun stubGetTapAuthorisation(id: UUID, response: SyncReadTapAuthorisation = tapAuthorisation(id)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-authorisations/$id")
         .willReturn(
           aResponse()
@@ -220,7 +220,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapAuthorisationError(id: UUID, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-authorisations/$id")
         .willReturn(
           aResponse()
@@ -237,7 +237,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
     location: Location = Location(description = "Agency name", address = "agency address", postcode = "agency postcode", uprn = 1),
     response: SyncReadTapOccurrence = tapOccurrence(id, authorisationId, location),
   ) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-occurrences/$id")
         .willReturn(
           aResponse()
@@ -249,7 +249,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapOccurrenceError(id: UUID, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-occurrences/$id")
         .willReturn(
           aResponse()
@@ -261,7 +261,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapMovement(id: UUID, occurrenceId: UUID, response: SyncReadTapMovement = tapMovement(id, occurrenceId)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-movements/$id")
         .willReturn(
           aResponse()
@@ -273,7 +273,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapMovementError(id: UUID, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/sync/temporary-absence-movements/$id")
         .willReturn(
           aResponse()
@@ -285,7 +285,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapReconciliation(personIdentifier: String, response: PersonTapCounts = personTapCounts()) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/reconciliation/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()
@@ -297,7 +297,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapReconciliation(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/reconciliation/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()
@@ -309,7 +309,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapReconciliationDetail(personIdentifier: String, response: PersonTapDetail = personTapDetail()) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/reconciliation-detail/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()
@@ -321,7 +321,7 @@ class TapDpsApiMockServer : WireMockServer(WIREMOCK_PORT) {
   }
 
   fun stubGetTapReconciliationDetail(personIdentifier: String, status: Int = 500, error: ErrorResponse = ErrorResponse(status = status)) {
-    dpsExternalMovementsServer.stubFor(
+    tapDpsApiServer.stubFor(
       get("/reconciliation-detail/$personIdentifier/temporary-absences")
         .willReturn(
           aResponse()

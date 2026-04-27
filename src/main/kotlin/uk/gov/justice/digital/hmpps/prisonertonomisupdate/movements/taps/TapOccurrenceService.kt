@@ -5,7 +5,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapRetryService.Companion.MappingTypes.SCHEDULE_CREATE
@@ -27,7 +26,7 @@ internal val NULL_NOMIS_ESCORT_CODE = "NOT_PROVIDED"
 
 @Service
 class TapOccurrenceService(
-  private val mappingApiService: ExternalMovementsMappingApiService,
+  private val mappingApiService: TapMappingApiService,
   private val nomisApiService: TapNomisApiService,
   private val dpsApiService: TapDpsApiService,
   private val retryQueueService: TapRetryQueueService,
@@ -44,7 +43,7 @@ class TapOccurrenceService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun occurrenceChanged(event: TemporaryAbsenceEvent) {
+  suspend fun occurrenceChanged(event: TapEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsOccurrenceId = event.additionalInformation.id
     val telemetryMap = mutableMapOf(
@@ -95,7 +94,7 @@ class TapOccurrenceService(
       }
   }
 
-  suspend fun occurrenceDeleted(event: TemporaryAbsenceEvent) {
+  suspend fun occurrenceDeleted(event: TapEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsOccurrenceId = event.additionalInformation.id
     val telemetryMap = mutableMapOf(

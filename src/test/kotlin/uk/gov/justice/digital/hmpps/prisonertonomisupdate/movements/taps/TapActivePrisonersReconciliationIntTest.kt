@@ -22,14 +22,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.http.HttpStatus
 import org.springframework.test.web.reactive.server.WebTestClient
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.IntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.IN
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement.Direction.OUT
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationOccurrence.StatusCode.SCHEDULED
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.tapDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.personTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.reconAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiMockServer.Companion.reconMovement
@@ -40,10 +39,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomi
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapMovementOut
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapScheduleIn
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.tapScheduleOut
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapMovementMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingIdsWithLast
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.BookingTaps
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsResponse
@@ -55,10 +54,10 @@ import java.util.*
 class TapActivePrisonersReconciliationIntTest(
   @Autowired private val reconciliationService: TapActivePrisonersReconciliationService,
   @Autowired private val nomisMovementsApi: TapNomisApiMockServer,
-  @Autowired private val mappingApi: ExternalMovementsMappingApiMockServer,
+  @Autowired private val mappingApi: TapMappingApiMockServer,
 ) : IntegrationTestBase() {
 
-  private val dpsApi = dpsExternalMovementsServer
+  private val dpsApi = tapDpsApiServer
   private val nomisApi = NomisApiExtension.nomisApi
 
   @DisplayName("Temporary absences active prisoners reconciliation report")
@@ -77,7 +76,7 @@ class TapActivePrisonersReconciliationIntTest(
 
       nomisMovementsApi.stubGetOffenderTaps(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ")
+      mappingApi.stubGetTapMappingIds(prisonerNumber = "A0001TZ")
     }
 
     @Test
@@ -168,11 +167,11 @@ class TapActivePrisonersReconciliationIntTest(
         )
 
         // Only include some of the mappings to prove that missing mappings behaves the same as missing in DPS
-        mappingApi.stubGetTemporaryAbsenceMappingIds(
+        mappingApi.stubGetTapMappingIds(
           prisonerNumber = "A0001TZ",
           response = emptyPrisonerMappingIdsDto().copy(
-            applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, UUID.randomUUID())),
-            schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, UUID.randomUUID())),
+            applications = listOf(TapApplicationMappingIdsDto(applicationId, UUID.randomUUID())),
+            schedules = listOf(TapScheduleMappingIdsDto(scheduleOutId, UUID.randomUUID())),
           ),
         )
 
@@ -324,11 +323,11 @@ class TapActivePrisonersReconciliationIntTest(
         )
 
         // Only include some of the mappings to prove that missing mappings behaves the same as missing in NOMIS
-        mappingApi.stubGetTemporaryAbsenceMappingIds(
+        mappingApi.stubGetTapMappingIds(
           prisonerNumber = "A0001TZ",
           response = emptyPrisonerMappingIdsDto().copy(
-            applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(1111L, authorisationId)),
-            schedules = listOf(ScheduledMovementMappingIdsDto(2222L, occurrenceId)),
+            applications = listOf(TapApplicationMappingIdsDto(1111L, authorisationId)),
+            schedules = listOf(TapScheduleMappingIdsDto(2222L, occurrenceId)),
           ),
         )
 
@@ -456,7 +455,7 @@ class TapActivePrisonersReconciliationIntTest(
       personIdentifier = offenderNo,
       response = emptyPersonTapDetail(),
     )
-    mappingApi.stubGetTemporaryAbsenceMappingIds(
+    mappingApi.stubGetTapMappingIds(
       prisonerNumber = offenderNo,
       response = emptyPrisonerMappingIdsDto(),
     )
@@ -745,13 +744,13 @@ class TapActivePrisonersReconciliationIntTest(
 
     private fun stubMappingTaps(
       movementOut: Boolean = false,
-    ) = mappingApi.stubGetTemporaryAbsenceMappingIds(
+    ) = mappingApi.stubGetTapMappingIds(
       prisonerNumber = "A0001TZ",
       response = emptyPrisonerMappingIdsDto().copy(
-        applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
-        schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
+        applications = listOf(TapApplicationMappingIdsDto(applicationId, authorisationId)),
+        schedules = listOf(TapScheduleMappingIdsDto(scheduleOutId, occurrenceId)),
         movements = listOfNotNull(
-          if (movementOut) ExternalMovementMappingIdsDto(12345L, movementOutSeq, movementId) else null,
+          if (movementOut) TapMovementMappingIdsDto(12345L, movementOutSeq, movementId) else null,
         ),
       ),
     )
@@ -784,7 +783,7 @@ class TapActivePrisonersReconciliationIntTest(
       stubNomisTaps()
       stubDpsTaps()
       // There are no mappings for the prisoner - this happened in a real incident where the mappings were not moved after a merge
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ", response = emptyPrisonerMappingIdsDto())
+      mappingApi.stubGetTapMappingIds(prisonerNumber = "A0001TZ", response = emptyPrisonerMappingIdsDto())
 
       reconciliationService.generateTapActivePrisonersReconciliationReportBatch()
       awaitReportFinished()
@@ -891,7 +890,7 @@ class TapActivePrisonersReconciliationIntTest(
 
       nomisMovementsApi.stubGetOffenderTaps(offenderNo = "A0001TZ")
       dpsApi.stubGetTapReconciliationDetail(personIdentifier = "A0001TZ")
-      mappingApi.stubGetTemporaryAbsenceMappingIds(prisonerNumber = "A0001TZ")
+      mappingApi.stubGetTapMappingIds(prisonerNumber = "A0001TZ")
     }
 
     @Test
@@ -985,11 +984,11 @@ class TapActivePrisonersReconciliationIntTest(
         ),
       )
 
-      mappingApi.stubGetTemporaryAbsenceMappingIds(
+      mappingApi.stubGetTapMappingIds(
         prisonerNumber = "A0001TZ",
         response = emptyPrisonerMappingIdsDto().copy(
-          applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(applicationId, authorisationId)),
-          schedules = listOf(ScheduledMovementMappingIdsDto(scheduleOutId, occurrenceId)),
+          applications = listOf(TapApplicationMappingIdsDto(applicationId, authorisationId)),
+          schedules = listOf(TapScheduleMappingIdsDto(scheduleOutId, occurrenceId)),
         ),
       )
     }
@@ -1217,7 +1216,7 @@ private fun emptyPersonTapDetail() = PersonTapDetail(
   unscheduledMovements = listOf(),
 )
 
-private fun emptyPrisonerMappingIdsDto(offenderNo: String = "A0001TZ") = TemporaryAbsencesPrisonerMappingIdsDto(
+private fun emptyPrisonerMappingIdsDto(offenderNo: String = "A0001TZ") = TapPrisonerMappingIdsDto(
   prisonerNumber = offenderNo,
   applications = listOf(),
   schedules = listOf(),

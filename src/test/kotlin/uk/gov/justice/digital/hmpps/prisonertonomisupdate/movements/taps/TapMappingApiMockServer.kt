@@ -1,7 +1,6 @@
-package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements
+package uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps
 
 import com.github.tomakehurst.wiremock.client.CountMatchingStrategy
-import com.github.tomakehurst.wiremock.client.WireMock
 import com.github.tomakehurst.wiremock.client.WireMock.aResponse
 import com.github.tomakehurst.wiremock.client.WireMock.get
 import com.github.tomakehurst.wiremock.client.WireMock.post
@@ -13,20 +12,20 @@ import org.springframework.http.HttpStatus
 import org.springframework.stereotype.Component
 import tools.jackson.databind.json.JsonMapper
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ExternalMovementMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.ScheduledMovementMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapApplicationMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapMovementMappingDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapMovementMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsenceApplicationMappingIdsDto
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapScheduleMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.wiremock.MappingExtension.Companion.mappingServer
 import uk.gov.justice.hmpps.kotlin.common.ErrorResponse
 import java.time.LocalDateTime
 import java.util.*
 
 @Component
-class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) {
+class TapMappingApiMockServer(private val jsonMapper: JsonMapper) {
 
   fun stubCreateTapApplicationMapping() {
     mappingServer.stubFor(
@@ -37,10 +36,6 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
             .withStatus(201),
         ),
     )
-  }
-
-  fun stubCreateTemporaryAbsenceMappingFailureFollowedBySuccess() {
-    mappingServer.stubMappingCreateFailureFollowedBySuccess(url = "/mapping/temporary-absence/migrate", WireMock::put)
   }
 
   fun stubCreateTapApplicationMapping(status: HttpStatus, error: ErrorResponse = ErrorResponse(status = status.value())) {
@@ -231,12 +226,12 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubGetTemporaryAbsenceMappingIds(
+  fun stubGetTapMappingIds(
     prisonerNumber: String = "A1234BC",
-    response: TemporaryAbsencesPrisonerMappingIdsDto = prisonerMappingIdsDto(),
+    response: TapPrisonerMappingIdsDto = prisonerMappingIdsDto(),
   ) {
     mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/$prisonerNumber/ids")).willReturn(
+      get(urlPathMatching("/mapping/taps/$prisonerNumber/ids")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withBody(jsonMapper.writeValueAsString(response)),
@@ -244,13 +239,13 @@ class ExternalMovementsMappingApiMockServer(private val jsonMapper: JsonMapper) 
     )
   }
 
-  fun stubGetTemporaryAbsenceMappingIds(
+  fun stubGetTapMappingIds(
     prisonerNumber: String = "A1234BC",
     status: HttpStatus,
     error: ErrorResponse = ErrorResponse(status = status.value()),
   ) {
     mappingServer.stubFor(
-      get(urlPathMatching("/mapping/temporary-absence/$prisonerNumber/ids")).willReturn(
+      get(urlPathMatching("/mapping/taps/$prisonerNumber/ids")).willReturn(
         aResponse()
           .withHeader("Content-Type", "application/json")
           .withStatus(status.value())
@@ -303,14 +298,14 @@ fun tapMovementMapping(bookingId: Long = 12345L, movementSeq: Int = 1, prisonerN
   dpsAddressText = "",
 )
 
-fun prisonerMappingIdsDto(offenderNo: String = "A1234BC") = TemporaryAbsencesPrisonerMappingIdsDto(
+fun prisonerMappingIdsDto(offenderNo: String = "A1234BC") = TapPrisonerMappingIdsDto(
   prisonerNumber = offenderNo,
-  applications = listOf(TemporaryAbsenceApplicationMappingIdsDto(1111, UUID.randomUUID())),
-  schedules = listOf(ScheduledMovementMappingIdsDto(2222, UUID.randomUUID())),
+  applications = listOf(TapApplicationMappingIdsDto(1111, UUID.randomUUID())),
+  schedules = listOf(TapScheduleMappingIdsDto(2222, UUID.randomUUID())),
   movements = listOf(
-    ExternalMovementMappingIdsDto(12345, 3, UUID.randomUUID()),
-    ExternalMovementMappingIdsDto(12345, 4, UUID.randomUUID()),
-    ExternalMovementMappingIdsDto(12345, 5, UUID.randomUUID()),
-    ExternalMovementMappingIdsDto(12345, 6, UUID.randomUUID()),
+    TapMovementMappingIdsDto(12345, 3, UUID.randomUUID()),
+    TapMovementMappingIdsDto(12345, 4, UUID.randomUUID()),
+    TapMovementMappingIdsDto(12345, 5, UUID.randomUUID()),
+    TapMovementMappingIdsDto(12345, 6, UUID.randomUUID()),
   ),
 )
