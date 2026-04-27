@@ -13,8 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Import
 import org.springframework.web.reactive.function.client.WebClientResponseException
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.SpringAPIServiceTest
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapConfiguration
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.tapDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.RetryApiService
 import java.util.*
 
@@ -34,11 +33,11 @@ class TapDpsApiServiceTest {
     @Test
     fun `will pass oath2 token to service`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapAuthorisation(id)
+      tapDpsApiServer.stubGetTapAuthorisation(id)
 
       apiService.getTapAuthorisation(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
@@ -47,11 +46,11 @@ class TapDpsApiServiceTest {
     @Test
     fun `will call get endpoint`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapAuthorisation(id)
+      tapDpsApiServer.stubGetTapAuthorisation(id)
 
       apiService.getTapAuthorisation(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(urlPathEqualTo("/sync/temporary-absence-authorisations/$id")),
       )
     }
@@ -59,7 +58,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will return data`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapAuthorisation(id)
+      tapDpsApiServer.stubGetTapAuthorisation(id)
 
       with(apiService.getTapAuthorisation(id)) {
         assertThat(this.id).isEqualTo(id)
@@ -70,7 +69,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapAuthorisationError(id)
+      tapDpsApiServer.stubGetTapAuthorisationError(id)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapAuthorisation(id)
@@ -84,11 +83,11 @@ class TapDpsApiServiceTest {
     fun `will pass oath2 token to service`() = runTest {
       val id = UUID.randomUUID()
       val authorisationId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapOccurrence(id, authorisationId)
+      tapDpsApiServer.stubGetTapOccurrence(id, authorisationId)
 
       apiService.getTapOccurrence(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
@@ -98,11 +97,11 @@ class TapDpsApiServiceTest {
     fun `will call get endpoint`() = runTest {
       val id = UUID.randomUUID()
       val authorisationId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapOccurrence(id, authorisationId)
+      tapDpsApiServer.stubGetTapOccurrence(id, authorisationId)
 
       apiService.getTapOccurrence(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(urlPathEqualTo("/sync/temporary-absence-occurrences/$id")),
       )
     }
@@ -111,7 +110,7 @@ class TapDpsApiServiceTest {
     fun `will return data`() = runTest {
       val id = UUID.randomUUID()
       val authorisationId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapOccurrence(id, authorisationId)
+      tapDpsApiServer.stubGetTapOccurrence(id, authorisationId)
 
       with(apiService.getTapOccurrence(id)) {
         assertThat(this.id).isEqualTo(id)
@@ -123,7 +122,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapOccurrenceError(id)
+      tapDpsApiServer.stubGetTapOccurrenceError(id)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapOccurrence(id)
@@ -137,11 +136,11 @@ class TapDpsApiServiceTest {
     fun `will pass oath2 token to service`() = runTest {
       val id = UUID.randomUUID()
       val occurrenceId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapMovement(id, occurrenceId)
+      tapDpsApiServer.stubGetTapMovement(id, occurrenceId)
 
       apiService.getTapMovement(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
@@ -151,11 +150,11 @@ class TapDpsApiServiceTest {
     fun `will call get endpoint`() = runTest {
       val id = UUID.randomUUID()
       val occurrenceId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapMovement(id, occurrenceId)
+      tapDpsApiServer.stubGetTapMovement(id, occurrenceId)
 
       apiService.getTapMovement(id)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(urlPathEqualTo("/sync/temporary-absence-movements/$id")),
       )
     }
@@ -164,7 +163,7 @@ class TapDpsApiServiceTest {
     fun `will return data`() = runTest {
       val id = UUID.randomUUID()
       val occurrenceId = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapMovement(id, occurrenceId)
+      tapDpsApiServer.stubGetTapMovement(id, occurrenceId)
 
       with(apiService.getTapMovement(id)) {
         assertThat(this.id).isEqualTo(id)
@@ -176,7 +175,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val id = UUID.randomUUID()
-      dpsExternalMovementsServer.stubGetTapMovementError(id)
+      tapDpsApiServer.stubGetTapMovementError(id)
 
       assertThrows<WebClientResponseException.InternalServerError> {
         apiService.getTapMovement(id)
@@ -189,11 +188,11 @@ class TapDpsApiServiceTest {
     @Test
     fun `will pass oath2 token to service`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+      tapDpsApiServer.stubGetTapReconciliation(personIdentifier)
 
       apiService.getTapReconciliation(personIdentifier)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
@@ -202,11 +201,11 @@ class TapDpsApiServiceTest {
     @Test
     fun `will call get endpoint`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+      tapDpsApiServer.stubGetTapReconciliation(personIdentifier)
 
       apiService.getTapReconciliation(personIdentifier)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(urlPathEqualTo("/reconciliation/$personIdentifier/temporary-absences")),
       )
     }
@@ -214,7 +213,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will return data`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliation(personIdentifier)
+      tapDpsApiServer.stubGetTapReconciliation(personIdentifier)
 
       with(apiService.getTapReconciliation(personIdentifier)) {
         assertThat(authorisations.count).isEqualTo(1)
@@ -229,7 +228,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliation(
+      tapDpsApiServer.stubGetTapReconciliation(
         personIdentifier,
         status = 500,
       )
@@ -245,13 +244,13 @@ class TapDpsApiServiceTest {
     @Test
     fun `will pass oath2 token to service`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+      tapDpsApiServer.stubGetTapReconciliationDetail(
         personIdentifier,
       )
 
       apiService.getTapReconciliationDetail(personIdentifier)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(anyUrl())
           .withHeader("Authorization", equalTo("Bearer ABCDE")),
       )
@@ -260,13 +259,13 @@ class TapDpsApiServiceTest {
     @Test
     fun `will call get endpoint`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+      tapDpsApiServer.stubGetTapReconciliationDetail(
         personIdentifier,
       )
 
       apiService.getTapReconciliationDetail(personIdentifier)
 
-      dpsExternalMovementsServer.verify(
+      tapDpsApiServer.verify(
         getRequestedFor(urlPathEqualTo("/reconciliation-detail/$personIdentifier/temporary-absences")),
       )
     }
@@ -274,7 +273,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will return data`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+      tapDpsApiServer.stubGetTapReconciliationDetail(
         personIdentifier,
       )
 
@@ -295,7 +294,7 @@ class TapDpsApiServiceTest {
     @Test
     fun `will throw if error`() = runTest {
       val personIdentifier = "A1234BC"
-      dpsExternalMovementsServer.stubGetTapReconciliationDetail(
+      tapDpsApiServer.stubGetTapReconciliationDetail(
         personIdentifier,
         status = 500,
       )

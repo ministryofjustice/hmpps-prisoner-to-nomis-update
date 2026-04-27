@@ -14,11 +14,10 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.Reconciliation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.ReconciliationSuccessPageResult
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.helpers.generateReconciliationReport
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapCounts
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.PersonTapDetail
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.ReconciliationMovement
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TemporaryAbsencesPrisonerMappingIdsDto
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.TapPrisonerMappingIdsDto
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapMovementId
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.OffenderTapsIdsResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.PrisonerId
@@ -33,7 +32,7 @@ class TapAllPrisonersReconciliationService(
   private val nomisApiService: TapNomisApiService,
   private val dpsApiService: TapDpsApiService,
   private val nomisPrisonerApiService: NomisApiService,
-  private val mappingService: ExternalMovementsMappingApiService,
+  private val mappingService: TapMappingApiService,
   @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.page-size}") private val pageSize: Int = 100,
   @param:Value($$"${reports.temporary-absences.all-prisoners.reconciliation.thread-count}") private val threadCount: Int = 15,
 ) {
@@ -178,7 +177,7 @@ class TapAllPrisonersReconciliationService(
     type: MismatchPrisonerTapsSummary.Types,
     nomisIds: OffenderTapsIdsResponse,
     dpsIds: PersonTapDetail,
-    mappings: TemporaryAbsencesPrisonerMappingIdsDto,
+    mappings: TapPrisonerMappingIdsDto,
   ): MismatchedIds = when (type) {
     MismatchPrisonerTapsSummary.Types.AUTHORISATIONS -> {
       val dpsAuthorisationIds = dpsIds.scheduledAbsences.map { it.id }
@@ -229,42 +228,42 @@ class TapAllPrisonersReconciliationService(
     .filter { (_, found) -> !found }
     .map { (src, _) -> src }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedApplications(
+  private fun TapPrisonerMappingIdsDto.unexpectedApplications(
     nomisApplicationIds: List<Long>,
     dpsAuthorisationIds: List<UUID>,
   ) = findMissing(nomisApplicationIds, dpsAuthorisationIds) { applicationId ->
-    applications.find { applicationId == it.nomisMovementApplicationId }?.dpsMovementApplicationId
+    applications.find { applicationId == it.nomisApplicationId }?.dpsAuthorisationId
   }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedAuthorisations(
+  private fun TapPrisonerMappingIdsDto.unexpectedAuthorisations(
     dpsAuthorisationIds: List<UUID>,
     nomisApplicationIds: List<Long>,
   ) = findMissing(dpsAuthorisationIds, nomisApplicationIds) { dpsId ->
-    applications.find { dpsId == it.dpsMovementApplicationId }?.nomisMovementApplicationId
+    applications.find { dpsId == it.dpsAuthorisationId }?.nomisApplicationId
   }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedScheduledOut(
+  private fun TapPrisonerMappingIdsDto.unexpectedScheduledOut(
     nomisScheduledOutIds: List<Long>,
     dpsOccurrenceIds: List<UUID>,
   ) = findMissing(nomisScheduledOutIds, dpsOccurrenceIds) { nomisId ->
     schedules.find { nomisId == it.nomisEventId }?.dpsOccurrenceId
   }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedOccurrences(
+  private fun TapPrisonerMappingIdsDto.unexpectedOccurrences(
     dpsOccurrenceIds: List<UUID>,
     nomisScheduledOutIds: List<Long>,
   ) = findMissing(dpsOccurrenceIds, nomisScheduledOutIds) { dpsId ->
     schedules.find { dpsId == it.dpsOccurrenceId }?.nomisEventId
   }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedNomisMovements(
+  private fun TapPrisonerMappingIdsDto.unexpectedNomisMovements(
     nomisMovementIds: List<OffenderTapMovementId>,
     dpsMovementIds: List<UUID>,
   ) = findMissing(nomisMovementIds, dpsMovementIds) { nomisId ->
     this.movements.find { nomisId.bookingId == it.nomisBookingId && nomisId.sequence == it.nomisMovementSeq }?.dpsMovementId
   }
 
-  private fun TemporaryAbsencesPrisonerMappingIdsDto.unexpectedDpsMovements(
+  private fun TapPrisonerMappingIdsDto.unexpectedDpsMovements(
     dpsMovementIds: List<UUID>,
     nomisMovementIds: List<OffenderTapMovementId>,
   ) = findMissing(dpsMovementIds, nomisMovementIds) { dpsId ->

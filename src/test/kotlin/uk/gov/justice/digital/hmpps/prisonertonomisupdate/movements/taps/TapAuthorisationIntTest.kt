@@ -27,9 +27,7 @@ import org.springframework.http.HttpStatus.NOT_FOUND
 import software.amazon.awssdk.services.sns.model.MessageAttributeValue
 import software.amazon.awssdk.services.sns.model.PublishRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.integration.SqsIntegrationTestBase
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiMockServer
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.tapScheduleMapping
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.dpsExternalMovementsServer
+import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapDpsApiExtension.Companion.tapDpsApiServer
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.taps.TapNomisApiMockServer.Companion.upsertTapApplicationResponse
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateErrorContentObject
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomismappings.model.DuplicateMappingErrorResponse
@@ -45,9 +43,9 @@ class TapAuthorisationIntTest : SqsIntegrationTestBase() {
   private lateinit var nomisApi: TapNomisApiMockServer
 
   @Autowired
-  private lateinit var mappingApi: ExternalMovementsMappingApiMockServer
+  private lateinit var mappingApi: TapMappingApiMockServer
 
-  private val dpsApi: TapDpsApiMockServer = dpsExternalMovementsServer
+  private val dpsApi: TapDpsApiMockServer = tapDpsApiServer
 
   private val today = LocalDateTime.now()
   private val tomorrow = today.plusDays(1)

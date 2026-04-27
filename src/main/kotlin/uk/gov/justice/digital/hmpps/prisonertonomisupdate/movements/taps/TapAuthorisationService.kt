@@ -5,7 +5,6 @@ import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.config.trackEvent
-import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.ExternalMovementsMappingApiService
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.Location
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisation
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.movements.model.SyncReadTapAuthorisationOccurrence
@@ -23,7 +22,7 @@ private val AUTHORISATION_EVENTS_UPDATES_ONLY = listOf("person.temporary-absence
 
 @Service
 class TapAuthorisationService(
-  private val mappingApiService: ExternalMovementsMappingApiService,
+  private val mappingApiService: TapMappingApiService,
   private val nomisApiService: TapNomisApiService,
   private val dpsApiService: TapDpsApiService,
   private val retryQueueService: TapRetryQueueService,
@@ -38,7 +37,7 @@ class TapAuthorisationService(
     val log: Logger = LoggerFactory.getLogger(this::class.java)
   }
 
-  suspend fun authorisationChanged(event: TemporaryAbsenceEvent) {
+  suspend fun authorisationChanged(event: TapEvent) {
     val prisonerNumber = event.personReference.prisonerNumber()
     val dpsAuthorisationId = event.additionalInformation.id
     val source = event.additionalInformation.source

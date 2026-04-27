@@ -127,6 +127,6 @@ class HealthCheckTest : IntegrationTestBase() {
     VisitBalanceDpsApiExtension.visitBalanceDpsApi.stubHealthPing(status)
     CorePersonCprApiExtension.corePersonCprApi.stubHealthPing(status)
     OfficialVisitsDpsApiExtension.dpsOfficialVisitsServer.stubHealthPing(status)
-    TapDpsApiExtension.dpsExternalMovementsServer.stubHealthPing(status)
+    TapDpsApiExtension.tapDpsApiServer.stubHealthPing(status)
   }
 }

@@ -33,7 +33,7 @@ class TapNomisApiService(
   retryApiService: RetryApiService,
 ) {
   private val backoffSpec = retryApiService.getBackoffSpec().withRetryContext(
-    Context.of("api", "ExternalMovementsNomisApiService"),
+    Context.of("api", "TapNomisApiService"),
   )
 
   private val applicationApi = TapApplicationResourceApi(webClient)
