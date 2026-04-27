@@ -133,7 +133,6 @@ class AdjudicationsReconciliationService(
         )
 
         if (nomisAdaSummary == dpsAdaSummary) {
-          telemetryClient.trackEvent("adjudication-reports-reconciliation-merge-mismatch-resolved", telemetry)
           return false
         } else {
           telemetryClient.trackEvent("adjudication-reports-reconciliation-merge-mismatch", telemetry)

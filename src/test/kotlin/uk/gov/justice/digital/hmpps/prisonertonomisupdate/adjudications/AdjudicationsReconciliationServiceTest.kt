@@ -448,22 +448,6 @@ internal class AdjudicationsReconciliationServiceTest {
           )
           assertThat(mismatch).isNull()
         }
-
-        @Test
-        fun `will track telemetry with mismatch resolved`() = runTest {
-          service.checkADAPunishmentsMatch(
-            PrisonerIds(
-              bookingId = 123456L,
-              offenderNo = "A1234AA",
-            ),
-          )
-
-          verify(telemetryClient).trackEvent(
-            eq("adjudication-reports-reconciliation-merge-mismatch-resolved"),
-            any(),
-            isNull(),
-          )
-        }
       }
 
       @Nested
