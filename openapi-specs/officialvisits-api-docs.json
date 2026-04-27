@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-23.708.165e4a1"
+    "version" : "2026-04-24.711.8e9efde"
   },
   "servers" : [ {
     "url" : "https://official-visits-api-dev.hmpps.service.justice.gov.uk",
@@ -2793,9 +2793,9 @@
             "type" : "string"
           }
         }, {
-          "name" : "activeOnly",
+          "name" : "weekOldOrLatest",
           "in" : "query",
-          "description" : "If true, only returns active time slots and visit slots",
+          "description" : "If true, only returns active time slots and visit slots with expiry date within last 7 days or in the future. If false, returns all time slots and visit slots regardless of their effective and expiry dates. Defaults to true.",
           "required" : false,
           "schema" : {
             "type" : "boolean",
