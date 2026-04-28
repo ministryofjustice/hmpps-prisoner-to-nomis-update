@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-24.3186.12d2aca"
+    "version" : "2026-04-27.3211.8cbeda4"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -575,6 +575,43 @@
           },
           "301" : {
             "description" : "Permanent Redirect"
+          }
+        },
+        "security" : [ {
+          "api-role" : [ ]
+        } ]
+      }
+    },
+    "/person/probation/{crn}/address/{cprAddressId}" : {
+      "get" : {
+        "tags" : [ "Probation" ],
+        "description" : "Retrieve an address record by CPR Address Id. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**.",
+        "operationId" : "getProbationAddress",
+        "parameters" : [ {
+          "name" : "crn",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        }, {
+          "name" : "cprAddressId",
+          "in" : "path",
+          "required" : true,
+          "schema" : {
+            "type" : "string"
+          }
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "OK",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CanonicalAddress"
+                }
+              }
+            }
           }
         },
         "security" : [ {
@@ -1749,6 +1786,11 @@
       "CanonicalAddress" : {
         "type" : "object",
         "properties" : {
+          "cprAddressId" : {
+            "type" : "string",
+            "description" : "CPR address Id",
+            "example" : "ec4c7479-218c-4f11-a02d-edd749820679"
+          },
           "noFixedAbode" : {
             "type" : "boolean",
             "description" : "Person no fixed abode",
@@ -1830,7 +1872,7 @@
             }
           }
         },
-        "required" : [ "country", "status", "usages" ]
+        "required" : [ "country", "cprAddressId", "status", "usages" ]
       },
       "CanonicalAddressStatus" : {
         "type" : "object",
