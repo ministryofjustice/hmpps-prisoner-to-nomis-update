@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-20.677.9be3ead"
+    "version" : "2026-04-27.691.809559f"
   },
   "servers" : [ {
     "url" : "/",
@@ -7844,6 +7844,13 @@
             "description" : "Indicates the location is enabled",
             "example" : true
           },
+          "inactiveStatus" : {
+            "type" : [ "string", "null" ],
+            "deprecated" : true,
+            "description" : "If this location is inactive, indicates the type of inactive status",
+            "enum" : [ "INACTIVE_TEMP", "INACTIVE_PEND_CHANGE_REQ", "INACTIVE_MATCHING_CELL_CERT" ],
+            "example" : "true"
+          },
           "inCellSanitation" : {
             "type" : [ "boolean", "null" ],
             "description" : "In-cell sanitation",
@@ -7991,7 +7998,7 @@
             "example" : true
           }
         },
-        "required" : [ "active", "code", "deactivatedByParent", "id", "isResidential", "key", "lastModifiedBy", "lastModifiedDate", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
+        "required" : [ "active", "code", "deactivatedByParent", "id", "inactiveStatus", "isResidential", "key", "lastModifiedBy", "lastModifiedDate", "leafLevel", "level", "locationType", "locked", "pathHierarchy", "permanentlyInactive", "prisonId", "status", "topLevelId" ]
       },
       "NonResidentialUsageDto" : {
         "type" : "object",
@@ -9238,6 +9245,11 @@
             "description" : "Converted cell type",
             "enum" : [ "HOLDING_ROOM", "INTERVIEW_ROOM", "KITCHEN_SERVERY", "LISTENERS_ROOM", "OFFICE", "SHOWER", "STAFF_ROOM", "STORE", "TREATMENT_ROOM", "UTILITY_ROOM", "OTHER" ],
             "example" : "OFFICE"
+          },
+          "reactivateThisLocation" : {
+            "type" : [ "boolean", "null" ],
+            "description" : "Indicates this location will be reactivated",
+            "example" : true
           },
           "subLocations" : {
             "type" : [ "array", "null" ],
