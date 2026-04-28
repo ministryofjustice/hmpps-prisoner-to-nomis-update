@@ -11,7 +11,7 @@
       "name" : "MIT",
       "identifier" : "MIT"
     },
-    "version" : "2026-01-16.240.9d97f2c"
+    "version" : "2026-04-27.332.d70c1cd"
   },
   "servers" : [ {
     "url" : "/",
@@ -839,7 +839,7 @@
             "type" : "boolean",
             "default" : false,
             "description" : "Include inactive incentive levels",
-            "example" : true,
+            "example" : "true",
             "pattern" : "^true|false$"
           },
           "example" : true
@@ -1471,7 +1471,7 @@
             "type" : "boolean",
             "default" : false,
             "description" : "Include inactive prison incentive levels",
-            "example" : true,
+            "example" : "true",
             "pattern" : "^true|false$"
           },
           "example" : true
@@ -1689,7 +1689,7 @@
             "type" : "boolean",
             "default" : true,
             "description" : "Toggle to return incentive reviews detail entries in response (or not)",
-            "example" : true,
+            "example" : "true",
             "pattern" : "^true|false$"
           },
           "example" : true
@@ -1782,23 +1782,23 @@
             "example" : 500
           },
           "errorCode" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "When present, uniquely identifies the type of error making it easier for clients to discriminate without relying on error description; see `uk.gov.justice.digital.hmpps.incentivesapi.config.ErrorResponse` enumeration in hmpps-incentives-api",
             "example" : 123
           },
           "userMessage" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "User message for the error",
             "example" : "No incentive level found for code `ABC`"
           },
           "developerMessage" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "More detailed error message",
             "example" : "[Details, sometimes a stack trace]"
           },
           "moreInfo" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "More information about the error",
             "example" : "[Rarely used, error-specific]"
           }
@@ -1929,20 +1929,20 @@
             "minLength" : 1
           },
           "reviewType" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "default" : "REVIEW",
             "description" : "Review Type",
             "enum" : [ "INITIAL", "REVIEW", "TRANSFER", "MIGRATED", "READMISSION" ],
             "example" : "REVIEW"
           },
           "reviewTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "Date and time of the review, if not provided will default to now",
             "example" : "2023-06-07T13:05:46"
           },
           "reviewedBy" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The username of the member of staff undertaking the review, if not provided will use the user in the JWT access token",
             "example" : "ASMITH",
             "maxLength" : 30,
@@ -1972,7 +1972,7 @@
             "example" : "STD"
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Review comments",
             "example" : "A review took place"
           },
@@ -2005,13 +2005,13 @@
             "example" : "MDI"
           },
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "deprecated" : true,
             "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
             "example" : "1-2-003"
           },
           "userId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Username of the reviewer",
             "example" : "USER_1_GEN"
           },
@@ -2036,52 +2036,52 @@
         "type" : "object",
         "properties" : {
           "active" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this incentive level is enabled in this prison",
             "example" : true
           },
           "defaultOnAdmission" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that this incentive level is the default for new admissions",
             "example" : true
           },
           "remandTransferLimitInPence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a remand prisoner to use",
             "example" : 5500,
             "minimum" : 0
           },
           "remandSpendLimitInPence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a remand prisoner",
             "example" : 55000,
             "minimum" : 0
           },
           "convictedTransferLimitInPence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The amount transferred weekly from the private cash account to the spends account for a convicted prisoner to use",
             "example" : 1800,
             "minimum" : 0
           },
           "convictedSpendLimitInPence" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The maximum amount allowed in the spends account for a convicted prisoner",
             "example" : 18000,
             "minimum" : 0
           },
           "visitOrders" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of weekday visits for a convicted prisoner per fortnight",
             "example" : 2,
             "minimum" : 0
           },
           "privilegedVisitOrders" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "The number of privileged/weekend visits for a convicted prisoner per 4 weeks",
             "example" : 1,
@@ -2093,19 +2093,19 @@
         "type" : "object",
         "properties" : {
           "name" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Name of the incentive level",
             "example" : "Standard",
             "maxLength" : 30,
             "minLength" : 1
           },
           "active" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that the incentive level is active; inactive levels are historic levels no longer in use",
             "example" : true
           },
           "required" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates that all prisons must have this level active",
             "example" : true
           }
@@ -2150,7 +2150,7 @@
             "description" : "The content of the subject access request response"
           },
           "attachments" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "description" : "The details of any attachments for the subject access request response",
             "items" : {
               "$ref" : "#/components/schemas/Attachment"
@@ -2245,7 +2245,7 @@
             "example" : false
           },
           "daysSinceLastReview" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int32",
             "description" : "Days since last review, null when no real review has taken place",
             "example" : 45
@@ -2358,7 +2358,7 @@
             "example" : "2021-12-31T12:34:56.789012"
           },
           "locationId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "deprecated" : true,
             "description" : "DEPRECATED - Location of prisoner at the time when review was created in Incentives service (i.e. their cell)",
             "example" : "1-2-003"
