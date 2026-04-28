@@ -281,6 +281,19 @@ class IncidentsNomisApiMockServer(private val jsonMapper: JsonMapper) {
       ),
     )
   }
+
+  fun stubGetReconciliationOpenIncidentIdsWithError(agencyId: String, pageNumber: Long, pageSize: Long? = null, responseCode: Int = 500) {
+    nomisApi.stubFor(
+      get(urlPathMatching("/incidents/reconciliation/agency/$agencyId/ids"))
+        .willReturn(
+          aResponse()
+            .withHeader("Content-Type", "application/json")
+            .withStatus(responseCode)
+            .withBody("""{"message":"Error"}"""),
+        ),
+    )
+  }
+
   fun ResponseDefinitionBuilder.withBody(body: Any): ResponseDefinitionBuilder = this.withBody(jsonMapper.writeValueAsString(body))
 }
 

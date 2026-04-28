@@ -711,6 +711,60 @@ class IncidentsReconciliationIntTest(
         )
       }
     }
+
+    @Nested
+    @DisplayName("Page error Unhappy Path")
+    inner class PageErrorUnHappyPath {
+
+      @BeforeEach
+      fun setUp() {
+        incidentsNomisApi.stubGetReconciliationOpenIncidentIdsWithError("WWI", 39, 41)
+
+        incidentsDpsApi.stubGetIncidentCounts()
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("ASI")
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("BFI")
+        incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("WWI")
+      }
+
+      @Test
+      fun `will show reconcilitation success`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-requested"),
+          check { assertThat(it).containsEntry("prisonCount", "3") },
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will not invoke detail mismatch`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+        awaitReportFinished()
+
+        verify(telemetryClient, times(0)).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch-detail"),
+          any(),
+          isNull(),
+        )
+      }
+
+      @Test
+      fun `will complete a report even if some of the checks fail`() = runTest {
+        incidentsReconciliationService.incidentsReconciliation()
+        awaitReportFinished()
+
+        verify(telemetryClient).trackEvent(
+          eq("incidents-reports-reconciliation-mismatch-page-error"),
+          check {
+            assertThat(it).containsEntry("agencyId", "WWI")
+            assertThat(it).containsEntry("page", "0")
+          },
+          isNull(),
+        )
+      }
+    }
   }
 
   private fun awaitReportFinished() {
