@@ -158,6 +158,7 @@ class IncidentsReconciliationService(
       telemetryClient.trackEvent(
         "incidents-reports-reconciliation-mismatch-page-error",
         mapOf(
+          "agencyId" to agencyId,
           "page" to page.first.toString(),
         ),
       )
