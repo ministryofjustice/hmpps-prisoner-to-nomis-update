@@ -282,7 +282,7 @@ class IncidentsNomisApiMockServer(private val jsonMapper: JsonMapper) {
     )
   }
 
-  fun stubGetReconciliationOpenIncidentIdsWithError(agencyId: String, pageNumber: Long, pageSize: Long? = null, responseCode: Int = 500) {
+  fun stubGetReconciliationOpenIncidentIdsWithError(agencyId: String, responseCode: Int = 500) {
     nomisApi.stubFor(
       get(urlPathMatching("/incidents/reconciliation/agency/$agencyId/ids"))
         .willReturn(

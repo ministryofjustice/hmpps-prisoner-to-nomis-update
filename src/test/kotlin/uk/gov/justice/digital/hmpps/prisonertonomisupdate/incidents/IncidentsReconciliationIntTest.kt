@@ -718,7 +718,7 @@ class IncidentsReconciliationIntTest(
 
       @BeforeEach
       fun setUp() {
-        incidentsNomisApi.stubGetReconciliationOpenIncidentIdsWithError("WWI", 39, 41)
+        incidentsNomisApi.stubGetReconciliationOpenIncidentIdsWithError("WWI")
 
         incidentsDpsApi.stubGetIncidentCounts()
         incidentsNomisApi.stubGetReconciliationAgencyIncidentCounts("ASI")
