@@ -165,6 +165,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
                 check {
                   assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
                   assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+                  assertThat(it).containsEntry("changeReason", "ANYTHING")
                 },
                 isNull(),
               )
@@ -478,7 +479,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               check {
                 assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
                 assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
-                assertThat(it).containsEntry("changeReason", "STAFF_INVOLVED")
+                assertThat(it).containsEntry("changeReason", "ANYTHING")
               },
               isNull(),
             )
