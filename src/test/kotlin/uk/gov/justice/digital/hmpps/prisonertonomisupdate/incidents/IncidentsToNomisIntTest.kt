@@ -478,6 +478,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
               check {
                 assertThat(it).containsEntry("dpsIncidentId", dpsId.toString())
                 assertThat(it).containsEntry("nomisIncidentId", nomisId.toString())
+                assertThat(it).containsEntry("changeReason", "STAFF_INVOLVED")
               },
               isNull(),
             )
@@ -690,6 +691,7 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
       source: String = "DPS",
       dpsIncidentId: String = "87654",
       nomisIncidentId: Long = 87654L,
+      whatChanged: String? = "ANYTHING",
     ) = //language=JSON
       """
     {
@@ -697,7 +699,8 @@ class IncidentsToNomisIntTest : SqsIntegrationTestBase() {
       "additionalInformation": {
         "id": "$dpsIncidentId",
         "reportReference": "$nomisIncidentId",
-        "source": "$source"
+        "source": "$source",
+        "whatChanged": "$whatChanged"
       }
     }
     """
