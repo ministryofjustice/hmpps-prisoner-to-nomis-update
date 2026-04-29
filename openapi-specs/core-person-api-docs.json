@@ -7,7 +7,7 @@
       "name" : "HMPPS Person Record",
       "email" : "hmpps-person-record@digital.justice.gov.uk"
     },
-    "version" : "2026-04-27.3211.8cbeda4"
+    "version" : "2026-04-29.3237.9c49ca9"
   },
   "servers" : [ {
     "url" : "https://hmpps-person-record-dev.hmpps.service.justice.gov.uk",
@@ -582,43 +582,6 @@
         } ]
       }
     },
-    "/person/probation/{crn}/address/{cprAddressId}" : {
-      "get" : {
-        "tags" : [ "Probation" ],
-        "description" : "Retrieve an address record by CPR Address Id. Role required is **ROLE_CORE_PERSON_RECORD_API__RO**.",
-        "operationId" : "getProbationAddress",
-        "parameters" : [ {
-          "name" : "crn",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        }, {
-          "name" : "cprAddressId",
-          "in" : "path",
-          "required" : true,
-          "schema" : {
-            "type" : "string"
-          }
-        } ],
-        "responses" : {
-          "200" : {
-            "description" : "OK",
-            "content" : {
-              "application/json" : {
-                "schema" : {
-                  "$ref" : "#/components/schemas/CanonicalAddress"
-                }
-              }
-            }
-          }
-        },
-        "security" : [ {
-          "api-role" : [ ]
-        } ]
-      }
-    },
     "/person/prison/{prisonNumber}" : {
       "get" : {
         "tags" : [ "Prison" ],
@@ -802,75 +765,75 @@
             "example" : 5678
           },
           "fullAddress" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The full address",
             "example" : "Sub building 2, Main Building, 102 Petty France, Westminster, London, Greater London, SW1H 9AJ"
           },
           "noFixedAbode" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the person without a permanent residence",
             "example" : false
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The address start date",
             "example" : "2020-02-26"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The address end date",
             "example" : "2023-07-15"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address postcode",
             "example" : "SW1H 9AJ"
           },
           "subBuildingName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address sub building name",
             "example" : "Sub building 2"
           },
           "buildingName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address building name",
             "example" : "Main Building"
           },
           "buildingNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address building number",
             "example" : "102"
           },
           "thoroughfareName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address thoroughfare name",
             "example" : "Petty France"
           },
           "dependentLocality" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address dependent locality",
             "example" : "Westminster"
           },
           "postTown" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address building number",
             "example" : "London"
           },
           "county" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address building number",
             "example" : "Greater London"
           },
           "countryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address country code",
             "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
             "example" : "GBR"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The address comment",
             "example" : "String"
           },
@@ -880,7 +843,7 @@
             "example" : true
           },
           "isMail" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is this the mail address",
             "example" : true
           },
@@ -934,40 +897,40 @@
             "example" : 2378
           },
           "titleCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alias title code",
             "enum" : [ "MR", "MRS", "MISS", "MS", "MX", "REV", "FR", "IMAM", "RABBI", "BR", "SR", "DME", "DR", "LDY", "LRD", "SIR", "UN" ],
             "example" : "MR"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alias first name",
             "example" : "Jon"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alias middles name",
             "example" : "James"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alias last name",
             "example" : "Smythe"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The alias date of birth",
             "example" : "1980-01-01"
           },
           "sexCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The alias sex code",
             "enum" : [ "M", "F", "N", "NS" ],
             "example" : "M"
           },
           "isPrimary" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Indicates if this is a primary alias",
             "example" : true
           },
@@ -985,13 +948,13 @@
         "type" : "object",
         "properties" : {
           "nomisContactId" : {
-            "type" : "integer",
+            "type" : [ "integer", "null" ],
             "format" : "int64",
             "description" : "The nomis contact id",
             "example" : 1234
           },
           "value" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The contact value",
             "example" : "01234567890"
           },
@@ -1002,7 +965,7 @@
             "example" : "HOME"
           },
           "extension" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The contact extension",
             "example" : "235"
           }
@@ -1013,57 +976,57 @@
         "type" : "object",
         "properties" : {
           "birthPlace" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's birth place",
             "example" : "Milton Keynes"
           },
           "birthCountryCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's birth country code",
             "enum" : [ "ABW", "AFG", "AGO", "AIA", "AKR", "ALA", "ALB", "AND", "ANT", "ARE", "ARG", "ARM", "ASM", "ATA", "ATF", "ATG", "AUS", "AUT", "AZE", "BDI", "BEL", "BEN", "BES", "BFA", "BGD", "BGR", "BHR", "BHS", "BIH", "BLM", "BLR", "BLZ", "BMU", "BOL", "BRA", "BRB", "BRN", "BTN", "BVT", "BWA", "CAF", "CAN", "CCK", "CHE", "CHL", "CHN", "CI", "CIV", "CMR", "COD", "COG", "COK", "COL", "COM", "CPV", "CRI", "CUB", "CUW", "CXR", "CYM", "CYP", "CZE", "DEU", "DJI", "DKL", "DMA", "DNK", "DOM", "DZA", "ECU", "EGY", "ENG", "ERI", "ESH", "ESP", "EST", "ETH", "FIN", "FJI", "FLK", "FRA", "FRO", "FSM", "FXX", "GAB", "GBR", "GEO", "GGY", "GHA", "GIB", "GIN", "GLP", "GMB", "GNB", "GNQ", "GRC", "GRD", "GRL", "GTM", "GUF", "GUM", "GUY", "HKG", "HMD", "HND", "HRV", "HTI", "HUN", "IDN", "IMN", "IND", "IOT", "IRL", "IRN", "IRQ", "ISL", "ISR", "ITA", "JAM", "JEY", "JOR", "JPN", "KAZ", "KEN", "KGZ", "KHM", "KIR", "KNA", "KOR", "KOS", "KWT", "LAO", "LBN", "LBR", "LBY", "LCA", "LIE", "LKA", "LSO", "LTU", "LUX", "LVA", "MAC", "MAF", "MAR", "MCO", "MDA", "MDG", "MDV", "MEX", "MHL", "MKD", "MLI", "MLT", "MMR", "MNE", "MNG", "MNP", "MOZ", "MRT", "MSR", "MTQ", "MUS", "MWI", "MYS", "MYT", "NAM", "NCL", "NER", "NFK", "NGA", "NI", "NIC", "NIU", "NLD", "NOR", "NPL", "NRU", "NZL", "OMN", "PAK", "PAN", "PCN", "PER", "PHL", "PLW", "PNG", "POL", "PRI", "PRK", "PRT", "PRY", "PSE", "PYF", "QAT", "REU", "ROU", "RUS", "RWA", "SAU", "SCG", "SCOT", "SDN", "SEN", "SGP", "SGS", "SHN", "SJM", "SLB", "SLE", "SLV", "SMR", "SOM", "SPM", "SRB", "SSD", "STP", "SU", "SUR", "SVK", "SVN", "SWE", "SWZ", "SXM", "SYC", "SYR", "TCA", "TCD", "TGO", "THA", "TJK", "TKL", "TKM", "TLS", "TON", "TTO", "TUN", "TUR", "TUV", "TWN", "TZA", "UGA", "UKR", "UMI", "URY", "USA", "UZB", "VAT", "VCT", "VEN", "VGB", "VIR", "VNM", "VUT", "WALES", "WLF", "WSM", "XRK", "XX", "XZ", "YEM", "YU", "ZAF", "ZMB", "ZWE" ],
             "example" : "GBR"
           },
           "ethnicityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's ethnicity code",
             "enum" : [ "A1", "A2", "A3", "A4", "A9", "B1", "B2", "B9", "ETH03", "M1", "M2", "M3", "M9", "MERGE", "NS", "O1", "O2", "O9", "UN", "W1", "W2", "W3", "W4", "W5", "W8", "W9", "Z1" ],
             "example" : "W1"
           },
           "sexCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's sex code",
             "enum" : [ "M", "F", "N", "NS" ],
             "example" : "M"
           },
           "sexualOrientation" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's sexual orientation code",
             "enum" : [ "BIS", "HOM", "HET", "ND", "OTH", "REF", "UNKNOWN" ],
             "example" : "HET"
           },
           "disability" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Does the person have a disability",
             "example" : false
           },
           "interestToImmigration" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Is the person of interest to immigration",
             "example" : false
           },
           "religionCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's religion code",
             "example" : "MOS"
           },
           "nationalityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's nationality code",
             "enum" : [ "AB", "AFGA", "AG", "ALBA", "ALGE", "AMER", "AN", "ANDO", "ANGOL", "ANTIG", "ARGEN", "ARME", "ASM", "AUSI", "AUST", "AZERB", "BAHA", "BAHR", "BANGL", "BARB", "BELA", "BELG", "BELI", "BENI", "BHUT", "BM", "BOLI", "BOSNI", "BRAZ", "BRIT", "BRUN", "BULG", "BURM", "BURU", "CAMB", "CAMER", "CANA", "CAVER", "CCK", "CDR", "CF", "CGB", "CHAD", "CHIL", "CHINA", "COK", "COLO", "COMO", "COND", "CONG", "CONR", "COSRI", "CROAT", "CT", "CUBA", "CXR", "CYPR", "CZEC", "DANE", "DJIB", "DOMI", "DUTCH", "EATIM", "ECUA", "EGYP", "EMIR", "EQUATO", "ERI", "ESTO", "ETHI", "FG", "FIJI", "FILIP", "FINN", "FO", "FREN", "GABO", "GAMB", "GE", "GERM", "GHAN", "GI", "GL", "GLP", "GREE", "GREN", "GRN", "GU", "GUAT", "GUIN", "GUYA", "HAIT", "HKG", "HOND", "HUNG", "HV", "ICE", "INDI", "INDO", "IRAN", "IRAQ", "IRISH", "ISRA", "ITAL", "IVOR", "JAM", "JAP", "JORD", "JSM", "KAZA", "KENY", "KN", "KOS", "KUWA", "KY", "LA", "LATV", "LEBA", "LIBE", "LIBY", "LIEC", "LITHU", "LS", "LUX", "MAC", "MACE", "MALA", "MALD", "MALT", "MAN", "MAR", "MARI", "MAUR", "MEXI", "MG", "MICR", "ML", "MLAW", "MNE", "MO", "MOLD", "MONA", "MONGO", "MORO", "MOTS", "MOZA", "MS", "MTQ", "NAMI", "NAUR", "NCL", "NEPA", "NFK", "NICA", "NIGER", "NIGERIA", "NIU", "NKOR", "NORW", "NZEA", "OMAN", "PAKN", "PALA", "PANA", "PARA", "PCN", "PERU", "PNGU", "POLE", "PORTU", "PRI", "PSE", "PYF", "QUAT", "REF", "REU", "RID", "ROMA", "RUSS", "RWAN", "SAARA", "SALV", "SAMO", "SANM", "SECR", "SENE", "SEYC", "SH", "SILE", "SING", "SKOR", "SLENE", "SLOV", "SOAFR", "SOLO", "SOMA", "SPAN", "SRB", "SRIL", "SRK", "SSUDAN", "STATE", "STLU", "STP", "SUDAN", "SURIN", "SW", "SWAZI", "SWEDE", "SWIS", "SYRI", "TA", "TAIW", "TANZ", "TCI", "THAI", "TKL", "TNGA", "TOGO", "TRIN", "TRS", "TU", "TUNI", "TURK", "TV", "UGAN", "UKRA", "UNKNOWN", "URUG", "UZBE", "VC", "VENE", "VG", "VIET", "VTC", "VY", "WA", "WAL", "YEMIN", "ZAM", "ZIM" ],
             "example" : "BRIT"
           },
           "nationalityNote" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The person's nationality notes",
             "example" : "Possibly Finnish"
           }
@@ -1090,7 +1053,7 @@
             "example" : "2000/1234567A"
           },
           "comment" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The identifier comment",
             "example" : "Some comment"
           }
@@ -1139,7 +1102,7 @@
         "type" : "object",
         "properties" : {
           "sentenceDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The sentence date",
             "example" : "1980-01-01"
@@ -1153,7 +1116,7 @@
             "type" : "string"
           },
           "cprContactId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "nomisContactId" ]
@@ -1165,7 +1128,7 @@
             "type" : "string"
           },
           "cprAddressId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "addressUsageMappings" : {
             "type" : "array",
@@ -1189,7 +1152,7 @@
             "type" : "string"
           },
           "cprAddressUsageid" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "nomisAddressUsageId" ]
@@ -1201,7 +1164,7 @@
             "type" : "string"
           },
           "cprPseudonymId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "identifierMappings" : {
             "type" : "array",
@@ -1219,7 +1182,7 @@
             "type" : "string"
           },
           "cprIdentifierId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "nomisIdentifierId" ]
@@ -1231,7 +1194,7 @@
             "type" : "string"
           },
           "cprContactId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "nomisContactId" ]
@@ -1240,7 +1203,7 @@
         "type" : "object",
         "properties" : {
           "prisonerId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "addressMappings" : {
             "type" : "array",
@@ -1287,13 +1250,13 @@
         "type" : "object",
         "properties" : {
           "telephone" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "mobile" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "email" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -1301,13 +1264,13 @@
         "type" : "object",
         "properties" : {
           "crn" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "pnc" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "cro" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "prisonerNumber" : {
             "type" : "string"
@@ -1316,7 +1279,7 @@
             "type" : "string"
           },
           "additionalIdentifiers" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/ProbationCaseAdditionalIdentifier"
             }
@@ -1327,48 +1290,48 @@
         "type" : "object",
         "properties" : {
           "noFixedAbode" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "postcode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "fullAddress" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "buildingName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "addressNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "streetName" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "district" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "townCity" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "county" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "uprn" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "notes" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "telephoneNumber" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         }
       },
@@ -1376,33 +1339,45 @@
         "type" : "object",
         "properties" : {
           "title" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "name" : {
             "$ref" : "#/components/schemas/ProbationCaseName"
           },
           "ethnicity" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "identifiers" : {
             "$ref" : "#/components/schemas/Identifiers"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "dateOfDeath" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "aliases" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/ProbationCaseAlias"
             }
           },
           "contactDetails" : {
-            "$ref" : "#/components/schemas/ContactDetails"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/ContactDetails"
+            }, {
+              "type" : "null"
+            } ]
           },
           "addresses" : {
             "type" : "array",
@@ -1411,31 +1386,55 @@
             }
           },
           "sentences" : {
-            "type" : "array",
+            "type" : [ "array", "null" ],
             "items" : {
               "$ref" : "#/components/schemas/Sentences"
             }
           },
           "nationality" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "secondNationality" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "gender" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "genderIdentity" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "genderIdentityDescription" : {
             "type" : "string"
           },
           "sexualOrientation" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           },
           "religion" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "addresses", "identifiers", "name" ]
@@ -1444,10 +1443,14 @@
         "type" : "object",
         "properties" : {
           "value" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "type" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           }
         }
       },
@@ -1458,11 +1461,15 @@
             "$ref" : "#/components/schemas/ProbationCaseName"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "gender" : {
-            "$ref" : "#/components/schemas/Value"
+            "oneOf" : [ {
+              "$ref" : "#/components/schemas/Value"
+            }, {
+              "type" : "null"
+            } ]
           }
         },
         "required" : [ "name" ]
@@ -1515,11 +1522,11 @@
             "format" : "date-time"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "comments" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           }
         },
         "required" : [ "current", "modifyDateTime", "modifyUserId", "nomisReligionId" ]
@@ -1552,7 +1559,7 @@
         "type" : "object",
         "properties" : {
           "sexualOrientationCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The sexual orientation code",
             "example" : "BIS"
           },
@@ -1586,12 +1593,12 @@
             "example" : "AGNO"
           },
           "changeReasonKnown" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "The religion change reason known",
             "example" : true
           },
           "comments" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The religion comments",
             "example" : "Foo Bar"
           },
@@ -1602,19 +1609,19 @@
             "example" : "1980-01-01"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date",
             "description" : "The religion end date",
             "example" : "2000-01-01"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The religion modify date and time",
             "example" : "2000-01-01 12:00:00"
           },
           "modifyUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The religion modify user id",
             "example" : "12345"
           },
@@ -1681,7 +1688,7 @@
         "type" : "object",
         "properties" : {
           "nationalityCode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The nationality code",
             "example" : "BIS"
           },
@@ -1697,7 +1704,7 @@
             "example" : "12345"
           },
           "notes" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The nationality notes",
             "example" : "Foo bar"
           }
@@ -1713,14 +1720,14 @@
             "example" : true
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time",
             "description" : "The immigration status modify date and time",
             "example" : "2000-01-01 12:00:00",
             "minLength" : 1
           },
           "modifyUserId" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "The immigration status modify user id",
             "example" : "12345",
             "minLength" : 1
@@ -1786,145 +1793,88 @@
       "CanonicalAddress" : {
         "type" : "object",
         "properties" : {
-          "cprAddressId" : {
-            "type" : "string",
-            "description" : "CPR address Id",
-            "example" : "ec4c7479-218c-4f11-a02d-edd749820679"
-          },
           "noFixedAbode" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Person no fixed abode",
             "examples" : [ "false", "true", "null" ]
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address start date",
             "example" : "2020-02-26"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address end date",
             "example" : "2023-07-15"
           },
           "postcode" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address postcode",
             "example" : "SW1H 9AJ"
           },
           "subBuildingName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address sub building name",
             "example" : "Sub building 2"
           },
           "buildingName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address building Name",
             "example" : "Main Building"
           },
           "buildingNumber" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address building number",
             "example" : "102"
           },
           "thoroughfareName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address thoroughfareName",
             "example" : "Petty France"
           },
           "dependentLocality" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address dependentLocality",
             "example" : "Westminster"
           },
           "postTown" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address postTown",
             "example" : "London"
           },
           "county" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person address county",
             "example" : "Greater London"
           },
           "country" : {
-            "$ref" : "#/components/schemas/CanonicalCountry",
-            "description" : "Person address country"
-          },
-          "uprn" : {
-            "type" : "string",
-            "description" : "Person address uprn",
-            "example" : "100120991537"
-          },
-          "status" : {
-            "$ref" : "#/components/schemas/CanonicalAddressStatus",
-            "description" : "Person address status"
-          },
-          "comment" : {
-            "type" : "string",
-            "description" : "Person address comment",
+            "type" : [ "string", "null" ],
+            "description" : "Person address country",
             "example" : "United Kingdom"
           },
-          "usages" : {
-            "type" : "array",
-            "description" : "List of person address usages",
-            "items" : {
-              "$ref" : "#/components/schemas/CanonicalAddressUsage"
-            }
-          }
-        },
-        "required" : [ "country", "cprAddressId", "status", "usages" ]
-      },
-      "CanonicalAddressStatus" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Address status code",
-            "example" : "M"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Address status description",
-            "example" : "Main"
+          "uprn" : {
+            "type" : [ "string", "null" ],
+            "description" : "Person address uprn",
+            "example" : "100120991537"
           }
         }
-      },
-      "CanonicalAddressUsage" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Address usage code",
-            "example" : "CURFEW"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Address usage description",
-            "example" : "Curfew Order"
-          },
-          "isActive" : {
-            "type" : "boolean",
-            "description" : "Address usage active flag",
-            "example" : true
-          }
-        },
-        "required" : [ "isActive" ]
       },
       "CanonicalAlias" : {
         "type" : "object",
         "properties" : {
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person alias first name",
             "example" : "Jon"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person alias last name",
             "example" : "do"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person alias middle names",
             "example" : "Morgain"
           },
@@ -1939,31 +1889,16 @@
         },
         "required" : [ "sex", "title" ]
       },
-      "CanonicalCountry" : {
-        "type" : "object",
-        "properties" : {
-          "code" : {
-            "type" : "string",
-            "description" : "Country code",
-            "example" : "GBR"
-          },
-          "description" : {
-            "type" : "string",
-            "description" : "Country description",
-            "example" : "United Kingdom of Great Britain and Northern Ireland (the)"
-          }
-        }
-      },
       "CanonicalEthnicity" : {
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person ethnicity code",
             "example" : "B9"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person ethnicity description",
             "example" : "Black/Black British : Any other backgr'nd"
           }
@@ -2051,12 +1986,12 @@
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "person nationality code",
             "example" : "GB"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person nationality description",
             "example" : "GB"
           }
@@ -2066,37 +2001,37 @@
         "type" : "object",
         "properties" : {
           "cprUUID" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person CPR uuid. **If the record has been merged, this will be the CPR uuid of the record it has been merged to**",
             "example" : "f91ef118-a51f-4874-9409-c0538b4ca6fd"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person first name",
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person middle names",
             "example" : "Morgan"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person last name",
             "example" : "Doe"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person date of birth",
             "example" : "1990-08-21"
           },
           "disability" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Person disability",
             "example" : true
           },
           "interestToImmigration" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Person interest to immigration",
             "example" : true
           },
@@ -2152,12 +2087,12 @@
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person religion code",
             "example" : "Christianity"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person religion description",
             "example" : "Christianity"
           }
@@ -2167,12 +2102,12 @@
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person sex code",
             "example" : "M"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person sex description",
             "example" : "Male"
           }
@@ -2182,12 +2117,12 @@
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person sexual orientation code",
             "example" : "HET"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person sexual orientation description",
             "example" : "Heterosexual"
           }
@@ -2197,12 +2132,12 @@
         "type" : "object",
         "properties" : {
           "code" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person title code",
             "example" : "Mr"
           },
           "description" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person title description",
             "example" : "Mr"
           }
@@ -2212,34 +2147,34 @@
         "type" : "object",
         "properties" : {
           "religionCode" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "religionDescription" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "changeReasonKnown" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "comments" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "startDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "endDate" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date"
           },
           "modifyDateTime" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "format" : "date-time"
           },
           "modifyUserId" : {
-            "type" : "string"
+            "type" : [ "string", "null" ]
           },
           "current" : {
-            "type" : "boolean"
+            "type" : [ "boolean", "null" ]
           },
           "createDateTime" : {
             "type" : "string",
@@ -2267,37 +2202,37 @@
         "type" : "object",
         "properties" : {
           "cprUUID" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person CPR uuid. **If the record has been merged, this will be the CPR uuid of the record it has been merged to**",
             "example" : "f91ef118-a51f-4874-9409-c0538b4ca6fd"
           },
           "firstName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person first name",
             "example" : "John"
           },
           "middleNames" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person middle names",
             "example" : "Morgan"
           },
           "lastName" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person last name",
             "example" : "Doe"
           },
           "dateOfBirth" : {
-            "type" : "string",
+            "type" : [ "string", "null" ],
             "description" : "Person date of birth",
             "example" : "1990-08-21"
           },
           "disability" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Person disability",
             "example" : true
           },
           "interestToImmigration" : {
-            "type" : "boolean",
+            "type" : [ "boolean", "null" ],
             "description" : "Person interest to immigration",
             "example" : true
           },
