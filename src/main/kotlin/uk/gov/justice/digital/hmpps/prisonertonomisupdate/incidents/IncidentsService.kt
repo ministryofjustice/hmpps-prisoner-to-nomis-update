@@ -28,6 +28,7 @@ import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.Up
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.nomisprisoner.model.UpsertStaffPartyRequest
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.CreatingSystem
 import uk.gov.justice.digital.hmpps.prisonertonomisupdate.services.NomisApiService
+import kotlin.collections.plus
 
 @Service
 class IncidentsService(
@@ -48,7 +49,6 @@ class IncidentsService(
     )
 
     if (event.didOriginateInDPS()) {
-      log.info("Incident upsert due to ${event.additionalInformation.whatChanged}")
       try {
         val dps = dpsApiService.getIncident(dpsId)
         if (nomisApiService.isAgencySwitchOnForAgency("INCIDENTS", dps.location)) {
@@ -56,7 +56,7 @@ class IncidentsService(
             nomisId = nomisId,
             dps.toNomisUpsertRequest(),
           )
-          telemetryClient.trackEvent("incident-upsert-success", telemetryMap)
+          telemetryClient.trackEvent("incident-upsert-success", telemetryMap + mapOf("changeReason" to event.additionalInformation.whatChanged))
         } else {
           telemetryClient.trackEvent("incident-upsert-location-ignored", telemetryMap + ("location" to dps.location))
         }
@@ -112,8 +112,7 @@ data class IncidentAdditionalInformation(
   val id: String,
   val reportReference: Long,
   val source: CreatingSystem,
-  // TODO - check - we may not need this
-  val whatChanged: String?,
+  val whatChanged: String,
 )
 
 private fun IncidentEvent.didOriginateInDPS() = this.additionalInformation.source == CreatingSystem.DPS
