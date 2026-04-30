@@ -7,7 +7,7 @@
       "name" : "HMPPS Digital Studio",
       "email" : "feedback@digital.justice.gov.uk"
     },
-    "version" : "2026-04-28.1370.d7b59f0"
+    "version" : "2026-04-29.1380.5fe988a"
   },
   "servers" : [ {
     "url" : "https://nomis-prisoner-api-dev.prison.service.justice.gov.uk",
@@ -19198,6 +19198,80 @@
         }
       }
     },
+    "/movements/{offenderNo}/court/schedule/out/{eventId}" : {
+      "get" : {
+        "tags" : [ "court-schedule-resource" ],
+        "summary" : "Get a specific court schedule out for an offender",
+        "description" : "Get a specific court schedule out for an offender by event ID. Requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+        "operationId" : "getCourtScheduleOut",
+        "parameters" : [ {
+          "name" : "offenderNo",
+          "in" : "path",
+          "description" : "Offender number (NOMS ID)",
+          "required" : true,
+          "schema" : {
+            "type" : "string",
+            "description" : "Offender number (NOMS ID)",
+            "example" : "A1234BC"
+          },
+          "example" : "A1234BC"
+        }, {
+          "name" : "eventId",
+          "in" : "path",
+          "description" : "Event ID",
+          "required" : true,
+          "schema" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID",
+            "example" : 123
+          },
+          "example" : 123
+        } ],
+        "responses" : {
+          "200" : {
+            "description" : "Offender court schedule out returned",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/CourtScheduleOut"
+                }
+              }
+            }
+          },
+          "401" : {
+            "description" : "Unauthorized to access this endpoint",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403" : {
+            "description" : "Forbidden, requires role NOMIS_PRISONER_API__SYNCHRONISATION__RW",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404" : {
+            "description" : "Offender or court schedule in not found",
+            "content" : {
+              "application/json" : {
+                "schema" : {
+                  "$ref" : "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/movements/booking/{bookingId}/taps" : {
       "get" : {
         "tags" : [ "offender-taps-resource" ],
@@ -31383,12 +31457,12 @@
             "type" : "integer",
             "format" : "int32"
           },
+          "paged" : {
+            "type" : "boolean"
+          },
           "pageNumber" : {
             "type" : "integer",
             "format" : "int32"
-          },
-          "paged" : {
-            "type" : "boolean"
           },
           "unpaged" : {
             "type" : "boolean"
@@ -35874,6 +35948,54 @@
           }
         },
         "required" : [ "activeBooking", "applicationDate", "applicationStatus", "applicationType", "audit", "bookingId", "eventSubType", "fromDate", "latestBooking", "prisonId", "releaseTime", "returnTime", "tapApplicationId", "toDate" ]
+      },
+      "CourtScheduleOut" : {
+        "type" : "object",
+        "description" : "Court schedule out response",
+        "properties" : {
+          "bookingId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Booking ID"
+          },
+          "eventId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Event ID"
+          },
+          "eventDate" : {
+            "type" : "string",
+            "format" : "date",
+            "description" : "Event date"
+          },
+          "startTime" : {
+            "type" : "string",
+            "format" : "date-time",
+            "description" : "Start time"
+          },
+          "eventType" : {
+            "type" : "string",
+            "description" : "Event type"
+          },
+          "eventStatus" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "comment" : {
+            "type" : "string",
+            "description" : "Event status"
+          },
+          "prison" : {
+            "type" : "string",
+            "description" : "Prison code at time of scheduling"
+          },
+          "courtCaseId" : {
+            "type" : "integer",
+            "format" : "int64",
+            "description" : "Court case ID"
+          }
+        },
+        "required" : [ "bookingId", "comment", "eventDate", "eventId", "eventStatus", "eventType", "prison", "startTime" ]
       },
       "AmendmentResponse" : {
         "type" : "object",
